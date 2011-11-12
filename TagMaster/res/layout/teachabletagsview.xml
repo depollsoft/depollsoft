@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+    <ImageView android:layout_height="fill_parent" android:layout_width="fill_parent" android:src="@drawable/screenbackground" android:scaleType="centerInside" android:id="@+id/imageView1"></ImageView>
+    <LinearLayout android:id="@+id/linearLayout1" android:orientation="vertical" android:layout_height="fill_parent" android:layout_width="fill_parent">
+        <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:textStyle="bold" android:textSize="30dp" android:layout_marginBottom="8dp" android:id="@+id/teachableTagTitleTextView" android:text="@string/TeachableTags"></TextView>
+        <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/noTeachableTagsTextView" android:text="@string/NoTeachableTags" android:textSize="12dp"></TextView>
+        <ScrollView android:id="@+id/scrollView1" android:layout_width="fill_parent" android:layout_weight="1" android:layout_height="wrap_content">
+            <depollsoft.lib.ui.ItemsControl android:layout_width="fill_parent" android:id="@+id/teachableTagsItemsControl" android:layout_height="wrap_content"></depollsoft.lib.ui.ItemsControl>
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

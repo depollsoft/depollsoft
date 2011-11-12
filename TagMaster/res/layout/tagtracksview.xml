@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical">
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:id="@+id/trackNotesLayout">
+		<TextView android:text="@string/RecordingNotes" android:id="@+id/textView1"
+			android:layout_height="wrap_content" android:textStyle="bold"
+			android:textSize="12dp" android:inputType="textMultiLine"
+			android:layout_width="wrap_content" android:maxWidth="75dp"></TextView>
+		<TextView android:textSize="12dp" android:layout_weight="1"
+			android:inputType="textMultiLine" android:text="TextView"
+			android:layout_width="wrap_content" android:id="@+id/trackNotesTextView"
+			android:layout_height="wrap_content"></TextView>
+	</LinearLayout>
+	<depollsoft.tagmaster.MediaPlayerView
+		android:layout_height="wrap_content" android:layout_width="fill_parent"
+		android:id="@+id/mediaPlayer" />
+	<TextView android:textSize="12dp" android:layout_height="wrap_content" android:id="@+id/sorryTextView" android:layout_width="fill_parent" android:text="@string/SorryNoTracks"></TextView>
+	<ScrollView android:layout_width="fill_parent" android:id="@+id/scrollView1"
+		android:layout_height="wrap_content" android:layout_weight="1">
+		<RadioGroup android:layout_height="wrap_content"
+			android:layout_width="fill_parent" android:id="@+id/partsRadioGroup">
+			<RadioButton android:layout_height="wrap_content"
+				android:layout_width="wrap_content" android:id="@+id/allPartsButton"
+				android:text="@string/AllParts"></RadioButton>
+			<RadioButton android:layout_height="wrap_content"
+				android:layout_width="wrap_content" android:id="@+id/tenorButton"
+				android:text="@string/Tenor"></RadioButton>
+			<RadioButton android:layout_height="wrap_content"
+				android:layout_width="wrap_content" android:id="@+id/leadButton"
+				android:text="@string/Lead"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/bariButton"
+				android:text="@string/Baritone"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:text="@string/Bass"
+				android:id="@+id/bassButton"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:text="@string/Other1"
+				android:id="@+id/other1Button"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/other2Button"
+				android:text="@string/Other2"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/other3Button"
+				android:text="@string/Other3"></RadioButton>
+			<RadioButton android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:id="@+id/other4Button"
+				android:text="@string/Other4"></RadioButton>
+		</RadioGroup>
+	</ScrollView>
+</LinearLayout>

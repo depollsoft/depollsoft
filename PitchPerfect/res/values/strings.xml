@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, PitchPerfectActivity!</string>
+    <string name="app_name">Pitch Perfect</string>
+    <string name="CtoC">From C to B</string>
+    <string name="FtoF">From F to E</string>
+    <string name="AddSong">Add Song</string>
+    <string name="SongTitle">Song Title</string>
+    <string name="SongKey">Song Key</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Ok">OK</string>
+    <string name="EditSongList">Edit Songs</string>
+    <string name="StopEditing">Stop Editing</string>
+    <string name="Edit">Edit</string>
+    <string name="EditSong">Edit Song</string>
+    <string name="RemoveSong">Remove Song</string>
+    <string name="MoveUp">Move Up</string>
+    <string name="MoveDown">Move Down</string>
+    <string name="NoSongsInList">There are currently no songs in your song list.</string>
+    <string name="Settings">Settings</string>
+    <string name="Copyright">© 2011</string>
+    <string name="HomePage">apps.depoll.com</string>
+    <string name="ClearSongList">Clear Song List</string>
+    <string name="NotesToggle">Notes play until pressed a second time</string>
+    <string name="Purchase">Purchase to remove ads</string>
+    <string name="Purchased">(Licensed)</string>
+    <string name="DepollSoft">DepollSoft</string>
+    <string name="RateReview">Rate &amp; Review</string>
+    <string name="TermsOfUse">Terms of Use</string>
+    <string name="SortAll">Sort all songs by title</string>
+    <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
+
+</resources>

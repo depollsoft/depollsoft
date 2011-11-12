@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:title="@string/AddFavorite" android:id="@+id/addFavoriteMenuItem" android:icon="@drawable/ic_menu_star"></item>
+	<item android:id="@+id/removeFavoriteMenuItem" android:title="@string/RemoveFavorite" android:icon="@drawable/ic_menu_revert"></item>
+	<item android:id="@+id/addTeachableTagMenuItem" android:title="@string/AddTeachableTag" android:icon="@drawable/ic_menu_allfriends"></item>
+	<item android:id="@+id/removeTeachableTagMenuItem" android:title="@string/RemoveTeachableTag" android:icon="@drawable/ic_menu_revert"></item>
+	<item android:title="@string/RefreshTag" android:id="@+id/refreshMenuItem" android:icon="@drawable/ic_menu_refresh"></item>
+	<item android:title="@string/EmailTag" android:id="@+id/emailMenuItem" android:icon="@drawable/ic_menu_compose"></item>
+	<item android:title="@string/SmsTag" android:id="@+id/smsMenuItem" android:icon="@drawable/ic_menu_start_conversation"></item>
+</menu>

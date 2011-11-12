@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent">
+	<ImageView android:layout_height="fill_parent" android:src="@drawable/panobackground"
+		android:id="@+id/imageView1" android:scaleType="matrix"
+		android:layout_width="fill_parent"></ImageView>
+	<LinearLayout android:id="@+id/linearLayout1"
+		android:orientation="vertical" android:layout_height="fill_parent"
+		android:layout_width="fill_parent">
+		<TextView android:id="@+id/textView1" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/Settings"
+			android:textSize="40dp" android:textStyle="bold"></TextView>
+		<ScrollView android:id="@+id/scrollView1"
+			android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:layout_weight="1">
+			<LinearLayout android:layout_width="fill_parent"
+				android:id="@+id/linearLayout3" android:layout_height="fill_parent"
+				android:orientation="vertical">
+				<depollsoft.lib.ui.Hyperlink
+					android:layout_width="wrap_content" android:text="@string/Purchase"
+					android:layout_height="wrap_content" android:textSize="26dp"
+					android:id="@+id/removeAdsHyperlink" android:layout_marginTop="8dp"
+					android:tag="https://market.android.com/details?id=depollsoft.pitchperfect.license"></depollsoft.lib.ui.Hyperlink>
+				<CheckBox android:id="@+id/toggleNoteCheckBox"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:text="@string/NotesToggle" android:layout_marginTop="8dp"></CheckBox>
+
+				<CheckBox
+				    android:id="@+id/wakeLockCheckBox"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:text="@string/WakeLock" />
+
+				<Button android:layout_width="fill_parent"
+					android:layout_height="wrap_content" android:text="@string/ClearSongList"
+					android:id="@+id/clearSongListButton" android:layout_marginTop="8dp"
+					android:layout_marginBottom="16dp"></Button>
+				<include layout="@layout/aboutfooter" />
+			</LinearLayout>
+		</ScrollView>
+	</LinearLayout>
+</FrameLayout>

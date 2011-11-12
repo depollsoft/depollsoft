@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/removeTeachableTagMenuItem" android:title="@string/RemoveTeachableTagMenuText"></item>
+	<item android:title="@string/MoveUp" android:id="@+id/moveUpMenuItem"></item>
+	<item android:title="@string/MoveDown" android:id="@+id/moveDownMenuItem"></item>
+</menu>

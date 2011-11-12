@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:depollsoft="depollsoft" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<ImageView android:id="@+id/imageView1" android:src="@drawable/screenbackground"
+		android:scaleType="centerInside" android:layout_height="fill_parent"
+		android:layout_width="fill_parent"></ImageView>
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:orientation="vertical">
+		<LinearLayout android:id="@+id/linearLayout1"
+			android:layout_height="wrap_content" android:layout_width="fill_parent">
+			<ImageView android:id="@+id/imageView2"
+				android:layout_height="50dp" android:src="@drawable/icon"
+				android:layout_width="50dp" android:layout_gravity="center_vertical"
+				android:layout_marginRight="8dp"></ImageView>
+			<depollsoft.lib.ui.FontTextView
+				android:textStyle="bold" android:layout_width="wrap_content"
+				android:id="@+id/textView2" android:layout_height="wrap_content"
+				android:text="@string/app_name" depollsoft:fontAssetPath="fonts/wickhop-handwriting.ttf"
+				android:layout_gravity="center_vertical" android:textSize="40dp"></depollsoft.lib.ui.FontTextView>
+		</LinearLayout>
+		<ScrollView android:id="@+id/scrollView1"
+			android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:layout_weight="1">
+			<LinearLayout android:id="@+id/linearLayout2"
+				android:layout_width="fill_parent" android:orientation="vertical"
+				android:layout_height="wrap_content">
+				<depollsoft.tagmaster.MeHeaderView
+					android:layout_weight="1" android:id="@+id/meHeaderView1"
+					android:layout_height="wrap_content" android:layout_width="fill_parent"></depollsoft.tagmaster.MeHeaderView>
+				<depollsoft.lib.ui.ItemsControl
+					android:layout_weight="1" android:layout_width="fill_parent"
+					android:id="@+id/favoritesItemsControl" android:layout_height="wrap_content"></depollsoft.lib.ui.ItemsControl>
+				<include layout="@layout/meviewfooter"/>
+			</LinearLayout>
+		</ScrollView>
+	</LinearLayout>
+</FrameLayout>

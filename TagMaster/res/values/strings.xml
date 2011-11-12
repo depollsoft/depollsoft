@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="hello">Hello World, TagMaster!</string>
+	<string name="app_name">Tag Master</string>
+	<string name="Version">Version: </string>
+	<string name="aka">a.k.a. </string>
+	<string name="Rating">Rating</string>
+	<string name="Parts">Parts</string>
+	<string name="Type">Type</string>
+	<string name="Key">Key</string>
+	<string name="ClassicTag">Classic Tag</string>
+	<string name="SheetMusic">Sheet Music</string>
+	<string name="Notes">Notes</string>
+	<string name="Rate">Rate</string>
+	<string name="TagId">Tag ID</string>
+	<string name="LastRefreshed">Last Refreshed</string>
+	<string name="Downloads">Downloads</string>
+	<string name="Link">Link</string>
+	<string name="BarbershopTagsCom">BarbershopTags.com</string>
+	<string name="PostedBy">Posted by</string>
+	<string name="Posted">Posted</string>
+	<string name="ArrangedBy">Arranged by</string>
+	<string name="YearArranged">Year arranged</string>
+	<string name="SungBy">Sung by</string>
+	<string name="YearSung">Year sung</string>
+	<string name="Multitrack">Multitrack</string>
+	<string name="UserSubmissions">User Submissions</string>
+	<string name="TeachingVideo">Teaching Video</string>
+	<string name="NoVideos">Sorry, this tag does not have any videos associated
+		with it.</string>
+	<string name="Teacher">Teacher</string>
+	<string name="RatingColon" xml:space="preserve">Rating: </string>
+	<string name="PostedColon" xml:space="preserve">Posted: </string>
+	<string name="DLs">DLs: </string>
+	<string name="LearningTracks">Learning tracks</string>
+	<string name="SheetMusicCheck">Sheet music</string>
+	<string name="LoadMoreTags">Fetch additional tags...</string>
+	<string name="Search">Search</string>
+	<string name="SearchHint">Search BarbershopTags.com</string>
+	<string name="SheetMusicSentence">Sheet music</string>
+	<string name="TagCollectionSentence">Tag collection</string>
+	<string name="SortBy">Sort by</string>
+	<string name="SearchOptions">Search Options</string>
+	<string name="AddFavorite">Add Favorite</string>
+	<string name="EmailTag">Email</string>
+	<string name="SmsTag">Sms</string>
+	<string name="RefreshTag">Refresh</string>
+	<string-array name="SheetMusicChoices">
+		<item>Not important</item>
+		<item>Yes</item>
+		<item>No</item>
+	</string-array>
+	<string-array name="LearningTracksChoices">
+		<item>Not important</item>
+		<item>Yes</item>
+		<item>No</item>
+	</string-array>
+	<string-array name="PartsChoices">
+		<item>Any</item>
+		<item>3</item>
+		<item>4</item>
+		<item>5</item>
+		<item>6</item>
+		<item>7</item>
+		<item>8</item>
+	</string-array>
+	<string-array name="TagCollectionChoices">
+		<item>Any</item>
+		<item>Classic Tags</item>
+		<item>Easy Tags</item>
+	</string-array>
+	<string-array name="SortByChoices">
+		<item>Title</item>
+		<item>Downloads</item>
+		<item>Most recent</item>
+		<item>Rating</item>
+		<item>Classic tag number</item>
+	</string-array>
+	<string-array name="MinRatingChoices">
+		<item>Any</item>
+		<item>4</item>
+		<item>3</item>
+		<item>2</item>
+		<item>1</item>
+	</string-array>
+	<string-array name="MinDownloadChoices">
+		<item>Any</item>
+		<item>1000</item>
+		<item>500</item>
+		<item>100</item>
+		<item>50</item>
+	</string-array>
+	<string name="Lyrics">Lyrics</string>
+	<string name="AllParts">All Parts</string>
+	<string name="Tenor">Tenor</string>
+	<string name="Lead">Lead</string>
+	<string name="Baritone">Baritone</string>
+	<string name="Bass">Bass</string>
+	<string name="Other1">Other1</string>
+	<string name="Other2">Other2</string>
+	<string name="Other3">Other3</string>
+	<string name="Other4">Other4</string>
+	<string name="RecordingNotes">Recording Notes</string>
+	<string name="SorryNoTracks">Sorry, no tracks were found that could be played on
+		the phone for this tag.</string>
+	<string name="Balance">Balance</string>
+	<string name="RandomTag">Random Tag</string>
+	<string name="Favorites">Favorites</string>
+	<string name="Copyright">© 2011</string>
+	<string name="HomePage">apps.depoll.com</string>
+	<string name="ContentProvider">Content provided by</string>
+	<string name="BrowseTags">Browse</string>
+	<string name="RemoveFromFavorites">Remove from favorites</string>
+	<string name="MoveUp">Move up</string>
+	<string name="MoveDown">Move down</string>
+	<string name="ClearFavorites">Clear favorites</string>
+	<string name="Donate">Donate</string>
+	<string name="FavoriteMarker">*</string>
+	<string name="FavoriteIndicator">(Favorite)</string>
+	<string name="RemoveFavorite">Remove Favorite</string>
+	<string name="Settings">Settings</string>
+	<string name="RandomTagSettings">Random Tag Filters</string>
+	<string name="MinimumRating">Minimum rating</string>
+	<string name="MinimumDownloads">Minimum downloads</string>
+	<string name="AddTeachableTag">Mark as Teachable</string>
+	<string name="RemoveTeachableTag">Unmark as Teachable</string>
+	<string name="TeachableIndicator">(Teachable)</string>
+	<string name="TeachableTags">Teachable Tags</string>
+	<string name="RemoveTeachableTagMenuText">Remove from teachable tags</string>
+	<string name="NoTeachableTags">You have not marked any tags as teachable.</string>
+	<string name="ClearTeachableTags">Clear teachable tags</string>
+	<string name="SearchBoxHint">Tag title or lyrics</string>
+	<string name="Play">Play</string>
+	<string name="Refresh">Refresh</string>
+	<string name="ChooseARating">Select a rating</string>
+	<string name="FreePitchPipe">Also try Pitch Perfect, a free digital pitch pipe!
+	</string>
+	<string name="DepollSoft">DepollSoft</string>
+	<string name="ClearCache">Clear cached data (sheet music, tracks, etc.)
+	</string>
+	<string name="CurrentCacheSize">Current cache size:</string>
+	<string name="TermsOfUse">Terms of Use</string>
+</resources>

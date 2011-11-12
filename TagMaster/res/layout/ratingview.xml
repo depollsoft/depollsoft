@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_height="wrap_content"
+	android:layout_width="wrap_content">
+	<ScrollView android:id="@+id/scrollView1"
+		android:layout_height="wrap_content" android:layout_width="wrap_content">
+		<LinearLayout android:id="@+id/linearLayout1"
+			android:orientation="vertical" android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+			<TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/textView1" android:textAppearance="?android:attr/textAppearanceLarge" android:text="@string/ChooseARating" android:layout_margin="5dp"></TextView>
+			<RatingBar android:max="5" android:layout_height="wrap_content"
+				android:id="@+id/ratingBar1"
+				android:clickable="true" android:rating="1" android:layout_width="wrap_content"
+				android:numStars="5" android:focusable="true" android:isIndicator="true" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"></RatingBar>
+			<RatingBar android:max="5" android:layout_height="wrap_content"
+				android:id="@+id/ratingBar2"
+				android:clickable="true" android:rating="2" android:layout_width="wrap_content"
+				android:numStars="5" android:focusable="true" android:isIndicator="true" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"></RatingBar>
+			<RatingBar android:max="5" android:layout_height="wrap_content"
+				android:id="@+id/ratingBar3"
+				android:clickable="true" android:rating="3" android:layout_width="wrap_content"
+				android:numStars="5" android:focusable="true" android:isIndicator="true" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"></RatingBar>
+			<RatingBar android:max="5" android:layout_height="wrap_content"
+				android:id="@+id/ratingBar4"
+				android:clickable="true" android:rating="4" android:layout_width="wrap_content"
+				android:numStars="5" android:focusable="true" android:isIndicator="true" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"></RatingBar>
+			<RatingBar android:max="5" android:layout_height="wrap_content"
+				android:id="@+id/ratingBar5"
+				android:clickable="true" android:rating="5" android:layout_width="wrap_content"
+				android:numStars="5" android:focusable="true" android:isIndicator="true" android:layout_marginLeft="5dp" android:layout_marginRight="5dp"></RatingBar>
+		</LinearLayout>
+	</ScrollView>
+</LinearLayout>

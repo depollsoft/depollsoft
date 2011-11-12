@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/EditSong" android:id="@+id/editMenuItem"></item>
+    <item android:title="@string/RemoveSong" android:id="@+id/deleteMenuItem"></item>
+    <item android:id="@+id/sortMenuItem" android:title="@string/SortAll"></item><item android:title="@string/MoveUp" android:id="@+id/moveUpMenuItem"></item>
+    <item android:title="@string/MoveDown" android:id="@+id/moveDownMenuItem"></item>
+    
+</menu>

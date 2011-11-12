@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+  <ImageView android:id="@+id/imageView1" android:src="@drawable/screenbackground" android:scaleType="centerInside" android:layout_height="fill_parent" android:layout_width="fill_parent"></ImageView>
+  <LinearLayout android:layout_width="fill_parent" android:id="@+id/linearLayout1"
+                android:layout_height="fill_parent" android:orientation="vertical">
+    <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/textView1" android:text="@string/Settings" android:textSize="24dp" android:layout_marginBottom="10dp" android:textStyle="bold"></TextView>
+    <ScrollView android:layout_height="wrap_content" android:id="@+id/scrollView1" android:layout_width="fill_parent" android:layout_weight="1">
+        <TableLayout android:id="@+id/tableLayout1" android:layout_width="fill_parent" android:layout_height="fill_parent">
+            <TableRow android:id="@+id/tableRow4" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/textView5" android:text="@string/CurrentCacheSize" android:layout_marginRight="8dp" android:textSize="12dp" android:textStyle="bold"></TextView>
+                <TextView android:layout_weight="1" android:textSize="12dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/cacheSizeDisplay"></TextView>
+            </TableRow>
+            <Button android:layout_height="wrap_content" android:text="@string/ClearCache" android:layout_width="fill_parent" android:id="@+id/clearCacheButton"></Button>
+            <TextView android:layout_marginLeft="10dp" android:layout_marginBottom="5dp" android:layout_height="wrap_content" android:id="@+id/TextView02" android:textStyle="bold" android:textSize="20dp" android:layout_width="wrap_content" android:text="@string/Favorites"></TextView>
+            <Button android:layout_height="wrap_content" android:text="@string/ClearFavorites" android:layout_width="wrap_content" android:id="@+id/clearFavoritesButton"></Button>
+            <TextView android:layout_marginLeft="10dp" android:layout_marginBottom="5dp" android:layout_height="wrap_content" android:id="@+id/TextView03" android:text="@string/TeachableTags" android:textStyle="bold" android:textSize="20dp" android:layout_width="wrap_content"></TextView>
+            <Button android:layout_height="wrap_content" android:text="@string/ClearTeachableTags" android:layout_width="wrap_content" android:id="@+id/clearTeachableTags"></Button>
+            <TextView android:layout_marginLeft="10dp" android:textSize="20dp" android:textStyle="bold" android:layout_height="wrap_content" android:id="@+id/textView3" android:text="@string/RandomTagSettings" android:layout_width="wrap_content" android:layout_marginBottom="5dp"></TextView>
+            <TableRow android:id="@+id/TableRow01" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:id="@+id/TextView01" android:textStyle="bold" android:textSize="12dp" android:layout_marginRight="8dp" android:text="@string/MinimumRating"></TextView>
+                <Spinner android:layout_width="wrap_content" android:layout_weight="1" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:id="@+id/minimumRatingSpinner" android:entries="@array/MinRatingChoices"></Spinner>
+            </TableRow>
+            <TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:id="@+id/textView2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:textSize="12dp" android:textStyle="bold" android:layout_marginRight="8dp" android:text="@string/MinimumDownloads"></TextView>
+                <Spinner android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:layout_gravity="center_vertical" android:id="@+id/minimumDownloadSpinner" android:entries="@array/MinDownloadChoices"></Spinner>
+            </TableRow>
+            <TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:textSize="12dp" android:textStyle="bold" android:layout_marginRight="8dp" android:text="@string/SheetMusicCheck" android:id="@+id/textView3"></TextView>
+                <Spinner android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:layout_gravity="center_vertical" android:id="@+id/sheetMusicSpinner" android:entries="@array/SheetMusicChoices"></Spinner>
+            </TableRow>
+            <TableRow android:id="@+id/tableRow3" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:textSize="12dp" android:textStyle="bold" android:layout_marginRight="8dp" android:text="@string/LearningTracks" android:id="@+id/textView4"></TextView>
+                <Spinner android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:layout_gravity="center_vertical" android:entries="@array/LearningTracksChoices" android:id="@+id/learningTracksSpinner"></Spinner>
+            </TableRow>
+        </TableLayout>
+    </ScrollView>
+   </LinearLayout>
+</FrameLayout>
