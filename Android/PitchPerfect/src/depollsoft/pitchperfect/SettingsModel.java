@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect;
 
+import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.licensing.LicenseChecker;
 import depollsoft.lib.util.Preferences;
@@ -37,5 +38,9 @@ public class SettingsModel {
   public static void setWakeLock(boolean value) {
     Preferences.set(SettingsModel.WakeLockKey, value);
     SettingsModel.wakeLockTrackable.updateTrackers();
+  }
+
+  public static String getAppStore() {
+    return RichApplication.getAppContext().getString(R.string.app_store);
   }
 }

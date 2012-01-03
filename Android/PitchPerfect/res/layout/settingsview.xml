@@ -70,7 +70,7 @@
                     android:text="@string/ClearSongList" >
                 </Button>
 
-                <TextView
+                <!-- <TextView
                     android:id="@+id/textView2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -96,7 +96,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight=".5"
                         android:text="@string/LogOut" />
-                </LinearLayout>
+                </LinearLayout> -->
 
                 <include layout="@layout/aboutfooter" />
             </LinearLayout>

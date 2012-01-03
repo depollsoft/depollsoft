@@ -29,6 +29,11 @@ public class SettingsActivity extends Activity {
     return SettingsModel.getWakeLock();
   }
 
+  public static boolean getShowBuyLink() {
+    return !SettingsModel.getLicensed()
+        && !SettingsModel.getAppStore().equals("amazon");
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -46,8 +51,8 @@ public class SettingsActivity extends Activity {
             .findViewById(R.id.wakeLockCheckBox)), "WakeLock",
         BindingMode.TwoWay);
 
-    UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "Licensed",
-        BoolConverter.get(true));
+    UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink",
+        BoolConverter.get());
     UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed",
         BoolConverter.get());
 
