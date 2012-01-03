@@ -17,164 +17,136 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 public class FavoriteTagItemView extends FrameLayout implements
-      BoundUi<Integer>
-{
+    BoundUi<Integer> {
 
-   private TrackableField<Integer> tagId = new TrackableField<Integer>();
+  private TrackableField<Integer> tagId = new TrackableField<Integer>();
 
-   private TrackableField<Tag> tag = new TrackableField<Tag>();
-   private TagItemView regularView;
-   private Thread uiThread;
+  private TrackableField<Tag> tag = new TrackableField<Tag>();
+  private TagItemView regularView;
+  private Thread uiThread;
 
-   public FavoriteTagItemView(Context context)
-   {
-      super(context);
-      this.init();
-   }
+  public FavoriteTagItemView(Context context) {
+    super(context);
+    this.init();
+  }
 
-   public FavoriteTagItemView(Context context, AttributeSet attrs)
-   {
-      super(context, attrs);
-      this.init();
-   }
+  public FavoriteTagItemView(Context context, AttributeSet attrs) {
+    super(context, attrs);
+    this.init();
+  }
 
-   public FavoriteTagItemView(Context context, AttributeSet attrs, int defStyle)
-   {
-      super(context, attrs, defStyle);
-      this.init();
-   }
+  public FavoriteTagItemView(Context context, AttributeSet attrs, int defStyle) {
+    super(context, attrs, defStyle);
+    this.init();
+  }
 
-   public void bind(Integer dataSource)
-   {
-      if (ObjectUtilities.equals(dataSource, this.getTagId()))
-         return;
-      this.setTagId(dataSource);
-      this.setTag(null);
-      Tag.loadTagById(dataSource).continueWith(new Action<Tag>()
-      {
+  public void bind(Integer dataSource) {
+    if (ObjectUtilities.equals(dataSource, this.getTagId()))
+      return;
+    this.setTagId(dataSource);
+    this.setTag(null);
+    Tag.loadTagById(dataSource).continueWith(new Action<Tag>() {
 
-         public void invoke(final Tag parameter)
-         {
-            if (Thread.currentThread() != FavoriteTagItemView.this.uiThread)
-               FavoriteTagItemView.this.post(new Runnable()
-               {
-                  public void run()
-                  {
-                     FavoriteTagItemView.this.setTag(parameter);
-                  }
-               });
-            else
-               FavoriteTagItemView.this.setTag(parameter);
-         }
-      }, new Action<Exception>()
-      {
+      public void invoke(final Tag parameter) {
+        if (Thread.currentThread() != FavoriteTagItemView.this.uiThread)
+          FavoriteTagItemView.this.post(new Runnable() {
+            public void run() {
+              FavoriteTagItemView.this.setTag(parameter);
+            }
+          });
+        else
+          FavoriteTagItemView.this.setTag(parameter);
+      }
+    }, new Action<Exception>() {
 
-         public void invoke(Exception parameter)
-         {
-         }
-      });
-   }
+      public void invoke(Exception parameter) {
+      }
+    });
+  }
 
-   @Override
-   public Tag getTag()
-   {
-      return this.tag.getValue();
-   }
+  @Override
+  public Tag getTag() {
+    return this.tag.getValue();
+  }
 
-   public Integer getTagId()
-   {
-      return this.tagId.getValue();
-   }
+  public Integer getTagId() {
+    return this.tagId.getValue();
+  }
 
-   private void init()
-   {
-      View.inflate(this.getContext(), R.layout.favoritetagitemview, this);
-      this.uiThread = Thread.currentThread();
-      this.setLongClickable(true);
-      this.setOnLongClickListener(new OnLongClickListener()
-      {
-         public boolean onLongClick(View v)
-         {
-            FavoriteTagItemView.this.showContextMenu();
+  private void init() {
+    View.inflate(this.getContext(), R.layout.favoritetagitemview, this);
+    this.uiThread = Thread.currentThread();
+    this.setLongClickable(true);
+    this.setOnLongClickListener(new OnLongClickListener() {
+      public boolean onLongClick(View v) {
+        FavoriteTagItemView.this.showContextMenu();
+        return true;
+      }
+    });
+
+    this.regularView = (TagItemView) this.findViewById(R.id.tagItemView);
+    this.regularView.setHideFavoritesMarker(true);
+  }
+
+  @Override
+  protected void onAttachedToWindow() {
+    super.onAttachedToWindow();
+
+    UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag",
+        BoolConverter.get(true));
+    UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag",
+        BoolConverter.get());
+  }
+
+  @Override
+  protected void onCreateContextMenu(ContextMenu menu) {
+    MenuInflater mi = new MenuInflater(this.getContext());
+    mi.inflate(R.menu.favoritetagcontextmenu, menu);
+
+    menu.findItem(R.id.removeFavoriteMenuItem).setOnMenuItemClickListener(
+        new OnMenuItemClickListener() {
+          public boolean onMenuItemClick(MenuItem item) {
+            FavoritesModel.removeFavorite(FavoriteTagItemView.this.getTagId());
             return true;
-         }
-      });
+          }
+        });
 
-      this.regularView = (TagItemView) this.findViewById(R.id.tagItemView);
-      this.regularView.setHideFavoritesMarker(true);
-   }
+    menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(
+        new OnMenuItemClickListener() {
+          public boolean onMenuItemClick(MenuItem item) {
+            FavoritesModel.moveDown(FavoriteTagItemView.this.getTagId());
+            return true;
+          }
+        });
 
-   @Override
-   protected void onAttachedToWindow()
-   {
-      super.onAttachedToWindow();
+    menu.findItem(R.id.moveDownMenuItem).setEnabled(
+        FavoritesModel.canMoveDown(this.getTagId()));
 
-      UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag",
-            BoolConverter.get(true));
-      UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag",
-            BoolConverter.get());
-   }
+    menu.findItem(R.id.moveUpMenuItem).setEnabled(
+        FavoritesModel.canMoveUp(this.getTagId()));
 
-   @Override
-   protected void onCreateContextMenu(ContextMenu menu)
-   {
-      MenuInflater mi = new MenuInflater(this.getContext());
-      mi.inflate(R.menu.favoritetagcontextmenu, menu);
+    menu.findItem(R.id.moveUpMenuItem).setOnMenuItemClickListener(
+        new OnMenuItemClickListener() {
+          public boolean onMenuItemClick(MenuItem item) {
+            FavoritesModel.moveUp(FavoriteTagItemView.this.getTagId());
+            return true;
+          }
+        });
+    super.onCreateContextMenu(menu);
+  }
 
-      menu.findItem(R.id.removeFavoriteMenuItem).setOnMenuItemClickListener(
-            new OnMenuItemClickListener()
-            {
-               public boolean onMenuItemClick(MenuItem item)
-               {
-                  FavoritesModel.removeFavorite(FavoriteTagItemView.this
-                        .getTagId());
-                  return true;
-               }
-            });
+  @Override
+  protected void onDetachedFromWindow() {
+    super.onDetachedFromWindow();
+    UiBinder.unbind(this);
+  }
 
-      menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(
-            new OnMenuItemClickListener()
-            {
-               public boolean onMenuItemClick(MenuItem item)
-               {
-                  FavoritesModel.moveDown(FavoriteTagItemView.this.getTagId());
-                  return true;
-               }
-            });
+  public void setTag(Tag value) {
+    this.tag.setValue(value);
+    this.regularView.bind(value);
+  }
 
-      menu.findItem(R.id.moveDownMenuItem).setEnabled(
-            FavoritesModel.canMoveDown(this.getTagId()));
-
-      menu.findItem(R.id.moveUpMenuItem).setEnabled(
-            FavoritesModel.canMoveUp(this.getTagId()));
-
-      menu.findItem(R.id.moveUpMenuItem).setOnMenuItemClickListener(
-            new OnMenuItemClickListener()
-            {
-               public boolean onMenuItemClick(MenuItem item)
-               {
-                  FavoritesModel.moveUp(FavoriteTagItemView.this.getTagId());
-                  return true;
-               }
-            });
-      super.onCreateContextMenu(menu);
-   }
-
-   @Override
-   protected void onDetachedFromWindow()
-   {
-      super.onDetachedFromWindow();
-      UiBinder.unbind(this);
-   }
-
-   public void setTag(Tag value)
-   {
-      this.tag.setValue(value);
-      this.regularView.bind(value);
-   }
-
-   public void setTagId(Integer value)
-   {
-      this.tagId.setValue(value);
-   }
+  public void setTagId(Integer value) {
+    this.tagId.setValue(value);
+  }
 }

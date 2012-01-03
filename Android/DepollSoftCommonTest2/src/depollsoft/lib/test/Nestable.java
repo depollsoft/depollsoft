@@ -2,28 +2,23 @@ package depollsoft.lib.test;
 
 import depollsoft.lib.binding.TrackableField;
 
-public class Nestable
-{
-   private TrackableField<Nestable> child = new TrackableField<Nestable>();
-   private TrackableField<String> value = new TrackableField<String>();
+public class Nestable {
+  private TrackableField<Nestable> child = new TrackableField<Nestable>();
+  private TrackableField<String> value = new TrackableField<String>();
 
-   public Nestable getChild()
-   {
-      return this.child.getValue();
-   }
+  public Nestable getChild() {
+    return this.child.getValue();
+  }
 
-   public String getValue()
-   {
-      return this.value.getValue();
-   }
+  public String getValue() {
+    return this.value.getValue();
+  }
 
-   public void setChild(Nestable value)
-   {
-      this.child.setValue(value);
-   }
+  public void setChild(Nestable value) {
+    this.child.setValue(value);
+  }
 
-   public void setValue(String newVal)
-   {
-      this.value.setValue(newVal);
-   }
+  public void setValue(String newVal) {
+    this.value.setValue(newVal);
+  }
 }

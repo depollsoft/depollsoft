@@ -17,183 +17,151 @@ import android.view.ViewGroup;
 import android.widget.ListAdapter;
 import android.widget.SpinnerAdapter;
 
-public class BoundCollectionAdapter<T> implements ListAdapter, SpinnerAdapter
-{
-   private ObservableCollection<T> data;
-   private Class<? extends View> viewType;
-   private Class<? extends View> dropDownViewType;
-   private Constructor<? extends View> viewConstructor;
-   private Constructor<? extends View> dropDownViewConstructor;
-   private Tracker tracker;
-   private List<DataSetObserver> observers;
-   private boolean recycleViews;
-   private Map<T, View> cachedViews;
-   private Action<Void> trackAction = new Action<Void>()
-   {
-      public void invoke(Void parameter)
-      {
-         BoundCollectionAdapter.this.data.track();
+public class BoundCollectionAdapter<T> implements ListAdapter, SpinnerAdapter {
+  private ObservableCollection<T> data;
+  private Class<? extends View> viewType;
+  private Class<? extends View> dropDownViewType;
+  private Constructor<? extends View> viewConstructor;
+  private Constructor<? extends View> dropDownViewConstructor;
+  private Tracker tracker;
+  private List<DataSetObserver> observers;
+  private boolean recycleViews;
+  private Map<T, View> cachedViews;
+  private Action<Void> trackAction = new Action<Void>() {
+    public void invoke(Void parameter) {
+      BoundCollectionAdapter.this.data.track();
+    }
+  };
+
+  public BoundCollectionAdapter(ObservableCollection<T> data,
+      Class<? extends View> viewType) {
+    this(data, viewType, true, false);
+  }
+
+  public BoundCollectionAdapter(ObservableCollection<T> data,
+      Class<? extends View> viewType, boolean recycleViews, boolean cacheViews) {
+    this(data, viewType, recycleViews, cacheViews, viewType);
+  }
+
+  public BoundCollectionAdapter(ObservableCollection<T> data,
+      Class<? extends View> viewType, boolean recycleViews, boolean cacheViews,
+      Class<? extends View> dropDownViewType) {
+    if (cacheViews)
+      this.cachedViews = new HashMap<T, View>();
+    this.observers = new LinkedList<DataSetObserver>();
+    this.data = data;
+    this.viewType = viewType;
+    this.dropDownViewType = dropDownViewType;
+    try {
+      this.viewConstructor = this.viewType.getConstructor(Context.class);
+      this.dropDownViewConstructor = this.dropDownViewType
+          .getConstructor(Context.class);
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    this.recycleViews = recycleViews;
+    this.tracker = new Tracker() {
+      public void update() {
+        BoundCollectionAdapter.this.notifyCollectionChanged();
+        Trackable.track(BoundCollectionAdapter.this.tracker,
+            BoundCollectionAdapter.this.trackAction);
       }
-   };
+    };
+    Trackable.track(BoundCollectionAdapter.this.tracker, this.trackAction);
+  }
 
-   public BoundCollectionAdapter(ObservableCollection<T> data,
-         Class<? extends View> viewType)
-   {
-      this(data, viewType, true, false);
-   }
+  public boolean areAllItemsEnabled() {
+    return true;
+  }
 
-   public BoundCollectionAdapter(ObservableCollection<T> data,
-         Class<? extends View> viewType, boolean recycleViews,
-         boolean cacheViews)
-   {
-      this(data, viewType, recycleViews, cacheViews, viewType);
-   }
+  public int getCount() {
+    return this.data.size();
+  }
 
-   public BoundCollectionAdapter(ObservableCollection<T> data,
-         Class<? extends View> viewType, boolean recycleViews,
-         boolean cacheViews, Class<? extends View> dropDownViewType)
-   {
-      if (cacheViews)
-         this.cachedViews = new HashMap<T, View>();
-      this.observers = new LinkedList<DataSetObserver>();
-      this.data = data;
-      this.viewType = viewType;
-      this.dropDownViewType = dropDownViewType;
-      try
-      {
-         this.viewConstructor = this.viewType.getConstructor(Context.class);
-         this.dropDownViewConstructor = this.dropDownViewType
-               .getConstructor(Context.class);
-      }
-      catch (Exception e)
-      {
-         throw new RuntimeException(e);
-      }
-      this.recycleViews = recycleViews;
-      this.tracker = new Tracker()
-      {
-         public void update()
-         {
-            BoundCollectionAdapter.this.notifyCollectionChanged();
-            Trackable.track(BoundCollectionAdapter.this.tracker,
-                  BoundCollectionAdapter.this.trackAction);
-         }
-      };
-      Trackable.track(BoundCollectionAdapter.this.tracker, this.trackAction);
-   }
+  public View getDropDownView(int position, View convertView, ViewGroup parent) {
+    return this.getView(position, convertView, parent,
+        this.dropDownViewConstructor);
+  }
 
-   public boolean areAllItemsEnabled()
-   {
-      return true;
-   }
+  public Object getItem(int position) {
+    return this.data.get(position);
+  }
 
-   public int getCount()
-   {
-      return this.data.size();
-   }
-
-   public View getDropDownView(int position, View convertView, ViewGroup parent)
-   {
-      return this.getView(position, convertView, parent,
-            this.dropDownViewConstructor);
-   }
-
-   public Object getItem(int position)
-   {
-      return this.data.get(position);
-   }
-
-   public long getItemId(int position)
-   {
-      try
-      {
-         return this.data.getId(position);
-      }
-      catch (Exception e)
-      {
-         return 0;
-      }
-   }
-
-   public int getItemViewType(int position)
-   {
+  public long getItemId(int position) {
+    try {
+      return this.data.getId(position);
+    }
+    catch (Exception e) {
       return 0;
-   }
+    }
+  }
 
-   public View getView(int position, View convertView, ViewGroup parent)
-   {
-      return this.getView(position, convertView, parent, this.viewConstructor);
-   }
+  public int getItemViewType(int position) {
+    return 0;
+  }
 
-   @SuppressWarnings("unchecked")
-   private View getView(int position, View convertView, ViewGroup parent,
-         Constructor<? extends View> viewConstructor)
-   {
-      T dataItem = this.data.get(position);
-      if (this.cachedViews != null && this.cachedViews.containsKey(dataItem))
-         return this.cachedViews.get(dataItem);
-      View result = convertView;
-      if (!this.recycleViews || result == null || this.cachedViews != null)
-      {
-         try
-         {
-            result = viewConstructor.newInstance(parent.getContext());
-         }
-         catch (Exception e)
-         {
-            throw new RuntimeException(e);
-         }
+  public View getView(int position, View convertView, ViewGroup parent) {
+    return this.getView(position, convertView, parent, this.viewConstructor);
+  }
+
+  @SuppressWarnings("unchecked")
+  private View getView(int position, View convertView, ViewGroup parent,
+      Constructor<? extends View> viewConstructor) {
+    T dataItem = this.data.get(position);
+    if (this.cachedViews != null && this.cachedViews.containsKey(dataItem))
+      return this.cachedViews.get(dataItem);
+    View result = convertView;
+    if (!this.recycleViews || result == null || this.cachedViews != null) {
+      try {
+        result = viewConstructor.newInstance(parent.getContext());
       }
-      if (result instanceof BoundUi)
-         ((BoundUi<T>) result).bind(dataItem);
-      if (this.cachedViews != null)
-         this.cachedViews.put(dataItem, result);
-      return result;
-   }
-
-   public int getViewTypeCount()
-   {
-      return 1;
-   }
-
-   public boolean hasStableIds()
-   {
-      return true;
-   }
-
-   public boolean isEmpty()
-   {
-      return this.data.isEmpty();
-   }
-
-   public boolean isEnabled(int position)
-   {
-      return true;
-   }
-
-   private void notifyCollectionChanged()
-   {
-      if (this.cachedViews != null)
-      {
-         Map<T, View> newCache = new HashMap<T, View>();
-         for (T item : this.data)
-            if (this.cachedViews.containsKey(item))
-               newCache.put(item, this.cachedViews.get(item));
-         this.cachedViews = newCache;
+      catch (Exception e) {
+        throw new RuntimeException(e);
       }
+    }
+    if (result instanceof BoundUi)
+      ((BoundUi<T>) result).bind(dataItem);
+    if (this.cachedViews != null)
+      this.cachedViews.put(dataItem, result);
+    return result;
+  }
 
-      for (DataSetObserver obs : this.observers)
-         obs.onChanged();
-   }
+  public int getViewTypeCount() {
+    return 1;
+  }
 
-   public void registerDataSetObserver(DataSetObserver observer)
-   {
-      this.observers.add(observer);
-   }
+  public boolean hasStableIds() {
+    return true;
+  }
 
-   public void unregisterDataSetObserver(DataSetObserver observer)
-   {
-      this.observers.remove(observer);
-   }
+  public boolean isEmpty() {
+    return this.data.isEmpty();
+  }
+
+  public boolean isEnabled(int position) {
+    return true;
+  }
+
+  private void notifyCollectionChanged() {
+    if (this.cachedViews != null) {
+      Map<T, View> newCache = new HashMap<T, View>();
+      for (T item : this.data)
+        if (this.cachedViews.containsKey(item))
+          newCache.put(item, this.cachedViews.get(item));
+      this.cachedViews = newCache;
+    }
+
+    for (DataSetObserver obs : this.observers)
+      obs.onChanged();
+  }
+
+  public void registerDataSetObserver(DataSetObserver observer) {
+    this.observers.add(observer);
+  }
+
+  public void unregisterDataSetObserver(DataSetObserver observer) {
+    this.observers.remove(observer);
+  }
 
 }

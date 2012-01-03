@@ -1,9 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
-    <ImageButton android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/editButton" android:src="@drawable/ic_menu_edit" android:layout_marginRight="8dp" android:layout_gravity="center_vertical"></ImageButton>
-    <TextView android:layout_weight="1" android:layout_width="wrap_content" android:id="@+id/songTitleTextView" android:layout_height="wrap_content" android:textSize="20dp" android:layout_gravity="center_vertical"></TextView>
-    <TextView android:layout_width="wrap_content" android:id="@+id/songKeyTextView" android:layout_height="wrap_content" android:textSize="20dp" android:layout_gravity="center_vertical"></TextView>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <ImageButton
+        android:id="@+id/editButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="8dp"
+        android:src="@drawable/ic_menu_edit" >
+    </ImageButton>
+
+    <TextView
+        android:id="@+id/songTitleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:textSize="20dp" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/songKeyTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:textSize="20dp" >
+    </TextView>
+
 </LinearLayout>

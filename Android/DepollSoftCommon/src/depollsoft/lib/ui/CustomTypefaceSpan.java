@@ -5,52 +5,43 @@ import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.text.style.TypefaceSpan;
 
-public class CustomTypefaceSpan extends TypefaceSpan
-{
-   private static void applyCustomTypeFace(Paint paint, Typeface tf)
-   {
-      int oldStyle;
-      Typeface old = paint.getTypeface();
-      if (old == null)
-      {
-         oldStyle = 0;
-      }
-      else
-      {
-         oldStyle = old.getStyle();
-      }
+public class CustomTypefaceSpan extends TypefaceSpan {
+  private static void applyCustomTypeFace(Paint paint, Typeface tf) {
+    int oldStyle;
+    Typeface old = paint.getTypeface();
+    if (old == null) {
+      oldStyle = 0;
+    }
+    else {
+      oldStyle = old.getStyle();
+    }
 
-      int fake = oldStyle & ~tf.getStyle();
-      if ((fake & Typeface.BOLD) != 0)
-      {
-         paint.setFakeBoldText(true);
-      }
+    int fake = oldStyle & ~tf.getStyle();
+    if ((fake & Typeface.BOLD) != 0) {
+      paint.setFakeBoldText(true);
+    }
 
-      if ((fake & Typeface.ITALIC) != 0)
-      {
-         paint.setTextSkewX(-0.25f);
-      }
+    if ((fake & Typeface.ITALIC) != 0) {
+      paint.setTextSkewX(-0.25f);
+    }
 
-      paint.setTypeface(tf);
-   }
+    paint.setTypeface(tf);
+  }
 
-   private final Typeface newType;
+  private final Typeface newType;
 
-   public CustomTypefaceSpan(String family, Typeface type)
-   {
-      super(family);
-      this.newType = type;
-   }
+  public CustomTypefaceSpan(String family, Typeface type) {
+    super(family);
+    this.newType = type;
+  }
 
-   @Override
-   public void updateDrawState(TextPaint ds)
-   {
-      CustomTypefaceSpan.applyCustomTypeFace(ds, this.newType);
-   }
+  @Override
+  public void updateDrawState(TextPaint ds) {
+    CustomTypefaceSpan.applyCustomTypeFace(ds, this.newType);
+  }
 
-   @Override
-   public void updateMeasureState(TextPaint paint)
-   {
-      CustomTypefaceSpan.applyCustomTypeFace(paint, this.newType);
-   }
+  @Override
+  public void updateMeasureState(TextPaint paint) {
+    CustomTypefaceSpan.applyCustomTypeFace(paint, this.newType);
+  }
 }

@@ -1,6 +1,5 @@
 package depollsoft.lib.binding;
 
-public enum BindingMode
-{
-   OneWay, OneWayToSource, TwoWay
+public enum BindingMode {
+  OneWay, OneWayToSource, TwoWay
 }

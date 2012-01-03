@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect.lib;
 
-public enum KeyType
-{
-   Major, Minor
+public enum KeyType {
+  Major, Minor
 }

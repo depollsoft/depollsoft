@@ -1,61 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:layout_height="fill_parent"
-	android:orientation="vertical">
-	<LinearLayout android:layout_height="wrap_content"
-		android:id="@+id/linearLayout1" android:layout_gravity="center_horizontal"
-		android:layout_width="wrap_content">
-		<TextView android:layout_height="wrap_content" android:id="@+id/textView1"
-			android:layout_width="wrap_content" android:text="@string/app_name"
-			android:textSize="12dp"></TextView>
-		<TextView android:id="@+id/textView5" android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:text=" - "
-			android:textSize="12dp"></TextView>
-		<TextView android:layout_height="wrap_content" android:id="@+id/textView6"
-			android:layout_width="wrap_content" android:text="@string/app_version"
-			android:textSize="12dp"></TextView>
-	</LinearLayout>
-	<LinearLayout android:layout_height="wrap_content"
-		android:id="@+id/linearLayout3" android:layout_width="wrap_content"
-		android:layout_gravity="center_horizontal">
-		<depollsoft.lib.ui.Hyperlink
-			android:layout_height="wrap_content" android:textSize="12dp"
-			android:layout_width="wrap_content" android:id="@+id/TextView01"
-			android:layout_gravity="center_horizontal" android:text="@string/DepollSoft"
-			android:tag="http://apps.depoll.com"></depollsoft.lib.ui.Hyperlink>
-		<TextView android:layout_height="wrap_content"
-			android:textSize="12dp" android:layout_width="wrap_content"
-			android:id="@+id/textView2" android:text="@string/Copyright"
-			android:layout_gravity="center_horizontal" android:layout_marginLeft="4dp"></TextView>
-	</LinearLayout>
-	<LinearLayout android:layout_height="wrap_content"
-		android:id="@+id/linearLayout2" android:layout_gravity="center_horizontal"
-		android:layout_width="wrap_content">
-		<TextView android:layout_height="wrap_content" android:id="@+id/textView7"
-			android:layout_width="wrap_content" android:text="@string/ContentProvider"
-			android:textSize="12dp"></TextView>
-		<TextView android:id="@+id/textView8" android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:text=" "
-			android:textSize="12dp"></TextView>
-		<depollsoft.lib.ui.Hyperlink
-			android:layout_height="wrap_content" android:id="@+id/textView4"
-			android:layout_width="wrap_content" android:text="@string/BarbershopTagsCom"
-			android:tag="http://www.barbershoptags.com" android:textSize="12dp"></depollsoft.lib.ui.Hyperlink>
-	</LinearLayout>
-	<depollsoft.lib.ui.Hyperlink
-		android:layout_height="wrap_content" android:textSize="12dp"
-		android:layout_width="wrap_content" android:id="@+id/Hyperlink02"
-		android:text="@string/FreePitchPipe"
-		android:tag="https://market.android.com/details?id=depollsoft.pitchperfect"
-		android:layout_gravity="center_horizontal"></depollsoft.lib.ui.Hyperlink>
-	<depollsoft.lib.ui.Hyperlink
-		android:layout_gravity="center_horizontal" android:layout_height="wrap_content"
-		android:layout_width="wrap_content" android:id="@+id/Hyperlink01"
-		android:textSize="12dp" android:text="@string/TermsOfUse"
-		android:tag="http://apps.depoll.com/terms-of-use"></depollsoft.lib.ui.Hyperlink>
-	<depollsoft.lib.ui.Hyperlink
-		android:tag="http://www.davidpoll.com/applications/tag-master/donate"
-		android:textSize="12dp" android:layout_width="wrap_content"
-		android:id="@+id/Hyperlink01" android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal" android:text="@string/Donate"></depollsoft.lib.ui.Hyperlink>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="12dp" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" - "
+            android:textSize="12dp" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_version"
+            android:textSize="12dp" >
+        </TextView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" >
+
+        <depollsoft.lib.ui.Hyperlink
+            android:id="@+id/TextView01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:tag="http://apps.depoll.com"
+            android:text="@string/DepollSoft"
+            android:textSize="12dp" >
+        </depollsoft.lib.ui.Hyperlink>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="4dp"
+            android:text="@string/Copyright"
+            android:textSize="12dp" >
+        </TextView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" >
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ContentProvider"
+            android:textSize="12dp" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" "
+            android:textSize="12dp" >
+        </TextView>
+
+        <depollsoft.lib.ui.Hyperlink
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tag="http://www.barbershoptags.com"
+            android:text="@string/BarbershopTagsCom"
+            android:textSize="12dp" >
+        </depollsoft.lib.ui.Hyperlink>
+    </LinearLayout>
+
+    <depollsoft.lib.ui.Hyperlink
+        android:id="@+id/Hyperlink02"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:tag="https://market.android.com/details?id=depollsoft.pitchperfect"
+        android:text="@string/FreePitchPipe"
+        android:textSize="12dp" >
+    </depollsoft.lib.ui.Hyperlink>
+
+    <depollsoft.lib.ui.Hyperlink
+        android:id="@+id/Hyperlink01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:tag="http://apps.depoll.com/terms-of-use"
+        android:text="@string/TermsOfUse"
+        android:textSize="12dp" >
+    </depollsoft.lib.ui.Hyperlink>
+
+    <depollsoft.lib.ui.Hyperlink
+        android:id="@+id/Hyperlink01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:tag="http://www.davidpoll.com/applications/tag-master/donate"
+        android:text="@string/Donate"
+        android:textSize="12dp" >
+    </depollsoft.lib.ui.Hyperlink>
+
 </LinearLayout>

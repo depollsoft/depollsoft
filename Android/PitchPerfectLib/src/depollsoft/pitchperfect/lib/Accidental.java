@@ -1,8 +1,5 @@
 package depollsoft.pitchperfect.lib;
 
-public enum Accidental
-{
-   Flat,
-   Natural,
-   Sharp
+public enum Accidental {
+  Flat, Natural, Sharp
 }

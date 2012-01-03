@@ -1,47 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:layout_height="fill_parent" android:orientation="vertical">
-    <LinearLayout android:layout_height="wrap_content" android:id="@+id/linearLayout4" android:layout_width="fill_parent">
-        <ToggleButton android:background="@drawable/ic_favoritestar" android:textOff="" android:textOn="" android:id="@+id/favoriteMarker" android:layout_gravity="top" android:layout_height="14dp" android:layout_width="12dp" android:layout_marginRight="4dp" android:layout_marginTop="2dp"></ToggleButton>
-<!--         <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/favoriteMarkerTextView" android:text="@string/FavoriteMarker" android:textStyle="bold" android:layout_marginRight="4dp"></TextView> -->
-        <TextView android:layout_height="wrap_content" android:longClickable="false" android:linksClickable="false" android:layout_width="fill_parent" android:id="@+id/titleTextView" android:text="Who'll Take My Place When I'm Gone?" android:clickable="false" android:focusable="false" android:layout_weight="1"></TextView>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <ToggleButton
+            android:id="@+id/favoriteMarker"
+            android:layout_width="12dp"
+            android:layout_height="14dp"
+            android:layout_gravity="top"
+            android:layout_marginRight="4dp"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/ic_favoritestar"
+            android:textOff=""
+            android:textOn="" >
+        </ToggleButton>
+        <!-- <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/favoriteMarkerTextView" android:text="@string/FavoriteMarker" android:textStyle="bold" android:layout_marginRight="4dp"></TextView> -->
+
+        <TextView
+            android:id="@+id/titleTextView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:focusable="false"
+            android:linksClickable="false"
+            android:longClickable="false"
+            android:text="Who&apos;ll Take My Place When I&apos;m Gone?" >
+        </TextView>
     </LinearLayout>
-	<LinearLayout android:layout_height="fill_parent"
-		android:id="@+id/linearLayout1" android:orientation="vertical"
-		android:layout_marginLeft="20dp" android:layout_width="fill_parent">
-		<TextView android:layout_height="wrap_content"
-			android:text="TextView"
-			android:id="@+id/akaTextView" android:clickable="false" android:longClickable="false" android:linksClickable="false" android:textSize="12dp" android:focusable="false" android:layout_width="fill_parent"></TextView>
-	<LinearLayout android:layout_height="wrap_content"
-		android:id="@+id/linearLayout2" android:layout_width="wrap_content">
-		<LinearLayout android:layout_height="fill_parent" android:layout_width="wrap_content" android:id="@+id/ratingContainer" android:layout_marginRight="10dp">
-			<TextView android:layout_height="wrap_content" android:longClickable="false" android:linksClickable="false" android:layout_width="wrap_content" android:id="@+id/textView1" android:text="@string/RatingColon" android:textSize="12dp" android:clickable="false" android:focusable="false"></TextView>
-			<TextView android:layout_height="wrap_content" android:longClickable="false" android:linksClickable="false" android:layout_width="wrap_content" android:id="@+id/ratingTextView" android:text="3.26" android:textSize="12dp" android:clickable="false" android:focusable="false"></TextView>
-		</LinearLayout>
-		<TextView android:layout_height="wrap_content"
-			android:layout_width="wrap_content" android:text="@string/PostedColon"
-			android:id="@+id/textView3" android:clickable="false" android:longClickable="false"
-			android:linksClickable="false" android:textSize="12dp"
-			android:focusable="false"></TextView>
-		<TextView android:layout_height="wrap_content"
-			android:layout_width="wrap_content" android:id="@+id/postedTextView"
-			android:text="12/7/2008" android:clickable="false"
-			android:longClickable="false" android:linksClickable="false"
-			android:textSize="12dp" android:focusable="false"></TextView>
-	<LinearLayout android:layout_height="fill_parent"
-		android:layout_width="wrap_content" android:id="@+id/downloadsContainer">
-		<TextView android:focusable="false" android:layout_width="wrap_content"
-			android:clickable="false" android:longClickable="false" android:id="@+id/textView5"
-			android:layout_height="wrap_content" android:linksClickable="false"
-			android:text="@string/DLs" android:layout_marginLeft="10dp"
-			android:textSize="12dp"></TextView>
-		<TextView android:focusable="false" android:layout_width="wrap_content" android:clickable="false" android:longClickable="false" android:id="@+id/downloadsTextView" android:layout_height="wrap_content" android:linksClickable="false" android:text="4633" android:textSize="12dp"></TextView>
-	</LinearLayout>
-	</LinearLayout>
-	<LinearLayout android:layout_height="wrap_content"
-		android:layout_width="fill_parent" android:id="@+id/linearLayout3">
-		<CheckBox android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/SheetMusicCheck" android:id="@+id/sheetMusicCheckBox" android:textSize="12dp" android:clickable="false" android:focusable="false" android:button="@drawable/ic_yesnocheck"></CheckBox>
-		<CheckBox android:layout_weight="1" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/LearningTracks" android:clickable="false" android:id="@+id/learningTracksCheckBox" android:textSize="12dp" android:focusable="false" android:button="@drawable/ic_yesnocheck"></CheckBox>
-	</LinearLayout>
-	</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginLeft="20dp"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/akaTextView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:focusable="false"
+            android:linksClickable="false"
+            android:longClickable="false"
+            android:text="TextView"
+            android:textSize="12dp" >
+        </TextView>
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <LinearLayout
+                android:id="@+id/ratingContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_marginRight="10dp" >
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="@string/RatingColon"
+                    android:textSize="12dp" >
+                </TextView>
+
+                <TextView
+                    android:id="@+id/ratingTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="3.26"
+                    android:textSize="12dp" >
+                </TextView>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                android:linksClickable="false"
+                android:longClickable="false"
+                android:text="@string/PostedColon"
+                android:textSize="12dp" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/postedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                android:linksClickable="false"
+                android:longClickable="false"
+                android:text="12/7/2008"
+                android:textSize="12dp" >
+            </TextView>
+
+            <LinearLayout
+                android:id="@+id/downloadsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent" >
+
+                <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="@string/DLs"
+                    android:textSize="12dp" >
+                </TextView>
+
+                <TextView
+                    android:id="@+id/downloadsTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="4633"
+                    android:textSize="12dp" >
+                </TextView>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <CheckBox
+                android:id="@+id/sheetMusicCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:button="@drawable/ic_yesnocheck"
+                android:clickable="false"
+                android:focusable="false"
+                android:text="@string/SheetMusicCheck"
+                android:textSize="12dp" >
+            </CheckBox>
+
+            <CheckBox
+                android:id="@+id/learningTracksCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:button="@drawable/ic_yesnocheck"
+                android:clickable="false"
+                android:focusable="false"
+                android:text="@string/LearningTracks"
+                android:textSize="12dp" >
+            </CheckBox>
+        </LinearLayout>
+    </LinearLayout>
+
 </LinearLayout>

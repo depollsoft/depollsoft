@@ -11,54 +11,46 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-public class LoadMoreItemsView extends LinearLayout
-{
+public class LoadMoreItemsView extends LinearLayout {
 
-   public LoadMoreItemsView(Context context)
-   {
-      super(context);
-      this.init();
-   }
+  public LoadMoreItemsView(Context context) {
+    super(context);
+    this.init();
+  }
 
-   public LoadMoreItemsView(Context context, AttributeSet attrs)
-   {
-      super(context, attrs);
-      this.init();
-   }
+  public LoadMoreItemsView(Context context, AttributeSet attrs) {
+    super(context, attrs);
+    this.init();
+  }
 
-   private void init()
-   {
-      LayoutInflater inflater = (LayoutInflater) this.getContext()
-            .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-      inflater.inflate(R.layout.loadmoreitemview, this, true);
+  private void init() {
+    LayoutInflater inflater = (LayoutInflater) this.getContext()
+        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    inflater.inflate(R.layout.loadmoreitemview, this, true);
 
-      Button b = (Button) this.findViewById(R.id.loadMoreItemsButton);
-      b.setOnClickListener(new OnClickListener()
-      {
+    Button b = (Button) this.findViewById(R.id.loadMoreItemsButton);
+    b.setOnClickListener(new OnClickListener() {
 
-         public void onClick(View v)
-         {
-            QueryModel qm = (QueryModel) (new ReflectedProperty(
-                  LoadMoreItemsView.this, "Context.Model").getValue());
-            qm.fetchResults(new ThreadSwitchContext(LoadMoreItemsView.this));
-         }
-      });
-   }
+      public void onClick(View v) {
+        QueryModel qm = (QueryModel) (new ReflectedProperty(
+            LoadMoreItemsView.this, "Context.Model").getValue());
+        qm.fetchResults(new ThreadSwitchContext(LoadMoreItemsView.this));
+      }
+    });
+  }
 
-   @Override
-   protected void onAttachedToWindow()
-   {
-      super.onAttachedToWindow();
-      UiBinder.bind(this, R.id.loadMoreItemsLayout, "Visibility",
-            "Context.Model.HasMoreResults", BoolConverter.get());
-      UiBinder.bind(this, R.id.loadMoreItemsButton, "Enabled",
-            "Context.Model.IsLoading", BoolConverter.get(true));
-   }
+  @Override
+  protected void onAttachedToWindow() {
+    super.onAttachedToWindow();
+    UiBinder.bind(this, R.id.loadMoreItemsLayout, "Visibility",
+        "Context.Model.HasMoreResults", BoolConverter.get());
+    UiBinder.bind(this, R.id.loadMoreItemsButton, "Enabled",
+        "Context.Model.IsLoading", BoolConverter.get(true));
+  }
 
-   @Override
-   protected void onDetachedFromWindow()
-   {
-      super.onDetachedFromWindow();
-      UiBinder.unbind(this);
-   }
+  @Override
+  protected void onDetachedFromWindow() {
+    super.onDetachedFromWindow();
+    UiBinder.unbind(this);
+  }
 }

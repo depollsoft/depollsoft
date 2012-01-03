@@ -1,6 +1,5 @@
 package depollsoft.lib.util;
 
-public interface Function<T>
-{
-   T evaluate();
+public interface Function<T> {
+  T evaluate();
 }

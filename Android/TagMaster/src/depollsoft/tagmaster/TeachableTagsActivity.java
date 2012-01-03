@@ -15,63 +15,52 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-public class TeachableTagsActivity extends Activity
-{
+public class TeachableTagsActivity extends Activity {
 
-   public TeachableTagsActivity()
-   {
-   }
+  public TeachableTagsActivity() {
+  }
 
-   public ObservableCollection<Integer> getTeachableTags()
-   {
-      return TeachableTagsModel.getTeachableTagIds();
-   }
+  public ObservableCollection<Integer> getTeachableTags() {
+    return TeachableTagsModel.getTeachableTagIds();
+  }
 
-   @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
-      super.onCreate(savedInstanceState);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-      this.setContentView(R.layout.teachabletagsview);
+    this.setContentView(R.layout.teachabletagsview);
 
-      UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter",
-            "TeachableTags", new AdapterConverter(TeachableTagItemView.class,
-                  false, true));
-      UiBinder.registerBinding(
-            this,
-            new Binding(new ReflectedProperty(this
-                  .findViewById(R.id.noTeachableTagsTextView), "Visibility"),
-                  new Property<Boolean>(new Function<Boolean>()
-                  {
-                     public Boolean evaluate()
-                     {
-                        return TeachableTagsActivity.this.getTeachableTags()
-                              .size() == 0;
-                     }
-                  }, null, Boolean.class), BindingMode.OneWay, BoolConverter
-                        .get()).bind(this));
-   }
+    UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter",
+        "TeachableTags", new AdapterConverter(TeachableTagItemView.class,
+            false, true));
+    UiBinder.registerBinding(
+        this,
+        new Binding(new ReflectedProperty(this
+            .findViewById(R.id.noTeachableTagsTextView), "Visibility"),
+            new Property<Boolean>(new Function<Boolean>() {
+              public Boolean evaluate() {
+                return TeachableTagsActivity.this.getTeachableTags().size() == 0;
+              }
+            }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get())
+            .bind(this));
+  }
 
-   @Override
-   protected void onDestroy()
-   {
-      UiBinder.unbind(this);
-      super.onDestroy();
-   }
+  @Override
+  protected void onDestroy() {
+    UiBinder.unbind(this);
+    super.onDestroy();
+  }
 
-   @Override
-   protected void onResume()
-   {
-      super.onResume();
-      GoogleAnalyticsTracker.getInstance().trackPageView(
-            "TeachableTagsActivity");
-   }
+  @Override
+  protected void onResume() {
+    super.onResume();
+    GoogleAnalyticsTracker.getInstance().trackPageView("TeachableTagsActivity");
+  }
 
-   @Override
-   public boolean onSearchRequested()
-   {
-      Intent i = new Intent(this, TagSearchActivity.class);
-      this.startActivity(i);
-      return true;
-   }
+  @Override
+  public boolean onSearchRequested() {
+    Intent i = new Intent(this, TagSearchActivity.class);
+    this.startActivity(i);
+    return true;
+  }
 }

@@ -1,18 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:layout_height="fill_parent"
-	android:orientation="vertical">
-	<TextView android:layout_height="wrap_content"
-		android:layout_width="fill_parent" android:text="@string/Search"
-		android:id="@+id/searchButton" android:textSize="24dp"
-		android:textStyle="bold" android:layout_marginLeft="20dp"></TextView>
-	<TextView android:textSize="24dp" android:layout_height="wrap_content" android:id="@+id/browseButton" android:layout_width="fill_parent" android:text="@string/BrowseTags" android:textStyle="bold" android:layout_marginLeft="20dp"></TextView>
-	<TextView android:layout_height="wrap_content" android:layout_width="fill_parent" android:textStyle="bold" android:textSize="24dp" android:layout_marginLeft="20dp" android:text="@string/TeachableTags" android:id="@+id/teachableButton"></TextView>
-	<TextView android:text="@string/RandomTag"
-		android:layout_height="wrap_content" android:layout_width="fill_parent"
-		android:id="@+id/randomTagButton" android:textSize="24dp"
-		android:textStyle="bold" android:layout_marginBottom="15dp" android:layout_marginLeft="20dp"></TextView>
-	<TextView android:textSize="24dp" android:layout_height="wrap_content"
-		android:id="@+id/textView1" android:layout_width="wrap_content"
-		android:text="@string/Favorites" android:longClickable="false" android:clickable="false" android:textStyle="bold" android:layout_marginBottom="15dp" android:layout_marginLeft="20dp"></TextView>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/searchButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="@string/Search"
+        android:textSize="24dp"
+        android:textStyle="bold" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/browseButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="@string/BrowseTags"
+        android:textSize="24dp"
+        android:textStyle="bold" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/teachableButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="@string/TeachableTags"
+        android:textSize="24dp"
+        android:textStyle="bold" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/randomTagButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="20dp"
+        android:text="@string/RandomTag"
+        android:textSize="24dp"
+        android:textStyle="bold" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="20dp"
+        android:clickable="false"
+        android:longClickable="false"
+        android:text="@string/Favorites"
+        android:textSize="24dp"
+        android:textStyle="bold" >
+    </TextView>
+
 </LinearLayout>

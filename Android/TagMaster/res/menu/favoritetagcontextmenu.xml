@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-	<item android:title="@string/RemoveFromFavorites" android:id="@+id/removeFavoriteMenuItem"></item>
-	<item android:title="@string/MoveUp" android:id="@+id/moveUpMenuItem"></item>
-	<item android:title="@string/MoveDown" android:id="@+id/moveDownMenuItem"></item>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/removeFavoriteMenuItem"
+        android:title="@string/RemoveFromFavorites">
+    </item>
+
+    <item
+        android:id="@+id/moveUpMenuItem"
+        android:title="@string/MoveUp">
+    </item>
+
+    <item
+        android:id="@+id/moveDownMenuItem"
+        android:title="@string/MoveDown">
+    </item>
+
 </menu>

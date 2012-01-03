@@ -1,26 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TabHost
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:id="@android:id/tabhost"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
-	<LinearLayout android:orientation="vertical"
-		android:layout_width="fill_parent" android:layout_height="fill_parent"
-		android:padding="5dp">
-		<TabWidget android:id="@android:id/tabs"
-			android:layout_width="fill_parent" android:layout_height="wrap_content" />
-	<LinearLayout android:layout_width="fill_parent"
-		android:id="@+id/linearLayout1" android:layout_height="fill_parent"
-		android:orientation="vertical" android:layout_weight="1">
-	<FrameLayout android:id="@+id/frameLayout1"
-		android:layout_width="fill_parent" android:layout_weight="1" android:layout_height="fill_parent">
-		<ImageView android:id="@+id/imageView1" android:src="@drawable/screenbackground" android:scaleType="centerInside" android:layout_height="fill_parent" android:layout_width="fill_parent"></ImageView>
-	<FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:id="@+id/tabContentHolder">
-		<FrameLayout android:layout_width="fill_parent" android:id="@android:id/tabcontent"
-		android:layout_height="fill_parent">
-		</FrameLayout>
-	</FrameLayout>
-	</FrameLayout>
-	</LinearLayout>
-	</LinearLayout>
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:padding="5dp" >
+
+        <TabWidget
+            android:id="@android:id/tabs"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <FrameLayout
+                android:id="@+id/frameLayout1"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1" >
+
+                <ImageView
+                    android:id="@+id/imageView1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/screenbackground" >
+                </ImageView>
+
+                <FrameLayout
+                    android:id="@+id/tabContentHolder"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" >
+
+                    <FrameLayout
+                        android:id="@android:id/tabcontent"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+                    </FrameLayout>
+                </FrameLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
 </TabHost>

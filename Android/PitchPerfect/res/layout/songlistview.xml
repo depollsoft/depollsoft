@@ -1,12 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent" android:orientation="vertical">
-    <LinearLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/linearLayout1">
-        <Button android:text="@string/AddSong" android:id="@+id/addSongButton" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="1"></Button>
-        <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/EditSongList" android:id="@+id/editSongsButton" android:visibility="gone"></Button>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/addSongButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/AddSong" >
+        </Button>
+
+        <Button
+            android:id="@+id/editSongsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/EditSongList"
+            android:visibility="gone" >
+        </Button>
     </LinearLayout>
-    <TextView android:layout_width="wrap_content" android:id="@+id/sorryText" android:layout_height="wrap_content" android:text="@string/NoSongsInList"></TextView>
-    <ListView android:layout_width="fill_parent" android:layout_height="fill_parent" android:id="@+id/songListView" android:cacheColorHint="#00000000"></ListView>
+
+    <TextView
+        android:id="@+id/sorryText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/NoSongsInList" >
+    </TextView>
+
+    <ListView
+        android:id="@+id/songListView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:cacheColorHint="#00000000" >
+    </ListView>
+
 </LinearLayout>

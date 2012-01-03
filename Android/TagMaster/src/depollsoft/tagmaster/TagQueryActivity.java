@@ -15,131 +15,110 @@ import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.json.JsonSerializer;
 import depollsoft.lib.ui.ThreadSwitchContext;
 
-public class TagQueryActivity extends Activity
-{
+public class TagQueryActivity extends Activity {
 
-   private TrackableField<QueryModel> model = new TrackableField<QueryModel>();
-   public static final String QUERY_MODEL = "QueryModel";
+  private TrackableField<QueryModel> model = new TrackableField<QueryModel>();
+  public static final String QUERY_MODEL = "QueryModel";
 
-   private TrackableField<Boolean> handleSearchButton = new TrackableField<Boolean>(
-         true);
+  private TrackableField<Boolean> handleSearchButton = new TrackableField<Boolean>(
+      true);
 
-   public TagQueryActivity()
-   {
-   }
+  public TagQueryActivity() {
+  }
 
-   public boolean getHandleSearchButton()
-   {
-      return this.handleSearchButton.getValue();
-   }
+  public boolean getHandleSearchButton() {
+    return this.handleSearchButton.getValue();
+  }
 
-   public QueryModel getModel()
-   {
-      return this.model.getValue();
-   }
+  public QueryModel getModel() {
+    return this.model.getValue();
+  }
 
-   @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
-      super.onCreate(savedInstanceState);
-      this.setContentView(R.layout.tagqueryview);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.setContentView(R.layout.tagqueryview);
 
-      try
-      {
-         ((ListView) this.findViewById(R.id.queryResultListView))
-               .setOnScrollListener(new OnScrollListener()
-               {
+    try {
+      ((ListView) this.findViewById(R.id.queryResultListView))
+          .setOnScrollListener(new OnScrollListener() {
 
-                  public void onScroll(AbsListView view, int firstVisibleItem,
-                        int visibleItemCount, int totalItemCount)
-                  {
-                     if (TagQueryActivity.this.getModel() != null
-                           && Math.abs(totalItemCount
-                                 - (firstVisibleItem + visibleItemCount)) < 2)
-                     {
-                        TagQueryActivity.this.getModel().fetchResults(
-                              new ThreadSwitchContext(TagQueryActivity.this));
-                     }
-                  }
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                int visibleItemCount, int totalItemCount) {
+              if (TagQueryActivity.this.getModel() != null
+                  && Math.abs(totalItemCount
+                      - (firstVisibleItem + visibleItemCount)) < 2) {
+                TagQueryActivity.this.getModel().fetchResults(
+                    new ThreadSwitchContext(TagQueryActivity.this));
+              }
+            }
 
-                  public void onScrollStateChanged(AbsListView view,
-                        int scrollState)
-                  {
-                  }
-               });
-      }
-      catch (Exception e)
-      {
-         e.printStackTrace();
-      }
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+          });
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
 
-      UiBinder.bind(this, R.id.queryResultListView, "Adapter", "Model.Tags",
-            new AdapterConverter(TagItemView.class));
+    UiBinder.bind(this, R.id.queryResultListView, "Adapter", "Model.Tags",
+        new AdapterConverter(TagItemView.class));
 
-      UiBinder.bind(this, R.id.loadingProgressBar, "Visibility",
-            "Model.IsLoading", BoolConverter.get());
-      UiBinder.bind(this, R.id.loadingProgressBar, "Indeterminate",
-            "Model.IsLoading", BoolConverter.get());
+    UiBinder.bind(this, R.id.loadingProgressBar, "Visibility",
+        "Model.IsLoading", BoolConverter.get());
+    UiBinder.bind(this, R.id.loadingProgressBar, "Indeterminate",
+        "Model.IsLoading", BoolConverter.get());
 
-      UiBinder.bind(this, R.id.statusTextView, "Text", "Model.StatusText");
-      UiBinder.bind(this, R.id.statusTextView, "Visibility",
-            "Model.StatusText", BoolConverter.get());
+    UiBinder.bind(this, R.id.statusTextView, "Text", "Model.StatusText");
+    UiBinder.bind(this, R.id.statusTextView, "Visibility", "Model.StatusText",
+        BoolConverter.get());
 
+    this.refresh();
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    this.getMenuInflater().inflate(R.menu.mainmenu, menu);
+    return true;
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    UiBinder.unbind(this);
+  }
+
+  @Override
+  public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    if (item.getItemId() == R.id.refreshMenuItem) {
       this.refresh();
-   }
+    }
+    else if (item.getItemId() == R.id.searchMenuItem) {
+      this.onSearchRequested();
+    }
+    return super.onMenuItemSelected(featureId, item);
+  }
 
-   @Override
-   public boolean onCreateOptionsMenu(Menu menu)
-   {
-      this.getMenuInflater().inflate(R.menu.mainmenu, menu);
-      return true;
-   }
+  @Override
+  public boolean onSearchRequested() {
+    Intent i = new Intent(this, TagSearchActivity.class);
+    this.startActivity(i);
+    return !this.getHandleSearchButton();
+  }
 
-   @Override
-   protected void onDestroy()
-   {
-      super.onDestroy();
-      UiBinder.unbind(this);
-   }
+  public void refresh() {
+    String modelString = this.getIntent().getExtras()
+        .getString(TagQueryActivity.QUERY_MODEL);
+    this.setModel((QueryModel) JsonSerializer.deserialize(modelString));
+    this.getModel().fetchResults(new ThreadSwitchContext(this));
+  }
 
-   @Override
-   public boolean onMenuItemSelected(int featureId, MenuItem item)
-   {
-      if (item.getItemId() == R.id.refreshMenuItem)
-      {
-         this.refresh();
-      }
-      else if (item.getItemId() == R.id.searchMenuItem)
-      {
-         this.onSearchRequested();
-      }
-      return super.onMenuItemSelected(featureId, item);
-   }
+  public void setHandleSearchButton(boolean value) {
+    this.handleSearchButton.setValue(value);
+  }
 
-   @Override
-   public boolean onSearchRequested()
-   {
-      Intent i = new Intent(this, TagSearchActivity.class);
-      this.startActivity(i);
-      return !this.getHandleSearchButton();
-   }
-
-   public void refresh()
-   {
-      String modelString = this.getIntent().getExtras()
-            .getString(TagQueryActivity.QUERY_MODEL);
-      this.setModel((QueryModel) JsonSerializer.deserialize(modelString));
-      this.getModel().fetchResults(new ThreadSwitchContext(this));
-   }
-
-   public void setHandleSearchButton(boolean value)
-   {
-      this.handleSearchButton.setValue(value);
-   }
-
-   public void setModel(QueryModel value)
-   {
-      this.model.setValue(value);
-   }
+  public void setModel(QueryModel value) {
+    this.model.setValue(value);
+  }
 
 }

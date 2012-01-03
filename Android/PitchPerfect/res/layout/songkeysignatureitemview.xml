@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:layout_height="fill_parent">
-	<TextView android:layout_weight="1" android:layout_width="wrap_content"
-		android:id="@+id/keySignatureTextView" android:layout_height="wrap_content"
-		android:textSize="20dp" android:layout_marginLeft="8dp"
-		style="?android:attr/spinnerDropDownItemStyle"></TextView>
-	<TextView android:layout_width="wrap_content" android:id="@+id/keyNameTextView"
-		android:layout_height="wrap_content" android:textSize="20dp"
-		style="?android:attr/spinnerDropDownItemStyle"
-		android:layout_marginRight="8dp"></TextView>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/keySignatureTextView"
+        style="?android:attr/spinnerDropDownItemStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="1"
+        android:textSize="20dp" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/keyNameTextView"
+        style="?android:attr/spinnerDropDownItemStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:textSize="20dp" >
+    </TextView>
+
 </LinearLayout>

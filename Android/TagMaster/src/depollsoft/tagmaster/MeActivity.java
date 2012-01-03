@@ -12,68 +12,58 @@ import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.ui.AdapterConverter;
 import depollsoft.lib.binding.ui.UiBinder;
 
-public class MeActivity extends Activity
-{
-   public MeActivity()
-   {
-   }
+public class MeActivity extends Activity {
+  public MeActivity() {
+  }
 
-   public ObservableCollection<Integer> getFavoriteIds()
-   {
-      return FavoritesModel.getFavoriteIds();
-   }
+  public ObservableCollection<Integer> getFavoriteIds() {
+    return FavoritesModel.getFavoriteIds();
+  }
 
-   @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
-      super.onCreate(savedInstanceState);
-      this.setContentView(R.layout.meview);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.setContentView(R.layout.meview);
 
-      UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds",
-            new AdapterConverter(FavoriteTagItemView.class, false, true));
-   }
+    UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds",
+        new AdapterConverter(FavoriteTagItemView.class, false, true));
+  }
 
-   @Override
-   public boolean onCreateOptionsMenu(Menu menu)
-   {
-      this.getMenuInflater().inflate(R.menu.memenu, menu);
-      return true;
-   }
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    this.getMenuInflater().inflate(R.menu.memenu, menu);
+    return true;
+  }
 
-   @Override
-   protected void onDestroy()
-   {
-      super.onDestroy();
-      UiBinder.unbind(this);
-   }
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    UiBinder.unbind(this);
+  }
 
-   @Override
-   public boolean onOptionsItemSelected(MenuItem item)
-   {
-      if (item.getItemId() == R.id.settingsMenuItem)
-      {
-         Intent i = new Intent(this, SettingsActivity.class);
-         this.startActivity(i);
-         return true;
-      }
-      return super.onOptionsItemSelected(item);
-   }
-
-   @Override
-   protected void onResume()
-   {
-      super.onResume();
-      GoogleAnalyticsTracker.getInstance().setCustomVar(2, "NumFavorites",
-            "" + FavoritesModel.getFavoriteIds().size(), 1);
-      GoogleAnalyticsTracker.getInstance().trackPageView("MeActivity");
-   }
-
-   @Override
-   public boolean onSearchRequested()
-   {
-      Intent i = new Intent(this, TagSearchActivity.class);
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == R.id.settingsMenuItem) {
+      Intent i = new Intent(this, SettingsActivity.class);
       this.startActivity(i);
       return true;
-   }
+    }
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    GoogleAnalyticsTracker.getInstance().setCustomVar(2, "NumFavorites",
+        "" + FavoritesModel.getFavoriteIds().size(), 1);
+    GoogleAnalyticsTracker.getInstance().trackPageView("MeActivity");
+  }
+
+  @Override
+  public boolean onSearchRequested() {
+    Intent i = new Intent(this, TagSearchActivity.class);
+    this.startActivity(i);
+    return true;
+  }
 
 }

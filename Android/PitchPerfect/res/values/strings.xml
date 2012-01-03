@@ -30,5 +30,8 @@
     <string name="TermsOfUse">Terms of Use</string>
     <string name="SortAll">Sort all songs by title</string>
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
+    <string name="LogIn">Log in</string>
+    <string name="LogOut">Log out</string>
+    <string name="LogInInfo">Log in using Facebook to back up and synchronize your song list.</string>
 
 </resources>

@@ -1,73 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="depollsoft.tagmaster" android:versionName="@string/VersionNumber"
-	xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="23">
-	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
-	<supports-screens android:smallScreens="true"
-		android:normalScreens="true" android:largeScreens="true"
-		android:anyDensity="true" />
-	<uses-sdk android:minSdkVersion="4"></uses-sdk>
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="depollsoft.tagmaster"
+    android:versionCode="24"
+    android:versionName="@string/VersionNumber" >
 
-	<application android:icon="@drawable/icon" android:label="@string/app_name"
-		android:name="TagMasterApplication">
-		<!-- Used for install referrer tracking -->
-		<receiver android:name="com.google.android.apps.analytics.AnalyticsReceiver"
-			android:exported="true">
-			<intent-filter>
-				<action android:name="com.android.vending.INSTALL_REFERRER" />
-			</intent-filter>
-		</receiver>
-		<activity android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation" android:name=".TagBrowser">
-		</activity>
-		<activity android:name=".TagDetailActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation">
-		</activity>
-		<activity android:name=".TagSummaryActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:name=".TagMiscActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:name=".TagVideosActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:name=".TagTracksActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:name=".TagQueryActivity" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:name=".TagSearchActivity"
-			android:configChanges="keyboardHidden|orientation">
-		</activity>
-		<activity android:name=".TagSearchResultsActivity"
-			android:label="@string/app_name" android:icon="@drawable/icon"
-			android:configChanges="keyboardHidden|orientation"></activity>
-		<activity android:icon="@drawable/icon" android:label="@string/app_name"
-			android:configChanges="keyboardHidden|orientation" android:name=".TagMasterBrowserActivity"></activity>
-		<provider android:name="depollsoft.lib.util.ContentCacheFileProvider"
-			android:authorities="depollsoft.tagmaster"></provider>
-		<activity android:configChanges="keyboardHidden|orientation"
-			android:label="@string/app_name" android:icon="@drawable/icon"
-			android:name=".MeActivity">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-		<activity android:icon="@drawable/icon" android:label="@string/app_name"
-			android:name=".UrlHandlerActivity" android:configChanges="keyboardHidden|orientation">
-			<intent-filter android:icon="@drawable/icon"
-				android:label="@string/app_name">
-				<action android:name="android.intent.action.VIEW"></action>
-				<category android:name="android.intent.category.DEFAULT"></category>
-				<category android:name="android.intent.category.BROWSABLE"></category>
-				<data android:pathPrefix="/dbpage.php" android:scheme="http"
-					android:host="www.barbershoptags.com"></data>
-				<data android:pathPrefix="/dbpage.php" android:scheme="http"
-					android:host="barbershoptags.com"></data>
-			</intent-filter>
-		</activity>
-		<activity android:configChanges="keyboardHidden|orientation"
-			android:name=".SettingsActivity" android:label="@string/app_name"></activity>
-		<activity android:icon="@drawable/icon"
-			android:configChanges="keyboardHidden|orientation" android:name=".TeachableTagsActivity"
-			android:label="@string/app_name"></activity>
-	</application>
+    <uses-permission android:name="android.permission.INTERNET" >
+    </uses-permission>
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true" />
+
+    <uses-sdk android:minSdkVersion="4" >
+    </uses-sdk>
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" >
+    </uses-permission>
+
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:name="TagMasterApplication" >
+
+        <!-- Used for install referrer tracking -->
+        <receiver
+            android:exported="true"
+            android:name="com.google.android.apps.analytics.AnalyticsReceiver" >
+            <intent-filter >
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagBrowser" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagDetailActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagSummaryActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagMiscActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagVideosActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagTracksActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".TagQueryActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:name=".TagSearchActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:icon="@drawable/icon"
+            android:label="@string/app_name"
+            android:name=".TagSearchResultsActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:icon="@drawable/icon"
+            android:label="@string/app_name"
+            android:name=".TagMasterBrowserActivity" >
+        </activity>
+
+        <provider
+            android:authorities="depollsoft.tagmaster"
+            android:name="depollsoft.lib.util.ContentCacheFileProvider" >
+        </provider>
+
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:icon="@drawable/icon"
+            android:label="@string/app_name"
+            android:name=".MeActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:icon="@drawable/icon"
+            android:label="@string/app_name"
+            android:name=".UrlHandlerActivity" >
+            <intent-filter
+                android:icon="@drawable/icon"
+                android:label="@string/app_name" >
+                <action android:name="android.intent.action.VIEW" >
+                </action>
+
+                <category android:name="android.intent.category.DEFAULT" >
+                </category>
+                <category android:name="android.intent.category.BROWSABLE" >
+                </category>
+
+                <data
+                    android:host="www.barbershoptags.com"
+                    android:pathPrefix="/dbpage.php"
+                    android:scheme="http" >
+                </data>
+                <data
+                    android:host="barbershoptags.com"
+                    android:pathPrefix="/dbpage.php"
+                    android:scheme="http" >
+                </data>
+            </intent-filter>
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:name=".SettingsActivity" >
+        </activity>
+        <activity
+            android:configChanges="keyboardHidden|orientation"
+            android:icon="@drawable/icon"
+            android:label="@string/app_name"
+            android:name=".TeachableTagsActivity" >
+        </activity>
+    </application>
+
 </manifest>

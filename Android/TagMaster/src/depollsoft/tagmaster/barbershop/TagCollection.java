@@ -1,6 +1,5 @@
 package depollsoft.tagmaster.barbershop;
 
-public enum TagCollection
-{
-   ClassicTags, EasyTags
+public enum TagCollection {
+  ClassicTags, EasyTags
 }

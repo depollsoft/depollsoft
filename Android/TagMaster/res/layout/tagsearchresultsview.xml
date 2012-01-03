@@ -1,10 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:layout_height="fill_parent"
-	android:orientation="vertical">
-    <ImageView android:layout_height="fill_parent" android:layout_width="fill_parent" android:src="@drawable/screenbackground" android:scaleType="centerInside" android:id="@+id/imageView1"></ImageView>
-    <LinearLayout android:id="@+id/linearLayout1" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
-        <TextView android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_marginBottom="8dp" android:id="@+id/queryTitleTextView" android:text="TextView" android:textStyle="bold" android:textSize="30dp"></TextView>
-        <FrameLayout android:layout_height="wrap_content" android:layout_width="fill_parent" android:id="@+id/contentFrame" android:layout_weight="1"></FrameLayout>
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="centerInside"
+        android:src="@drawable/screenbackground" >
+    </ImageView>
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/queryTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="TextView"
+            android:textSize="30dp"
+            android:textStyle="bold" >
+        </TextView>
+
+        <FrameLayout
+            android:id="@+id/contentFrame"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+        </FrameLayout>
     </LinearLayout>
+
 </FrameLayout>

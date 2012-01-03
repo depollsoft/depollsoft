@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
-    <TextView android:layout_width="wrap_content" android:id="@+id/noteNameTextView" android:layout_marginBottom="8dp" android:layout_weight="1" android:layout_marginTop="8dp" android:textSize="20dp" android:layout_height="wrap_content" android:layout_marginLeft="8dp"></TextView>
-    <TextView android:layout_width="wrap_content" android:id="@+id/noteFrequencyTextView" android:layout_marginBottom="8dp" android:layout_marginTop="8dp" android:textSize="20dp" android:layout_height="wrap_content" android:layout_marginRight="8dp"></TextView>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/noteNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:textSize="20dp" >
+    </TextView>
+
+    <TextView
+        android:id="@+id/noteFrequencyTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:textSize="20dp" >
+    </TextView>
+
 </LinearLayout>

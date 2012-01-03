@@ -1,25 +1,21 @@
 package depollsoft.lib.binding;
 
-public class ValueConverter
-{
-   private static final ValueConverter defaultConverter;
+public class ValueConverter {
+  private static final ValueConverter defaultConverter;
 
-   static
-   {
-      defaultConverter = new ValueConverter();
-   }
+  static {
+    defaultConverter = new ValueConverter();
+  }
 
-   public static ValueConverter getDefaultConverter()
-   {
-      return ValueConverter.defaultConverter;
-   }
-   public Object convertToSource(Object targetValue, Class<?> sourceType)
-   {
-      return targetValue;
-   }
+  public static ValueConverter getDefaultConverter() {
+    return ValueConverter.defaultConverter;
+  }
 
-   public Object convertToTarget(Object sourceValue, Class<?> targetType)
-   {
-      return sourceValue;
-   }
+  public Object convertToSource(Object targetValue, Class<?> sourceType) {
+    return targetValue;
+  }
+
+  public Object convertToTarget(Object sourceValue, Class<?> targetType) {
+    return sourceValue;
+  }
 }
