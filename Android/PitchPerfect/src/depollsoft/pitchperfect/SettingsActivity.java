@@ -1,19 +1,22 @@
 package depollsoft.pitchperfect;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.CheckBoxCheckedProperty;
-import depollsoft.lib.binding.ui.UiBinder;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Toast;
+import android.view.Window;
 import android.widget.CheckBox;
+import android.widget.Toast;
+
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.binding.BindingMode;
+import depollsoft.lib.binding.ui.BoolConverter;
+import depollsoft.lib.binding.ui.CheckBoxCheckedProperty;
+import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
 
 public class SettingsActivity extends Activity {
 
@@ -37,6 +40,11 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    if (!ActionBars.hasActionBar(this)) {
+      requestWindowFeature(Window.FEATURE_NO_TITLE);
+    }
+
     this.setContentView(R.layout.settingsview);
 
     UiBinder.bind(

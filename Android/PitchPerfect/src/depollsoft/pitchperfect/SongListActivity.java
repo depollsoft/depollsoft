@@ -6,12 +6,18 @@ import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.ui.AdapterConverter;
 import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.PitchedSong;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
@@ -20,6 +26,8 @@ public class SongListActivity extends Activity {
   private TrackableField<SongsModel> model = new TrackableField<SongsModel>();
 
   private TrackableField<Boolean> editing = new TrackableField<Boolean>(true);
+
+  private boolean preparingMenu;
 
   public SongListActivity() {
     this.setModel(SongsModel.get());
@@ -55,6 +63,9 @@ public class SongListActivity extends Activity {
         SongListActivity.this.startActivity(i);
       }
     });
+    if (ActionBars.hasActionBar(this)) {
+      addButton.setVisibility(View.GONE);
+    }
 
     View editButton = this.findViewById(R.id.editSongsButton);
     editButton.setOnClickListener(new OnClickListener() {
@@ -63,6 +74,50 @@ public class SongListActivity extends Activity {
         SongListActivity.this.setEditing(!SongListActivity.this.getEditing());
       }
     });
+  }
+
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    if (preparingMenu) {
+      return true;
+    }
+    preparingMenu = true;
+    try {
+      super.onPrepareOptionsMenu(menu);
+      MenuInflater mi = new MenuInflater(this);
+      mi.inflate(R.menu.songsmenu, menu);
+
+      MenuItems.setShowAsAction(menu.findItem(R.id.sortMenuItem),
+          MenuItems.SHOW_AS_ACTION_IF_ROOM);
+      menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener(
+          new OnMenuItemClickListener() {
+
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+              SongsModel.get().sortSongs();
+              return true;
+            }
+          });
+
+      MenuItems.setShowAsAction(menu.findItem(R.id.addSongMenuItem),
+          MenuItems.SHOW_AS_ACTION_IF_ROOM);
+      menu.findItem(R.id.addSongMenuItem).setOnMenuItemClickListener(
+          new OnMenuItemClickListener() {
+
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+              Intent i = new Intent(SongListActivity.this,
+                  AddSongActivity.class);
+              SongListActivity.this.startActivity(i);
+              return true;
+            }
+          });
+
+      return true;
+    }
+    finally {
+      preparingMenu = false;
+    }
   }
 
   @Override

@@ -99,6 +99,7 @@
                 </LinearLayout> -->
 
                 <include layout="@layout/aboutfooter" />
+
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

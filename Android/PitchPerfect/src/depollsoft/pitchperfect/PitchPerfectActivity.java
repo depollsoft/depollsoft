@@ -14,14 +14,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
+import android.view.Window;
+import android.widget.TabHost.OnTabChangeListener;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.Activities;
+import depollsoft.lib.compat.ui.CompatTabHostWrapper;
 
 public class PitchPerfectActivity extends TabActivity {
   private WakeLock wakeLock;
+  private CompatTabHostWrapper tabHost;
+  private boolean preparingMenu;
 
   public boolean getAdsShouldShow() {
     return !SettingsModel.getLicensed();
@@ -29,7 +36,6 @@ public class PitchPerfectActivity extends TabActivity {
 
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
-    // TODO Auto-generated method stub
     super.onConfigurationChanged(newConfig);
     View title = this.findViewById(R.id.titleLayout);
     switch (newConfig.orientation) {
@@ -39,7 +45,12 @@ public class PitchPerfectActivity extends TabActivity {
       break;
     case Configuration.ORIENTATION_PORTRAIT:
     case Configuration.ORIENTATION_UNDEFINED:
-      title.setVisibility(View.VISIBLE);
+      if (!ActionBars.hasActionBar(this)) {
+        title.setVisibility(View.VISIBLE);
+      }
+      else {
+        title.setVisibility(View.GONE);
+      }
       break;
     }
   }
@@ -48,64 +59,94 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    
+    if (!ActionBars.hasActionBar(this)) {
+      requestWindowFeature(Window.FEATURE_NO_TITLE);
+    }
 
     this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
     this.setContentView(R.layout.pitchperfectview);
 
+    tabHost = new CompatTabHostWrapper(this, getTabHost());
+
     UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow",
         BoolConverter.get());
 
-    this.getTabHost().addTab(
-        this.getTabHost()
-            .newTabSpec("PitchPipe")
-            .setIndicator("Quick Pitch",
-                this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
-            .setContent(new Intent(this, PitchPipeActivity.class)));
+    tabHost.addTab(tabHost
+        .newTabSpec("PitchPipe")
+        .setIndicator("Quick Pitch",
+            this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
+        .setContent(new Intent(this, PitchPipeActivity.class)));
 
-    this.getTabHost().addTab(
-        this.getTabHost()
-            .newTabSpec("NoteList")
-            .setIndicator("Notes",
-                this.getResources().getDrawable(R.drawable.ic_tab_octaves))
-            .setContent(new Intent(this, NoteListActivity.class)));
+    tabHost.addTab(tabHost
+        .newTabSpec("NoteList")
+        .setIndicator("Notes",
+            this.getResources().getDrawable(R.drawable.ic_tab_octaves))
+        .setContent(new Intent(this, NoteListActivity.class)));
 
-    this.getTabHost().addTab(
-        this.getTabHost()
-            .newTabSpec("KeySignatures")
-            .setIndicator("Keys",
-                this.getResources().getDrawable(R.drawable.ic_tab_keys))
-            .setContent(new Intent(this, KeySignatureActivity.class)));
+    tabHost.addTab(tabHost
+        .newTabSpec("KeySignatures")
+        .setIndicator("Keys",
+            this.getResources().getDrawable(R.drawable.ic_tab_keys))
+        .setContent(new Intent(this, KeySignatureActivity.class)));
 
-    this.getTabHost().addTab(
-        this.getTabHost()
-            .newTabSpec("Songs")
-            .setIndicator("Songs",
-                this.getResources().getDrawable(R.drawable.ic_tab_songs))
-            .setContent(new Intent(this, SongListActivity.class)));
+    tabHost.addTab(tabHost
+        .newTabSpec("Songs")
+        .setIndicator("Songs",
+            this.getResources().getDrawable(R.drawable.ic_tab_songs))
+        .setContent(new Intent(this, SongListActivity.class)));
 
     this.onConfigurationChanged(Resources.getSystem().getConfiguration());
+
+    getTabHost().setOnTabChangedListener(new OnTabChangeListener() {
+      @Override
+      public void onTabChanged(String tabId) {
+        Activities.invalidateOptionsMenu(PitchPerfectActivity.this);
+      }
+    });
 
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater mi = new MenuInflater(this);
-    mi.inflate(R.menu.mainmenu, menu);
+  protected void onRestoreInstanceState(Bundle state) {
+    super.onRestoreInstanceState(state);
+    tabHost.restoreInstanceState("tabs", state);
+  }
 
-    menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener(
-        new OnMenuItemClickListener() {
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    tabHost.saveInstanceState("tabs", outState);
+  }
 
-          @Override
-          public boolean onMenuItemClick(MenuItem item) {
-            Intent i = new Intent(PitchPerfectActivity.this,
-                SettingsActivity.class);
-            PitchPerfectActivity.this.startActivity(i);
-            return true;
-          }
-        });
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    if (preparingMenu)
+      return false;
+    preparingMenu = true;
+    try {
+      menu.clear();
+      MenuInflater mi = new MenuInflater(this);
+      mi.inflate(R.menu.mainmenu, menu);
 
-    return super.onCreateOptionsMenu(menu);
+      menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener(
+          new OnMenuItemClickListener() {
+
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+              Intent i = new Intent(PitchPerfectActivity.this,
+                  SettingsActivity.class);
+              PitchPerfectActivity.this.startActivity(i);
+              return true;
+            }
+          });
+      getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
+      return super.onPrepareOptionsMenu(menu);
+    }
+    finally {
+      preparingMenu = false;
+    }
   }
 
   @Override

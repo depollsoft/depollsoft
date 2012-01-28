@@ -1,5 +1,19 @@
 package depollsoft.pitchperfect;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.EditText;
+import android.widget.Spinner;
+
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.BindingMode;
@@ -8,16 +22,10 @@ import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.ui.AdapterConverter;
 import depollsoft.lib.binding.ui.EditTextTextProperty;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.Key;
 import depollsoft.pitchperfect.lib.PitchedSong;
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.EditText;
-import android.widget.Spinner;
 
 public class AddSongActivity extends Activity {
   public static final String ID_EXTRA = "depollsoft.pitchperfect.AddSong.id";
@@ -44,6 +52,11 @@ public class AddSongActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    
+    if (!ActionBars.hasActionBar(this)) {
+      requestWindowFeature(Window.FEATURE_NO_TITLE);
+    }
+    
     this.setContentView(R.layout.addsongview);
 
     String id = this.getIntent().getStringExtra(AddSongActivity.ID_EXTRA);
@@ -123,6 +136,31 @@ public class AddSongActivity extends Activity {
   protected void onDestroy() {
     UiBinder.unbind(this);
     super.onDestroy();
+  }
+
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    super.onPrepareOptionsMenu(menu);
+    MenuInflater mi = new MenuInflater(this);
+    mi.inflate(R.menu.songeditmenu, menu);
+
+    MenuItems.setShowAsAction(menu.findItem(R.id.removeSongMenuItem),
+        MenuItems.SHOW_AS_ACTION_IF_ROOM);
+    menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
+        new OnMenuItemClickListener() {
+
+          @Override
+          public boolean onMenuItemClick(MenuItem item) {
+            if (AddSongActivity.this.editing) {
+              SongsModel.get().removeSong(AddSongActivity.this.toEdit);
+            }
+            AddSongActivity.this.setResult(Activity.RESULT_OK);
+            AddSongActivity.this.finish();
+            return true;
+          }
+        });
+
+    return true;
   }
 
   @Override
