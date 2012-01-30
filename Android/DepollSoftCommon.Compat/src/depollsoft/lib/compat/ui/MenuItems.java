@@ -2,6 +2,7 @@ package depollsoft.lib.compat.ui;
 
 import android.view.MenuItem;
 import depollsoft.lib.compat.Compatibility;
+import depollsoft.lib.compat.RunnableFactory;
 
 public final class MenuItems {
   public static final int SHOW_AS_ACTION_ALWAYS = 2;
@@ -14,10 +15,15 @@ public final class MenuItems {
   }
 
   public static boolean setShowAsAction(final MenuItem item, final int flags) {
-    return Compatibility.tryWithFallback(new Runnable() {
+    return Compatibility.tryWithFallback(new RunnableFactory() {
       @Override
-      public void run() {
-        item.setShowAsAction(flags);
+      public Runnable create() {
+        return new Runnable() {
+          @Override
+          public void run() {
+            item.setShowAsAction(flags);
+          }
+        };
       }
     });
   }

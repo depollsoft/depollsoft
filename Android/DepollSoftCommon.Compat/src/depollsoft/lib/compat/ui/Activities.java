@@ -1,17 +1,23 @@
 package depollsoft.lib.compat.ui;
 
-import depollsoft.lib.compat.Compatibility;
 import android.app.Activity;
+import depollsoft.lib.compat.Compatibility;
+import depollsoft.lib.compat.RunnableFactory;
 
 public final class Activities {
   private Activities() {
   }
 
   public static void invalidateOptionsMenu(final Activity activity) {
-    Compatibility.tryWithFallback(new Runnable() {
+    Compatibility.tryWithFallback(new RunnableFactory() {
       @Override
-      public void run() {
-        activity.invalidateOptionsMenu();
+      public Runnable create() {
+        return new Runnable() {
+          @Override
+          public void run() {
+            activity.invalidateOptionsMenu();
+          }
+        };
       }
     });
   }

@@ -4,9 +4,9 @@ public final class Compatibility {
   private Compatibility() {
   }
 
-  public static boolean tryWithFallback(Runnable toRun) {
+  public static boolean tryWithFallback(RunnableFactory toRun) {
     try {
-      runWithExceptions(toRun);
+      runWithExceptions(toRun.create());
       return true;
     }
     catch (NoSuchFieldError e) {
@@ -22,6 +22,8 @@ public final class Compatibility {
     catch (NoSuchMethodException e) {
     }
     catch (NullPointerException e) {
+    }
+    catch (VerifyError e) {
     }
     return false;
   }

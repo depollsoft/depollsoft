@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TabHost;
 import depollsoft.lib.compat.Compatibility;
+import depollsoft.lib.compat.RunnableFactory;
 import depollsoft.lib.util.Function;
 
 public class CompatTabHostWrapper {
@@ -23,11 +24,16 @@ public class CompatTabHostWrapper {
     this.host = host;
     hasActionBar = ActionBars.hasActionBar(activity);
 
-    if (hasActionBar && Compatibility.tryWithFallback(new Runnable() {
+    if (hasActionBar && Compatibility.tryWithFallback(new RunnableFactory() {
       @Override
-      public void run() {
-        CompatTabHostWrapper.this.activity.getActionBar().setNavigationMode(
-            ActionBar.NAVIGATION_MODE_TABS);
+      public Runnable create() {
+        return new Runnable() {
+          @Override
+          public void run() {
+            CompatTabHostWrapper.this.activity.getActionBar()
+                .setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+          }
+        };
       }
     })) {
       host.getTabWidget().setVisibility(View.GONE);
@@ -39,11 +45,16 @@ public class CompatTabHostWrapper {
 
   public void saveInstanceState(final String key, final Bundle bundle) {
     if (hasActionBar) {
-      Compatibility.tryWithFallback(new Runnable() {
+      Compatibility.tryWithFallback(new RunnableFactory() {
         @Override
-        public void run() {
-          bundle.putInt(key, activity.getActionBar().getSelectedTab()
-              .getPosition());
+        public Runnable create() {
+          return new Runnable() {
+            @Override
+            public void run() {
+              bundle.putInt(key, activity.getActionBar().getSelectedTab()
+                  .getPosition());
+            }
+          };
         }
       });
     }
@@ -54,10 +65,15 @@ public class CompatTabHostWrapper {
 
   public void restoreInstanceState(final String key, final Bundle bundle) {
     if (hasActionBar) {
-      Compatibility.tryWithFallback(new Runnable() {
+      Compatibility.tryWithFallback(new RunnableFactory() {
         @Override
-        public void run() {
-          activity.getActionBar().getTabAt(bundle.getInt(key)).select();
+        public Runnable create() {
+          return new Runnable() {
+            @Override
+            public void run() {
+              activity.getActionBar().getTabAt(bundle.getInt(key)).select();
+            }
+          };
         }
       });
     }
@@ -73,10 +89,15 @@ public class CompatTabHostWrapper {
   public void addTab(final CompatTabHostWrapper.TabSpec spec) {
     host.addTab(spec.buildTabSpec());
     if (hasActionBar) {
-      Compatibility.tryWithFallback(new Runnable() {
+      Compatibility.tryWithFallback(new RunnableFactory() {
         @Override
-        public void run() {
-          activity.getActionBar().addTab(spec.buildTab());
+        public Runnable create() {
+          return new Runnable() {
+            @Override
+            public void run() {
+              activity.getActionBar().addTab((Tab) spec.buildTab());
+            }
+          };
         }
       });
     }
@@ -85,10 +106,15 @@ public class CompatTabHostWrapper {
   public void clearAllTabs() {
     host.clearAllTabs();
     if (hasActionBar) {
-      Compatibility.tryWithFallback(new Runnable() {
+      Compatibility.tryWithFallback(new RunnableFactory() {
         @Override
-        public void run() {
-          activity.getActionBar().removeAllTabs();
+        public Runnable create() {
+          return new Runnable() {
+            @Override
+            public void run() {
+              activity.getActionBar().removeAllTabs();
+            }
+          };
         }
       });
     }
@@ -103,21 +129,26 @@ public class CompatTabHostWrapper {
     public TabSpec(String tag) {
       this.tag = tag;
 
-      Compatibility.tryWithFallback(new Runnable() {
+      Compatibility.tryWithFallback(new RunnableFactory() {
         @Override
-        public void run() {
-          setCurrentTabListener = new TabListener() {
+        public Runnable create() {
+          return new Runnable() {
             @Override
-            public void onTabReselected(Tab tab, FragmentTransaction ft) {
-            }
+            public void run() {
+              setCurrentTabListener = new TabListener() {
+                @Override
+                public void onTabReselected(Tab tab, FragmentTransaction ft) {
+                }
 
-            @Override
-            public void onTabSelected(Tab tab, FragmentTransaction ft) {
-              host.setCurrentTabByTag(TabSpec.this.tag);
-            }
+                @Override
+                public void onTabSelected(Tab tab, FragmentTransaction ft) {
+                  host.setCurrentTabByTag(TabSpec.this.tag);
+                }
 
-            @Override
-            public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+                @Override
+                public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+                }
+              };
             }
           };
         }
@@ -129,12 +160,16 @@ public class CompatTabHostWrapper {
           return host.newTabSpec(TabSpec.this.tag);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return activity.getActionBar().newTab().setTag(TabSpec.this.tag);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return activity.getActionBar().newTab().setTag(TabSpec.this.tag);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
     }
 
     public TabSpec setContent(final int viewId) {
@@ -146,13 +181,17 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setContent(viewId);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setTabListener(
-              setCurrentTabListener);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setTabListener(
+                setCurrentTabListener);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -165,13 +204,17 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setContent(intent);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setTabListener(
-              setCurrentTabListener);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setTabListener(
+                setCurrentTabListener);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -184,13 +227,17 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setContent(contentFactory);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setTabListener(
-              setCurrentTabListener);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setTabListener(
+                setCurrentTabListener);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -203,12 +250,16 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setIndicator(label);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setText(label);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setText(label);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -221,12 +272,16 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setIndicator(view);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setCustomView(view);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setCustomView(view);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -239,12 +294,16 @@ public class CompatTabHostWrapper {
           return currentTabSpecBuilder.evaluate().setIndicator(label, icon);
         }
       };
-      tabBuilder = new Function<ActionBar.Tab>() {
-        @Override
-        public Tab evaluate() {
-          return currentTabBuilder.evaluate().setText(label).setIcon(icon);
-        }
-      };
+      try {
+        tabBuilder = new Function<ActionBar.Tab>() {
+          @Override
+          public Tab evaluate() {
+            return currentTabBuilder.evaluate().setText(label).setIcon(icon);
+          }
+        };
+      }
+      catch (VerifyError e) {
+      }
       return this;
     }
 
@@ -252,7 +311,7 @@ public class CompatTabHostWrapper {
       return tabSpecBuilder.evaluate();
     }
 
-    public ActionBar.Tab buildTab() {
+    public Object buildTab() {
       return tabBuilder.evaluate();
     }
   }

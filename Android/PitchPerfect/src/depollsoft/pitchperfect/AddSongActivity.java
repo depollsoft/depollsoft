@@ -52,11 +52,11 @@ public class AddSongActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    
+
     if (!ActionBars.hasActionBar(this)) {
       requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
-    
+
     this.setContentView(R.layout.addsongview);
 
     String id = this.getIntent().getStringExtra(AddSongActivity.ID_EXTRA);
@@ -140,6 +140,7 @@ public class AddSongActivity extends Activity {
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
+    menu.clear();
     super.onPrepareOptionsMenu(menu);
     MenuInflater mi = new MenuInflater(this);
     mi.inflate(R.menu.songeditmenu, menu);
