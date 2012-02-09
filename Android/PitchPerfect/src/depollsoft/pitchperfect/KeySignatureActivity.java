@@ -34,8 +34,7 @@ public class KeySignatureActivity extends Activity {
       public void run() {
         list.setVisibility(View.INVISIBLE);
 
-        int totalVisible = list.getLastVisiblePosition()
-            - list.getFirstVisiblePosition();
+        int totalVisible = list.getLastVisiblePosition() - list.getFirstVisiblePosition();
         list.setSelection(list.getCount() / 2 - totalVisible / 2);
         list.setVisibility(priorVisibility);
       }
@@ -57,38 +56,29 @@ public class KeySignatureActivity extends Activity {
     UiBinder.bind(
         this,
         new ToggleButtonCheckedProperty((ToggleButton) this
-            .findViewById(R.id.majorMinorToggleButton)), "Model.IsMajor",
-        BindingMode.TwoWay);
+            .findViewById(R.id.majorMinorToggleButton)), "Model.IsMajor", BindingMode.TwoWay);
 
-    UiBinder
-        .bind(this, R.id.majorKeySignatureListView, "Adapter",
-            "Model.MajorKeys", new AdapterConverter(
-                KeySignatureListItemView.class));
-    UiBinder.bind(this, R.id.majorKeySignatureListView, "Visibility",
-        "Model.IsMajor", new BoolConverter());
-    UiBinder
-        .bind(this, R.id.minorKeySignatureListView, "Adapter",
-            "Model.MinorKeys", new AdapterConverter(
-                KeySignatureListItemView.class));
-    UiBinder.bind(this, R.id.minorKeySignatureListView, "Visibility",
-        "Model.IsMajor", new BoolConverter(true));
+    UiBinder.bind(this, R.id.majorKeySignatureListView, "Adapter", "Model.MajorKeys",
+        new AdapterConverter(KeySignatureListItemView.class));
+    UiBinder.bind(this, R.id.majorKeySignatureListView, "Visibility", "Model.IsMajor",
+        new BoolConverter());
+    UiBinder.bind(this, R.id.minorKeySignatureListView, "Adapter", "Model.MinorKeys",
+        new AdapterConverter(KeySignatureListItemView.class));
+    UiBinder.bind(this, R.id.minorKeySignatureListView, "Visibility", "Model.IsMajor",
+        new BoolConverter(true));
 
-    this.majorView = (ListView) this
-        .findViewById(R.id.majorKeySignatureListView);
-    this.minorView = (ListView) this
-        .findViewById(R.id.minorKeySignatureListView);
+    this.majorView = (ListView) this.findViewById(R.id.majorKeySignatureListView);
+    this.minorView = (ListView) this.findViewById(R.id.minorKeySignatureListView);
 
     ((ToggleButton) this.findViewById(R.id.majorMinorToggleButton))
         .setOnClickListener(new OnClickListener() {
           public void onClick(View v) {
             if (KeySignatureActivity.this.getModel().getIsMajor())
-              KeySignatureActivity.this.majorView
-                  .setSelection(KeySignatureActivity.this.minorView
-                      .getFirstVisiblePosition());
+              KeySignatureActivity.this.majorView.setSelection(KeySignatureActivity.this.minorView
+                  .getFirstVisiblePosition());
             else
-              KeySignatureActivity.this.minorView
-                  .setSelection(KeySignatureActivity.this.majorView
-                      .getFirstVisiblePosition());
+              KeySignatureActivity.this.minorView.setSelection(KeySignatureActivity.this.majorView
+                  .getFirstVisiblePosition());
             for (Key k : KeySignatureActivity.this.getModel().getMajorKeys())
               k.getNote().stop();
             for (Key k : KeySignatureActivity.this.getModel().getMinorKeys())
@@ -120,8 +110,7 @@ public class KeySignatureActivity extends Activity {
     super.onResume();
     this.runOnUiThread(new Runnable() {
       public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView(
-            "KeySignatureActivity");
+        GoogleAnalyticsTracker.getInstance().trackPageView("KeySignatureActivity");
       }
     });
   }

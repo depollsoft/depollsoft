@@ -74,19 +74,15 @@ public class AddSongActivity extends Activity {
     }
     if (this.getSong() == null) {
       this.setSong(new PitchedSong());
-      this.getSong().setKey(
-          Key.getMajorKeys().get(Key.getMajorKeys().size() / 2));
+      this.getSong().setKey(Key.getMajorKeys().get(Key.getMajorKeys().size() / 2));
     }
 
-    UiBinder.bind(
-        this,
-        new EditTextTextProperty((EditText) this
-            .findViewById(R.id.songTitleEditText)), "Song.Name",
-        BindingMode.TwoWay);
+    UiBinder.bind(this,
+        new EditTextTextProperty((EditText) this.findViewById(R.id.songTitleEditText)),
+        "Song.Name", BindingMode.TwoWay);
 
-    UiBinder.bind(this, R.id.songKeySpinner, "Adapter", "AllKeys",
-        new AdapterConverter(SongKeySignatureSelectedItemView.class, true,
-            false, SongKeySignatureListItemView.class));
+    UiBinder.bind(this, R.id.songKeySpinner, "Adapter", "AllKeys", new AdapterConverter(
+        SongKeySignatureSelectedItemView.class, true, false, SongKeySignatureListItemView.class));
 
     int keyIndex = this.getAllKeys().indexOf(this.getSong().getKey());
 
@@ -94,8 +90,7 @@ public class AddSongActivity extends Activity {
     spinner.setSelection(keyIndex);
     spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
       @Override
-      public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2,
-          long arg3) {
+      public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
         AddSongActivity.this.getSong().setKey((Key) spinner.getSelectedItem());
       }
 
@@ -109,10 +104,8 @@ public class AddSongActivity extends Activity {
       @Override
       public void onClick(View v) {
         if (AddSongActivity.this.editing) {
-          AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong()
-              .getName());
-          AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong()
-              .getKey());
+          AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
+          AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
         }
         else {
           SongsModel.get().addSong(AddSongActivity.this.getSong());

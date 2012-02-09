@@ -15,8 +15,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-public class KeySignatureListItemView extends LinearLayout implements
-    BoundUi<Key> {
+public class KeySignatureListItemView extends LinearLayout implements BoundUi<Key> {
   private TrackableField<Key> key = new TrackableField<Key>();
 
   public KeySignatureListItemView(Context context) {
@@ -47,14 +46,12 @@ public class KeySignatureListItemView extends LinearLayout implements
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
 
-    UiBinder.bind(this, R.id.keySignatureTextView, "Text", "Key",
-        new KeySignatureConverter());
+    UiBinder.bind(this, R.id.keySignatureTextView, "Text", "Key", new KeySignatureConverter());
 
-    UiBinder.bind(this, R.id.keyNameTextView, "Text", "Key",
-        new KeyNameConverter());
+    UiBinder.bind(this, R.id.keyNameTextView, "Text", "Key", new KeyNameConverter());
 
-    UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
-        "Key.Note.IsPlaying", BindingMode.OneWay);
+    UiBinder.bind(this, new ReflectedProperty(this, "Pressed"), "Key.Note.IsPlaying",
+        BindingMode.OneWay);
   }
 
   @Override
@@ -69,15 +66,13 @@ public class KeySignatureListItemView extends LinearLayout implements
       switch (event.getAction()) {
       case MotionEvent.ACTION_DOWN:
         if (SettingsModel.getToggleNotes())
-          this.getKey().getNote()
-              .setIsPlaying(!this.getKey().getNote().getIsPlaying());
+          this.getKey().getNote().setIsPlaying(!this.getKey().getNote().getIsPlaying());
         else
           this.getKey().getNote().play();
         this.setPressed(this.getKey().getNote().getIsPlaying());
         return true;
       case MotionEvent.ACTION_MOVE:
-        if (SettingsModel.getToggleNotes()
-            && event.getEventTime() - event.getDownTime() > 100)
+        if (SettingsModel.getToggleNotes() && event.getEventTime() - event.getDownTime() > 100)
           this.getKey().getNote().stop();
         break;
       case MotionEvent.ACTION_UP:

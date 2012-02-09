@@ -12,8 +12,8 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    GoogleAnalyticsTracker.getInstance().start("UA-24315533-2", 10, this);
-    GoogleAnalyticsTracker.getInstance().setProductVersion("TagMaster",
+    GoogleAnalyticsTracker.getInstance().startNewSession("UA-24315533-2", 10, this);
+    GoogleAnalyticsTracker.getInstance().setProductVersion("Pitch Perfect",
         this.getString(R.string.app_version));
     GoogleAnalyticsTracker.getInstance().setCustomVar(1, "Version",
         this.getString(R.string.app_version), 2);
@@ -24,7 +24,7 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onTerminate() {
     GoogleAnalyticsTracker.getInstance().dispatch();
-    GoogleAnalyticsTracker.getInstance().stop();
+    GoogleAnalyticsTracker.getInstance().stopSession();
     super.onTerminate();
   }
 }

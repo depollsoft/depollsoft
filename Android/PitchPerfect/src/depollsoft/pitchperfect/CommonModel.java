@@ -15,29 +15,29 @@ public class CommonModel {
 
   public static Typeface getMusiQwik() {
     if (CommonModel.musiQwik == null)
-      CommonModel.musiQwik = Typeface.createFromAsset(RichApplication
-          .getAppContext().getAssets(), "fonts/MusiQwik.ttf");
+      CommonModel.musiQwik = Typeface.createFromAsset(RichApplication.getAppContext().getAssets(),
+          "fonts/MusiQwik.ttf");
     return CommonModel.musiQwik;
   }
 
   public static Typeface getMusiQwikB() {
     if (CommonModel.musiQwikB == null)
-      CommonModel.musiQwikB = Typeface.createFromAsset(RichApplication
-          .getAppContext().getAssets(), "fonts/MusiQwikB.ttf");
+      CommonModel.musiQwikB = Typeface.createFromAsset(RichApplication.getAppContext().getAssets(),
+          "fonts/MusiQwikB.ttf");
     return CommonModel.musiQwikB;
   }
 
   public static Typeface getMusiSync() {
     if (CommonModel.musiSync == null)
-      CommonModel.musiSync = Typeface.createFromAsset(RichApplication
-          .getAppContext().getAssets(), "fonts/MusiSync.ttf");
+      CommonModel.musiSync = Typeface.createFromAsset(RichApplication.getAppContext().getAssets(),
+          "fonts/MusiSync.ttf");
     return CommonModel.musiSync;
   }
 
   public static Typeface getNoteHedz() {
     if (CommonModel.noteHedz == null)
-      CommonModel.noteHedz = Typeface.createFromAsset(RichApplication
-          .getAppContext().getAssets(), "fonts/NoteHedz170.ttf");
+      CommonModel.noteHedz = Typeface.createFromAsset(RichApplication.getAppContext().getAssets(),
+          "fonts/NoteHedz170.ttf");
     return CommonModel.noteHedz;
   }
 }
