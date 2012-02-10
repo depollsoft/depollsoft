@@ -106,6 +106,7 @@ public class AddSongActivity extends Activity {
         if (AddSongActivity.this.editing) {
           AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
           AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
+          SongsModel.get().notifyOfChange();
         }
         else {
           SongsModel.get().addSong(AddSongActivity.this.getSong());

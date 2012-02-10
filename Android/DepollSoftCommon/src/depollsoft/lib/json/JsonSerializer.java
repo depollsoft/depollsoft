@@ -29,11 +29,10 @@ public class JsonSerializer {
       if (this.getValue() == null)
         return null;
       try {
-        Class<?> trueType = Class.forName(this.type);
+        Class<?> trueType = JsonSerializer.getClassForName(this.type);
         if (this.getValue().getClass().equals(trueType))
           return this.getValue();
-        return trueType.getConstructor(String.class).newInstance(
-            "" + this.getValue());
+        return trueType.getConstructor(String.class).newInstance("" + this.getValue());
       }
       catch (Exception e) {
         throw new RuntimeException(e);
@@ -58,19 +57,25 @@ public class JsonSerializer {
     }
   }
 
+  public static Class<?> PRIMITIVE_CLASS = JsonPrimitive.class;
+
   private static Map<Class<?>, List<Pair<Method, Method>>> properties;
   private static Map<Pair<Class<?>, String>, Pair<Method, Method>> revProperties;
+  private static Map<Class<?>, String> typeAliases;
+  private static Map<String, Class<?>> revTypeAliases;
 
   static {
     JsonSerializer.properties = new HashMap<Class<?>, List<Pair<Method, Method>>>();
     JsonSerializer.revProperties = new HashMap<Pair<Class<?>, String>, Pair<Method, Method>>();
+    JsonSerializer.typeAliases = new HashMap<Class<?>, String>();
+    JsonSerializer.revTypeAliases = new HashMap<String, Class<?>>();
   }
 
   public static Object deserialize(JSONObject object) {
     try {
       Object result = null;
       String typeName = (String) object.get("*type");
-      Class<?> type = Class.forName(typeName);
+      Class<?> type = JsonSerializer.getClassForName(typeName);
       JSONArray items = (JSONArray) object.opt("*items");
       if (items == null) {
         result = JsonSerializer.deserializeObject(object, type);
@@ -96,10 +101,9 @@ public class JsonSerializer {
   }
 
   @SuppressWarnings("unchecked")
-  private static Object deserializeArray(JSONArray items, Class<?> type)
-      throws SecurityException, NoSuchMethodException,
-      IllegalArgumentException, InstantiationException, IllegalAccessException,
-      InvocationTargetException, JSONException {
+  private static Object deserializeArray(JSONArray items, Class<?> type) throws SecurityException,
+      NoSuchMethodException, IllegalArgumentException, InstantiationException,
+      IllegalAccessException, InvocationTargetException, JSONException {
     Constructor<?> c = type.getConstructor();
     Collection<?> collection = (Collection<?>) c.newInstance();
     for (int x = 0; x < items.length(); x++) {
@@ -113,9 +117,8 @@ public class JsonSerializer {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static Object deserializeObject(JSONObject object, Class<?> type)
-      throws SecurityException, NoSuchMethodException,
-      IllegalArgumentException, InstantiationException, IllegalAccessException,
-      InvocationTargetException, JSONException {
+      throws SecurityException, NoSuchMethodException, IllegalArgumentException,
+      InstantiationException, IllegalAccessException, InvocationTargetException, JSONException {
     Object result;
     if (Enum.class.isAssignableFrom(type))
       result = Enum.valueOf((Class) type, object.getString("*name"));
@@ -132,8 +135,7 @@ public class JsonSerializer {
           cur = null;
         else if (cur instanceof JSONObject)
           cur = JsonSerializer.deserialize((JSONObject) cur);
-        Pair<Method, Method> propPair = JsonSerializer
-            .getProperty(type, curKey);
+        Pair<Method, Method> propPair = JsonSerializer.getProperty(type, curKey);
         propPair.getRight().invoke(result, cur);
       }
       catch (Exception e) {
@@ -142,14 +144,24 @@ public class JsonSerializer {
     return result;
   }
 
+  private static Class<?> getClassForName(String typeName) throws ClassNotFoundException {
+    return JsonSerializer.revTypeAliases.containsKey(typeName) ? JsonSerializer.revTypeAliases
+        .get(typeName) : Class.forName(typeName);
+  }
+
+  private static String getNameForClass(Class<?> cls) {
+    return JsonSerializer.typeAliases.containsKey(cls) ? JsonSerializer.typeAliases.get(cls) : cls
+        .getName();
+  }
+
   private static List<Pair<Method, Method>> getProperties(Class<?> type) {
     if (JsonSerializer.properties.containsKey(type))
       return JsonSerializer.properties.get(type);
     List<Pair<Method, Method>> props = new ArrayList<Pair<Method, Method>>();
     Method[] methods = type.getMethods();
     for (Method m : methods) {
-      if (!((m.getModifiers() & Member.PUBLIC) == Member.PUBLIC
-          && m.getName().startsWith("set") && m.getParameterTypes().length == 1))
+      if (!((m.getModifiers() & Member.PUBLIC) == Member.PUBLIC && m.getName().startsWith("set") && m
+          .getParameterTypes().length == 1))
         continue;
       String propName = m.getName().substring(3);
       Method getter;
@@ -159,13 +171,11 @@ public class JsonSerializer {
       catch (NoSuchMethodException nsme) {
         continue;
       }
-      if (!(getter.getReturnType().equals(m.getParameterTypes()[0]) && (m
-          .getModifiers() & Member.PUBLIC) == Member.PUBLIC))
+      if (!(getter.getReturnType().equals(m.getParameterTypes()[0]) && (m.getModifiers() & Member.PUBLIC) == Member.PUBLIC))
         continue;
       Pair<Method, Method> propPair = new Pair<Method, Method>(getter, m);
       props.add(propPair);
-      JsonSerializer.revProperties.put(new Pair<Class<?>, String>(type,
-          propName), propPair);
+      JsonSerializer.revProperties.put(new Pair<Class<?>, String>(type, propName), propPair);
     }
     JsonSerializer.properties.put(type, props);
     return props;
@@ -174,20 +184,26 @@ public class JsonSerializer {
   private static Pair<Method, Method> getProperty(Class<?> type, String propName) {
     if (!JsonSerializer.properties.containsKey(type))
       JsonSerializer.getProperties(type);
-    return JsonSerializer.revProperties.get(new Pair<Class<?>, String>(type,
-        propName));
+    return JsonSerializer.revProperties.get(new Pair<Class<?>, String>(type, propName));
+  }
+
+  public static void registerAlias(Class<?> cls, String alias) {
+    if (JsonSerializer.typeAliases.containsKey(cls))
+      return;
+    if (JsonSerializer.revTypeAliases.containsKey(alias))
+      return;
+    JsonSerializer.typeAliases.put(cls, alias);
+    JsonSerializer.revTypeAliases.put(alias, cls);
   }
 
   public static JSONObject serialize(Object obj) {
-    if (obj == null || obj.getClass().equals(String.class)
-        || obj.getClass().equals(Integer.class)
-        || obj.getClass().equals(Boolean.class)
-        || obj.getClass().equals(Long.class)
+    if (obj == null || obj.getClass().equals(String.class) || obj.getClass().equals(Integer.class)
+        || obj.getClass().equals(Boolean.class) || obj.getClass().equals(Long.class)
         || obj.getClass().equals(Double.class)) {
       JsonPrimitive prim = new JsonPrimitive();
       prim.setValue(obj);
       if (obj != null)
-        prim.setType(obj.getClass().getName());
+        prim.setType(JsonSerializer.getNameForClass(obj.getClass()));
       return JsonSerializer.serializeObject(prim);
     }
     if (obj instanceof Collection)
@@ -199,7 +215,7 @@ public class JsonSerializer {
   private static JSONObject serializeArray(Collection<?> array) {
     try {
       JSONObject result = new JSONObject();
-      result.put("*type", array.getClass().getName());
+      result.put("*type", JsonSerializer.getNameForClass(array.getClass()));
       JSONArray data = new JSONArray();
       for (Object o : array) {
         try {
@@ -209,12 +225,10 @@ public class JsonSerializer {
           else if (o.getClass().equals(String.class)) {
             data.put(o);
           }
-          else if (o.getClass().equals(Integer.class)
-              || o.getClass().equals(Boolean.class)
-              || o.getClass().equals(Long.class)
-              || o.getClass().equals(Double.class)) {
+          else if (o.getClass().equals(Integer.class) || o.getClass().equals(Boolean.class)
+              || o.getClass().equals(Long.class) || o.getClass().equals(Double.class)) {
             JsonPrimitive prim = new JsonPrimitive();
-            prim.setType(o.getClass().getName());
+            prim.setType(JsonSerializer.getNameForClass(o.getClass()));
             prim.setValue(o);
             data.put(JsonSerializer.serializeObject(prim));
           }
@@ -240,12 +254,11 @@ public class JsonSerializer {
   private static JSONObject serializeObject(Object obj) {
     try {
       JSONObject result = new JSONObject();
-      result.put("*type", obj.getClass().getName());
+      result.put("*type", JsonSerializer.getNameForClass(obj.getClass()));
       if (obj instanceof Enum) {
         result.put("*name", ((Enum) obj).name());
       }
-      List<Pair<Method, Method>> props = JsonSerializer.getProperties(obj
-          .getClass());
+      List<Pair<Method, Method>> props = JsonSerializer.getProperties(obj.getClass());
       for (Pair<Method, Method> property : props) {
         Method getter = property.getLeft();
         String propName = getter.getName().substring(3);
@@ -254,22 +267,18 @@ public class JsonSerializer {
           if (value == null) {
             result.put(propName, JSONObject.NULL);
           }
-          else if (value.getClass().equals(String.class)
-              || obj instanceof JsonPrimitive) {
+          else if (value.getClass().equals(String.class) || obj instanceof JsonPrimitive) {
             result.put(propName, value);
           }
-          else if (value.getClass().equals(Integer.class)
-              || value.getClass().equals(Boolean.class)
-              || value.getClass().equals(Long.class)
-              || value.getClass().equals(Double.class)) {
+          else if (value.getClass().equals(Integer.class) || value.getClass().equals(Boolean.class)
+              || value.getClass().equals(Long.class) || value.getClass().equals(Double.class)) {
             JsonPrimitive prim = new JsonPrimitive();
-            prim.setType(value.getClass().getName());
+            prim.setType(JsonSerializer.getNameForClass(value.getClass()));
             prim.setValue(value);
             result.put(propName, JsonSerializer.serializeObject(prim));
           }
           else if (value instanceof Collection) {
-            result.put(propName,
-                JsonSerializer.serializeArray((Collection<?>) value));
+            result.put(propName, JsonSerializer.serializeArray((Collection<?>) value));
           }
           else {
             result.put(propName, JsonSerializer.serializeObject(value));

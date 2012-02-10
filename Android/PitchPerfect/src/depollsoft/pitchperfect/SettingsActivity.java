@@ -1,9 +1,14 @@
 package depollsoft.pitchperfect;
 
+import java.util.Arrays;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -11,8 +16,14 @@ import android.widget.CheckBox;
 import android.widget.Toast;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.parse.LogInCallback;
+import com.parse.ParseException;
+import com.parse.ParseFacebookUtils;
+import com.parse.ParseFacebookUtils.Permissions;
+import com.parse.ParseUser;
 
 import depollsoft.lib.binding.BindingMode;
+import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.CheckBoxCheckedProperty;
 import depollsoft.lib.binding.ui.UiBinder;
@@ -20,8 +31,19 @@ import depollsoft.lib.compat.ui.ActionBars;
 
 public class SettingsActivity extends Activity {
 
+  public static boolean getShowBuyLink() {
+    return !SettingsModel.getLicensed() && !SettingsModel.getAppStore().equals("amazon");
+  }
+
+  private Trackable loginTrackable = new Trackable();
+
   public boolean getLicensed() {
     return SettingsModel.getLicensed();
+  }
+
+  public boolean getLoggedIn() {
+    this.loginTrackable.track();
+    return ParseUser.getCurrentUser() != null;
   }
 
   public boolean getToggleNotes() {
@@ -32,9 +54,10 @@ public class SettingsActivity extends Activity {
     return SettingsModel.getWakeLock();
   }
 
-  public static boolean getShowBuyLink() {
-    return !SettingsModel.getLicensed()
-        && !SettingsModel.getAppStore().equals("amazon");
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
   }
 
   @Override
@@ -42,41 +65,83 @@ public class SettingsActivity extends Activity {
     super.onCreate(savedInstanceState);
 
     if (!ActionBars.hasActionBar(this)) {
-      requestWindowFeature(Window.FEATURE_NO_TITLE);
+      this.requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
 
     this.setContentView(R.layout.settingsview);
 
-    UiBinder.bind(
-        this,
-        new CheckBoxCheckedProperty((CheckBox) this
-            .findViewById(R.id.toggleNoteCheckBox)), "ToggleNotes",
-        BindingMode.TwoWay);
+    UiBinder.bind(this,
+        new CheckBoxCheckedProperty((CheckBox) this.findViewById(R.id.toggleNoteCheckBox)),
+        "ToggleNotes", BindingMode.TwoWay);
 
-    UiBinder.bind(
-        this,
-        new CheckBoxCheckedProperty((CheckBox) this
-            .findViewById(R.id.wakeLockCheckBox)), "WakeLock",
-        BindingMode.TwoWay);
+    UiBinder.bind(this,
+        new CheckBoxCheckedProperty((CheckBox) this.findViewById(R.id.wakeLockCheckBox)),
+        "WakeLock", BindingMode.TwoWay);
 
-    UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink",
-        BoolConverter.get());
-    UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed",
-        BoolConverter.get());
+    UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
+    UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed", BoolConverter.get());
+
+    UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true));
+    UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get());
+
+    this.findViewById(R.id.loginButton).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
+            SettingsActivity.this, new LogInCallback() {
+              @Override
+              public void done(ParseUser user, ParseException err) {
+                if(err!=null) {
+                  Log.d("Pitch Perfect", "Failed to log in.", err);
+                  return;
+                }
+                SettingsActivity.this.loginTrackable.updateTrackers();
+                if (!user.isNew()) {
+                  SettingsModel.restoreUser();
+                  SongsModel.get().refreshFromParse();
+                }
+                else {
+                  SettingsModel.refreshUser();
+                  SongsModel.get().saveAllToParse();
+                }
+              }
+            });
+      }
+    });
+
+    this.findViewById(R.id.logoutButton).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        AsyncTask<Void, Void, Void> logOutTask = new AsyncTask<Void, Void, Void>() {
+
+          @Override
+          protected Void doInBackground(Void... params) {
+            ParseUser.logOut();
+            return null;
+          }
+
+          @Override
+          protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            SettingsActivity.this.loginTrackable.updateTrackers();
+          }
+        };
+        logOutTask.execute();
+      }
+    });
 
     View clearSongListButton = this.findViewById(R.id.clearSongListButton);
     clearSongListButton.setOnClickListener(new OnClickListener() {
 
       @Override
       public void onClick(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(
-            SettingsActivity.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
         builder.setMessage("Are you sure you want to clear your song list?")
             .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
                 SongsModel.get().resetSongs();
-                Toast.makeText(SettingsActivity.this, "Song list cleared.",
-                    Toast.LENGTH_SHORT).show();
+                Toast.makeText(SettingsActivity.this, "Song list cleared.", Toast.LENGTH_SHORT)
+                    .show();
               }
             }).setNegativeButton("No", new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
@@ -90,6 +155,12 @@ public class SettingsActivity extends Activity {
   protected void onDestroy() {
     UiBinder.unbind(this);
     super.onDestroy();
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    SettingsModel.refreshUser();
   }
 
   @Override

@@ -1,18 +1,31 @@
 package depollsoft.pitchperfect;
 
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import com.parse.FindCallback;
+import com.parse.ParseACL;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
 
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.Tracker;
+import depollsoft.lib.json.JsonSerializer;
 import depollsoft.lib.util.Action;
 import depollsoft.lib.util.Preferences;
 import depollsoft.pitchperfect.lib.PitchedSong;
 
 public class SongsModel {
   private static final String SongsKey = "depollsoft.pitchperfect.SongsModel";
+  private static final String SongsChangedKey = "depollsoft.pitchperfect.SongsChanged";
   private TrackableField<ObservableCollection<PitchedSong>> songs = new TrackableField<ObservableCollection<PitchedSong>>();
+  private ParseObject serialized;
+  private boolean suspendTimestamp;
 
   private static SongsModel instance;
 
@@ -24,11 +37,13 @@ public class SongsModel {
 
   @SuppressWarnings("unchecked")
   private SongsModel() {
+    this.suspendTimestamp = true;
+    Preferences.initialize(SongsModel.SongsChangedKey, 0L, Long.TYPE);
     if (Preferences.get(SongsModel.SongsKey) == null)
       this.setSongs(new ObservableCollection<PitchedSong>());
     else
-      this.setSongs((ObservableCollection<PitchedSong>) Preferences
-          .get(SongsModel.SongsKey));
+      this.setSongs((ObservableCollection<PitchedSong>) Preferences.get(SongsModel.SongsKey));
+    this.suspendTimestamp = false;
     Trackable.track(new Tracker() {
 
       public void update() {
@@ -63,13 +78,21 @@ public class SongsModel {
     return index > 0;
   }
 
-  public ObservableCollection<PitchedSong> getSongs() {
-    return this.songs.getValue();
+  @SuppressWarnings("unchecked")
+  public void fromParseObject(ParseObject object) {
+    this.suspendTimestamp = true;
+    this.setSongs((ObservableCollection<PitchedSong>) JsonSerializer.deserialize(object
+        .getJSONObject("songs")));
+    this.suspendTimestamp = false;
+    this.serialized = object;
   }
 
-  public void sortSongs() {
-    Collections.sort(getSongs());
-    getSongs().updateTrackers();
+  private long getLastChangeTime() {
+    return Preferences.get(SongsModel.SongsChangedKey);
+  }
+
+  public ObservableCollection<PitchedSong> getSongs() {
+    return this.songs.getValue();
   }
 
   public void moveDown(PitchedSong s) {
@@ -88,6 +111,25 @@ public class SongsModel {
     this.getSongs().add(index - 1, s);
   }
 
+  public void notifyOfChange() {
+    this.songs.updateTrackers();
+  }
+
+  public void refreshFromParse() {
+    ParseQuery query = new ParseQuery("SongList");
+    query.findInBackground(new FindCallback() {
+      @Override
+      public void done(List<ParseObject> results, ParseException err) {
+        if (results != null && results.size() > 0) {
+          ParseObject main = results.get(0);
+          if (SongsModel.this.getLastChangeTime() < main.getUpdatedAt().getTime()) {
+            SongsModel.this.fromParseObject(results.get(0));
+          }
+        }
+      }
+    });
+  }
+
   public void removeSong(PitchedSong song) {
     this.getSongs().remove(song);
   }
@@ -96,11 +138,38 @@ public class SongsModel {
     this.getSongs().clear();
   }
 
+  public void saveAllToParse() {
+    if (this.serialized != null && this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
+      this.toParseObject().saveInBackground();
+  }
+
+  private void setLastChangeTime(long time) {
+    if (this.suspendTimestamp)
+      return;
+    Preferences.set(SongsModel.SongsChangedKey, time);
+  }
+
   public void setSongs(ObservableCollection<PitchedSong> value) {
     this.songs.setValue(value);
   }
 
+  public void sortSongs() {
+    Collections.sort(this.getSongs());
+    this.getSongs().updateTrackers();
+  }
+
   private void storeValue() {
     Preferences.set(SongsModel.SongsKey, this.getSongs());
+    this.setLastChangeTime(new Date().getTime());
+  }
+
+  public ParseObject toParseObject() {
+    if (this.serialized == null) {
+      this.serialized = new ParseObject("SongList");
+      this.serialized.setACL(new ParseACL(ParseUser.getCurrentUser()));
+      this.serialized.put("name", "*default");
+    }
+    this.serialized.put("songs", JsonSerializer.serialize(this.getSongs()));
+    return this.serialized;
   }
 }

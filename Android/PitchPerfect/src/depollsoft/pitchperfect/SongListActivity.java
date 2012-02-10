@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.parse.ParseUser;
 
 import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.ui.AdapterConverter;
@@ -49,8 +50,8 @@ public class SongListActivity extends Activity {
 
     this.setContentView(R.layout.songlistview);
 
-    UiBinder.bind(this, R.id.songListView, "Adapter", "Model.Songs",
-        new AdapterConverter(SongListItemView.class));
+    UiBinder.bind(this, R.id.songListView, "Adapter", "Model.Songs", new AdapterConverter(
+        SongListItemView.class));
 
     UiBinder.bind(this, R.id.sorryText, "Visibility", "Model.Songs[0]",
         BoolConverter.get(true, true));
@@ -87,31 +88,27 @@ public class SongListActivity extends Activity {
       MenuInflater mi = new MenuInflater(this);
       mi.inflate(R.menu.songsmenu, menu);
 
-      MenuItems.setShowAsAction(menu.findItem(R.id.sortMenuItem),
-          MenuItems.SHOW_AS_ACTION_IF_ROOM);
-      menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener(
-          new OnMenuItemClickListener() {
+      MenuItems.setShowAsAction(menu.findItem(R.id.sortMenuItem), MenuItems.SHOW_AS_ACTION_IF_ROOM);
+      menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener(new OnMenuItemClickListener() {
 
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-              SongsModel.get().sortSongs();
-              return true;
-            }
-          });
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+          SongsModel.get().sortSongs();
+          return true;
+        }
+      });
 
       MenuItems.setShowAsAction(menu.findItem(R.id.addSongMenuItem),
           MenuItems.SHOW_AS_ACTION_IF_ROOM);
-      menu.findItem(R.id.addSongMenuItem).setOnMenuItemClickListener(
-          new OnMenuItemClickListener() {
+      menu.findItem(R.id.addSongMenuItem).setOnMenuItemClickListener(new OnMenuItemClickListener() {
 
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-              Intent i = new Intent(SongListActivity.this,
-                  AddSongActivity.class);
-              SongListActivity.this.startActivity(i);
-              return true;
-            }
-          });
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+          Intent i = new Intent(SongListActivity.this, AddSongActivity.class);
+          SongListActivity.this.startActivity(i);
+          return true;
+        }
+      });
 
       return true;
     }
@@ -131,6 +128,9 @@ public class SongListActivity extends Activity {
     super.onPause();
     for (PitchedSong song : this.getModel().getSongs())
       song.stop();
+    if (ParseUser.getCurrentUser() != null) {
+      SongsModel.get().saveAllToParse();
+    }
   }
 
   @Override

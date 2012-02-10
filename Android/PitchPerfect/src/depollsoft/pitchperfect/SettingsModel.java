@@ -1,5 +1,7 @@
 package depollsoft.pitchperfect;
 
+import com.parse.ParseUser;
+
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.licensing.LicenseChecker;
@@ -16,6 +18,10 @@ public class SettingsModel {
     Preferences.initialize(SettingsModel.WakeLockKey, false);
   }
 
+  public static String getAppStore() {
+    return RichApplication.getAppContext().getString(R.string.app_store);
+  }
+
   public static boolean getLicensed() {
     return LicenseChecker.isLicensed();
   }
@@ -30,6 +36,25 @@ public class SettingsModel {
     return Preferences.get(SettingsModel.WakeLockKey);
   }
 
+  public static void refreshUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      ParseUser.getCurrentUser().put("ToggleNote", SettingsModel.getToggleNotes());
+      ParseUser.getCurrentUser().put("WakeLock", SettingsModel.getWakeLock());
+      ParseUser.getCurrentUser().saveInBackground();
+    }
+  }
+
+  public static void restoreUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      if (ParseUser.getCurrentUser().containsKey("ToggleNote")) {
+        SettingsModel.setToggleNotes(ParseUser.getCurrentUser().getBoolean("ToggleNote"));
+      }
+      if (ParseUser.getCurrentUser().containsKey("WakeLock")) {
+        SettingsModel.setWakeLock(ParseUser.getCurrentUser().getBoolean("WakeLock"));
+      }
+    }
+  }
+
   public static void setToggleNotes(boolean value) {
     Preferences.set(SettingsModel.ToggleNoteKey, value);
     SettingsModel.toggleNoteTrackable.updateTrackers();
@@ -38,9 +63,5 @@ public class SettingsModel {
   public static void setWakeLock(boolean value) {
     Preferences.set(SettingsModel.WakeLockKey, value);
     SettingsModel.wakeLockTrackable.updateTrackers();
-  }
-
-  public static String getAppStore() {
-    return RichApplication.getAppContext().getString(R.string.app_store);
   }
 }
