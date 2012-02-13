@@ -24,6 +24,8 @@ import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
+import depollsoft.lib.ui.ChangelogViewer;
+import depollsoft.lib.util.Versioning;
 
 public class PitchPerfectActivity extends TabActivity {
   private WakeLock wakeLock;
@@ -59,7 +61,7 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    
+
     if (!ActionBars.hasActionBar(this)) {
       requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
@@ -70,31 +72,22 @@ public class PitchPerfectActivity extends TabActivity {
 
     tabHost = new CompatTabHostWrapper(this, getTabHost());
 
-    UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow",
-        BoolConverter.get());
+    UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow", BoolConverter.get());
 
-    tabHost.addTab(tabHost
-        .newTabSpec("PitchPipe")
-        .setIndicator("Quick Pitch",
-            this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
+    tabHost.addTab(tabHost.newTabSpec("PitchPipe")
+        .setIndicator("Quick Pitch", this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
         .setContent(new Intent(this, PitchPipeActivity.class)));
 
-    tabHost.addTab(tabHost
-        .newTabSpec("NoteList")
-        .setIndicator("Notes",
-            this.getResources().getDrawable(R.drawable.ic_tab_octaves))
+    tabHost.addTab(tabHost.newTabSpec("NoteList")
+        .setIndicator("Notes", this.getResources().getDrawable(R.drawable.ic_tab_octaves))
         .setContent(new Intent(this, NoteListActivity.class)));
 
-    tabHost.addTab(tabHost
-        .newTabSpec("KeySignatures")
-        .setIndicator("Keys",
-            this.getResources().getDrawable(R.drawable.ic_tab_keys))
+    tabHost.addTab(tabHost.newTabSpec("KeySignatures")
+        .setIndicator("Keys", this.getResources().getDrawable(R.drawable.ic_tab_keys))
         .setContent(new Intent(this, KeySignatureActivity.class)));
 
-    tabHost.addTab(tabHost
-        .newTabSpec("Songs")
-        .setIndicator("Songs",
-            this.getResources().getDrawable(R.drawable.ic_tab_songs))
+    tabHost.addTab(tabHost.newTabSpec("Songs")
+        .setIndicator("Songs", this.getResources().getDrawable(R.drawable.ic_tab_songs))
         .setContent(new Intent(this, SongListActivity.class)));
 
     this.onConfigurationChanged(Resources.getSystem().getConfiguration());
@@ -106,6 +99,16 @@ public class PitchPerfectActivity extends TabActivity {
       }
     });
 
+    if (Versioning.isFirstRunOfVersion()) {
+      showChangelog();
+    }
+  }
+
+  private void showChangelog() {
+    ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
+    viewer.setTitle("Pitch Perfect Changelog");
+    viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
+    viewer.showIfAppropriate();
   }
 
   @Override
@@ -135,8 +138,7 @@ public class PitchPerfectActivity extends TabActivity {
 
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-              Intent i = new Intent(PitchPerfectActivity.this,
-                  SettingsActivity.class);
+              Intent i = new Intent(PitchPerfectActivity.this, SettingsActivity.class);
               PitchPerfectActivity.this.startActivity(i);
               return true;
             }
@@ -169,8 +171,7 @@ public class PitchPerfectActivity extends TabActivity {
     super.onResume();
     GoogleAnalyticsTracker.getInstance().trackPageView("PitchPerfectActivity");
     if (SettingsModel.getWakeLock()) {
-      this.wakeLock = ((PowerManager) this
-          .getSystemService(Context.POWER_SERVICE)).newWakeLock(
+      this.wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
       this.wakeLock.acquire();
     }

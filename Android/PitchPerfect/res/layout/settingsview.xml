@@ -98,8 +98,13 @@
                         android:text="@string/LogOut" />
                 </LinearLayout>
 
-                <include layout="@layout/aboutfooter" />
+                <Button
+                    android:id="@+id/changelogButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ViewChangelog" />
 
+                <include layout="@layout/aboutfooter" />
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

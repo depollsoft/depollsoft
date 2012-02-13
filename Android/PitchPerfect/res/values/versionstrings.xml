@@ -2,7 +2,22 @@
 <resources>
 
     <string name="app_store">android</string>
-    <string name="app_version">1.8</string>
-    <string name="VersionString">Version 1.8</string>
+    <string name="app_version">1.9</string>
+    <string name="VersionString">Version 1.9</string>
+    <string name="Changelog">        <![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 1.9</h5>
+                    -Log in with your Facebook ID to save your preferences and song list in the cloud!  To use this feature, view the "Settings" page.<br />
+                    -Minor bug fixes
+            </p>
+            <p>
+                    <h5>Version 1.8</h5>
+                    -Allows latest native UI to be used (including Honeycomb and Ice Cream Sandwich UI features such as the action bar)<br />
+                    -Updates graphics to be sharp on various screen resolutions<br />
+                    -Makes the sort functionality for the song list more discoverable. On Honeycomb/ICS devices, an icon appears in the action bar. Older devices can access this feature using the menu key.<br />
+                    -Adds song deletion to the song editing activity (rather than keeping it exclusively on the song list tab)<br />
+                    -Minor bug fixes
+            </p>]]>
+    </string>
 
 </resources>

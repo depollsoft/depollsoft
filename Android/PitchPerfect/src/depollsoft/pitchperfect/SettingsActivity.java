@@ -28,6 +28,7 @@ import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.CheckBoxCheckedProperty;
 import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
 
@@ -86,13 +87,22 @@ public class SettingsActivity extends Activity {
 
     this.findViewById(R.id.loginButton).setOnClickListener(new OnClickListener() {
       @Override
-      public void onClick(View v) {
+      public void onClick(final View v) {
+        v.setEnabled(false);
         ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
             SettingsActivity.this, new LogInCallback() {
               @Override
               public void done(ParseUser user, ParseException err) {
-                if(err!=null) {
+                v.setEnabled(true);
+                if (err != null) {
+                  Toast.makeText(SettingsActivity.this, "Facebook login failed.",
+                      Toast.LENGTH_SHORT);
                   Log.d("Pitch Perfect", "Failed to log in.", err);
+                  return;
+                }
+
+                if (user == null) {
+                  Log.d("Pitch Perfect", "User cancelled login.");
                   return;
                 }
                 SettingsActivity.this.loginTrackable.updateTrackers();
@@ -147,6 +157,18 @@ public class SettingsActivity extends Activity {
               public void onClick(DialogInterface dialog, int which) {
               }
             }).show();
+      }
+    });
+
+    this.findViewById(R.id.changelogButton).setOnClickListener(new OnClickListener() {
+
+      @Override
+      public void onClick(View v) {
+        ChangelogViewer viewer = new ChangelogViewer(SettingsActivity.this, SettingsActivity.this
+            .getString(R.string.Changelog));
+        viewer.setTitle("Pitch Perfect Changelog");
+        viewer.setIcon(SettingsActivity.this.getResources().getDrawable(R.drawable.icon));
+        viewer.show();
       }
     });
   }
