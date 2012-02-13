@@ -139,7 +139,7 @@ public class SongsModel {
   }
 
   public void saveAllToParse() {
-    if (this.serialized != null && this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
+    if (this.serialized == null || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
       this.toParseObject().saveInBackground();
   }
 

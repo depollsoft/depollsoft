@@ -25,7 +25,6 @@ import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
 import depollsoft.lib.ui.ChangelogViewer;
-import depollsoft.lib.util.Versioning;
 
 public class PitchPerfectActivity extends TabActivity {
   private WakeLock wakeLock;
@@ -99,12 +98,6 @@ public class PitchPerfectActivity extends TabActivity {
       }
     });
 
-    if (Versioning.isFirstRunOfVersion()) {
-      showChangelog();
-    }
-  }
-
-  private void showChangelog() {
     ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
     viewer.setTitle("Pitch Perfect Changelog");
     viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));

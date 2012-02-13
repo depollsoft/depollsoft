@@ -3,16 +3,12 @@ package depollsoft.lib.ui;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Html;
-import android.util.TypedValue;
-import android.view.Window;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import depollsoft.lib.util.Versioning;
 
 public class ChangelogViewer extends AlertDialog {
+  private static boolean hasBeenShown;
   private String changelogText;
 
   public ChangelogViewer(Context context, boolean cancelable, OnCancelListener cancelListener,
@@ -44,8 +40,9 @@ public class ChangelogViewer extends AlertDialog {
   }
 
   public void showIfAppropriate() {
-    if (Versioning.isFirstRunOfVersion()) {
+    if (Versioning.isFirstRunOfVersion() && !hasBeenShown) {
       show();
+      hasBeenShown = true;
     }
   }
 }

@@ -2,6 +2,7 @@ package depollsoft.lib.util;
 
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.util.Log;
 import depollsoft.lib.activity.RichApplication;
 
 public class Versioning {
@@ -21,7 +22,10 @@ public class Versioning {
       Preferences.set(LAST_VERSION_SEEN_KEY, curVersion);
     }
     catch (NameNotFoundException e) {
+      Log.e("depollsoft.lib", "Unable to set depollsoft.lib.LastVersionSeen", e);
     }
+    Log.d("depollsoft.lib", "Current Version Code: " + curVersion);
+    Log.d("depollsoft.lib", "Last Seen Version Code: " + lastVersion);
   }
 
   public static int getLastVersionSeen() {
