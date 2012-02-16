@@ -2,9 +2,8 @@ package depollsoft.pitchperfect;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
-import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseACL;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -117,17 +116,27 @@ public class SongsModel {
 
   public void refreshFromParse() {
     ParseQuery query = new ParseQuery("SongList");
-    query.findInBackground(new FindCallback() {
-      @Override
-      public void done(List<ParseObject> results, ParseException err) {
-        if (results != null && results.size() > 0) {
-          ParseObject main = results.get(0);
+    try {
+      query.getFirstInBackground(new GetCallback() {
+
+        @Override
+        public void done(ParseObject main, ParseException ex) {
+          if (ex != null) {
+            return;
+          }
           if (SongsModel.this.getLastChangeTime() < main.getUpdatedAt().getTime()) {
-            SongsModel.this.fromParseObject(results.get(0));
+            SongsModel.this.fromParseObject(main);
           }
         }
-      }
-    });
+      });
+    }
+    catch (Exception e) {
+      // It's ok -- it just means that a query is already ongoing.
+    }
+  }
+
+  public void handleLogOut() {
+    setLastChangeTime(0);
   }
 
   public void removeSong(PitchedSong song) {
@@ -139,14 +148,20 @@ public class SongsModel {
   }
 
   public void saveAllToParse() {
-    if (this.serialized == null || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
+    if (this.serialized == null
+        || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
       this.toParseObject().saveInBackground();
   }
 
   private void setLastChangeTime(long time) {
     if (this.suspendTimestamp)
       return;
-    Preferences.set(SongsModel.SongsChangedKey, time);
+    if (this.serialized == null) {
+      Preferences.set(SongsModel.SongsChangedKey, 0L);
+    }
+    else {
+      Preferences.set(SongsModel.SongsChangedKey, time);
+    }
   }
 
   public void setSongs(ObservableCollection<PitchedSong> value) {

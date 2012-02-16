@@ -168,5 +168,7 @@ public class PitchPerfectActivity extends TabActivity {
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
       this.wakeLock.acquire();
     }
+    
+    PitchPerfectApplication.startupRefreshFromParse();
   }
 }

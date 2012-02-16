@@ -45,7 +45,7 @@ public class PitchPerfectApplication extends RichApplication {
     JsonSerializer.registerAlias(Double.class, "Double");
     JsonSerializer.registerAlias(Double.TYPE, "double");
     JsonSerializer.registerAlias(ObservableCollection.class, "List");
-    
+
     GoogleAnalyticsTracker.getInstance().startNewSession("UA-24315533-2", 10, this);
     GoogleAnalyticsTracker.getInstance().setProductVersion("Pitch Perfect",
         this.getString(R.string.app_version));
@@ -62,18 +62,25 @@ public class PitchPerfectApplication extends RichApplication {
           "Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE");
       ParseFacebookUtils.initialize(PitchPerfectApplication.FACEBOOK_PRODUCTION, true);
     }
+  }
 
+  public static void startupRefreshFromParse() {
     if (ParseUser.getCurrentUser() != null) {
       SettingsModel.restoreUser();
-      ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {
-        @Override
-        public void done(ParseObject obj, ParseException e) {
-          if (obj != null && e == null) {
-            SettingsModel.restoreUser();
-            SongsModel.get().refreshFromParse();
+      try {
+        ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {
+          @Override
+          public void done(ParseObject obj, ParseException e) {
+            if (obj != null && e == null) {
+              SettingsModel.restoreUser();
+              SongsModel.get().refreshFromParse();
+            }
           }
-        }
-      });
+        });
+      }
+      catch (Exception e) {
+        // It's ok -- it just means there's already a query going on.
+      }
     }
   }
 

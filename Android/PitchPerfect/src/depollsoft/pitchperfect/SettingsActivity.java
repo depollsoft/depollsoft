@@ -127,6 +127,7 @@ public class SettingsActivity extends Activity {
           @Override
           protected Void doInBackground(Void... params) {
             ParseUser.logOut();
+            SongsModel.get().handleLogOut();
             return null;
           }
 

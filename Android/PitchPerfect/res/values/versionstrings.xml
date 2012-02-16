@@ -2,9 +2,14 @@
 <resources>
 
     <string name="app_store">android</string>
-    <string name="app_version">1.9</string>
-    <string name="VersionString">Version 1.9</string>
+    <string name="app_version">1.9.1</string>
+    <string name="VersionString">Version 1.9.1</string>
     <string name="Changelog">        <![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 1.9.1</h5>
+                    -Fixes a bug that kept some people from logging into the app via Facebook.<br />
+                    -Minor bug fixes
+            </p>
             <p>
                     <h5>Version 1.9</h5>
                     -Log in with your Facebook ID to save your preferences and song list in the cloud!  To use this feature, view the "Settings" page.<br />
