@@ -14,6 +14,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.BindingMode;
@@ -111,7 +112,8 @@ public class AddSongActivity extends Activity {
         else {
           SongsModel.get().addSong(AddSongActivity.this.getSong());
         }
-        AddSongActivity.this.setResult(Activity.RESULT_OK);
+        AddSongActivity.this.setResult(1);
+        PitchPerfectActivity.handlingResult = true;
         AddSongActivity.this.finish();
       }
     });
@@ -121,6 +123,7 @@ public class AddSongActivity extends Activity {
       @Override
       public void onClick(View v) {
         AddSongActivity.this.setResult(Activity.RESULT_CANCELED);
+        PitchPerfectActivity.handlingResult = true;
         AddSongActivity.this.finish();
       }
     });
@@ -149,7 +152,8 @@ public class AddSongActivity extends Activity {
             if (AddSongActivity.this.editing) {
               SongsModel.get().removeSong(AddSongActivity.this.toEdit);
             }
-            AddSongActivity.this.setResult(Activity.RESULT_OK);
+            AddSongActivity.this.setResult(1);
+            PitchPerfectActivity.handlingResult = true;
             AddSongActivity.this.finish();
             return true;
           }
@@ -162,6 +166,19 @@ public class AddSongActivity extends Activity {
   protected void onResume() {
     super.onResume();
     GoogleAnalyticsTracker.getInstance().trackPageView("AddSongActivity");
+    FlurryAgent.logEvent("AddSongActivity");
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
   public void setAllKeys(ObservableCollection<Key> value) {

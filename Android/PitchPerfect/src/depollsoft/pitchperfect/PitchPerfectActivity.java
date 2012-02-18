@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.TabHost.OnTabChangeListener;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.ui.BoolConverter;
@@ -30,6 +31,7 @@ public class PitchPerfectActivity extends TabActivity {
   private WakeLock wakeLock;
   private CompatTabHostWrapper tabHost;
   private boolean preparingMenu;
+  static boolean handlingResult;
 
   public boolean getAdsShouldShow() {
     return !SettingsModel.getLicensed();
@@ -168,7 +170,34 @@ public class PitchPerfectActivity extends TabActivity {
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
       this.wakeLock.acquire();
     }
-    
-    PitchPerfectApplication.startupRefreshFromParse();
+
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        if(handlingResult) {
+          handlingResult = false;
+          return;
+        }
+        PitchPerfectApplication.startupRefreshFromParse();
+      }
+    });
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    handlingResult = true;
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 }

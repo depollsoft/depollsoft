@@ -9,6 +9,7 @@ import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.Trackable;
@@ -25,6 +26,10 @@ public class SongsModel {
   private TrackableField<ObservableCollection<PitchedSong>> songs = new TrackableField<ObservableCollection<PitchedSong>>();
   private ParseObject serialized;
   private boolean suspendTimestamp;
+  private boolean saving;
+  private boolean refreshing;
+  private boolean postponedSave;
+  private boolean refreshPostponedSave;
 
   private static SongsModel instance;
 
@@ -94,6 +99,10 @@ public class SongsModel {
     return this.songs.getValue();
   }
 
+  public void handleLogOut() {
+    this.setLastChangeTime(0);
+  }
+
   public void moveDown(PitchedSong s) {
     if (!this.canMoveDown(s))
       return;
@@ -115,28 +124,31 @@ public class SongsModel {
   }
 
   public void refreshFromParse() {
+    refreshing = true;
     ParseQuery query = new ParseQuery("SongList");
     try {
       query.getFirstInBackground(new GetCallback() {
 
         @Override
         public void done(ParseObject main, ParseException ex) {
+          refreshing = false;
           if (ex != null) {
             return;
           }
-          if (SongsModel.this.getLastChangeTime() < main.getUpdatedAt().getTime()) {
+          if (main != null && SongsModel.this.getLastChangeTime() < main.getUpdatedAt().getTime()) {
             SongsModel.this.fromParseObject(main);
           }
+          else if (refreshPostponedSave) {
+            saveAllToParse();
+          }
+          refreshPostponedSave = false;
         }
       });
     }
     catch (Exception e) {
       // It's ok -- it just means that a query is already ongoing.
+      refreshing = false;
     }
-  }
-
-  public void handleLogOut() {
-    setLastChangeTime(0);
   }
 
   public void removeSong(PitchedSong song) {
@@ -148,9 +160,39 @@ public class SongsModel {
   }
 
   public void saveAllToParse() {
-    if (this.serialized == null
-        || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime())
-      this.toParseObject().saveInBackground();
+    this.saveAllToParse(false);
+  }
+
+  public void saveAllToParse(boolean immediately) {
+    if (ParseUser.getCurrentUser() == null) {
+      return;
+    }
+    if (refreshing) {
+      refreshPostponedSave = true;
+      return;
+    }
+    if (this.saving) {
+      this.postponedSave = true;
+      return;
+    }
+    if (immediately) {
+      this.saving = true;
+      this.toParseObject().saveInBackground(new SaveCallback() {
+
+        @Override
+        public void done(ParseException ex) {
+          SongsModel.this.saving = false;
+          if (SongsModel.this.postponedSave) {
+            SongsModel.this.saveAllToParse(false);
+          }
+          SongsModel.this.postponedSave = false;
+        }
+      });
+    }
+    else if (this.serialized == null || this.serialized.getUpdatedAt() == null
+        || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime()) {
+      this.toParseObject().saveEventually();
+    }
   }
 
   private void setLastChangeTime(long time) {
@@ -175,6 +217,9 @@ public class SongsModel {
 
   private void storeValue() {
     Preferences.set(SongsModel.SongsKey, this.getSongs());
+    if (!suspendTimestamp) {
+      this.saveAllToParse();
+    }
     this.setLastChangeTime(new Date().getTime());
   }
 

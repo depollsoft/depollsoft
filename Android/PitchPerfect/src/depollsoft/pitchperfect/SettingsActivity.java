@@ -4,17 +4,20 @@ import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
@@ -32,6 +35,8 @@ import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
 
+  private boolean loggingIn;
+
   public static boolean getShowBuyLink() {
     return !SettingsModel.getLicensed() && !SettingsModel.getAppStore().equals("amazon");
   }
@@ -40,6 +45,14 @@ public class SettingsActivity extends Activity {
 
   public boolean getLicensed() {
     return SettingsModel.getLicensed();
+  }
+
+  @Override
+  public boolean onKeyDown(int keyCode, KeyEvent event) {
+    if (keyCode == KeyEvent.KEYCODE_BACK && loggingIn) {
+      return true;
+    }
+    return super.onKeyDown(keyCode, event);
   }
 
   public boolean getLoggedIn() {
@@ -89,10 +102,16 @@ public class SettingsActivity extends Activity {
       @Override
       public void onClick(final View v) {
         v.setEnabled(false);
+        final ProgressDialog progress = new ProgressDialog(SettingsActivity.this);
+        progress.setMessage("Logging in...");
+        loggingIn = true;
+        progress.show();
         ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
             SettingsActivity.this, new LogInCallback() {
               @Override
               public void done(ParseUser user, ParseException err) {
+                loggingIn = false;
+                progress.dismiss();
                 v.setEnabled(true);
                 if (err != null) {
                   Toast.makeText(SettingsActivity.this, "Facebook login failed.",
@@ -105,6 +124,7 @@ public class SettingsActivity extends Activity {
                   Log.d("Pitch Perfect", "User cancelled login.");
                   return;
                 }
+                FlurryAgent.setUserId(user.getUsername());
                 SettingsActivity.this.loginTrackable.updateTrackers();
                 if (!user.isNew()) {
                   SettingsModel.restoreUser();
@@ -112,7 +132,7 @@ public class SettingsActivity extends Activity {
                 }
                 else {
                   SettingsModel.refreshUser();
-                  SongsModel.get().saveAllToParse();
+                  SongsModel.get().saveAllToParse(true);
                 }
               }
             });
@@ -184,12 +204,14 @@ public class SettingsActivity extends Activity {
   protected void onPause() {
     super.onPause();
     SettingsModel.refreshUser();
+    FlurryAgent.endTimedEvent("SettingsActivity");
   }
 
   @Override
   protected void onResume() {
     super.onResume();
     GoogleAnalyticsTracker.getInstance().trackPageView("SettingsActivity");
+    FlurryAgent.logEvent("SettingsActivity", true);
   }
 
   public void setToggleNotes(boolean value) {
@@ -198,6 +220,18 @@ public class SettingsActivity extends Activity {
 
   public void setWakeLock(boolean value) {
     SettingsModel.setWakeLock(value);
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
 }

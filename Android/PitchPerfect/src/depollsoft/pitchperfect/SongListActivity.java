@@ -1,5 +1,8 @@
 package depollsoft.pitchperfect;
 
+import java.util.Collections;
+
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.ParseUser;
 
@@ -61,7 +64,7 @@ public class SongListActivity extends Activity {
       @Override
       public void onClick(View v) {
         Intent i = new Intent(SongListActivity.this, AddSongActivity.class);
-        SongListActivity.this.startActivity(i);
+        SongListActivity.this.startActivityForResult(i, 1);
       }
     });
     if (ActionBars.hasActionBar(this)) {
@@ -105,7 +108,7 @@ public class SongListActivity extends Activity {
         @Override
         public boolean onMenuItemClick(MenuItem item) {
           Intent i = new Intent(SongListActivity.this, AddSongActivity.class);
-          SongListActivity.this.startActivity(i);
+          SongListActivity.this.startActivityForResult(i, 2);
           return true;
         }
       });
@@ -115,6 +118,13 @@ public class SongListActivity extends Activity {
     finally {
       preparingMenu = false;
     }
+  }
+  
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    PitchPerfectActivity.handlingResult = true;
   }
 
   @Override
@@ -131,6 +141,7 @@ public class SongListActivity extends Activity {
     if (ParseUser.getCurrentUser() != null) {
       SongsModel.get().saveAllToParse();
     }
+    FlurryAgent.endTimedEvent("SongListActivity");
   }
 
   @Override
@@ -139,6 +150,8 @@ public class SongListActivity extends Activity {
     this.runOnUiThread(new Runnable() {
       public void run() {
         GoogleAnalyticsTracker.getInstance().trackPageView("SongListActivity");
+        FlurryAgent.logEvent("SongListActivity",
+            Collections.singletonMap("SongCount", SongsModel.get().getSongs().size()), true);
       }
     });
   }
@@ -157,4 +170,15 @@ public class SongListActivity extends Activity {
     this.model.setValue(value);
   }
 
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
+  }
 }

@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.TrackableField;
@@ -120,6 +121,7 @@ public class PitchPipeActivity extends Activity {
     super.onPause();
     for (Note n : this.getModel().getNotes())
       n.stop();
+    FlurryAgent.endTimedEvent("PitchPipeActivity");
   }
 
   @Override
@@ -128,8 +130,21 @@ public class PitchPipeActivity extends Activity {
     this.runOnUiThread(new Runnable() {
       public void run() {
         GoogleAnalyticsTracker.getInstance().trackPageView("PitchPipeActivity");
+        FlurryAgent.logEvent("PitchPipeActivity", true);
       }
     });
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
   public void setModel(PitchPipeModel value) {

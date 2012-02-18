@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.util.Log;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.Parse;
 import com.parse.ParseException;
@@ -31,6 +32,12 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+
+    FlurryAgent.setUseHttps(true);
+    FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
+        getString(R.string.app_store))
+        + (DebugTools.isDebugSigned(DEBUG_SIGNATURE) ? " debug" : ""));
+
     JsonSerializer.registerAlias(Integer.class, "Integer");
     JsonSerializer.registerAlias(Integer.TYPE, "int");
     JsonSerializer.registerAlias(Key.class, "Key");
@@ -66,6 +73,7 @@ public class PitchPerfectApplication extends RichApplication {
 
   public static void startupRefreshFromParse() {
     if (ParseUser.getCurrentUser() != null) {
+      FlurryAgent.setUserId(ParseUser.getCurrentUser().getUsername());
       SettingsModel.restoreUser();
       try {
         ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {

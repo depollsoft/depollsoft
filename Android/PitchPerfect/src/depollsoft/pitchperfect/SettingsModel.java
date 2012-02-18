@@ -40,7 +40,7 @@ public class SettingsModel {
     if (ParseUser.getCurrentUser() != null) {
       ParseUser.getCurrentUser().put("ToggleNote", SettingsModel.getToggleNotes());
       ParseUser.getCurrentUser().put("WakeLock", SettingsModel.getWakeLock());
-      ParseUser.getCurrentUser().saveInBackground();
+      ParseUser.getCurrentUser().saveEventually();
     }
   }
 
