@@ -38,7 +38,8 @@ public class SettingsActivity extends Activity {
   private boolean loggingIn;
 
   public static boolean getShowBuyLink() {
-    return !SettingsModel.getLicensed() && !SettingsModel.getAppStore().equals("amazon");
+    return !SettingsModel.getLicensed() && !SettingsModel.getAppStore().equals("amazon")
+        && !SettingsModel.getAppStore().equals("blackberry");
   }
 
   private Trackable loginTrackable = new Trackable();
