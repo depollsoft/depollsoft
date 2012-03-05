@@ -136,11 +136,16 @@
     <string name="ChooseARating">Select a rating</string>
     <string name="FreePitchPipe">Also try Pitch Perfect, a free digital pitch pipe!</string>
     <string name="DepollSoft">DepollSoft</string>
-    <string name="ClearCache">Clear cached data (sheet music, tracks, etc.)</string>
+    <string name="ClearCache">Clear cached sheet music and tracks</string>
     <string name="CurrentCacheSize">Current cache size:</string>
     <string name="TermsOfUse">Terms of Use</string>
     <string name="Stop">Stop</string>
     <string name="Play">Play</string>
     <string name="Pause">Pause</string>
+    <string name="LogIn">Log in with Facebook</string>
+    <string name="LogOut">Log out</string>
+    <string name="LogInInfo">Log in using Facebook to back up and synchronize your tag lists.</string>
+    <string name="LogInTitle">Log in</string>
+    <string name="ViewChangelog">View Changelog</string>
 
 </resources>

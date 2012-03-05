@@ -5,9 +5,13 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,9 +22,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.parse.LogInCallback;
+import com.parse.ParseException;
+import com.parse.ParseFacebookUtils;
+import com.parse.ParseFacebookUtils.Permissions;
+import com.parse.ParseUser;
 
+import depollsoft.lib.binding.Trackable;
+import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
   private Spinner minDownloadSpinner;
@@ -31,7 +43,23 @@ public class SettingsActivity extends Activity {
   private List<String> minDownloadChoices;
   private List<String> minRatingChoices;
 
+  private boolean loggingIn;
+
+  private Trackable loginTrackable = new Trackable();
+
   public SettingsActivity() {
+  }
+
+  public boolean getLoggedIn() {
+    this.loginTrackable.track();
+    return ParseUser.getCurrentUser() != null;
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
   }
 
   @Override
@@ -164,6 +192,81 @@ public class SettingsActivity extends Activity {
       }
     });
 
+    UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true));
+    UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get());
+
+    this.findViewById(R.id.loginButton).setOnClickListener(new OnClickListener() {
+      public void onClick(final View v) {
+        v.setEnabled(false);
+        final ProgressDialog progress = new ProgressDialog(SettingsActivity.this);
+        progress.setMessage("Logging in...");
+        SettingsActivity.this.loggingIn = true;
+        progress.show();
+        ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
+            SettingsActivity.this, new LogInCallback() {
+              @Override
+              public void done(ParseUser user, ParseException err) {
+                SettingsActivity.this.loggingIn = false;
+                progress.dismiss();
+                v.setEnabled(true);
+                if (err != null) {
+                  Toast.makeText(SettingsActivity.this, "Facebook login failed.",
+                      Toast.LENGTH_SHORT);
+                  Log.d("Tag Master", "Failed to log in.", err);
+                  return;
+                }
+
+                if (user == null) {
+                  Log.d("Tag Master", "User cancelled login.");
+                  return;
+                }
+                SettingsActivity.this.loginTrackable.updateTrackers();
+                if (user.isNew()) {
+                  FavoritesModel.storeToUser();
+                  TeachableTagsModel.storeToUser();
+                  user.saveEventually();
+                }
+                else {
+                  FavoritesModel.restoreFromUser();
+                  TeachableTagsModel.restoreFromUser();
+                }
+              }
+            });
+      }
+    });
+
+    this.findViewById(R.id.logoutButton).setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        AsyncTask<Void, Void, Void> logOutTask = new AsyncTask<Void, Void, Void>() {
+
+          @Override
+          protected Void doInBackground(Void... params) {
+            ParseUser.logOut();
+            // TODO:handle logout
+            return null;
+          }
+
+          @Override
+          protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            SettingsActivity.this.loginTrackable.updateTrackers();
+          }
+        };
+        logOutTask.execute();
+      }
+    });
+
+    this.findViewById(R.id.changelogButton).setOnClickListener(new OnClickListener() {
+
+      public void onClick(View v) {
+        ChangelogViewer viewer = new ChangelogViewer(SettingsActivity.this, SettingsActivity.this
+            .getString(R.string.Changelog));
+        viewer.setTitle("Tag Master Changelog");
+        viewer.setIcon(SettingsActivity.this.getResources().getDrawable(R.drawable.icon));
+        viewer.show();
+      }
+    });
+
     ActionBars.setCustomTitle(this, R.layout.titleview);
   }
 
@@ -171,6 +274,14 @@ public class SettingsActivity extends Activity {
   protected void onDestroy() {
     UiBinder.unbind(this);
     super.onDestroy();
+  }
+
+  @Override
+  public boolean onKeyDown(int keyCode, KeyEvent event) {
+    if (keyCode == KeyEvent.KEYCODE_BACK && this.loggingIn) {
+      return true;
+    }
+    return super.onKeyDown(keyCode, event);
   }
 
   @Override

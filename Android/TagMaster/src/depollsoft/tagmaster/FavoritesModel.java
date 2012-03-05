@@ -1,5 +1,10 @@
 package depollsoft.tagmaster;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import com.parse.ParseUser;
+
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.binding.TrackableField;
@@ -22,8 +27,7 @@ public class FavoritesModel {
     for (int x = 0; x < objects.size(); x++) {
       if (!(objects.get(x).getClass() == Integer.TYPE || objects.get(x) instanceof Integer)) {
         try {
-          ((ObservableCollection<Integer>) objects).set(x, new Integer(objects
-              .get(x).toString()));
+          ((ObservableCollection<Integer>) objects).set(x, new Integer(objects.get(x).toString()));
         }
         catch (Exception e) {
           // Oh well...
@@ -94,12 +98,39 @@ public class FavoritesModel {
     FavoritesModel.getFavoriteIds().clear();
   }
 
+  public static void restoreFromUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      JSONArray ids = ParseUser.getCurrentUser().getJSONArray("FavoriteIds");
+      if (ids == null)
+        return;
+      ObservableCollection<Integer> newIds = new ObservableCollection<Integer>();
+      for (int i = 0; i < ids.length(); i++) {
+        try {
+          newIds.add(ids.getInt(i));
+        }
+        catch (JSONException e) {
+        }
+      }
+      FavoritesModel.setFavoriteIds(newIds);
+    }
+  }
+
   public static void setFavoriteIds(ObservableCollection<Integer> value) {
     FavoritesModel.favoriteIds.setValue(value);
   }
 
+  public static void storeToUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      JSONArray ids = new JSONArray(FavoritesModel.getFavoriteIds());
+      ParseUser.getCurrentUser().put("FavoriteIds", ids);
+    }
+  }
+
   private static void storeValue() {
-    Preferences.set(FavoritesModel.FavoritesPreference,
-        FavoritesModel.getFavoriteIds());
+    Preferences.set(FavoritesModel.FavoritesPreference, FavoritesModel.getFavoriteIds());
+    if (ParseUser.getCurrentUser() != null) {
+      FavoritesModel.storeToUser();
+      ParseUser.getCurrentUser().saveEventually();
+    }
   }
 }

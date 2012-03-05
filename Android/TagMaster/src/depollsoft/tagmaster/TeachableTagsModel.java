@@ -1,5 +1,10 @@
 package depollsoft.tagmaster;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import com.parse.ParseUser;
+
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.binding.TrackableField;
@@ -14,12 +19,10 @@ public class TeachableTagsModel {
 
   static {
     if (Preferences.get(TeachableTagsModel.TeachableTagsPreference) == null)
-      TeachableTagsModel
-          .setTeachableTagIds(new ObservableCollection<Integer>());
+      TeachableTagsModel.setTeachableTagIds(new ObservableCollection<Integer>());
     else
-      TeachableTagsModel
-          .setTeachableTagIds((ObservableCollection<Integer>) Preferences
-              .get(TeachableTagsModel.TeachableTagsPreference));
+      TeachableTagsModel.setTeachableTagIds((ObservableCollection<Integer>) Preferences
+          .get(TeachableTagsModel.TeachableTagsPreference));
     Trackable.track(new Tracker() {
 
       public void update() {
@@ -54,12 +57,12 @@ public class TeachableTagsModel {
     return index > 0;
   }
 
-  public static ObservableCollection<Integer> getTeachableTagIds() {
-    return TeachableTagsModel.teachableTagIds.getValue();
-  }
-
   public static boolean getIsTeachableTag(int id) {
     return TeachableTagsModel.getTeachableTagIds().contains(id);
+  }
+
+  public static ObservableCollection<Integer> getTeachableTagIds() {
+    return TeachableTagsModel.teachableTagIds.getValue();
   }
 
   public static void moveDown(int id) {
@@ -82,12 +85,40 @@ public class TeachableTagsModel {
     TeachableTagsModel.getTeachableTagIds().clear();
   }
 
+  public static void restoreFromUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      JSONArray ids = ParseUser.getCurrentUser().getJSONArray("TeachableIds");
+      if (ids == null)
+        return;
+      ObservableCollection<Integer> newIds = new ObservableCollection<Integer>();
+      for (int i = 0; i < ids.length(); i++) {
+        try {
+          newIds.add(ids.getInt(i));
+        }
+        catch (JSONException e) {
+        }
+      }
+      TeachableTagsModel.setTeachableTagIds(newIds);
+    }
+  }
+
   public static void setTeachableTagIds(ObservableCollection<Integer> value) {
     TeachableTagsModel.teachableTagIds.setValue(value);
+  }
+
+  public static void storeToUser() {
+    if (ParseUser.getCurrentUser() != null) {
+      JSONArray ids = new JSONArray(TeachableTagsModel.getTeachableTagIds());
+      ParseUser.getCurrentUser().put("TeachableIds", ids);
+    }
   }
 
   private static void storeValue() {
     Preferences.set(TeachableTagsModel.TeachableTagsPreference,
         TeachableTagsModel.getTeachableTagIds());
+    if (ParseUser.getCurrentUser() != null) {
+      TeachableTagsModel.storeToUser();
+      ParseUser.getCurrentUser().saveEventually();
+    }
   }
 }

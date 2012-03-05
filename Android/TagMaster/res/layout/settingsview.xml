@@ -68,6 +68,35 @@
                 </Button>
 
                 <TextView
+                    android:id="@+id/logInTitleTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginLeft="10dp"
+                    android:text="@string/LogInTitle"
+                    android:textSize="20dp"
+                    android:textStyle="bold" >
+                </TextView>
+
+                <TextView
+                    android:id="@+id/loginTextView"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/LogInInfo" />
+
+                <Button
+                    android:id="@+id/loginButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/LogIn" />
+
+                <Button
+                    android:id="@+id/logoutButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/LogOut" />
+
+                <TextView
                     android:id="@+id/TextView02"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -217,6 +246,13 @@
                         android:entries="@array/LearningTracksChoices" >
                     </Spinner>
                 </TableRow>
+
+                <Button
+                    android:id="@+id/changelogButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/ViewChangelog" />
             </TableLayout>
         </ScrollView>
     </LinearLayout>

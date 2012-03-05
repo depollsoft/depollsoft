@@ -7,6 +7,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseUser;
+import com.parse.RefreshCallback;
 
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.ui.AdapterConverter;
@@ -14,6 +18,7 @@ import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.MenuItems;
+import depollsoft.lib.ui.ChangelogViewer;
 
 public class MeActivity extends Activity {
   public MeActivity() {
@@ -21,6 +26,10 @@ public class MeActivity extends Activity {
 
   public ObservableCollection<Integer> getFavoriteIds() {
     return FavoritesModel.getFavoriteIds();
+  }
+
+  public boolean getHasActionBar() {
+    return ActionBars.hasActionBar(this);
   }
 
   @Override
@@ -32,12 +41,27 @@ public class MeActivity extends Activity {
         FavoriteTagItemView.class, false, true));
 
     UiBinder.bind(this, R.id.titleLayout, "Visibility", "HasActionBar", new BoolConverter(true));
-    
-    ActionBars.setCustomTitle(this, R.layout.titleview);
-  }
 
-  public boolean getHasActionBar() {
-    return ActionBars.hasActionBar(this);
+    ActionBars.setCustomTitle(this, R.layout.titleview);
+
+    if (ParseUser.getCurrentUser() != null) {
+      ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {
+
+        @Override
+        public void done(ParseObject obj, ParseException err) {
+          if (err != null) {
+            return;
+          }
+          FavoritesModel.restoreFromUser();
+          TeachableTagsModel.restoreFromUser();
+        }
+      });
+    }
+    
+    ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
+    viewer.setTitle("Tag Master Changelog");
+    viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
+    viewer.showIfAppropriate();
   }
 
   @Override
