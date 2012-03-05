@@ -13,7 +13,6 @@
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
             android:maxWidth="75dp"
             android:text="@string/RecordingNotes"
             android:textSize="12dp"
@@ -22,11 +21,9 @@
 
         <TextView
             android:id="@+id/trackNotesTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:inputType="textMultiLine"
-            android:text="TextView"
             android:textSize="12dp" >
         </TextView>
     </LinearLayout>
@@ -47,7 +44,7 @@
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dip"
         android:layout_weight="1" >
 
         <RadioGroup

@@ -10,9 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_gravity="center_vertical"
-        android:text="ToggleButton"
-        android:textOff="Play"
-        android:textOn="Pause" >
+        android:textOff="@string/Play"
+        android:textOn="@string/Pause" >
     </ToggleButton>
 
     <Button
@@ -20,12 +19,12 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_gravity="center_vertical"
-        android:text="Stop" >
+        android:text="@string/Stop" >
     </Button>
 
     <TableLayout
         android:id="@+id/tableLayout1"
-        android:layout_width="wrap_content"
+        android:layout_width="0dip"
         android:layout_height="wrap_content"
         android:layout_weight="1" >
 
@@ -47,7 +46,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|center_vertical"
                 android:layout_marginLeft="4dp"
-                android:inputType="textMultiLine"
                 android:minWidth="60dp"
                 android:textSize="12dp" >
             </TextView>

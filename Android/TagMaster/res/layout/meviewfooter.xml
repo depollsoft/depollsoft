@@ -5,13 +5,13 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
+        android:id="@+id/appDisplayLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/appNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
@@ -19,7 +19,7 @@
         </TextView>
 
         <TextView
-            android:id="@+id/textView5"
+            android:id="@+id/dashTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=" - "
@@ -27,7 +27,7 @@
         </TextView>
 
         <TextView
-            android:id="@+id/textView6"
+            android:id="@+id/appVersionTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_version"
@@ -52,7 +52,7 @@
         </depollsoft.lib.ui.Hyperlink>
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/copyrightTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -63,7 +63,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/linkLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal" >
@@ -95,7 +95,7 @@
     </LinearLayout>
 
     <depollsoft.lib.ui.Hyperlink
-        android:id="@+id/Hyperlink02"
+        android:id="@+id/marketHyperlink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -105,7 +105,7 @@
     </depollsoft.lib.ui.Hyperlink>
 
     <depollsoft.lib.ui.Hyperlink
-        android:id="@+id/Hyperlink01"
+        android:id="@+id/termsHyperlink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -115,7 +115,7 @@
     </depollsoft.lib.ui.Hyperlink>
 
     <depollsoft.lib.ui.Hyperlink
-        android:id="@+id/Hyperlink01"
+        android:id="@+id/donateHyperlink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

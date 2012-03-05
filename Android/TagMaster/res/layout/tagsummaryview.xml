@@ -12,7 +12,7 @@
         <TableLayout
             android:id="@+id/tableLayout1"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:shrinkColumns="1"
             android:stretchColumns="1" >
 
@@ -47,9 +47,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
-                    android:inputType="textMultiLine"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="24dp" >
                 </TextView>
 
@@ -77,7 +75,6 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:singleLine="false"
-                        android:text="TextView"
                         android:textSize="12dp" >
                     </TextView>
                 </LinearLayout>
@@ -105,7 +102,6 @@
                         android:layout_marginLeft="5dp"
                         android:clickable="false"
                         android:longClickable="false"
-                        android:text="TextView"
                         android:textSize="12dp" >
                     </TextView>
                 </LinearLayout>
@@ -137,7 +133,7 @@
 
                     <LinearLayout
                         android:id="@+id/linearLayout4"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dip"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
@@ -150,7 +146,6 @@
                             android:layout_gravity="center"
                             android:clickable="false"
                             android:longClickable="false"
-                            android:text="TextView"
                             android:textSize="12dp" >
                         </TextView>
 
@@ -201,7 +196,6 @@
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -231,7 +225,6 @@
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -289,7 +282,6 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -307,7 +299,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_margin="5dip"
-                    android:inputType="text"
                     android:text="@string/SheetMusic"
                     android:textSize="20dip"
                     android:textStyle="bold" >
@@ -320,7 +311,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView7"
+                    android:id="@+id/lyticsTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -338,9 +329,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
                     android:clickable="false"
-                    android:inputType="textMultiLine"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -369,9 +358,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
                     android:clickable="false"
-                    android:inputType="textMultiLine"
                     android:longClickable="false"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>

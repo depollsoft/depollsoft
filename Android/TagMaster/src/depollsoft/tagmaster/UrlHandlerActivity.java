@@ -16,8 +16,7 @@ public class UrlHandlerActivity extends ActivityGroup {
     return uri.getHost().toLowerCase().endsWith("barbershoptags.com")
         && uri.getPath().equals("/dbpage.php")
         && (uri.getQueryParameter("pg").equals("view")
-            && uri.getQueryParameter("dbase").equals("tags") && uri
-            .getQueryParameter("id") != null);
+            && uri.getQueryParameter("dbase").equals("tags") && uri.getQueryParameter("id") != null);
   }
 
   public UrlHandlerActivity() {
@@ -35,14 +34,10 @@ public class UrlHandlerActivity extends ActivityGroup {
         "UrlHandlerActivity/" + URLEncoder.encode(uri.toString()));
     String value;
     try {
-      if (uri.getQueryParameter("pg").equals("view")
-          && uri.getQueryParameter("dbase").equals("tags")
-          && (value = uri.getQueryParameter("id")) != null) {
+      if (UrlHandlerActivity.canHandleUri(uri) && (value = uri.getQueryParameter("id")) != null) {
         Intent tagDetails = new Intent(this, TagDetailActivity.class);
-        tagDetails.putExtra(TagDetailActivity.TAG_ID_EXTRA,
-            Integer.parseInt(value));
-        this.setContentView(this.getLocalActivityManager()
-            .startActivity("tagDetails", tagDetails).getDecorView());
+        tagDetails.putExtra(TagDetailActivity.TAG_ID_EXTRA, Integer.parseInt(value));
+        this.startActivity(tagDetails);
         return;
       }
     }
@@ -51,7 +46,6 @@ public class UrlHandlerActivity extends ActivityGroup {
 
     Intent browser = new Intent(this, TagMasterBrowserActivity.class);
     browser.putExtra(BrowserActivity.URL_EXTRA, uri.toString());
-    this.setContentView(this.getLocalActivityManager()
-        .startActivity("browse", browser).getDecorView());
+    this.startActivity(browser);
   }
 }

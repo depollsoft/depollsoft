@@ -46,10 +46,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
-                android:inputType="textMultiLine"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:text="TextView"
                 android:textSize="12dp" >
             </TextView>
         </TableRow>
@@ -77,10 +75,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
-                android:inputType="textMultiLine"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:text="TextView"
                 android:textSize="12dp" >
             </TextView>
         </TableRow>
@@ -108,10 +104,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
-                android:inputType="textMultiLine"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:text="TextView"
                 android:textSize="12dp" >
             </TextView>
         </TableRow>

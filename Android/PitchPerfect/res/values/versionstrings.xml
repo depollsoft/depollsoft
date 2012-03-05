@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_store">android</string>
+    <string name="app_store">blackberry</string>
     <string name="app_version">1.9.2</string>
     <string name="VersionString">Version 1.9.2</string>
     <string name="Changelog">        <![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:

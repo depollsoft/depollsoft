@@ -12,7 +12,7 @@
         <TableLayout
             android:id="@+id/tableLayout1"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:shrinkColumns="1"
             android:stretchColumns="1" >
 
@@ -26,8 +26,6 @@
                     android:id="@+id/titleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="24dp" >
                 </TextView>
             </LinearLayout>
@@ -53,7 +51,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -79,7 +76,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -104,7 +100,6 @@
                     android:id="@+id/downloadsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -155,8 +150,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
@@ -167,7 +160,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/postedTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -182,8 +175,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -194,7 +185,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/arrangedByTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -209,8 +200,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
@@ -221,7 +210,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/yearArrangedTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -236,8 +225,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>
@@ -248,7 +235,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/sungByTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -263,8 +250,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
@@ -275,7 +260,7 @@
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/yearSungTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
@@ -290,8 +275,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:inputType="textMultiLine"
-                    android:text="TextView"
                     android:textSize="12dp" >
                 </TextView>
             </TableRow>

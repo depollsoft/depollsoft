@@ -16,6 +16,7 @@
             android:layout_height="wrap_content" />
 
         <LinearLayout
+            android:baselineAligned="false"
             android:id="@+id/linearLayout1"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
@@ -24,7 +25,7 @@
             <FrameLayout
                 android:id="@+id/frameLayout1"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="0dip"
                 android:layout_weight="1" >
 
                 <ImageView

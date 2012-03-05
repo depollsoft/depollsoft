@@ -8,12 +8,14 @@ import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.ui.AdapterConverter;
 import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.util.Function;
 import depollsoft.lib.util.Property;
 import depollsoft.lib.util.ReflectedProperty;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 
 public class TeachableTagsActivity extends Activity {
 
@@ -30,25 +32,34 @@ public class TeachableTagsActivity extends Activity {
 
     this.setContentView(R.layout.teachabletagsview);
 
-    UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter",
-        "TeachableTags", new AdapterConverter(TeachableTagItemView.class,
-            false, true));
-    UiBinder.registerBinding(
-        this,
-        new Binding(new ReflectedProperty(this
-            .findViewById(R.id.noTeachableTagsTextView), "Visibility"),
-            new Property<Boolean>(new Function<Boolean>() {
-              public Boolean evaluate() {
-                return TeachableTagsActivity.this.getTeachableTags().size() == 0;
-              }
-            }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get())
-            .bind(this));
+    UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter", "TeachableTags",
+        new AdapterConverter(TeachableTagItemView.class, false, true));
+    UiBinder.registerBinding(this,
+        new Binding(new ReflectedProperty(this.findViewById(R.id.noTeachableTagsTextView),
+            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+          public Boolean evaluate() {
+            return TeachableTagsActivity.this.getTeachableTags().size() == 0;
+          }
+        }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get()).bind(this));
+
+    ActionBars.setCustomTitle(this, R.layout.titleview);
   }
 
   @Override
   protected void onDestroy() {
     UiBinder.unbind(this);
     super.onDestroy();
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == ActionBars.HOME_MENU_ITEM_ID) {
+      Intent intent = new Intent(this, MeActivity.class);
+      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      this.startActivity(intent);
+      return true;
+    }
+    return super.onOptionsItemSelected(item);
   }
 
   @Override

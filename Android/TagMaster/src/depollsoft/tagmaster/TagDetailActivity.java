@@ -4,6 +4,10 @@ import depollsoft.lib.binding.Binding;
 import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.Activities;
+import depollsoft.lib.compat.ui.CompatTabHostWrapper;
+import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.lib.ui.ThreadSwitchProperty;
 import depollsoft.lib.util.Action;
 import depollsoft.lib.util.ContentCache;
@@ -23,6 +27,7 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class TagDetailActivity extends TabActivity {
   public static final String TAG_ID_EXTRA = "depollsoft.tagmaster.tagid";
+  private CompatTabHostWrapper tabHost;
   private TrackableField<Tag> tag = new TrackableField<Tag>();
   private ProgressDialog progress;
 
@@ -31,6 +36,10 @@ public class TagDetailActivity extends TabActivity {
 
   public Tag getTag() {
     return this.tag.getValue();
+  }
+
+  public int getTagId() {
+    return this.getIntent().getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1);
   }
 
   private void loadQueryItem(boolean refresh) {
@@ -62,8 +71,7 @@ public class TagDetailActivity extends TabActivity {
     this.progress.setMessage("Loading...");
     this.progress.show();
 
-    int tagId = this.getIntent().getExtras()
-        .getInt(TagDetailActivity.TAG_ID_EXTRA);
+    int tagId = this.getIntent().getExtras().getInt(TagDetailActivity.TAG_ID_EXTRA);
 
     Tag.loadTagById(tagId, refresh).continueWith(new Action<Tag>() {
 
@@ -74,6 +82,7 @@ public class TagDetailActivity extends TabActivity {
             TagDetailActivity.this.setTag(null);
             TagDetailActivity.this.setTag(parameter);
             TagDetailActivity.this.progress.dismiss();
+            Activities.invalidateOptionsMenu(TagDetailActivity.this);
           }
         });
       }
@@ -89,38 +98,32 @@ public class TagDetailActivity extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.tagdetailview);
+
+    this.tabHost = new CompatTabHostWrapper(this, this.getTabHost());
+
     this.progress = new ProgressDialog(this);
 
     Intent summaryIntent = new Intent(this, TagSummaryActivity.class);
     summaryIntent.putExtras(this.getIntent().getExtras());
-    this.getTabHost().addTab(
-        this.getTabHost().newTabSpec("summary").setContent(summaryIntent)
-            .setIndicator("Summary"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("summary").setContent(summaryIntent).setIndicator("Summary"));
 
     Intent detailsIntent = new Intent(this, TagMiscActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
-    this.getTabHost().addTab(
-        this.getTabHost().newTabSpec("details").setContent(detailsIntent)
-            .setIndicator("Details"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("details").setContent(detailsIntent).setIndicator("Details"));
 
     Intent tracksIntent = new Intent(this, TagTracksActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
-    this.getTabHost().addTab(
-        this.getTabHost().newTabSpec("tracks").setContent(tracksIntent)
-            .setIndicator("Tracks"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("tracks").setContent(tracksIntent).setIndicator("Tracks"));
 
     Intent videosIntent = new Intent(this, TagVideosActivity.class);
     videosIntent.putExtras(this.getIntent().getExtras());
-    this.getTabHost().addTab(
-        this.getTabHost().newTabSpec("videos").setContent(videosIntent)
-            .setIndicator("Videos"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("videos").setContent(videosIntent).setIndicator("Videos"));
 
-    UiBinder.registerBinding(this, new Binding(
-        new ThreadSwitchProperty<Object>(new ReflectedProperty(this, "Title"),
-            this), new ReflectedProperty(this, "Tag.Title")).bind(this));
+    UiBinder.registerBinding(this, new Binding(new ThreadSwitchProperty<Object>(
+        new ReflectedProperty(this, "Title"), this), new ReflectedProperty(this, "Tag.Title"))
+        .bind(this));
 
-    UiBinder.bind(this, R.id.tabContentHolder, "Visibility", "Tag",
-        BoolConverter.get());
+    UiBinder.bind(this, R.id.tabContentHolder, "Visibility", "Tag", BoolConverter.get());
 
     this.loadQueryItem(false);
   }
@@ -130,6 +133,11 @@ public class TagDetailActivity extends TabActivity {
     if (this.getTag() == null)
       return false;
     this.getMenuInflater().inflate(R.menu.tagdetailmenu, menu);
+    MenuItems.setShowAsAction(menu.findItem(R.id.addFavoriteMenuItem),
+        MenuItems.SHOW_AS_ACTION_IF_ROOM);
+    MenuItems.setShowAsAction(menu.findItem(R.id.removeFavoriteMenuItem),
+        MenuItems.SHOW_AS_ACTION_IF_ROOM);
+    MenuItems.setShowAsAction(menu.findItem(R.id.smsMenuItem), MenuItems.SHOW_AS_ACTION_IF_ROOM);
     return true;
   }
 
@@ -141,42 +149,57 @@ public class TagDetailActivity extends TabActivity {
 
   @Override
   public boolean onMenuItemSelected(int featureId, MenuItem item) {
-    if (item.getItemId() == R.id.addFavoriteMenuItem) {
-      FavoritesModel.addFavorite(this.getTag().getId());
+    try {
+      if (item.getItemId() == R.id.addFavoriteMenuItem) {
+        FavoritesModel.addFavorite(this.getTag().getId());
+      }
+      else if (item.getItemId() == R.id.removeFavoriteMenuItem) {
+        FavoritesModel.removeFavorite(this.getTag().getId());
+      }
+      if (item.getItemId() == R.id.addTeachableTagMenuItem) {
+        TeachableTagsModel.addTeachableTag(this.getTag().getId());
+      }
+      else if (item.getItemId() == R.id.removeTeachableTagMenuItem) {
+        TeachableTagsModel.removeTeachableTag(this.getTag().getId());
+      }
+      else if (item.getItemId() == R.id.emailMenuItem) {
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.putExtra(Intent.EXTRA_SUBJECT, this.getTag().getTitle() + " - Tag Master for Android");
+        i.putExtra(
+            Intent.EXTRA_TEXT,
+            String
+                .format(
+                    "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
+                    this.getTag().getTitle(), this.getTag().getTagUri()));
+        i.setType("text/plain");
+        this.startActivity(i);
+      }
+      else if (item.getItemId() == R.id.smsMenuItem) {
+        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
+        i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this.getTag()
+            .getTitle(), this.getTag().getTagUri()));
+        this.startActivity(i);
+      }
+      else if (item.getItemId() == R.id.refreshMenuItem) {
+        this.loadQueryItem(true);
+        return true;
+      }
+      return super.onMenuItemSelected(featureId, item);
     }
-    else if (item.getItemId() == R.id.removeFavoriteMenuItem) {
-      FavoritesModel.removeFavorite(this.getTag().getId());
+    finally {
+      Activities.invalidateOptionsMenu(this);
     }
-    if (item.getItemId() == R.id.addTeachableTagMenuItem) {
-      TeachableTagsModel.addTeachableTag(this.getTag().getId());
-    }
-    else if (item.getItemId() == R.id.removeTeachableTagMenuItem) {
-      TeachableTagsModel.removeTeachableTag(this.getTag().getId());
-    }
-    else if (item.getItemId() == R.id.emailMenuItem) {
-      Intent i = new Intent(Intent.ACTION_SEND);
-      i.putExtra(Intent.EXTRA_SUBJECT, this.getTag().getTitle()
-          + " - Tag Master for Android");
-      i.putExtra(
-          Intent.EXTRA_TEXT,
-          String
-              .format(
-                  "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
-                  this.getTag().getTitle(), this.getTag().getTagUri()));
-      i.setType("text/plain");
-      this.startActivity(i);
-    }
-    else if (item.getItemId() == R.id.smsMenuItem) {
-      Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
-      i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this
-          .getTag().getTitle(), this.getTag().getTagUri()));
-      this.startActivity(i);
-    }
-    else if (item.getItemId() == R.id.refreshMenuItem) {
-      this.loadQueryItem(true);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == ActionBars.HOME_MENU_ITEM_ID) {
+      Intent intent = new Intent(this, MeActivity.class);
+      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      this.startActivity(intent);
       return true;
     }
-    return super.onMenuItemSelected(featureId, item);
+    return super.onOptionsItemSelected(item);
   }
 
   @Override
@@ -193,11 +216,22 @@ public class TagDetailActivity extends TabActivity {
   }
 
   @Override
+  protected void onRestoreInstanceState(Bundle state) {
+    super.onRestoreInstanceState(state);
+    this.tabHost.restoreInstanceState("tabs", state);
+  }
+
+  @Override
   protected void onResume() {
     super.onResume();
     GoogleAnalyticsTracker.getInstance().trackPageView(
-        "TagDetailActivity/"
-            + this.getIntent().getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1));
+        "TagDetailActivity/" + this.getIntent().getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1));
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    this.tabHost.saveInstanceState("tabs", outState);
   }
 
   public void setTag(Tag value) {

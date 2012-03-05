@@ -10,7 +10,10 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.binding.ui.AdapterConverter;
+import depollsoft.lib.binding.ui.BoolConverter;
 import depollsoft.lib.binding.ui.UiBinder;
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.MenuItems;
 
 public class MeActivity extends Activity {
   public MeActivity() {
@@ -25,13 +28,24 @@ public class MeActivity extends Activity {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.meview);
 
-    UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds",
-        new AdapterConverter(FavoriteTagItemView.class, false, true));
+    UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds", new AdapterConverter(
+        FavoriteTagItemView.class, false, true));
+
+    UiBinder.bind(this, R.id.titleLayout, "Visibility", "HasActionBar", new BoolConverter(true));
+    
+    ActionBars.setCustomTitle(this, R.layout.titleview);
+  }
+
+  public boolean getHasActionBar() {
+    return ActionBars.hasActionBar(this);
   }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     this.getMenuInflater().inflate(R.menu.memenu, menu);
+
+    MenuItems
+        .setShowAsAction(menu.findItem(R.id.settingsMenuItem), MenuItems.SHOW_AS_ACTION_ALWAYS);
     return true;
   }
 

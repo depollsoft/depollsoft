@@ -27,15 +27,14 @@
     <string name="Multitrack">Multitrack</string>
     <string name="UserSubmissions">User Submissions</string>
     <string name="TeachingVideo">Teaching Video</string>
-    <string name="NoVideos">Sorry, this tag does not have any videos associated
-		with it.</string>
+    <string name="NoVideos">Sorry, this tag does not have any videos associated with it.</string>
     <string name="Teacher">Teacher</string>
     <string name="RatingColon" xml:space="preserve">Rating: </string>
     <string name="PostedColon" xml:space="preserve">Posted: </string>
     <string name="DLs">DLs: </string>
     <string name="LearningTracks">Learning tracks</string>
     <string name="SheetMusicCheck">Sheet music</string>
-    <string name="LoadMoreTags">Fetch additional tags...</string>
+    <string name="LoadMoreTags">Fetch additional tags…</string>
     <string name="Search">Search</string>
     <string name="SearchHint">Search BarbershopTags.com</string>
     <string name="SheetMusicSentence">Sheet music</string>
@@ -104,12 +103,11 @@
     <string name="Other3">Other3</string>
     <string name="Other4">Other4</string>
     <string name="RecordingNotes">Recording Notes</string>
-    <string name="SorryNoTracks">Sorry, no tracks were found that could be played on
-		the phone for this tag.</string>
+    <string name="SorryNoTracks">Sorry, no tracks were found that could be played on the phone for this tag.</string>
     <string name="Balance">Balance</string>
     <string name="RandomTag">Random Tag</string>
     <string name="Favorites">Favorites</string>
-    <string name="Copyright">© 2011</string>
+    <string name="Copyright">© 2012</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="ContentProvider">Content provided by</string>
     <string name="BrowseTags">Browse</string>
@@ -136,12 +134,13 @@
     <string name="Play">Play</string>
     <string name="Refresh">Refresh</string>
     <string name="ChooseARating">Select a rating</string>
-    <string name="FreePitchPipe">Also try Pitch Perfect, a free digital pitch pipe!
-	</string>
+    <string name="FreePitchPipe">Also try Pitch Perfect, a free digital pitch pipe!</string>
     <string name="DepollSoft">DepollSoft</string>
-    <string name="ClearCache">Clear cached data (sheet music, tracks, etc.)
-	</string>
+    <string name="ClearCache">Clear cached data (sheet music, tracks, etc.)</string>
     <string name="CurrentCacheSize">Current cache size:</string>
     <string name="TermsOfUse">Terms of Use</string>
+    <string name="Stop">Stop</string>
+    <string name="Play">Play</string>
+    <string name="Pause">Pause</string>
 
 </resources>

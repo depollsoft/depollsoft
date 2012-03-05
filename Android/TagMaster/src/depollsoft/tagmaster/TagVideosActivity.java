@@ -16,11 +16,11 @@ public class TagVideosActivity extends Activity {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.tagvideosview);
 
-    UiBinder.bind(this, R.id.videoList, "Adapter", "Parent.Tag.Videos",
-        new AdapterConverter(VideoDisplay.class));
+    UiBinder.bind(this, R.id.videoList, "Adapter", "Parent.Tag.Videos", new AdapterConverter(
+        VideoDisplay.class));
 
-    UiBinder.bind(this, R.id.teachingVideoRow, "Visibility",
-        "Parent.Tag.TeachingVideo", BoolConverter.get());
+    UiBinder.bind(this, R.id.teachingVideoRow, "Visibility", "Parent.Tag.TeachingVideo",
+        BoolConverter.get());
 
     UiBinder.bind(this, R.id.sorryTextView, "Visibility", "Parent.Tag.Videos",
         BoolConverter.get(true, true));
@@ -48,8 +48,7 @@ public class TagVideosActivity extends Activity {
       public void run() {
         GoogleAnalyticsTracker.getInstance().trackPageView(
             "TagDetailActivity/"
-                + ((TagDetailActivity) TagVideosActivity.this.getParent())
-                    .getTag().getId() + "/videos");
+                + ((TagDetailActivity) TagVideosActivity.this.getParent()).getTagId() + "/videos");
       }
     });
   }

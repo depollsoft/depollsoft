@@ -24,7 +24,7 @@
 
         <TextView
             android:id="@+id/titleTextView"
-            android:layout_width="fill_parent"
+            android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:clickable="false"
@@ -50,7 +50,6 @@
             android:focusable="false"
             android:linksClickable="false"
             android:longClickable="false"
-            android:text="TextView"
             android:textSize="12dp" >
         </TextView>
 
