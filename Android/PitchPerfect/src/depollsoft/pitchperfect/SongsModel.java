@@ -85,8 +85,12 @@ public class SongsModel {
   @SuppressWarnings("unchecked")
   public void fromParseObject(ParseObject object) {
     this.suspendTimestamp = true;
-    this.setSongs((ObservableCollection<PitchedSong>) JsonSerializer.deserialize(object
-        .getJSONObject("songs")));
+    try {
+      this.setSongs((ObservableCollection<PitchedSong>) JsonSerializer.deserialize(object
+          .getJSONObject("songs")));
+    }
+    catch (Exception e) {
+    }
     this.suspendTimestamp = false;
     this.serialized = object;
   }
