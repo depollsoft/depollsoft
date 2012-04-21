@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -57,7 +58,7 @@ public class MeActivity extends Activity {
         }
       });
     }
-    
+
     ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
     viewer.setTitle("Tag Master Changelog");
     viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
@@ -102,6 +103,18 @@ public class MeActivity extends Activity {
     Intent i = new Intent(this, TagSearchActivity.class);
     this.startActivity(i);
     return true;
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
 }

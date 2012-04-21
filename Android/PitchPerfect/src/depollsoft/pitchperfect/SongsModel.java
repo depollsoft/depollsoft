@@ -234,6 +234,7 @@ public class SongsModel {
       this.serialized.put("name", "*default");
     }
     this.serialized.put("songs", JsonSerializer.serialize(this.getSongs()));
+    this.serialized.put("owner", ParseUser.getCurrentUser());
     return this.serialized;
   }
 }

@@ -27,6 +27,7 @@ import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
 import depollsoft.lib.ui.ChangelogViewer;
 
+@SuppressWarnings("deprecation")
 public class PitchPerfectActivity extends TabActivity {
   private WakeLock wakeLock;
   private CompatTabHostWrapper tabHost;

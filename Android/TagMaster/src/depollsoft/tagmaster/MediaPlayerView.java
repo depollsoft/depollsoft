@@ -89,8 +89,8 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   private void init() {
-    LayoutInflater inflater = (LayoutInflater) this.getContext()
-        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
+        Context.LAYOUT_INFLATER_SERVICE);
     inflater.inflate(R.layout.mediaplayerview, this, true);
 
     this.player = new MediaPlayer();
@@ -99,16 +99,14 @@ public class MediaPlayerView extends LinearLayout {
 
     this.balanceBar = (SeekBar) this.findViewById(R.id.balanceSeekBar);
     this.playbackBar = (SeekBar) this.findViewById(R.id.counterSeekBar);
-    this.playPauseButton = (ToggleButton) this
-        .findViewById(R.id.playPauseButton);
+    this.playPauseButton = (ToggleButton) this.findViewById(R.id.playPauseButton);
     this.stopButton = (Button) this.findViewById(R.id.stopButton);
 
     this.timer = new Timer();
 
     this.player.setOnPreparedListener(new OnPreparedListener() {
       public void onPrepared(MediaPlayer mp) {
-        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
-            .getDuration());
+        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player.getDuration());
       }
     });
     this.player.setOnCompletionListener(new OnCompletionListener() {
@@ -120,16 +118,15 @@ public class MediaPlayerView extends LinearLayout {
     this.player.setOnErrorListener(new OnErrorListener() {
 
       public boolean onError(MediaPlayer mp, int what, int extra) {
-        Toast.makeText(MediaPlayerView.this.getContext(),
-            "Failed to load track.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
+            Toast.LENGTH_SHORT).show();
         MediaPlayerView.this.setIsPlaying(false);
         return true;
       }
     });
 
     this.playbackBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-      public void onProgressChanged(SeekBar seekBar, int progress,
-          boolean fromUser) {
+      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser && !MediaPlayerView.this.refreshing)
           MediaPlayerView.this.player.seekTo(progress);
       }
@@ -143,8 +140,7 @@ public class MediaPlayerView extends LinearLayout {
 
     this.balanceBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 
-      public void onProgressChanged(SeekBar seekBar, int progress,
-          boolean fromUser) {
+      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         MediaPlayerView.this.setBalance(progress);
       }
 
@@ -170,14 +166,13 @@ public class MediaPlayerView extends LinearLayout {
         else {
           MediaPlayerView.this.rlChangedSinceLastPlay = false;
           final ProgressDialog dialog = new ProgressDialog(
-              ((TagTracksActivity) MediaPlayerView.this.getContext())
-                  .getParent());
+              ((TagTracksActivity) MediaPlayerView.this.getContext()).getParent());
           dialog.setMessage("Loading track...");
           dialog.show();
           MediaPlayerView.this.cache.loadContentPublic(
               MediaPlayerView.this.getRemoteLocation().getUri(),
-              MediaPlayerView.this.getRemoteLocation().getType(), false)
-              .continueWith(new Action<File>() {
+              MediaPlayerView.this.getRemoteLocation().getType(), false).continueWith(
+              new Action<File>() {
                 public void invoke(final File parameter) {
                   MediaPlayerView.this.post(new Runnable() {
 
@@ -187,16 +182,15 @@ public class MediaPlayerView extends LinearLayout {
                         MediaPlayerView.this.player.reset();
                         MediaPlayerView.this.player.setDataSource(fis.getFD());
                         MediaPlayerView.this.player.prepare();
-                        MediaPlayerView.this
-                            .setAudioLength(MediaPlayerView.this.player
-                                .getDuration());
+                        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
+                            .getDuration());
                         fis.close();
                         MediaPlayerView.this.player.start();
                         MediaPlayerView.this.setIsPlaying(true);
                       }
                       catch (Exception e) {
-                        Toast.makeText(MediaPlayerView.this.getContext(),
-                            "Failed to load track.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
+                            Toast.LENGTH_SHORT).show();
                         MediaPlayerView.this.setIsPlaying(false);
                       }
                       finally {
@@ -211,15 +205,15 @@ public class MediaPlayerView extends LinearLayout {
 
                     public void run() {
                       dialog.dismiss();
-                      Toast.makeText(MediaPlayerView.this.getContext(),
-                          "Failed to load track.", Toast.LENGTH_SHORT).show();
+                      Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
+                          Toast.LENGTH_SHORT).show();
                     }
                   });
                 }
               });
         }
-        GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews",
-            "PlayTrack", MediaPlayerView.this.getRemoteLocation().getUri(), 0);
+        GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "PlayTrack",
+            MediaPlayerView.this.getRemoteLocation().getUri(), 0);
       }
     });
 
@@ -316,7 +310,7 @@ public class MediaPlayerView extends LinearLayout {
     this.stop();
   }
 
-  private void stop() {
+  public void stop() {
     if (this.player.isPlaying())
       this.player.stop();
     this.setIsPlaying(false);

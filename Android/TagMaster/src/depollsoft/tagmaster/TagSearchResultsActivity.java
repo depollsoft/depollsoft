@@ -2,6 +2,7 @@ package depollsoft.tagmaster;
 
 import java.net.URLEncoder;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.TrackableField;
@@ -68,6 +69,18 @@ public class TagSearchResultsActivity extends ActivityGroup {
     GoogleAnalyticsTracker.getInstance().trackPageView(
         "TagSearchResultsActivity/"
             + URLEncoder.encode(this.getIntent().getStringExtra(TagQueryActivity.QUERY_MODEL)));
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
   public void setModel(QueryModel value) {

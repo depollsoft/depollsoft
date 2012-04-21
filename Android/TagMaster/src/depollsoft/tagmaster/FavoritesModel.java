@@ -27,7 +27,7 @@ public class FavoritesModel {
     for (int x = 0; x < objects.size(); x++) {
       if (!(objects.get(x).getClass() == Integer.TYPE || objects.get(x) instanceof Integer)) {
         try {
-          ((ObservableCollection<Integer>) objects).set(x, new Integer(objects.get(x).toString()));
+          ((ObservableCollection<Integer>) objects).set(x, Integer.valueOf(objects.get(x).toString()));
         }
         catch (Exception e) {
           // Oh well...
@@ -91,7 +91,7 @@ public class FavoritesModel {
   }
 
   public static void removeFavorite(int id) {
-    FavoritesModel.getFavoriteIds().remove(new Integer(id));
+    FavoritesModel.getFavoriteIds().remove(Integer.valueOf(id));
   }
 
   public static void resetFavorites() {
@@ -121,8 +121,12 @@ public class FavoritesModel {
 
   public static void storeToUser() {
     if (ParseUser.getCurrentUser() != null) {
-      JSONArray ids = new JSONArray(FavoritesModel.getFavoriteIds());
-      ParseUser.getCurrentUser().put("FavoriteIds", ids);
+      try {
+        JSONArray ids = new JSONArray(FavoritesModel.getFavoriteIds());
+        ParseUser.getCurrentUser().put("FavoriteIds", ids);
+      }
+      catch (Exception e) {
+      }
     }
   }
 

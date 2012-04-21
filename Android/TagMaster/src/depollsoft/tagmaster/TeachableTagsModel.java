@@ -78,7 +78,7 @@ public class TeachableTagsModel {
   }
 
   public static void removeTeachableTag(int id) {
-    TeachableTagsModel.getTeachableTagIds().remove(new Integer(id));
+    TeachableTagsModel.getTeachableTagIds().remove(Integer.valueOf(id));
   }
 
   public static void resetTeachableTags() {
@@ -108,8 +108,12 @@ public class TeachableTagsModel {
 
   public static void storeToUser() {
     if (ParseUser.getCurrentUser() != null) {
-      JSONArray ids = new JSONArray(TeachableTagsModel.getTeachableTagIds());
-      ParseUser.getCurrentUser().put("TeachableIds", ids);
+      try {
+        JSONArray ids = new JSONArray(TeachableTagsModel.getTeachableTagIds());
+        ParseUser.getCurrentUser().put("TeachableIds", ids);
+      }
+      catch (Exception e) {
+      }
     }
   }
 

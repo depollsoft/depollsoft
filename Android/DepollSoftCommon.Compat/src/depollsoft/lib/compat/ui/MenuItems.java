@@ -1,5 +1,6 @@
 package depollsoft.lib.compat.ui;
 
+import android.annotation.TargetApi;
 import android.view.MenuItem;
 import depollsoft.lib.compat.Compatibility;
 import depollsoft.lib.compat.RunnableFactory;
@@ -19,6 +20,7 @@ public final class MenuItems {
       @Override
       public Runnable create() {
         return new Runnable() {
+          @TargetApi(11)
           @Override
           public void run() {
             item.setShowAsAction(flags);

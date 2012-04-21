@@ -12,13 +12,13 @@
     </ImageView>
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
+        android:id="@+id/topLinearLayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/settingsTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/Settings"
@@ -78,7 +78,7 @@
                     android:text="@string/LogInInfo" />
 
                 <LinearLayout
-                    android:id="@+id/linearLayout2"
+                    android:id="@+id/loginButtonLayout"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp" >

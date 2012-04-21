@@ -60,26 +60,26 @@ public class BoolConverter extends ValueConverter {
     try {
       Object value = sourceValue;
       if (value == null)
-        value = new Boolean(false);
+        value = Boolean.valueOf(false);
       if (this.getZeroLengthArrayIsFalse() && value instanceof List) {
         if (((List<?>) value).size() == 0)
-          value = new Boolean(false);
+          value = Boolean.valueOf(false);
         else
-          value = new Boolean(true);
+          value = Boolean.valueOf(true);
       }
       if ((value instanceof Integer || value.getClass().equals(Integer.TYPE))
-          && new Integer(0).equals(value))
-        value = new Boolean(false);
+          && Integer.valueOf(0).equals(value))
+        value = Boolean.valueOf(false);
       if (!(value instanceof Boolean) && !value.getClass().equals(Boolean.TYPE))
-        value = new Boolean(true);
+        value = Boolean.valueOf(true);
       boolean realValue = ((Boolean) value).booleanValue();
       if (this.getInvert())
         realValue = !realValue;
       if (targetType.equals(Integer.class) || targetType.equals(Integer.TYPE))
-        return new Integer(realValue ? View.VISIBLE : View.GONE);
+        return Integer.valueOf(realValue ? View.VISIBLE : View.GONE);
       if (targetType.equals(Boolean.class) || targetType.equals(Boolean.TYPE)
           || targetType.equals(Object.class))
-        return new Boolean(realValue);
+        return Boolean.valueOf(realValue);
       return super.convertToTarget(sourceValue, targetType);
     }
     catch (Exception e) {

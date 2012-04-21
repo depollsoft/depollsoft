@@ -1,5 +1,6 @@
 package depollsoft.tagmaster;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.TrackableField;
@@ -126,8 +127,25 @@ public class TagTracksActivity extends Activity {
     });
   }
 
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
+    stopMedia();
+  }
+
   public void setSelectedTrack(RemoteLocation value) {
     this.selectedTrack.setValue(value);
+  }
+
+  public void stopMedia() {
+    ((MediaPlayerView) this.findViewById(R.id.mediaPlayer)).stop();
   }
 
 }

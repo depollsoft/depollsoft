@@ -1,5 +1,18 @@
 package depollsoft.tagmaster;
 
+import java.util.ArrayList;
+
+import android.app.ProgressDialog;
+import android.app.TabActivity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 import depollsoft.lib.binding.Binding;
 import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.binding.ui.BoolConverter;
@@ -11,19 +24,10 @@ import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.lib.ui.ThreadSwitchProperty;
 import depollsoft.lib.util.Action;
 import depollsoft.lib.util.ContentCache;
+import depollsoft.lib.util.IntentUtilities;
 import depollsoft.lib.util.ReflectedProperty;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 import depollsoft.tagmaster.barbershop.Tag;
-import android.app.ProgressDialog;
-import android.app.TabActivity;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import java.util.ArrayList;
-
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class TagDetailActivity extends TabActivity {
   public static final String TAG_ID_EXTRA = "depollsoft.tagmaster.tagid";
@@ -32,6 +36,26 @@ public class TagDetailActivity extends TabActivity {
   private ProgressDialog progress;
 
   public TagDetailActivity() {
+  }
+
+  private Intent getEmailIntent() {
+    Intent i = new Intent(Intent.ACTION_SEND);
+    i.putExtra(Intent.EXTRA_SUBJECT, this.getTag().getTitle() + " - Tag Master for Android");
+    i.putExtra(
+        Intent.EXTRA_TEXT,
+        String
+            .format(
+                "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
+                this.getTag().getTitle(), this.getTag().getTagUri()));
+    i.setType("text/plain");
+    return i;
+  }
+
+  private Intent getSmsIntent() {
+    Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
+    i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this.getTag().getTitle(),
+        this.getTag().getTagUri()));
+    return i;
   }
 
   public Tag getTag() {
@@ -105,19 +129,23 @@ public class TagDetailActivity extends TabActivity {
 
     Intent summaryIntent = new Intent(this, TagSummaryActivity.class);
     summaryIntent.putExtras(this.getIntent().getExtras());
-    this.tabHost.addTab(this.tabHost.newTabSpec("summary").setContent(summaryIntent).setIndicator("Summary"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("summary").setContent(summaryIntent)
+        .setIndicator("Summary"));
 
     Intent detailsIntent = new Intent(this, TagMiscActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
-    this.tabHost.addTab(this.tabHost.newTabSpec("details").setContent(detailsIntent).setIndicator("Details"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("details").setContent(detailsIntent)
+        .setIndicator("Details"));
 
     Intent tracksIntent = new Intent(this, TagTracksActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
-    this.tabHost.addTab(this.tabHost.newTabSpec("tracks").setContent(tracksIntent).setIndicator("Tracks"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("tracks").setContent(tracksIntent)
+        .setIndicator("Tracks"));
 
     Intent videosIntent = new Intent(this, TagVideosActivity.class);
     videosIntent.putExtras(this.getIntent().getExtras());
-    this.tabHost.addTab(this.tabHost.newTabSpec("videos").setContent(videosIntent).setIndicator("Videos"));
+    this.tabHost.addTab(this.tabHost.newTabSpec("videos").setContent(videosIntent)
+        .setIndicator("Videos"));
 
     UiBinder.registerBinding(this, new Binding(new ThreadSwitchProperty<Object>(
         new ReflectedProperty(this, "Title"), this), new ReflectedProperty(this, "Tag.Title"))
@@ -138,6 +166,10 @@ public class TagDetailActivity extends TabActivity {
     MenuItems.setShowAsAction(menu.findItem(R.id.removeFavoriteMenuItem),
         MenuItems.SHOW_AS_ACTION_IF_ROOM);
     MenuItems.setShowAsAction(menu.findItem(R.id.smsMenuItem), MenuItems.SHOW_AS_ACTION_IF_ROOM);
+    menu.findItem(R.id.smsMenuItem).setVisible(
+        IntentUtilities.isIntentAvailable(this, this.getSmsIntent()));
+    menu.findItem(R.id.emailMenuItem).setVisible(
+        IntentUtilities.isIntentAvailable(this, this.getEmailIntent()));
     return true;
   }
 
@@ -163,21 +195,11 @@ public class TagDetailActivity extends TabActivity {
         TeachableTagsModel.removeTeachableTag(this.getTag().getId());
       }
       else if (item.getItemId() == R.id.emailMenuItem) {
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.putExtra(Intent.EXTRA_SUBJECT, this.getTag().getTitle() + " - Tag Master for Android");
-        i.putExtra(
-            Intent.EXTRA_TEXT,
-            String
-                .format(
-                    "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
-                    this.getTag().getTitle(), this.getTag().getTagUri()));
-        i.setType("text/plain");
+        Intent i = this.getEmailIntent();
         this.startActivity(i);
       }
       else if (item.getItemId() == R.id.smsMenuItem) {
-        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
-        i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this.getTag()
-            .getTitle(), this.getTag().getTagUri()));
+        Intent i = this.getSmsIntent();
         this.startActivity(i);
       }
       else if (item.getItemId() == R.id.refreshMenuItem) {
@@ -232,6 +254,18 @@ public class TagDetailActivity extends TabActivity {
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     this.tabHost.saveInstanceState("tabs", outState);
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
   public void setTag(Tag value) {

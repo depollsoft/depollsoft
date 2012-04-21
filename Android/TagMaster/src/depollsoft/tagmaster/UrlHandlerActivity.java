@@ -2,6 +2,7 @@ package depollsoft.tagmaster;
 
 import java.net.URLEncoder;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.activity.BrowserActivity;
@@ -47,5 +48,17 @@ public class UrlHandlerActivity extends ActivityGroup {
     Intent browser = new Intent(this, TagMasterBrowserActivity.class);
     browser.putExtra(BrowserActivity.URL_EXTRA, uri.toString());
     this.startActivity(browser);
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 }

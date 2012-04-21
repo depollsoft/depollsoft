@@ -1,10 +1,12 @@
 package depollsoft.lib.compat.ui;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.view.View;
 import depollsoft.lib.compat.Compatibility;
 import depollsoft.lib.compat.RunnableFactory;
 
+@TargetApi(11)
 public final class ActionBars {
   public static final int HOME_MENU_ITEM_ID = 16908332;
 

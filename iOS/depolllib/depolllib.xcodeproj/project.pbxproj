@@ -1,0 +1,403 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
+		63DC373D151E9263007C46DB /* depolllib.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC373C151E9263007C46DB /* depolllib.m */; };
+		63DC3745151E9263007C46DB /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3744151E9263007C46DB /* SenTestingKit.framework */; };
+		63DC3747151E9263007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3746151E9263007C46DB /* UIKit.framework */; };
+		63DC3748151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
+		63DC374B151E9263007C46DB /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3733151E9263007C46DB /* libdepolllib.a */; };
+		63DC3751151E9263007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC374F151E9263007C46DB /* InfoPlist.strings */; };
+		63DC3754151E9263007C46DB /* depolllibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC3753151E9263007C46DB /* depolllibTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		63DC3749151E9263007C46DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC372A151E9263007C46DB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63DC3732151E9263007C46DB;
+			remoteInfo = depolllib;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DC3736151E9263007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		63DC373A151E9263007C46DB /* depolllib-Prefix.pch */ = {isa = PBXFileReference; path = "depolllib-Prefix.pch"; sourceTree = "<group>"; };
+		63DC373B151E9263007C46DB /* depolllib.h */ = {isa = PBXFileReference; path = depolllib.h; sourceTree = "<group>"; };
+		63DC373C151E9263007C46DB /* depolllib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = depolllib.m; sourceTree = "<group>"; };
+		63DC3743151E9263007C46DB /* depolllibTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = depolllibTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DC3744151E9263007C46DB /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		63DC3746151E9263007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		63DC374E151E9263007C46DB /* depolllibTests-Info.plist */ = {isa = PBXFileReference; path = "depolllibTests-Info.plist"; sourceTree = "<group>"; };
+		63DC3750151E9263007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		63DC3752151E9263007C46DB /* depolllibTests.h */ = {isa = PBXFileReference; path = depolllibTests.h; sourceTree = "<group>"; };
+		63DC3753151E9263007C46DB /* depolllibTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = depolllibTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		63DC3730151E9263007C46DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DC373F151E9263007C46DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3745151E9263007C46DB /* SenTestingKit.framework in Frameworks */,
+				63DC3747151E9263007C46DB /* UIKit.framework in Frameworks */,
+				63DC3748151E9263007C46DB /* Foundation.framework in Frameworks */,
+				63DC374B151E9263007C46DB /* libdepolllib.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		63DC3728151E9263007C46DB = {
+			isa = PBXGroup;
+			children = (
+				63DC3738151E9263007C46DB /* depolllib */,
+				63DC374C151E9263007C46DB /* depolllibTests */,
+				63DC3735151E9263007C46DB /* Frameworks */,
+				63DC3734151E9263007C46DB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		63DC3734151E9263007C46DB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				63DC3733151E9263007C46DB /* libdepolllib.a */,
+				63DC3743151E9263007C46DB /* depolllibTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		63DC3735151E9263007C46DB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				63DC3736151E9263007C46DB /* Foundation.framework */,
+				63DC3744151E9263007C46DB /* SenTestingKit.framework */,
+				63DC3746151E9263007C46DB /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		63DC3738151E9263007C46DB /* depolllib */ = {
+			isa = PBXGroup;
+			children = (
+				63DC373B151E9263007C46DB /* depolllib.h */,
+				63DC373C151E9263007C46DB /* depolllib.m */,
+				63DC3739151E9263007C46DB /* Supporting Files */,
+			);
+			path = depolllib;
+			sourceTree = "<group>";
+		};
+		63DC3739151E9263007C46DB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63DC373A151E9263007C46DB /* depolllib-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		63DC374C151E9263007C46DB /* depolllibTests */ = {
+			isa = PBXGroup;
+			children = (
+				63DC3752151E9263007C46DB /* depolllibTests.h */,
+				63DC3753151E9263007C46DB /* depolllibTests.m */,
+				63DC374D151E9263007C46DB /* Supporting Files */,
+			);
+			path = depolllibTests;
+			sourceTree = "<group>";
+		};
+		63DC374D151E9263007C46DB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63DC374E151E9263007C46DB /* depolllibTests-Info.plist */,
+				63DC374F151E9263007C46DB /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		63DC3731151E9263007C46DB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		63DC3732151E9263007C46DB /* depolllib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DC3757151E9263007C46DB /* Build configuration list for PBXNativeTarget "depolllib" */;
+			buildPhases = (
+				63DC372F151E9263007C46DB /* Sources */,
+				63DC3730151E9263007C46DB /* Frameworks */,
+				63DC3731151E9263007C46DB /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = depolllib;
+			productName = depolllib;
+			productReference = 63DC3733151E9263007C46DB /* libdepolllib.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		63DC3742151E9263007C46DB /* depolllibTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DC375A151E9263007C46DB /* Build configuration list for PBXNativeTarget "depolllibTests" */;
+			buildPhases = (
+				63DC373E151E9263007C46DB /* Sources */,
+				63DC373F151E9263007C46DB /* Frameworks */,
+				63DC3740151E9263007C46DB /* Resources */,
+				63DC3741151E9263007C46DB /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				63DC374A151E9263007C46DB /* PBXTargetDependency */,
+			);
+			name = depolllibTests;
+			productName = depolllibTests;
+			productReference = 63DC3743151E9263007C46DB /* depolllibTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		63DC372A151E9263007C46DB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = DepollSoft;
+			};
+			buildConfigurationList = 63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 63DC3728151E9263007C46DB;
+			productRefGroup = 63DC3734151E9263007C46DB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				63DC3732151E9263007C46DB /* depolllib */,
+				63DC3742151E9263007C46DB /* depolllibTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		63DC3740151E9263007C46DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3751151E9263007C46DB /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		63DC3741151E9263007C46DB /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		63DC372F151E9263007C46DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC373D151E9263007C46DB /* depolllib.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DC373E151E9263007C46DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3754151E9263007C46DB /* depolllibTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		63DC374A151E9263007C46DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63DC3732151E9263007C46DB /* depolllib */;
+			targetProxy = 63DC3749151E9263007C46DB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		63DC374F151E9263007C46DB /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				63DC3750151E9263007C46DB /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		63DC3755151E9263007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		63DC3756151E9263007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		63DC3758151E9263007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/depolllib.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		63DC3759151E9263007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/depolllib.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		63DC375B151E9263007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				INFOPLIST_FILE = "depolllibTests/depolllibTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		63DC375C151E9263007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				INFOPLIST_FILE = "depolllibTests/depolllibTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC3755151E9263007C46DB /* Debug */,
+				63DC3756151E9263007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		63DC3757151E9263007C46DB /* Build configuration list for PBXNativeTarget "depolllib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC3758151E9263007C46DB /* Debug */,
+				63DC3759151E9263007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		63DC375A151E9263007C46DB /* Build configuration list for PBXNativeTarget "depolllibTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC375B151E9263007C46DB /* Debug */,
+				63DC375C151E9263007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 63DC372A151E9263007C46DB /* Project object */;
+}

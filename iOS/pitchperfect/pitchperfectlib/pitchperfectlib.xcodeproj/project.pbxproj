@@ -1,0 +1,403 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		63DC36F3151E9079007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36F2151E9079007C46DB /* Foundation.framework */; };
+		63DC36F9151E9079007C46DB /* pitchperfectlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36F8151E9079007C46DB /* pitchperfectlib.m */; };
+		63DC3701151E9079007C46DB /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3700151E9079007C46DB /* SenTestingKit.framework */; };
+		63DC3703151E9079007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3702151E9079007C46DB /* UIKit.framework */; };
+		63DC3704151E9079007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36F2151E9079007C46DB /* Foundation.framework */; };
+		63DC3707151E9079007C46DB /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36EF151E9079007C46DB /* libpitchperfectlib.a */; };
+		63DC370D151E9079007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC370B151E9079007C46DB /* InfoPlist.strings */; };
+		63DC3710151E9079007C46DB /* pitchperfectlibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC370F151E9079007C46DB /* pitchperfectlibTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		63DC3705151E9079007C46DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC36E6151E9079007C46DB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63DC36EE151E9079007C46DB;
+			remoteInfo = pitchperfectlib;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		63DC36EF151E9079007C46DB /* libpitchperfectlib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpitchperfectlib.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DC36F2151E9079007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		63DC36F6151E9079007C46DB /* pitchperfectlib-Prefix.pch */ = {isa = PBXFileReference; path = "pitchperfectlib-Prefix.pch"; sourceTree = "<group>"; };
+		63DC36F7151E9079007C46DB /* pitchperfectlib.h */ = {isa = PBXFileReference; path = pitchperfectlib.h; sourceTree = "<group>"; };
+		63DC36F8151E9079007C46DB /* pitchperfectlib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectlib.m; sourceTree = "<group>"; };
+		63DC36FF151E9079007C46DB /* pitchperfectlibTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectlibTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DC3700151E9079007C46DB /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		63DC3702151E9079007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		63DC370A151E9079007C46DB /* pitchperfectlibTests-Info.plist */ = {isa = PBXFileReference; path = "pitchperfectlibTests-Info.plist"; sourceTree = "<group>"; };
+		63DC370C151E9079007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		63DC370E151E9079007C46DB /* pitchperfectlibTests.h */ = {isa = PBXFileReference; path = pitchperfectlibTests.h; sourceTree = "<group>"; };
+		63DC370F151E9079007C46DB /* pitchperfectlibTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectlibTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		63DC36EC151E9079007C46DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC36F3151E9079007C46DB /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DC36FB151E9079007C46DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3701151E9079007C46DB /* SenTestingKit.framework in Frameworks */,
+				63DC3703151E9079007C46DB /* UIKit.framework in Frameworks */,
+				63DC3704151E9079007C46DB /* Foundation.framework in Frameworks */,
+				63DC3707151E9079007C46DB /* libpitchperfectlib.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		63DC36E4151E9079007C46DB = {
+			isa = PBXGroup;
+			children = (
+				63DC36F4151E9079007C46DB /* pitchperfectlib */,
+				63DC3708151E9079007C46DB /* pitchperfectlibTests */,
+				63DC36F1151E9079007C46DB /* Frameworks */,
+				63DC36F0151E9079007C46DB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		63DC36F0151E9079007C46DB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				63DC36EF151E9079007C46DB /* libpitchperfectlib.a */,
+				63DC36FF151E9079007C46DB /* pitchperfectlibTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		63DC36F1151E9079007C46DB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				63DC36F2151E9079007C46DB /* Foundation.framework */,
+				63DC3700151E9079007C46DB /* SenTestingKit.framework */,
+				63DC3702151E9079007C46DB /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		63DC36F4151E9079007C46DB /* pitchperfectlib */ = {
+			isa = PBXGroup;
+			children = (
+				63DC36F7151E9079007C46DB /* pitchperfectlib.h */,
+				63DC36F8151E9079007C46DB /* pitchperfectlib.m */,
+				63DC36F5151E9079007C46DB /* Supporting Files */,
+			);
+			path = pitchperfectlib;
+			sourceTree = "<group>";
+		};
+		63DC36F5151E9079007C46DB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63DC36F6151E9079007C46DB /* pitchperfectlib-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		63DC3708151E9079007C46DB /* pitchperfectlibTests */ = {
+			isa = PBXGroup;
+			children = (
+				63DC370E151E9079007C46DB /* pitchperfectlibTests.h */,
+				63DC370F151E9079007C46DB /* pitchperfectlibTests.m */,
+				63DC3709151E9079007C46DB /* Supporting Files */,
+			);
+			path = pitchperfectlibTests;
+			sourceTree = "<group>";
+		};
+		63DC3709151E9079007C46DB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63DC370A151E9079007C46DB /* pitchperfectlibTests-Info.plist */,
+				63DC370B151E9079007C46DB /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		63DC36ED151E9079007C46DB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		63DC36EE151E9079007C46DB /* pitchperfectlib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DC3713151E9079007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectlib" */;
+			buildPhases = (
+				63DC36EB151E9079007C46DB /* Sources */,
+				63DC36EC151E9079007C46DB /* Frameworks */,
+				63DC36ED151E9079007C46DB /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = pitchperfectlib;
+			productName = pitchperfectlib;
+			productReference = 63DC36EF151E9079007C46DB /* libpitchperfectlib.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		63DC36FE151E9079007C46DB /* pitchperfectlibTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DC3716151E9079007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectlibTests" */;
+			buildPhases = (
+				63DC36FA151E9079007C46DB /* Sources */,
+				63DC36FB151E9079007C46DB /* Frameworks */,
+				63DC36FC151E9079007C46DB /* Resources */,
+				63DC36FD151E9079007C46DB /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				63DC3706151E9079007C46DB /* PBXTargetDependency */,
+			);
+			name = pitchperfectlibTests;
+			productName = pitchperfectlibTests;
+			productReference = 63DC36FF151E9079007C46DB /* pitchperfectlibTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		63DC36E6151E9079007C46DB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = DepollSoft;
+			};
+			buildConfigurationList = 63DC36E9151E9079007C46DB /* Build configuration list for PBXProject "pitchperfectlib" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 63DC36E4151E9079007C46DB;
+			productRefGroup = 63DC36F0151E9079007C46DB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				63DC36EE151E9079007C46DB /* pitchperfectlib */,
+				63DC36FE151E9079007C46DB /* pitchperfectlibTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		63DC36FC151E9079007C46DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC370D151E9079007C46DB /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		63DC36FD151E9079007C46DB /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		63DC36EB151E9079007C46DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC36F9151E9079007C46DB /* pitchperfectlib.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DC36FA151E9079007C46DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DC3710151E9079007C46DB /* pitchperfectlibTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		63DC3706151E9079007C46DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63DC36EE151E9079007C46DB /* pitchperfectlib */;
+			targetProxy = 63DC3705151E9079007C46DB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		63DC370B151E9079007C46DB /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				63DC370C151E9079007C46DB /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		63DC3711151E9079007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		63DC3712151E9079007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		63DC3714151E9079007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/pitchperfectlib.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		63DC3715151E9079007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/pitchperfectlib.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		63DC3717151E9079007C46DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				INFOPLIST_FILE = "pitchperfectlibTests/pitchperfectlibTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		63DC3718151E9079007C46DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				INFOPLIST_FILE = "pitchperfectlibTests/pitchperfectlibTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		63DC36E9151E9079007C46DB /* Build configuration list for PBXProject "pitchperfectlib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC3711151E9079007C46DB /* Debug */,
+				63DC3712151E9079007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		63DC3713151E9079007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectlib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC3714151E9079007C46DB /* Debug */,
+				63DC3715151E9079007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		63DC3716151E9079007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectlibTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DC3717151E9079007C46DB /* Debug */,
+				63DC3718151E9079007C46DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 63DC36E6151E9079007C46DB /* Project object */;
+}

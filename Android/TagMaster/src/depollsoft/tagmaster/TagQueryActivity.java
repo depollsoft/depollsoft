@@ -1,5 +1,7 @@
 package depollsoft.tagmaster;
 
+import com.flurry.android.FlurryAgent;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -111,6 +113,18 @@ public class TagQueryActivity extends Activity {
     Intent i = new Intent(this, TagSearchActivity.class);
     this.startActivity(i);
     return !this.getHandleSearchButton();
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
   public void refresh() {

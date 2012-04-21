@@ -1,5 +1,6 @@
 package depollsoft.tagmaster;
 
+import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.binding.ui.BoolConverter;
@@ -78,6 +79,18 @@ public class TagMiscActivity extends Activity {
                 + ((TagDetailActivity) TagMiscActivity.this.getParent()).getTagId() + "/misc");
       }
     });
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    FlurryAgent.onEndSession(this);
   }
 
 }

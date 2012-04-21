@@ -1,5 +1,6 @@
 package depollsoft.lib.compat.ui;
 
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.ActionBar.TabListener;
@@ -14,6 +15,7 @@ import depollsoft.lib.compat.Compatibility;
 import depollsoft.lib.compat.RunnableFactory;
 import depollsoft.lib.util.Function;
 
+@TargetApi(11)
 public class CompatTabHostWrapper {
   private Activity activity;
   private TabHost host;
