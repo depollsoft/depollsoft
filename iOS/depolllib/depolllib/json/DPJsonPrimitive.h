@@ -10,4 +10,9 @@
 
 @interface DPJsonPrimitive : NSObject
 
+@property (nonatomic, retain) id value;
+@property (nonatomic, retain) NSString *type;
+
+- (id)trueValue;
+
 @end

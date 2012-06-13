@@ -7,14 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */; };
+		63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */; };
 		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
-		63DC373D151E9263007C46DB /* depolllib.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC373C151E9263007C46DB /* depolllib.m */; };
 		63DC3745151E9263007C46DB /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3744151E9263007C46DB /* SenTestingKit.framework */; };
 		63DC3747151E9263007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3746151E9263007C46DB /* UIKit.framework */; };
 		63DC3748151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
 		63DC374B151E9263007C46DB /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3733151E9263007C46DB /* libdepolllib.a */; };
 		63DC3751151E9263007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC374F151E9263007C46DB /* InfoPlist.strings */; };
 		63DC3754151E9263007C46DB /* depolllibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC3753151E9263007C46DB /* depolllibTests.m */; };
+		63DC375F151E93A8007C46DB /* DPJsonSerializer.h in Headers */ = {isa = PBXBuildFile; fileRef = 63DC375D151E93A8007C46DB /* DPJsonSerializer.h */; };
+		63DC3760151E93A8007C46DB /* DPJsonSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC375E151E93A8007C46DB /* DPJsonSerializer.m */; };
+		63DC3768151E94CC007C46DB /* DPJsonPrimitive.h in Headers */ = {isa = PBXBuildFile; fileRef = 63DC3766151E94CC007C46DB /* DPJsonPrimitive.h */; };
+		63DC3769151E94CC007C46DB /* DPJsonPrimitive.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC3767151E94CC007C46DB /* DPJsonPrimitive.m */; };
+		63F17816154E112000C2AB59 /* DPEnum.h in Headers */ = {isa = PBXBuildFile; fileRef = 63F17814154E112000C2AB59 /* DPEnum.h */; };
+		63F17817154E112000C2AB59 /* DPEnum.m in Sources */ = {isa = PBXBuildFile; fileRef = 63F17815154E112000C2AB59 /* DPEnum.m */; };
+		63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF00831554F90000C28218 /* DPUtils+NSString.h */; };
+		63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00841554F90000C28218 /* DPUtils+NSString.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,18 +37,26 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+UIControl.h"; path = "utils/DPUtils+UIControl.h"; sourceTree = "<group>"; };
+		63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+UIControl.m"; path = "utils/DPUtils+UIControl.m"; sourceTree = "<group>"; };
 		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC3736151E9263007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		63DC373A151E9263007C46DB /* depolllib-Prefix.pch */ = {isa = PBXFileReference; path = "depolllib-Prefix.pch"; sourceTree = "<group>"; };
-		63DC373B151E9263007C46DB /* depolllib.h */ = {isa = PBXFileReference; path = depolllib.h; sourceTree = "<group>"; };
-		63DC373C151E9263007C46DB /* depolllib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = depolllib.m; sourceTree = "<group>"; };
+		63DC373A151E9263007C46DB /* depolllib-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "depolllib-Prefix.pch"; sourceTree = "<group>"; };
 		63DC3743151E9263007C46DB /* depolllibTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = depolllibTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC3744151E9263007C46DB /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		63DC3746151E9263007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		63DC374E151E9263007C46DB /* depolllibTests-Info.plist */ = {isa = PBXFileReference; path = "depolllibTests-Info.plist"; sourceTree = "<group>"; };
+		63DC374E151E9263007C46DB /* depolllibTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "depolllibTests-Info.plist"; sourceTree = "<group>"; };
 		63DC3750151E9263007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		63DC3752151E9263007C46DB /* depolllibTests.h */ = {isa = PBXFileReference; path = depolllibTests.h; sourceTree = "<group>"; };
-		63DC3753151E9263007C46DB /* depolllibTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = depolllibTests.m; sourceTree = "<group>"; };
+		63DC3752151E9263007C46DB /* depolllibTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = depolllibTests.h; sourceTree = "<group>"; };
+		63DC3753151E9263007C46DB /* depolllibTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = depolllibTests.m; path = depolllibTests/depolllibTests.m; sourceTree = "<group>"; };
+		63DC375D151E93A8007C46DB /* DPJsonSerializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPJsonSerializer.h; path = json/DPJsonSerializer.h; sourceTree = "<group>"; };
+		63DC375E151E93A8007C46DB /* DPJsonSerializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPJsonSerializer.m; path = json/DPJsonSerializer.m; sourceTree = "<group>"; };
+		63DC3766151E94CC007C46DB /* DPJsonPrimitive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPJsonPrimitive.h; path = json/DPJsonPrimitive.h; sourceTree = "<group>"; };
+		63DC3767151E94CC007C46DB /* DPJsonPrimitive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPJsonPrimitive.m; path = json/DPJsonPrimitive.m; sourceTree = "<group>"; };
+		63F17814154E112000C2AB59 /* DPEnum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPEnum.h; sourceTree = "<group>"; };
+		63F17815154E112000C2AB59 /* DPEnum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPEnum.m; sourceTree = "<group>"; };
+		63FF00831554F90000C28218 /* DPUtils+NSString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+NSString.h"; path = "utils/DPUtils+NSString.h"; sourceTree = "<group>"; };
+		63FF00841554F90000C28218 /* DPUtils+NSString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+NSString.m"; path = "utils/DPUtils+NSString.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,12 +82,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		63A99D6015882D6900C78CC0 /* ui */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = ui;
+			sourceTree = "<group>";
+		};
 		63DC3728151E9263007C46DB = {
 			isa = PBXGroup;
 			children = (
 				63DC3738151E9263007C46DB /* depolllib */,
 				63DC374C151E9263007C46DB /* depolllibTests */,
 				63DC3735151E9263007C46DB /* Frameworks */,
+				63DC3753151E9263007C46DB /* depolllibTests.m */,
 				63DC3734151E9263007C46DB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -97,9 +122,10 @@
 		63DC3738151E9263007C46DB /* depolllib */ = {
 			isa = PBXGroup;
 			children = (
-				63DC373B151E9263007C46DB /* depolllib.h */,
-				63DC373C151E9263007C46DB /* depolllib.m */,
+				63A99D6015882D6900C78CC0 /* ui */,
+				63FF00811554F8BE00C28218 /* utils */,
 				63DC3739151E9263007C46DB /* Supporting Files */,
+				63DC3761151E93AF007C46DB /* json */,
 			);
 			path = depolllib;
 			sourceTree = "<group>";
@@ -116,7 +142,6 @@
 			isa = PBXGroup;
 			children = (
 				63DC3752151E9263007C46DB /* depolllibTests.h */,
-				63DC3753151E9263007C46DB /* depolllibTests.m */,
 				63DC374D151E9263007C46DB /* Supporting Files */,
 			);
 			path = depolllibTests;
@@ -131,6 +156,30 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		63DC3761151E93AF007C46DB /* json */ = {
+			isa = PBXGroup;
+			children = (
+				63DC375D151E93A8007C46DB /* DPJsonSerializer.h */,
+				63DC375E151E93A8007C46DB /* DPJsonSerializer.m */,
+				63DC3766151E94CC007C46DB /* DPJsonPrimitive.h */,
+				63DC3767151E94CC007C46DB /* DPJsonPrimitive.m */,
+				63F17814154E112000C2AB59 /* DPEnum.h */,
+				63F17815154E112000C2AB59 /* DPEnum.m */,
+			);
+			name = json;
+			sourceTree = "<group>";
+		};
+		63FF00811554F8BE00C28218 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				63FF00831554F90000C28218 /* DPUtils+NSString.h */,
+				63FF00841554F90000C28218 /* DPUtils+NSString.m */,
+				63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */,
+				63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */,
+			);
+			name = utils;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -138,6 +187,11 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63DC375F151E93A8007C46DB /* DPJsonSerializer.h in Headers */,
+				63DC3768151E94CC007C46DB /* DPJsonPrimitive.h in Headers */,
+				63F17816154E112000C2AB59 /* DPEnum.h in Headers */,
+				63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */,
+				63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,7 +293,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63DC373D151E9263007C46DB /* depolllib.m in Sources */,
+				63DC3760151E93A8007C46DB /* DPJsonSerializer.m in Sources */,
+				63DC3769151E94CC007C46DB /* DPJsonPrimitive.m in Sources */,
+				63F17817154E112000C2AB59 /* DPEnum.m in Sources */,
+				63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */,
+				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,6 +446,7 @@
 				63DC3759151E9263007C46DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63DC375A151E9263007C46DB /* Build configuration list for PBXNativeTarget "depolllibTests" */ = {
 			isa = XCConfigurationList;
@@ -396,6 +455,7 @@
 				63DC375C151E9263007C46DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

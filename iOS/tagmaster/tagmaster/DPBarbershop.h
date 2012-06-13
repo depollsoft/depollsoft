@@ -9,6 +9,12 @@
 #ifndef tagmaster_DPBarbershop_h
 #define tagmaster_DPBarbershop_h
 
-
+#import "DPTag.h"
+#import "DPRemoteLocation.h"
+#import "DPVideo.h"
+#import "DPTrack.h"
+#import "DPConstants.h"
+#import "DPTagXMLParser.h"
+#import "DPTagQueryResult.h"
 
 #endif

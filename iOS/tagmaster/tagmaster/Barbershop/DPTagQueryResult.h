@@ -10,4 +10,9 @@
 
 @interface DPTagQueryResult : NSObject
 
+@property (nonatomic, strong) NSArray *tags;
+@property (nonatomic) int start;
+@property (nonatomic) int count;
+@property (nonatomic) int available;
+
 @end

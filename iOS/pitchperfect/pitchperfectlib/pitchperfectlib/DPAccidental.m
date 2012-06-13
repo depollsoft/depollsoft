@@ -6,8 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import "Accidental.h"
+#define ENUM_IMPLEMENTATION
+#import "DPAccidental.h"
 
-@implementation Accidental
-
-@end
+IMPLEMENT_ENUM(DPAccidental)

@@ -7,7 +7,14 @@
 //
 
 #import "DPJsonPrimitive.h"
+#import "DPJsonSerializer.h"
 
 @implementation DPJsonPrimitive
+
+@synthesize type, value;
+
+- (id)trueValue {
+    return value;
+}
 
 @end

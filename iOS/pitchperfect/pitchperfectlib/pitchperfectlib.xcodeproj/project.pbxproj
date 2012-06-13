@@ -7,14 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		63A99D85158840C000C78CC0 /* DPPitchPipeButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */; };
+		63A99D86158840C000C78CC0 /* DPPitchPipeButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */; };
+		63C14A901579E4DE00348592 /* DPAudioSynthesizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */; };
+		63C14A911579E4DE00348592 /* DPAudioSynthesizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		63C14A9B157AA4C600348592 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A9A157AA4C600348592 /* CoreAudio.framework */; };
 		63DC36F3151E9079007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36F2151E9079007C46DB /* Foundation.framework */; };
-		63DC36F9151E9079007C46DB /* pitchperfectlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36F8151E9079007C46DB /* pitchperfectlib.m */; };
 		63DC3701151E9079007C46DB /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3700151E9079007C46DB /* SenTestingKit.framework */; };
-		63DC3703151E9079007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3702151E9079007C46DB /* UIKit.framework */; };
 		63DC3704151E9079007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36F2151E9079007C46DB /* Foundation.framework */; };
 		63DC3707151E9079007C46DB /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36EF151E9079007C46DB /* libpitchperfectlib.a */; };
 		63DC370D151E9079007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC370B151E9079007C46DB /* InfoPlist.strings */; };
 		63DC3710151E9079007C46DB /* pitchperfectlibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC370F151E9079007C46DB /* pitchperfectlibTests.m */; };
+		63DC3726151E9196007C46DB /* DPAccidental.h in Headers */ = {isa = PBXBuildFile; fileRef = 63DC3724151E9196007C46DB /* DPAccidental.h */; };
+		63DC3727151E9196007C46DB /* DPAccidental.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC3725151E9196007C46DB /* DPAccidental.m */; };
+		63FF00671554C25C00C28218 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63FF00661554C25C00C28218 /* libdepolllib.a */; };
+		63FF006F1554CD4A00C28218 /* DPKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF006D1554CD4A00C28218 /* DPKey.h */; };
+		63FF00701554CD4A00C28218 /* DPKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF006E1554CD4A00C28218 /* DPKey.m */; };
+		63FF00711554CD4A00C28218 /* DPKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF006E1554CD4A00C28218 /* DPKey.m */; };
+		63FF00741554CDB900C28218 /* DPNote.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF00721554CDB900C28218 /* DPNote.h */; };
+		63FF00751554CDB900C28218 /* DPNote.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00731554CDB900C28218 /* DPNote.m */; };
+		63FF00761554CDB900C28218 /* DPNote.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00731554CDB900C28218 /* DPNote.m */; };
+		63FF00791554CDC800C28218 /* DPKeyType.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF00771554CDC800C28218 /* DPKeyType.h */; };
+		63FF007A1554CDC800C28218 /* DPKeyType.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00781554CDC800C28218 /* DPKeyType.m */; };
+		63FF007B1554CDC800C28218 /* DPKeyType.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00781554CDC800C28218 /* DPKeyType.m */; };
+		63FF007E1554D22000C28218 /* DPPitchedSong.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF007C1554D22000C28218 /* DPPitchedSong.h */; };
+		63FF007F1554D22000C28218 /* DPPitchedSong.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF007D1554D22000C28218 /* DPPitchedSong.m */; };
+		63FF00801554D22000C28218 /* DPPitchedSong.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF007D1554D22000C28218 /* DPPitchedSong.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,18 +46,31 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPPitchPipeButton.h; sourceTree = "<group>"; };
+		63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeButton.m; sourceTree = "<group>"; };
+		63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPAudioSynthesizer.h; sourceTree = "<group>"; };
+		63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPAudioSynthesizer.m; sourceTree = "<group>"; };
+		63C14A9A157AA4C600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63DC36EF151E9079007C46DB /* libpitchperfectlib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpitchperfectlib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC36F2151E9079007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		63DC36F6151E9079007C46DB /* pitchperfectlib-Prefix.pch */ = {isa = PBXFileReference; path = "pitchperfectlib-Prefix.pch"; sourceTree = "<group>"; };
-		63DC36F7151E9079007C46DB /* pitchperfectlib.h */ = {isa = PBXFileReference; path = pitchperfectlib.h; sourceTree = "<group>"; };
-		63DC36F8151E9079007C46DB /* pitchperfectlib.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectlib.m; sourceTree = "<group>"; };
+		63DC36F6151E9079007C46DB /* pitchperfectlib-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfectlib-Prefix.pch"; sourceTree = "<group>"; };
 		63DC36FF151E9079007C46DB /* pitchperfectlibTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectlibTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC3700151E9079007C46DB /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
-		63DC3702151E9079007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		63DC370A151E9079007C46DB /* pitchperfectlibTests-Info.plist */ = {isa = PBXFileReference; path = "pitchperfectlibTests-Info.plist"; sourceTree = "<group>"; };
+		63DC370A151E9079007C46DB /* pitchperfectlibTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "pitchperfectlibTests-Info.plist"; sourceTree = "<group>"; };
 		63DC370C151E9079007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		63DC370E151E9079007C46DB /* pitchperfectlibTests.h */ = {isa = PBXFileReference; path = pitchperfectlibTests.h; sourceTree = "<group>"; };
+		63DC370E151E9079007C46DB /* pitchperfectlibTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchperfectlibTests.h; sourceTree = "<group>"; };
 		63DC370F151E9079007C46DB /* pitchperfectlibTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectlibTests.m; sourceTree = "<group>"; };
+		63DC3724151E9196007C46DB /* DPAccidental.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPAccidental.h; sourceTree = "<group>"; };
+		63DC3725151E9196007C46DB /* DPAccidental.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPAccidental.m; sourceTree = "<group>"; };
+		63FF00661554C25C00C28218 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
+		63FF006D1554CD4A00C28218 /* DPKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKey.h; sourceTree = "<group>"; };
+		63FF006E1554CD4A00C28218 /* DPKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPKey.m; sourceTree = "<group>"; };
+		63FF00721554CDB900C28218 /* DPNote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPNote.h; sourceTree = "<group>"; };
+		63FF00731554CDB900C28218 /* DPNote.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPNote.m; sourceTree = "<group>"; };
+		63FF00771554CDC800C28218 /* DPKeyType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeyType.h; sourceTree = "<group>"; };
+		63FF00781554CDC800C28218 /* DPKeyType.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPKeyType.m; sourceTree = "<group>"; };
+		63FF007C1554D22000C28218 /* DPPitchedSong.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPPitchedSong.h; sourceTree = "<group>"; };
+		63FF007D1554D22000C28218 /* DPPitchedSong.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPPitchedSong.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +78,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63C14A9B157AA4C600348592 /* CoreAudio.framework in Frameworks */,
+				63FF00671554C25C00C28218 /* libdepolllib.a in Frameworks */,
 				63DC36F3151E9079007C46DB /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -56,7 +89,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63DC3701151E9079007C46DB /* SenTestingKit.framework in Frameworks */,
-				63DC3703151E9079007C46DB /* UIKit.framework in Frameworks */,
 				63DC3704151E9079007C46DB /* Foundation.framework in Frameworks */,
 				63DC3707151E9079007C46DB /* libpitchperfectlib.a in Frameworks */,
 			);
@@ -68,6 +100,7 @@
 		63DC36E4151E9079007C46DB = {
 			isa = PBXGroup;
 			children = (
+				63FF00661554C25C00C28218 /* libdepolllib.a */,
 				63DC36F4151E9079007C46DB /* pitchperfectlib */,
 				63DC3708151E9079007C46DB /* pitchperfectlibTests */,
 				63DC36F1151E9079007C46DB /* Frameworks */,
@@ -87,9 +120,9 @@
 		63DC36F1151E9079007C46DB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63C14A9A157AA4C600348592 /* CoreAudio.framework */,
 				63DC36F2151E9079007C46DB /* Foundation.framework */,
 				63DC3700151E9079007C46DB /* SenTestingKit.framework */,
-				63DC3702151E9079007C46DB /* UIKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -97,9 +130,21 @@
 		63DC36F4151E9079007C46DB /* pitchperfectlib */ = {
 			isa = PBXGroup;
 			children = (
-				63DC36F7151E9079007C46DB /* pitchperfectlib.h */,
-				63DC36F8151E9079007C46DB /* pitchperfectlib.m */,
 				63DC36F5151E9079007C46DB /* Supporting Files */,
+				63DC3724151E9196007C46DB /* DPAccidental.h */,
+				63DC3725151E9196007C46DB /* DPAccidental.m */,
+				63FF006D1554CD4A00C28218 /* DPKey.h */,
+				63FF006E1554CD4A00C28218 /* DPKey.m */,
+				63FF00721554CDB900C28218 /* DPNote.h */,
+				63FF00731554CDB900C28218 /* DPNote.m */,
+				63FF00771554CDC800C28218 /* DPKeyType.h */,
+				63FF00781554CDC800C28218 /* DPKeyType.m */,
+				63FF007C1554D22000C28218 /* DPPitchedSong.h */,
+				63FF007D1554D22000C28218 /* DPPitchedSong.m */,
+				63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */,
+				63C14A8F1579E4DE00348592 /* DPAudioSynthesizer.m */,
+				63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */,
+				63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */,
 			);
 			path = pitchperfectlib;
 			sourceTree = "<group>";
@@ -138,6 +183,13 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63DC3726151E9196007C46DB /* DPAccidental.h in Headers */,
+				63FF006F1554CD4A00C28218 /* DPKey.h in Headers */,
+				63FF00741554CDB900C28218 /* DPNote.h in Headers */,
+				63FF00791554CDC800C28218 /* DPKeyType.h in Headers */,
+				63FF007E1554D22000C28218 /* DPPitchedSong.h in Headers */,
+				63C14A901579E4DE00348592 /* DPAudioSynthesizer.h in Headers */,
+				63A99D85158840C000C78CC0 /* DPPitchPipeButton.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,7 +291,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63DC36F9151E9079007C46DB /* pitchperfectlib.m in Sources */,
+				63DC3727151E9196007C46DB /* DPAccidental.m in Sources */,
+				63FF00701554CD4A00C28218 /* DPKey.m in Sources */,
+				63FF00751554CDB900C28218 /* DPNote.m in Sources */,
+				63FF007A1554CDC800C28218 /* DPKeyType.m in Sources */,
+				63FF007F1554D22000C28218 /* DPPitchedSong.m in Sources */,
+				63C14A911579E4DE00348592 /* DPAudioSynthesizer.m in Sources */,
+				63A99D86158840C000C78CC0 /* DPPitchPipeButton.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -248,6 +306,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				63DC3710151E9079007C46DB /* pitchperfectlibTests.m in Sources */,
+				63FF00711554CD4A00C28218 /* DPKey.m in Sources */,
+				63FF00761554CDB900C28218 /* DPNote.m in Sources */,
+				63FF007B1554CDC800C28218 /* DPKeyType.m in Sources */,
+				63FF00801554D22000C28218 /* DPPitchedSong.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,7 +338,7 @@
 		63DC3711151E9079007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
@@ -292,15 +354,17 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(BUILT_PRODUCTS_DIR)\"/**";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				SDKROOT = iphoneos;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
 			};
 			name = Debug;
 		};
 		63DC3712151E9079007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
@@ -309,8 +373,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "\"$(BUILT_PRODUCTS_DIR)\"/**";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				SDKROOT = iphoneos;
+				USER_HEADER_SEARCH_PATHS = "../../../**";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -319,8 +385,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = /tmp/pitchperfectlib.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/..\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
+					"\"$(SRCROOT)/../GoogleAdMobAdsSDK.framework\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -331,8 +406,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = /tmp/pitchperfectlib.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/..\"",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfectlib/pitchperfectlib-Prefix.pch";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
+					"\"$(SRCROOT)/../GoogleAdMobAdsSDK.framework\"",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -388,6 +472,7 @@
 				63DC3715151E9079007C46DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63DC3716151E9079007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectlibTests" */ = {
 			isa = XCConfigurationList;
@@ -396,6 +481,7 @@
 				63DC3718151E9079007C46DB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

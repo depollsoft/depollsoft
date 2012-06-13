@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "DPEnum.h"
 
-@interface Accidental : NSObject
-
-@end
+DEFINE_ENUM(DPAccidental, Flat, Natural, Sharp)

@@ -7,7 +7,9 @@
 //
 
 #import <SenTestingKit/SenTestingKit.h>
+#import "DPEnum.h"
 
 @interface depolllibTests : SenTestCase
+
 
 @end

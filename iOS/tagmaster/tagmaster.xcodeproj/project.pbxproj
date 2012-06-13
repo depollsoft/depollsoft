@@ -1,0 +1,502 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
+		636455741515731A002AD091 /* DPTagQueryResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 636455731515731A002AD091 /* DPTagQueryResult.m */; };
+		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
+		63712EF215130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
+		63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF315130B21007997CC /* CoreGraphics.framework */; };
+		63712EF615130B21007997CC /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF515130B21007997CC /* CoreData.framework */; };
+		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
+		63712EFE15130B21007997CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712EFD15130B21007997CC /* main.m */; };
+		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
+		63712F0515130B21007997CC /* tagmaster.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0315130B21007997CC /* tagmaster.xcdatamodeld */; };
+		63712F0D15130B21007997CC /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712F0C15130B21007997CC /* SenTestingKit.framework */; };
+		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
+		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
+		63712F1015130B21007997CC /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF515130B21007997CC /* CoreData.framework */; };
+		63712F1815130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712F1615130B21007997CC /* InfoPlist.strings */; };
+		63712F1B15130B21007997CC /* tagmasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F1A15130B21007997CC /* tagmasterTests.m */; };
+		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
+		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
+		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
+		63D9472815145EDD000C8784 /* DPTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472715145EDD000C8784 /* DPTrack.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		63712F1115130B21007997CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63712EE215130B21007997CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63712EEA15130B21007997CC;
+			remoteInfo = tagmaster;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
+		6364557015156B3A002AD091 /* DPTagXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagXMLParser.m; path = Barbershop/DPTagXMLParser.m; sourceTree = "<group>"; };
+		636455721515731A002AD091 /* DPTagQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagQueryResult.h; path = Barbershop/DPTagQueryResult.h; sourceTree = "<group>"; };
+		636455731515731A002AD091 /* DPTagQueryResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagQueryResult.m; path = Barbershop/DPTagQueryResult.m; sourceTree = "<group>"; };
+		63645575151588E2002AD091 /* DPBarbershop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPBarbershop.h; sourceTree = "<group>"; };
+		63712EEB15130B21007997CC /* tagmaster.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tagmaster.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		63712EEF15130B21007997CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		63712EF115130B21007997CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		63712EF315130B21007997CC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		63712EF515130B21007997CC /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		63712EF915130B21007997CC /* tagmaster-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmaster-Info.plist"; sourceTree = "<group>"; };
+		63712EFB15130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		63712EFD15130B21007997CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		63712EFF15130B21007997CC /* tagmaster-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Prefix.pch"; sourceTree = "<group>"; };
+		63712F0015130B21007997CC /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
+		63712F0115130B21007997CC /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
+		63712F0415130B21007997CC /* tagmaster.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = tagmaster.xcdatamodel; sourceTree = "<group>"; };
+		63712F0B15130B21007997CC /* tagmasterTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		63712F0C15130B21007997CC /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		63712F1515130B21007997CC /* tagmasterTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmasterTests-Info.plist"; sourceTree = "<group>"; };
+		63712F1715130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		63712F1915130B21007997CC /* tagmasterTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tagmasterTests.h; sourceTree = "<group>"; };
+		63712F1A15130B21007997CC /* tagmasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = tagmasterTests.m; sourceTree = "<group>"; };
+		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
+		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
+		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
+		63D9472115145BBC000C8784 /* DPRemoteLocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPRemoteLocation.m; path = Barbershop/DPRemoteLocation.m; sourceTree = "<group>"; };
+		63D9472315145DE0000C8784 /* DPVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPVideo.h; path = Barbershop/DPVideo.h; sourceTree = "<group>"; };
+		63D9472415145DE0000C8784 /* DPVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPVideo.m; path = Barbershop/DPVideo.m; sourceTree = "<group>"; };
+		63D9472615145EDD000C8784 /* DPTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTrack.h; path = Barbershop/DPTrack.h; sourceTree = "<group>"; };
+		63D9472715145EDD000C8784 /* DPTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTrack.m; path = Barbershop/DPTrack.m; sourceTree = "<group>"; };
+		63D9472A15145FD3000C8784 /* DPConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DPConstants.h; path = Barbershop/DPConstants.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		63712EE815130B21007997CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
+				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
+				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
+				63712EF615130B21007997CC /* CoreData.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63712F0715130B21007997CC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712F0D15130B21007997CC /* SenTestingKit.framework in Frameworks */,
+				63712F0E15130B21007997CC /* UIKit.framework in Frameworks */,
+				63712F0F15130B21007997CC /* Foundation.framework in Frameworks */,
+				63712F1015130B21007997CC /* CoreData.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		63712EE015130B21007997CC = {
+			isa = PBXGroup;
+			children = (
+				63712EF715130B21007997CC /* tagmaster */,
+				63712F1315130B21007997CC /* tagmasterTests */,
+				63712EEE15130B21007997CC /* Frameworks */,
+				63712EEC15130B21007997CC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		63712EEC15130B21007997CC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				63712EEB15130B21007997CC /* tagmaster.app */,
+				63712F0B15130B21007997CC /* tagmasterTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		63712EEE15130B21007997CC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				63712EEF15130B21007997CC /* UIKit.framework */,
+				63712EF115130B21007997CC /* Foundation.framework */,
+				63712EF315130B21007997CC /* CoreGraphics.framework */,
+				63712EF515130B21007997CC /* CoreData.framework */,
+				63712F0C15130B21007997CC /* SenTestingKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		63712EF715130B21007997CC /* tagmaster */ = {
+			isa = PBXGroup;
+			children = (
+				63D9472B151465B5000C8784 /* Barbershop */,
+				63712F0015130B21007997CC /* DPAppDelegate.h */,
+				63712F0115130B21007997CC /* DPAppDelegate.m */,
+				63712F0315130B21007997CC /* tagmaster.xcdatamodeld */,
+				63712EF815130B21007997CC /* Supporting Files */,
+			);
+			path = tagmaster;
+			sourceTree = "<group>";
+		};
+		63712EF815130B21007997CC /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63712EF915130B21007997CC /* tagmaster-Info.plist */,
+				63712EFA15130B21007997CC /* InfoPlist.strings */,
+				63712EFD15130B21007997CC /* main.m */,
+				63712EFF15130B21007997CC /* tagmaster-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		63712F1315130B21007997CC /* tagmasterTests */ = {
+			isa = PBXGroup;
+			children = (
+				63712F1915130B21007997CC /* tagmasterTests.h */,
+				63712F1A15130B21007997CC /* tagmasterTests.m */,
+				63712F1415130B21007997CC /* Supporting Files */,
+			);
+			path = tagmasterTests;
+			sourceTree = "<group>";
+		};
+		63712F1415130B21007997CC /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				63712F1515130B21007997CC /* tagmasterTests-Info.plist */,
+				63712F1615130B21007997CC /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		63D9472B151465B5000C8784 /* Barbershop */ = {
+			isa = PBXGroup;
+			children = (
+				63D9471D1513198D000C8784 /* DPTag.h */,
+				63D9471E1513198D000C8784 /* DPTag.m */,
+				63D9472015145BBC000C8784 /* DPRemoteLocation.h */,
+				63D9472115145BBC000C8784 /* DPRemoteLocation.m */,
+				63D9472315145DE0000C8784 /* DPVideo.h */,
+				63D9472415145DE0000C8784 /* DPVideo.m */,
+				63D9472615145EDD000C8784 /* DPTrack.h */,
+				63D9472715145EDD000C8784 /* DPTrack.m */,
+				63D9472A15145FD3000C8784 /* DPConstants.h */,
+				6364556F15156B3A002AD091 /* DPTagXMLParser.h */,
+				6364557015156B3A002AD091 /* DPTagXMLParser.m */,
+				636455721515731A002AD091 /* DPTagQueryResult.h */,
+				636455731515731A002AD091 /* DPTagQueryResult.m */,
+				63645575151588E2002AD091 /* DPBarbershop.h */,
+			);
+			name = Barbershop;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		63712EEA15130B21007997CC /* tagmaster */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63712F1E15130B21007997CC /* Build configuration list for PBXNativeTarget "tagmaster" */;
+			buildPhases = (
+				63712EE715130B21007997CC /* Sources */,
+				63712EE815130B21007997CC /* Frameworks */,
+				63712EE915130B21007997CC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tagmaster;
+			productName = tagmaster;
+			productReference = 63712EEB15130B21007997CC /* tagmaster.app */;
+			productType = "com.apple.product-type.application";
+		};
+		63712F0A15130B21007997CC /* tagmasterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63712F2115130B21007997CC /* Build configuration list for PBXNativeTarget "tagmasterTests" */;
+			buildPhases = (
+				63712F0615130B21007997CC /* Sources */,
+				63712F0715130B21007997CC /* Frameworks */,
+				63712F0815130B21007997CC /* Resources */,
+				63712F0915130B21007997CC /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				63712F1215130B21007997CC /* PBXTargetDependency */,
+			);
+			name = tagmasterTests;
+			productName = tagmasterTests;
+			productReference = 63712F0B15130B21007997CC /* tagmasterTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		63712EE215130B21007997CC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = DepollSoft;
+			};
+			buildConfigurationList = 63712EE515130B21007997CC /* Build configuration list for PBXProject "tagmaster" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 63712EE015130B21007997CC;
+			productRefGroup = 63712EEC15130B21007997CC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				63712EEA15130B21007997CC /* tagmaster */,
+				63712F0A15130B21007997CC /* tagmasterTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		63712EE915130B21007997CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63712F0815130B21007997CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712F1815130B21007997CC /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		63712F0915130B21007997CC /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		63712EE715130B21007997CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712EFE15130B21007997CC /* main.m in Sources */,
+				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
+				63712F0515130B21007997CC /* tagmaster.xcdatamodeld in Sources */,
+				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
+				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
+				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
+				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,
+				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
+				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63712F0615130B21007997CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63712F1B15130B21007997CC /* tagmasterTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		63712F1215130B21007997CC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63712EEA15130B21007997CC /* tagmaster */;
+			targetProxy = 63712F1115130B21007997CC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		63712EFA15130B21007997CC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				63712EFB15130B21007997CC /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		63712F1615130B21007997CC /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				63712F1715130B21007997CC /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		63712F1C15130B21007997CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		63712F1D15130B21007997CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		63712F1F15130B21007997CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
+				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		63712F2015130B21007997CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
+				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		63712F2215130B21007997CC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
+				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		63712F2315130B21007997CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
+				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		63712EE515130B21007997CC /* Build configuration list for PBXProject "tagmaster" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63712F1C15130B21007997CC /* Debug */,
+				63712F1D15130B21007997CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		63712F1E15130B21007997CC /* Build configuration list for PBXNativeTarget "tagmaster" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63712F1F15130B21007997CC /* Debug */,
+				63712F2015130B21007997CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		63712F2115130B21007997CC /* Build configuration list for PBXNativeTarget "tagmasterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63712F2215130B21007997CC /* Debug */,
+				63712F2315130B21007997CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		63712F0315130B21007997CC /* tagmaster.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				63712F0415130B21007997CC /* tagmaster.xcdatamodel */,
+			);
+			currentVersion = 63712F0415130B21007997CC /* tagmaster.xcdatamodel */;
+			path = tagmaster.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = 63712EE215130B21007997CC /* Project object */;
+}

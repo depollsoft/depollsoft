@@ -8,6 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
-@interface DPSerializer : NSObject
+@interface DPJsonSerializer : NSObject
+
++ (Class)getClassForName:(NSString *)name;
++ (id)deserializeDictionary:(NSDictionary *)dictionary;
++ (void)registerAlias:(NSString *)alias forClass:(Class)aliasedClass;
++ (void)registerAlias:(NSString *)alias forObjCType:(NSString *)typeName;
++ (void)clearAliases;
++ (NSDictionary *)serialize:(id)object;
 
 @end

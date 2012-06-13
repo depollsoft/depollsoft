@@ -10,4 +10,9 @@
 
 @implementation DPTagQueryResult
 
+@synthesize count;
+@synthesize tags;
+@synthesize start;
+@synthesize available;
+
 @end

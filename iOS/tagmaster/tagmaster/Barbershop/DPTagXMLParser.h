@@ -8,6 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
-@interface DPTagXMLParser : NSObject
+@interface DPTagXMLParser : NSObject<NSXMLParserDelegate> {
+    NSMutableArray *result;
+    NSDateFormatter *dayNameDateFormatter;
+}
+
+- (NSArray *)parseWithData:(NSData *)xmlData;
+- (NSArray *)parseWithUrl:(NSURL *)url;
 
 @end

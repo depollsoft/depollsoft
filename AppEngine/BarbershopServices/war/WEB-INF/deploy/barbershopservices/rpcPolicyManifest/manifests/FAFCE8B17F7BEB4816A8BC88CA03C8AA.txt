@@ -1,0 +1,2 @@
+serviceClass: depollsoft.bbsservices.client.GreetingService
+path: B771F410C434378486FD4C7917495258.gwt.rpc
