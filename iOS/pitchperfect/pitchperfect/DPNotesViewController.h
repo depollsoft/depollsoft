@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface DPSecondViewController : UIViewController
+@interface DPNotesViewController : UIViewController<UITableViewDataSource, UIGestureRecognizerDelegate>
 
 @end

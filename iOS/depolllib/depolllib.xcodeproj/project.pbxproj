@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */ = {isa = PBXBuildFile; fileRef = 631C911C15942383004733F1 /* DPUtils+UIColor.h */; };
+		631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C911D15942383004733F1 /* DPUtils+UIColor.m */; };
 		63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */; };
 		63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */; };
 		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
@@ -37,6 +39,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		631C911C15942383004733F1 /* DPUtils+UIColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DPUtils+UIColor.h"; sourceTree = "<group>"; };
+		631C911D15942383004733F1 /* DPUtils+UIColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "DPUtils+UIColor.m"; sourceTree = "<group>"; };
 		63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+UIControl.h"; path = "utils/DPUtils+UIControl.h"; sourceTree = "<group>"; };
 		63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+UIControl.m"; path = "utils/DPUtils+UIControl.m"; sourceTree = "<group>"; };
 		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -176,6 +180,8 @@
 				63FF00841554F90000C28218 /* DPUtils+NSString.m */,
 				63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */,
 				63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */,
+				631C911C15942383004733F1 /* DPUtils+UIColor.h */,
+				631C911D15942383004733F1 /* DPUtils+UIColor.m */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -192,6 +198,7 @@
 				63F17816154E112000C2AB59 /* DPEnum.h in Headers */,
 				63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */,
 				63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */,
+				631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,6 +305,7 @@
 				63F17817154E112000C2AB59 /* DPEnum.m in Sources */,
 				63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */,
 				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
+				631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
