@@ -24,7 +24,6 @@
 @interface DPPitchPipeViewController ()
 
 @property (nonatomic, strong) GADBannerView *bannerView;
-@property (nonatomic, strong) NSMutableArray *toRetain;
 @property (nonatomic, strong) NSMutableArray *noteButtons;
 @property (nonatomic, strong) DPPitchPipeModel *model;
 
@@ -32,12 +31,11 @@
 
 @implementation DPPitchPipeViewController
 
-@synthesize bannerView, toRetain, model, noteButtons;
+@synthesize bannerView, model, noteButtons;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.toRetain = [NSMutableArray array];
     self.noteButtons = [NSMutableArray arrayWithCapacity:12];
     self.model = [[DPPitchPipeModel alloc] init];
 	// Do any additional setup after loading the view, typically from a nib.
@@ -50,7 +48,7 @@
     
     [bannerView loadRequest:[GADRequest request]];
     
-    CGRect gridLayoutViewBounds = CGRectInset(self.view.bounds, 4, bannerView.frame.size.height + bannerView.frame.origin.y + 4);
+    CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, bannerView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - bannerView.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
     
     KJGridLayoutView *glv = [[KJGridLayoutView alloc] initWithFrame:gridLayoutViewBounds];
     
@@ -69,10 +67,10 @@
     UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to C", @"F to F", nil]];
     typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBordered;
     typeSwitcher.alpha = 0.75;
-    [toRetain addObject:[typeSwitcher addBlock:^{
+    [typeSwitcher addBlock:^{
         self.model.isFromFToF = typeSwitcher.selectedSegmentIndex == 1;
         [self refreshButtons];
-    } forControlEvents:UIControlEventValueChanged]];
+    } forControlEvents:UIControlEventValueChanged];
     typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
     [glv addSubview:typeSwitcher row:2 rowSpan:2 column:1 columnSpan:2 options:KJGridLayoutFixedHeight];
     [self.view addSubview:glv];
@@ -141,7 +139,6 @@
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     bannerView = nil;
-    toRetain = nil;
 }
 
 @end
