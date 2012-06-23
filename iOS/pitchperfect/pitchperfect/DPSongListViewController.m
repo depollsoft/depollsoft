@@ -1,32 +1,34 @@
 //
-//  DPKeysViewController.m
+//  DPSongListViewController.m
 //  pitchperfect
 //
 //  Created by David Poll on 6/22/12.
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import "DPKeysViewController.h"
+#import "DPSongListViewController.h"
 #import "GADBannerView.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
+#import "DPPitchedSong.h"
 #import "LayoutManagers.h"
 #import "DPUtils+UIControl.h"
 #import "DPUtils+UIColor.h"
+#import "DPSongsModel.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
 
-@interface DPKeyCell : UITableViewCell
+@interface DPSongCell : UITableViewCell
 
-@property (nonatomic, strong) DPKey *key;
+@property (nonatomic, strong) DPPitchedSong *song;
 
 @end
 
-@implementation DPKeyCell
+@implementation DPSongCell
 
-@synthesize key;
+@synthesize song;
 
 - (UIView *)keyUi:(DPKey *)k {
     NSArray *flats = [NSArray arrayWithObjects:@"", @"\u00A8", @"\u00A9", @"\u00AA", @"\u00AB", @"\u00AC", @"\u20AC", @"\u00AE", nil];
@@ -79,23 +81,20 @@
     return flow;
 }
 
-- (void)setKey:(DPKey *)newKey {
-    key = newKey;
+- (void)setSong:(DPPitchedSong *)newSong {
+    song = newSong;
     
     HLayoutView *flowRight = [[HLayoutView alloc] init];
-    [flowRight addSubview:[self noteUi:newKey]];
+    [flowRight addSubview:[self noteUi:song.key]];
     
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     
-    HLayoutView *flowLeft = [[HLayoutView alloc] init];
-    [flowLeft addSubview:[self keyUi:newKey]];
+    self.textLabel.text = song.name;
+    self.textLabel.textColor = self.textLabel.textColor.invert;
     
-    flowLeft.frame = CGRectInset(self.frame, 10, 0);
-    flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
-    
-    [self addSubview:flowRight];
-    [self addSubview:flowLeft];
+    [self.contentView addSubview:flowRight];
     [self sizeToFit];
     
     self.frame = CGRectInset(self.frame, 0, -20);
@@ -103,36 +102,41 @@
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note play];
+    [song.key.note play];
     [self setHighlighted:YES];
     [super touchesBegan:touches withEvent:event];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note stop];
+    [song.key.note stop];
     [self setHighlighted:NO];
     [super touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note stop];
+    [song.key.note stop];
     [self setHighlighted:NO];
     [super touchesCancelled:touches withEvent:event];
 }
 
 @end
 
-@interface DPKeysViewController ()
+@interface DPSongListViewController ()
 
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) NSArray *keys;
+@property (nonatomic, strong) UIBarButtonItem *editItem;
+@property (nonatomic, strong) UIBarButtonItem *doneItem;
+@property (nonatomic, strong) UIBarButtonItem *addItem;
+@property (nonatomic, strong) NSArray *editingButtons;
+@property (nonatomic, strong) NSArray *normalButtons;
+@property (nonatomic, strong) UIToolbar *toolbar;
 
 @end
 
-@implementation DPKeysViewController
+@implementation DPSongListViewController
 
-@synthesize bannerView, tableView, keys;
+@synthesize bannerView, tableView, editItem, doneItem, addItem, editingButtons, normalButtons, toolbar;
 
 - (void)viewDidLoad
 {
@@ -142,14 +146,13 @@
     VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
     topLayout.vAlignment = UIControlContentVerticalAlignmentTop;
     
-    keys = [DPKey majorKeys];
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
     bannerView.rootViewController = self;
     
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
+    toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleBlackTranslucent;
     
     [toolbar sizeToFit];
@@ -163,45 +166,33 @@
     
     [bannerView loadRequest:[GADRequest request]];
     
-    UISegmentedControl *majorMinorChooser = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Major", @"Minor", nil]];
-    majorMinorChooser.selectedSegmentIndex = 0;
-    majorMinorChooser.segmentedControlStyle = UISegmentedControlStyleBar;
-    [majorMinorChooser sizeToFit];
-    
-    [majorMinorChooser addBlock:^{
-        for (DPKey *key in self.keys) {
-            [key.note stop];
-        }
-        switch(majorMinorChooser.selectedSegmentIndex) {
-            case 0:
-                keys = [DPKey majorKeys];
-                break;
-            case 1:
-                keys = [DPKey minorKeys];
-                break;
-        }
-        [tableView reloadData];
-    } forControlEvents:UIControlEventValueChanged];
-    
     [topLayout sizeToFit];
     
     [self.view addSubview:topLayout];
     
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
+    tableView.delegate = self;
     tableView.allowsSelection = NO;
     tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
     [self.view addSubview:tableView];
-    
-    [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(keys.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
-    
-    UIBarButtonItem *majorMinorChooserItem = [[UIBarButtonItem alloc] initWithCustomView:majorMinorChooser];
         
+    
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
+    
+    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRow)];
+    
+    editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
+    
+    doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditing)];
+    
+    normalButtons = [NSArray arrayWithObjects:flexibleSpace, editItem, settingsButton, nil];
+    editingButtons = [NSArray arrayWithObjects:addButton, flexibleSpace, doneItem, settingsButton, nil];
+    
+    toolbar.items = normalButtons;
 }
 
 - (void)viewDidUnload
@@ -216,14 +207,63 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPKey *key = [keys objectAtIndex:indexPath.row];
-    DPKeyCell *cell = [[DPKeyCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.key = key;
+    DPPitchedSong *song = [[[DPSongsModel sharedInstance] songs] objectAtIndex:indexPath.row];
+    DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
+    cell.editingAccessoryType = UITableViewCellAccessoryDetailDisclosureButton;
+    cell.song = song;
     return cell;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return keys.count;
+    return [[DPSongsModel sharedInstance] songs].count;
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    return YES;
+}
+
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+    return YES;
+}
+
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
+    NSMutableArray *arr = [DPSongsModel sharedInstance].songs;
+    [arr exchangeObjectAtIndex:sourceIndexPath.row withObjectAtIndex:destinationIndexPath.row];
+    [DPSongsModel sharedInstance].songs = arr;
+}
+
+- (void)tableView:(UITableView *)view commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        [[DPSongsModel sharedInstance].songs removeObjectAtIndex:indexPath.row];
+        [DPSongsModel sharedInstance].songs = [DPSongsModel sharedInstance].songs;
+        [tableView reloadData];
+    }
+}
+
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return UITableViewCellEditingStyleDelete;
+}
+
+- (void)addRow {
+    static int count = 0;
+    DPPitchedSong *song = [[DPPitchedSong alloc] init];
+    song.name = [NSString stringWithFormat:@"Test%d", count];
+    song.key = [DPKey majorKeys].lastObject;
+    count++;
+    [[DPSongsModel sharedInstance].songs addObject:song];
+    [DPSongsModel sharedInstance].songs = [DPSongsModel sharedInstance].songs;
+    
+    [tableView reloadData];
+}
+
+- (void)edit {
+    [tableView setEditing:YES animated:YES];
+    [toolbar setItems:editingButtons animated:YES];
+}
+
+- (void)doneEditing {
+    [tableView setEditing:NO animated:YES];
+    [toolbar setItems:normalButtons animated:YES];
 }
 
 @end

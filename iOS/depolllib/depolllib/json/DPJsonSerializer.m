@@ -320,7 +320,7 @@ static NSNumber *kFalse;
 #pragma clang diagnostic pop
         }
         if (!propValue) {
-            [result setObject:[NSNull null] forKey:propertyKey];
+            // Do nothing for a null property value
         } else if ([propValue isKindOfClass:[NSValue class]] && [object isKindOfClass:[DPJsonPrimitive class]]) {
             [result setObject:propValue forKey:propertyKey];
         } else if ([propValue isKindOfClass:[NSString class]]) {

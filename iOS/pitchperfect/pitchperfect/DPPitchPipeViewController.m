@@ -15,7 +15,7 @@
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"
-#import "HLayoutView.h"
+#import "LayoutManagers.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -36,6 +36,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    VLayoutView *topLayout = [[VLayoutView alloc] init];
     self.noteButtons = [NSMutableArray arrayWithCapacity:12];
     self.model = [[DPPitchPipeModel alloc] init];
 	// Do any additional setup after loading the view, typically from a nib.
@@ -43,12 +44,25 @@
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
     bannerView.rootViewController = self;
-    [self.view addSubview:bannerView];
-    [self.view setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]]];
+
+    UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
+    background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
+    [self.view setBackgroundColor:[UIColor blackColor]];
+    [self.view addSubview:background];
     
     [bannerView loadRequest:[GADRequest request]];
     
-    CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, bannerView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - bannerView.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
+    UIToolbar *toolbar = [[UIToolbar alloc] init];
+    toolbar.barStyle = UIBarStyleBlackTranslucent;
+    
+    [toolbar sizeToFit];
+    [topLayout addSubview:toolbar];
+    [topLayout addSubview:bannerView];
+    [topLayout sizeToFit];
+    [self.view addSubview:topLayout];
+    
+    
+    CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
     
     KJGridLayoutView *glv = [[KJGridLayoutView alloc] initWithFrame:gridLayoutViewBounds];
     
@@ -65,7 +79,8 @@
     }
     
     UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to C", @"F to F", nil]];
-    typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBordered;
+    typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBar;
+    typeSwitcher.tintColor = [UIColor darkGrayColor];
     typeSwitcher.alpha = 0.75;
     [typeSwitcher addBlock:^{
         self.model.isFromFToF = typeSwitcher.selectedSegmentIndex == 1;
@@ -73,6 +88,16 @@
     } forControlEvents:UIControlEventValueChanged];
     typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
     [glv addSubview:typeSwitcher row:2 rowSpan:2 column:1 columnSpan:2 options:KJGridLayoutFixedHeight];
+    
+    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
+
+    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    
+    
+    
+    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
+    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
+    
     [self.view addSubview:glv];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self refreshButtons];

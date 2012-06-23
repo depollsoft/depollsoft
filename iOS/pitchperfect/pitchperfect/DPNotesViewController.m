@@ -92,7 +92,7 @@
     [self addSubview:flow];
     
     self.detailTextLabel.text = [NSString stringWithFormat:@"%1.2f Hz", note.frequency];
-    self.detailTextLabel.textColor = self.detailTextLabel.textColor.invert;
+    self.detailTextLabel.textColor = [UIColor lightTextColor];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -139,8 +139,18 @@
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
     bannerView.rootViewController = self;
+    
+    UIToolbar *toolbar = [[UIToolbar alloc] init];
+    toolbar.barStyle = UIBarStyleBlackTranslucent;
+    
+    [toolbar sizeToFit];
+    [topLayout addSubview:toolbar];
     [topLayout addSubview:bannerView];
-    [self.view setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]]];
+    
+    UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
+    background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
+    [self.view setBackgroundColor:[UIColor blackColor]];
+    [self.view addSubview:background];
     
     [bannerView loadRequest:[GADRequest request]];
 
@@ -156,6 +166,13 @@
     [self.view addSubview:tableView];
     
     [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+    
+    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
+    
+    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    
+    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
+    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
 }
 
 - (void)viewDidUnload

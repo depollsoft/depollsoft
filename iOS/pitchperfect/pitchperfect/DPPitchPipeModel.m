@@ -10,6 +10,8 @@
 #import "DPNote.h"
 #import "DPAccidental.h"
 
+#define F_TO_F_KEY @"depollsoft.pitchperfect.isFToF"
+
 @interface DPPitchPipeModel ()
 
 @property (nonatomic, strong) NSArray *cToC;
@@ -19,10 +21,18 @@
 
 @implementation DPPitchPipeModel
 
-@synthesize isFromFToF, cToC, fToF;
+@synthesize cToC, fToF;
+
+- (BOOL)isFromFToF {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:F_TO_F_KEY];
+}
+
+- (void)setIsFromFToF:(BOOL)isFromFToF {
+    [[NSUserDefaults standardUserDefaults] setBool:isFromFToF forKey:F_TO_F_KEY];
+}
 
 - (id)init {
-    if (self = [super init]) {
+    if (self = [super init]) {        
         NSMutableArray *temp;
         temp = [NSMutableArray arrayWithCapacity:12];
         [temp addObject:[DPNote findNoteWithName:@"C" accidental:[DPAccidental enumWithInt:Natural] octave:4]];

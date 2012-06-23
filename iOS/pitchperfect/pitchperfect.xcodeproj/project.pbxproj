@@ -12,6 +12,18 @@
 		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
 		631C9126159455F1004733F1 /* keys.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9124159455F1004733F1 /* keys.png */; };
 		631C9127159455F1004733F1 /* keys@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9125159455F1004733F1 /* keys@2x.png */; };
+		631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912915957B58004733F1 /* DPSongListViewController.m */; };
+		631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912C15957D3C004733F1 /* DPSettingsModel.m */; };
+		631C913015958022004733F1 /* DPSongsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912F15958022004733F1 /* DPSongsModel.m */; };
+		631C9132159582E4004733F1 /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C9131159582E4004733F1 /* Parse.framework */; };
+		631C91341595830F004733F1 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C91331595830F004733F1 /* CFNetwork.framework */; };
+		631C91361595831A004733F1 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C91351595831A004733F1 /* MobileCoreServices.framework */; };
+		631C913815958329004733F1 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C913715958329004733F1 /* libz.1.1.3.dylib */; };
+		631C913A1595832F004733F1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C91391595832F004733F1 /* Security.framework */; };
+		631C913C15958335004733F1 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C913B15958335004733F1 /* QuartzCore.framework */; };
+		631C913F15958DC4004733F1 /* songs.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913D15958DC4004733F1 /* songs.png */; };
+		631C914015958DC4004733F1 /* songs@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913E15958DC4004733F1 /* songs@2x.png */; };
+		631C914E15958E98004733F1 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C914D15958E98004733F1 /* libpitchperfectlib.a */; };
 		634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897915885F6A000D9AFE /* AbstractLayoutView.m */; };
 		634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897B15885F6A000D9AFE /* GridLayoutView.m */; };
 		634C898515885F6A000D9AFE /* HLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897D15885F6A000D9AFE /* HLayoutView.m */; };
@@ -43,7 +55,6 @@
 		63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403E6158EA92E00FCA77C /* AudioToolbox.framework */; };
 		63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A96157A997600348592 /* CoreAudio.framework */; };
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
-		63C14A9C157AA51600348592 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC371F151E907A007C46DB /* libpitchperfectlib.a */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A5151E9000007C46DB /* CoreGraphics.framework */; };
@@ -58,8 +69,6 @@
 		63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36D8151E9000007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36D6151E9000007C46DB /* InfoPlist.strings */; };
 		63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36DA151E9000007C46DB /* pitchperfectTests.m */; };
-		63FF006A1554C76600C28218 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC371F151E907A007C46DB /* libpitchperfectlib.a */; };
-		63FF006C1554C76700C28218 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63FF006B1554C76600C28218 /* libdepolllib.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,20 +79,6 @@
 			remoteGlobalIDString = 63DC369C151E8FFF007C46DB;
 			remoteInfo = pitchperfect;
 		};
-		63DC371E151E907A007C46DB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 63DC36EF151E9079007C46DB;
-			remoteInfo = pitchperfectlib;
-		};
-		63DC3720151E907A007C46DB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 63DC36FF151E9079007C46DB;
-			remoteInfo = pitchperfectlibTests;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +88,21 @@
 		631C912215945219004733F1 /* DPKeysViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPKeysViewController.m; sourceTree = "<group>"; };
 		631C9124159455F1004733F1 /* keys.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = keys.png; sourceTree = "<group>"; };
 		631C9125159455F1004733F1 /* keys@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "keys@2x.png"; sourceTree = "<group>"; };
+		631C912815957B58004733F1 /* DPSongListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongListViewController.h; sourceTree = "<group>"; };
+		631C912915957B58004733F1 /* DPSongListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSongListViewController.m; sourceTree = "<group>"; };
+		631C912B15957D3C004733F1 /* DPSettingsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsModel.h; sourceTree = "<group>"; };
+		631C912C15957D3C004733F1 /* DPSettingsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsModel.m; sourceTree = "<group>"; };
+		631C912E15958022004733F1 /* DPSongsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongsModel.h; sourceTree = "<group>"; };
+		631C912F15958022004733F1 /* DPSongsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSongsModel.m; sourceTree = "<group>"; };
+		631C9131159582E4004733F1 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
+		631C91331595830F004733F1 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		631C91351595831A004733F1 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		631C913715958329004733F1 /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
+		631C91391595832F004733F1 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		631C913B15958335004733F1 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		631C913D15958DC4004733F1 /* songs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = songs.png; sourceTree = "<group>"; };
+		631C913E15958DC4004733F1 /* songs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "songs@2x.png"; sourceTree = "<group>"; };
+		631C914D15958E98004733F1 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpitchperfectlib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
 		634C897815885F6A000D9AFE /* AbstractLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AbstractLayoutView.h; sourceTree = "<group>"; };
 		634C897915885F6A000D9AFE /* AbstractLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AbstractLayoutView.m; sourceTree = "<group>"; };
 		634C897A15885F6A000D9AFE /* GridLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GridLayoutView.h; sourceTree = "<group>"; };
@@ -166,7 +176,6 @@
 		63DC36D9151E9000007C46DB /* pitchperfectTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchperfectTests.h; sourceTree = "<group>"; };
 		63DC36DA151E9000007C46DB /* pitchperfectTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectTests.m; sourceTree = "<group>"; };
 		63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pitchperfectlib.xcodeproj; path = pitchperfectlib/pitchperfectlib.xcodeproj; sourceTree = "<group>"; };
-		63FF006B1554C76600C28218 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,17 +183,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				631C914E15958E98004733F1 /* libpitchperfectlib.a in Frameworks */,
+				631C913C15958335004733F1 /* QuartzCore.framework in Frameworks */,
+				631C913A1595832F004733F1 /* Security.framework in Frameworks */,
+				631C913815958329004733F1 /* libz.1.1.3.dylib in Frameworks */,
+				63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */,
+				631C91361595831A004733F1 /* MobileCoreServices.framework in Frameworks */,
+				63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */,
+				631C91341595830F004733F1 /* CFNetwork.framework in Frameworks */,
 				63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */,
 				63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */,
 				63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */,
 				63A99D8915884EE600C78CC0 /* CoreText.framework in Frameworks */,
-				63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */,
-				63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */,
 				63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */,
-				63C14A9C157AA51600348592 /* libpitchperfectlib.a in Frameworks */,
 				63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */,
 				63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */,
 				63A99D4E1588257600C78CC0 /* libGoogleAdMobAds.a in Frameworks */,
+				631C9132159582E4004733F1 /* Parse.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,8 +207,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63FF006C1554C76700C28218 /* libdepolllib.a in Frameworks */,
-				63FF006A1554C76600C28218 /* libpitchperfectlib.a in Frameworks */,
 				63DC36CE151E9000007C46DB /* SenTestingKit.framework in Frameworks */,
 				63DC36CF151E9000007C46DB /* UIKit.framework in Frameworks */,
 				63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */,
@@ -269,8 +282,9 @@
 		63DC3692151E8FFF007C46DB = {
 			isa = PBXGroup;
 			children = (
-				63B403EA158EAC1100FCA77C /* AVFoundation.framework */,
-				63B403E6158EA92E00FCA77C /* AudioToolbox.framework */,
+				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
+				631C913D15958DC4004733F1 /* songs.png */,
+				631C913E15958DC4004733F1 /* songs@2x.png */,
 				63B403DD1588771C00FCA77C /* pitchpipe@2x.png */,
 				63B403DB1588768700FCA77C /* pitchpipe.png */,
 				631C911515906D2B004733F1 /* notes.png */,
@@ -280,18 +294,13 @@
 				631C9124159455F1004733F1 /* keys.png */,
 				631C9125159455F1004733F1 /* keys@2x.png */,
 				634C897715885F6A000D9AFE /* LayoutManagers */,
-				63A99D8815884EE600C78CC0 /* CoreText.framework */,
 				63A99D7B15883F2900C78CC0 /* MusiQwik.ttf */,
 				63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */,
 				63A99D7D15883F2900C78CC0 /* MusiSync.ttf */,
 				63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */,
 				63B403D31588703200FCA77C /* panobackground.png */,
 				63A99D581588293A00C78CC0 /* KJGridLayout */,
-				63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */,
-				63A99D52158826F800C78CC0 /* MessageUI.framework */,
 				63A99D511588259000C78CC0 /* Admob */,
-				63FF006B1554C76600C28218 /* libdepolllib.a */,
-				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
 				63DC36A7151E9000007C46DB /* pitchperfect */,
 				63DC36D3151E9000007C46DB /* pitchperfectTests */,
 				63DC36A0151E9000007C46DB /* Frameworks */,
@@ -311,6 +320,18 @@
 		63DC36A0151E9000007C46DB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				631C914D15958E98004733F1 /* libpitchperfectlib.a */,
+				631C913B15958335004733F1 /* QuartzCore.framework */,
+				631C91391595832F004733F1 /* Security.framework */,
+				631C913715958329004733F1 /* libz.1.1.3.dylib */,
+				631C91351595831A004733F1 /* MobileCoreServices.framework */,
+				631C91331595830F004733F1 /* CFNetwork.framework */,
+				63B403EA158EAC1100FCA77C /* AVFoundation.framework */,
+				63B403E6158EA92E00FCA77C /* AudioToolbox.framework */,
+				63A99D8815884EE600C78CC0 /* CoreText.framework */,
+				63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */,
+				63A99D52158826F800C78CC0 /* MessageUI.framework */,
+				631C9131159582E4004733F1 /* Parse.framework */,
 				63C14A96157A997600348592 /* CoreAudio.framework */,
 				63DC36A1151E9000007C46DB /* UIKit.framework */,
 				63DC36A3151E9000007C46DB /* Foundation.framework */,
@@ -323,6 +344,7 @@
 		63DC36A7151E9000007C46DB /* pitchperfect */ = {
 			isa = PBXGroup;
 			children = (
+				63DC36A8151E9000007C46DB /* Supporting Files */,
 				63B403DF15887AD400FCA77C /* MainStoryboard_iPad.storyboard */,
 				63DC36B0151E9000007C46DB /* DPAppDelegate.h */,
 				63DC36B1151E9000007C46DB /* DPAppDelegate.m */,
@@ -331,11 +353,16 @@
 				63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */,
 				63DC36C0151E9000007C46DB /* DPNotesViewController.h */,
 				63DC36C1151E9000007C46DB /* DPNotesViewController.m */,
-				63DC36A8151E9000007C46DB /* Supporting Files */,
 				63A99D781588359700C78CC0 /* DPPitchPipeModel.h */,
 				63A99D791588359700C78CC0 /* DPPitchPipeModel.m */,
 				631C912115945219004733F1 /* DPKeysViewController.h */,
 				631C912215945219004733F1 /* DPKeysViewController.m */,
+				631C912815957B58004733F1 /* DPSongListViewController.h */,
+				631C912915957B58004733F1 /* DPSongListViewController.m */,
+				631C912B15957D3C004733F1 /* DPSettingsModel.h */,
+				631C912C15957D3C004733F1 /* DPSettingsModel.m */,
+				631C912E15958022004733F1 /* DPSongsModel.h */,
+				631C912F15958022004733F1 /* DPSongsModel.m */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -368,15 +395,6 @@
 				63DC36D6151E9000007C46DB /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		63DC371A151E9079007C46DB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				63DC371F151E907A007C46DB /* libpitchperfectlib.a */,
-				63DC3721151E907A007C46DB /* pitchperfectlibTests.octest */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -438,12 +456,6 @@
 			mainGroup = 63DC3692151E8FFF007C46DB;
 			productRefGroup = 63DC369E151E9000007C46DB /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 63DC371A151E9079007C46DB /* Products */;
-					ProjectRef = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				63DC369C151E8FFF007C46DB /* pitchperfect */,
@@ -451,23 +463,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		63DC371F151E907A007C46DB /* libpitchperfectlib.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libpitchperfectlib.a;
-			remoteRef = 63DC371E151E907A007C46DB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		63DC3721151E907A007C46DB /* pitchperfectlibTests.octest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = pitchperfectlibTests.octest;
-			remoteRef = 63DC3720151E907A007C46DB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		63DC369B151E8FFF007C46DB /* Resources */ = {
@@ -493,6 +488,8 @@
 				631C911815906D2B004733F1 /* notes@2x.png in Resources */,
 				631C9126159455F1004733F1 /* keys.png in Resources */,
 				631C9127159455F1004733F1 /* keys@2x.png in Resources */,
+				631C913F15958DC4004733F1 /* songs.png in Resources */,
+				631C914015958DC4004733F1 /* songs@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -543,6 +540,9 @@
 				634C898515885F6A000D9AFE /* HLayoutView.m in Sources */,
 				634C898815885F6A000D9AFE /* VLayoutView.m in Sources */,
 				631C912315945219004733F1 /* DPKeysViewController.m in Sources */,
+				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
+				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
+				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -660,6 +660,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/GoogleAdMobAdsSDK.framework\"",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -682,6 +683,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/GoogleAdMobAdsSDK.framework\"",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";

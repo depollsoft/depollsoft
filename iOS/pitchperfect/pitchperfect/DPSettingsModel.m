@@ -1,0 +1,68 @@
+//
+//  DPSettingsModel.m
+//  pitchperfect
+//
+//  Created by David Poll on 6/22/12.
+//  Copyright (c) 2012 DepollSoft. All rights reserved.
+//
+
+#import "DPSettingsModel.h"
+#import <Parse/Parse.h>
+
+#define WAKE_LOCK_KEY @"depollsoft.pitchperfect.WakeLock"
+#define TOGGLE_NOTE_KEY @"depollsoft.pitchperfect.ToggleNote"
+
+@implementation DPSettingsModel
+
++ (DPSettingsModel *)sharedInstance {
+    static DPSettingsModel *instance;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[DPSettingsModel alloc] init];
+    });
+    return instance;
+}
+
+- (BOOL)wakeLock {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:WAKE_LOCK_KEY];
+}
+
+- (void)setWakeLock:(BOOL)wakeLock {
+    [[NSUserDefaults standardUserDefaults] setBool:wakeLock forKey:WAKE_LOCK_KEY];
+}
+
+- (BOOL)toggleNotes {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:TOGGLE_NOTE_KEY];
+}
+
+- (void)setToggleNotes:(BOOL)toggleNotes {
+    [[NSUserDefaults standardUserDefaults] setBool:toggleNotes forKey:TOGGLE_NOTE_KEY];
+}
+
+- (void)refreshUser {
+    if ([PFUser currentUser]) {
+        [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.toggleNotes] forKey:@"ToggleNote"];
+        [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.wakeLock] forKey:@"WakeLock"];
+        [[PFUser currentUser] saveEventually];
+    }
+}
+
+- (void)restoreUser {
+    if ([PFUser currentUser]) {
+        if ([[PFUser currentUser].allKeys containsObject:@"ToggleNote"]) {
+            self.toggleNotes = [[[PFUser currentUser] objectForKey:@"ToggleNote"] boolValue];
+        }
+        if ([[PFUser currentUser].allKeys containsObject:@"WakeLock"]) {
+            self.wakeLock = [[[PFUser currentUser] objectForKey:@"WakeLock"] boolValue];
+        }
+    }
+}
+
+- (id)init {
+    if (self = [super init]) {
+        
+    }
+    return self;
+}
+
+@end

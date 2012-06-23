@@ -8,6 +8,16 @@
 
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
+#import <Parse/Parse.h>
+#import "DPSettingsModel.h"
+#import "DPSongsModel.h"
+#import "DPJsonSerializer.h"
+#import "DPJsonPrimitive.h"
+#import "DPKey.h"
+#import "DPKeyType.h"
+#import "DPAccidental.h"
+#import "DPNote.h"
+#import "DPPitchedSong.h"
 
 @implementation DPAppDelegate
 
@@ -18,8 +28,43 @@
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
+#ifdef PRODUCTION
+    [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
+    [PFFacebookUtils initializeWithApplicationId:@"263872380333771"];
+#else
+    [Parse setApplicationId:@"fIRF0tfJBkE2XbiJf4diG2LsRphoqPe4q4GazAKu" clientKey:@"Edcy5i5CKUTLwJe7m56MeIT1LrjBb9ZP1by89Rd4"];
+    [PFFacebookUtils initializeWithApplicationId:@"292538514135026"];
+#endif
+    
+    [DPJsonSerializer registerAlias:@"List" forClass:NSClassFromString(@"__NSArrayM")];
+    [DPJsonSerializer registerAlias:@"Key" forClass:[DPKey class]];
+    [DPJsonSerializer registerAlias:@"KeyType" forClass:[DPKeyType class]];
+    [DPJsonSerializer registerAlias:@"Accidental" forClass:[DPAccidental class]];
+    [DPJsonSerializer registerAlias:@"Note" forClass:[DPNote class]];
+    [DPJsonSerializer registerAlias:@"PitchedSong" forClass:[DPPitchedSong class]];
+    [DPJsonSerializer registerAlias:@"String" forClass:[NSString class]];
+    [DPJsonSerializer registerAlias:@"Primitive" forClass:[DPJsonPrimitive class]];
+    [DPJsonSerializer registerAlias:@"Integer" forObjCType:[NSString stringWithUTF8String:@encode(int)]];
+    [DPJsonSerializer registerAlias:@"Boolean" forObjCType:[NSString stringWithUTF8String:@encode(BOOL)]];
+    [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
+
     // Override point for customization after application launch.
     return YES;
+}
+
++ (void)startupRefreshFromParse {
+    if ([PFUser currentUser]) {
+        @try {
+            [[PFUser currentUser] fetchInBackgroundWithBlock:^(PFObject *object, NSError *error) {
+                if (!error) {
+                    [[DPSettingsModel sharedInstance] restoreUser];
+                    [[DPSongsModel sharedInstance] refreshFromParse];
+                }
+            }];
+        }
+        @catch (NSException *exception) {
+        }
+    }
 }
 							
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -42,6 +87,7 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    [DPAppDelegate startupRefreshFromParse];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

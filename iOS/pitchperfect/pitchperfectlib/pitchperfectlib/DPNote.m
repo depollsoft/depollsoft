@@ -17,7 +17,7 @@ static NSArray *prunedNotes = nil;
 @interface DPNote ()
 
 @property (nonatomic, readonly) NSObject *synchronizer;
-@property (nonatomic, strong) DPAudioSynthesizer *synth;
+@property (nonatomic, readonly) DPAudioSynthesizer *synth;
 
 @end
 
@@ -162,8 +162,8 @@ static NSArray *prunedNotes = nil;
         if(self.isPlaying) {
             return;
         }
-        if (!self.synth) {
-            self.synth = [[DPAudioSynthesizer alloc] initWithFrequency:self.frequency sampleRate:44100];
+        if (!synth) {
+            synth = [[DPAudioSynthesizer alloc] initWithFrequency:self.frequency sampleRate:44100];
         }
         [synth start];
         self->isPlaying = YES;

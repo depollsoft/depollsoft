@@ -10,6 +10,8 @@
 
 @interface DPAppDelegate : UIResponder <UIApplicationDelegate>
 
++ (void)startupRefreshFromParse;
+
 @property (strong, nonatomic) UIWindow *window;
 
 @end
