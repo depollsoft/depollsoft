@@ -55,6 +55,8 @@
 		63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403E6158EA92E00FCA77C /* AudioToolbox.framework */; };
 		63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A96157A997600348592 /* CoreAudio.framework */; };
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
+		63CB96E31595C03400116907 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E11595C03400116907 /* Default.png */; };
+		63CB96E41595C03400116907 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E21595C03400116907 /* Default@2x.png */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A5151E9000007C46DB /* CoreGraphics.framework */; };
@@ -72,6 +74,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		63CB96DC1595C01100116907 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC36EF151E9079007C46DB;
+			remoteInfo = pitchperfectlib;
+		};
+		63CB96DE1595C01100116907 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC36FF151E9079007C46DB;
+			remoteInfo = pitchperfectlibTests;
+		};
 		63DC36D1151E9000007C46DB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 63DC3694151E8FFF007C46DB /* Project object */;
@@ -154,6 +170,8 @@
 		63B403E6158EA92E00FCA77C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		63B403EA158EAC1100FCA77C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63C14A96157A997600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		63CB96E11595C03400116907 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		63CB96E21595C03400116907 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		63DC369D151E9000007C46DB /* pitchperfect.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pitchperfect.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC36A1151E9000007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		63DC36A3151E9000007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -279,9 +297,20 @@
 			path = KJGridLayout;
 			sourceTree = "<group>";
 		};
+		63CB96D81595C01100116907 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				63CB96DD1595C01100116907 /* libpitchperfectlib.a */,
+				63CB96DF1595C01100116907 /* pitchperfectlibTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		63DC3692151E8FFF007C46DB = {
 			isa = PBXGroup;
 			children = (
+				63CB96E11595C03400116907 /* Default.png */,
+				63CB96E21595C03400116907 /* Default@2x.png */,
 				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
 				631C913D15958DC4004733F1 /* songs.png */,
 				631C913E15958DC4004733F1 /* songs@2x.png */,
@@ -456,6 +485,12 @@
 			mainGroup = 63DC3692151E8FFF007C46DB;
 			productRefGroup = 63DC369E151E9000007C46DB /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 63CB96D81595C01100116907 /* Products */;
+					ProjectRef = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				63DC369C151E8FFF007C46DB /* pitchperfect */,
@@ -463,6 +498,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		63CB96DD1595C01100116907 /* libpitchperfectlib.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libpitchperfectlib.a;
+			remoteRef = 63CB96DC1595C01100116907 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		63CB96DF1595C01100116907 /* pitchperfectlibTests.octest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = pitchperfectlibTests.octest;
+			remoteRef = 63CB96DE1595C01100116907 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		63DC369B151E8FFF007C46DB /* Resources */ = {
@@ -490,6 +542,8 @@
 				631C9127159455F1004733F1 /* keys@2x.png in Resources */,
 				631C913F15958DC4004733F1 /* songs.png in Resources */,
 				631C914015958DC4004733F1 /* songs@2x.png in Resources */,
+				63CB96E31595C03400116907 /* Default.png in Resources */,
+				63CB96E41595C03400116907 /* Default@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
