@@ -16,6 +16,7 @@
 #import "DPUtils+UIControl.h"
 #import "DPUtils+UIColor.h"
 #import "DPSongsModel.h"
+#import "DPSettingsViewController.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -177,11 +178,11 @@
     tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
     [self.view addSubview:tableView];
-        
+    
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
+    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     
     UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRow)];
     
@@ -193,6 +194,8 @@
     editingButtons = [NSArray arrayWithObjects:addButton, flexibleSpace, doneItem, settingsButton, nil];
     
     toolbar.items = normalButtons;
+    
+    [DPSongsModel sharedInstance].delegate = self;
 }
 
 - (void)viewDidUnload
@@ -264,6 +267,17 @@
 - (void)doneEditing {
     [tableView setEditing:NO animated:YES];
     [toolbar setItems:normalButtons animated:YES];
+}
+
+- (void)openSettings {
+    DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
+    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+    [self presentViewController:settings animated:YES completion:^{
+    }];
+}
+
+- (void)songsChanged {
+    [tableView reloadData];
 }
 
 @end

@@ -57,6 +57,7 @@
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
 		63CB96E31595C03400116907 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E11595C03400116907 /* Default.png */; };
 		63CB96E41595C03400116907 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E21595C03400116907 /* Default@2x.png */; };
+		63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E615964EAA00116907 /* DPSettingsViewController.m */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A5151E9000007C46DB /* CoreGraphics.framework */; };
@@ -172,6 +173,8 @@
 		63C14A96157A997600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63CB96E11595C03400116907 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		63CB96E21595C03400116907 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		63CB96E515964EAA00116907 /* DPSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsViewController.h; sourceTree = "<group>"; };
+		63CB96E615964EAA00116907 /* DPSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsViewController.m; sourceTree = "<group>"; };
 		63DC369D151E9000007C46DB /* pitchperfect.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pitchperfect.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC36A1151E9000007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		63DC36A3151E9000007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -309,9 +312,9 @@
 		63DC3692151E8FFF007C46DB = {
 			isa = PBXGroup;
 			children = (
+				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
 				63CB96E11595C03400116907 /* Default.png */,
 				63CB96E21595C03400116907 /* Default@2x.png */,
-				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
 				631C913D15958DC4004733F1 /* songs.png */,
 				631C913E15958DC4004733F1 /* songs@2x.png */,
 				63B403DD1588771C00FCA77C /* pitchpipe@2x.png */,
@@ -392,6 +395,8 @@
 				631C912C15957D3C004733F1 /* DPSettingsModel.m */,
 				631C912E15958022004733F1 /* DPSongsModel.h */,
 				631C912F15958022004733F1 /* DPSongsModel.m */,
+				63CB96E515964EAA00116907 /* DPSettingsViewController.h */,
+				63CB96E615964EAA00116907 /* DPSettingsViewController.m */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -597,6 +602,7 @@
 				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
+				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -674,7 +680,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -693,7 +699,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -711,6 +717,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/GoogleAdMobAdsSDK.framework\"",
@@ -734,6 +741,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/GoogleAdMobAdsSDK.framework\"",

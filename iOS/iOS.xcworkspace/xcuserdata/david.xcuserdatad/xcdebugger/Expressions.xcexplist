@@ -17,6 +17,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "-[DPPitchPipeViewController openSettings]:DPPitchPipeViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.navigationController">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "+[DPJsonSerializer deserializeDictionary:]:DPJsonSerializer.m">
          <PersistentStrings>
             <PersistentString

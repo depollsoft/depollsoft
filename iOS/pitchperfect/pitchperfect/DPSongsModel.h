@@ -16,5 +16,6 @@
 - (void)refreshFromParse;
 
 @property (nonatomic, strong) NSMutableArray *songs;
+@property (nonatomic, weak) id delegate;
 
 @end

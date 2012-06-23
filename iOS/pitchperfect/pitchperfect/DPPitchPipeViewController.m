@@ -16,6 +16,7 @@
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"
 #import "LayoutManagers.h"
+#import "DPSettingsViewController.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -95,7 +96,7 @@
     
     
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
+    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
     
     [self.view addSubview:glv];
@@ -164,6 +165,13 @@
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     bannerView = nil;
+}
+
+- (void)openSettings {
+    DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
+    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+    [self presentViewController:settings animated:YES completion:^{
+    }];
 }
 
 @end

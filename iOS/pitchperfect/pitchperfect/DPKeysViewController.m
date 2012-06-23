@@ -14,6 +14,7 @@
 #import "LayoutManagers.h"
 #import "DPUtils+UIControl.h"
 #import "DPUtils+UIColor.h"
+#import "DPSettingsViewController.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -200,7 +201,7 @@
         
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:nil action:nil];
+    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
 }
 
@@ -224,6 +225,13 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return keys.count;
+}
+
+- (void)openSettings {
+    DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
+    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+    [self presentViewController:settings animated:YES completion:^{
+    }];
 }
 
 @end

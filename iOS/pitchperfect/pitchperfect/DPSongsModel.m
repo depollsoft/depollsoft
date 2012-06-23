@@ -28,7 +28,7 @@
 
 @implementation DPSongsModel
 
-@synthesize songs, serialized, suspendTimestamp, saving, refreshing, postponedSave, refreshPostponedSave;
+@synthesize songs, serialized, suspendTimestamp, saving, refreshing, postponedSave, refreshPostponedSave, delegate;
 
 - (id)init {
     if (self = [super init]) {
@@ -60,7 +60,7 @@
             if (error) {
                 return;
             }
-            if ([object.updatedAt compare:[self lastChangedTime]] > 0) {
+            if (![self lastChangedTime] || [object.updatedAt compare:[self lastChangedTime]] > 0) {
                 [self fromParseObject:object];
             } else if (refreshPostponedSave) {
                 [self saveAllToParse];
@@ -131,6 +131,13 @@
 - (void)setSongs:(NSMutableArray *)newSongs {
     songs = newSongs;
     [self storeValue];
+    if ([delegate respondsToSelector:@selector(songsChanged)]) {
+        [delegate songsChanged];
+    }
+}
+
+- (void)songsChanged {
+    
 }
 
 - (PFObject *)toParseObject {

@@ -35,4 +35,23 @@
     return newColor;
 }
 
+- (UIColor *)withAlpha:(CGFloat)alpha {
+    CGColorRef oldCGColor = self.CGColor;
+    int numberOfComponents = CGColorGetNumberOfComponents(oldCGColor);
+    
+    const CGFloat *oldComponentColors = CGColorGetComponents(oldCGColor);
+    CGFloat newComponentColors[numberOfComponents];
+    int i = - 1;
+    while (++i < numberOfComponents - 1) {
+        newComponentColors[i] = oldComponentColors[i];
+    }
+    newComponentColors[i] = alpha; // alpha
+    
+    CGColorRef newCGColor = CGColorCreate(CGColorGetColorSpace(oldCGColor), newComponentColors);
+    UIColor *newColor = [UIColor colorWithCGColor:newCGColor];
+    CGColorRelease(newCGColor);
+    
+    return newColor;
+}
+
 @end
