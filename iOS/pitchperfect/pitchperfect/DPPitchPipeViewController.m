@@ -78,7 +78,7 @@
         [glv addSubview:button row:rowMap[buttonNumber] column:colMap[buttonNumber]];
     }
     
-    UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to C", @"F to F", nil]];
+    UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to B", @"F to E", nil]];
     typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBar;
     typeSwitcher.tintColor = [UIColor darkGrayColor];
     typeSwitcher.alpha = 0.75;
