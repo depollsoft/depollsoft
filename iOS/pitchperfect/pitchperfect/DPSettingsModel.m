@@ -29,6 +29,7 @@
 
 - (void)setWakeLock:(BOOL)wakeLock {
     [[NSUserDefaults standardUserDefaults] setBool:wakeLock forKey:WAKE_LOCK_KEY];
+    [UIApplication sharedApplication].idleTimerDisabled = wakeLock;
 }
 
 - (BOOL)toggleNotes {
@@ -60,7 +61,7 @@
 
 - (id)init {
     if (self = [super init]) {
-        
+        self.wakeLock = self.wakeLock;
     }
     return self;
 }
