@@ -16,6 +16,7 @@
 #import "DPUtils+UIColor.h"
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
+#import "DPAppDelegate.h"
 #import <Parse/Parse.h>
 
 @interface DPSettingsViewController ()
@@ -64,7 +65,9 @@
     [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [self.view addSubview:background];
     
-    [bannerView loadRequest:[GADRequest request]];
+    GADRequest *request = [GADRequest request];
+    request.testing = [DPAppDelegate testAds];
+    [bannerView loadRequest:request];
     
     [topLayout sizeToFit];
     

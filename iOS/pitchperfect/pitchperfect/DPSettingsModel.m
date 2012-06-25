@@ -44,9 +44,16 @@
 
 - (void)refreshUser {
     if ([PFUser currentUser]) {
-        [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.toggleNotes] forKey:@"ToggleNote"];
-        [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.wakeLock] forKey:@"WakeLock"];
-        [[PFUser currentUser] saveEventually];
+        @try {
+            [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.toggleNotes] forKey:@"ToggleNote"];
+            [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.wakeLock] forKey:@"WakeLock"];
+            [[PFUser currentUser] saveInBackground];
+        }
+        @catch (NSException *exception) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self refreshUser];
+            });
+        }
     }
 }
 

@@ -156,7 +156,9 @@
     [self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
-    [bannerView loadRequest:[GADRequest request]];
+    GADRequest *request = [GADRequest request];
+    request.testing = [DPAppDelegate testAds];
+    [bannerView loadRequest:request];
 
     [topLayout sizeToFit];
     

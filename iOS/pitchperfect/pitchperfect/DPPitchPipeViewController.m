@@ -18,6 +18,7 @@
 #import "LayoutManagers.h"
 #import "DPSettingsViewController.h"
 #import "DPSettingsModel.h"
+#import "DPAppDelegate.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -54,7 +55,9 @@
     [self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
-    [bannerView loadRequest:[GADRequest request]];
+    GADRequest *request = [GADRequest request];
+    request.testing = [DPAppDelegate testAds];
+    [bannerView loadRequest:request];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleBlackTranslucent;

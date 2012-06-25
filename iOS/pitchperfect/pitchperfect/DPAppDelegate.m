@@ -18,6 +18,10 @@
 #import "DPAccidental.h"
 #import "DPNote.h"
 #import "DPPitchedSong.h"
+#import "FlurryAnalytics.h"
+
+#define PRODUCTION
+//#define TEST_ADS
 
 @implementation DPAppDelegate
 
@@ -27,10 +31,11 @@
 {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
+        
 #ifdef PRODUCTION
     [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
     [PFFacebookUtils initializeWithApplicationId:@"263872380333771"];
+    [FlurryAnalytics startSession:@"JMG2ZWM6HXCZTC33YHKF"];
 #else
     [Parse setApplicationId:@"fIRF0tfJBkE2XbiJf4diG2LsRphoqPe4q4GazAKu" clientKey:@"Edcy5i5CKUTLwJe7m56MeIT1LrjBb9ZP1by89Rd4"];
     [PFFacebookUtils initializeWithApplicationId:@"292538514135026"];
@@ -68,6 +73,14 @@
         @catch (NSException *exception) {
         }
     }
+}
+
++ (BOOL)testAds {
+#ifdef TEST_ADS
+    return YES;
+#else
+    return NO;
+#endif
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
