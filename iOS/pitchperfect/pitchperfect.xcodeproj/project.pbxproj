@@ -24,6 +24,10 @@
 		631C913F15958DC4004733F1 /* songs.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913D15958DC4004733F1 /* songs.png */; };
 		631C914015958DC4004733F1 /* songs@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C913E15958DC4004733F1 /* songs@2x.png */; };
 		631C914E15958E98004733F1 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C914D15958E98004733F1 /* libpitchperfectlib.a */; };
+		63422DE3159873F100ACE42A /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 63422DDF159873F100ACE42A /* Default.png */; };
+		63422DE4159873F100ACE42A /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63422DE0159873F100ACE42A /* Default@2x.png */; };
+		63422DE5159873F100ACE42A /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 63422DE1159873F100ACE42A /* icon.png */; };
+		63422DE6159873F100ACE42A /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63422DE2159873F100ACE42A /* icon@2x.png */; };
 		634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897915885F6A000D9AFE /* AbstractLayoutView.m */; };
 		634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897B15885F6A000D9AFE /* GridLayoutView.m */; };
 		634C898515885F6A000D9AFE /* HLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897D15885F6A000D9AFE /* HLayoutView.m */; };
@@ -47,18 +51,14 @@
 		63A99D8215883F2900C78CC0 /* NoteHedz170.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */; };
 		63A99D8915884EE600C78CC0 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D8815884EE600C78CC0 /* CoreText.framework */; };
 		63B301B81597DF450045935E /* DPSplashScreenViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63B301B71597DF450045935E /* DPSplashScreenViewController.m */; };
-		63B301B91597E16A0045935E /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E21595C03400116907 /* Default@2x.png */; };
 		63B301BF1598606E0045935E /* libFlurryAnalytics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B301BE1598606E0045935E /* libFlurryAnalytics.a */; };
 		63B403D41588703200FCA77C /* panobackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D31588703200FCA77C /* panobackground.png */; };
-		63B403D91588741B00FCA77C /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D71588741B00FCA77C /* icon.png */; };
-		63B403DA1588741B00FCA77C /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D81588741B00FCA77C /* icon@2x.png */; };
 		63B403DC1588768700FCA77C /* pitchpipe.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403DB1588768700FCA77C /* pitchpipe.png */; };
 		63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403DD1588771C00FCA77C /* pitchpipe@2x.png */; };
 		63B403E115887AD400FCA77C /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63B403DF15887AD400FCA77C /* MainStoryboard_iPad.storyboard */; };
 		63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403E6158EA92E00FCA77C /* AudioToolbox.framework */; };
 		63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A96157A997600348592 /* CoreAudio.framework */; };
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
-		63CB96E31595C03400116907 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 63CB96E11595C03400116907 /* Default.png */; };
 		63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E615964EAA00116907 /* DPSettingsViewController.m */; };
 		63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E91597D67400116907 /* DPSongEditorViewController.m */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
@@ -123,6 +123,10 @@
 		631C913D15958DC4004733F1 /* songs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = songs.png; sourceTree = "<group>"; };
 		631C913E15958DC4004733F1 /* songs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "songs@2x.png"; sourceTree = "<group>"; };
 		631C914D15958E98004733F1 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpitchperfectlib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
+		63422DDF159873F100ACE42A /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		63422DE0159873F100ACE42A /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		63422DE1159873F100ACE42A /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
+		63422DE2159873F100ACE42A /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		634C897815885F6A000D9AFE /* AbstractLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AbstractLayoutView.h; sourceTree = "<group>"; };
 		634C897915885F6A000D9AFE /* AbstractLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AbstractLayoutView.m; sourceTree = "<group>"; };
 		634C897A15885F6A000D9AFE /* GridLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GridLayoutView.h; sourceTree = "<group>"; };
@@ -170,16 +174,12 @@
 		63B301BD1598606E0045935E /* FlurryAnalytics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FlurryAnalytics.h; sourceTree = "<group>"; };
 		63B301BE1598606E0045935E /* libFlurryAnalytics.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFlurryAnalytics.a; sourceTree = "<group>"; };
 		63B403D31588703200FCA77C /* panobackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = panobackground.png; sourceTree = SOURCE_ROOT; };
-		63B403D71588741B00FCA77C /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
-		63B403D81588741B00FCA77C /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
 		63B403DB1588768700FCA77C /* pitchpipe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pitchpipe.png; sourceTree = "<group>"; };
 		63B403DD1588771C00FCA77C /* pitchpipe@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "pitchpipe@2x.png"; sourceTree = "<group>"; };
 		63B403E015887AD400FCA77C /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		63B403E6158EA92E00FCA77C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		63B403EA158EAC1100FCA77C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63C14A96157A997600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		63CB96E11595C03400116907 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
-		63CB96E21595C03400116907 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		63CB96E515964EAA00116907 /* DPSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsViewController.h; sourceTree = "<group>"; };
 		63CB96E615964EAA00116907 /* DPSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsViewController.m; sourceTree = "<group>"; };
 		63CB96E81597D67400116907 /* DPSongEditorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongEditorViewController.h; sourceTree = "<group>"; };
@@ -331,18 +331,18 @@
 		63DC3692151E8FFF007C46DB = {
 			isa = PBXGroup;
 			children = (
+				63422DDF159873F100ACE42A /* Default.png */,
+				63422DE0159873F100ACE42A /* Default@2x.png */,
+				63422DE1159873F100ACE42A /* icon.png */,
+				63422DE2159873F100ACE42A /* icon@2x.png */,
 				63B301BC1598606E0045935E /* FlurryAnalytics */,
 				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
-				63CB96E11595C03400116907 /* Default.png */,
-				63CB96E21595C03400116907 /* Default@2x.png */,
 				631C913D15958DC4004733F1 /* songs.png */,
 				631C913E15958DC4004733F1 /* songs@2x.png */,
 				63B403DD1588771C00FCA77C /* pitchpipe@2x.png */,
 				63B403DB1588768700FCA77C /* pitchpipe.png */,
 				631C911515906D2B004733F1 /* notes.png */,
 				631C911615906D2B004733F1 /* notes@2x.png */,
-				63B403D71588741B00FCA77C /* icon.png */,
-				63B403D81588741B00FCA77C /* icon@2x.png */,
 				631C9124159455F1004733F1 /* keys.png */,
 				631C9125159455F1004733F1 /* keys@2x.png */,
 				634C897715885F6A000D9AFE /* LayoutManagers */,
@@ -560,8 +560,6 @@
 				634C898615885F6A000D9AFE /* License.txt in Resources */,
 				634C898715885F6A000D9AFE /* Readme.txt in Resources */,
 				63B403D41588703200FCA77C /* panobackground.png in Resources */,
-				63B403D91588741B00FCA77C /* icon.png in Resources */,
-				63B403DA1588741B00FCA77C /* icon@2x.png in Resources */,
 				63B403DC1588768700FCA77C /* pitchpipe.png in Resources */,
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
 				63B403E115887AD400FCA77C /* MainStoryboard_iPad.storyboard in Resources */,
@@ -571,8 +569,10 @@
 				631C9127159455F1004733F1 /* keys@2x.png in Resources */,
 				631C913F15958DC4004733F1 /* songs.png in Resources */,
 				631C914015958DC4004733F1 /* songs@2x.png in Resources */,
-				63CB96E31595C03400116907 /* Default.png in Resources */,
-				63B301B91597E16A0045935E /* Default@2x.png in Resources */,
+				63422DE3159873F100ACE42A /* Default.png in Resources */,
+				63422DE4159873F100ACE42A /* Default@2x.png in Resources */,
+				63422DE5159873F100ACE42A /* icon.png in Resources */,
+				63422DE6159873F100ACE42A /* icon@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
