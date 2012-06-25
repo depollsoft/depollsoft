@@ -120,7 +120,6 @@
 
 - (void)storeValue {
     NSDictionary *toSave = [DPJsonSerializer serialize:songs];
-    NSLog(@"Saving...\n%@", toSave);
     [[NSUserDefaults standardUserDefaults] setObject:toSave forKey:SONGS_KEY];
     if (!suspendTimestamp) {
         [self saveAllToParse];

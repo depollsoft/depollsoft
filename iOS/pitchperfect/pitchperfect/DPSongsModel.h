@@ -14,6 +14,7 @@
 - (void)saveAllToParse;
 - (void)saveAllToParse:(BOOL)immediately;
 - (void)refreshFromParse;
+- (void)storeValue;
 
 @property (nonatomic, strong) NSMutableArray *songs;
 @property (nonatomic, weak) id delegate;

@@ -50,7 +50,7 @@
     
     // Initialize settings
     [DPSettingsModel sharedInstance];
-
+    
     // Override point for customization after application launch.
     return YES;
 }
@@ -69,7 +69,7 @@
         }
     }
 }
-							
+
 - (void)applicationWillResignActive:(UIApplication *)application
 {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
@@ -105,6 +105,28 @@
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
   sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
     return [PFFacebookUtils handleOpenURL:url]; 
+}
+
++ (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {
+    if ([DPSettingsModel sharedInstance].toggleNotes) {
+        if (note.isPlaying) {
+            [note stop];
+            [cell setHighlighted:NO animated:YES];
+        } else {
+            [note play];
+            [cell setHighlighted:YES animated:YES];
+        }
+    } else {
+        [note play];
+        [cell setHighlighted:YES animated:YES];
+    }
+}
+
++ (void)noteTouchEnded:(DPNote *)note forCell:(UITableViewCell *)cell {
+    if (![DPSettingsModel sharedInstance].toggleNotes) {
+        [note stop];
+        [cell setHighlighted:NO animated:YES];
+    }
 }
 
 @end

@@ -80,7 +80,9 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, flexibleSpace, nil];
+    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
+    
+    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneItem, nil];
 }
 
 - (void)viewDidUnload
@@ -215,6 +217,10 @@
         return @"Log in using Facebook to back up and synchronize your song list and settings.";
     }
     return nil;
+}
+
+- (void)complete {
+    [self dismissModalViewControllerAnimated:YES];
 }
 
 @end

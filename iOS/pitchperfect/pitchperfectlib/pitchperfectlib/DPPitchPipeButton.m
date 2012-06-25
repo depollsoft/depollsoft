@@ -18,7 +18,7 @@
 
 @implementation DPPitchPipeButton
 
-@synthesize note, button;
+@synthesize note, button, toggle;
 @synthesize downEvent, upEvent;
 
 - (id)initWithFrame:(CGRect)frame
@@ -37,14 +37,31 @@
     [button removeFromSuperview];
     button = newButton;
     button.frame = self.frame;
+    __weak DPPitchPipeButton *me = self;
     downEvent = [button addBlock:^{
-        [self.note play];
+        if (self.toggle) {
+            if (self.note.isPlaying) {
+                [self.note stop];
+            } else {
+                [self.note play];
+            }
+        } else {
+            [self.note play];
+        }
     } forControlEvents:UIControlEventTouchDown];
     upEvent = [button addBlock:^{
-        [self.note stop];
+        if (!self.toggle) {
+            [self.note stop];
+        } else {
+            [me performSelector:@selector(doHighlight) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
+        }
     } forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside];
     button.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self addSubview:button];
+}
+
+- (void)doHighlight {
+    button.highlighted = note.isPlaying;
 }
 
 - (void)setNote:(DPNote *)newNote {
@@ -53,12 +70,12 @@
 }
 
 /*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect
-{
-    // Drawing code
-}
-*/
+ // Only override drawRect: if you perform custom drawing.
+ // An empty implementation adversely affects performance during animation.
+ - (void)drawRect:(CGRect)rect
+ {
+ // Drawing code
+ }
+ */
 
 @end

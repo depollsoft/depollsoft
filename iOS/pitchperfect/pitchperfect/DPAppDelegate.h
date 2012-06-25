@@ -8,9 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+@class DPNote;
+
 @interface DPAppDelegate : UIResponder <UIApplicationDelegate>
 
 + (void)startupRefreshFromParse;
++ (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell;
++ (void)noteTouchEnded:(DPNote *)note forCell:(UITableViewCell *)cell;
 
 @property (strong, nonatomic) UIWindow *window;
 

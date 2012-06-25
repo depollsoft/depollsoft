@@ -13,5 +13,6 @@
 
 @property (nonatomic, strong) DPNote *note;
 @property (nonatomic, strong) UIButton *button;
+@property (nonatomic) BOOL toggle;
 
 @end

@@ -17,6 +17,8 @@
 #import "DPUtils+UIColor.h"
 #import "DPSongsModel.h"
 #import "DPSettingsViewController.h"
+#import "DPSongEditorViewController.h"
+#import "DPAppDelegate.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -103,21 +105,23 @@
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    [song.key.note play];
-    [self setHighlighted:YES];
+    [DPAppDelegate noteTouchStarted:song.key.note forCell:self];
     [super touchesBegan:touches withEvent:event];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [song.key.note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:song.key.note forCell:self];
     [super touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [song.key.note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:song.key.note forCell:self];
     [super touchesCancelled:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [DPAppDelegate noteTouchEnded:song.key.note forCell:self];
+    [super touchesMoved:touches withEvent:event];
 }
 
 @end
@@ -184,7 +188,7 @@
     
     UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     
-    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addRow)];
+    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
     
     editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     
@@ -196,6 +200,15 @@
     toolbar.items = normalButtons;
     
     [DPSongsModel sharedInstance].delegate = self;
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    for (int x = 0; x < [DPSongsModel sharedInstance].songs.count; x++) {
+        [[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:x inSection:0]] setHighlighted:NO animated:NO];
+        DPPitchedSong *song = [[DPSongsModel sharedInstance].songs objectAtIndex:x];
+        [song.key.note stop];
+    }
+    [super viewDidDisappear:animated];
 }
 
 - (void)viewDidUnload
@@ -215,6 +228,10 @@
     cell.editingAccessoryType = UITableViewCellAccessoryDetailDisclosureButton;
     cell.song = song;
     return cell;
+}
+
+- (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath {
+    [self editSong:[[DPSongsModel sharedInstance].songs objectAtIndex:indexPath.row]];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -247,18 +264,6 @@
     return UITableViewCellEditingStyleDelete;
 }
 
-- (void)addRow {
-    static int count = 0;
-    DPPitchedSong *song = [[DPPitchedSong alloc] init];
-    song.name = [NSString stringWithFormat:@"Test%d", count];
-    song.key = [DPKey majorKeys].lastObject;
-    count++;
-    [[DPSongsModel sharedInstance].songs addObject:song];
-    [DPSongsModel sharedInstance].songs = [DPSongsModel sharedInstance].songs;
-    
-    [tableView reloadData];
-}
-
 - (void)edit {
     [tableView setEditing:YES animated:YES];
     [toolbar setItems:editingButtons animated:YES];
@@ -274,6 +279,40 @@
     settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
     [self presentViewController:settings animated:YES completion:^{
     }];
+}
+
+- (void)editSong:(DPPitchedSong *)song {
+    DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
+    editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
+    editor.song = song;
+    editor.completionCallback = ^(BOOL cancelled) {
+        if (!cancelled) {
+            [tableView reloadData];
+            [[DPSongsModel sharedInstance] storeValue];
+        }
+    };
+    [self presentModalViewController:editor animated:YES];
+}
+
+- (void)addSong {
+    DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
+    editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
+    newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
+    editor.song = newSong;
+    editor.completionCallback = ^(BOOL cancelled) {
+        if (!cancelled) {
+            [[DPSongsModel sharedInstance].songs addObject:newSong];
+            [[DPSongsModel sharedInstance] storeValue];
+            [tableView reloadData];
+            [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+        } else {
+            [[DPSongsModel sharedInstance].songs removeObject:newSong];
+            [[DPSongsModel sharedInstance] storeValue];
+        }
+    };
+    [tableView reloadData];
+    [self presentModalViewController:editor animated:YES];
 }
 
 - (void)songsChanged {

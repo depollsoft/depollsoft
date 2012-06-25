@@ -14,6 +14,7 @@
 #import "DPUtils+UIControl.h"
 #import "DPAccidental.h"
 #import "DPSettingsViewController.h"
+#import "DPAppDelegate.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -97,21 +98,23 @@
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    [note play];
-    [self setHighlighted:YES];
+    [DPAppDelegate noteTouchStarted:note forCell:self];
     [super touchesBegan:touches withEvent:event];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:note forCell:self];
     [super touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:note forCell:self];
     [super touchesCancelled:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [DPAppDelegate noteTouchEnded:note forCell:self];
+    [super touchesMoved:touches withEvent:event];
 }
 
 @end
@@ -181,6 +184,15 @@
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     bannerView = nil;
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    for (int x = 0; x < notes.count; x++) {
+        [[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:x inSection:0]] setHighlighted:NO animated:NO];
+        DPNote *note = [notes objectAtIndex:x];
+        [note stop];
+    }
+    [super viewDidDisappear:animated];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {

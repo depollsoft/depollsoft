@@ -15,6 +15,7 @@
 #import "DPUtils+UIControl.h"
 #import "DPUtils+UIColor.h"
 #import "DPSettingsViewController.h"
+#import "DPAppDelegate.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -104,21 +105,23 @@
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note play];
-    [self setHighlighted:YES];
+    [DPAppDelegate noteTouchStarted:key.note forCell:self];
     [super touchesBegan:touches withEvent:event];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:key.note forCell:self];
     [super touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [key.note stop];
-    [self setHighlighted:NO];
+    [DPAppDelegate noteTouchEnded:key.note forCell:self];
     [super touchesCancelled:touches withEvent:event];
+}
+
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [DPAppDelegate noteTouchEnded:key.note forCell:self];
+    [super touchesMoved:touches withEvent:event];
 }
 
 @end
@@ -203,6 +206,15 @@
     
     UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    for (int x = 0; x < keys.count; x++) {
+        [[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:x inSection:0]] setHighlighted:NO animated:NO];
+        DPKey *key = [keys objectAtIndex:x];
+        [key.note stop];
+    }
+    [super viewDidDisappear:animated];
 }
 
 - (void)viewDidUnload
