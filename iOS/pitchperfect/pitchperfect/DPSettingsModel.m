@@ -12,7 +12,15 @@
 #define WAKE_LOCK_KEY @"depollsoft.pitchperfect.WakeLock"
 #define TOGGLE_NOTE_KEY @"depollsoft.pitchperfect.ToggleNote"
 
+@interface DPSettingsModel ()
+
+@property (nonatomic) BOOL shouldRefresh;
+
+@end
+
 @implementation DPSettingsModel
+
+@synthesize shouldRefresh;
 
 + (DPSettingsModel *)sharedInstance {
     static DPSettingsModel *instance;
@@ -43,11 +51,11 @@
 }
 
 - (void)refreshUser {
-    if ([PFUser currentUser]) {
+    if ([PFUser currentUser] && shouldRefresh) {
         @try {
             [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.toggleNotes] forKey:@"ToggleNote"];
             [[PFUser currentUser] setObject:[NSNumber numberWithBool:self.wakeLock] forKey:@"WakeLock"];
-            [[PFUser currentUser] saveInBackground];
+            [[PFUser currentUser] saveEventually];
         }
         @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -60,10 +68,14 @@
 - (void)restoreUser {
     if ([PFUser currentUser]) {
         if ([[PFUser currentUser].allKeys containsObject:@"ToggleNote"]) {
+            shouldRefresh = NO;
             self.toggleNotes = [[[PFUser currentUser] objectForKey:@"ToggleNote"] boolValue];
+            shouldRefresh = YES;
         }
         if ([[PFUser currentUser].allKeys containsObject:@"WakeLock"]) {
+            shouldRefresh = NO;
             self.wakeLock = [[[PFUser currentUser] objectForKey:@"WakeLock"] boolValue];
+            shouldRefresh = YES;
         }
     }
 }
@@ -71,6 +83,7 @@
 - (id)init {
     if (self = [super init]) {
         self.wakeLock = self.wakeLock;
+        shouldRefresh = YES;
     }
     return self;
 }
