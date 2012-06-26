@@ -36,6 +36,7 @@
     noteName.text = n.friendlyName;
     noteName.textColor = self.textLabel.textColor.invert;
     noteName.backgroundColor = [UIColor clearColor];
+    noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
     [flow addSubview:noteName];
     
@@ -43,6 +44,7 @@
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
     accidental.textColor = self.textLabel.textColor.invert;
     accidental.backgroundColor = [UIColor clearColor];
+    accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
         case Sharp:
             accidental.text = SHARP_STRING;
@@ -62,8 +64,10 @@
     octave.text = [NSString stringWithFormat:@"%d", n.octave];
     octave.textColor = self.textLabel.textColor.invert;
     octave.backgroundColor = [UIColor clearColor];
+    octave.userInteractionEnabled = NO;
     [octave sizeToFit];
     [flow addSubview:octave];
+    flow.userInteractionEnabled = NO;
     
     [flow sizeToFit];
     return flow;
@@ -110,11 +114,6 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [DPAppDelegate noteTouchEnded:note forCell:self];
     [super touchesCancelled:touches withEvent:event];
-}
-
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [DPAppDelegate noteTouchEnded:note forCell:self];
-    [super touchesMoved:touches withEvent:event];
 }
 
 @end

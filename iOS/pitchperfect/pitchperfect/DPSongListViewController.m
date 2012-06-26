@@ -33,24 +33,6 @@
 
 @synthesize song;
 
-- (UIView *)keyUi:(DPKey *)k {
-    NSArray *flats = [NSArray arrayWithObjects:@"", @"\u00A8", @"\u00A9", @"\u00AA", @"\u00AB", @"\u00AC", @"\u20AC", @"\u00AE", nil];
-    NSArray *sharps = [NSArray arrayWithObjects:@"", @"\u00A1", @"\u00A2", @"\u00A3", @"\u00A4", @"\u00A5", @"\u00A6", @"\u00A7", nil];
-    UILabel *label = [[UILabel alloc] init];
-    NSMutableString *string = [NSMutableString stringWithString:@"&"];
-    if (k.numAccidentals > 0) {
-        [string appendFormat:[sharps objectAtIndex:k.numAccidentals]];
-    } else if (k.numAccidentals < 0) {
-        [string appendString:[flats objectAtIndex:-k.numAccidentals]];
-    }
-    label.text = [NSString stringWithString:string];
-    label.font = [UIFont fontWithName:@"MusiQwik" size:30];
-    label.textColor = self.textLabel.textColor.invert;
-    label.backgroundColor = [UIColor clearColor];
-    [label sizeToFit];
-    return label;
-}
-
 - (UIView *)noteUi:(DPKey *)k {
     DPNote *n = k.note;
     HLayoutView *flow = [[HLayoutView alloc] init];
@@ -59,6 +41,8 @@
     noteName.text = k.friendlyName;
     noteName.textColor = self.textLabel.textColor.invert;
     noteName.backgroundColor = [UIColor clearColor];
+    noteName.userInteractionEnabled = NO;
+    
     [noteName sizeToFit];
     [flow addSubview:noteName];
     
@@ -66,6 +50,7 @@
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
     accidental.textColor = self.textLabel.textColor.invert;
     accidental.backgroundColor = [UIColor clearColor];
+    accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
         case Sharp:
             accidental.text = SHARP_STRING;
@@ -79,6 +64,7 @@
     [accidental sizeToFit];
     
     [flow addSubview:accidental];
+    flow.userInteractionEnabled = NO;
     
     [flow sizeToFit];
     return flow;
@@ -93,9 +79,11 @@
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
     flowRight.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    flowRight.userInteractionEnabled = NO;
     
     self.textLabel.text = song.name;
     self.textLabel.textColor = self.textLabel.textColor.invert;
+    self.textLabel.userInteractionEnabled = NO;
     
     [self.contentView addSubview:flowRight];
     [self sizeToFit];
@@ -117,11 +105,6 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [DPAppDelegate noteTouchEnded:song.key.note forCell:self];
     [super touchesCancelled:touches withEvent:event];
-}
-
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [DPAppDelegate noteTouchEnded:song.key.note forCell:self];
-    [super touchesMoved:touches withEvent:event];
 }
 
 @end

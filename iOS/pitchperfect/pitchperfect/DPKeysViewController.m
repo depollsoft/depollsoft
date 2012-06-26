@@ -44,6 +44,7 @@
     label.font = [UIFont fontWithName:@"MusiQwik" size:30];
     label.textColor = self.textLabel.textColor.invert;
     label.backgroundColor = [UIColor clearColor];
+    label.userInteractionEnabled = NO;
     [label sizeToFit];
     return label;
 }
@@ -56,6 +57,7 @@
     noteName.text = k.friendlyName;
     noteName.textColor = self.textLabel.textColor.invert;
     noteName.backgroundColor = [UIColor clearColor];
+    noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
     [flow addSubview:noteName];
     
@@ -63,6 +65,7 @@
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
     accidental.textColor = self.textLabel.textColor.invert;
     accidental.backgroundColor = [UIColor clearColor];
+    accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
         case Sharp:
             accidental.text = SHARP_STRING;
@@ -75,6 +78,7 @@
     }
     [accidental sizeToFit];
     
+    flow.userInteractionEnabled = NO;
     [flow addSubview:accidental];
     
     [flow sizeToFit];
@@ -89,12 +93,14 @@
     
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
+    flowRight.userInteractionEnabled = NO;
     
     HLayoutView *flowLeft = [[HLayoutView alloc] init];
     [flowLeft addSubview:[self keyUi:newKey]];
     
     flowLeft.frame = CGRectInset(self.frame, 10, 0);
     flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
+    flowLeft.userInteractionEnabled = NO;
     
     [self addSubview:flowRight];
     [self addSubview:flowLeft];
@@ -117,11 +123,6 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [DPAppDelegate noteTouchEnded:key.note forCell:self];
     [super touchesCancelled:touches withEvent:event];
-}
-
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [DPAppDelegate noteTouchEnded:key.note forCell:self];
-    [super touchesMoved:touches withEvent:event];
 }
 
 @end
