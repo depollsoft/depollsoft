@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="DePhoneTunes.SongItemDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit">
+    <Grid  Background="#00000001"
+           toolkit:TiltEffect.IsTiltEnabled="True">
+        <toolkit:ContextMenuService.ContextMenu>
+            <toolkit:ContextMenu IsZoomEnabled="False"
+                                 Opened="MenuOpened">
+                <toolkit:MenuItem Header="Edit"
+                                  Click="EditClick" />
+                <toolkit:MenuItem Header="Remove"
+                                  Click="RemoveClick" />
+                <toolkit:MenuItem x:Name="MoveUp"
+                                  Header="Move up"
+                                  Click="MoveUpClick" />
+                <toolkit:MenuItem x:Name="MoveDown"
+                                  Header="Move down"
+                                  Click="MoveDownClick" />
+                <toolkit:MenuItem Header="Sort all songs by title"
+                                  Click="SortClick" />
+            </toolkit:ContextMenu>
+        </toolkit:ContextMenuService.ContextMenu>
+        <Grid Margin="12,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Title}"
+                       FontSize="26.667" />
+            <ContentPresenter Grid.Column="1"
+                              ContentTemplate="{StaticResource SongKeyDT}"
+                              Content="{Binding Key}" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="BarbershopTags.FavoritesScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:slabControls="clr-namespace:SLaB.Controls.Phone;assembly=SLaB.Controls.Phone"
+             xmlns:local="clr-namespace:BarbershopTags"
+             xmlns:tilt="clr-namespace:Microsoft.Unsupported;assembly=SLaB.Controls.Phone"
+             xmlns:xamlUtil="clr-namespace:SLaB.Utilities.Xaml;assembly=SLaB.Utilities.Xaml.Phone"
+             mc:Ignorable="d"
+             FontFamily="{StaticResource PhoneFontFamilyNormal}"
+             FontSize="{StaticResource PhoneFontSizeNormal}"
+             Foreground="{StaticResource PhoneForegroundBrush}"
+             d:DesignHeight="500"
+             d:DesignWidth="480">
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer xamlUtil:Tombstoner.TombstoneId="FavoritesScroller">
+            <xamlUtil:Tombstoner.Tombstoner>
+                <xamlUtil:Tombstoner>
+                    <xamlUtil:TombstoneProperty PropertyName="VerticalOffset"
+                                                RepeatUntilRoundTrip="True"
+                                                RepeatUntilSuccess="True"
+                                                StopRepeatingIfChanged="True">
+                        <xamlUtil:TombstoneProperty.AttachedPropertyTargetTypeStyle>
+                            <Style TargetType="slabControls:ScrollViewerHelper" />
+                        </xamlUtil:TombstoneProperty.AttachedPropertyTargetTypeStyle>
+                    </xamlUtil:TombstoneProperty>
+                </xamlUtil:Tombstoner>
+            </xamlUtil:Tombstoner.Tombstoner>
+            <StackPanel>
+                <TextBlock Text="search"
+                           Style="{StaticResource PhoneTextGroupHeaderStyle}" />
+                <TextBox Margin="20,0"
+                         IsReadOnly="True"
+                         GotFocus="SearchBoxGotFocus" />
+                <HyperlinkButton Style="{StaticResource HyperlinkButtonStyle}"
+                                 HorizontalContentAlignment="Left"
+                                 tilt:TiltEffect.IsTiltEnabled="True"
+                                 Click="RandomTagClick">
+                    <TextBlock Text="random tag"
+                               Margin="0,0,0,0"
+                               Style="{StaticResource PhoneTextGroupHeaderStyle}" />
+                </HyperlinkButton>
+                <HyperlinkButton Style="{StaticResource HyperlinkButtonStyle}"
+                                 HorizontalContentAlignment="Left"
+                                 tilt:TiltEffect.IsTiltEnabled="True"
+                                 NavigateUri="/TeachableTagsPage.xaml"
+                                 Visibility="{Binding TeachableTagIds.Count, Converter={StaticResource BoolConverter}, Source={StaticResource TeachableTagsModel}}">
+                    <TextBlock Text="teachable tags"
+                               Margin="0,0,0,0"
+                               Style="{StaticResource PhoneTextGroupHeaderStyle}" />
+                </HyperlinkButton>
+                <TextBlock Text="favorites"
+                           Style="{StaticResource PhoneTextGroupHeaderStyle}" />
+                <ItemsControl ItemsSource="{Binding FavoriteTagIds}"
+                              ItemTemplate="{StaticResource FavoriteItemTemplate}" />
+                <HyperlinkButton Style="{StaticResource HyperlinkButtonStyle}"
+                                 HorizontalContentAlignment="Left"
+                                 tilt:TiltEffect.IsTiltEnabled="True"
+                                 NavigateUri="/SettingsPage.xaml">
+                    <TextBlock Text="settings"
+                               Margin="0,0,0,0"
+                               Style="{StaticResource PhoneTextGroupHeaderStyle}" />
+                </HyperlinkButton>
+                <local:MiniAboutControl Margin="0,30,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+        <slabControls:BusyIndicator Grid.Row="1"
+                                    x:Name="BusyIndicator" />
+    </Grid>
+</UserControl>

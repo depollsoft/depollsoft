@@ -1,0 +1,44 @@
+﻿<Application x:Class="ValentineCountdown.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+             xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+             xmlns:event="clr-namespace:CountdownEvent;assembly=CountdownEvent"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--Application Resources-->
+    <Application.Resources>
+        <event:AppConfig x:Key="AppConfig"
+                         ApplicationTitle="Valentine's Day 2011"
+                         EventName="Be mine"
+                         EventMessage="Happy Valentine's Day!"
+                         NewsFeedUri="http://api.bing.com/rss.aspx?Source=News&amp;Query=Valentine's Day 2011&amp;news.offset={StartIndex}&amp;news.count={Count}"
+                         ImageFeedUri="http://api.bing.com/rss.aspx?Source=Image&amp;Query=Valentine's Day&amp;image.offset={StartIndex}&amp;image.count={Count}"
+                         WebSearchFeedUri="http://api.bing.com/rss.aspx?Source=Web&amp;Query=Valentine's Day 2011&amp;web.offset={StartIndex}&amp;web.count={Count}"
+                         VideoFeedUri="http://gdata.youtube.com/feeds/api/videos?alt=rss&amp;q=Valentine's Day&amp;max-results={Count}&amp;start-index={StartIndex1}"
+                         Wikipedia="http://en.wikipedia.org/wiki/Valentine%27s_Day"
+                         PreparationText="Valentine's Day is in..."
+                         AboutHeader="About Valentine's Day"
+                         TileImageKey="valentine2011"
+                         EventDate="02/14/2011">
+            <event:AppConfig.ApplicationBackgroundImage>
+                <ImageBrush Opacity="0.2"
+                            ImageSource="/ValentineCountdown;component/ScreenBackground.png" />
+            </event:AppConfig.ApplicationBackgroundImage>
+            <event:AppConfig.Description>
+                <sys:String>Saint Valentine's Day (commonly shortened to Valentine's Day) is an annual commemoration held on February 14 celebrating love and affection between intimate companions. The day is named after one or more early Christian martyrs named Valentine and was established by Pope Gelasius I in 500 AD. It was deleted from the Roman calendar of saints in 1969 by Pope Paul VI, but its religious observance is still permitted. It is traditionally a day on which lovers express their love for each other by presenting flowers, offering confectionery, and sending greeting cards (known as "valentines"). The day first became associated with romantic love in the circle of Geoffrey Chaucer in the High Middle Ages, when the tradition of courtly love flourished.
+
+Modern Valentine's Day symbols include the heart-shaped outline, doves, and the figure of the winged Cupid. Since the 19th century, handwritten valentines have largely given way to mass-produced greeting cards.</sys:String>
+            </event:AppConfig.Description>
+        </event:AppConfig>
+    </Application.Resources>
+
+    <Application.ApplicationLifetimeObjects>
+        <!--Required object that handles lifetime events for the application-->
+        <shell:PhoneApplicationService Launching="Application_Launching"
+                                       Closing="Application_Closing"
+                                       Activated="Application_Activated"
+                                       Deactivated="Application_Deactivated" />
+    </Application.ApplicationLifetimeObjects>
+
+</Application>

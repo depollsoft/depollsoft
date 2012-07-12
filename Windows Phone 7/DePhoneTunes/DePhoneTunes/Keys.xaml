@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="DePhoneTunes.Keys"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:slabControls="clr-namespace:SLaB.Controls.Phone;assembly=SLaB.Controls.Phone"
+             xmlns:converters="clr-namespace:SLaB.Utilities.Xaml.Converters;assembly=SLaB.Utilities.Xaml.Phone"
+             xmlns:local="clr-namespace:DePhoneTunes"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d"
+             FontFamily="{StaticResource PhoneFontFamilyNormal}"
+             FontSize="{StaticResource PhoneFontSizeNormal}"
+             Foreground="{StaticResource PhoneForegroundBrush}"
+             d:DesignHeight="480"
+             d:DesignWidth="480">
+
+    <slabControls:TrialBlocker>
+        <Grid x:Name="root"
+              d:DataContext="{d:DesignInstance Type=local:KeysModel}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <ToggleButton Content="{Binding Key}"
+                          IsChecked="{Binding Key, Mode=TwoWay, Converter={StaticResource KeyBoolConverter}}" />
+            <ContentPresenter Grid.Column="1"
+                              Content="{Binding}"
+                              ContentTemplate="{Binding Source={StaticResource SettingsModel}, Path=UseToggleNotes, Converter={StaticResource TemplateSwitcher}}" />
+            <!--<ScrollViewer x:Name="scroller"
+                          Grid.Row="1"
+                          Grid.ColumnSpan="2">-->
+            <!--<StackPanel>-->
+            <ListBox Grid.Row="1"
+                     Grid.ColumnSpan="2"
+                     SelectionChanged="ListBox_SelectionChanged"
+                     Loaded="ListBox_Loaded"
+                     ItemsSource="{Binding MinorKeys}"
+                     ItemTemplate="{StaticResource MinorKeyDT}"
+                     SelectedItem="{Binding SelectedNote, Mode=TwoWay}"
+                     ItemContainerStyle="{StaticResource ListBoxItemStyle}">
+                <ListBox.Visibility>
+                    <Binding Path="Key"
+                             ConverterParameter="!">
+                        <Binding.Converter>
+                            <local:KeyVisibilityConverter />
+                        </Binding.Converter>
+                    </Binding>
+                </ListBox.Visibility>
+            </ListBox>
+            <ListBox Grid.Row="1"
+                     Grid.ColumnSpan="2"
+                     SelectionChanged="ListBox_SelectionChanged"
+                     Loaded="ListBox_Loaded"
+                     ItemsSource="{Binding MajorKeys}"
+                     ItemTemplate="{StaticResource MajorKeyDT}"
+                     SelectedItem="{Binding SelectedNote, Mode=TwoWay}"
+                     ItemContainerStyle="{StaticResource ListBoxItemStyle}">
+                <ListBox.Visibility>
+                    <Binding Path="Key">
+                        <Binding.Converter>
+                            <local:KeyVisibilityConverter />
+                        </Binding.Converter>
+                    </Binding>
+                </ListBox.Visibility>
+            </ListBox>
+            <!--<local:MiniAboutControl />-->
+            <!--</StackPanel>-->
+            <!--</ScrollViewer>-->
+        </Grid>
+    </slabControls:TrialBlocker>
+</UserControl>

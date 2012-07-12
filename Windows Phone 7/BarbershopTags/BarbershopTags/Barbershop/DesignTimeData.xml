@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" ?>
+<tags available="1" count="1">
+  <tag index="1">
+    <id>
+      105
+    </id>
+    <Title>
+      The Shadow of Your Smile
+    </Title>
+    <AltTitle />
+    <Version />
+    <WritKey>
+      Minor:F
+    </WritKey>
+    <Parts>
+      4
+    </Parts>
+    <Type>
+      Barbershop
+    </Type>
+    <Recording>
+      stereo - one part on one side, the other three parts on the other side
+    </Recording>
+    <TeachVid />
+    <Notes>
+      Small error in bass audio file. At &quot;When&quot; it should be a Db not a C as sung.
+
+      For proper balance and ultimate barbershop ring, the tenor voice should become much more predominant on the penultimate chord.
+    </Notes>
+    <Arranger />
+    <ArrWebsite />
+    <Arranged />
+    <SungBy />
+    <SungWebsite />
+    <SungYear />
+    <Quartet>
+      Daniel Gillis
+    </Quartet>
+    <QWebsite>
+      http://www.vocalharmonies.com
+    </QWebsite>
+    <Teacher />
+    <TWebsite />
+    <Provider>
+      Daniel Gillis
+    </Provider>
+    <ProvWebsite>
+      http://www.vocalharmonies.com
+    </ProvWebsite>
+    <Posted>
+      Thu, 18 Dec 2008
+    </Posted>
+    <Classic>
+      93
+    </Classic>
+    <Rating>
+      3.78971428574
+    </Rating>
+    <Downloaded>
+      1,755
+    </Downloaded>
+    <SheetMusic type="gif">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=SheetMusic
+    </SheetMusic>
+    <Notation />
+    <AllParts type="mp3">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=AllParts
+    </AllParts>
+    <Bass type="mp3">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=Bass
+    </Bass>
+    <Bari type="mp3">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=Bari
+    </Bari>
+    <Lead type="mp3">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=Lead
+    </Lead>
+    <Tenor type="mp3">
+      http://www.barbershoptags.com/dbaction.php?action=DownloadFile&amp;dbase=tags&amp;id=105&amp;fldname=Tenor
+    </Tenor>
+    <Other1 />
+    <Other2 />
+    <Other3 />
+    <Other4 />
+    <videos available="4" count="4">
+      <video index="1">
+        <id>
+          359
+        </id>
+        <Desc />
+        <SungKey />
+        <Multitrack>
+          Yes
+        </Multitrack>
+        <Code>
+          vg9smVcTjEk
+        </Code>
+        <SungBy>
+          Mike Beck
+        </SungBy>
+        <SungWebsite>
+          http://youtube.com/virtualbeck
+        </SungWebsite>
+        <Posted>
+          Thu, 13 May 2010
+        </Posted>
+      </video>
+      <video index="2">
+        <id>
+          75
+        </id>
+        <Desc />
+        <SungKey>
+          Minor:F
+        </SungKey>
+        <Multitrack>
+          Yes
+        </Multitrack>
+        <Code>
+          6Rxo8I9OWYA
+        </Code>
+        <SungBy>
+          Ronnie Spann (aka BBSTENOR419)
+        </SungBy>
+        <SungWebsite />
+        <Posted>
+          Sat, 28 Mar 2009
+        </Posted>
+      </video>
+      <video index="3">
+        <id>
+          35
+        </id>
+        <Desc />
+        <SungKey>
+          Major:F
+        </SungKey>
+        <Multitrack>
+          No
+        </Multitrack>
+        <Code>
+          UstIgCNFKBc
+        </Code>
+        <SungBy>
+          Back 4 Good
+        </SungBy>
+        <SungWebsite />
+        <Posted>
+          Sun, 4 Jan 2009
+        </Posted>
+      </video>
+      <video index="4">
+        <id>
+          21
+        </id>
+        <Desc />
+        <SungKey />
+        <Multitrack>
+          No
+        </Multitrack>
+        <Code>
+          C-33fxTBZDo
+        </Code>
+        <SungBy>
+          Asher and Tyler
+        </SungBy>
+        <SungWebsite>
+          http://www.youtube.com/Vtags
+        </SungWebsite>
+        <Posted>
+          Sat, 3 Jan 2009
+        </Posted>
+      </video>
+    </videos>
+  </tag>
+</tags>

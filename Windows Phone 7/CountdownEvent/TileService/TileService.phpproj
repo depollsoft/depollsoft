@@ -1,0 +1,173 @@
+"General"
+{
+"SccProjectName" = "SAK"
+"SccLocalPath" = "SAK"
+"SccAuxPath" = "SAK"
+"SccProvider" = "SAK"
+"ProjectType" = "local"
+"AutoLoadTemplate" = "%s.php;class.%s.php;"
+"IncludeDirs" = ""
+}
+"Configurations"
+{
+    "Local|PHP 5.2"
+    {
+    }
+    "Staging|PHP 5.2"
+    {
+    }
+    "Production|PHP 5.2"
+    {
+    }
+}
+"Files"
+{
+    "chanukkah\\-8.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "tax2011"
+    {
+    "ProjRelPath" = "T"
+    }
+    "tax2011\\0.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "valentine2011\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts\\SegoeWP.ttf"
+    {
+    "ProjRelPath" = "T"
+    }
+    "valentine2011\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "reporting\\index.php"
+    {
+    "ProjRelPath" = "T"
+    }
+    "passover2011"
+    {
+    "ProjRelPath" = "T"
+    }
+    "saintpatricks2011\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fetchTile.php"
+    {
+    "ProjRelPath" = "T"
+    }
+    "TileService.phpproj.vspscc"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts\\SegoeWP-Black.ttf"
+    {
+    "ProjRelPath" = "T"
+    }
+    "valentine2011"
+    {
+    "ProjRelPath" = "T"
+    }
+    "chanukkah"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts\\SegoeWP-Bold.ttf"
+    {
+    "ProjRelPath" = "T"
+    }
+    "tax2011\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "election2012\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "newyear2010\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts\\SegoeWP-Light.ttf"
+    {
+    "ProjRelPath" = "T"
+    }
+    "election2012\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "tax2011\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "passover2011\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "saintpatricks2011"
+    {
+    "ProjRelPath" = "T"
+    }
+    "newyear2010"
+    {
+    "ProjRelPath" = "T"
+    }
+    "index.php"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts\\SegoeWP-Semibold.ttf"
+    {
+    "ProjRelPath" = "T"
+    }
+    "reporting"
+    {
+    "ProjRelPath" = "T"
+    }
+    "saintpatricks2011\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "fonts"
+    {
+    "ProjRelPath" = "T"
+    }
+    "newyear2010\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "election2012"
+    {
+    "ProjRelPath" = "T"
+    }
+    "passover2011\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "chanukkah\\defaultBefore.png"
+    {
+    "ProjRelPath" = "T"
+    }
+    "chanukkah\\defaultAfter.png"
+    {
+    "ProjRelPath" = "T"
+    }
+}
+"ProjStartupServices"
+{
+}
+"Globals"
+{
+}
+"References"
+{
+"PhpReference" = "image"
+"PhpReference" = "fileinfo"
+"PhpReference" = "apd"
+}

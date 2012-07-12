@@ -1,0 +1,46 @@
+﻿<Application x:Class="PassoverCountdown.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+             xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+             xmlns:event="clr-namespace:CountdownEvent;assembly=CountdownEvent"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--Application Resources-->
+    <Application.Resources>
+        <event:AppConfig x:Key="AppConfig"
+                         ApplicationTitle="Passover 2011"
+                         EventName="Pesach"
+                         EventMessage="Chag sameach!"
+                         NewsFeedUri="http://api.bing.com/rss.aspx?Source=News&amp;Query=Passover 2011&amp;news.offset={StartIndex}&amp;news.count={Count}"
+                         ImageFeedUri="http://api.bing.com/rss.aspx?Source=Image&amp;Query=Passover&amp;image.offset={StartIndex}&amp;image.count={Count}"
+                         WebSearchFeedUri="http://api.bing.com/rss.aspx?Source=Web&amp;Query=Passover 2011&amp;web.offset={StartIndex}&amp;web.count={Count}"
+                         VideoFeedUri="http://gdata.youtube.com/feeds/api/videos?alt=rss&amp;q=Passover&amp;max-results={Count}&amp;start-index={StartIndex1}"
+                         Wikipedia="http://en.wikipedia.org/wiki/Passover"
+                         PreparationText="Passover begins in..."
+                         AboutHeader="About Passover"
+                         TileImageKey="passover2011"
+                         EventDate="04/18/2011 19:00">
+            <event:AppConfig.ApplicationBackgroundImage>
+                <ImageBrush Opacity="0.2"
+                            ImageSource="/PassoverCountdown;component/ScreenBackground.png" />
+            </event:AppConfig.ApplicationBackgroundImage>
+            <event:AppConfig.Description>
+                <sys:String>Passover (Hebrew, Yiddish: חספ Pesach, Tiberian: [pesaħ], Modern Hebrew: Pesah, Pesakh, Yiddish: Peysekh, Paysakh, Paysokh) is a predominantly Jewish holy day and festival. It commemorates the story of the Exodus, in which the ancient Israelites were freed from slavery in Egypt. Passover begins on the 15th day of the month of Nisan, which is spring in the Northern Hemisphere, and is celebrated for seven or eight days. It is one of the most widely observed Jewish holidays.
+
+In the narrative of the Exodus, the Bible tells that God helped the Children of Israel escape slavery in Egypt by inflicting ten plagues upon the Egyptians before Pharaoh would release his Israelite slaves. The Israelites were instructed to mark the doorposts of their homes with the blood of a spring lamb and, upon seeing this, the spirit of the Lord passed over these homes, hence the term "passover". When Pharaoh freed the Israelites, it is said that they left in such a hurry that they could not wait for bread to rise. In commemoration, for the duration of Passover no leavened bread is eaten, for which reason it is called "The Festival of the Unleavened Bread". Matzo (flat unleavened bread) is the primary symbol of the holiday.
+
+Together with Shavuot ("Pentecost") and Sukkot ("Tabernacles"), Passover is one of the three pilgrimage festivals (Shalosh Regalim) during which the entire Jewish populace historically made a pilgrimage to the Temple in Jerusalem. Samaritans still make this pilgrimage to Mount Gerizim, but only men participate in public worship.</sys:String>
+            </event:AppConfig.Description>
+        </event:AppConfig>
+    </Application.Resources>
+
+    <Application.ApplicationLifetimeObjects>
+        <!--Required object that handles lifetime events for the application-->
+        <shell:PhoneApplicationService Launching="Application_Launching"
+                                       Closing="Application_Closing"
+                                       Activated="Application_Activated"
+                                       Deactivated="Application_Deactivated" />
+    </Application.ApplicationLifetimeObjects>
+
+</Application>

@@ -1,0 +1,50 @@
+﻿<Application 
+    x:Class="ElectionCountdown.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"       
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:event="clr-namespace:CountdownEvent;assembly=CountdownEvent"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--Application Resources-->
+    <Application.Resources>
+        <event:AppConfig x:Key="AppConfig"
+                         ApplicationTitle="Election 2012"
+                         EventName="Election Day"
+                         EventMessage="Remember to vote!"
+                         NewsFeedUri="http://api.bing.com/rss.aspx?Source=News&amp;Query=Election 2012&amp;news.offset={StartIndex}&amp;news.count={Count}"
+                         ImageFeedUri="http://api.bing.com/rss.aspx?Source=Image&amp;Query=Election 2012&amp;image.offset={StartIndex}&amp;image.count={Count}"
+                         WebSearchFeedUri="http://api.bing.com/rss.aspx?Source=Web&amp;Query=Election 2012&amp;web.offset={StartIndex}&amp;web.count={Count}"
+                         VideoFeedUri="http://gdata.youtube.com/feeds/api/videos?alt=rss&amp;q=Election 2012&amp;max-results={Count}&amp;start-index={StartIndex1}"
+                         Wikipedia="http://en.wikipedia.org/wiki/Election_Day_(United_States)"
+                         PreparationText="Voting begins in..."
+                         AboutHeader="About Election Day"
+                         TileImageKey="election2012"
+                         EventDate="11/06/2012">
+            <event:AppConfig.ApplicationBackgroundImage>
+                <ImageBrush Opacity="0.2"
+                            ImageSource="/ElectionCountdown;component/ScreenBackground.png" />
+            </event:AppConfig.ApplicationBackgroundImage>
+            <event:AppConfig.Description>
+                <sys:String>Election Day in the United States is the day set by law for the election of public officials. It occurs on the Tuesday after the first Monday in the month of November. The earliest possible date is November 2 and the latest possible date is November 8. November 8, 2011 is the upcoming election day. The following election days are November 6, 2012, November 5, 2013, November 4, 2014, and November 3, 2015.
+
+For federal offices (President, Vice President, and United States Congress), Election Day occurs only in even-numbered years. Presidential elections are held every four years, in years evenly divisible by four, in which electors for President and Vice President are chosen according to the method determined by each state. Elections to the United States House of Representatives and the United States Senate are held every two years; all Representatives serve two-year terms and are up for election every two years, while Senators serve six-year terms, staggered so that one-third of Senators are elected in any given general election. General elections in which presidential candidates are not on the ballot are referred to as midterm elections. Terms for those elected begin in January the following year; the President and Vice President are inaugurated ("sworn in") on Inauguration Day, usually January 20.
+
+Many state and local government offices are also elected on Election Day as a matter of convenience and cost saving, although a handful of states hold elections for state offices (such as governor) during odd-numbered "off years."
+
+Congress has mandated a uniform date for presidential (3 U.S.C. § 1) and congressional (2 U.S.C. § 1 and 2 U.S.C. § 7) elections, though early voting is nonetheless authorized in many states. In Oregon, where all elections are vote-by-mail, all ballots must be received by a set time on Election Day, as is common with absentee ballots in most states (except overseas military ballots which receive more time by federal law). In the state of Washington, where most counties are vote-by-mail (and in the others most votes are cast by mail as permanent absentee ballots), ballots need only be postmarked by Election Day.
+
+Election Day is a civic holiday in some states, including Delaware, Hawaii, Kentucky, Montana, New Jersey, New York, Ohio, and West Virginia. Some other states require that workers be permitted to take time off from employment without loss of pay. California Elections Code Section 14000 provides that employees otherwise unable to vote must be allowed two hours off with pay, at the beginning or end of a shift.</sys:String>
+            </event:AppConfig.Description>
+        </event:AppConfig>
+    </Application.Resources>
+
+    <Application.ApplicationLifetimeObjects>
+        <!--Required object that handles lifetime events for the application-->
+        <shell:PhoneApplicationService 
+            Launching="Application_Launching" Closing="Application_Closing" 
+            Activated="Application_Activated" Deactivated="Application_Deactivated"/>
+    </Application.ApplicationLifetimeObjects>
+
+</Application>
