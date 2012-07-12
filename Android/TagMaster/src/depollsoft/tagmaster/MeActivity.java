@@ -46,17 +46,21 @@ public class MeActivity extends Activity {
     ActionBars.setCustomTitle(this, R.layout.titleview);
 
     if (ParseUser.getCurrentUser() != null) {
-      ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {
+      try {
+        ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {
 
-        @Override
-        public void done(ParseObject obj, ParseException err) {
-          if (err != null) {
-            return;
+          @Override
+          public void done(ParseObject obj, ParseException err) {
+            if (err != null) {
+              return;
+            }
+            FavoritesModel.restoreFromUser();
+            TeachableTagsModel.restoreFromUser();
           }
-          FavoritesModel.restoreFromUser();
-          TeachableTagsModel.restoreFromUser();
-        }
-      });
+        });
+      }
+      catch (Exception e) {
+      }
     }
 
     ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));

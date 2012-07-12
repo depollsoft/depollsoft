@@ -3,6 +3,9 @@ package depollsoft.tagmaster;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.parse.ParseUser;
 
 import depollsoft.lib.binding.ObservableCollection;
@@ -27,7 +30,8 @@ public class FavoritesModel {
     for (int x = 0; x < objects.size(); x++) {
       if (!(objects.get(x).getClass() == Integer.TYPE || objects.get(x) instanceof Integer)) {
         try {
-          ((ObservableCollection<Integer>) objects).set(x, Integer.valueOf(objects.get(x).toString()));
+          ((ObservableCollection<Integer>) objects).set(x,
+              Integer.valueOf(objects.get(x).toString()));
         }
         catch (Exception e) {
           // Oh well...
@@ -123,7 +127,17 @@ public class FavoritesModel {
     if (ParseUser.getCurrentUser() != null) {
       try {
         JSONArray ids = new JSONArray(FavoritesModel.getFavoriteIds());
-        ParseUser.getCurrentUser().put("FavoriteIds", ids);
+        try {
+          ParseUser.getCurrentUser().put("FavoriteIds", ids);
+        }
+        catch (Exception e) {
+          new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+
+            public void run() {
+              storeToUser();
+            }
+          }, 100);
+        }
       }
       catch (Exception e) {
       }

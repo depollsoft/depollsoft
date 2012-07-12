@@ -111,29 +111,33 @@ public class SettingsActivity extends Activity {
             SettingsActivity.this, new LogInCallback() {
               @Override
               public void done(ParseUser user, ParseException err) {
-                loggingIn = false;
-                progress.dismiss();
-                v.setEnabled(true);
-                if (err != null) {
-                  Toast.makeText(SettingsActivity.this, "Facebook login failed.",
-                      Toast.LENGTH_SHORT);
-                  Log.d("Pitch Perfect", "Failed to log in.", err);
-                  return;
-                }
+                try {
+                  loggingIn = false;
+                  progress.dismiss();
+                  v.setEnabled(true);
+                  if (err != null) {
+                    Toast.makeText(SettingsActivity.this, "Facebook login failed.",
+                        Toast.LENGTH_SHORT).show();
+                    Log.d("Pitch Perfect", "Failed to log in.", err);
+                    return;
+                  }
 
-                if (user == null) {
-                  Log.d("Pitch Perfect", "User cancelled login.");
-                  return;
+                  if (user == null) {
+                    Log.d("Pitch Perfect", "User cancelled login.");
+                    return;
+                  }
+                  FlurryAgent.setUserId(user.getUsername());
+                  SettingsActivity.this.loginTrackable.updateTrackers();
+                  if (!user.isNew()) {
+                    SettingsModel.restoreUser();
+                    SongsModel.get().refreshFromParse();
+                  }
+                  else {
+                    SettingsModel.refreshUser();
+                    SongsModel.get().saveAllToParse(true);
+                  }
                 }
-                FlurryAgent.setUserId(user.getUsername());
-                SettingsActivity.this.loginTrackable.updateTrackers();
-                if (!user.isNew()) {
-                  SettingsModel.restoreUser();
-                  SongsModel.get().refreshFromParse();
-                }
-                else {
-                  SettingsModel.refreshUser();
-                  SongsModel.get().saveAllToParse(true);
+                catch (Exception e) {
                 }
               }
             });

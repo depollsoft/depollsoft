@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="depollsoft.pitchperfect"
-    android:versionCode="24"
+    android:versionCode="25"
     android:versionName="@string/app_version" >
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -28,9 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.google.ads.AdActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation" />
         <activity
             android:name=".KeySignatureActivity"
             android:configChanges="keyboardHidden|orientation" >

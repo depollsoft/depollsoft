@@ -32,7 +32,7 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    boolean isDebugSigned = BuildConfig.DEBUG;
+    boolean isDebugSigned = false;
 
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
