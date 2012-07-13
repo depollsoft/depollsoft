@@ -30,7 +30,7 @@
                     </slabControls:TrialBlocker.TrialContent>
                 </slabControls:TrialBlocker>
                 <TextBlock FontSize="{StaticResource PhoneFontSizeSmall}"
-                           Text="Version 2.0" />
+                           Text="Version 2.1" />
             </StackPanel>
             <StackPanel HorizontalAlignment="Center"
                         Orientation="Horizontal">
@@ -41,7 +41,7 @@
                                  FontSize="{StaticResource PhoneFontSizeSmall}" />
                 <TextBlock HorizontalAlignment="Center"
                            FontSize="{StaticResource PhoneFontSizeSmall}"
-                           Text=" © 2011" />
+                           Text=" © 2012" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal"

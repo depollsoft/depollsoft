@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Sodipodi ("http://www.sodipodi.com/") --><svg height="300" id="svg626" inkscape:output_extension="org.inkscape.output.svg.inkscape" inkscape:version="0.46" sodipodi:docname="char-Cancer.svg" sodipodi:version="0.32" space="preserve" style="fill-rule:evenodd" version="1.0" viewBox="0 0 8268 11692" width="300" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg">
+  <metadata>
+    <rdf:RDF xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <cc:Work rdf:about="">
+        <dc:title></dc:title>
+        <dc:description></dc:description>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>unsorted</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://www.openclipart.org/">
+            <dc:title>Open Clip Art Library, Source: Wikimedia Commons, Source: Wikimedia Commons, Source: Wikimedia Commons</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date></dc:date>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://en.wikipedia.org/wiki/Public_domain"/>
+        <dc:language>en</dc:language>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview id="base" inkscape:current-layer="svg626" inkscape:cx="150" inkscape:cy="117.5" inkscape:window-height="674" inkscape:window-width="640" inkscape:window-x="139" inkscape:window-y="21" inkscape:zoom="0.65878782" showgrid="false"/>
+  <defs id="defs627">
+    <inkscape:perspective id="perspective10" inkscape:persp3d-origin="150 : 78.333333 : 1" inkscape:vp_x="0 : 117.5 : 1" inkscape:vp_y="0 : 1000 : 0" inkscape:vp_z="300 : 117.5 : 1" sodipodi:type="inkscape:persp3d"/>
+    <style id="style628" type="text/css">
+    .fil0 {fill:#000000}
+   </style>
+  </defs>
+  <g id="Layer 1" transform="matrix(4.5389981,0,0,4.5347412,-13959.441,-18976.283)">
+    <path class="fil0" d="M 2720,6219 L 2720,6001 C 3140,6193 3547,6288 3939,6288 C 4196,6288 4405,6255 4566,6188 C 4464,6136 4387,6070 4336,5991 C 4285,5912 4259,5819 4259,5712 C 4259,5572 4310,5452 4411,5351 C 4511,5251 4633,5201 4773,5201 C 4913,5201 5032,5251 5132,5350 C 5231,5450 5281,5569 5281,5710 C 5281,5933 5145,6119 4872,6267 C 4599,6415 4257,6489 3846,6489 C 3490,6489 3115,6400 2720,6219 z M 4394,5713 C 4394,5815 4431,5903 4506,5977 C 4580,6051 4670,6088 4773,6088 C 4877,6088 4965,6051 5038,5980 C 5110,5908 5146,5820 5146,5716 C 5146,5610 5110,5520 5037,5446 C 4964,5372 4876,5335 4772,5335 C 4667,5335 4578,5372 4504,5446 C 4431,5519 4394,5608 4394,5713 z M 5281,4752 L 5281,4970 C 4860,4778 4454,4682 4061,4682 C 3805,4682 3595,4715 3433,4783 C 3537,4835 3614,4901 3664,4980 C 3716,5059 3741,5152 3741,5259 C 3741,5399 3691,5519 3590,5620 C 3489,5720 3368,5770 3227,5770 C 3087,5770 2968,5721 2869,5621 C 2770,5522 2720,5402 2720,5262 C 2720,5038 2856,4851 3129,4703 C 3401,4555 3744,4481 4155,4481 C 4511,4481 4886,4571 5281,4752 z M 3607,5258 C 3607,5155 3570,5067 3495,4993 C 3420,4920 3330,4883 3226,4883 C 3122,4883 3034,4919 2962,4991 C 2890,5063 2854,5151 2854,5255 C 2854,5361 2891,5451 2964,5525 C 3036,5599 3125,5636 3229,5636 C 3333,5636 3423,5599 3496,5525 C 3570,5451 3607,5362 3607,5258 z" id="path630" style="fill:#000000"/>
+  </g>
+</svg>

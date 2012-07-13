@@ -1,0 +1,63 @@
+﻿<navigation:Page x:Class="ScratchContent.Views.Home"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 mc:Ignorable="d"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480"
+                 Title="Home"
+                 Style="{StaticResource PageStyle}"
+                 xmlns:SLaB="clr-namespace:SLaB.Navigation.Controls;assembly=SLaB.Navigation.Controls">
+
+    <Grid x:Name="LayoutRoot">
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition  Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition  Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Image Source="/ScratchContent;component/Assets/home.png"
+                   HorizontalAlignment="Center"
+                   Margin="4"
+                   VerticalAlignment="Center" />
+            <TextBlock x:Name="HeaderText"
+                       VerticalAlignment="Center"
+                       FontSize="24"
+                       Margin="4"
+                       Text="Home"
+                       Grid.Column="1" />
+            <Rectangle Height="1"
+                       Grid.Column="1"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Bottom"
+                       Stroke="Gray"
+                       Margin="4,0" />
+            <ScrollViewer x:Name="PageScrollViewer"
+                          Grid.Row="1"
+                          Grid.Column="1"
+                          BorderThickness="0"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="4"
+                            Background="White">
+                    <TextBlock x:Name="ContentText"
+                               Style="{StaticResource ContentTextStyle}"
+                               Text="This application demonstrates various features in SLaB (Silverlight and Beyond).  Try clicking the links in the sitemap below to see the features in action and experiment with the benefits it provides."
+                               TextWrapping="Wrap" />
+                    <SLaB:TreeViewNavigator ExpandAll="True"
+                                            SitemapHeaderVisibility="Collapsed"
+                                            Sitemap="{StaticResource Sitemap}" />
+                </StackPanel>
+            </ScrollViewer>
+
+        </Grid>
+
+    </Grid>
+
+</navigation:Page>

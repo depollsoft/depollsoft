@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>True</AlwaysStartWebServerOnDebug>
+          <ProjectOutputReferences>
+            <Ref Project="{F8832EB5-E055-4689-AD83-772C22DA21CC}" Folder="ClientBin">SecondaryXap.xap|SLaB.Controls.Remote.zip|SLaB.Utilities.Xap.zip|SLaB.Utilities.zip|System.Windows.Controls.DataVisualization.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip</Ref>
+            <Ref Project="{321E2A01-EFC0-4292-B101-40C7C423D051}" Folder="ClientBin">System.ComponentModel.DataAnnotations.zip|System.Windows.Controls.Data.Input.zip|System.Windows.Controls.Data.zip|System.Windows.Controls.Input.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip|System.Windows.Data.zip|TernaryXap.xap</Ref>
+            <Ref Project="{96B42394-974C-4B52-B161-9BD2F002C733}" Folder="ClientBin">Microsoft.Silverlight.Testing.zip|Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight.zip|NavigationTests.xap|SLaB.Navigation.ContentLoaders.Auth.zip|SLaB.Navigation.ContentLoaders.Error.zip|SLaB.Navigation.ContentLoaders.Utilities.zip|SLaB.Navigation.ContentLoaders.Xap.zip|SLaB.Navigation.ContentLoaders.zip|SLaB.Navigation.Utilities.zip|SLaB.Utilities.Xap.zip|SLaB.Utilities.zip|System.Windows.Controls.Navigation.zip</Ref>
+          </ProjectOutputReferences>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

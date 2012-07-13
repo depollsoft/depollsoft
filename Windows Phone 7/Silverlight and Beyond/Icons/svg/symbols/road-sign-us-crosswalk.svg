@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) --><svg height="74" id="svg2" version="1.0" width="74" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <metadata>
+    <rdf:RDF xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <cc:Work rdf:about="">
+        <dc:title></dc:title>
+        <dc:description></dc:description>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li></rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://commons.wikimedia.org/">
+            <dc:title>Source: Wikimedia Commons, Source: Wikimedia Commons, Source: Wikimedia Commons</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date></dc:date>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://en.wikipedia.org/wiki/Public_domain"/>
+        <dc:language>en</dc:language>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs5"/>
+  <g id="g5192">
+    <rect height="52.28883" id="rect3165" rx="1.9379964" ry="1.9379964" style="fill:#ffcc00;stroke:#000000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round" transform="matrix(0.7071068,-0.7071068,0.7071068,0.7071068,0,0)" width="52.28883" x="-26.144415" y="26.181486"/>
+    <path d="M 18.527116,47.750655 L 55.722883,47.750655 M 26.593088,57.922282 L 47.656911,57.922282" id="path4161" style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:round"/>
+    <path d="M 32.705025,22.54629 L 44.605239,27.469902 L 44.955686,36.083658 L 42.146721,35.434766 L 41.269178,30.672944 L 39.669972,30.148142 L 43.389548,44.243381 L 46.521823,52.857137 L 43.389549,55.989412 L 38.886903,47.76719 L 37.320766,42.693777 L 34.517525,46.709319 L 32.81812,55.40211 L 28.323742,55.40211 L 29.685845,44.830682 L 33.796956,35.629623 L 32.622353,32.623718 L 30.450065,34.952706 L 24.970898,37.095563 L 23.383596,36.669141 L 23.421294,34.617719 L 29.280091,31.178896 L 29.569113,27.991065 L 32.705025,22.54629 z " id="path2167" style="fill:#000000;stroke:none"/>
+  </g>
+  <path d="M 34.891299 20.712875 A 3.4913397 3.5023882 0 1 1  27.90862,20.712875 A 3.4913397 3.5023882 0 1 1  34.891299 20.712875 z" id="path5187" style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+</svg>

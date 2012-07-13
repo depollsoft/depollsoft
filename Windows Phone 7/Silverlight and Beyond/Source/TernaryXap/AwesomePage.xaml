@@ -1,0 +1,12 @@
+﻿<navigation:Page xmlns:my1="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit" x:Class="TernaryXap.AwesomePage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation" d:DesignWidth="640" d:DesignHeight="480" x:Name="page" Title="AwesomePage Page" xmlns:data="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Data">
+	<Grid x:Name="LayoutRoot">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="2*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="1*" />
+		</Grid.RowDefinitions>
+		<Image Name="image1" Stretch="Uniform" Source="/TernaryXap;component/Images/Penguins.jpg" />
+		<my1:Rating Grid.Row="1" ItemCount="5" Name="rating1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+		<data:DataGrid Grid.Row="2" Name="dataGrid1" ItemsSource="{Binding ElementName=page, Path=NavigationContext.QueryString}" ColumnWidth="*" />
+	</Grid>
+</navigation:Page>

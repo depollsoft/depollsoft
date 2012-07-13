@@ -31,36 +31,6 @@ namespace BarbershopTags
             }
         }
 
-        protected override void OnBackKeyPress(CancelEventArgs e)
-        {
-            base.OnBackKeyPress(e);
-            if (SheetMusic.ListPickerMode == ListPickerMode.Expanded)
-            {
-                SheetMusic.ListPickerMode = ListPickerMode.Normal;
-                e.Cancel = true;
-            }
-            if (Parts.ListPickerMode == ListPickerMode.Expanded)
-            {
-                Parts.ListPickerMode = ListPickerMode.Normal;
-                e.Cancel = true;
-            }
-            if (LearningTracks.ListPickerMode == ListPickerMode.Expanded)
-            {
-                LearningTracks.ListPickerMode = ListPickerMode.Normal;
-                e.Cancel = true;
-            }
-            if (TagCollection.ListPickerMode == ListPickerMode.Expanded)
-            {
-                TagCollection.ListPickerMode = ListPickerMode.Normal;
-                e.Cancel = true;
-            }
-            if (SortBy.ListPickerMode == ListPickerMode.Expanded)
-            {
-                SortBy.ListPickerMode = ListPickerMode.Normal;
-                e.Cancel = true;
-            }
-        }
-
         private void CurrentDeactivated(object sender, DeactivatedEventArgs e)
         {
             IDictionary<string, object> state = PhoneApplicationService.Current.State;

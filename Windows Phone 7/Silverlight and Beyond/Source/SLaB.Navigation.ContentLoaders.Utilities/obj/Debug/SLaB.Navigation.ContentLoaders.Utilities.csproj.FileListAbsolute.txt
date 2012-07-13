@@ -1,0 +1,5 @@
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Utilities\Bin\Debug\SLaB.Navigation.ContentLoaders.Utilities.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Utilities\Bin\Debug\SLaB.Navigation.ContentLoaders.Utilities.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Utilities\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Utilities\obj\Debug\SLaB.Navigation.ContentLoaders.Utilities.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Utilities\obj\Debug\SLaB.Navigation.ContentLoaders.Utilities.pdb

@@ -1,0 +1,115 @@
+﻿<UserControl x:Class="UtilitiesContent.RichTextEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="300"
+             d:DesignWidth="400">
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <ToggleButton IsChecked="{Binding Path=IsReadOnly, Mode=TwoWay, ElementName=rtb}"
+                          MinWidth="25"
+                          MinHeight="25"
+                          Margin="0,2,2,2">Read only</ToggleButton>
+            <ToggleButton x:Name="boldButton"
+                          Click="boldButton_Click"
+                          MinWidth="25"
+                          MinHeight="25"
+                          Margin="0,2,2,2">
+                <TextBlock><Bold>B</Bold></TextBlock>
+            </ToggleButton>
+            <ToggleButton Name="italicButton"
+                          Click="italicButton_Click"
+                          MinWidth="25"
+                          MinHeight="25"
+                          Margin="0,2,2,2">
+                <TextBlock><Italic>I</Italic></TextBlock>
+            </ToggleButton>
+            <ToggleButton Name="underlineButton"
+                          Click="underlineButton_Click"
+                          MinWidth="25"
+                          MinHeight="25"
+                          Margin="0,2,2,2">
+                <TextBlock><Underline>U</Underline></TextBlock>
+            </ToggleButton>
+            <ComboBox x:Name="fontsComboBox"
+                      ItemsSource="{Binding Path=Fonts}"
+                      SelectionChanged="fontsComboBox_SelectionChanged"
+                      SelectedValuePath="Source"
+                      Margin="0,2,2,2"
+                      Height="25"
+                      Width="175">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Source}"
+                                   FontFamily="{Binding}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox x:Name="sizeComboBox"
+                      Margin="0,2,2,2"
+                      SelectionChanged="sizeComboBox_SelectionChanged"
+                      Height="25"
+                      Width="50"
+                      xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}"
+                                   FontSize="{Binding}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+                <sys:Double>6</sys:Double>
+                <sys:Double>7</sys:Double>
+                <sys:Double>8</sys:Double>
+                <sys:Double>9</sys:Double>
+                <sys:Double>10</sys:Double>
+                <sys:Double>11</sys:Double>
+                <sys:Double>12</sys:Double>
+                <sys:Double>13</sys:Double>
+                <sys:Double>14</sys:Double>
+                <sys:Double>15</sys:Double>
+                <sys:Double>16</sys:Double>
+                <sys:Double>24</sys:Double>
+                <sys:Double>32</sys:Double>
+            </ComboBox>
+            <Button x:Name="linkButton"
+                    Click="linkButton_Click"
+                    MinWidth="25"
+                    MinHeight="25"
+                    Margin="0,2,2,2">
+                <TextBlock TextDecorations="Underline"
+                           FontStyle="Italic"
+                           Foreground="Blue">&lt;a&gt;</TextBlock>
+            </Button>
+            <Button x:Name="imageButton"
+                    Click="imageButton_Click"
+                    MinWidth="25"
+                    MinHeight="25"
+                    MaxHeight="25"
+                    ToolTipService.ToolTip="Insert an image"
+                    Margin="0,2,2,2">
+                <Image Source="InsertPicture.png" />
+            </Button>
+            <Button x:Name="innerRichButton"
+                    Click="innerRichButton_Click"
+                    MinWidth="25"
+                    MinHeight="25"
+                    MaxHeight="25"
+                    ToolTipService.ToolTip="Insert inner rich text box"
+                    Margin="0,2,2,2">
+                RTB
+            </Button>
+        </StackPanel>
+        <RichTextBox Grid.Row="1"
+                     TextWrapping="Wrap"
+                     SelectionChanged="rtb_SelectionChanged"
+                     x:Name="rtb"
+                     VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</UserControl>

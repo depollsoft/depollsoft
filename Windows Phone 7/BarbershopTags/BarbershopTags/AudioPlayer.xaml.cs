@@ -9,6 +9,7 @@ using System.IO.IsolatedStorage;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.ComponentModel;
+using System.IO;
 
 namespace BarbershopTags
 {
@@ -150,9 +151,7 @@ namespace BarbershopTags
                                     return;
                                 var response = wr.EndGetResponse(res);
                                 var finalUri = response.ResponseUri;
-                                string disposition = response.Headers["Content-Disposition"];
-                                var group = _DispositionPattern.Match(disposition).Groups["filename"];
-                                string filename = group.Value;
+                                string filename = Path.GetFileName(finalUri.AbsolutePath);
                                 var file = iso.CreateFile(_LastTempFile = "AudioPlayerTemp" + _InstanceNum + "_" + ++_LastTemp + filename);
                                 if (filename.ToLowerInvariant().EndsWith(".mid"))
                                     throw new NotSupportedException();

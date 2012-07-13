@@ -1,0 +1,115 @@
+﻿<SLaB:CollectionPrinter xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                        xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
+                        x:Class="ScratchPrintingProject.TestPrinter"
+                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        xmlns:SLaB="http://www.davidpoll.com/SLaB"
+                        d:DataContext="{d:DesignData Source=SampleData/People/People.xaml}"
+                        ItemsSource="{Binding Person}"
+                        CurrentPageIndex="0"
+                        mc:Ignorable="d">
+    <SLaB:CollectionPrinter.HeaderTemplate>
+        <DataTemplate>
+            <StackPanel HorizontalAlignment="Stretch">
+                <StackPanel.Resources>
+                    <SLaB:BoolConverter x:Key="BoolConverter" />
+                </StackPanel.Resources>
+                <StackPanel HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <TextBlock Text="{Binding CurrentPage, StringFormat='{}Page {0} '}" />
+                    <TextBlock Text="{Binding PageCount, StringFormat='{}/ {0}'}" />
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Center"
+                           Visibility="{Binding IsFirstPage, Converter={StaticResource BoolConverter}}"
+                           FontSize="32">This is a test document!</TextBlock>
+                <TextBlock HorizontalAlignment="Center"
+                           Visibility="{Binding IsLastPage, Converter={StaticResource BoolConverter}}"
+                           FontSize="16">This is the last page!</TextBlock>
+                <TextBlock HorizontalAlignment="Center"
+                           FontSize="14">
+                    <TextBlock.Foreground>
+                        <Binding Path="CurrentPage">
+                            <Binding.Converter>
+                                <SLaB:EvenOddConverter>
+                                    <SLaB:EvenOddConverter.Even>
+                                        <SolidColorBrush Color="Blue" />
+                                    </SLaB:EvenOddConverter.Even>
+                                    <SLaB:EvenOddConverter.Odd>
+                                        <SolidColorBrush Color="Red" />
+                                    </SLaB:EvenOddConverter.Odd>
+                                </SLaB:EvenOddConverter>
+                            </Binding.Converter>
+                        </Binding>
+                    </TextBlock.Foreground>
+                    <TextBlock.Text>
+                        <Binding Path="CurrentPage"
+                                 StringFormat="This page is {0}">
+                            <Binding.Converter>
+                                <SLaB:EvenOddConverter>
+                                    <SLaB:EvenOddConverter.Even>
+                                        Even
+                                    </SLaB:EvenOddConverter.Even>
+                                    <SLaB:EvenOddConverter.Odd>
+                                        Odd
+                                    </SLaB:EvenOddConverter.Odd>
+                                </SLaB:EvenOddConverter>
+                            </Binding.Converter>
+                        </Binding>
+                    </TextBlock.Text>
+                </TextBlock>
+            </StackPanel>
+        </DataTemplate>
+    </SLaB:CollectionPrinter.HeaderTemplate>
+    <SLaB:CollectionPrinter.FooterTemplate>
+        <DataTemplate>
+            <StackPanel HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+                <TextBlock Text="{Binding FirstItemValue.Name}" />
+                <TextBlock Text=" - " />
+                <TextBlock Text="{Binding LastItemValue.Name}" />
+            </StackPanel>
+        </DataTemplate>
+    </SLaB:CollectionPrinter.FooterTemplate>
+    <SLaB:CollectionPrinter.BodyTemplate>
+        <DataTemplate>
+            <sdk:DataGrid ItemsSource="{Binding CurrentItems}"
+                          AutoGenerateColumns="False"
+                          VerticalScrollBarVisibility="Disabled">
+                <sdk:DataGrid.Columns>
+                    <sdk:DataGridTextColumn Binding="{Binding Name}"
+                                            Header="Name" />
+                    <sdk:DataGridTextColumn Binding="{Binding Address}"
+                                            Header="Address" />
+                    <sdk:DataGridTextColumn Binding="{Binding Age}"
+                                            Header="Age" />
+                    <sdk:DataGridTemplateColumn Header="Image"
+                                                IsReadOnly="True">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding Photo}"
+                                       Height="50"
+                                       Width="50" />
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                    </sdk:DataGridTemplateColumn>
+                    <sdk:DataGridTemplateColumn Header="Values"
+                                                Width="*"
+                                                IsReadOnly="True">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <chartingToolkit:Chart Title="{Binding Name}">
+                                    <chartingToolkit:ScatterSeries DependentValuePath="X"
+                                                                   IndependentValuePath="Y"
+                                                                   Title="Values"
+                                                                   ItemsSource="{Binding Values}" />
+                                </chartingToolkit:Chart>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                    </sdk:DataGridTemplateColumn>
+                </sdk:DataGrid.Columns>
+            </sdk:DataGrid>
+        </DataTemplate>
+    </SLaB:CollectionPrinter.BodyTemplate>
+</SLaB:CollectionPrinter>

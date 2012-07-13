@@ -1,0 +1,61 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:SLaB.Navigation.Controls" xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" xmlns:SLaB="http://www.davidpoll.com/SLaB">
+	<SLaB:BoolConverter x:Key="boolConverter" />
+	<SLaB:CollectionConverter x:Key="collectionConverter" />
+	<SLaB:WrappingConverter x:Key="wrappingConverter" />
+
+	<Style TargetType="local:TreeViewNavigator">
+		<Setter Property="ItemTemplate">
+			<Setter.Value>
+				<sdk:HierarchicalDataTemplate ItemsSource="{Binding Nodes}">
+					<Grid ToolTipService.ToolTip="{Binding Node.Description}">
+						<HyperlinkButton TargetName="{Binding Node.TargetName}" NavigateUri="{Binding Node.Uri}" Content="{Binding Node.Title}" Visibility="{Binding Node.IsNavigable, Converter={StaticResource boolConverter}}" />
+						<TextBlock Text="{Binding Node.Title}" Visibility="{Binding Node.IsNavigable, Converter={StaticResource boolConverter}, ConverterParameter=!}" />
+					</Grid>
+				</sdk:HierarchicalDataTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="SitemapHeaderTemplate">
+			<Setter.Value>
+				<DataTemplate>
+					<TextBlock Text="{Binding Value.Title}" ToolTipService.ToolTip="{Binding Value.Description}" FontSize="20" FontWeight="Bold" Margin="4" />
+				</DataTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="SitemapHeaderVisibility" Value="Visible" />
+		<Setter Property="TreeViewStyle">
+			<Setter.Value>
+				<Style TargetType="sdk:TreeView">
+					<Setter Property="BorderThickness" Value="0" />
+				</Style>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="local:TreeViewNavigator">
+					<Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<ContentPresenter Visibility="{TemplateBinding SitemapHeaderVisibility}" Content="{Binding Sitemap, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource wrappingConverter}}" ContentTemplate="{TemplateBinding SitemapHeaderTemplate}" />
+							<sdk:TreeView x:Name="TreeView" Grid.Row="1" Background="{TemplateBinding Background}" ItemsSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TrimmedSitemap}" Style="{TemplateBinding TreeViewStyle}" ItemTemplate="{TemplateBinding ItemTemplate}">
+								<sdk:TreeView.ItemContainerStyle>
+									<Style TargetType="sdk:TreeViewItem">
+										<Setter Property="Template">
+											<Setter.Value>
+												<ControlTemplate TargetType="sdk:TreeViewItem">
+													<sdk:TreeViewItem ItemsSource="{TemplateBinding ItemsSource}" ItemTemplate="{TemplateBinding ItemTemplate}" ItemContainerStyle="{TemplateBinding ItemContainerStyle}" HeaderTemplate="{TemplateBinding HeaderTemplate}" IsSelected="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Header.IsCurrentSource}" IsExpanded="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Header.IsInPath, Mode=TwoWay}" Style="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Header.Host.ItemContainerStyle}" Header="{TemplateBinding Header}" />
+												</ControlTemplate>
+											</Setter.Value>
+										</Setter>
+									</Style>
+								</sdk:TreeView.ItemContainerStyle>
+							</sdk:TreeView>
+						</Grid>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

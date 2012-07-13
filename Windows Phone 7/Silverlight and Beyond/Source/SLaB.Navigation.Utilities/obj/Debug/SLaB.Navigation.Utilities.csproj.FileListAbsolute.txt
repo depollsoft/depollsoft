@@ -1,0 +1,16 @@
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\SLaB.Navigation.Utilities.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\SLaB.Navigation.Utilities.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\System.Windows.Controls.Navigation.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\System.Windows.Controls.Navigation.xml
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\de\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\es\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\fr\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\it\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\ja\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\ko\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\ru\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\zh-Hans\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\Bin\Debug\zh-Hant\System.Windows.Controls.Navigation.resources.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\obj\Debug\SLaB.Navigation.Utilities.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Utilities\obj\Debug\SLaB.Navigation.Utilities.pdb

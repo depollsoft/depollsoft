@@ -1,0 +1,42 @@
+﻿<Application x:Class="ScratchApplication.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:SLaB="http://www.davidpoll.com/SLaB">
+    <!--<SLaB:OfflineManager.OfflineManager>
+        <SLaB:OfflineManager IsolatedStorageQuotaIncreaseRequested="OfflineManager_IsolatedStorageQuotaIncreaseRequested">
+            <SLaB:OfflinedFile Uri="ScratchApplication.xap" />
+            <SLaB:OfflinedFile Uri="ScratchContent.xap" />
+            <SLaB:OfflinedFile Uri="ScratchPrintingProject.xap" />
+            <SLaB:OfflinedFile Uri="SecondaryXap.xap" />
+            <SLaB:OfflinedFile Uri="SLaB.Controls.Remote.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.Auth.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.Error.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.PageResource.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.Utilities.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.Xap.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.ContentLoaders.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.Controls.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Navigation.Utilities.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Printing.Controls.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.ChangeLinq.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.Xaml.Serializer.UI.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.Xaml.Serializer.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.Xaml.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.Xap.zip" />
+            <SLaB:OfflinedFile Uri="SLaB.Utilities.zip" />
+            <SLaB:OfflinedFile Uri="System.ComponentModel.DataAnnotations.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.Data.Input.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.Data.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.DataVisualization.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.Input.Toolkit.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.Navigation.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.Toolkit.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Controls.zip" />
+            <SLaB:OfflinedFile Uri="System.Windows.Data.zip" />
+            <SLaB:OfflinedFile Uri="TernaryXap.xap" />
+            <SLaB:OfflinedFile Uri="UtilitiesContent.xap" />
+            <SLaB:OfflinedFile Uri="http://open.depoll.com/SimpleApplication/SimpleApplication.xap" />
+            <SLaB:OfflinedFile Uri="http://www.davidpoll.com/wp-content/uploads/2009/03/davidpoll_thumb.jpg" />
+        </SLaB:OfflineManager>
+    </SLaB:OfflineManager.OfflineManager>-->
+</Application>

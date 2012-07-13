@@ -1,0 +1,5 @@
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\NavigationTests.Web\bin\NavigationTests.Web.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\NavigationTests.Web\bin\NavigationTests.Web.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\NavigationTests.Web\obj\Release\ResolveAssemblyReference.cache
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\NavigationTests.Web\obj\Release\NavigationTests.Web.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\NavigationTests.Web\obj\Release\NavigationTests.Web.pdb

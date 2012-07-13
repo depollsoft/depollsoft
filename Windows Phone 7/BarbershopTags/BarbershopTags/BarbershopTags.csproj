@@ -13,11 +13,10 @@
     <AssemblyName>BarbershopTags</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
-    <TargetFrameworkProfile>WindowsPhone</TargetFrameworkProfile>
+    <TargetFrameworkProfile>WindowsPhone71</TargetFrameworkProfile>
     <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
     <SilverlightApplication>true</SilverlightApplication>
-    <SupportedCultures>
-    </SupportedCultures>
+    <SupportedCultures>zh-CN;zh-TW;cs-CZ;da-DK;nl-NL;en-US;en-GB;fi-FI;fr-FR;de-DE;el-GR;hu-HU;id-ID;it-IT;ja-JP;ko-KR;ms-MY;nb-NO;pl-PL;pt-BR;pt-PT;ru-RU;es-ES;sv-SE;</SupportedCultures>
     <XapOutputs>true</XapOutputs>
     <GenerateSilverlightManifest>true</GenerateSilverlightManifest>
     <XapFilename>BarbershopTags.xap</XapFilename>
@@ -25,10 +24,14 @@
     <SilverlightAppEntry>BarbershopTags.App</SilverlightAppEntry>
     <ValidateXaml>true</ValidateXaml>
     <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -71,21 +74,21 @@
   <ItemGroup>
     <Reference Include="Microsoft.Phone" />
     <Reference Include="Microsoft.Phone.Controls, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Interop" />
     <Reference Include="Microsoft.Xna.Framework" />
     <Reference Include="PhonePerformance, Version=1.0.0.0, Culture=neutral, PublicKeyToken=eb13ab44d9ca0fe1, processorArchitecture=MSIL" />
-    <Reference Include="SLaB.Controls.Phone, Version=0.10.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL">
+    <Reference Include="SLaB.Controls.Phone">
       <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Phone.dll</HintPath>
     </Reference>
-    <Reference Include="SLaB.Utilities.Phone, Version=0.10.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL">
+    <Reference Include="SLaB.Utilities.Phone">
       <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Phone.dll</HintPath>
     </Reference>
-    <Reference Include="SLaB.Utilities.Xaml.Phone, Version=0.10.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL">
+    <Reference Include="SLaB.Utilities.Xaml.Phone, Version=0.11.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL">
       <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Phone.dll</HintPath>
     </Reference>
     <Reference Include="SLaB.Utilities.Xaml.Serializer.Phone">
-      <HintPath>..\..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Serializer.Phone.dll</HintPath>
+      <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Serializer.Phone.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />

@@ -1,0 +1,10 @@
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Controls.Remote.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Controls.Remote.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Utilities.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Utilities.Xap.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Utilities.Xap.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\Bin\Debug\SLaB.Utilities.pdb
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Debug\SLaB.Controls.Remote.g.resources
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Debug\SLaB.Controls.Remote.dll
+C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Debug\SLaB.Controls.Remote.pdb

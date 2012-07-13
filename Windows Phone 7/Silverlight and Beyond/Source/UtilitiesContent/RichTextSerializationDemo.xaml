@@ -1,0 +1,101 @@
+﻿<navigation:Page x:Class="UtilitiesContent.RichTextSerializationDemo"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:my="clr-namespace:UtilitiesContent"
+                 mc:Ignorable="d"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480"
+                 Title="RichTextSerializationDemo Page">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Rich Text Serialization Demo"
+                   FontStyle="Italic"
+                   Foreground="Navy"
+                   FontSize="20" />
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <my:RichTextEditor x:Name="rteLeft"
+                               Margin="4">
+                <my:RichTextEditor.Blocks>
+                    <Paragraph>
+                        <Run Text="About Me"
+                             FontFamily="Trebuchet MS"
+                             FontSize="32" />
+                    </Paragraph>
+                    <Paragraph TextAlignment="Center">
+                        <InlineUIContainer>
+                            <Image Source="http://www.davidpoll.com/wp-content/uploads/2009/03/davidpoll_thumb.jpg"
+                                   Stretch="None"
+                                   ToolTipService.ToolTip="That's me!"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        </InlineUIContainer>
+                    </Paragraph>
+                    <Paragraph>
+                        <Hyperlink TargetName="_blank"
+                                   NavigateUri="http://www.davidpoll.com">David Eitan Poll</Hyperlink> is a Program Manager on the Silverlight team.  He joined Microsoft in June 2008 after two summer internships with the  Application Frameworks team.  David is currently working on Silverlight with a focus on RIA applications.
+                        <LineBreak />
+                    </Paragraph>
+                    <Paragraph>
+                        David grew up in Yorba Linda, California — a suburban paradise in “The O.C.”  He attended Troy High School in Fullerton, California and graduated in 2005 with an International Baccalaureate diploma.  After high school, he high-tailed it up to the Bay Area to study Computer Science at the University of California, Berkeley.  After earning his B.A. in Computer Science and graduating with High Honors in 2007, he continued on at Cal to finish an M.Sc. in Computer Science in 2008.  While at Berkeley, he was a member and president of the International Honor Society for the Computer Sciences, Upsilon Pi Epsilon – Nu Chapter.
+                        <LineBreak />
+                    </Paragraph>
+                    <Paragraph>
+                        You can find David’s personal blog here:
+                        <Hyperlink TargetName="_blank"
+                                   NavigateUri="http://www.depoll.com">Depoll.com</Hyperlink>
+                        <LineBreak />
+                    </Paragraph>
+                    <Paragraph>
+                        You can follow David on Twitter:
+                        <Hyperlink TargetName="_blank"
+                                   NavigateUri="http://www.twitter.com/depoll">@depoll</Hyperlink>
+                        <LineBreak />
+                    </Paragraph>
+                    <Paragraph>
+                        <Bold>Disclaimer:</Bold> All posting and code samples are provided “AS IS” with no warrianties, and confers no rights.
+                        <LineBreak />
+                    </Paragraph>
+                </my:RichTextEditor.Blocks>
+            </my:RichTextEditor>
+            <my:RichTextEditor x:Name="rteRight"
+                               Margin="4"
+                               IsReadOnly="True"
+                               Grid.Column="1" />
+            <Button Margin="4"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Click="Button_Click">Copy XAML left-->right</Button>
+            <TextBlock Grid.Row="2"
+                       Grid.ColumnSpan="2"
+                       FontStyle="Italic"
+                       Foreground="Navy"
+                       FontSize="15">Generated Xaml</TextBlock>
+            <TextBox x:Name="xamlTb"
+                     IsReadOnly="True"
+                     Grid.Row="3"
+                     Grid.ColumnSpan="2"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     Margin="4"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto" />
+        </Grid>
+    </Grid>
+</navigation:Page>
