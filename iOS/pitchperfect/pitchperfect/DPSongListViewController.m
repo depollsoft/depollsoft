@@ -78,7 +78,7 @@
     
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     flowRight.userInteractionEnabled = NO;
     
     self.textLabel.text = song.name;
@@ -119,12 +119,14 @@
 @property (nonatomic, strong) NSArray *editingButtons;
 @property (nonatomic, strong) NSArray *normalButtons;
 @property (nonatomic, strong) UIToolbar *toolbar;
+@property (nonatomic, strong) UIPopoverController *popover;
+@property (nonatomic, strong) UIBarButtonItem *addButton;
 
 @end
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, addItem, editingButtons, normalButtons, toolbar;
+@synthesize bannerView, tableView, editItem, doneItem, addItem, editingButtons, normalButtons, toolbar, popover, addButton;
 
 - (void)viewDidLoad
 {
@@ -173,7 +175,7 @@
     
     UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     
-    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
+    addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
     
     editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     
@@ -196,27 +198,26 @@
     [super viewDidDisappear:animated];
 }
 
-- (void)viewDidUnload
-{
+- (void)viewDidUnload {
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPPitchedSong *song = [[[DPSongsModel sharedInstance] songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.editingAccessoryType = UITableViewCellAccessoryDetailDisclosureButton;
+    UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
+    __block __weak UIButton *weakDisclosureButton;
+    cell.editingAccessoryView = disclosureButton;
+    [disclosureButton addBlock:^{
+        [self editSong:song fromUi:weakDisclosureButton];
+    } forControlEvents:UIControlEventTouchUpInside];
     cell.song = song;
     return cell;
-}
-
-- (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath {
-    [self editSong:[[DPSongsModel sharedInstance].songs objectAtIndex:indexPath.row]];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -266,8 +267,9 @@
     }];
 }
 
-- (void)editSong:(DPPitchedSong *)song {
+- (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
+    editor.contentSizeForViewInPopover = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
@@ -276,11 +278,20 @@
             [[DPSongsModel sharedInstance] storeValue];
         }
     };
-    [self presentModalViewController:editor animated:YES];
+    if (NO && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (popover.isPopoverVisible) {
+            [popover dismissPopoverAnimated:YES];
+        }
+        popover = [[UIPopoverController alloc] initWithContentViewController:editor];
+        [popover presentPopoverFromRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height) inView:view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+    } else {
+        [self presentModalViewController:editor animated:YES];
+    }
 }
 
 - (void)addSong {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
+    editor.contentSizeForViewInPopover = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
@@ -296,8 +307,15 @@
             [[DPSongsModel sharedInstance] storeValue];
         }
     };
-    [tableView reloadData];
-    [self presentModalViewController:editor animated:YES];
+    if (NO && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (popover.isPopoverVisible) {
+            [popover dismissPopoverAnimated:YES];
+        }
+        popover = [[UIPopoverController alloc] initWithContentViewController:editor];
+        [popover presentPopoverFromBarButtonItem:addButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+    } else {
+        [self presentModalViewController:editor animated:YES];
+    }
 }
 
 - (void)songsChanged {

@@ -96,7 +96,7 @@
     keyPicker.delegate = self;
     keyPicker.showsSelectionIndicator = YES;
     [keyPicker sizeToFit];
-    keyPicker.frame = CGRectMake(0, self.view.frame.size.height - keyPicker.frame.size.height, keyPicker.frame.size.width, keyPicker.frame.size.height);
+    keyPicker.frame = CGRectMake(self.view.frame.size.width / 2 - keyPicker.frame.size.width / 2, self.view.frame.size.height - keyPicker.frame.size.height, keyPicker.frame.size.width, keyPicker.frame.size.height);
     [keyPicker selectRow:[allKeys indexOfObject:song.key] inComponent:0 animated:YES];
     
     [self.view addSubview:keyPicker];
@@ -139,7 +139,7 @@
 
 - (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
     DPKey *key = [allKeys objectAtIndex:row];
-    return [self viewForKey:key];
+    return [self viewForKey:key withPicker:pickerView];
 }
 
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -198,24 +198,27 @@
     return flow;
 }
 
-- (UIView *)viewForKey:(DPKey *)key {
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width * .9, 44)];
+- (UIView *)viewForKey:(DPKey *)key withPicker:(UIPickerView *)picker {
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, picker.frame.size.width * .9, 44)];
     HLayoutView *flowRight = [[HLayoutView alloc] init];
     [flowRight addSubview:[self noteUi:key]];
     
     flowRight.frame = CGRectInset(view.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     
     HLayoutView *flowLeft = [[HLayoutView alloc] init];
     [flowLeft addSubview:[self keyUi:key]];
     
     flowLeft.frame = CGRectInset(view.frame, 10, 0);
     flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         
     [view addSubview:flowRight];
     [view addSubview:flowLeft];
     
     view.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill;
+    view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     return view;
 }
 

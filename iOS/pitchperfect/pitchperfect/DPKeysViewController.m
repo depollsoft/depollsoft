@@ -94,20 +94,22 @@
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
     flowRight.userInteractionEnabled = NO;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     
     HLayoutView *flowLeft = [[HLayoutView alloc] init];
     [flowLeft addSubview:[self keyUi:newKey]];
     
     flowLeft.frame = CGRectInset(self.frame, 10, 0);
     flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     flowLeft.userInteractionEnabled = NO;
     
-    [self addSubview:flowRight];
-    [self addSubview:flowLeft];
+    [self.contentView addSubview:flowRight];
+    [self.contentView addSubview:flowLeft];
     [self sizeToFit];
-    
+        
     self.frame = CGRectInset(self.frame, 0, -20);
-    self.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill;
+    self.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill | UIControlContentHorizontalAlignmentFill;
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
