@@ -83,7 +83,7 @@
 
 /*! 
  Called when objects have loaded from Parse. If you override this method, you must
- call [super objectsDidLoad] in your implementation.
+ call [super objectsDidLoad:] in your implementation.
  @param error The Parse error from running the PFQuery, if there was any.
 */
 - (void)objectsDidLoad:(NSError *)error;

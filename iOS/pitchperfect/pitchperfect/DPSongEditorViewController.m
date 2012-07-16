@@ -39,6 +39,11 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        self.view.frame = CGRectMake(0, 0, 320, 480);
+    }
+    
     VLayoutView *topLayout = [[VLayoutView alloc] init];
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
@@ -53,17 +58,18 @@
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    [self.view setBackgroundColor:[UIColor blackColor]];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        self.view.backgroundColor = [UIColor colorWithRed:200.0/255 green:200.0/255 blue:200.0/255 alpha:1];
+    } else {
+        [self.view setBackgroundColor:[UIColor blackColor]];
+    }
     [self.view addSubview:background];
-    
-    GADRequest *request = [GADRequest request];
-    request.testing = [DPAppDelegate testAds];
-    [bannerView loadRequest:request];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleBlackTranslucent;
     
     [toolbar sizeToFit];
+    toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
     VLayoutView *controlsLayout = [[VLayoutView alloc] initWithFrame:CGRectZero spacing:5];
     
@@ -77,6 +83,8 @@
     nameField.text = song.name;
     nameField.contentMode = UIControlContentVerticalAlignmentCenter;
     nameField.borderStyle = UITextBorderStyleRoundedRect;
+    nameField.returnKeyType = UIReturnKeyNext;
+    nameField.autocapitalizationType = UITextAutocapitalizationTypeWords;
     nameField.delegate = self;
     [nameField sizeToFit];
     nameField.frame = CGRectMake(nameField.frame.origin.x, nameField.frame.origin.y, self.view.frame.size.width, nameField.frame.size.height);
@@ -84,8 +92,15 @@
     [controlsLayout addSubview:nameField];
     
     [controlsLayout sizeToFit];
+    
     [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [topLayout addSubview:bannerView];
+        
+        GADRequest *request = [GADRequest request];
+        request.testing = [DPAppDelegate testAds];
+        [bannerView loadRequest:request];
+    }
     [topLayout addSubview:[[UIView alloc] initWithFrame:CGRectMake(0, 0, 1, 5)]];
     [topLayout addSubview:controlsLayout];
     [topLayout sizeToFit];
@@ -213,7 +228,7 @@
     flowLeft.frame = CGRectInset(view.frame, 10, 0);
     flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
     flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-        
+    
     [view addSubview:flowRight];
     [view addSubview:flowLeft];
     

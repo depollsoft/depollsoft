@@ -228,6 +228,10 @@ A Parse Framework User Object that is a local representation of a user persisted
                                            block:(PFBooleanResultBlock)block;
 
 /** @name Querying for Users */
+
+/*!
+ Creates a query for PFUser objects.
+ */
 + (PFQuery *)query;
 
 /** @name Deprecated */

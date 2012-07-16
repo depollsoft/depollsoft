@@ -7,6 +7,7 @@
 //
 
 #import <CoreText/CoreText.h>
+#import "DPAppDelegate.h"
 #import "DPPitchPipeViewController.h"
 #import "DPNote.h"
 #import "DPAccidental.h"
@@ -29,6 +30,8 @@
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) NSMutableArray *noteButtons;
 @property (nonatomic, strong) DPPitchPipeModel *model;
+@property (nonatomic, strong) UIPopoverController *popover;
+@property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
 - (void)stopNotes;
 
@@ -36,7 +39,7 @@
 
 @implementation DPPitchPipeViewController
 
-@synthesize bannerView, model, noteButtons;
+@synthesize bannerView, model, noteButtons, popover, settingsButton;
 
 - (void)viewDidLoad
 {
@@ -49,7 +52,7 @@
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
     bannerView.rootViewController = self;
-
+    
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
     [self.view setBackgroundColor:[UIColor blackColor]];
@@ -98,12 +101,12 @@
     [glv addSubview:typeSwitcher row:2 rowSpan:2 column:1 columnSpan:2 options:KJGridLayoutFixedHeight];
     
     UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
-
+    
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
     
     [self.view addSubview:glv];
@@ -192,9 +195,21 @@
 
 - (void)openSettings {
     DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
-    [self presentViewController:settings animated:YES completion:^{
-    }];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (self.popover.isPopoverVisible) {
+            [popover dismissPopoverAnimated:YES];
+            return;
+        }
+        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        popover = [[UIPopoverController alloc] initWithContentViewController:settings];
+        settings.popoverController = popover;
+        [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        
+    } else {
+        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        [self presentViewController:settings animated:YES completion:^{
+        }];
+    }
 }
 
 @end

@@ -114,6 +114,7 @@
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UIBarButtonItem *editItem;
+@property (nonatomic, strong) UIBarButtonItem *sortItem;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
 @property (nonatomic, strong) UIBarButtonItem *addItem;
 @property (nonatomic, strong) NSArray *editingButtons;
@@ -121,12 +122,13 @@
 @property (nonatomic, strong) UIToolbar *toolbar;
 @property (nonatomic, strong) UIPopoverController *popover;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
+@property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
 @end
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, addItem, editingButtons, normalButtons, toolbar, popover, addButton;
+@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, editingButtons, normalButtons, toolbar, popover, addButton, settingsButton;
 
 - (void)viewDidLoad
 {
@@ -173,20 +175,33 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     
     addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
     
     editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     
+    sortItem = [[UIBarButtonItem alloc] initWithTitle:@"Sort Alphabetically" style:UIBarButtonItemStyleBordered target:self action:@selector(sort)];
+    
     doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditing)];
     
-    normalButtons = [NSArray arrayWithObjects:flexibleSpace, editItem, settingsButton, nil];
-    editingButtons = [NSArray arrayWithObjects:addButton, flexibleSpace, doneItem, settingsButton, nil];
+    normalButtons = [NSArray arrayWithObjects:editItem, flexibleSpace, settingsButton, nil];
+    editingButtons = [NSArray arrayWithObjects:doneItem, sortItem, flexibleSpace, addButton, nil];
     
     toolbar.items = normalButtons;
     
     [DPSongsModel sharedInstance].delegate = self;
+}
+
+- (void)sort {
+    [[DPSongsModel sharedInstance].songs sortUsingComparator:^NSComparisonResult(DPPitchedSong *song1, DPPitchedSong *song2) {
+        static NSStringCompareOptions comparisonOptions = NSCaseInsensitiveSearch | NSNumericSearch | NSWidthInsensitiveSearch | NSForcedOrderingSearch;
+        NSRange string1Range = NSMakeRange(0, song1.name.length);
+        
+        return [song1.name compare:song2.name options:comparisonOptions range:string1Range locale:[NSLocale currentLocale]];
+    }];
+    [[DPSongsModel sharedInstance] storeValue];
+    [tableView reloadData];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -211,7 +226,7 @@
     DPPitchedSong *song = [[[DPSongsModel sharedInstance] songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
-    __block __weak UIButton *weakDisclosureButton;
+    __block __weak UIButton *weakDisclosureButton = disclosureButton;
     cell.editingAccessoryView = disclosureButton;
     [disclosureButton addBlock:^{
         [self editSong:song fromUi:weakDisclosureButton];
@@ -262,9 +277,21 @@
 
 - (void)openSettings {
     DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
-    [self presentViewController:settings animated:YES completion:^{
-    }];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (self.popover.isPopoverVisible) {
+            [popover dismissPopoverAnimated:YES];
+            return;
+        }
+        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        popover = [[UIPopoverController alloc] initWithContentViewController:settings];
+        settings.popoverController = popover;
+        [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        
+    } else {
+        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        [self presentViewController:settings animated:YES completion:^{
+        }];
+    }
 }
 
 - (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
@@ -273,12 +300,13 @@
     editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
+        [popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [tableView reloadData];
             [[DPSongsModel sharedInstance] storeValue];
         }
     };
-    if (NO && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         if (popover.isPopoverVisible) {
             [popover dismissPopoverAnimated:YES];
         }
@@ -297,6 +325,7 @@
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
     editor.completionCallback = ^(BOOL cancelled) {
+        [popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [[DPSongsModel sharedInstance].songs addObject:newSong];
             [[DPSongsModel sharedInstance] storeValue];
@@ -307,9 +336,10 @@
             [[DPSongsModel sharedInstance] storeValue];
         }
     };
-    if (NO && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         if (popover.isPopoverVisible) {
             [popover dismissPopoverAnimated:YES];
+            return;
         }
         popover = [[UIPopoverController alloc] initWithContentViewController:editor];
         [popover presentPopoverFromBarButtonItem:addButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];

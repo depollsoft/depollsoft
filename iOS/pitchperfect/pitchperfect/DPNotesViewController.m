@@ -123,12 +123,14 @@
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) NSArray *notes;
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) UIPopoverController *popover;
+@property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
 @end
 
 @implementation DPNotesViewController
 
-@synthesize bannerView, notes, tableView;
+@synthesize bannerView, notes, tableView, popover, settingsButton;
 
 - (void)viewDidLoad
 {
@@ -176,7 +178,7 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    UIBarButtonItem *settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
 }
 
@@ -210,9 +212,21 @@
 
 - (void)openSettings {
     DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
-    [self presentViewController:settings animated:YES completion:^{
-    }];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (self.popover.isPopoverVisible) {
+            [popover dismissPopoverAnimated:YES];
+            return;
+        }
+        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        popover = [[UIPopoverController alloc] initWithContentViewController:settings];
+        settings.popoverController = popover;
+        [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        
+    } else {
+        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        [self presentViewController:settings animated:YES completion:^{
+        }];
+    }
 }
 
 @end

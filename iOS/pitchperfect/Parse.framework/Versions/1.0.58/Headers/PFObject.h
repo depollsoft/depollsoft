@@ -128,6 +128,19 @@
 - (void)removeObjectForKey:(NSString *)key;
 
 /*!
+ * In LLVM 4.0 (XCode 4.5) or higher allows myPFObject[key].
+ @param key The key.
+ */
+- (id)objectForKeyedSubscript:(NSString *)key;
+
+/*!
+ * In LLVM 4.0 (XCode 4.5) or higher allows myObject[key] = value
+ @param object The object.
+ @param key The key.
+ */
+- (void)setObject:(id)object forKeyedSubscript:(NSString *)key;
+
+/*!
  Returns the relation object associated with the given key 
  @param key The key that the relation is associated with. 
  */

@@ -13,6 +13,9 @@
 /*!
  A class which defines a push notification that can be sent from
  a client device.
+
+ The preferred way of modifying or retrieving channel subscriptions is to use
+ the PFInstallation class, instead of the class methods in PFPush.
  */
 @interface PFPush : NSObject
 

@@ -28,7 +28,7 @@
 
 @implementation DPSettingsViewController
 
-@synthesize bannerView, tableView;
+@synthesize bannerView, tableView, popoverController;
 
 + (DPSettingsViewController *)sharedInstance {
     static DPSettingsViewController *settings;
@@ -42,6 +42,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+        
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        self.view.frame = CGRectMake(0, 0, 320, 480);
+    }
     
 	// Do any additional setup after loading the view.
     VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
@@ -57,17 +61,22 @@
     toolbar.barStyle = UIBarStyleBlackTranslucent;
     
     [toolbar sizeToFit];
-    [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
+    toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    [self.view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
+    self.view.backgroundColor = [UIColor colorWithRed:200.0/255 green:200.0/255 blue:200.0/255 alpha:1];
     [self.view addSubview:background];
     
-    GADRequest *request = [GADRequest request];
-    request.testing = [DPAppDelegate testAds];
-    [bannerView loadRequest:request];
+    [topLayout addSubview:toolbar];
+
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [topLayout addSubview:bannerView];
+        
+        GADRequest *request = [GADRequest request];
+        request.testing = [DPAppDelegate testAds];
+        [bannerView loadRequest:request];
+    }
     
     [topLayout sizeToFit];
     
@@ -79,6 +88,7 @@
     tableView.allowsSelection = NO;
     tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
+    tableView.backgroundView = nil;
     [self.view addSubview:tableView];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
@@ -224,6 +234,7 @@
 
 - (void)complete {
     [self dismissModalViewControllerAnimated:YES];
+    [popoverController dismissPopoverAnimated:YES];
 }
 
 @end

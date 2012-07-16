@@ -14,6 +14,7 @@
 #import "PFQuery.h"
 #import "PF_FBConnect.h"
 #import "PFUser.h"
+#import "PFInstallation.h"
 #import "PFFile.h"
 #import "PFFacebookUtils.h"
 #import "PFTwitterUtils.h"
