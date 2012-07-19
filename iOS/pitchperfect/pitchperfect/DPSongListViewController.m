@@ -249,7 +249,9 @@
 
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
     NSMutableArray *arr = [DPSongsModel sharedInstance].songs;
-    [arr exchangeObjectAtIndex:sourceIndexPath.row withObjectAtIndex:destinationIndexPath.row];
+    id obj = [arr objectAtIndex:sourceIndexPath.row];
+    [arr removeObjectAtIndex:sourceIndexPath.row];
+    [arr insertObject:obj atIndex:destinationIndexPath.row];
     [DPSongsModel sharedInstance].songs = arr;
 }
 

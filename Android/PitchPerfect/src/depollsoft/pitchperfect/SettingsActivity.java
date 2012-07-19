@@ -94,6 +94,7 @@ public class SettingsActivity extends Activity {
         "WakeLock", BindingMode.TwoWay);
 
     UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
+    UiBinder.bind(this, R.id.rateReviewHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
     UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed", BoolConverter.get());
 
     UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true));

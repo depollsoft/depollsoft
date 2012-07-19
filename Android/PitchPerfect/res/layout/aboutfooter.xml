@@ -83,7 +83,7 @@
     </depollsoft.lib.ui.Hyperlink>
 
     <depollsoft.lib.ui.Hyperlink
-        android:id="@+id/textView4"
+        android:id="@+id/rateReviewHyperlink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
