@@ -39,7 +39,7 @@
         } else {
             songs = [NSMutableArray array];
         }
-        self.suspendTimestamp = YES;
+        self.suspendTimestamp = NO;
     }
     return self;
 }

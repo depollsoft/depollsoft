@@ -13,7 +13,6 @@
 
 @interface DPTag : NSObject
 
-
 @property (nonatomic) int appVersion;
 @property (nonatomic) int tagId;
 @property (nonatomic, copy) NSString *title;

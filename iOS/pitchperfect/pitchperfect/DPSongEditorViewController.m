@@ -171,7 +171,7 @@
     UILabel *label = [[UILabel alloc] init];
     NSMutableString *string = [NSMutableString stringWithString:@"&"];
     if (k.numAccidentals > 0) {
-        [string appendFormat:[sharps objectAtIndex:k.numAccidentals]];
+        [string appendString:[sharps objectAtIndex:k.numAccidentals]];
     } else if (k.numAccidentals < 0) {
         [string appendString:[flats objectAtIndex:-k.numAccidentals]];
     }
