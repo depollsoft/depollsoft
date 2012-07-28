@@ -27,6 +27,7 @@
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
 		63D9472815145EDD000C8784 /* DPTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472715145EDD000C8784 /* DPTrack.m */; };
+		63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,7 @@
 		63D9472615145EDD000C8784 /* DPTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTrack.h; path = Barbershop/DPTrack.h; sourceTree = "<group>"; };
 		63D9472715145EDD000C8784 /* DPTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTrack.m; path = Barbershop/DPTrack.m; sourceTree = "<group>"; };
 		63D9472A15145FD3000C8784 /* DPConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DPConstants.h; path = Barbershop/DPConstants.h; sourceTree = "<group>"; };
+		63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpitchperfectlib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +81,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
@@ -103,6 +106,7 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */,
 				63712EF715130B21007997CC /* tagmaster */,
 				63712F1315130B21007997CC /* tagmasterTests */,
 				63712EEE15130B21007997CC /* Frameworks */,
@@ -239,7 +243,7 @@
 		63712EE215130B21007997CC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63712EE515130B21007997CC /* Build configuration list for PBXProject "tagmaster" */;
@@ -400,10 +404,16 @@
 		63712F1F15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -411,10 +421,16 @@
 		63712F2015130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

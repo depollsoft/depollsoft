@@ -13,6 +13,8 @@
 
 static Class primitiveClass;
 
+static NSMutableDictionary *typeSerializers;
+static NSMutableDictionary *typeDeserializers;
 static NSMutableDictionary *typeAliases; // Class -> String
 static NSMutableDictionary *revTypeAliases; // String -> Class
 static NSMutableDictionary *boxers;
@@ -49,6 +51,8 @@ static NSNumber *kFalse;
         typeAliases = [[NSMutableDictionary alloc] init];
         revTypeAliases = [[NSMutableDictionary alloc] init];
         boxers = [[NSMutableDictionary alloc] init];
+        typeSerializers = [[NSMutableDictionary alloc] init];
+        typeDeserializers = [[NSMutableDictionary alloc] init];
         
         [boxers setValue:[^(char *value) {
             return [NSNumber numberWithChar:*value];
@@ -168,6 +172,9 @@ static NSNumber *kFalse;
     id result = nil;
     if ([type isSubclassOfClass:[DPEnum class]]) {
         result = [[type alloc] initWithString:[dictionary objectForKey:@"*name"]];
+    } else if ([typeDeserializers objectForKey:type]) {
+        id (^deserializer)(NSString *) = [typeDeserializers objectForKey:type];
+        result = deserializer([dictionary objectForKey:@"*serialized"]);
     } else {
         result = [[type alloc] init];
     }
@@ -247,6 +254,11 @@ static NSNumber *kFalse;
     [revTypeAliases setObject:typeName forKey:alias];
 }
 
++ (void)registerSerializer:(NSString *(^)(id))serializer deserializer:(id (^)(NSString *))deserializer forClass:(Class)theClass {
+    [typeSerializers setObject:[serializer copy] forKey:theClass];
+    [typeDeserializers setObject:[deserializer copy] forKey:theClass];
+}
+
 + (void)clearAliases {
     [typeAliases removeAllObjects];
     [revTypeAliases removeAllObjects];
@@ -293,6 +305,9 @@ static NSNumber *kFalse;
     [result setObject:[DPJsonSerializer getNameForClass:type] forKey:@"*type"];
     if ([object isKindOfClass:[DPEnum class]]) {
         [result setObject:[object name] forKey:@"*name"];
+    } else if ([typeSerializers objectForKey:type]) {
+        NSString * (^serializer)(id) = [typeSerializers objectForKey:type];
+        [result setObject:serializer(object) forKey:@"*serialized"];
     }
     for (NSString *property in properties) {
         NSString *propertyKey = [property propertyCapitalize];

@@ -8,6 +8,7 @@
 
 #import "DPAppDelegate.h"
 #import "DPBarbershop.h"
+#import "DPJsonSerializer.h"
 
 @implementation DPAppDelegate
 
@@ -18,8 +19,26 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
+        return [url absoluteString];
+    } deserializer:^NSURL *(NSString *input) {
+        return [NSURL URLWithString:input];
+    } forClass:[NSURL class]];
+    
+    NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+    [DPJsonSerializer registerSerializer:^NSString *(NSDate *date) {
+        return [numberFormatter stringFromNumber:@([date timeIntervalSince1970])];
+    } deserializer:^NSDate *(NSString *input) {
+        return [NSDate dateWithTimeIntervalSince1970:[numberFormatter numberFromString:input].doubleValue];
+    } forClass:[[NSDate date] class]];
+    
     DPTagQueryResult *tagQueryResult = [DPTag query:@"" numberOfResults:2000];
     NSLog(@"%@", tagQueryResult.tags);
+    
+    NSLog(@"%@", [DPTag queryById:1330]);
+    NSLog(@"%@", [DPTag loadTagById:1330]);
+    NSLog(@"%@", [DPTag loadTagById:1330]);
+    NSLog(@"%@", [DPTag loadTagById:1330 refresh:YES]);
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
@@ -38,7 +57,7 @@
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     /*
-     Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
+     Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
      If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
      */
 }
@@ -74,11 +93,11 @@
             /*
              Replace this implementation with code to handle the error appropriately.
              
-             abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. 
+             abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
              */
             NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
             abort();
-        } 
+        }
     }
 }
 
@@ -139,7 +158,7 @@
         /*
          Replace this implementation with code to handle the error appropriately.
          
-         abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. 
+         abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
          
          Typical reasons for an error here include:
          * The persistent store is not accessible;
@@ -153,7 +172,7 @@
          * Simply deleting the existing store:
          [[NSFileManager defaultManager] removeItemAtURL:storeURL error:nil]
          
-         * Performing automatic lightweight migration by passing the following dictionary as the options parameter: 
+         * Performing automatic lightweight migration by passing the following dictionary as the options parameter:
          [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption, [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption, nil];
          
          Lightweight migration will only work for a limited set of schema changes; consult "Core Data Model Versioning and Data Migration Programming Guide" for details.
@@ -161,7 +180,7 @@
          */
         NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
         abort();
-    }    
+    }
     
     return __persistentStoreCoordinator;
 }

@@ -8,6 +8,8 @@
 
 #import "DPTag.h"
 #import "DPTagXMLParser.h"
+#import "DPFileCache.h"
+#import "DPUtils+Subscripts.h"
 
 const int APP_VERSION = 1;
 NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=TagMaster&";
@@ -64,8 +66,31 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
     return self;
 }
 
-+ (DPTag *)queryById:(int)tagId refresh:(BOOL)refresh {
-    return nil;
++ (NSString *)cacheKeyForId:(int)tagId {
+    return [NSString stringWithFormat:@"DPTag.%d", tagId];
+}
+
+- (NSString *)cacheKey {
+    return [DPTag cacheKeyForId:self.tagId];
+}
+
++ (NSMutableDictionary *)tagCache {
+    static NSMutableDictionary *tagCache = nil;
+    if (!tagCache) {
+        tagCache = [NSMutableDictionary dictionary];
+    }
+    return tagCache;
+}
+
++ (DPTag *)queryById:(int)tagId {
+    NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
+    [builtString appendFormat:@"id=%d", tagId];
+    NSURL *url = [NSURL URLWithString:builtString];
+    DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
+    NSArray *parseResult = [parser parseWithUrl:url];
+    DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+    
+    return queryResult.tags.count > 0 ? queryResult.tags[0] : nil;
 }
 
 - (NSString *)description {
@@ -86,8 +111,20 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 }
 
 + (DPTag *)loadTagById:(int)tagId refresh:(BOOL)refresh {
-    // TODO: implement
-    return nil;
+    if (!refresh) {
+        if (self.tagCache[@(tagId)]) {
+            return self.tagCache[@(tagId)];
+        }
+        DPTag *cachedTag = [DPFileCache readObjectForKey:[self cacheKeyForId:tagId]];
+        if (cachedTag && cachedTag.appVersion == APP_VERSION) {
+            self.tagCache[@(tagId)] = cachedTag;
+            return cachedTag;
+        }
+    }
+    
+    DPTag *foundTag = [self queryById:tagId];
+    [foundTag cache];
+    return foundTag;
 }
 
 + (DPTagQueryResult *)query:(NSString *)query {
@@ -115,7 +152,7 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 }
 
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection {
-        return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:DPTagSortNone];
+    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:DPTagSortNone];
 }
 
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy {
@@ -209,6 +246,8 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 }
 
 - (void)cache {
+    DPTag.tagCache[@(self.tagId)] = self;
+    [DPFileCache writeObject:self forKey:self.cacheKey];
     return;
 }
 

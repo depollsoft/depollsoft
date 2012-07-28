@@ -516,7 +516,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = DP;
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0440;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63DC3697151E8FFF007C46DB /* Build configuration list for PBXProject "pitchperfect" */;

@@ -14,6 +14,7 @@
 + (id)deserializeDictionary:(NSDictionary *)dictionary;
 + (void)registerAlias:(NSString *)alias forClass:(Class)aliasedClass;
 + (void)registerAlias:(NSString *)alias forObjCType:(NSString *)typeName;
++ (void)registerSerializer:(NSString * (^)(id object))serializer deserializer:(id (^)(NSString *))deserializer forClass:(Class)theClass;
 + (void)clearAliases;
 + (NSDictionary *)serialize:(id)object;
 
