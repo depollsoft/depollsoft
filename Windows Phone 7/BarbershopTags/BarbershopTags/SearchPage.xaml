@@ -90,8 +90,6 @@
                 <toolkit:ListPicker Grid.Row="2"
                                     Grid.Column="1"
                                     x:Name="SheetMusic"
-                                    ListPickerMode="Normal"
-                                    ItemCountThreshold="7"
                                     Margin="5">
                     <local:KeyValue Key="Not important"
                                     Value="{x:Null}" />
@@ -111,8 +109,6 @@
                 <toolkit:ListPicker Grid.Row="3"
                                     Grid.Column="1"
                                     x:Name="LearningTracks"
-                                    ListPickerMode="Normal"
-                                    ItemCountThreshold="7"
                                     Margin="5">
                     <local:KeyValue Key="Not important"
                                     Value="{x:Null}" />
@@ -131,8 +127,6 @@
                 <toolkit:ListPicker Grid.Row="4"
                                     Grid.Column="1"
                                     x:Name="Parts"
-                                    ListPickerMode="Normal"
-                                    ItemCountThreshold="7"
                                     Margin="5">
                     <local:KeyValue Key="Any"
                                     Value="{x:Null}" />
@@ -163,8 +157,6 @@
                 <toolkit:ListPicker Grid.Row="5"
                                     Grid.Column="1"
                                     x:Name="TagCollection"
-                                    ListPickerMode="Normal"
-                                    ItemCountThreshold="7"
                                     Margin="5">
                     <local:KeyValue Key="Any"
                                     Value="{x:Null}" />
@@ -183,8 +175,6 @@
                 <toolkit:ListPicker Grid.Row="1"
                                     Grid.Column="1"
                                     x:Name="SortBy"
-                                    ListPickerMode="Normal"
-                                    ItemCountThreshold="7"
                                     Margin="5">
                     <local:KeyValue Key="Title">
                         <bbshop:TagSortOptions>Title</bbshop:TagSortOptions>
