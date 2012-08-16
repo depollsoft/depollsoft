@@ -10,6 +10,7 @@
 #import "DPTagXMLParser.h"
 #import "DPFileCache.h"
 #import "DPUtils+Subscripts.h"
+#import "DPUtils+NSString.h"
 
 const int APP_VERSION = 1;
 NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=TagMaster&";
@@ -178,7 +179,7 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
     }
     [builtString appendFormat:@"&start=%d", start + 1];
     if (query && [[query stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length]) {
-        [builtString appendFormat:@"&q=%@", [query stringByReplacingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        [builtString appendFormat:@"&q=%@", [query stringByURLEncoding]];
     }
     if (parts) {
         [builtString appendFormat:@"&Parts=%@", parts];
@@ -235,6 +236,7 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
     DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
     NSArray *parseResult = [parser parseWithUrl:url];
     DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+    queryResult.start = start;
     
     if (cache) {
         for (DPTag *tag in queryResult.tags) {

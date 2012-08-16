@@ -1,0 +1,16 @@
+//
+//  DPTagCell.h
+//  tagmaster
+//
+//  Created by David Poll on 8/15/12.
+//  Copyright (c) 2012 DepollSoft. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "DPBarbershop.h"
+
+@interface DPTagCell : UITableViewCell
+
+@property (nonatomic, retain) DPTag *tag;
+
+@end

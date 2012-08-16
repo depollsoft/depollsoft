@@ -32,14 +32,6 @@
         return [NSDate dateWithTimeIntervalSince1970:[numberFormatter numberFromString:input].doubleValue];
     } forClass:[[NSDate date] class]];
     
-    DPTagQueryResult *tagQueryResult = [DPTag query:@"" numberOfResults:2000];
-    NSLog(@"%@", tagQueryResult.tags);
-    
-    NSLog(@"%@", [DPTag queryById:1330]);
-    NSLog(@"%@", [DPTag loadTagById:1330]);
-    NSLog(@"%@", [DPTag loadTagById:1330]);
-    NSLog(@"%@", [DPTag loadTagById:1330 refresh:YES]);
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];

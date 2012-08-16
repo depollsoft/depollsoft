@@ -11,5 +11,6 @@
 @interface NSString (DPUtils)
 
 + (NSString *)stringWithUUID;
+- (NSString *)stringByURLEncoding;
 
 @end

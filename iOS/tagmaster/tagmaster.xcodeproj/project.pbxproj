@@ -16,7 +16,6 @@
 		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
 		63712EFE15130B21007997CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712EFD15130B21007997CC /* main.m */; };
 		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
-		63712F0515130B21007997CC /* tagmaster.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0315130B21007997CC /* tagmaster.xcdatamodeld */; };
 		63712F0D15130B21007997CC /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712F0C15130B21007997CC /* SenTestingKit.framework */; };
 		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
@@ -28,6 +27,11 @@
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
 		63D9472815145EDD000C8784 /* DPTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472715145EDD000C8784 /* DPTrack.m */; };
 		63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */; };
+		63E8666E15DCACE100E0FC17 /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */; };
+		63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */; };
+		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
+		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
+		63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,7 +61,6 @@
 		63712EFF15130B21007997CC /* tagmaster-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Prefix.pch"; sourceTree = "<group>"; };
 		63712F0015130B21007997CC /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
 		63712F0115130B21007997CC /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
-		63712F0415130B21007997CC /* tagmaster.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = tagmaster.xcdatamodel; sourceTree = "<group>"; };
 		63712F0B15130B21007997CC /* tagmasterTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63712F0C15130B21007997CC /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		63712F1515130B21007997CC /* tagmasterTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmasterTests-Info.plist"; sourceTree = "<group>"; };
@@ -74,6 +77,15 @@
 		63D9472715145EDD000C8784 /* DPTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTrack.m; path = Barbershop/DPTrack.m; sourceTree = "<group>"; };
 		63D9472A15145FD3000C8784 /* DPConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DPConstants.h; path = Barbershop/DPConstants.h; sourceTree = "<group>"; };
 		63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpitchperfectlib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
+		63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
+		63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagQueryViewController.h; sourceTree = "<group>"; };
+		63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagQueryViewController.m; sourceTree = "<group>"; };
+		63E8667215DCB86300E0FC17 /* DPTagCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagCell.h; sourceTree = "<group>"; };
+		63E8667315DCB86300E0FC17 /* DPTagCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagCell.m; sourceTree = "<group>"; };
+		63E8667815DCCB9B00E0FC17 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,9 +93,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
 				63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
+				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
 				63712EF615130B21007997CC /* CoreData.framework in Frameworks */,
 			);
@@ -106,6 +120,10 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */,
+				63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */,
+				63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */,
+				63E8667815DCCB9B00E0FC17 /* AudioUnit.framework */,
 				63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */,
 				63712EF715130B21007997CC /* tagmaster */,
 				63712F1315130B21007997CC /* tagmasterTests */,
@@ -141,8 +159,12 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
-				63712F0315130B21007997CC /* tagmaster.xcdatamodeld */,
 				63712EF815130B21007997CC /* Supporting Files */,
+				63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */,
+				63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */,
+				63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */,
+				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
+				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -270,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
+				63E8666E15DCACE100E0FC17 /* Storyboard.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -306,13 +329,14 @@
 			files = (
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
-				63712F0515130B21007997CC /* tagmaster.xcdatamodeld in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
 				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,
 				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
+				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
+				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,6 +436,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
@@ -429,6 +454,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
+				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
@@ -500,19 +526,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCVersionGroup section */
-		63712F0315130B21007997CC /* tagmaster.xcdatamodeld */ = {
-			isa = XCVersionGroup;
-			children = (
-				63712F0415130B21007997CC /* tagmaster.xcdatamodel */,
-			);
-			currentVersion = 63712F0415130B21007997CC /* tagmaster.xcdatamodel */;
-			path = tagmaster.xcdatamodeld;
-			sourceTree = "<group>";
-			versionGroupType = wrapper.xcdatamodel;
-		};
-/* End XCVersionGroup section */
 	};
 	rootObject = 63712EE215130B21007997CC /* Project object */;
 }
