@@ -13,10 +13,6 @@
 // Constant for getting test ads on the simulator using the testDevices method.
 #define GAD_SIMULATOR_ID @"Simulator"
 
-// The google ad mob network name to use with the additional parameters methods
-// below.
-#define kGADGoogleAdMobNetworkName @"GoogleAdMobAds"
-
 // Genders to help deliver more relevant ads.
 typedef enum {
   kGADGenderUnknown,

@@ -245,7 +245,8 @@ static NSNumber *kFalse;
 }
 
 + (void)registerAlias:(NSString *)alias forClass:(Class)aliasedClass {
-    [typeAliases setObject:alias forKey:aliasedClass];
+    id class = aliasedClass;
+    [typeAliases setObject:alias forKey:class];
     [revTypeAliases setObject:aliasedClass forKey:alias];
 }
 
@@ -255,8 +256,9 @@ static NSNumber *kFalse;
 }
 
 + (void)registerSerializer:(NSString *(^)(id))serializer deserializer:(id (^)(NSString *))deserializer forClass:(Class)theClass {
-    [typeSerializers setObject:[serializer copy] forKey:theClass];
-    [typeDeserializers setObject:[deserializer copy] forKey:theClass];
+    id class = theClass;
+    [typeSerializers setObject:[serializer copy] forKey:class];
+    [typeDeserializers setObject:[deserializer copy] forKey:class];
 }
 
 + (void)clearAliases {
