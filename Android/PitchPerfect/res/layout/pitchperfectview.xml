@@ -72,7 +72,8 @@
                     android:layout_height="wrap_content"
                     ads:adSize="SMART_BANNER"
                     ads:adUnitId="a14de989831d633"
-                    ads:loadAdOnCreate="true" >
+                    ads:loadAdOnCreate="true" 
+                    ads:keywords="music, musician, singer, a cappella, notes, harmony, sheet music, songs, instrument, pitch pipe, barbershop">
                 </com.google.ads.AdView>
             </LinearLayout>
         </FrameLayout>
