@@ -170,9 +170,7 @@
     [self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
-    GADRequest *request = [GADRequest request];
-    request.testing = [DPAppDelegate testAds];
-    [bannerView loadRequest:request];
+    [bannerView loadRequest:DPAppDelegate.adRequest];
     
     UISegmentedControl *majorMinorChooser = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Major", @"Minor", nil]];
     majorMinorChooser.selectedSegmentIndex = 0;

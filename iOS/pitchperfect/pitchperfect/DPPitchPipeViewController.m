@@ -58,9 +58,7 @@
     [self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
-    GADRequest *request = [GADRequest request];
-    request.testing = [DPAppDelegate testAds];
-    [bannerView loadRequest:request];
+    [bannerView loadRequest:DPAppDelegate.adRequest];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleBlackTranslucent;

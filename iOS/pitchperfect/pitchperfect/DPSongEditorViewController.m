@@ -97,9 +97,7 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [topLayout addSubview:bannerView];
         
-        GADRequest *request = [GADRequest request];
-        request.testing = [DPAppDelegate testAds];
-        [bannerView loadRequest:request];
+        [bannerView loadRequest:DPAppDelegate.adRequest];
     }
     [topLayout addSubview:[[UIView alloc] initWithFrame:CGRectMake(0, 0, 1, 5)]];
     [topLayout addSubview:controlsLayout];

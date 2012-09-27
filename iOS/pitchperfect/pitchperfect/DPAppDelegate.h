@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "GADBannerView.h"
 
 @class DPNote;
 
@@ -16,6 +17,7 @@
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell;
 + (void)noteTouchEnded:(DPNote *)note forCell:(UITableViewCell *)cell;
 + (BOOL)testAds;
++ (GADRequest *)adRequest;
 
 @property (strong, nonatomic) UIWindow *window;
 

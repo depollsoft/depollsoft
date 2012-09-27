@@ -142,4 +142,11 @@
     }
 }
 
++ (GADRequest *)adRequest {
+    GADRequest *request = [GADRequest request];
+    request.testing = [DPAppDelegate testAds];
+    request.keywords = [NSMutableArray arrayWithObjects:@"music", @"musician", @"singer", @"a cappella", @"notes", @"harmony", @"sheet music", @"songs", @"instrument", @"pitch pipe", @"barbershop", nil];
+    return request;
+}
+
 @end
