@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>True</AlwaysStartWebServerOnDebug>
+          <ProjectOutputReferences>
+            <Ref Project="{F2D9762C-396C-4248-8DCA-437CD3819FD8}" Folder="ClientBin">ScratchApplication.xap</Ref>
+            <Ref Project="{F8832EB5-E055-4689-AD83-772C22DA21CC}" Folder="ClientBin">SecondaryXap.xap|SLaB.Controls.Remote.zip|SLaB.Utilities.Xap.zip|SLaB.Utilities.zip|System.Windows.Controls.DataVisualization.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip</Ref>
+            <Ref Project="{321E2A01-EFC0-4292-B101-40C7C423D051}" Folder="ClientBin">System.ComponentModel.DataAnnotations.zip|System.Windows.Controls.Data.Input.zip|System.Windows.Controls.Data.zip|System.Windows.Controls.Input.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip|System.Windows.Data.zip|TernaryXap.xap</Ref>
+            <Ref Project="{6C1A088A-A3B0-4545-A566-BF1D54692582}" Folder="ClientBin">ScratchPrintingProject.xap|SLaB.Printing.Controls.zip|SLaB.Utilities.Xaml.zip|SLaB.Utilities.zip|System.ComponentModel.DataAnnotations.zip|System.Windows.Controls.Data.Input.zip|System.Windows.Controls.Data.zip|System.Windows.Controls.DataVisualization.Toolkit.zip|System.Windows.Controls.Input.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip|System.Windows.Data.zip</Ref>
+            <Ref Project="{E8680924-4CBF-4A2F-A148-F84AD62E8C3D}" Folder="ClientBin">ScratchContent.xap|SLaB.Navigation.ContentLoaders.Auth.zip|SLaB.Navigation.ContentLoaders.Error.zip|SLaB.Navigation.ContentLoaders.PageResource.zip|SLaB.Navigation.ContentLoaders.Utilities.zip|SLaB.Navigation.ContentLoaders.Xap.zip|SLaB.Navigation.Controls.zip|SLaB.Navigation.Utilities.zip|SLaB.Utilities.ChangeLinq.zip|SLaB.Utilities.Xaml.zip|SLaB.Utilities.Xap.zip|SLaB.Utilities.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip</Ref>
+            <Ref Project="{A8BCFA09-663A-4900-B90B-4776C80EA8F9}" Folder="ClientBin">SLaB.Utilities.Xaml.Serializer.UI.zip|SLaB.Utilities.Xaml.Serializer.zip|SLaB.Utilities.Xaml.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip|UtilitiesContent.xap</Ref>
+          </ProjectOutputReferences>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

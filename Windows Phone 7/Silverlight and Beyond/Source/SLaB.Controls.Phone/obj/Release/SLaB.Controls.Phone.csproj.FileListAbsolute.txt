@@ -5,3 +5,10 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.g.resources
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Phone.XML
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Phone.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Phone.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Phone\obj\Release\SLaB.Controls.Phone.pdb

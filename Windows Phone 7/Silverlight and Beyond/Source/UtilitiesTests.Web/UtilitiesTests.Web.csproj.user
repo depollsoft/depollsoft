@@ -22,7 +22,8 @@
           <EnableENC>False</EnableENC>
           <AlwaysStartWebServerOnDebug>True</AlwaysStartWebServerOnDebug>
           <ProjectOutputReferences>
-            <Ref Project="{46FE2EA3-4A3A-486D-8837-61044B68256A}" Folder="ClientBin">Microsoft.Silverlight.Testing.zip|Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight.zip|SLaB.Utilities.ChangeLinq.zip|SLaB.Utilities.Xaml.Serializer.UI.zip|SLaB.Utilities.Xaml.Serializer.zip|SLaB.Utilities.Xaml.zip|SLaB.Utilities.Xap.zip|SLaB.Utilities.zip|System.ComponentModel.DataAnnotations.zip|System.Windows.Controls.Data.Input.zip|System.Windows.Controls.Data.zip|System.Windows.Controls.DataVisualization.Toolkit.zip|System.Windows.Controls.Navigation.zip|System.Windows.Controls.Toolkit.zip|System.Windows.Controls.zip|System.Windows.Data.zip|UtilitiesTests.xap</Ref>
+            <Ref Project="{46FE2EA3-4A3A-486D-8837-61044B68256A}" Folder="ClientBin">
+            </Ref>
           </ProjectOutputReferences>
         </WebProjectProperties>
       </FlavorProperties>

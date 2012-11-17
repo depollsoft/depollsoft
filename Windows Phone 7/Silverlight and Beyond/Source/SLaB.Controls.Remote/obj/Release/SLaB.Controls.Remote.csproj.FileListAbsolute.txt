@@ -5,3 +5,10 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.g.resources
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Remote.XML
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Remote.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Remote.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Controls.Remote\obj\Release\SLaB.Controls.Remote.pdb

@@ -3,3 +3,8 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\ResolveAssemblyReference.cache
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\UtilitiesTests.Web.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\UtilitiesTests.Web.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\bin\UtilitiesTests.Web.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\bin\UtilitiesTests.Web.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\UtilitiesTests.Web.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\UtilitiesTests.Web.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\UtilitiesTests.Web\obj\Release\UtilitiesTests.Web.pdb

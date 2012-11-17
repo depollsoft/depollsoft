@@ -214,3 +214,8 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.pdb
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\XapCacheFile.xml
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\AwesomePage.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\TernaryXap\obj\Release\TernaryXap.pdb

@@ -5,3 +5,10 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.g.resources
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Navigation.Controls.XML
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Navigation.Controls.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Navigation.Controls.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.Controls\obj\Release\SLaB.Navigation.Controls.pdb

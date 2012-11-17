@@ -4,3 +4,9 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\ResolveAssemblyReference.cache
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\SLaB.Utilities.Xaml.Serializer.UI.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\SLaB.Utilities.Xaml.Serializer.UI.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Serializer.UI.XML
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Serializer.UI.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Serializer.UI.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\SLaB.Utilities.Xaml.Serializer.UI.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\SLaB.Utilities.Xaml.Serializer.UI.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer.UI\obj\Release\SLaB.Utilities.Xaml.Serializer.UI.pdb

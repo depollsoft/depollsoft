@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -23,6 +24,15 @@
     <SccProvider>
     </SccProvider>
     <UseIISExpress>false</UseIISExpress>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -101,16 +111,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ClientBin\System.Windows.Controls.DataVisualization.Toolkit.zip" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ClientBin\System.Windows.Controls.Navigation.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\System.Windows.Controls.Toolkit.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\System.Windows.Controls.zip" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ClientBin\System.ComponentModel.DataAnnotations.zip" />
@@ -122,25 +123,10 @@
     <Content Include="ClientBin\System.Windows.Controls.Data.Input.zip" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ClientBin\System.Windows.Controls.Input.Toolkit.zip" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ClientBin\System.Windows.Data.zip" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ClientBin\SLaB.Navigation.ContentLoaders.Auth.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Navigation.ContentLoaders.Error.zip" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ClientBin\SLaB.Navigation.ContentLoaders.Utilities.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Navigation.ContentLoaders.Xap.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Navigation.Controls.zip" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ClientBin\SLaB.Navigation.Utilities.zip" />
@@ -148,32 +134,13 @@
   <ItemGroup>
     <Content Include="ClientBin\SLaB.Utilities.ChangeLinq.zip" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Utilities.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Utilities.Xaml.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Utilities.Xap.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Printing.Controls.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Navigation.ContentLoaders.PageResource.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Controls.Remote.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Utilities.Xaml.Serializer.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ClientBin\SLaB.Utilities.Xaml.Serializer.UI.zip" />
-  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">

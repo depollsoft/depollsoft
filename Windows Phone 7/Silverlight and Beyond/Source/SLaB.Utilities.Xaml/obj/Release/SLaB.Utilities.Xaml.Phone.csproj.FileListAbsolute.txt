@@ -4,3 +4,8 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml\obj\Release\ResolveAssemblyReference.cache
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml\obj\Release\SLaB.Utilities.Xaml.Phone.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml\obj\Release\SLaB.Utilities.Xaml.Phone.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Phone.XML
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Phone.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Phone.pdb
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml\obj\Release\SLaB.Utilities.Xaml.Phone.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml\obj\Release\SLaB.Utilities.Xaml.Phone.pdb

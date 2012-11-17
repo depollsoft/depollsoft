@@ -1,8 +1,8 @@
-﻿<xapCache source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\Bin\Release\ScratchApplication.xap" wasSigned="False" certificateThumbprint="" TimeStampUrl="" lastWriteTime="7/12/2012 2:51:25 AM">
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\obj\Release\ScratchApplication.dll" archivePath="ScratchApplication.dll" lastWriteTime="7/12/2012 2:51:25 AM" />
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Remote.dll" archivePath="SLaB.Controls.Remote.dll" lastWriteTime="7/12/2012 2:51:09 AM" />
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.dll" archivePath="SLaB.Utilities.dll" lastWriteTime="7/12/2012 2:51:05 AM" />
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xap.dll" archivePath="SLaB.Utilities.Xap.dll" lastWriteTime="7/12/2012 2:51:06 AM" />
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\largeIcon.png" archivePath="largeIcon.png" lastWriteTime="7/12/2012 2:06:58 AM" />
-  <file source="C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\Bin\Release\AppManifest.xaml" archivePath="AppManifest.xaml" lastWriteTime="7/12/2012 2:51:25 AM" />
+﻿<xapCache source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\Bin\Release\ScratchApplication.xap" wasSigned="False" certificateThumbprint="" TimeStampUrl="" lastWriteTime="11/17/2012 2:42:16 PM">
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\obj\Release\ScratchApplication.dll" archivePath="ScratchApplication.dll" lastWriteTime="11/17/2012 2:42:16 PM" />
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Remote.dll" archivePath="SLaB.Controls.Remote.dll" lastWriteTime="11/17/2012 2:42:14 PM" />
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.dll" archivePath="SLaB.Utilities.dll" lastWriteTime="11/17/2012 2:42:01 PM" />
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xap.dll" archivePath="SLaB.Utilities.Xap.dll" lastWriteTime="11/17/2012 2:42:13 PM" />
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\largeIcon.png" archivePath="largeIcon.png" lastWriteTime="11/17/2012 2:34:39 PM" />
+  <file source="C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchApplication\Bin\Release\AppManifest.xaml" archivePath="AppManifest.xaml" lastWriteTime="11/17/2012 2:42:16 PM" />
 </xapCache>

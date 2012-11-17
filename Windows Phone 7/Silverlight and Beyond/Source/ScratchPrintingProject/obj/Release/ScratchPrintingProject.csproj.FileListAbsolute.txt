@@ -233,3 +233,11 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.pdb
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\XapCacheFile.xml
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\TestPrinter.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ItemTemplatePrinting.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\PredefinedPages.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\PrintingPage.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\ScratchPrintingProject\obj\Release\ScratchPrintingProject.pdb

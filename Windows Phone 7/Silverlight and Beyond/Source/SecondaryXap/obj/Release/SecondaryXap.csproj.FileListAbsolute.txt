@@ -85,3 +85,8 @@ C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Sourc
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.dll
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.pdb
 C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\XapCacheFile.xml
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.csprojResolveAssemblyReference.cache
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\Page1.g.cs
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.g.resources
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.dll
+C:\Users\David\Documents\GitHub\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SecondaryXap\obj\Release\SecondaryXap.pdb
