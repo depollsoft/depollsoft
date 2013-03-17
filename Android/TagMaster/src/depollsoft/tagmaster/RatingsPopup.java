@@ -1,6 +1,5 @@
 package depollsoft.tagmaster;
 
-import depollsoft.lib.binding.TrackableField;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
@@ -9,6 +8,8 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.widget.RatingBar;
+
+import com.bindroid.trackable.TrackableField;
 
 public class RatingsPopup extends Dialog {
   private TrackableField<Integer> rating = new TrackableField<Integer>();
@@ -19,7 +20,7 @@ public class RatingsPopup extends Dialog {
   }
 
   public Integer getRating() {
-    return this.rating.getValue();
+    return this.rating.get();
   }
 
   @Override
@@ -52,6 +53,6 @@ public class RatingsPopup extends Dialog {
   }
 
   public void setRating(Integer value) {
-    this.rating.setValue(value);
+    this.rating.set(value);
   }
 }

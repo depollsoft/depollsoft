@@ -6,7 +6,7 @@ import java.util.List;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class Note {
   private static List<Note> commonNotes;
@@ -56,13 +56,11 @@ public class Note {
     for (int octave = 1; octave < 8; octave++)
       for (int i = 0; i < originalCount; i++) {
         Note cur = Note.commonNotes.get(i);
-        Note.commonNotes.add(new Note(cur.getFriendlyName(), octave, cur
-            .getAccidental(), cur.getFrequency() * Math.pow(2, octave)));
+        Note.commonNotes.add(new Note(cur.getFriendlyName(), octave, cur.getAccidental(), cur
+            .getFrequency() * Math.pow(2, octave)));
         if (octave == 4
-            && Note.commonNotes.get(Note.commonNotes.size() - 1)
-                .getFriendlyName().equals("C")
-            && Note.commonNotes.get(Note.commonNotes.size() - 1)
-                .getAccidental() == Accidental.Natural)
+            && Note.commonNotes.get(Note.commonNotes.size() - 1).getFriendlyName().equals("C")
+            && Note.commonNotes.get(Note.commonNotes.size() - 1).getAccidental() == Accidental.Natural)
           Note.c4 = Note.commonNotes.get(Note.commonNotes.size() - 1);
       }
 
@@ -110,16 +108,14 @@ public class Note {
   public Note() {
   }
 
-  public Note(String friendlyName, int octave, Accidental accidental,
-      double frequency) {
+  public Note(String friendlyName, int octave, Accidental accidental, double frequency) {
     this.setFriendlyName(friendlyName);
     this.setOctave(octave);
     this.setAccidental(accidental);
     this.setFrequency(frequency);
   }
 
-  public Note(String friendlyName, int octave, Accidental accidental,
-      int keyNumber) {
+  public Note(String friendlyName, int octave, Accidental accidental, int keyNumber) {
     this.setFriendlyName(friendlyName);
     this.setOctave(octave);
     this.setAccidental(accidental);
@@ -132,36 +128,35 @@ public class Note {
       return false;
     Note n = (Note) o;
     return n.getFriendlyName().equals(this.getFriendlyName())
-        && n.getAccidental() == this.getAccidental()
-        && n.getOctave() == this.getOctave();
+        && n.getAccidental() == this.getAccidental() && n.getOctave() == this.getOctave();
   }
 
   public Accidental getAccidental() {
-    return this.accidental.getValue();
+    return this.accidental.get();
   }
 
   public Note getAlternate() {
-    return this.alternate.getValue();
+    return this.alternate.get();
   }
 
   public double getFrequency() {
-    return this.frequency.getValue();
+    return this.frequency.get();
   }
 
   public String getFriendlyName() {
-    return this.friendlyName.getValue();
+    return this.friendlyName.get();
   }
 
   public boolean getIsPlaying() {
-    return this.isPlaying.getValue();
+    return this.isPlaying.get();
   }
 
   public Integer getKeyNumber() {
-    return this.keyNumber.getValue();
+    return this.keyNumber.get();
   }
 
   public int getOctave() {
-    return this.octave.getValue();
+    return this.octave.get();
   }
 
   public void play() {
@@ -170,9 +165,8 @@ public class Note {
         return;
       this.isAttemptingToPlay = true;
       if (this.track == null)
-        this.track = PitchAudioTrackGenerator.getPitchAudioTrack(
-            this.getFrequency(), 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-            2000);
+        this.track = PitchAudioTrackGenerator.getPitchAudioTrack(this.getFrequency(), 8000,
+            AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000);
       this.track.play();
       this.setIsPlaying(true);
       this.isAttemptingToPlay = false;
@@ -180,19 +174,19 @@ public class Note {
   }
 
   public void setAccidental(Accidental value) {
-    this.accidental.setValue(value);
+    this.accidental.set(value);
   }
 
   public void setAlternate(Note value) {
-    this.alternate.setValue(value);
+    this.alternate.set(value);
   }
 
   public void setFrequency(double value) {
-    this.frequency.setValue(value);
+    this.frequency.set(value);
   }
 
   public void setFriendlyName(String value) {
-    this.friendlyName.setValue(value);
+    this.friendlyName.set(value);
   }
 
   public void setIsPlaying(boolean value) {
@@ -200,17 +194,17 @@ public class Note {
       this.play();
     else
       this.stop();
-    this.isPlaying.setValue(value);
+    this.isPlaying.set(value);
   }
 
   public void setKeyNumber(Integer value) {
-    this.keyNumber.setValue(value);
+    this.keyNumber.set(value);
     if (value != null)
       this.setFrequency(Note.getNoteFrequency(value));
   }
 
   public void setOctave(int value) {
-    this.octave.setValue(value);
+    this.octave.set(value);
   }
 
   public void stop() {

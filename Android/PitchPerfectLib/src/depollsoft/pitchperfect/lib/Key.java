@@ -1,75 +1,49 @@
 package depollsoft.pitchperfect.lib;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
 
 public class Key {
-  private static ObservableCollection<Key> majorKeys;
+  private static TrackableCollection<Key> majorKeys;
 
-  private static ObservableCollection<Key> minorKeys;
+  private static TrackableCollection<Key> minorKeys;
 
-  public static ObservableCollection<Key> getMajorKeys() {
+  public static TrackableCollection<Key> getMajorKeys() {
     if (Key.majorKeys == null) {
-      Key.majorKeys = new ObservableCollection<Key>();
-      Key.majorKeys.add(new Key(Note.findNote("G", Accidental.Flat, 4),
-          KeyType.Major, -6));
-      Key.majorKeys.add(new Key(Note.findNote("D", Accidental.Flat, 4),
-          KeyType.Major, -5));
-      Key.majorKeys.add(new Key(Note.findNote("A", Accidental.Flat, 4),
-          KeyType.Major, -4));
-      Key.majorKeys.add(new Key(Note.findNote("E", Accidental.Flat, 4),
-          KeyType.Major, -3));
-      Key.majorKeys.add(new Key(Note.findNote("B", Accidental.Flat, 4),
-          KeyType.Major, -2));
-      Key.majorKeys.add(new Key(Note.findNote("F", Accidental.Natural, 4),
-          KeyType.Major, -1));
-      Key.majorKeys.add(new Key(Note.findNote("C", Accidental.Natural, 4),
-          KeyType.Major, 0));
-      Key.majorKeys.add(new Key(Note.findNote("G", Accidental.Natural, 4),
-          KeyType.Major, 1));
-      Key.majorKeys.add(new Key(Note.findNote("D", Accidental.Natural, 4),
-          KeyType.Major, 2));
-      Key.majorKeys.add(new Key(Note.findNote("A", Accidental.Natural, 4),
-          KeyType.Major, 3));
-      Key.majorKeys.add(new Key(Note.findNote("E", Accidental.Natural, 4),
-          KeyType.Major, 4));
-      Key.majorKeys.add(new Key(Note.findNote("B", Accidental.Natural, 4),
-          KeyType.Major, 5));
-      Key.majorKeys.add(new Key(Note.findNote("F", Accidental.Sharp, 4),
-          KeyType.Major, 6));
+      Key.majorKeys = new TrackableCollection<Key>();
+      Key.majorKeys.add(new Key(Note.findNote("G", Accidental.Flat, 4), KeyType.Major, -6));
+      Key.majorKeys.add(new Key(Note.findNote("D", Accidental.Flat, 4), KeyType.Major, -5));
+      Key.majorKeys.add(new Key(Note.findNote("A", Accidental.Flat, 4), KeyType.Major, -4));
+      Key.majorKeys.add(new Key(Note.findNote("E", Accidental.Flat, 4), KeyType.Major, -3));
+      Key.majorKeys.add(new Key(Note.findNote("B", Accidental.Flat, 4), KeyType.Major, -2));
+      Key.majorKeys.add(new Key(Note.findNote("F", Accidental.Natural, 4), KeyType.Major, -1));
+      Key.majorKeys.add(new Key(Note.findNote("C", Accidental.Natural, 4), KeyType.Major, 0));
+      Key.majorKeys.add(new Key(Note.findNote("G", Accidental.Natural, 4), KeyType.Major, 1));
+      Key.majorKeys.add(new Key(Note.findNote("D", Accidental.Natural, 4), KeyType.Major, 2));
+      Key.majorKeys.add(new Key(Note.findNote("A", Accidental.Natural, 4), KeyType.Major, 3));
+      Key.majorKeys.add(new Key(Note.findNote("E", Accidental.Natural, 4), KeyType.Major, 4));
+      Key.majorKeys.add(new Key(Note.findNote("B", Accidental.Natural, 4), KeyType.Major, 5));
+      Key.majorKeys.add(new Key(Note.findNote("F", Accidental.Sharp, 4), KeyType.Major, 6));
     }
     return Key.majorKeys;
   }
 
-  public static ObservableCollection<Key> getMinorKeys() {
+  public static TrackableCollection<Key> getMinorKeys() {
     if (Key.minorKeys == null) {
-      Key.minorKeys = new ObservableCollection<Key>();
-      Key.minorKeys.add(new Key(Note.findNote("E", Accidental.Flat, 4),
-          KeyType.Minor, -6));
-      Key.minorKeys.add(new Key(Note.findNote("B", Accidental.Flat, 4),
-          KeyType.Minor, -5));
-      Key.minorKeys.add(new Key(Note.findNote("F", Accidental.Natural, 4),
-          KeyType.Minor, -4));
-      Key.minorKeys.add(new Key(Note.findNote("C", Accidental.Natural, 4),
-          KeyType.Minor, -3));
-      Key.minorKeys.add(new Key(Note.findNote("G", Accidental.Natural, 4),
-          KeyType.Minor, -2));
-      Key.minorKeys.add(new Key(Note.findNote("D", Accidental.Natural, 4),
-          KeyType.Minor, -1));
-      Key.minorKeys.add(new Key(Note.findNote("A", Accidental.Natural, 4),
-          KeyType.Minor, 0));
-      Key.minorKeys.add(new Key(Note.findNote("E", Accidental.Natural, 4),
-          KeyType.Minor, 1));
-      Key.minorKeys.add(new Key(Note.findNote("B", Accidental.Natural, 4),
-          KeyType.Minor, 2));
-      Key.minorKeys.add(new Key(Note.findNote("F", Accidental.Sharp, 4),
-          KeyType.Minor, 3));
-      Key.minorKeys.add(new Key(Note.findNote("C", Accidental.Sharp, 4),
-          KeyType.Minor, 4));
-      Key.minorKeys.add(new Key(Note.findNote("G", Accidental.Sharp, 4),
-          KeyType.Minor, 5));
-      Key.minorKeys.add(new Key(Note.findNote("D", Accidental.Sharp, 4),
-          KeyType.Minor, 6));
+      Key.minorKeys = new TrackableCollection<Key>();
+      Key.minorKeys.add(new Key(Note.findNote("E", Accidental.Flat, 4), KeyType.Minor, -6));
+      Key.minorKeys.add(new Key(Note.findNote("B", Accidental.Flat, 4), KeyType.Minor, -5));
+      Key.minorKeys.add(new Key(Note.findNote("F", Accidental.Natural, 4), KeyType.Minor, -4));
+      Key.minorKeys.add(new Key(Note.findNote("C", Accidental.Natural, 4), KeyType.Minor, -3));
+      Key.minorKeys.add(new Key(Note.findNote("G", Accidental.Natural, 4), KeyType.Minor, -2));
+      Key.minorKeys.add(new Key(Note.findNote("D", Accidental.Natural, 4), KeyType.Minor, -1));
+      Key.minorKeys.add(new Key(Note.findNote("A", Accidental.Natural, 4), KeyType.Minor, 0));
+      Key.minorKeys.add(new Key(Note.findNote("E", Accidental.Natural, 4), KeyType.Minor, 1));
+      Key.minorKeys.add(new Key(Note.findNote("B", Accidental.Natural, 4), KeyType.Minor, 2));
+      Key.minorKeys.add(new Key(Note.findNote("F", Accidental.Sharp, 4), KeyType.Minor, 3));
+      Key.minorKeys.add(new Key(Note.findNote("C", Accidental.Sharp, 4), KeyType.Minor, 4));
+      Key.minorKeys.add(new Key(Note.findNote("G", Accidental.Sharp, 4), KeyType.Minor, 5));
+      Key.minorKeys.add(new Key(Note.findNote("D", Accidental.Sharp, 4), KeyType.Minor, 6));
     }
     return Key.minorKeys;
   }
@@ -78,8 +52,7 @@ public class Key {
 
   private TrackableField<KeyType> keyType = new TrackableField<KeyType>();
 
-  private TrackableField<Integer> numAccidentals = new TrackableField<Integer>(
-      0);
+  private TrackableField<Integer> numAccidentals = new TrackableField<Integer>(0);
 
   public Key() {
     this(Note.getC4(), KeyType.Major, 0);
@@ -96,8 +69,7 @@ public class Key {
     if (!(o instanceof Key))
       return false;
     Key k = (Key) o;
-    return k.getNote().equals(this.getNote())
-        && k.getKeyType() == this.getKeyType();
+    return k.getNote().equals(this.getNote()) && k.getKeyType() == this.getKeyType();
   }
 
   public Accidental getAccidental() {
@@ -115,26 +87,26 @@ public class Key {
   }
 
   public KeyType getKeyType() {
-    return this.keyType.getValue();
+    return this.keyType.get();
   }
 
   public Note getNote() {
-    return this.note.getValue();
+    return this.note.get();
   }
 
   public int getNumAccidentals() {
-    return this.numAccidentals.getValue();
+    return this.numAccidentals.get();
   }
 
   public void setKeyType(KeyType value) {
-    this.keyType.setValue(value);
+    this.keyType.set(value);
   }
 
   public void setNote(Note value) {
-    this.note.setValue(value);
+    this.note.set(value);
   }
 
   public void setNumAccidentals(int value) {
-    this.numAccidentals.setValue(value);
+    this.numAccidentals.set(value);
   }
 }

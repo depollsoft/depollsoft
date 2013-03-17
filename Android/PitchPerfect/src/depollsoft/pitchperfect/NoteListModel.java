@@ -1,21 +1,22 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+
 import depollsoft.pitchperfect.lib.Note;
 
 public class NoteListModel {
-  private TrackableField<ObservableCollection<Note>> notes = new TrackableField<ObservableCollection<Note>>();
+  private TrackableField<TrackableCollection<Note>> notes = new TrackableField<TrackableCollection<Note>>();
 
   public NoteListModel() {
-    this.setNotes(new ObservableCollection<Note>(Note.getPrunedNotes()));
+    this.setNotes(new TrackableCollection<Note>(Note.getPrunedNotes()));
   }
 
-  public ObservableCollection<Note> getNotes() {
-    return this.notes.getValue();
+  public TrackableCollection<Note> getNotes() {
+    return this.notes.get();
   }
 
-  public void setNotes(ObservableCollection<Note> value) {
-    this.notes.setValue(value);
+  public void setNotes(TrackableCollection<Note> value) {
+    this.notes.set(value);
   }
 }

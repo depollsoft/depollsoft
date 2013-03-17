@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import depollsoft.lib.util.Pair;
+import com.bindroid.utils.Pair;
 
 public class JsonSerializer {
   private static class JsonPrimitive {

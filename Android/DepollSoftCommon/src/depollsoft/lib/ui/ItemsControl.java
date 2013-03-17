@@ -2,13 +2,15 @@ package depollsoft.lib.ui;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.LinearLayout;
-import depollsoft.lib.binding.TrackableField;
+
+import com.bindroid.trackable.TrackableField;
 
 public class ItemsControl extends LinearLayout {
   private class Observer extends DataSetObserver {
@@ -42,7 +44,7 @@ public class ItemsControl extends LinearLayout {
   }
 
   public Adapter getAdapter() {
-    return this.adapter.getValue();
+    return this.adapter.get();
   }
 
   protected void init() {
@@ -73,8 +75,7 @@ public class ItemsControl extends LinearLayout {
           else
             this.removeViewAt(index);
         }
-      }
-      finally {
+      } finally {
         newViews.put(itemId, view);
       }
       this.addView(view, x);
@@ -87,7 +88,7 @@ public class ItemsControl extends LinearLayout {
     if (this.getAdapter() != null) {
       this.getAdapter().unregisterDataSetObserver(this.observer);
     }
-    this.adapter.setValue(value);
+    this.adapter.set(value);
     if (this.getAdapter() != null) {
       this.getAdapter().registerDataSetObserver(this.observer);
       this.idToView.clear();

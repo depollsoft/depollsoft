@@ -14,15 +14,15 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.bindroid.BindingMode;
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.EditTextTextProperty;
+import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.EditTextTextProperty;
-import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.Key;
@@ -34,20 +34,20 @@ public class AddSongActivity extends Activity {
   private PitchedSong toEdit;
   private TrackableField<PitchedSong> song = new TrackableField<PitchedSong>();
 
-  private TrackableField<ObservableCollection<Key>> allKeys = new TrackableField<ObservableCollection<Key>>();
+  private TrackableField<TrackableCollection<Key>> allKeys = new TrackableField<TrackableCollection<Key>>();
 
   public AddSongActivity() {
-    this.setAllKeys(new ObservableCollection<Key>());
+    this.setAllKeys(new TrackableCollection<Key>());
     this.getAllKeys().addAll(Key.getMajorKeys());
     this.getAllKeys().addAll(Key.getMinorKeys());
   }
 
-  public ObservableCollection<Key> getAllKeys() {
-    return this.allKeys.getValue();
+  public TrackableCollection<Key> getAllKeys() {
+    return this.allKeys.get();
   }
 
   public PitchedSong getSong() {
-    return this.song.getValue();
+    return this.song.get();
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AddSongActivity extends Activity {
 
     UiBinder.bind(this,
         new EditTextTextProperty((EditText) this.findViewById(R.id.songTitleEditText)),
-        "Song.Name", BindingMode.TwoWay);
+        "Song.Name", BindingMode.TWO_WAY);
 
     UiBinder.bind(this, R.id.songKeySpinner, "Adapter", "AllKeys", new AdapterConverter(
         SongKeySignatureSelectedItemView.class, true, false, SongKeySignatureListItemView.class));
@@ -108,8 +108,7 @@ public class AddSongActivity extends Activity {
           AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
           AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
           SongsModel.get().notifyOfChange();
-        }
-        else {
+        } else {
           SongsModel.get().addSong(AddSongActivity.this.getSong());
         }
         AddSongActivity.this.setResult(1);
@@ -131,7 +130,6 @@ public class AddSongActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -181,12 +179,12 @@ public class AddSongActivity extends Activity {
     FlurryAgent.onEndSession(this);
   }
 
-  public void setAllKeys(ObservableCollection<Key> value) {
-    this.allKeys.setValue(value);
+  public void setAllKeys(TrackableCollection<Key> value) {
+    this.allKeys.set(value);
   }
 
   public void setSong(PitchedSong value) {
-    this.song.setValue(value);
+    this.song.set(value);
   }
 
 }

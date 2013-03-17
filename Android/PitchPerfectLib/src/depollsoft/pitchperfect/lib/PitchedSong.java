@@ -2,7 +2,7 @@ package depollsoft.pitchperfect.lib;
 
 import java.util.UUID;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class PitchedSong implements Comparable<PitchedSong> {
   private TrackableField<String> name = new TrackableField<String>();
@@ -29,19 +29,19 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public String getId() {
-    return this.uuid.getValue();
+    return this.uuid.get();
   }
 
   public boolean getIsPlaying() {
-    return this.isPlaying.getValue() && this.getKey().getNote().getIsPlaying();
+    return this.isPlaying.get() && this.getKey().getNote().getIsPlaying();
   }
 
   public Key getKey() {
-    return this.key.getValue();
+    return this.key.get();
   }
 
   public String getName() {
-    return this.name.getValue();
+    return this.name.get();
   }
 
   @Override
@@ -50,24 +50,24 @@ public class PitchedSong implements Comparable<PitchedSong> {
   }
 
   public void play() {
-    this.isPlaying.setValue(true);
+    this.isPlaying.set(true);
     this.getKey().getNote().play();
   }
 
   public void setId(String value) {
-    this.uuid.setValue(value);
+    this.uuid.set(value);
   }
 
   public void setKey(Key value) {
-    this.key.setValue(value);
+    this.key.set(value);
   }
 
   public void setName(String value) {
-    this.name.setValue(value);
+    this.name.set(value);
   }
 
   public void stop() {
-    this.isPlaying.setValue(false);
+    this.isPlaying.set(false);
     this.getKey().getNote().stop();
   }
 }

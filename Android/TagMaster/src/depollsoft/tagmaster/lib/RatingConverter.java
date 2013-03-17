@@ -1,6 +1,6 @@
 package depollsoft.tagmaster.lib;
 
-import depollsoft.lib.binding.ValueConverter;
+import com.bindroid.ValueConverter;
 
 public class RatingConverter extends ValueConverter {
 

@@ -1,13 +1,5 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.BoundUi;
-import depollsoft.lib.util.ReflectedProperty;
-import depollsoft.pitchperfect.converters.KeyNameConverter;
-import depollsoft.pitchperfect.lib.PitchedSong;
 import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
@@ -19,6 +11,16 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.BoundUi;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.ReflectedProperty;
+
+import depollsoft.pitchperfect.converters.KeyNameConverter;
+import depollsoft.pitchperfect.lib.PitchedSong;
 
 public class SongListItemView extends LinearLayout implements
     BoundUi<PitchedSong> {
@@ -40,7 +42,7 @@ public class SongListItemView extends LinearLayout implements
   }
 
   public PitchedSong getSong() {
-    return this.song.getValue();
+    return this.song.get();
   }
 
   private void init() {
@@ -61,7 +63,7 @@ public class SongListItemView extends LinearLayout implements
         BoolConverter.get());
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
-        "Song.IsPlaying", BindingMode.OneWay);
+        "Song.IsPlaying", BindingMode.ONE_WAY);
 
     View editButton = this.findViewById(R.id.editButton);
     editButton.setOnClickListener(new OnClickListener() {
@@ -140,7 +142,6 @@ public class SongListItemView extends LinearLayout implements
 
   @Override
   protected void onDetachedFromWindow() {
-    UiBinder.unbind(this);
     super.onDetachedFromWindow();
   }
 
@@ -182,7 +183,7 @@ public class SongListItemView extends LinearLayout implements
   }
 
   public void setSong(PitchedSong value) {
-    this.song.setValue(value);
+    this.song.set(value);
   }
 
 }

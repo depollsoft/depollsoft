@@ -11,9 +11,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TabHost;
+
+import com.bindroid.utils.Function;
+
 import depollsoft.lib.compat.Compatibility;
 import depollsoft.lib.compat.RunnableFactory;
-import depollsoft.lib.util.Function;
 
 @TargetApi(11)
 public class CompatTabHostWrapper {

@@ -1,6 +1,5 @@
 package depollsoft.lib.ui;
 
-import depollsoft.lib.binding.TrackableField;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +8,8 @@ import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TextView;
+
+import com.bindroid.trackable.TrackableField;
 
 public class Hyperlink extends TextView {
 
@@ -45,7 +46,7 @@ public class Hyperlink extends TextView {
   }
 
   public String getHyperlinkUri() {
-    return this.hyperlinkUri.getValue();
+    return this.hyperlinkUri.get();
   }
 
   private void init() {
@@ -77,7 +78,7 @@ public class Hyperlink extends TextView {
   }
 
   public void setHyperlinkUri(String value) {
-    this.hyperlinkUri.setValue(value);
+    this.hyperlinkUri.set(value);
     this.ensureUnderlined();
   }
 }

@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.util.Log;
 
+import com.bindroid.trackable.TrackableCollection;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.Parse;
@@ -12,7 +13,6 @@ import com.parse.ParseUser;
 import com.parse.RefreshCallback;
 
 import depollsoft.lib.activity.RichApplication;
-import depollsoft.lib.binding.ObservableCollection;
 import depollsoft.lib.json.JsonSerializer;
 import depollsoft.pitchperfect.lib.Accidental;
 import depollsoft.pitchperfect.lib.Key;
@@ -52,7 +52,7 @@ public class PitchPerfectApplication extends RichApplication {
     JsonSerializer.registerAlias(Boolean.TYPE, "bool");
     JsonSerializer.registerAlias(Double.class, "Double");
     JsonSerializer.registerAlias(Double.TYPE, "double");
-    JsonSerializer.registerAlias(ObservableCollection.class, "List");
+    JsonSerializer.registerAlias(TrackableCollection.class, "List");
 
     GoogleAnalyticsTracker.getInstance().startNewSession("UA-24315533-2", 10, this);
     GoogleAnalyticsTracker.getInstance().setProductVersion("Pitch Perfect",

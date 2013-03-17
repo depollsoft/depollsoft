@@ -17,11 +17,11 @@ import android.view.View;
 import android.view.Window;
 import android.widget.TabHost.OnTabChangeListener;
 
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
@@ -51,8 +51,7 @@ public class PitchPerfectActivity extends TabActivity {
     case Configuration.ORIENTATION_UNDEFINED:
       if (!ActionBars.hasActionBar(this)) {
         title.setVisibility(View.VISIBLE);
-      }
-      else {
+      } else {
         title.setVisibility(View.GONE);
       }
       break;
@@ -141,15 +140,13 @@ public class PitchPerfectActivity extends TabActivity {
           });
       getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
       return super.onPrepareOptionsMenu(menu);
-    }
-    finally {
+    } finally {
       preparingMenu = false;
     }
   }
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -175,7 +172,7 @@ public class PitchPerfectActivity extends TabActivity {
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        if(handlingResult) {
+        if (handlingResult) {
           handlingResult = false;
           return;
         }

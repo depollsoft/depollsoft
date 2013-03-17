@@ -2,19 +2,20 @@ package depollsoft.tagmaster;
 
 import java.net.URLEncoder;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.json.JsonSerializer;
 import android.app.ActivityGroup;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.Window;
-import android.widget.*;
+import android.widget.FrameLayout;
+
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.json.JsonSerializer;
 
 public class TagSearchResultsActivity extends ActivityGroup {
 
@@ -24,7 +25,7 @@ public class TagSearchResultsActivity extends ActivityGroup {
   }
 
   public QueryModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -49,7 +50,6 @@ public class TagSearchResultsActivity extends ActivityGroup {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override
@@ -84,7 +84,7 @@ public class TagSearchResultsActivity extends ActivityGroup {
   }
 
   public void setModel(QueryModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 
 }

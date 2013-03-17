@@ -1,14 +1,14 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
+
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class TagVideosActivity extends Activity {
 
@@ -32,7 +32,6 @@ public class TagVideosActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override

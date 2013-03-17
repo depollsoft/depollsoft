@@ -1,18 +1,19 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.tagmaster.barbershop.RemoteLocation;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
+
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.tagmaster.barbershop.RemoteLocation;
 
 public class TagTracksActivity extends Activity {
 
@@ -22,7 +23,7 @@ public class TagTracksActivity extends Activity {
   }
 
   public RemoteLocation getSelectedTrack() {
-    return this.selectedTrack.getValue();
+    return this.selectedTrack.get();
   }
 
   @Override
@@ -105,7 +106,6 @@ public class TagTracksActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override
@@ -141,7 +141,7 @@ public class TagTracksActivity extends Activity {
   }
 
   public void setSelectedTrack(RemoteLocation value) {
-    this.selectedTrack.setValue(value);
+    this.selectedTrack.set(value);
   }
 
   public void stopMedia() {

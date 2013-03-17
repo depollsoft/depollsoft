@@ -1,19 +1,21 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.BoundUi;
-import depollsoft.lib.util.ReflectedProperty;
-import depollsoft.pitchperfect.converters.KeyNameConverter;
-import depollsoft.pitchperfect.converters.KeySignatureConverter;
-import depollsoft.pitchperfect.lib.Key;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import com.bindroid.BindingMode;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.BoundUi;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.ReflectedProperty;
+
+import depollsoft.pitchperfect.converters.KeyNameConverter;
+import depollsoft.pitchperfect.converters.KeySignatureConverter;
+import depollsoft.pitchperfect.lib.Key;
 
 public class KeySignatureListItemView extends LinearLayout implements BoundUi<Key> {
   private TrackableField<Key> key = new TrackableField<Key>();
@@ -34,7 +36,7 @@ public class KeySignatureListItemView extends LinearLayout implements BoundUi<Ke
   }
 
   public Key getKey() {
-    return this.key.getValue();
+    return this.key.get();
   }
 
   protected void init() {
@@ -51,12 +53,11 @@ public class KeySignatureListItemView extends LinearLayout implements BoundUi<Ke
     UiBinder.bind(this, R.id.keyNameTextView, "Text", "Key", new KeyNameConverter());
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"), "Key.Note.IsPlaying",
-        BindingMode.OneWay);
+        BindingMode.ONE_WAY);
   }
 
   @Override
   protected void onDetachedFromWindow() {
-    UiBinder.unbind(this);
     super.onDetachedFromWindow();
   }
 
@@ -88,7 +89,7 @@ public class KeySignatureListItemView extends LinearLayout implements BoundUi<Ke
   }
 
   public void setKey(Key value) {
-    this.key.setValue(value);
+    this.key.set(value);
   }
 
 }

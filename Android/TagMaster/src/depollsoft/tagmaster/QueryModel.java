@@ -1,9 +1,10 @@
 package depollsoft.tagmaster;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.utils.Action;
+
 import depollsoft.lib.ui.ThreadSwitchContext;
-import depollsoft.lib.util.Action;
 import depollsoft.tagmaster.barbershop.Tag;
 import depollsoft.tagmaster.barbershop.TagCollection;
 import depollsoft.tagmaster.barbershop.TagQueryResult;
@@ -34,7 +35,7 @@ public class QueryModel {
 
   private TrackableField<TagSortOptions> sortBy = new TrackableField<TagSortOptions>();
 
-  private TrackableField<ObservableCollection<Tag>> tags = new TrackableField<ObservableCollection<Tag>>();
+  private TrackableField<TrackableCollection<Tag>> tags = new TrackableField<TrackableCollection<Tag>>();
 
   private TrackableField<Double> minRating = new TrackableField<Double>();
 
@@ -48,7 +49,7 @@ public class QueryModel {
     this.setHasMoreResults(true);
     this.setResultSetSize(20);
     this.setMaxResults(50);
-    this.setTags(new ObservableCollection<Tag>());
+    this.setTags(new TrackableCollection<Tag>());
   }
 
   public void fetchResults(final ThreadSwitchContext context) {
@@ -58,161 +59,159 @@ public class QueryModel {
       return;
     this.setIsLoading(true);
     Tag.query(this.getQuery(), this.getResultSetSize(),
-        this.mostRecentResult.getStart() + this.mostRecentResult.getCount(),
-        this.getParts(), this.getHasLearningTracks(), this.getHasSheetMusic(),
-        this.getCollection(), this.getSortBy(), this.getMinimumRating(),
-        this.getMinimumDownloads()).continueWith(new Action<TagQueryResult>() {
+        this.mostRecentResult.getStart() + this.mostRecentResult.getCount(), this.getParts(),
+        this.getHasLearningTracks(), this.getHasSheetMusic(), this.getCollection(),
+        this.getSortBy(), this.getMinimumRating(), this.getMinimumDownloads()).continueWith(
+        new Action<TagQueryResult>() {
 
-      public void invoke(final TagQueryResult parameter) {
-        context.post(new Runnable() {
+          public void invoke(final TagQueryResult parameter) {
+            context.post(new Runnable() {
 
-          public void run() {
-            try {
-              QueryModel.this.setStatusText(null);
-              QueryModel.this.mostRecentResult = parameter;
-              for (Tag t : parameter.getTags())
-                QueryModel.this.getTags().add(t);
-              if (QueryModel.this.mostRecentResult.getStart()
-                  + QueryModel.this.mostRecentResult.getCount() >= Math.min(
-                  QueryModel.this.mostRecentResult.getAvailable(),
-                  QueryModel.this.getMaxResults()))
-                QueryModel.this.setHasMoreResults(false);
-              else
-                QueryModel.this.setHasMoreResults(true);
-              if (parameter.getAvailable() == 0)
-                QueryModel.this
-                    .setStatusText("No tags could be found that matched your query.");
-            }
-            finally {
-              QueryModel.this.setIsLoading(false);
-            }
+              public void run() {
+                try {
+                  QueryModel.this.setStatusText(null);
+                  QueryModel.this.mostRecentResult = parameter;
+                  for (Tag t : parameter.getTags())
+                    QueryModel.this.getTags().add(t);
+                  if (QueryModel.this.mostRecentResult.getStart()
+                      + QueryModel.this.mostRecentResult.getCount() >= Math.min(
+                      QueryModel.this.mostRecentResult.getAvailable(),
+                      QueryModel.this.getMaxResults()))
+                    QueryModel.this.setHasMoreResults(false);
+                  else
+                    QueryModel.this.setHasMoreResults(true);
+                  if (parameter.getAvailable() == 0)
+                    QueryModel.this
+                        .setStatusText("No tags could be found that matched your query.");
+                } finally {
+                  QueryModel.this.setIsLoading(false);
+                }
+              }
+            });
+          }
+        }, new Action<Exception>() {
+
+          public void invoke(final Exception parameter) {
+            context.post(new Runnable() {
+
+              public void run() {
+                QueryModel.this.setStatusText("An error has occurred: " + parameter.getMessage());
+                QueryModel.this.setIsLoading(false);
+              }
+            });
           }
         });
-      }
-    }, new Action<Exception>() {
-
-      public void invoke(final Exception parameter) {
-        context.post(new Runnable() {
-
-          public void run() {
-            QueryModel.this.setStatusText("An error has occurred: "
-                + parameter.getMessage());
-            QueryModel.this.setIsLoading(false);
-          }
-        });
-      }
-    });
   }
 
   public TagCollection getCollection() {
-    return this.collection.getValue();
+    return this.collection.get();
   }
 
   public Boolean getHasLearningTracks() {
-    return this.hasLearningTracks.getValue();
+    return this.hasLearningTracks.get();
   }
 
   public Boolean getHasMoreResults() {
-    return this.hasMoreResults.getValue();
+    return this.hasMoreResults.get();
   }
 
   public Boolean getHasSheetMusic() {
-    return this.hasSheetMusic.getValue();
+    return this.hasSheetMusic.get();
   }
 
   public Boolean getIsLoading() {
-    return this.isLoading.getValue();
+    return this.isLoading.get();
   }
 
   public Integer getMaxResults() {
-    return this.maxResults.getValue();
+    return this.maxResults.get();
   }
 
   public Integer getMinimumDownloads() {
-    return this.minDownloads.getValue();
+    return this.minDownloads.get();
   }
 
   public Double getMinimumRating() {
-    return this.minRating.getValue();
+    return this.minRating.get();
   }
 
   public Integer getParts() {
-    return this.parts.getValue();
+    return this.parts.get();
   }
 
   public String getQuery() {
-    return this.query.getValue();
+    return this.query.get();
   }
 
   public Integer getResultSetSize() {
-    return this.resultSetSize.getValue();
+    return this.resultSetSize.get();
   }
 
   public TagSortOptions getSortBy() {
-    return this.sortBy.getValue();
+    return this.sortBy.get();
   }
 
   public String getStatusText() {
-    return this.statusText.getValue();
+    return this.statusText.get();
   }
 
-  public ObservableCollection<Tag> getTags() {
-    return this.tags.getValue();
+  public TrackableCollection<Tag> getTags() {
+    return this.tags.get();
   }
 
   public void setCollection(TagCollection value) {
-    this.collection.setValue(value);
+    this.collection.set(value);
   }
 
   public void setHasLearningTracks(Boolean value) {
-    this.hasLearningTracks.setValue(value);
+    this.hasLearningTracks.set(value);
   }
 
   public void setHasMoreResults(Boolean value) {
-    this.hasMoreResults.setValue(value);
+    this.hasMoreResults.set(value);
   }
 
   public void setHasSheetMusic(Boolean value) {
-    this.hasSheetMusic.setValue(value);
+    this.hasSheetMusic.set(value);
   }
 
   public void setIsLoading(Boolean value) {
-    this.isLoading.setValue(value);
+    this.isLoading.set(value);
   }
 
   public void setMaxResults(Integer value) {
-    this.maxResults.setValue(value);
+    this.maxResults.set(value);
   }
 
   public void setMinimumDownloads(Integer value) {
-    this.minDownloads.setValue(value);
+    this.minDownloads.set(value);
   }
 
   public void setMinimumRating(Double value) {
-    this.minRating.setValue(value);
+    this.minRating.set(value);
   }
 
   public void setParts(Integer value) {
-    this.parts.setValue(value);
+    this.parts.set(value);
   }
 
   public void setQuery(String value) {
-    this.query.setValue(value);
+    this.query.set(value);
   }
 
   public void setResultSetSize(Integer value) {
-    this.resultSetSize.setValue(value);
+    this.resultSetSize.set(value);
   }
 
   public void setSortBy(TagSortOptions value) {
-    this.sortBy.setValue(value);
+    this.sortBy.set(value);
   }
 
   public void setStatusText(String value) {
-    this.statusText.setValue(value);
+    this.statusText.set(value);
   }
 
-  public void setTags(ObservableCollection<Tag> value) {
-    this.tags.setValue(value);
+  public void setTags(TrackableCollection<Tag> value) {
+    this.tags.set(value);
   }
 }

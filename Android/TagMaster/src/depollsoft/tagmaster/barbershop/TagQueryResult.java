@@ -2,7 +2,7 @@ package depollsoft.tagmaster.barbershop;
 
 import java.util.List;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class TagQueryResult {
 
@@ -15,34 +15,34 @@ public class TagQueryResult {
   private TrackableField<Integer> available = new TrackableField<Integer>();
 
   public int getAvailable() {
-    return this.available.getValue();
+    return this.available.get();
   }
 
   public int getCount() {
-    return this.count.getValue();
+    return this.count.get();
   }
 
   public int getStart() {
-    return this.start.getValue();
+    return this.start.get();
   }
 
   public List<Tag> getTags() {
-    return this.tags.getValue();
+    return this.tags.get();
   }
 
   public void setAvailable(int value) {
-    this.available.setValue(value);
+    this.available.set(value);
   }
 
   public void setCount(int value) {
-    this.count.setValue(value);
+    this.count.set(value);
   }
 
   public void setStart(int value) {
-    this.start.setValue(value);
+    this.start.set(value);
   }
 
   public void setTags(List<Tag> value) {
-    this.tags.setValue(value);
+    this.tags.set(value);
   }
 }

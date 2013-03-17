@@ -1,18 +1,19 @@
 package depollsoft.pitchperfect;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
-import depollsoft.pitchperfect.lib.Note;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.RadioButton;
+
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
+import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeActivity extends Activity {
 
@@ -23,7 +24,7 @@ public class PitchPipeActivity extends Activity {
   }
 
   public PitchPipeModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   public boolean getToggle() {
@@ -112,7 +113,6 @@ public class PitchPipeActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -148,6 +148,6 @@ public class PitchPipeActivity extends Activity {
   }
 
   public void setModel(PitchPipeModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 }

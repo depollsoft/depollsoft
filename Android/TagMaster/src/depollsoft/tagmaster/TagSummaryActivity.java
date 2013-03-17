@@ -2,22 +2,6 @@ package depollsoft.tagmaster;
 
 import java.io.File;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.Binding;
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.ToStringConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.Hyperlink;
-import depollsoft.lib.util.Action;
-import depollsoft.lib.util.ContentCache;
-import depollsoft.lib.util.Function;
-import depollsoft.lib.util.Property;
-import depollsoft.lib.util.ReflectedProperty;
-import depollsoft.tagmaster.lib.RatingConverter;
-import depollsoft.tagmaster.barbershop.*;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
@@ -32,6 +16,23 @@ import android.view.View.OnClickListener;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.bindroid.Binding;
+import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.converters.ToStringConverter;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.Action;
+import com.bindroid.utils.Function;
+import com.bindroid.utils.Property;
+import com.bindroid.utils.ReflectedProperty;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.ui.Hyperlink;
+import depollsoft.lib.util.ContentCache;
+import depollsoft.tagmaster.barbershop.Tag;
+import depollsoft.tagmaster.lib.RatingConverter;
 
 public class TagSummaryActivity extends Activity {
   public boolean getCanRate() {
@@ -87,25 +88,22 @@ public class TagSummaryActivity extends Activity {
     UiBinder.bind(this, R.id.sheetMusicLink, "Visibility", "Parent.Tag.SheetMusicUri",
         BoolConverter.get());
 
-    UiBinder.registerBinding(this,
-        new Binding(new ReflectedProperty(this.findViewById(R.id.favoriteMarkerTextView),
-            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+    UiBinder.bind(new ReflectedProperty(this.findViewById(R.id.favoriteMarkerTextView),
+        "Visibility"), new Property<Boolean>(new Function<Boolean>() {
 
-          public Boolean evaluate() {
-            return FavoritesModel.getIsFavorite(((TagDetailActivity) TagSummaryActivity.this
-                .getParent()).getTag().getId());
-          }
-        }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get()).bind(this));
-    UiBinder.registerBinding(this,
-        new Binding(new ReflectedProperty(this.findViewById(R.id.teachableMarkerTextView),
-            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+      public Boolean evaluate() {
+        return FavoritesModel.getIsFavorite(((TagDetailActivity) TagSummaryActivity.this
+            .getParent()).getTag().getId());
+      }
+    }, null, Boolean.class), BindingMode.ONE_WAY, BoolConverter.get());
+    UiBinder.bind(new ReflectedProperty(this.findViewById(R.id.teachableMarkerTextView),
+        "Visibility"), new Property<Boolean>(new Function<Boolean>() {
 
-          public Boolean evaluate() {
-            return TeachableTagsModel
-                .getIsTeachableTag(((TagDetailActivity) TagSummaryActivity.this.getParent())
-                    .getTag().getId());
-          }
-        }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get()).bind(this));
+      public Boolean evaluate() {
+        return TeachableTagsModel.getIsTeachableTag(((TagDetailActivity) TagSummaryActivity.this
+            .getParent()).getTag().getId());
+      }
+    }, null, Boolean.class), BindingMode.ONE_WAY, BoolConverter.get());
 
     Hyperlink link = (Hyperlink) this.findViewById(R.id.sheetMusicLink);
     link.setOnClickListener(new OnClickListener() {
@@ -132,8 +130,7 @@ public class TagSummaryActivity extends Activity {
                   if (sheetMusicType.toLowerCase().equals("pdf")) {
                     intent.setDataAndType(path, "application/pdf");
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                  }
-                  else {
+                  } else {
                     MimeTypeMap map = MimeTypeMap.getSingleton();
                     String mimeType = map.getMimeTypeFromExtension(sheetMusicType.toLowerCase());
                     intent.setDataAndType(path, mimeType);
@@ -142,8 +139,7 @@ public class TagSummaryActivity extends Activity {
                     TagSummaryActivity.this.startActivity(intent);
                     GoogleAnalyticsTracker.getInstance().trackEvent("MediaView", "ViewSheetMusic",
                         contentPath, 0);
-                  }
-                  catch (ActivityNotFoundException e) {
+                  } catch (ActivityNotFoundException e) {
                     TagSummaryActivity.this.runOnUiThread(new Runnable() {
                       public void run() {
                         Toast.makeText(
@@ -153,11 +149,9 @@ public class TagSummaryActivity extends Activity {
                       }
                     });
                   }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                   e.printStackTrace();
-                }
-                finally {
+                } finally {
                   progress.dismiss();
                 }
               }
@@ -222,7 +216,6 @@ public class TagSummaryActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override

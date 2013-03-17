@@ -6,8 +6,10 @@ import java.util.Map;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+
+import com.bindroid.trackable.Trackable;
+
 import depollsoft.lib.activity.RichApplication;
-import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.json.JsonSerializer;
 
 public class Preferences {

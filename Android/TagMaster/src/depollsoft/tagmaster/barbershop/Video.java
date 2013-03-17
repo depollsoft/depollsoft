@@ -2,7 +2,8 @@ package depollsoft.tagmaster.barbershop;
 
 import java.util.Date;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
+
 import depollsoft.lib.xml.XmlElement;
 
 public class Video {
@@ -24,35 +25,35 @@ public class Video {
   private TrackableField<Date> posted = new TrackableField<Date>();
 
   public String getDescription() {
-    return this.description.getValue();
+    return this.description.get();
   }
 
   public int getId() {
-    return this.id.getValue();
+    return this.id.get();
   }
 
   public boolean getIsMultitrack() {
-    return this.isMultitrack.getValue();
+    return this.isMultitrack.get();
   }
 
   public Date getPosted() {
-    return this.posted.getValue();
+    return this.posted.get();
   }
 
   public String getSungBy() {
-    return this.sungBy.getValue();
+    return this.sungBy.get();
   }
 
   public String getSungKey() {
-    return this.sungKey.getValue();
+    return this.sungKey.get();
   }
 
   public String getSungWebsite() {
-    return this.sungWebsite.getValue();
+    return this.sungWebsite.get();
   }
 
   public String getYouTubeCode() {
-    return this.youTubeCode.getValue();
+    return this.youTubeCode.get();
   }
 
   public void parseFromXml(XmlElement elem) {
@@ -82,34 +83,34 @@ public class Video {
   }
 
   public void setDescription(String value) {
-    this.description.setValue(value);
+    this.description.set(value);
   }
 
   public void setId(int value) {
-    this.id.setValue(value);
+    this.id.set(value);
   }
 
   public void setIsMultitrack(boolean value) {
-    this.isMultitrack.setValue(value);
+    this.isMultitrack.set(value);
   }
 
   public void setPosted(Date value) {
-    this.posted.setValue(value);
+    this.posted.set(value);
   }
 
   public void setSungBy(String value) {
-    this.sungBy.setValue(value);
+    this.sungBy.set(value);
   }
 
   public void setSungKey(String value) {
-    this.sungKey.setValue(value);
+    this.sungKey.set(value);
   }
 
   public void setSungWebsite(String value) {
-    this.sungWebsite.setValue(value);
+    this.sungWebsite.set(value);
   }
 
   public void setYouTubeCode(String value) {
-    this.youTubeCode.setValue(value);
+    this.youTubeCode.set(value);
   }
 }

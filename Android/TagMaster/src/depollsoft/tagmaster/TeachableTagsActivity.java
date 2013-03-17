@@ -1,29 +1,30 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.Binding;
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.util.Function;
-import depollsoft.lib.util.Property;
-import depollsoft.lib.util.ReflectedProperty;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+
+import com.bindroid.Binding;
+import com.bindroid.BindingMode;
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.Function;
+import com.bindroid.utils.Property;
+import com.bindroid.utils.ReflectedProperty;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.compat.ui.ActionBars;
 
 public class TeachableTagsActivity extends Activity {
 
   public TeachableTagsActivity() {
   }
 
-  public ObservableCollection<Integer> getTeachableTags() {
+  public TrackableCollection<Integer> getTeachableTags() {
     return TeachableTagsModel.getTeachableTagIds();
   }
 
@@ -35,20 +36,17 @@ public class TeachableTagsActivity extends Activity {
 
     UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter", "TeachableTags",
         new AdapterConverter(TeachableTagItemView.class, false, true));
-    UiBinder.registerBinding(this,
-        new Binding(new ReflectedProperty(this.findViewById(R.id.noTeachableTagsTextView),
-            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
-          public Boolean evaluate() {
-            return TeachableTagsActivity.this.getTeachableTags().size() == 0;
-          }
-        }, null, Boolean.class), BindingMode.OneWay, BoolConverter.get()).bind(this));
-
+    UiBinder.bind(new ReflectedProperty(this.findViewById(R.id.noTeachableTagsTextView),
+        "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+      public Boolean evaluate() {
+        return TeachableTagsActivity.this.getTeachableTags().size() == 0;
+      }
+    }, null, Boolean.class), BindingMode.ONE_WAY, BoolConverter.get());
     ActionBars.setCustomTitle(this, R.layout.titleview);
   }
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 

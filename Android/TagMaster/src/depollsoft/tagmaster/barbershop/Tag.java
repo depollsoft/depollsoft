@@ -20,11 +20,13 @@ import org.json.JSONObject;
 
 import android.net.Uri;
 import android.util.SparseArray;
+
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.utils.Action;
+
 import depollsoft.lib.activity.RichApplication;
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
 import depollsoft.lib.json.JsonSerializer;
-import depollsoft.lib.util.Action;
 import depollsoft.lib.util.Task;
 import depollsoft.lib.xml.XmlDocument;
 import depollsoft.lib.xml.XmlElement;
@@ -83,8 +85,7 @@ public class Tag {
           throw new Exception();
         Tag.TagCache.put(id, new SoftReference<Tag>(tag));
         taskSource.setResult(tag);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         Tag.loadTagById(id, true).continueWith(new Action<Tag>() {
 
           public void invoke(Tag parameter) {
@@ -97,8 +98,7 @@ public class Tag {
           }
         });
       }
-    }
-    else {
+    } else {
       Tag.queryById(id).continueWith(new Action<Tag>() {
 
         public void invoke(Tag parameter) {
@@ -266,15 +266,13 @@ public class Tag {
               for (Tag t : resultTags)
                 t.cache();
             source.setResult(result);
-          }
-          catch (Exception e) {
+          } catch (Exception e) {
             source.setError(e);
           }
         }
       };
       t.start();
-    }
-    catch (MalformedURLException e) {
+    } catch (MalformedURLException e) {
       e.printStackTrace();
     }
     return new Task<TagQueryResult>(source);
@@ -294,15 +292,13 @@ public class Tag {
             Tag t = new Tag();
             t.parseFromXml(tags.elements("tag").get(0));
             source.setResult(t);
-          }
-          catch (Exception e) {
+          } catch (Exception e) {
             source.setError(e);
           }
         }
       };
       t.start();
-    }
-    catch (MalformedURLException e) {
+    } catch (MalformedURLException e) {
       e.printStackTrace();
     }
     return new Task<Tag>(source);
@@ -422,8 +418,7 @@ public class Tag {
             PrintWriter pw = new PrintWriter(fos);
             pw.println(serialized);
             pw.close();
-          }
-          catch (FileNotFoundException e) {
+          } catch (FileNotFoundException e) {
             e.printStackTrace();
           }
         }
@@ -440,43 +435,43 @@ public class Tag {
   }
 
   public RemoteLocation getAllPartsTrackUri() {
-    return this.allPartsTrackUri.getValue();
+    return this.allPartsTrackUri.get();
   }
 
   public String getAlternativeTitle() {
-    return this.alternativeTitle.getValue();
+    return this.alternativeTitle.get();
   }
 
   public int getAppVersion() {
-    return this.appVersion.getValue();
+    return this.appVersion.get();
   }
 
   public String getArranger() {
-    return this.arranger.getValue();
+    return this.arranger.get();
   }
 
   public String getArrangerWebsite() {
-    return this.arrangerWebsite.getValue();
+    return this.arrangerWebsite.get();
   }
 
   public RemoteLocation getBaritoneTrackUri() {
-    return this.baritoneTrackUri.getValue();
+    return this.baritoneTrackUri.get();
   }
 
   public RemoteLocation getBassTrackUri() {
-    return this.bassTrackUri.getValue();
+    return this.bassTrackUri.get();
   }
 
   public Integer getClassicTagNumber() {
-    return this.classicTagNumber.getValue();
+    return this.classicTagNumber.get();
   }
 
   public int getDownloadCount() {
-    return this.downloadCount.getValue();
+    return this.downloadCount.get();
   }
 
   public int getId() {
-    return this.id.getValue();
+    return this.id.get();
   }
 
   public Note getKeyNote() {
@@ -491,71 +486,71 @@ public class Tag {
   }
 
   public Date getLastRefreshed() {
-    return this.lastRefreshed.getValue();
+    return this.lastRefreshed.get();
   }
 
   public RemoteLocation getLeadTrackUri() {
-    return this.leadTrackUri.getValue();
+    return this.leadTrackUri.get();
   }
 
   public String getLearningTrackQuartet() {
-    return this.learningTrackQuartet.getValue();
+    return this.learningTrackQuartet.get();
   }
 
   public String getLearningTrackQuartetWebsite() {
-    return this.learningTrackQuartetWebsite.getValue();
+    return this.learningTrackQuartetWebsite.get();
   }
 
   public String getLyrics() {
-    return this.lyrics.getValue();
+    return this.lyrics.get();
   }
 
   public RemoteLocation getNotationUri() {
-    return this.notationUri.getValue();
+    return this.notationUri.get();
   }
 
   public String getNotes() {
-    return this.notes.getValue();
+    return this.notes.get();
   }
 
   public RemoteLocation getOther1TrackUri() {
-    return this.other1TrackUri.getValue();
+    return this.other1TrackUri.get();
   }
 
   public RemoteLocation getOther2TrackUri() {
-    return this.other2TrackUri.getValue();
+    return this.other2TrackUri.get();
   }
 
   public RemoteLocation getOther3TrackUri() {
-    return this.other3TrackUri.getValue();
+    return this.other3TrackUri.get();
   }
 
   public RemoteLocation getOther4TrackUri() {
-    return this.other4TrackUri.getValue();
+    return this.other4TrackUri.get();
   }
 
   public Integer getParts() {
-    return this.parts.getValue();
+    return this.parts.get();
   }
 
   public Date getPosted() {
-    return this.posted.getValue();
+    return this.posted.get();
   }
 
   public String getProvider() {
-    return this.provider.getValue();
+    return this.provider.get();
   }
 
   public String getProviderWebsite() {
-    return this.providerWebsite.getValue();
+    return this.providerWebsite.get();
   }
 
   public Double getRating() {
-    return this.rating.getValue();
+    return this.rating.get();
   }
 
   public String getRecordingMethod() {
-    return this.recordingMethod.getValue();
+    return this.recordingMethod.get();
   }
 
   public boolean getSheetMusicSupportedFormat() {
@@ -563,23 +558,23 @@ public class Tag {
   }
 
   public RemoteLocation getSheetMusicUri() {
-    return this.sheetMusicUri.getValue();
+    return this.sheetMusicUri.get();
   }
 
   public String getSungBy() {
-    return this.sungBy.getValue();
+    return this.sungBy.get();
   }
 
   public String getSungByWebsite() {
-    return this.sungByWebsite.getValue();
+    return this.sungByWebsite.get();
   }
 
   public Integer getSungYear() {
-    return this.sungYear.getValue();
+    return this.sungYear.get();
   }
 
   public String getTagType() {
-    return this.tagType.getValue();
+    return this.tagType.get();
   }
 
   public String getTagUri() {
@@ -588,28 +583,28 @@ public class Tag {
   }
 
   public String getTeacher() {
-    return this.teacher.getValue();
+    return this.teacher.get();
   }
 
   public String getTeacherWebsite() {
-    return this.teacherWebsite.getValue();
+    return this.teacherWebsite.get();
   }
 
   public String getTeachingVideo() {
-    return this.teachingVideo.getValue();
+    return this.teachingVideo.get();
   }
 
   public RemoteLocation getTenorTrackUri() {
-    return this.tenorTrackUri.getValue();
+    return this.tenorTrackUri.get();
   }
 
   public String getTitle() {
-    return this.title.getValue();
+    return this.title.get();
   }
 
   public List<Track> getTracks() {
-    if (this.tracks.getValue() == null) {
-      ObservableCollection<Track> tracks = new ObservableCollection<Track>();
+    if (this.tracks.get() == null) {
+      TrackableCollection<Track> tracks = new TrackableCollection<Track>();
       if (this.getAllPartsTrackUri() != null)
         tracks.add(new Track("All Parts", this.getAllPartsTrackUri()));
       if (this.getTenorTrackUri() != null)
@@ -628,25 +623,25 @@ public class Tag {
         tracks.add(new Track("Other3", this.getOther3TrackUri()));
       if (this.getOther4TrackUri() != null)
         tracks.add(new Track("Other4", this.getOther4TrackUri()));
-      this.tracks.setValue(tracks);
+      this.tracks.set(tracks);
     }
-    return this.tracks.getValue();
+    return this.tracks.get();
   }
 
   public String getVersion() {
-    return this.version.getValue();
+    return this.version.get();
   }
 
   public List<Video> getVideos() {
-    return this.videos.getValue();
+    return this.videos.get();
   }
 
   public String getWrittenKey() {
-    return this.writtenKey.getValue();
+    return this.writtenKey.get();
   }
 
   public Integer getYearArranged() {
-    return this.yearArranged.getValue();
+    return this.yearArranged.get();
   }
 
   @Override
@@ -724,88 +719,77 @@ public class Tag {
             rl.setType(property.attribute("type").getValue());
             this.setSheetMusicUri(rl);
           }
-        }
-        else if (property.getName().equals("Notation")) {
+        } else if (property.getName().equals("Notation")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setNotationUri(rl);
           }
-        }
-        else if (property.getName().equals("AllParts")) {
+        } else if (property.getName().equals("AllParts")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setAllPartsTrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Bass")) {
+        } else if (property.getName().equals("Bass")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setBassTrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Bari")) {
+        } else if (property.getName().equals("Bari")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setBaritoneTrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Lead")) {
+        } else if (property.getName().equals("Lead")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setLeadTrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Tenor")) {
+        } else if (property.getName().equals("Tenor")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setTenorTrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Other1")) {
+        } else if (property.getName().equals("Other1")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setOther1TrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Other2")) {
+        } else if (property.getName().equals("Other2")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setOther2TrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Other3")) {
+        } else if (property.getName().equals("Other3")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setOther3TrackUri(rl);
           }
-        }
-        else if (property.getName().equals("Other4")) {
+        } else if (property.getName().equals("Other4")) {
           if (!(propValue == null || propValue.length() == 0)) {
             RemoteLocation rl = new RemoteLocation();
             rl.setUri(propValue);
             rl.setType(property.attribute("type").getValue());
             this.setOther4TrackUri(rl);
           }
-        }
-        else if (property.getName().equals("videos")) {
+        } else if (property.getName().equals("videos")) {
           for (XmlElement elem : property.getElements()) {
             if (!elem.getName().equals("video"))
               continue;
@@ -814,8 +798,7 @@ public class Tag {
             this.getVideos().add(v);
           }
         }
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
@@ -834,182 +817,180 @@ public class Tag {
             String value = br.readLine();
             boolean result = value.trim().toLowerCase().equals("ok");
             source.setResult(result);
-          }
-          catch (Exception e) {
+          } catch (Exception e) {
             source.setError(e);
           }
         }
       };
       t.start();
-    }
-    catch (MalformedURLException e) {
+    } catch (MalformedURLException e) {
       e.printStackTrace();
     }
     return new Task<Boolean>(source);
   }
 
   public void setAllPartsTrackUri(RemoteLocation value) {
-    this.allPartsTrackUri.setValue(value);
+    this.allPartsTrackUri.set(value);
   }
 
   public void setAlternativeTitle(String value) {
-    this.alternativeTitle.setValue(value);
+    this.alternativeTitle.set(value);
   }
 
   public void setAppVersion(int value) {
-    this.appVersion.setValue(value);
+    this.appVersion.set(value);
   }
 
   public void setArranger(String value) {
-    this.arranger.setValue(value);
+    this.arranger.set(value);
   }
 
   public void setArrangerWebsite(String value) {
-    this.arrangerWebsite.setValue(value);
+    this.arrangerWebsite.set(value);
   }
 
   public void setBaritoneTrackUri(RemoteLocation value) {
-    this.baritoneTrackUri.setValue(value);
+    this.baritoneTrackUri.set(value);
   }
 
   public void setBassTrackUri(RemoteLocation value) {
-    this.bassTrackUri.setValue(value);
+    this.bassTrackUri.set(value);
   }
 
   public void setClassicTagNumber(Integer value) {
-    this.classicTagNumber.setValue(value);
+    this.classicTagNumber.set(value);
   }
 
   public void setDownloadCount(int value) {
-    this.downloadCount.setValue(value);
+    this.downloadCount.set(value);
   }
 
   public void setId(int value) {
-    this.id.setValue(value);
+    this.id.set(value);
   }
 
   public void setLastRefreshed(Date value) {
-    this.lastRefreshed.setValue(value);
+    this.lastRefreshed.set(value);
   }
 
   public void setLeadTrackUri(RemoteLocation value) {
-    this.leadTrackUri.setValue(value);
+    this.leadTrackUri.set(value);
   }
 
   public void setLearningTrackQuartet(String value) {
-    this.learningTrackQuartet.setValue(value);
+    this.learningTrackQuartet.set(value);
   }
 
   public void setLearningTrackQuartetWebsite(String value) {
-    this.learningTrackQuartetWebsite.setValue(value);
+    this.learningTrackQuartetWebsite.set(value);
   }
 
   public void setLyrics(String value) {
-    this.lyrics.setValue(value);
+    this.lyrics.set(value);
   }
 
   public void setNotationUri(RemoteLocation value) {
-    this.notationUri.setValue(value);
+    this.notationUri.set(value);
   }
 
   public void setNotes(String value) {
-    this.notes.setValue(value);
+    this.notes.set(value);
   }
 
   public void setOther1TrackUri(RemoteLocation value) {
-    this.other1TrackUri.setValue(value);
+    this.other1TrackUri.set(value);
   }
 
   public void setOther2TrackUri(RemoteLocation value) {
-    this.other2TrackUri.setValue(value);
+    this.other2TrackUri.set(value);
   }
 
   public void setOther3TrackUri(RemoteLocation value) {
-    this.other3TrackUri.setValue(value);
+    this.other3TrackUri.set(value);
   }
 
   public void setOther4TrackUri(RemoteLocation value) {
-    this.other4TrackUri.setValue(value);
+    this.other4TrackUri.set(value);
   }
 
   public void setParts(Integer value) {
-    this.parts.setValue(value);
+    this.parts.set(value);
   }
 
   public void setPosted(Date value) {
-    this.posted.setValue(value);
+    this.posted.set(value);
   }
 
   public void setProvider(String value) {
-    this.provider.setValue(value);
+    this.provider.set(value);
   }
 
   public void setProviderWebsite(String value) {
-    this.providerWebsite.setValue(value);
+    this.providerWebsite.set(value);
   }
 
   public void setRating(Double value) {
-    this.rating.setValue(value);
+    this.rating.set(value);
   }
 
   public void setRecordingMethod(String value) {
-    this.recordingMethod.setValue(value);
+    this.recordingMethod.set(value);
   }
 
   public void setSheetMusicUri(RemoteLocation value) {
-    this.sheetMusicUri.setValue(value);
+    this.sheetMusicUri.set(value);
   }
 
   public void setSungBy(String value) {
-    this.sungBy.setValue(value);
+    this.sungBy.set(value);
   }
 
   public void setSungByWebsite(String value) {
-    this.sungByWebsite.setValue(value);
+    this.sungByWebsite.set(value);
   }
 
   public void setSungYear(Integer value) {
-    this.sungYear.setValue(value);
+    this.sungYear.set(value);
   }
 
   public void setTagType(String value) {
-    this.tagType.setValue(value);
+    this.tagType.set(value);
   }
 
   public void setTeacher(String value) {
-    this.teacher.setValue(value);
+    this.teacher.set(value);
   }
 
   public void setTeacherWebsite(String value) {
-    this.teacherWebsite.setValue(value);
+    this.teacherWebsite.set(value);
   }
 
   public void setTeachingVideo(String value) {
-    this.teachingVideo.setValue(value);
+    this.teachingVideo.set(value);
   }
 
   public void setTenorTrackUri(RemoteLocation value) {
-    this.tenorTrackUri.setValue(value);
+    this.tenorTrackUri.set(value);
   }
 
   public void setTitle(String value) {
-    this.title.setValue(value);
+    this.title.set(value);
   }
 
   public void setVersion(String value) {
-    this.version.setValue(value);
+    this.version.set(value);
   }
 
   public void setVideos(List<Video> value) {
-    this.videos.setValue(value);
+    this.videos.set(value);
   }
 
   public void setWrittenKey(String value) {
-    this.writtenKey.setValue(value);
+    this.writtenKey.set(value);
   }
 
   public void setYearArranged(Integer value) {
-    this.yearArranged.setValue(value);
+    this.yearArranged.set(value);
   }
 
   @Override

@@ -1,7 +1,5 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,10 +9,13 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
+
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+
 import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.lib.json.JsonSerializer;
 import depollsoft.lib.ui.ThreadSwitchContext;
@@ -30,11 +31,11 @@ public class TagQueryActivity extends Activity {
   }
 
   public boolean getHandleSearchButton() {
-    return this.handleSearchButton.getValue();
+    return this.handleSearchButton.get();
   }
 
   public QueryModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -58,8 +59,7 @@ public class TagQueryActivity extends Activity {
             public void onScrollStateChanged(AbsListView view, int scrollState) {
             }
           });
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
@@ -105,7 +105,6 @@ public class TagQueryActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override
@@ -134,11 +133,11 @@ public class TagQueryActivity extends Activity {
   }
 
   public void setHandleSearchButton(boolean value) {
-    this.handleSearchButton.setValue(value);
+    this.handleSearchButton.set(value);
   }
 
   public void setModel(QueryModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 
 }

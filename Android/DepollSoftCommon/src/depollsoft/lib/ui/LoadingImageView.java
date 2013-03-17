@@ -1,15 +1,17 @@
 package depollsoft.lib.ui;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import depollsoft.lib.binding.TrackableField;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
 import android.widget.ImageView;
+
+import com.bindroid.trackable.TrackableField;
 
 public class LoadingImageView extends ImageView {
 
@@ -33,9 +35,8 @@ public class LoadingImageView extends ImageView {
       public void run() {
         try {
           final String currentSource = LoadingImageView.this.getSource();
-          final Bitmap bitmap = BitmapFactory
-              .decodeStream((InputStream) new URL(LoadingImageView.this
-                  .getSource()).getContent());
+          final Bitmap bitmap = BitmapFactory.decodeStream((InputStream) new URL(
+              LoadingImageView.this.getSource()).getContent());
           LoadingImageView.this.post(new Runnable() {
 
             public void run() {
@@ -44,11 +45,9 @@ public class LoadingImageView extends ImageView {
             }
           });
 
-        }
-        catch (MalformedURLException e) {
+        } catch (MalformedURLException e) {
           e.printStackTrace();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
           e.printStackTrace();
         }
       }
@@ -57,11 +56,11 @@ public class LoadingImageView extends ImageView {
   }
 
   public String getSource() {
-    return this.source.getValue();
+    return this.source.get();
   }
 
   public void setSource(String value) {
-    this.source.setValue(value);
+    this.source.set(value);
     if (value != null)
       this.fetchSource();
   }

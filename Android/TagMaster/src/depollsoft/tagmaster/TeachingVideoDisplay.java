@@ -1,10 +1,5 @@
 package depollsoft.tagmaster;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.tagmaster.barbershop.Tag;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -12,6 +7,12 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
+
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.tagmaster.barbershop.Tag;
 
 public class TeachingVideoDisplay extends LinearLayout {
 
@@ -33,20 +34,20 @@ public class TeachingVideoDisplay extends LinearLayout {
 
   @Override
   public Tag getTag() {
-    return this.tag.getValue();
+    return this.tag.get();
   }
 
   public String getThumbnailUri() {
-    return this.thumbnailUri.getValue();
+    return this.thumbnailUri.get();
   }
 
   public String getWatchUri() {
-    return this.watchUri.getValue();
+    return this.watchUri.get();
   }
 
   private void init() {
-    LayoutInflater inflater = (LayoutInflater) this.getContext()
-        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
+        Context.LAYOUT_INFLATER_SERVICE);
     inflater.inflate(R.layout.teachingvideodisplay, this, true);
 
     this.setClickable(true);
@@ -54,8 +55,8 @@ public class TeachingVideoDisplay extends LinearLayout {
 
       public void onClick(View arg0) {
         if (TeachingVideoDisplay.this.getWatchUri() != null) {
-          GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews",
-              "ViewTeachingVideo", TeachingVideoDisplay.this.getWatchUri(), 0);
+          GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "ViewTeachingVideo",
+              TeachingVideoDisplay.this.getWatchUri(), 0);
           Intent i = new Intent(Intent.ACTION_VIEW);
           i.setData(Uri.parse(TeachingVideoDisplay.this.getWatchUri()));
           TeachingVideoDisplay.this.getContext().startActivity(i);
@@ -75,22 +76,20 @@ public class TeachingVideoDisplay extends LinearLayout {
   @Override
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-    UiBinder.unbind(this);
   }
 
   public void setTag(Tag value) {
-    this.tag.setValue(value);
+    this.tag.set(value);
     this.setThumbnailUri(String.format("http://img.youtube.com/vi/%s/2.jpg",
         value.getTeachingVideo()));
-    this.setWatchUri(String.format("http://www.youtube.com/watch?v=%s",
-        value.getTeachingVideo()));
+    this.setWatchUri(String.format("http://www.youtube.com/watch?v=%s", value.getTeachingVideo()));
   }
 
   public void setThumbnailUri(String value) {
-    this.thumbnailUri.setValue(value);
+    this.thumbnailUri.set(value);
   }
 
   public void setWatchUri(String value) {
-    this.watchUri.setValue(value);
+    this.watchUri.set(value);
   }
 }

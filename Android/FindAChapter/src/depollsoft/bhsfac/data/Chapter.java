@@ -1,6 +1,6 @@
 package depollsoft.bhsfac.data;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class Chapter {
   private TrackableField<Integer> id = new TrackableField<Integer>(0);
@@ -24,82 +24,82 @@ public class Chapter {
   private TrackableField<String> nextMeetingDate = new TrackableField<String>();
 
   public String getAddress() {
-    return this.address.getValue();
+    return this.address.get();
   }
 
   public String getChapterName() {
-    return this.chapterName.getValue();
+    return this.chapterName.get();
   }
 
   public String getChorusName() {
-    return this.chorusName.getValue();
+    return this.chorusName.get();
   }
 
   public String getContactEmail() {
-    return this.contactEmail.getValue();
+    return this.contactEmail.get();
   }
 
   public String getContactName() {
-    return this.contactName.getValue();
+    return this.contactName.get();
   }
 
   public int getDistance() {
-    return this.distance.getValue();
+    return this.distance.get();
   }
 
   public int getId() {
-    return this.id.getValue();
+    return this.id.get();
   }
 
   public String getNextMeetingDate() {
-    return this.nextMeetingDate.getValue();
+    return this.nextMeetingDate.get();
   }
 
   public String getPhone() {
-    return this.phone.getValue();
+    return this.phone.get();
   }
 
   public String getWebsite() {
-    return this.website.getValue();
+    return this.website.get();
   }
 
   public void setAddress(String address) {
-    this.address.setValue(address);
+    this.address.set(address);
   }
 
   public void setChapterName(String chapterName) {
-    this.chapterName.setValue(chapterName);
+    this.chapterName.set(chapterName);
   }
 
   public void setChorusName(String chorusName) {
-    this.chorusName.setValue(chorusName);
+    this.chorusName.set(chorusName);
   }
 
   public void setContactEmail(String contactEmail) {
-    this.contactEmail.setValue(contactEmail);
+    this.contactEmail.set(contactEmail);
   }
 
   public void setContactName(String contactName) {
-    this.contactName.setValue(contactName);
+    this.contactName.set(contactName);
   }
 
   public void setDistance(int distance) {
-    this.distance.setValue(distance);
+    this.distance.set(distance);
   }
 
   public void setId(int id) {
-    this.id.setValue(id);
+    this.id.set(id);
   }
 
   public void setNextMeetingDate(String nextMeetingDate) {
-    this.nextMeetingDate.setValue(nextMeetingDate);
+    this.nextMeetingDate.set(nextMeetingDate);
   }
 
   public void setPhone(String phone) {
-    this.phone.setValue(phone);
+    this.phone.set(phone);
   }
 
   public void setWebsite(String website) {
-    this.website.setValue(website);
+    this.website.set(website);
   }
 }

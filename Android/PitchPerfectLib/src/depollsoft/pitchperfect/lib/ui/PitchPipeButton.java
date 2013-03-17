@@ -1,14 +1,16 @@
 package depollsoft.pitchperfect.lib.ui;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.util.ReflectedProperty;
-import depollsoft.pitchperfect.lib.Note;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.Button;
+
+import com.bindroid.BindingMode;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.ReflectedProperty;
+
+import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeButton extends Button {
 
@@ -29,23 +31,22 @@ public class PitchPipeButton extends Button {
   }
 
   public boolean getIsToggle() {
-    return this.isToggle.getValue();
+    return this.isToggle.get();
   }
 
   public Note getNote() {
-    return this.note.getValue();
+    return this.note.get();
   }
 
   @Override
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
-    UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
-        "Note.IsPlaying", BindingMode.OneWay);
+    UiBinder.bind(new ReflectedProperty(this, "Pressed"), new ReflectedProperty(this,
+        "Note.IsPlaying"), BindingMode.ONE_WAY);
   }
 
   @Override
   protected void onDetachedFromWindow() {
-    UiBinder.unbind(this);
     super.onDetachedFromWindow();
   }
 
@@ -57,8 +58,7 @@ public class PitchPipeButton extends Button {
         if (this.getIsToggle()) {
           this.getNote().setIsPlaying(!this.getNote().getIsPlaying());
           return true;
-        }
-        else
+        } else
           this.getNote().play();
         break;
       case MotionEvent.ACTION_UP:
@@ -91,11 +91,11 @@ public class PitchPipeButton extends Button {
   // }
 
   public void setIsToggle(boolean value) {
-    this.isToggle.setValue(value);
+    this.isToggle.set(value);
   }
 
   public void setNote(Note value) {
-    this.note.setValue(value);
+    this.note.set(value);
   }
 
 }

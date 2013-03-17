@@ -1,15 +1,5 @@
 package depollsoft.pitchperfect;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.ToggleButtonCheckedProperty;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.pitchperfect.lib.Key;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -17,6 +7,17 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ListView;
 import android.widget.ToggleButton;
+
+import com.bindroid.BindingMode;
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.CompoundButtonCheckedProperty;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.pitchperfect.lib.Key;
 
 public class KeySignatureActivity extends Activity {
 
@@ -43,7 +44,7 @@ public class KeySignatureActivity extends Activity {
   }
 
   public KeySignatureModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -56,8 +57,8 @@ public class KeySignatureActivity extends Activity {
 
     UiBinder.bind(
         this,
-        new ToggleButtonCheckedProperty((ToggleButton) this
-            .findViewById(R.id.majorMinorToggleButton)), "Model.IsMajor", BindingMode.TwoWay);
+        new CompoundButtonCheckedProperty((ToggleButton) this
+            .findViewById(R.id.majorMinorToggleButton)), "Model.IsMajor", BindingMode.TWO_WAY);
 
     UiBinder.bind(this, R.id.majorKeySignatureListView, "Adapter", "Model.MajorKeys",
         new AdapterConverter(KeySignatureListItemView.class));
@@ -93,7 +94,6 @@ public class KeySignatureActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -131,7 +131,7 @@ public class KeySignatureActivity extends Activity {
   }
 
   public void setModel(KeySignatureModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 
 }

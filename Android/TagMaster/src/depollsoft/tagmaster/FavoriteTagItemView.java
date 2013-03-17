@@ -1,12 +1,5 @@
 package depollsoft.tagmaster;
 
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.BoundUi;
-import depollsoft.lib.util.Action;
-import depollsoft.lib.util.ObjectUtilities;
-import depollsoft.tagmaster.barbershop.Tag;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.ContextMenu;
@@ -16,8 +9,16 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.widget.FrameLayout;
 
-public class FavoriteTagItemView extends FrameLayout implements
-    BoundUi<Integer> {
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.BoundUi;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.Action;
+import com.bindroid.utils.ObjectUtilities;
+
+import depollsoft.tagmaster.barbershop.Tag;
+
+public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer> {
 
   private TrackableField<Integer> tagId = new TrackableField<Integer>();
 
@@ -66,11 +67,11 @@ public class FavoriteTagItemView extends FrameLayout implements
 
   @Override
   public Tag getTag() {
-    return this.tag.getValue();
+    return this.tag.get();
   }
 
   public Integer getTagId() {
-    return this.tagId.getValue();
+    return this.tagId.get();
   }
 
   private void init() {
@@ -92,10 +93,8 @@ public class FavoriteTagItemView extends FrameLayout implements
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
 
-    UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag",
-        BoolConverter.get(true));
-    UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag",
-        BoolConverter.get());
+    UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag", BoolConverter.get(true));
+    UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag", BoolConverter.get());
   }
 
   @Override
@@ -111,42 +110,37 @@ public class FavoriteTagItemView extends FrameLayout implements
           }
         });
 
-    menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(
-        new OnMenuItemClickListener() {
-          public boolean onMenuItemClick(MenuItem item) {
-            FavoritesModel.moveDown(FavoriteTagItemView.this.getTagId());
-            return true;
-          }
-        });
+    menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+      public boolean onMenuItemClick(MenuItem item) {
+        FavoritesModel.moveDown(FavoriteTagItemView.this.getTagId());
+        return true;
+      }
+    });
 
-    menu.findItem(R.id.moveDownMenuItem).setEnabled(
-        FavoritesModel.canMoveDown(this.getTagId()));
+    menu.findItem(R.id.moveDownMenuItem).setEnabled(FavoritesModel.canMoveDown(this.getTagId()));
 
-    menu.findItem(R.id.moveUpMenuItem).setEnabled(
-        FavoritesModel.canMoveUp(this.getTagId()));
+    menu.findItem(R.id.moveUpMenuItem).setEnabled(FavoritesModel.canMoveUp(this.getTagId()));
 
-    menu.findItem(R.id.moveUpMenuItem).setOnMenuItemClickListener(
-        new OnMenuItemClickListener() {
-          public boolean onMenuItemClick(MenuItem item) {
-            FavoritesModel.moveUp(FavoriteTagItemView.this.getTagId());
-            return true;
-          }
-        });
+    menu.findItem(R.id.moveUpMenuItem).setOnMenuItemClickListener(new OnMenuItemClickListener() {
+      public boolean onMenuItemClick(MenuItem item) {
+        FavoritesModel.moveUp(FavoriteTagItemView.this.getTagId());
+        return true;
+      }
+    });
     super.onCreateContextMenu(menu);
   }
 
   @Override
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-    UiBinder.unbind(this);
   }
 
   public void setTag(Tag value) {
-    this.tag.setValue(value);
+    this.tag.set(value);
     this.regularView.bind(value);
   }
 
   public void setTagId(Integer value) {
-    this.tagId.setValue(value);
+    this.tagId.set(value);
   }
 }

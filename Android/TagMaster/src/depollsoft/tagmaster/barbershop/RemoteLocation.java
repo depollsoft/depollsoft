@@ -1,6 +1,6 @@
 package depollsoft.tagmaster.barbershop;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class RemoteLocation {
 
@@ -9,18 +9,18 @@ public class RemoteLocation {
   private TrackableField<String> type = new TrackableField<String>();
 
   public String getType() {
-    return this.type.getValue();
+    return this.type.get();
   }
 
   public String getUri() {
-    return this.uri.getValue();
+    return this.uri.get();
   }
 
   public void setType(String value) {
-    this.type.setValue(value);
+    this.type.set(value);
   }
 
   public void setUri(String value) {
-    this.uri.setValue(value);
+    this.uri.set(value);
   }
 }

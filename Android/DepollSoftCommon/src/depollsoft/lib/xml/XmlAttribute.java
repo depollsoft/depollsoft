@@ -1,6 +1,6 @@
 package depollsoft.lib.xml;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class XmlAttribute {
 
@@ -9,19 +9,19 @@ public class XmlAttribute {
   private TrackableField<String> value = new TrackableField<String>();
 
   public String getName() {
-    return this.name.getValue();
+    return this.name.get();
   }
 
   public String getValue() {
-    return this.value.getValue();
+    return this.value.get();
   }
 
   public void setName(String value) {
-    this.name.setValue(value);
+    this.name.set(value);
   }
 
   public void setValue(String value) {
-    this.value.setValue(value);
+    this.value.set(value);
   }
 
   @Override

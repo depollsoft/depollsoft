@@ -2,17 +2,6 @@ package depollsoft.pitchperfect;
 
 import java.util.Collections;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-import com.parse.ParseUser;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.compat.ui.MenuItems;
-import depollsoft.pitchperfect.lib.PitchedSong;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -20,10 +9,22 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.parse.ParseUser;
+
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.compat.ui.MenuItems;
+import depollsoft.pitchperfect.lib.PitchedSong;
 
 public class SongListActivity extends Activity {
 
@@ -38,11 +39,11 @@ public class SongListActivity extends Activity {
   }
 
   public boolean getEditing() {
-    return this.editing.getValue();
+    return this.editing.get();
   }
 
   public SongsModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -114,12 +115,10 @@ public class SongListActivity extends Activity {
       });
 
       return true;
-    }
-    finally {
+    } finally {
       preparingMenu = false;
     }
   }
-  
 
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -129,7 +128,6 @@ public class SongListActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -157,7 +155,7 @@ public class SongListActivity extends Activity {
   }
 
   public void setEditing(boolean value) {
-    this.editing.setValue(value);
+    this.editing.set(value);
     String text;
     if (!value)
       text = this.getResources().getString(R.string.EditSongList);
@@ -167,7 +165,7 @@ public class SongListActivity extends Activity {
   }
 
   public void setModel(SongsModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 
   @Override

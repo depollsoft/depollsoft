@@ -1,14 +1,14 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.ToStringConverter;
-import depollsoft.lib.binding.ui.UiBinder;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
+
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.converters.ToStringConverter;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class TagMiscActivity extends Activity {
 
@@ -59,7 +59,6 @@ public class TagMiscActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override

@@ -3,7 +3,7 @@ package depollsoft.lib.xml;
 import java.util.ArrayList;
 import java.util.List;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class XmlElement {
   private TrackableField<String> name = new TrackableField<String>();
@@ -35,35 +35,35 @@ public class XmlElement {
   }
 
   public List<XmlAttribute> getAttributes() {
-    return this.attributes.getValue();
+    return this.attributes.get();
   }
 
   public List<XmlElement> getElements() {
-    return this.elements.getValue();
+    return this.elements.get();
   }
 
   public String getName() {
-    return this.name.getValue();
+    return this.name.get();
   }
 
   public String getValue() {
-    return this.value.getValue();
+    return this.value.get();
   }
 
   private void setAttributes(List<XmlAttribute> value) {
-    this.attributes.setValue(value);
+    this.attributes.set(value);
   }
 
   private void setElements(List<XmlElement> value) {
-    this.elements.setValue(value);
+    this.elements.set(value);
   }
 
   public void setName(String value) {
-    this.name.setValue(value);
+    this.name.set(value);
   }
 
   public void setValue(String value) {
-    this.value.setValue(value);
+    this.value.set(value);
   }
 
   @Override

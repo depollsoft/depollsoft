@@ -17,6 +17,11 @@ import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
+import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.Trackable;
+import com.bindroid.ui.CompoundButtonCheckedProperty;
+import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.LogInCallback;
@@ -25,11 +30,6 @@ import com.parse.ParseFacebookUtils;
 import com.parse.ParseFacebookUtils.Permissions;
 import com.parse.ParseUser;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.Trackable;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.CheckBoxCheckedProperty;
-import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
@@ -86,12 +86,12 @@ public class SettingsActivity extends Activity {
     this.setContentView(R.layout.settingsview);
 
     UiBinder.bind(this,
-        new CheckBoxCheckedProperty((CheckBox) this.findViewById(R.id.toggleNoteCheckBox)),
-        "ToggleNotes", BindingMode.TwoWay);
+        new CompoundButtonCheckedProperty((CheckBox) this.findViewById(R.id.toggleNoteCheckBox)),
+        "ToggleNotes", BindingMode.TWO_WAY);
 
     UiBinder.bind(this,
-        new CheckBoxCheckedProperty((CheckBox) this.findViewById(R.id.wakeLockCheckBox)),
-        "WakeLock", BindingMode.TwoWay);
+        new CompoundButtonCheckedProperty((CheckBox) this.findViewById(R.id.wakeLockCheckBox)),
+        "WakeLock", BindingMode.TWO_WAY);
 
     UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
     UiBinder.bind(this, R.id.rateReviewHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
@@ -202,7 +202,6 @@ public class SettingsActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 

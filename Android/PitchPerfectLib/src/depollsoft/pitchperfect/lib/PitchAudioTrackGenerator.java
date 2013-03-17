@@ -2,11 +2,14 @@ package depollsoft.pitchperfect.lib;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import depollsoft.lib.audio.StreamingAudioTrack;
-import depollsoft.lib.util.Action;
+
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+
+import com.bindroid.utils.Action;
+
+import depollsoft.lib.audio.StreamingAudioTrack;
 
 public class PitchAudioTrackGenerator {
   private static final double TwoPi = Math.PI * 2;

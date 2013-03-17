@@ -3,6 +3,11 @@ package depollsoft.pitchperfect;
 import java.util.Collections;
 import java.util.Date;
 
+import com.bindroid.trackable.Trackable;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.trackable.Tracker;
+import com.bindroid.utils.Action;
 import com.parse.GetCallback;
 import com.parse.ParseACL;
 import com.parse.ParseException;
@@ -11,19 +16,14 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.Trackable;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.Tracker;
 import depollsoft.lib.json.JsonSerializer;
-import depollsoft.lib.util.Action;
 import depollsoft.lib.util.Preferences;
 import depollsoft.pitchperfect.lib.PitchedSong;
 
 public class SongsModel {
   private static final String SongsKey = "depollsoft.pitchperfect.SongsModel";
   private static final String SongsChangedKey = "depollsoft.pitchperfect.SongsChanged";
-  private TrackableField<ObservableCollection<PitchedSong>> songs = new TrackableField<ObservableCollection<PitchedSong>>();
+  private TrackableField<TrackableCollection<PitchedSong>> songs = new TrackableField<TrackableCollection<PitchedSong>>();
   private ParseObject serialized;
   private boolean suspendTimestamp;
   private boolean saving;
@@ -44,9 +44,9 @@ public class SongsModel {
     this.suspendTimestamp = true;
     Preferences.initialize(SongsModel.SongsChangedKey, 0L, Long.TYPE);
     if (Preferences.get(SongsModel.SongsKey) == null)
-      this.setSongs(new ObservableCollection<PitchedSong>());
+      this.setSongs(new TrackableCollection<PitchedSong>());
     else
-      this.setSongs((ObservableCollection<PitchedSong>) Preferences.get(SongsModel.SongsKey));
+      this.setSongs((TrackableCollection<PitchedSong>) Preferences.get(SongsModel.SongsKey));
     this.suspendTimestamp = false;
     Trackable.track(new Tracker() {
 
@@ -86,10 +86,9 @@ public class SongsModel {
   public void fromParseObject(ParseObject object) {
     this.suspendTimestamp = true;
     try {
-      this.setSongs((ObservableCollection<PitchedSong>) JsonSerializer.deserialize(object
+      this.setSongs((TrackableCollection<PitchedSong>) JsonSerializer.deserialize(object
           .getJSONObject("songs")));
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
     }
     this.suspendTimestamp = false;
     this.serialized = object;
@@ -99,8 +98,8 @@ public class SongsModel {
     return Preferences.get(SongsModel.SongsChangedKey);
   }
 
-  public ObservableCollection<PitchedSong> getSongs() {
-    return this.songs.getValue();
+  public TrackableCollection<PitchedSong> getSongs() {
+    return this.songs.get();
   }
 
   public void handleLogOut() {
@@ -141,15 +140,13 @@ public class SongsModel {
           }
           if (main != null && SongsModel.this.getLastChangeTime() < main.getUpdatedAt().getTime()) {
             SongsModel.this.fromParseObject(main);
-          }
-          else if (refreshPostponedSave) {
+          } else if (refreshPostponedSave) {
             saveAllToParse();
           }
           refreshPostponedSave = false;
         }
       });
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       // It's ok -- it just means that a query is already ongoing.
       refreshing = false;
     }
@@ -192,8 +189,7 @@ public class SongsModel {
           SongsModel.this.postponedSave = false;
         }
       });
-    }
-    else if (this.serialized == null || this.serialized.getUpdatedAt() == null
+    } else if (this.serialized == null || this.serialized.getUpdatedAt() == null
         || this.getLastChangeTime() > this.serialized.getUpdatedAt().getTime()) {
       this.toParseObject().saveEventually();
     }
@@ -204,14 +200,13 @@ public class SongsModel {
       return;
     if (this.serialized == null) {
       Preferences.set(SongsModel.SongsChangedKey, 0L);
-    }
-    else {
+    } else {
       Preferences.set(SongsModel.SongsChangedKey, time);
     }
   }
 
-  public void setSongs(ObservableCollection<PitchedSong> value) {
-    this.songs.setValue(value);
+  public void setSongs(TrackableCollection<PitchedSong> value) {
+    this.songs.set(value);
   }
 
   public void sortSongs() {

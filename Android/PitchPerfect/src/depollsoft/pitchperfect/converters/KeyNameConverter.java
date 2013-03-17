@@ -2,7 +2,9 @@ package depollsoft.pitchperfect.converters;
 
 import android.text.SpannableStringBuilder;
 import android.text.style.RelativeSizeSpan;
-import depollsoft.lib.binding.ValueConverter;
+
+import com.bindroid.ValueConverter;
+
 import depollsoft.lib.ui.CustomTypefaceSpan;
 import depollsoft.lib.ui.SpannableUtilities;
 import depollsoft.pitchperfect.CommonModel;

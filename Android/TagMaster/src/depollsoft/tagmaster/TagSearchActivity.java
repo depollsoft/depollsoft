@@ -1,16 +1,5 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.EditTextTextProperty;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.json.JsonSerializer;
-import depollsoft.tagmaster.barbershop.TagCollection;
-import depollsoft.tagmaster.barbershop.TagSortOptions;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +13,18 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.bindroid.BindingMode;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.EditTextTextProperty;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.compat.ui.ActionBars;
+import depollsoft.lib.json.JsonSerializer;
+import depollsoft.tagmaster.barbershop.TagCollection;
+import depollsoft.tagmaster.barbershop.TagSortOptions;
+
 public class TagSearchActivity extends Activity {
 
   private TrackableField<QueryModel> model = new TrackableField<QueryModel>(new QueryModel());
@@ -33,7 +34,7 @@ public class TagSearchActivity extends Activity {
   }
 
   public QueryModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -43,7 +44,7 @@ public class TagSearchActivity extends Activity {
     this.setContentView(R.layout.tagsearchview);
 
     UiBinder.bind(this, new EditTextTextProperty((EditText) this.findViewById(R.id.searchTextBox)),
-        "Model.Query", BindingMode.TwoWay);
+        "Model.Query", BindingMode.TWO_WAY);
 
     ((EditText) this.findViewById(R.id.searchTextBox)).setOnKeyListener(new OnKeyListener() {
       public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -152,7 +153,6 @@ public class TagSearchActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override
@@ -192,6 +192,6 @@ public class TagSearchActivity extends Activity {
   }
 
   public void setModel(QueryModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 }

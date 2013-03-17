@@ -1,19 +1,21 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.BindingMode;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.ToStringConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.BoundUi;
-import depollsoft.lib.util.ReflectedProperty;
-import depollsoft.pitchperfect.converters.NoteListNoteTextConverter;
-import depollsoft.pitchperfect.lib.Note;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import com.bindroid.BindingMode;
+import com.bindroid.converters.ToStringConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.BoundUi;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.ReflectedProperty;
+
+import depollsoft.pitchperfect.converters.NoteListNoteTextConverter;
+import depollsoft.pitchperfect.lib.Note;
 
 public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
   private TrackableField<Note> note = new TrackableField<Note>();
@@ -34,7 +36,7 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
   }
 
   public Note getNote() {
-    return this.note.getValue();
+    return this.note.get();
   }
 
   private void init() {
@@ -46,18 +48,16 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
 
-    UiBinder.bind(this, R.id.noteNameTextView, "Text", "Note",
-        new NoteListNoteTextConverter());
+    UiBinder.bind(this, R.id.noteNameTextView, "Text", "Note", new NoteListNoteTextConverter());
     UiBinder.bind(this, R.id.noteFrequencyTextView, "Text", "Note.Frequency",
         new ToStringConverter("%1.2f Hz"));
 
-    UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
-        "Note.IsPlaying", BindingMode.OneWay);
+    UiBinder.bind(this, new ReflectedProperty(this, "Pressed"), "Note.IsPlaying",
+        BindingMode.ONE_WAY);
   }
 
   @Override
   protected void onDetachedFromWindow() {
-    UiBinder.unbind(this);
     super.onDetachedFromWindow();
   }
 
@@ -73,8 +73,7 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
         this.setPressed(this.getNote().getIsPlaying());
         return true;
       case MotionEvent.ACTION_MOVE:
-        if (SettingsModel.getToggleNotes()
-            && event.getEventTime() - event.getDownTime() > 100)
+        if (SettingsModel.getToggleNotes() && event.getEventTime() - event.getDownTime() > 100)
           this.getNote().stop();
         break;
       case MotionEvent.ACTION_UP:
@@ -90,7 +89,7 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
   }
 
   public void setNote(Note value) {
-    this.note.setValue(value);
+    this.note.set(value);
   }
 
 }

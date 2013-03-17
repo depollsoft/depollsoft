@@ -1,7 +1,7 @@
 package depollsoft.tagmaster.barbershop;
 
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.util.ObjectUtilities;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.utils.ObjectUtilities;
 
 public class Track {
 
@@ -26,19 +26,19 @@ public class Track {
   }
 
   public RemoteLocation getSource() {
-    return this.source.getValue();
+    return this.source.get();
   }
 
   public String getTitle() {
-    return this.title.getValue();
+    return this.title.get();
   }
 
   public void setSource(RemoteLocation value) {
-    this.source.setValue(value);
+    this.source.set(value);
   }
 
   public void setTitle(String value) {
-    this.title.setValue(value);
+    this.title.set(value);
   }
 
   @Override

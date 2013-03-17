@@ -1,16 +1,17 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+
 import depollsoft.pitchperfect.lib.Key;
 
 public class KeySignatureModel {
 
   private TrackableField<Boolean> isMajor = new TrackableField<Boolean>(true);
 
-  private TrackableField<ObservableCollection<Key>> majorKeys = new TrackableField<ObservableCollection<Key>>();
+  private TrackableField<TrackableCollection<Key>> majorKeys = new TrackableField<TrackableCollection<Key>>();
 
-  private TrackableField<ObservableCollection<Key>> minorKeys = new TrackableField<ObservableCollection<Key>>();
+  private TrackableField<TrackableCollection<Key>> minorKeys = new TrackableField<TrackableCollection<Key>>();
 
   public KeySignatureModel() {
     this.setMajorKeys(Key.getMajorKeys());
@@ -18,26 +19,26 @@ public class KeySignatureModel {
   }
 
   public boolean getIsMajor() {
-    return this.isMajor.getValue();
+    return this.isMajor.get();
   }
 
-  public ObservableCollection<Key> getMajorKeys() {
-    return this.majorKeys.getValue();
+  public TrackableCollection<Key> getMajorKeys() {
+    return this.majorKeys.get();
   }
 
-  public ObservableCollection<Key> getMinorKeys() {
-    return this.minorKeys.getValue();
+  public TrackableCollection<Key> getMinorKeys() {
+    return this.minorKeys.get();
   }
 
   public void setIsMajor(boolean value) {
-    this.isMajor.setValue(value);
+    this.isMajor.set(value);
   }
 
-  public void setMajorKeys(ObservableCollection<Key> value) {
-    this.majorKeys.setValue(value);
+  public void setMajorKeys(TrackableCollection<Key> value) {
+    this.majorKeys.set(value);
   }
 
-  public void setMinorKeys(ObservableCollection<Key> value) {
-    this.minorKeys.setValue(value);
+  public void setMinorKeys(TrackableCollection<Key> value) {
+    this.minorKeys.set(value);
   }
 }

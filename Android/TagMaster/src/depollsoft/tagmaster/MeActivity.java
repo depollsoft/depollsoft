@@ -6,6 +6,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.ParseException;
@@ -13,10 +17,6 @@ import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.RefreshCallback;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.lib.ui.ChangelogViewer;
@@ -25,7 +25,7 @@ public class MeActivity extends Activity {
   public MeActivity() {
   }
 
-  public ObservableCollection<Integer> getFavoriteIds() {
+  public TrackableCollection<Integer> getFavoriteIds() {
     return FavoritesModel.getFavoriteIds();
   }
 
@@ -81,7 +81,6 @@ public class MeActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override

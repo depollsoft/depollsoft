@@ -3,25 +3,25 @@ package depollsoft.tagmaster;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import com.bindroid.trackable.Trackable;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.trackable.Tracker;
+import com.bindroid.utils.Action;
 import com.parse.ParseUser;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.Trackable;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.Tracker;
-import depollsoft.lib.util.Action;
 import depollsoft.lib.util.Preferences;
 
 @SuppressWarnings("unchecked")
 public class TeachableTagsModel {
   private static final String TeachableTagsPreference = "tagmaster.TeachableTags";
-  private static TrackableField<ObservableCollection<Integer>> teachableTagIds = new TrackableField<ObservableCollection<Integer>>();
+  private static TrackableField<TrackableCollection<Integer>> teachableTagIds = new TrackableField<TrackableCollection<Integer>>();
 
   static {
     if (Preferences.get(TeachableTagsModel.TeachableTagsPreference) == null)
-      TeachableTagsModel.setTeachableTagIds(new ObservableCollection<Integer>());
+      TeachableTagsModel.setTeachableTagIds(new TrackableCollection<Integer>());
     else
-      TeachableTagsModel.setTeachableTagIds((ObservableCollection<Integer>) Preferences
+      TeachableTagsModel.setTeachableTagIds((TrackableCollection<Integer>) Preferences
           .get(TeachableTagsModel.TeachableTagsPreference));
     Trackable.track(new Tracker() {
 
@@ -61,8 +61,8 @@ public class TeachableTagsModel {
     return TeachableTagsModel.getTeachableTagIds().contains(id);
   }
 
-  public static ObservableCollection<Integer> getTeachableTagIds() {
-    return TeachableTagsModel.teachableTagIds.getValue();
+  public static TrackableCollection<Integer> getTeachableTagIds() {
+    return TeachableTagsModel.teachableTagIds.get();
   }
 
   public static void moveDown(int id) {
@@ -90,20 +90,19 @@ public class TeachableTagsModel {
       JSONArray ids = ParseUser.getCurrentUser().getJSONArray("TeachableIds");
       if (ids == null)
         return;
-      ObservableCollection<Integer> newIds = new ObservableCollection<Integer>();
+      TrackableCollection<Integer> newIds = new TrackableCollection<Integer>();
       for (int i = 0; i < ids.length(); i++) {
         try {
           newIds.add(ids.getInt(i));
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
         }
       }
       TeachableTagsModel.setTeachableTagIds(newIds);
     }
   }
 
-  public static void setTeachableTagIds(ObservableCollection<Integer> value) {
-    TeachableTagsModel.teachableTagIds.setValue(value);
+  public static void setTeachableTagIds(TrackableCollection<Integer> value) {
+    TeachableTagsModel.teachableTagIds.set(value);
   }
 
   public static void storeToUser() {
@@ -111,8 +110,7 @@ public class TeachableTagsModel {
       try {
         JSONArray ids = new JSONArray(TeachableTagsModel.getTeachableTagIds());
         ParseUser.getCurrentUser().put("TeachableIds", ids);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
       }
     }
   }

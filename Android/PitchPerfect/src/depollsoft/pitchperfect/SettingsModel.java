@@ -1,9 +1,9 @@
 package depollsoft.pitchperfect;
 
+import com.bindroid.trackable.Trackable;
 import com.parse.ParseUser;
 
 import depollsoft.lib.activity.RichApplication;
-import depollsoft.lib.binding.Trackable;
 import depollsoft.lib.licensing.LicenseChecker;
 import depollsoft.lib.util.Preferences;
 

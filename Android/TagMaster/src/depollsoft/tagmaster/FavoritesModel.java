@@ -6,31 +6,31 @@ import org.json.JSONException;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.bindroid.trackable.Trackable;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.trackable.Tracker;
+import com.bindroid.utils.Action;
 import com.parse.ParseUser;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.Trackable;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.Tracker;
-import depollsoft.lib.util.Action;
 import depollsoft.lib.util.Preferences;
 
 @SuppressWarnings("unchecked")
 public class FavoritesModel {
   private static final String FavoritesPreference = "tagmaster.Favorites";
-  private static TrackableField<ObservableCollection<Integer>> favoriteIds = new TrackableField<ObservableCollection<Integer>>();
+  private static TrackableField<TrackableCollection<Integer>> favoriteIds = new TrackableField<TrackableCollection<Integer>>();
 
   static {
     if (Preferences.get(FavoritesModel.FavoritesPreference) == null)
-      FavoritesModel.setFavoriteIds(new ObservableCollection<Integer>());
+      FavoritesModel.setFavoriteIds(new TrackableCollection<Integer>());
     else
-      FavoritesModel.setFavoriteIds((ObservableCollection<Integer>) Preferences
+      FavoritesModel.setFavoriteIds((TrackableCollection<Integer>) Preferences
           .get(FavoritesModel.FavoritesPreference));
-    ObservableCollection<?> objects = FavoritesModel.getFavoriteIds();
+    TrackableCollection<?> objects = FavoritesModel.getFavoriteIds();
     for (int x = 0; x < objects.size(); x++) {
       if (!(objects.get(x).getClass() == Integer.TYPE || objects.get(x) instanceof Integer)) {
         try {
-          ((ObservableCollection<Integer>) objects).set(x,
+          ((TrackableCollection<Integer>) objects).set(x,
               Integer.valueOf(objects.get(x).toString()));
         }
         catch (Exception e) {
@@ -74,8 +74,8 @@ public class FavoritesModel {
     return index > 0;
   }
 
-  public static ObservableCollection<Integer> getFavoriteIds() {
-    return FavoritesModel.favoriteIds.getValue();
+  public static TrackableCollection<Integer> getFavoriteIds() {
+    return FavoritesModel.favoriteIds.get();
   }
 
   public static boolean getIsFavorite(int id) {
@@ -107,7 +107,7 @@ public class FavoritesModel {
       JSONArray ids = ParseUser.getCurrentUser().getJSONArray("FavoriteIds");
       if (ids == null)
         return;
-      ObservableCollection<Integer> newIds = new ObservableCollection<Integer>();
+      TrackableCollection<Integer> newIds = new TrackableCollection<Integer>();
       for (int i = 0; i < ids.length(); i++) {
         try {
           newIds.add(ids.getInt(i));
@@ -119,8 +119,8 @@ public class FavoritesModel {
     }
   }
 
-  public static void setFavoriteIds(ObservableCollection<Integer> value) {
-    FavoritesModel.favoriteIds.setValue(value);
+  public static void setFavoriteIds(TrackableCollection<Integer> value) {
+    FavoritesModel.favoriteIds.set(value);
   }
 
   public static void storeToUser() {

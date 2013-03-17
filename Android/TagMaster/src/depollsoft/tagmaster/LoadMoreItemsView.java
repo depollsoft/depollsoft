@@ -1,15 +1,17 @@
 package depollsoft.tagmaster;
 
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.ui.ThreadSwitchContext;
-import depollsoft.lib.util.ReflectedProperty;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.ReflectedProperty;
+
+import depollsoft.lib.ui.ThreadSwitchContext;
 
 public class LoadMoreItemsView extends LinearLayout {
 
@@ -51,6 +53,5 @@ public class LoadMoreItemsView extends LinearLayout {
   @Override
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-    UiBinder.unbind(this);
   }
 }

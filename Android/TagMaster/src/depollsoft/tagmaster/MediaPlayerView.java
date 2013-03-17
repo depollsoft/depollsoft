@@ -5,13 +5,6 @@ import java.io.FileInputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.lib.util.Action;
-import depollsoft.lib.util.ContentCache;
-import depollsoft.tagmaster.barbershop.RemoteLocation;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -27,6 +20,14 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.Action;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.lib.util.ContentCache;
+import depollsoft.tagmaster.barbershop.RemoteLocation;
 
 public class MediaPlayerView extends LinearLayout {
   private MediaPlayer player;
@@ -59,19 +60,19 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   public int getAudioLength() {
-    return this.audioLength.getValue();
+    return this.audioLength.get();
   }
 
   public int getAudioPosition() {
-    return this.audioPosition.getValue();
+    return this.audioPosition.get();
   }
 
   public int getBalance() {
-    return this.balance.getValue();
+    return this.balance.get();
   }
 
   public boolean getIsPlaying() {
-    return this.isPlaying.getValue();
+    return this.isPlaying.get();
   }
 
   public String getPositionString() {
@@ -85,7 +86,7 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   public RemoteLocation getRemoteLocation() {
-    return this.remoteLocation.getValue();
+    return this.remoteLocation.get();
   }
 
   private void init() {
@@ -158,12 +159,10 @@ public class MediaPlayerView extends LinearLayout {
         if (MediaPlayerView.this.getIsPlaying()) {
           MediaPlayerView.this.pause();
           return;
-        }
-        else if (!MediaPlayerView.this.rlChangedSinceLastPlay) {
+        } else if (!MediaPlayerView.this.rlChangedSinceLastPlay) {
           MediaPlayerView.this.player.start();
           MediaPlayerView.this.setIsPlaying(true);
-        }
-        else {
+        } else {
           MediaPlayerView.this.rlChangedSinceLastPlay = false;
           final ProgressDialog dialog = new ProgressDialog(
               ((TagTracksActivity) MediaPlayerView.this.getContext()).getParent());
@@ -187,13 +186,11 @@ public class MediaPlayerView extends LinearLayout {
                         fis.close();
                         MediaPlayerView.this.player.start();
                         MediaPlayerView.this.setIsPlaying(true);
-                      }
-                      catch (Exception e) {
+                      } catch (Exception e) {
                         Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
                             Toast.LENGTH_SHORT).show();
                         MediaPlayerView.this.setIsPlaying(false);
-                      }
-                      finally {
+                      } finally {
                         dialog.dismiss();
                       }
                     }
@@ -244,7 +241,6 @@ public class MediaPlayerView extends LinearLayout {
     super.onDetachedFromWindow();
 
     this.stop();
-    UiBinder.unbind(this);
   }
 
   private void pause() {
@@ -255,15 +251,15 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   public void setAudioLength(int value) {
-    this.audioLength.setValue(value);
+    this.audioLength.set(value);
   }
 
   public void setAudioPosition(int value) {
-    this.audioPosition.setValue(value);
+    this.audioPosition.set(value);
   }
 
   public void setBalance(int value) {
-    this.balance.setValue(value);
+    this.balance.set(value);
     float rightPercentage = 1.0f * value / 1000;
     float leftPercentage = 1.0f * (1000 - value) / 1000;
     float max = Math.max(leftPercentage, rightPercentage);
@@ -282,7 +278,7 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   private void setIsPlaying(boolean value) {
-    this.isPlaying.setValue(value);
+    this.isPlaying.set(value);
     if (value) {
       this.timerTask = new TimerTask() {
 
@@ -299,13 +295,12 @@ public class MediaPlayerView extends LinearLayout {
         }
       };
       this.timer.scheduleAtFixedRate(this.timerTask, 0, 25);
-    }
-    else if (this.timerTask != null)
+    } else if (this.timerTask != null)
       this.timerTask.cancel();
   }
 
   public void setRemoteLocation(RemoteLocation value) {
-    this.remoteLocation.setValue(value);
+    this.remoteLocation.set(value);
     this.rlChangedSinceLastPlay = true;
     this.stop();
   }

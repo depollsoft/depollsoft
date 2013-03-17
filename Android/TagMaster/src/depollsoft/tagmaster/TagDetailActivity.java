@@ -10,22 +10,21 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.bindroid.utils.Action;
+import com.bindroid.utils.ReflectedProperty;
 import com.flurry.android.FlurryAgent;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
-import depollsoft.lib.binding.Binding;
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.BoolConverter;
-import depollsoft.lib.binding.ui.UiBinder;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
 import depollsoft.lib.compat.ui.MenuItems;
-import depollsoft.lib.ui.ThreadSwitchProperty;
-import depollsoft.lib.util.Action;
 import depollsoft.lib.util.ContentCache;
 import depollsoft.lib.util.IntentUtilities;
-import depollsoft.lib.util.ReflectedProperty;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 import depollsoft.tagmaster.barbershop.Tag;
 
@@ -59,7 +58,7 @@ public class TagDetailActivity extends TabActivity {
   }
 
   public Tag getTag() {
-    return this.tag.getValue();
+    return this.tag.get();
   }
 
   public int getTagId() {
@@ -147,9 +146,8 @@ public class TagDetailActivity extends TabActivity {
     this.tabHost.addTab(this.tabHost.newTabSpec("videos").setContent(videosIntent)
         .setIndicator("Videos"));
 
-    UiBinder.registerBinding(this, new Binding(new ThreadSwitchProperty<Object>(
-        new ReflectedProperty(this, "Title"), this), new ReflectedProperty(this, "Tag.Title"))
-        .bind(this));
+    UiBinder.bind(new ReflectedProperty(this, "Title"), new ReflectedProperty(this, "Tag.Title"),
+        BindingMode.ONE_WAY);
 
     UiBinder.bind(this, R.id.tabContentHolder, "Visibility", "Tag", BoolConverter.get());
 
@@ -176,7 +174,6 @@ public class TagDetailActivity extends TabActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    UiBinder.unbind(this);
   }
 
   @Override
@@ -184,31 +181,25 @@ public class TagDetailActivity extends TabActivity {
     try {
       if (item.getItemId() == R.id.addFavoriteMenuItem) {
         FavoritesModel.addFavorite(this.getTag().getId());
-      }
-      else if (item.getItemId() == R.id.removeFavoriteMenuItem) {
+      } else if (item.getItemId() == R.id.removeFavoriteMenuItem) {
         FavoritesModel.removeFavorite(this.getTag().getId());
       }
       if (item.getItemId() == R.id.addTeachableTagMenuItem) {
         TeachableTagsModel.addTeachableTag(this.getTag().getId());
-      }
-      else if (item.getItemId() == R.id.removeTeachableTagMenuItem) {
+      } else if (item.getItemId() == R.id.removeTeachableTagMenuItem) {
         TeachableTagsModel.removeTeachableTag(this.getTag().getId());
-      }
-      else if (item.getItemId() == R.id.emailMenuItem) {
+      } else if (item.getItemId() == R.id.emailMenuItem) {
         Intent i = this.getEmailIntent();
         this.startActivity(i);
-      }
-      else if (item.getItemId() == R.id.smsMenuItem) {
+      } else if (item.getItemId() == R.id.smsMenuItem) {
         Intent i = this.getSmsIntent();
         this.startActivity(i);
-      }
-      else if (item.getItemId() == R.id.refreshMenuItem) {
+      } else if (item.getItemId() == R.id.refreshMenuItem) {
         this.loadQueryItem(true);
         return true;
       }
       return super.onMenuItemSelected(featureId, item);
-    }
-    finally {
+    } finally {
       Activities.invalidateOptionsMenu(this);
     }
   }
@@ -269,6 +260,6 @@ public class TagDetailActivity extends TabActivity {
   }
 
   public void setTag(Tag value) {
-    this.tag.setValue(value);
+    this.tag.set(value);
   }
 }

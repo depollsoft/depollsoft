@@ -1,8 +1,10 @@
 package depollsoft.lib.licensing;
 
 import android.content.pm.PackageManager;
+
+import com.bindroid.trackable.Trackable;
+
 import depollsoft.lib.activity.RichApplication;
-import depollsoft.lib.binding.Trackable;
 
 public class LicenseChecker {
   private static Trackable licenseCheckNotifier = new Trackable();

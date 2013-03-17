@@ -1,20 +1,21 @@
 package depollsoft.pitchperfect;
 
-import depollsoft.lib.binding.ObservableCollection;
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableCollection;
+import com.bindroid.trackable.TrackableField;
+
 import depollsoft.lib.util.Preferences;
 import depollsoft.pitchperfect.lib.Accidental;
 import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeModel {
   private static final String PitchPipeModelKey = "depollsoft.pitchperfect.PitchPipeModel";
-  private ObservableCollection<Note> cToC;
-  private ObservableCollection<Note> fToF;
+  private TrackableCollection<Note> cToC;
+  private TrackableCollection<Note> fToF;
 
-  private TrackableField<ObservableCollection<Note>> notes = new TrackableField<ObservableCollection<Note>>();
+  private TrackableField<TrackableCollection<Note>> notes = new TrackableField<TrackableCollection<Note>>();
 
   public PitchPipeModel() {
-    this.cToC = new ObservableCollection<Note>();
+    this.cToC = new TrackableCollection<Note>();
     this.cToC.add(Note.findNote("C", Accidental.Natural, 4));
     this.cToC.add(Note.findNote("C", Accidental.Sharp, 4));
     this.cToC.add(Note.findNote("D", Accidental.Natural, 4));
@@ -28,7 +29,7 @@ public class PitchPipeModel {
     this.cToC.add(Note.findNote("A", Accidental.Sharp, 4));
     this.cToC.add(Note.findNote("B", Accidental.Natural, 4));
 
-    this.fToF = new ObservableCollection<Note>();
+    this.fToF = new TrackableCollection<Note>();
     this.fToF.add(Note.findNote("F", Accidental.Natural, 4));
     this.fToF.add(Note.findNote("F", Accidental.Sharp, 4));
     this.fToF.add(Note.findNote("G", Accidental.Natural, 4));
@@ -42,8 +43,7 @@ public class PitchPipeModel {
     this.fToF.add(Note.findNote("D", Accidental.Sharp, 5));
     this.fToF.add(Note.findNote("E", Accidental.Natural, 5));
 
-    Preferences.initialize(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF",
-        false);
+    Preferences.initialize(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF", false);
     if (this.getIsFromFToF())
       this.setNotes(this.fToF);
     else
@@ -54,8 +54,8 @@ public class PitchPipeModel {
     return Preferences.get(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF");
   }
 
-  public ObservableCollection<Note> getNotes() {
-    return this.notes.getValue();
+  public TrackableCollection<Note> getNotes() {
+    return this.notes.get();
   }
 
   public void setIsFromFToF(boolean value) {
@@ -66,7 +66,7 @@ public class PitchPipeModel {
       this.setNotes(this.cToC);
   }
 
-  public void setNotes(ObservableCollection<Note> value) {
-    this.notes.setValue(value);
+  public void setNotes(TrackableCollection<Note> value) {
+    this.notes.set(value);
   }
 }

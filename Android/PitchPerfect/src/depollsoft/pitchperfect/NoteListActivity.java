@@ -1,16 +1,17 @@
 package depollsoft.pitchperfect;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.binding.TrackableField;
-import depollsoft.lib.binding.ui.AdapterConverter;
-import depollsoft.lib.binding.ui.UiBinder;
-import depollsoft.pitchperfect.lib.Note;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.widget.ListView;
+
+import com.bindroid.converters.AdapterConverter;
+import com.bindroid.trackable.TrackableField;
+import com.bindroid.ui.UiBinder;
+import com.flurry.android.FlurryAgent;
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
+import depollsoft.pitchperfect.lib.Note;
 
 public class NoteListActivity extends Activity {
 
@@ -21,7 +22,7 @@ public class NoteListActivity extends Activity {
   }
 
   public NoteListModel getModel() {
-    return this.model.getValue();
+    return this.model.get();
   }
 
   @Override
@@ -49,7 +50,6 @@ public class NoteListActivity extends Activity {
 
   @Override
   protected void onDestroy() {
-    UiBinder.unbind(this);
     super.onDestroy();
   }
 
@@ -85,7 +85,7 @@ public class NoteListActivity extends Activity {
   }
 
   public void setModel(NoteListModel value) {
-    this.model.setValue(value);
+    this.model.set(value);
   }
 
 }

@@ -17,7 +17,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import android.util.Xml;
 
-import depollsoft.lib.binding.TrackableField;
+import com.bindroid.trackable.TrackableField;
 
 public class XmlDocument {
   private static class XmlHandler extends DefaultHandler {
@@ -30,12 +30,10 @@ public class XmlDocument {
     }
 
     @Override
-    public void characters(char[] ch, int start, int length)
-        throws SAXException {
+    public void characters(char[] ch, int start, int length) throws SAXException {
       super.characters(ch, start, length);
-      String newValue = (this.elementStack.peek().getValue() != null ? this.elementStack
-          .peek().getValue() : "")
-          + new String(ch, start, length);
+      String newValue = (this.elementStack.peek().getValue() != null ? this.elementStack.peek()
+          .getValue() : "") + new String(ch, start, length);
       if (newValue.length() == 0 && this.elementStack.peek().getValue() == null)
         return;
       this.elementStack.peek().setValue(newValue);
@@ -43,14 +41,11 @@ public class XmlDocument {
 
     @Override
     public void endDocument() throws SAXException {
-      // TODO Auto-generated method stub
       super.endDocument();
     }
 
     @Override
-    public void endElement(String uri, String localName, String qName)
-        throws SAXException {
-      // TODO Auto-generated method stub
+    public void endElement(String uri, String localName, String qName) throws SAXException {
       super.endElement(uri, localName, qName);
       XmlElement cur = this.elementStack.pop();
       if (this.elementStack.isEmpty())
@@ -61,71 +56,58 @@ public class XmlDocument {
 
     @Override
     public void endPrefixMapping(String prefix) throws SAXException {
-      // TODO Auto-generated method stub
       super.endPrefixMapping(prefix);
     }
 
     @Override
     public void error(SAXParseException e) throws SAXException {
-      // TODO Auto-generated method stub
       super.error(e);
     }
 
     @Override
     public void fatalError(SAXParseException e) throws SAXException {
-      // TODO Auto-generated method stub
       super.fatalError(e);
     }
 
     @Override
-    public void ignorableWhitespace(char[] ch, int start, int length)
-        throws SAXException {
-      // TODO Auto-generated method stub
+    public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
       super.ignorableWhitespace(ch, start, length);
     }
 
     @Override
-    public void notationDecl(String name, String publicId, String systemId)
-        throws SAXException {
-      // TODO Auto-generated method stub
+    public void notationDecl(String name, String publicId, String systemId) throws SAXException {
       super.notationDecl(name, publicId, systemId);
     }
 
     @Override
-    public void processingInstruction(String target, String data)
-        throws SAXException {
-      // TODO Auto-generated method stub
+    public void processingInstruction(String target, String data) throws SAXException {
       super.processingInstruction(target, data);
     }
 
     @Override
-    public InputSource resolveEntity(String publicId, String systemId)
-        throws IOException, SAXException {
-      // TODO Auto-generated method stub
+    public InputSource resolveEntity(String publicId, String systemId) throws IOException,
+        SAXException {
       return super.resolveEntity(publicId, systemId);
     }
 
     @Override
     public void setDocumentLocator(Locator locator) {
-      // TODO Auto-generated method stub
       super.setDocumentLocator(locator);
     }
 
     @Override
     public void skippedEntity(String name) throws SAXException {
-      // TODO Auto-generated method stub
       super.skippedEntity(name);
     }
 
     @Override
     public void startDocument() throws SAXException {
-      // TODO Auto-generated method stub
       super.startDocument();
     }
 
     @Override
-    public void startElement(String uri, String localName, String qName,
-        Attributes attributes) throws SAXException {
+    public void startElement(String uri, String localName, String qName, Attributes attributes)
+        throws SAXException {
       super.startElement(uri, localName, qName, attributes);
       XmlElement elem = new XmlElement();
       elem.setName(localName);
@@ -139,22 +121,18 @@ public class XmlDocument {
     }
 
     @Override
-    public void startPrefixMapping(String prefix, String uri)
-        throws SAXException {
-      // TODO Auto-generated method stub
+    public void startPrefixMapping(String prefix, String uri) throws SAXException {
       super.startPrefixMapping(prefix, uri);
     }
 
     @Override
-    public void unparsedEntityDecl(String name, String publicId,
-        String systemId, String notationName) throws SAXException {
-      // TODO Auto-generated method stub
+    public void unparsedEntityDecl(String name, String publicId, String systemId,
+        String notationName) throws SAXException {
       super.unparsedEntityDecl(name, publicId, systemId, notationName);
     }
 
     @Override
     public void warning(SAXParseException e) throws SAXException {
-      // TODO Auto-generated method stub
       super.warning(e);
     }
   }
@@ -166,11 +144,9 @@ public class XmlDocument {
       XmlDocument result = new XmlDocument();
       result.setElements(handler.elements);
       return result;
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
-    }
-    catch (SAXException e) {
+    } catch (SAXException e) {
       e.printStackTrace();
     }
     return null;
@@ -194,10 +170,10 @@ public class XmlDocument {
   }
 
   public List<XmlElement> getElements() {
-    return this.elements.getValue();
+    return this.elements.get();
   }
 
   private void setElements(List<XmlElement> value) {
-    this.elements.setValue(value);
+    this.elements.set(value);
   }
 }

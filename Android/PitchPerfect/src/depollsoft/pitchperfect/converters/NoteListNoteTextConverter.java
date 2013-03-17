@@ -3,7 +3,9 @@ package depollsoft.pitchperfect.converters;
 import android.text.SpannableStringBuilder;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.SubscriptSpan;
-import depollsoft.lib.binding.ValueConverter;
+
+import com.bindroid.ValueConverter;
+
 import depollsoft.lib.ui.CustomTypefaceSpan;
 import depollsoft.lib.ui.SpannableUtilities;
 import depollsoft.pitchperfect.CommonModel;
@@ -21,14 +23,14 @@ public class NoteListNoteTextConverter extends ValueConverter {
       break;
     case Flat:
       res.append(CommonModel.flatString);
-      SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
-          "NoteHedz", CommonModel.getNoteHedz()));
+      SpannableUtilities.applyToLastChar(res,
+          new CustomTypefaceSpan("NoteHedz", CommonModel.getNoteHedz()));
       SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(1.2f));
       break;
     case Sharp:
       res.append(CommonModel.sharpString);
-      SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
-          "NoteHedz", CommonModel.getNoteHedz()));
+      SpannableUtilities.applyToLastChar(res,
+          new CustomTypefaceSpan("NoteHedz", CommonModel.getNoteHedz()));
       SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(1.2f));
       break;
     }
@@ -44,14 +46,14 @@ public class NoteListNoteTextConverter extends ValueConverter {
         break;
       case Flat:
         res.append(CommonModel.flatString);
-        SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
-            "NoteHedz", CommonModel.getNoteHedz()));
+        SpannableUtilities.applyToLastChar(res,
+            new CustomTypefaceSpan("NoteHedz", CommonModel.getNoteHedz()));
         SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(1.2f));
         break;
       case Sharp:
         res.append(CommonModel.sharpString);
-        SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
-            "NoteHedz", CommonModel.getNoteHedz()));
+        SpannableUtilities.applyToLastChar(res,
+            new CustomTypefaceSpan("NoteHedz", CommonModel.getNoteHedz()));
         SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(1.2f));
         break;
       }
