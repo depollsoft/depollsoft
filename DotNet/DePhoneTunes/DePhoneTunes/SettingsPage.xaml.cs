@@ -11,13 +11,10 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 
-namespace DePhoneTunes
-{
-    public partial class SettingsPage : PhoneApplicationPage
-    {
-        public SettingsPage()
-        {
-            InitializeComponent();
-        }
+namespace DePhoneTunes {
+  public partial class SettingsPage : PhoneApplicationPage {
+    public SettingsPage() {
+      InitializeComponent();
     }
+  }
 }

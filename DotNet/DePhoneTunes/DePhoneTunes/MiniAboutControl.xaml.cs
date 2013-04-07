@@ -10,13 +10,10 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace DePhoneTunes
-{
-    public partial class MiniAboutControl : UserControl
-    {
-        public MiniAboutControl()
-        {
-            InitializeComponent();
-        }
+namespace DePhoneTunes {
+  public partial class MiniAboutControl : UserControl {
+    public MiniAboutControl() {
+      InitializeComponent();
     }
+  }
 }

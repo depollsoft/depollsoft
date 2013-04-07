@@ -10,16 +10,13 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace DePhoneTunes
-{
-    public partial class PitchPipe : UserControl
-    {
-        public PitchPipe()
-        {
-            InitializeComponent();
+namespace DePhoneTunes {
+  public partial class PitchPipe : UserControl {
+    public PitchPipe() {
+      InitializeComponent();
 #if ADS
             aboutControl.Visibility = Visibility.Collapsed;
 #endif
-        }
     }
+  }
 }

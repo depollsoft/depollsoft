@@ -10,28 +10,23 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Data;
 
-namespace DePhoneTunes
-{
-    public class KeyTypeConverter : IValueConverter
-    {
-        public object MajorValue { get; set; }
-        public object MinorValue { get; set; }
+namespace DePhoneTunes {
+  public class KeyTypeConverter : IValueConverter {
+    public object MajorValue { get; set; }
+    public object MinorValue { get; set; }
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            switch ((KeyType)value)
-            {
-                case KeyType.Major:
-                    return MajorValue;
-                case KeyType.Minor:
-                    return MinorValue;
-            }
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return value;
-        }
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      switch ((KeyType)value) {
+        case KeyType.Major:
+          return MajorValue;
+        case KeyType.Minor:
+          return MinorValue;
+      }
+      return value;
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      return value;
+    }
+  }
 }

@@ -10,23 +10,18 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace DePhoneTunes
-{
-    public partial class Keys : UserControl
-    {
-        public Keys()
-        {
-            InitializeComponent();
-        }
-
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ((ListBox)sender).ScrollIntoView(((ListBox)sender).SelectedItem);
-        }
-
-        private void ListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            ListBox_SelectionChanged(sender, null);
-        }
+namespace DePhoneTunes {
+  public partial class Keys : UserControl {
+    public Keys() {
+      InitializeComponent();
     }
+
+    private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+      ((ListBox)sender).ScrollIntoView(((ListBox)sender).SelectedItem);
+    }
+
+    private void ListBox_Loaded(object sender, RoutedEventArgs e) {
+      ListBox_SelectionChanged(sender, null);
+    }
+  }
 }

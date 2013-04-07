@@ -11,30 +11,25 @@ using System.Windows.Shapes;
 using System.Windows.Data;
 using System.Globalization;
 
-namespace DePhoneTunes
-{
-    public class AccidentalStringConverter : IValueConverter
-    {
+namespace DePhoneTunes {
+  public class AccidentalStringConverter : IValueConverter {
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            Accidental acc = (Accidental)value;
-            switch (acc)
-            {
-                case Accidental.Natural:
-                    return "";
-                    //return "î";
-                case Accidental.Flat:
-                    return "í";
-                case Accidental.Sharp:
-                    return "ì";
-            }
-            return "";
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+      Accidental acc = (Accidental)value;
+      switch (acc) {
+        case Accidental.Natural:
+          return "";
+        //return "î";
+        case Accidental.Flat:
+          return "í";
+        case Accidental.Sharp:
+          return "ì";
+      }
+      return "";
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+      throw new NotImplementedException();
+    }
+  }
 }

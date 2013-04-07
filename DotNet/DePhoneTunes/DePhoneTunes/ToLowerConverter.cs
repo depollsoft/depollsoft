@@ -10,19 +10,15 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Data;
 
-namespace DePhoneTunes
-{
-    public class ToLowerConverter : IValueConverter
-    {
+namespace DePhoneTunes {
+  public class ToLowerConverter : IValueConverter {
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return ((string)value).ToLower();
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      return ((string)value).ToLower();
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      throw new NotImplementedException();
+    }
+  }
 }
