@@ -1,5 +1,0 @@
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities\Bin\Debug\SLaB.Utilities.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities\Bin\Debug\SLaB.Utilities.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities\obj\Debug\SLaB.Utilities.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities\obj\Debug\SLaB.Utilities.pdb

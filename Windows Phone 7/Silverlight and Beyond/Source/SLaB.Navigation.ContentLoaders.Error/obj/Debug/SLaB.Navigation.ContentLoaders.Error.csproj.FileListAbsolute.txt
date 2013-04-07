@@ -1,7 +1,0 @@
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\Bin\Debug\SLaB.Navigation.ContentLoaders.Error.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\Bin\Debug\SLaB.Navigation.ContentLoaders.Error.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\Bin\Debug\SLaB.Navigation.ContentLoaders.Utilities.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\Bin\Debug\SLaB.Navigation.ContentLoaders.Utilities.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\obj\Debug\SLaB.Navigation.ContentLoaders.Error.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Navigation.ContentLoaders.Error\obj\Debug\SLaB.Navigation.ContentLoaders.Error.pdb
