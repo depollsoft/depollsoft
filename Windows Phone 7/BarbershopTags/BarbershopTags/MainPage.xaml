@@ -11,6 +11,7 @@
                             xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
                             xmlns:converters="clr-namespace:SLaB.Utilities.Xaml.Converters;assembly=SLaB.Utilities.Xaml.Phone"
                             xmlns:xamlUtil="clr-namespace:SLaB.Utilities.Xaml;assembly=SLaB.Utilities.Xaml.Phone"
+                            xmlns:builtin="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
                             mc:Ignorable="d"
                             d:DesignWidth="480"
                             d:DesignHeight="768"
@@ -20,7 +21,7 @@
                             SupportedOrientations="Portrait"
                             Orientation="Portrait"
                             shell:SystemTray.IsVisible="True">
-    <!--<toolkit:TransitionService.NavigationInTransition>
+    <toolkit:TransitionService.NavigationInTransition>
         <toolkit:NavigationInTransition>
             <toolkit:NavigationInTransition.Backward>
                 <toolkit:TurnstileTransition Mode="BackwardIn" />
@@ -39,11 +40,11 @@
                 <toolkit:TurnstileTransition Mode="ForwardOut" />
             </toolkit:NavigationOutTransition.Forward>
         </toolkit:NavigationOutTransition>
-    </toolkit:TransitionService.NavigationOutTransition>-->
+    </toolkit:TransitionService.NavigationOutTransition>
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot"
           Background="Transparent">
-        <controls:Panorama x:Name="Panorama"
+        <builtin:Panorama x:Name="Panorama"
                            Title="Tag Master"
                            Loaded="PanoramaLoaded"
                            SelectionChanged="PanoramaSelectionChanged"
@@ -60,47 +61,47 @@
                     </xamlUtil:TombstoneProperty>
                 </xamlUtil:Tombstoner>
             </xamlUtil:Tombstoner.Tombstoner>
-            <controls:Panorama.TitleTemplate>
+            <builtin:Panorama.TitleTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding}"
                                FontFamily="Assets/wickhop-handwriting.ttf#wickhop handwriting"
-                               FontSize="150"
-                               Margin="0,75,0,-40" />
+                               FontSize="125"
+                               Margin="0,25,0,-30" />
                 </DataTemplate>
-            </controls:Panorama.TitleTemplate>
-            <controls:PanoramaItem Header="me">
-                <controls:PanoramaItem.DataContext>
+            </builtin:Panorama.TitleTemplate>
+            <builtin:PanoramaItem Header="me">
+                <builtin:PanoramaItem.DataContext>
                     <local:FavoritesModel />
-                </controls:PanoramaItem.DataContext>
+                </builtin:PanoramaItem.DataContext>
                 <local:FavoritesScreen />
-            </controls:PanoramaItem>
-            <controls:PanoramaItem Header="latest">
-                <controls:PanoramaItem.DataContext>
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="latest">
+                <builtin:PanoramaItem.DataContext>
                     <local:QueryModel SortBy="Posted" />
-                </controls:PanoramaItem.DataContext>
+                </builtin:PanoramaItem.DataContext>
                 <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Posted" />
-            </controls:PanoramaItem>
-            <controls:PanoramaItem Header="highly rated">
-                <controls:PanoramaItem.DataContext>
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="highly rated">
+                <builtin:PanoramaItem.DataContext>
                     <local:QueryModel SortBy="Rating" />
-                </controls:PanoramaItem.DataContext>
+                </builtin:PanoramaItem.DataContext>
                 <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Rating" />
-            </controls:PanoramaItem>
-            <controls:PanoramaItem Header="downloads">
-                <controls:PanoramaItem.DataContext>
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="downloads">
+                <builtin:PanoramaItem.DataContext>
                     <local:QueryModel SortBy="Downloaded" />
-                </controls:PanoramaItem.DataContext>
+                </builtin:PanoramaItem.DataContext>
                 <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Downloaded" />
-            </controls:PanoramaItem>
-            <controls:PanoramaItem Header="classic tags">
-                <controls:PanoramaItem.DataContext>
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="classic tags">
+                <builtin:PanoramaItem.DataContext>
                     <local:QueryModel SortBy="Classic"
                                       Collection="ClassicTags"
                                       MaxResults="200" />
-                </controls:PanoramaItem.DataContext>
+                </builtin:PanoramaItem.DataContext>
                 <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Classic" />
-            </controls:PanoramaItem>
-        </controls:Panorama>
+            </builtin:PanoramaItem>
+        </builtin:Panorama>
     </Grid>
 
     <!--Sample code showing usage of ApplicationBar-->

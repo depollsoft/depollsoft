@@ -43,30 +43,31 @@
         <Grid x:Name="ContentPanel"
               Grid.Row="1"
               Margin="12,0,12,0">
-            <StackPanel>
-                <TextBlock x:Name="CacheSize"
+            <ScrollViewer>
+                <StackPanel>
+                    <TextBlock x:Name="CacheSize"
                            Style="{StaticResource PhoneTextLargeStyle}" />
-                <Button Content="Clear cached tags"
+                    <Button Content="Clear cached tags"
                         Click="ClearCache" />
-                <Button Content="Reset favorites"
+                    <Button Content="Reset favorites"
                         Click="ResetFavorites" />
-                <Button Content="Reset teachable tags"
+                    <Button Content="Reset teachable tags"
                         Click="ResetTeachables" />
-                <Button Content="Reset ratings"
+                    <Button Content="Reset ratings"
                         Click="ResetRatings" />
-                <TextBlock Text="learning track volume"
+                    <TextBlock Text="learning track volume"
                            Style="{StaticResource PhoneTextGroupHeaderStyle}" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="75" />
-                        <ColumnDefinition />
-                        <ColumnDefinition Width="75" />
-                        <ColumnDefinition Width="75" />
-                    </Grid.ColumnDefinitions>
-                    <RepeatButton Content="-"
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="75" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="75" />
+                            <ColumnDefinition Width="75" />
+                        </Grid.ColumnDefinitions>
+                        <RepeatButton Content="-"
                                   Click="DecreaseVolume" />
 
-                    <Slider x:Name="VolumeSlider"
+                        <Slider x:Name="VolumeSlider"
                             Grid.Column="1"
                             Minimum="0"
                             Maximum="100"
@@ -75,19 +76,22 @@
                             SmallChange="1"
                             LargeChange="1" />
 
-                    <RepeatButton Content="+"
+                        <RepeatButton Content="+"
                                   Grid.Column="2"
                                   Click="IncreaseVolume" />
-                    <TextBlock Grid.Column="3"
+                        <TextBlock Grid.Column="3"
                                Margin="5"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Right"
                                Text="{Binding Value, ElementName=VolumeSlider, Converter={StaticResource StringFormat}, ConverterParameter='\{0:#0\}%'}"
                                Style="{StaticResource PhoneTextLargeStyle}" />
-                </Grid>
-                <CheckBox IsChecked="{Binding CanRunInBackground, Mode=TwoWay}"
+                    </Grid>
+                    <CheckBox IsChecked="{Binding CanRunInBackground, Mode=TwoWay}"
                           Content="Continue running under lock screen" />
-            </StackPanel>
+                    <Button Content="Log in with Facebook" Click="LogInWithFacebook" Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolConverter}, ConverterParameter=!}" />
+                    <Button Content="Log out" Click="LogOut" Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolConverter}}" />
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 

@@ -13,7 +13,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock Text="{Binding StatusText}"
-                   TextWrapping="Wrap" />
+                   TextWrapping="Wrap"
+                   Visibility="{Binding StatusText, Converter={StaticResource BoolConverter}}" />
         <slabControls:DelayLoadItemsControl Grid.Row="1"
                                             xamlUtil:Tombstoner.TombstoneId="QueryPresenterList"
                                             ItemsSource="{Binding Tags}"

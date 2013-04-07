@@ -11,19 +11,15 @@ using System.Windows.Shapes;
 using System.Windows.Data;
 using System.Linq;
 
-namespace BarbershopTags
-{
-    public class RangeCollectionConverter : IValueConverter
-    {
+namespace BarbershopTags {
+  public class RangeCollectionConverter : IValueConverter {
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return Enumerable.Range(0, (int)value);
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      return Enumerable.Range(0, (int)value);
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+      throw new NotImplementedException();
+    }
+  }
 }

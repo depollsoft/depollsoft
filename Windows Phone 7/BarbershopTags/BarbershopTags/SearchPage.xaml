@@ -19,7 +19,7 @@
                             d:DesignHeight="696"
                             d:DesignWidth="480"
                             shell:SystemTray.IsVisible="True">
-    <!--<toolkit:TransitionService.NavigationInTransition>
+    <toolkit:TransitionService.NavigationInTransition>
         <toolkit:NavigationInTransition>
             <toolkit:NavigationInTransition.Backward>
                 <toolkit:TurnstileTransition Mode="BackwardIn" />
@@ -38,7 +38,7 @@
                 <toolkit:TurnstileTransition Mode="ForwardOut" />
             </toolkit:NavigationOutTransition.Forward>
         </toolkit:NavigationOutTransition>
-    </toolkit:TransitionService.NavigationOutTransition>-->
+    </toolkit:TransitionService.NavigationOutTransition>
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot"
           Background="{StaticResource ImageBackgroundBrush}">
