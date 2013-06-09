@@ -17,7 +17,6 @@ import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 import com.bindroid.utils.ReflectedProperty;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
@@ -28,6 +27,7 @@ import depollsoft.lib.util.IntentUtilities;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 import depollsoft.tagmaster.barbershop.Tag;
 
+@SuppressWarnings("deprecation")
 public class TagDetailActivity extends TabActivity {
   public static final String TAG_ID_EXTRA = "depollsoft.tagmaster.tagid";
   private CompatTabHostWrapper tabHost;
@@ -237,8 +237,6 @@ public class TagDetailActivity extends TabActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView(
-        "TagDetailActivity/" + this.getIntent().getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1));
   }
 
   @Override

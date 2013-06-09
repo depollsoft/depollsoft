@@ -10,7 +10,6 @@ import android.widget.LinearLayout;
 
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.tagmaster.barbershop.Tag;
 
@@ -55,8 +54,6 @@ public class TeachingVideoDisplay extends LinearLayout {
 
       public void onClick(View arg0) {
         if (TeachingVideoDisplay.this.getWatchUri() != null) {
-          GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "ViewTeachingVideo",
-              TeachingVideoDisplay.this.getWatchUri(), 0);
           Intent i = new Intent(Intent.ACTION_VIEW);
           i.setData(Uri.parse(TeachingVideoDisplay.this.getWatchUri()));
           TeachingVideoDisplay.this.getContext().startActivity(i);

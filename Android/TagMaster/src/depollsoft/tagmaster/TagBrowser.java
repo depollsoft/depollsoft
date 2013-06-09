@@ -15,6 +15,7 @@ import depollsoft.lib.json.JsonSerializer;
 import depollsoft.tagmaster.barbershop.TagCollection;
 import depollsoft.tagmaster.barbershop.TagSortOptions;
 
+@SuppressWarnings("deprecation")
 public class TagBrowser extends TabActivity {
   private CompatTabHostWrapper tabHost;
 

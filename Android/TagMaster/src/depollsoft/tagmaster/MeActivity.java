@@ -11,7 +11,6 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -96,9 +95,6 @@ public class MeActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().setCustomVar(2, "NumFavorites",
-        "" + FavoritesModel.getFavoriteIds().size(), 1);
-    GoogleAnalyticsTracker.getInstance().trackPageView("MeActivity");
   }
 
   @Override

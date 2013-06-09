@@ -14,7 +14,6 @@ import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 
@@ -58,12 +57,6 @@ public class TeachableTagsActivity extends Activity {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("TeachableTagsActivity");
   }
 
   @Override

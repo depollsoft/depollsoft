@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">Version 3.0.3</string>
-    <string name="VersionNumber">3.0.3</string>
+    <string name="app_version">Version 3.0.4</string>
+    <string name="VersionNumber">3.0.4</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 3.0.4</h5>
+                    -Integrates native Facebook login (see the options menu to log in!)<br />
+                    -Enables hardware acceleration for UI<br />
+                    -Minor bug fixes
+            </p>
             <p>
                     <h5>Version 3.0.3</h5>
                     -Minor bug fixes

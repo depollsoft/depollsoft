@@ -8,7 +8,6 @@ import com.bindroid.converters.AdapterConverter;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class TagVideosActivity extends Activity {
 
@@ -39,18 +38,6 @@ public class TagVideosActivity extends Activity {
     if (this.getParent() != null)
       return this.getParent().onMenuItemSelected(featureId, item);
     return false;
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView(
-            "TagDetailActivity/"
-                + ((TagDetailActivity) TagVideosActivity.this.getParent()).getTagId() + "/videos");
-      }
-    });
   }
 
   @Override

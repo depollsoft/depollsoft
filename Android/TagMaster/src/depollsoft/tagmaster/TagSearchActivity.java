@@ -18,7 +18,6 @@ import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.json.JsonSerializer;
@@ -164,12 +163,6 @@ public class TagSearchActivity extends Activity {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("TagSearchActivity");
   }
 
   @Override

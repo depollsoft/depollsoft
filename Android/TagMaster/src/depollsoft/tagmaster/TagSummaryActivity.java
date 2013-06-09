@@ -1,6 +1,7 @@
 package depollsoft.tagmaster;
 
 import java.io.File;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -26,7 +27,6 @@ import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.ui.Hyperlink;
 import depollsoft.lib.util.ContentCache;
@@ -126,18 +126,17 @@ public class TagSummaryActivity extends Activity {
                       + Uri.encode(sheetMusicUri);
                   Uri path = Uri.parse(contentPath);
                   Intent intent = new Intent(Intent.ACTION_VIEW);
-                  if (sheetMusicType.toLowerCase().equals("pdf")) {
+                  if (sheetMusicType.toLowerCase(Locale.US).equals("pdf")) {
                     intent.setDataAndType(path, "application/pdf");
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                   } else {
                     MimeTypeMap map = MimeTypeMap.getSingleton();
-                    String mimeType = map.getMimeTypeFromExtension(sheetMusicType.toLowerCase());
+                    String mimeType = map.getMimeTypeFromExtension(sheetMusicType
+                        .toLowerCase(Locale.US));
                     intent.setDataAndType(path, mimeType);
                   }
                   try {
                     TagSummaryActivity.this.startActivity(intent);
-                    GoogleAnalyticsTracker.getInstance().trackEvent("MediaView", "ViewSheetMusic",
-                        contentPath, 0);
                   } catch (ActivityNotFoundException e) {
                     TagSummaryActivity.this.runOnUiThread(new Runnable() {
                       public void run() {
@@ -222,20 +221,6 @@ public class TagSummaryActivity extends Activity {
     if (this.getParent() != null)
       return this.getParent().onMenuItemSelected(featureId, item);
     return false;
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        GoogleAnalyticsTracker.getInstance()
-            .trackPageView(
-                "TagDetailActivity/"
-                    + ((TagDetailActivity) TagSummaryActivity.this.getParent()).getTagId()
-                    + "/summary");
-      }
-    });
   }
 
   @Override

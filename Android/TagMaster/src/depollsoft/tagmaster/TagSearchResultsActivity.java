@@ -1,7 +1,5 @@
 package depollsoft.tagmaster;
 
-import java.net.URLEncoder;
-
 import android.app.ActivityGroup;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,11 +10,11 @@ import android.widget.FrameLayout;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.json.JsonSerializer;
 
+@SuppressWarnings("deprecation")
 public class TagSearchResultsActivity extends ActivityGroup {
 
   private TrackableField<QueryModel> model = new TrackableField<QueryModel>();
@@ -61,14 +59,6 @@ public class TagSearchResultsActivity extends ActivityGroup {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView(
-        "TagSearchResultsActivity/"
-            + URLEncoder.encode(this.getIntent().getStringExtra(TagQueryActivity.QUERY_MODEL)));
   }
 
   @Override

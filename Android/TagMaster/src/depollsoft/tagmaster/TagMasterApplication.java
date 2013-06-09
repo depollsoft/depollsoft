@@ -3,7 +3,6 @@ package depollsoft.tagmaster;
 import android.util.Log;
 
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 
@@ -21,30 +20,23 @@ public class TagMasterApplication extends RichApplication {
     super.onCreate();
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(getString(R.string.app_version));
-    
-    GoogleAnalyticsTracker.getInstance().start("UA-24315533-3", 10, this);
-    GoogleAnalyticsTracker.getInstance().setProductVersion("TagMaster",
-        this.getString(R.string.VersionNumber));
-    GoogleAnalyticsTracker.getInstance().setCustomVar(1, "Version",
-        this.getString(R.string.VersionNumber), 2);
 
     if (DebugTools.isDebugSigned(TagMasterApplication.DEBUG_SIGNATURE)) {
       Log.d(this.getPackageName(), "Initializing with debug key");
       Parse.initialize(this, "BFOuL26qLCzpRLOZv0rZWYBHBJzbtFPScYioq506",
           "TEe557a3ENSz5Y6fv2i2FyduZwY5HehM9pVinOie");
-      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_DEBUG, true);
-    }
-    else {
+      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_DEBUG);
+      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_DEBUG);
+    } else {
       Parse.initialize(this, "RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj",
           "7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4");
-      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_PRODUCTION, true);
+      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_PRODUCTION);
+      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_PRODUCTION);
     }
   }
 
   @Override
   public void onTerminate() {
-    GoogleAnalyticsTracker.getInstance().dispatch();
-    GoogleAnalyticsTracker.getInstance().stop();
     super.onTerminate();
   }
 

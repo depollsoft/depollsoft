@@ -13,7 +13,6 @@ import com.bindroid.converters.ToStringConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.BoundUi;
 import com.bindroid.ui.UiBinder;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.tagmaster.barbershop.Video;
 
@@ -61,8 +60,6 @@ public class VideoDisplay extends LinearLayout implements BoundUi<Video> {
 
       public void onClick(View arg0) {
         if (VideoDisplay.this.getWatchUri() != null) {
-          GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "ViewVideo",
-              VideoDisplay.this.getWatchUri(), 0);
           Intent i = new Intent(Intent.ACTION_VIEW);
           i.setData(Uri.parse(VideoDisplay.this.getWatchUri()));
           VideoDisplay.this.getContext().startActivity(i);

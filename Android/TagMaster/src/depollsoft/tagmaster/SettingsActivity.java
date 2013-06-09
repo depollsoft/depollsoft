@@ -25,11 +25,9 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
-import com.parse.ParseFacebookUtils.Permissions;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -203,36 +201,34 @@ public class SettingsActivity extends Activity {
         progress.setMessage("Logging in...");
         SettingsActivity.this.loggingIn = true;
         progress.show();
-        ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
-            SettingsActivity.this, new LogInCallback() {
-              @Override
-              public void done(ParseUser user, ParseException err) {
-                SettingsActivity.this.loggingIn = false;
-                progress.dismiss();
-                v.setEnabled(true);
-                if (err != null) {
-                  Toast.makeText(SettingsActivity.this, "Facebook login failed.",
-                      Toast.LENGTH_SHORT);
-                  Log.d("Tag Master", "Failed to log in.", err);
-                  return;
-                }
+        ParseFacebookUtils.logIn(null, SettingsActivity.this, new LogInCallback() {
+          @Override
+          public void done(ParseUser user, ParseException err) {
+            SettingsActivity.this.loggingIn = false;
+            progress.dismiss();
+            v.setEnabled(true);
+            if (err != null) {
+              Toast.makeText(SettingsActivity.this, "Facebook login failed.", Toast.LENGTH_SHORT)
+                  .show();
+              Log.d("Tag Master", "Failed to log in.", err);
+              return;
+            }
 
-                if (user == null) {
-                  Log.d("Tag Master", "User cancelled login.");
-                  return;
-                }
-                SettingsActivity.this.loginTrackable.updateTrackers();
-                if (user.isNew()) {
-                  FavoritesModel.storeToUser();
-                  TeachableTagsModel.storeToUser();
-                  user.saveEventually();
-                }
-                else {
-                  FavoritesModel.restoreFromUser();
-                  TeachableTagsModel.restoreFromUser();
-                }
-              }
-            });
+            if (user == null) {
+              Log.d("Tag Master", "User cancelled login.");
+              return;
+            }
+            SettingsActivity.this.loginTrackable.updateTrackers();
+            if (user.isNew()) {
+              FavoritesModel.storeToUser();
+              TeachableTagsModel.storeToUser();
+              user.saveEventually();
+            } else {
+              FavoritesModel.restoreFromUser();
+              TeachableTagsModel.restoreFromUser();
+            }
+          }
+        });
       }
     });
 
@@ -298,7 +294,6 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("SettingsActivity");
   }
 
   @Override

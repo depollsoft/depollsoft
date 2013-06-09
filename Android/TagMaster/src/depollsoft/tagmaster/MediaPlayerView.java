@@ -2,6 +2,7 @@ package depollsoft.tagmaster;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -24,7 +25,6 @@ import android.widget.ToggleButton;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.util.ContentCache;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
@@ -82,7 +82,7 @@ public class MediaPlayerView extends LinearLayout {
     double posSec = position / 1000d;
     double lenSec = length / 1000d;
 
-    return String.format("%1.1f/%1.1fs", posSec, lenSec);
+    return String.format(Locale.US, "%1.1f/%1.1fs", posSec, lenSec);
   }
 
   public RemoteLocation getRemoteLocation() {
@@ -209,8 +209,6 @@ public class MediaPlayerView extends LinearLayout {
                 }
               });
         }
-        GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "PlayTrack",
-            MediaPlayerView.this.getRemoteLocation().getUri(), 0);
       }
     });
 

@@ -17,7 +17,6 @@ import com.bindroid.utils.Action;
 import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.tagmaster.barbershop.Tag;
 import depollsoft.tagmaster.barbershop.TagQueryResult;
@@ -43,7 +42,6 @@ public class MeHeaderView extends LinearLayout {
 
         public void onClick(View v) {
           final ProgressDialog progress = new ProgressDialog(MeHeaderView.this.getContext());
-          GoogleAnalyticsTracker.getInstance().trackEvent("MediaViews", "RandomTag", null, 0);
           progress.setMessage("Loading...");
           progress.setIndeterminate(true);
           progress.show();

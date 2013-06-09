@@ -11,7 +11,6 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 
@@ -113,18 +112,6 @@ public class TagTracksActivity extends Activity {
     if (this.getParent() != null)
       return this.getParent().onMenuItemSelected(featureId, item);
     return false;
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView(
-            "TagDetailActivity/"
-                + ((TagDetailActivity) TagTracksActivity.this.getParent()).getTagId() + "/tracks");
-      }
-    });
   }
 
   @Override

@@ -2,6 +2,7 @@ package depollsoft.tagmaster;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,7 +25,6 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
 
   private TrackableField<Tag> tag = new TrackableField<Tag>();
   private TagItemView regularView;
-  private Thread uiThread;
 
   public FavoriteTagItemView(Context context) {
     super(context);
@@ -49,18 +49,11 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
     Tag.loadTagById(dataSource).continueWith(new Action<Tag>() {
 
       public void invoke(final Tag parameter) {
-        if (Thread.currentThread() != FavoriteTagItemView.this.uiThread)
-          FavoriteTagItemView.this.post(new Runnable() {
-            public void run() {
-              FavoriteTagItemView.this.setTag(parameter);
-            }
-          });
-        else
-          FavoriteTagItemView.this.setTag(parameter);
+        FavoriteTagItemView.this.setTag(parameter);
       }
     }, new Action<Exception>() {
-
       public void invoke(Exception parameter) {
+        Log.e("depollsoft.tagmaster", "Failed to load tag", parameter);
       }
     });
   }
@@ -76,7 +69,6 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
 
   private void init() {
     View.inflate(this.getContext(), R.layout.favoritetagitemview, this);
-    this.uiThread = Thread.currentThread();
     this.setLongClickable(true);
     this.setOnLongClickListener(new OnLongClickListener() {
       public boolean onLongClick(View v) {
@@ -87,11 +79,6 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
 
     this.regularView = (TagItemView) this.findViewById(R.id.tagItemView);
     this.regularView.setHideFavoritesMarker(true);
-  }
-
-  @Override
-  protected void onAttachedToWindow() {
-    super.onAttachedToWindow();
 
     UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag", BoolConverter.get(true));
     UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag", BoolConverter.get());

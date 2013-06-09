@@ -1,20 +1,21 @@
 package depollsoft.tagmaster;
 
-import java.net.URLEncoder;
+import java.util.Locale;
 
-import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
-import depollsoft.lib.activity.BrowserActivity;
 import android.app.ActivityGroup;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.flurry.android.FlurryAgent;
+
+import depollsoft.lib.activity.BrowserActivity;
+
+@SuppressWarnings("deprecation")
 public class UrlHandlerActivity extends ActivityGroup {
 
   public static boolean canHandleUri(Uri uri) {
-    return uri.getHost().toLowerCase().endsWith("barbershoptags.com")
+    return uri.getHost().toLowerCase(Locale.US).endsWith("barbershoptags.com")
         && uri.getPath().equals("/dbpage.php")
         && (uri.getQueryParameter("pg").equals("view")
             && uri.getQueryParameter("dbase").equals("tags") && uri.getQueryParameter("id") != null);
@@ -31,8 +32,6 @@ public class UrlHandlerActivity extends ActivityGroup {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Uri uri = this.getIntent().getData();
-    GoogleAnalyticsTracker.getInstance().trackPageView(
-        "UrlHandlerActivity/" + URLEncoder.encode(uri.toString()));
     String value;
     try {
       if (UrlHandlerActivity.canHandleUri(uri) && (value = uri.getQueryParameter("id")) != null) {
@@ -41,8 +40,7 @@ public class UrlHandlerActivity extends ActivityGroup {
         this.startActivity(tagDetails);
         return;
       }
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
     }
 
     Intent browser = new Intent(this, TagMasterBrowserActivity.class);
