@@ -1,0 +1,7 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:SLaB="http://www.davidpoll.com/SLaB">
+	<ResourceDictionary.MergedDictionaries>
+		<SLaB:TryImportResourceDictionary Source="/SLaB.Navigation.Controls;component/BreadCrumbComboBox.xaml" />
+		<SLaB:TryImportResourceDictionary Source="/SLaB.Navigation.Controls;component/BreadCrumbNavigator.xaml" />
+		<SLaB:TryImportResourceDictionary Source="/SLaB.Navigation.Controls;component/TreeViewNavigator.xaml" />
+	</ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

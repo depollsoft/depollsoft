@@ -1,0 +1,119 @@
+﻿<phone:PhoneApplicationPage x:Class="BarbershopTags.MainPage"
+                            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+                            xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
+                            xmlns:slabControls="clr-namespace:SLaB.Controls.Phone;assembly=SLaB.Controls.Phone"
+                            xmlns:local="clr-namespace:BarbershopTags"
+                            xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
+                            xmlns:converters="clr-namespace:SLaB.Utilities.Xaml.Converters;assembly=SLaB.Utilities.Xaml.Phone"
+                            xmlns:xamlUtil="clr-namespace:SLaB.Utilities.Xaml;assembly=SLaB.Utilities.Xaml.Phone"
+                            xmlns:builtin="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+                            mc:Ignorable="d"
+                            d:DesignWidth="480"
+                            d:DesignHeight="768"
+                            FontFamily="{StaticResource PhoneFontFamilyNormal}"
+                            FontSize="{StaticResource PhoneFontSizeNormal}"
+                            Foreground="{StaticResource PhoneForegroundBrush}"
+                            SupportedOrientations="Portrait"
+                            Orientation="Portrait"
+                            shell:SystemTray.IsVisible="True">
+    <toolkit:TransitionService.NavigationInTransition>
+        <toolkit:NavigationInTransition>
+            <toolkit:NavigationInTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardIn" />
+            </toolkit:NavigationInTransition.Backward>
+            <toolkit:NavigationInTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardIn" />
+            </toolkit:NavigationInTransition.Forward>
+        </toolkit:NavigationInTransition>
+    </toolkit:TransitionService.NavigationInTransition>
+    <toolkit:TransitionService.NavigationOutTransition>
+        <toolkit:NavigationOutTransition>
+            <toolkit:NavigationOutTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardOut" />
+            </toolkit:NavigationOutTransition.Backward>
+            <toolkit:NavigationOutTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardOut" />
+            </toolkit:NavigationOutTransition.Forward>
+        </toolkit:NavigationOutTransition>
+    </toolkit:TransitionService.NavigationOutTransition>
+    <!--LayoutRoot is the root grid where all page content is placed-->
+    <Grid x:Name="LayoutRoot"
+          Background="Transparent">
+        <builtin:Panorama x:Name="Panorama"
+                           Title="Tag Master"
+                           Loaded="PanoramaLoaded"
+                           SelectionChanged="PanoramaSelectionChanged"
+                           xamlUtil:Tombstoner.TombstoneId="MainPano"
+                           Background="{StaticResource ImageBackgroundBrush}">
+            <xamlUtil:Tombstoner.Tombstoner>
+                <xamlUtil:Tombstoner>
+                    <xamlUtil:TombstoneProperty PropertyName="DefaultIndex"
+                                                RepeatUntilRoundTrip="True"
+                                                RepeatUntilSuccess="True">
+                        <xamlUtil:TombstoneProperty.AttachedPropertyTargetTypeStyle>
+                            <Style TargetType="slabControls:PanoramaHelper" />
+                        </xamlUtil:TombstoneProperty.AttachedPropertyTargetTypeStyle>
+                    </xamlUtil:TombstoneProperty>
+                </xamlUtil:Tombstoner>
+            </xamlUtil:Tombstoner.Tombstoner>
+            <builtin:Panorama.TitleTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}"
+                               FontFamily="Assets/wickhop-handwriting.ttf#wickhop handwriting"
+                               FontSize="125"
+                               Margin="0,25,0,-30" />
+                </DataTemplate>
+            </builtin:Panorama.TitleTemplate>
+            <builtin:PanoramaItem Header="me">
+                <builtin:PanoramaItem.DataContext>
+                    <local:FavoritesModel />
+                </builtin:PanoramaItem.DataContext>
+                <local:FavoritesScreen />
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="latest">
+                <builtin:PanoramaItem.DataContext>
+                    <local:QueryModel SortBy="Posted" />
+                </builtin:PanoramaItem.DataContext>
+                <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Posted" />
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="highly rated">
+                <builtin:PanoramaItem.DataContext>
+                    <local:QueryModel SortBy="Rating" />
+                </builtin:PanoramaItem.DataContext>
+                <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Rating" />
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="downloads">
+                <builtin:PanoramaItem.DataContext>
+                    <local:QueryModel SortBy="Downloaded" />
+                </builtin:PanoramaItem.DataContext>
+                <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Downloaded" />
+            </builtin:PanoramaItem>
+            <builtin:PanoramaItem Header="classic tags">
+                <builtin:PanoramaItem.DataContext>
+                    <local:QueryModel SortBy="Classic"
+                                      Collection="ClassicTags"
+                                      MaxResults="200" />
+                </builtin:PanoramaItem.DataContext>
+                <local:QueryPresenter xamlUtil:Tombstoner.TombstoneId="Classic" />
+            </builtin:PanoramaItem>
+        </builtin:Panorama>
+    </Grid>
+
+    <!--Sample code showing usage of ApplicationBar-->
+    <!--<phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar_button1.png" Text="Button 1"/>
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar_button2.png" Text="Button 2"/>
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem Text="MenuItem 1"/>
+                <shell:ApplicationBarMenuItem Text="MenuItem 2"/>
+            </shell:ApplicationBar.MenuItems>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>-->
+
+</phone:PhoneApplicationPage>

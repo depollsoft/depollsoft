@@ -1,0 +1,80 @@
+﻿<navigation:Page x:Class="ScratchContent.Views.ObservableDictionaryDemo"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:collections="clr-namespace:SLaB.Utilities.Xaml.Collections;assembly=SLaB.Utilities.Xaml"
+                 mc:Ignorable="d"
+                 DataContext="{Binding RelativeSource={RelativeSource Self}}"
+                 Style="{StaticResource PageStyle}"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480"
+                 Title="Observable Dictionary Demo">
+    <navigation:Page.Resources>
+        <collections:BindableDictionary x:Key="ValueBag"
+                                        xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <sys:Double x:Key="Value Between Zero and 100">37.9184273</sys:Double>
+            <sys:Boolean x:Key="A boolean">True</sys:Boolean>
+        </collections:BindableDictionary>
+        <DataTemplate x:Key="DictionaryItemTemplate">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Key, StringFormat='Key = {0}, '}"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="Value = "
+                           VerticalAlignment="Center" />
+                <TextBox Text="{Binding Value, Mode=TwoWay}"
+                         MinWidth="100"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+    </navigation:Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  BorderThickness="0">
+
+        <Grid x:Name="LayoutRoot">
+            <StackPanel>
+                <TextBlock x:Name="HeaderText"
+                           Style="{StaticResource HeaderTextStyle}"
+                           Text="Observable Dictionary Demo" />
+                <TextBlock x:Name="ContentText"
+                           Style="{StaticResource ContentTextStyle}"
+                           Text="The following content is bound to/modifies an ObservableDictionary based upon the QueryString for the page:" />
+                <ListBox ItemsSource="{Binding QueryString}"
+                         ItemTemplate="{StaticResource DictionaryItemTemplate}"
+                         Height="175">
+                </ListBox>
+                <Button Content="Add an item"
+                        Click="ButtonClick"></Button>
+                <Button Content="Change an item"
+                        Click="ButtonClick1"></Button>
+                <TextBlock Text="{Binding QueryString[a], StringFormat='QueryString[a] = {0}'}" />
+                <TextBlock Style="{StaticResource ContentTextStyle}"
+                           Text="The following content is bound to/modifies a BindableDictionary that can be used as a variable bag:" />
+                <ListBox ItemsSource="{Binding Source={StaticResource ValueBag}}"
+                         ItemTemplate="{StaticResource DictionaryItemTemplate}"
+                         Height="175">
+                </ListBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="TestString = "
+                               VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1"
+                             Text="{Binding [TestString], Source={StaticResource ValueBag}, Mode=TwoWay, TargetNullValue=''}"
+                             VerticalAlignment="Center" />
+                </Grid>
+                <Slider Minimum="0"
+                        Maximum="100"
+                        Value="{Binding [Value Between Zero and 100], Source={StaticResource ValueBag}, Mode=TwoWay}" />
+                <ProgressBar Minimum="0"
+                             Maximum="100"
+                             Height="25"
+                             Value="{Binding [Value Between Zero and 100], Source={StaticResource ValueBag}}" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+
+</navigation:Page>

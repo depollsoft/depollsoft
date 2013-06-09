@@ -1,0 +1,9 @@
+<OutOfBrowserSettings ShortName="DavidPoll.com SLaB Demo Application" EnableGPUAcceleration="False" ShowInstallMenuItem="True">
+  <OutOfBrowserSettings.Blurb>DavidPoll.com SLaB Demo Application on your desktop; at home, at work or on the go.</OutOfBrowserSettings.Blurb>
+  <OutOfBrowserSettings.WindowSettings>
+    <WindowSettings Title="DavidPoll.com SLaB Demo Application" />
+  </OutOfBrowserSettings.WindowSettings>
+  <OutOfBrowserSettings.Icons>
+    <Icon Size="128,128">largeIcon.png</Icon>
+  </OutOfBrowserSettings.Icons>
+</OutOfBrowserSettings>

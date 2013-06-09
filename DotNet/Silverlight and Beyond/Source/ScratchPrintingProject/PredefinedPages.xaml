@@ -1,0 +1,154 @@
+﻿<navigation:Page x:Class="ScratchPrintingProject.PredefinedPages"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 mc:Ignorable="d"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+                 xmlns:SLaB="http://www.davidpoll.com/SLaB"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480"
+                 Title="ItemTemplate-based Printing Page">
+    <navigation:Page.Resources>
+        <ResourceDictionary>
+            <SLaB:BoolConverter x:Key="BoolConverter" />
+            <SLaB:ObservableObjectCollection x:Key="Pages">
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock FontWeight="Bold"
+                                   FontSize="20">Lorem Ipsum</TextBlock>
+                        <TextBlock TextWrapping="Wrap"
+                                   Margin="10"
+                                   xml:space="preserve">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ultrices cursus tortor ac egestas. Pellentesque semper lobortis enim, vel imperdiet dolor vehicula ac. Suspendisse auctor tempus molestie. Cras pulvinar sagittis libero, vel pretium ipsum consectetur sit amet. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vestibulum feugiat nunc eget ante euismod ac facilisis velit aliquet. Vestibulum eget nulla magna, eget scelerisque ligula. Cras nec nisi faucibus leo fermentum euismod eu vel lacus. Etiam lacus massa, pulvinar id tempor eget, varius at lorem. Praesent venenatis nisi ac ipsum facilisis at suscipit magna sollicitudin. Phasellus placerat imperdiet hendrerit. Nulla ac risus velit. Sed orci lorem, imperdiet vel ultrices et, viverra ut leo. Mauris feugiat, diam eget mollis tempus, est leo pellentesque risus, vitae lacinia ante felis hendrerit elit. 
+
+Suspendisse potenti. Donec dui justo, ultrices quis condimentum vel, bibendum vel nisi. Pellentesque suscipit fermentum dui vel sodales. Nulla vitae tortor vel orci posuere vestibulum. Curabitur non lacus quam. Nulla sit amet tempor libero. Integer dictum lectus ut sem adipiscing vitae fringilla felis accumsan. Mauris ut risus felis, ut pulvinar quam. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Integer fermentum, turpis sit amet tincidunt fermentum, metus mauris bibendum nisi, nec tincidunt purus enim nec nisi. Sed faucibus congue ultricies. Maecenas sed lorem id sem ornare imperdiet ut vitae libero. Curabitur mi diam, ornare sit amet dignissim eu, imperdiet sed nibh. Donec ultrices libero sed ipsum sollicitudin in dapibus elit rutrum. Nulla egestas tempus est, nec semper lacus sodales vel. Quisque consectetur turpis nunc, eu pretium felis. Etiam non adipiscing elit. 
+
+Cras sit amet volutpat metus. Nunc eu augue eu urna placerat adipiscing in vel lacus. Etiam auctor orci nec dui adipiscing non viverra nisl gravida. In lacinia venenatis lobortis. Vestibulum dignissim, dolor ut feugiat ultricies, eros odio adipiscing augue, quis congue turpis augue quis mauris. Aliquam at ligula sem. Aenean eget arcu ac odio eleifend convallis. Aenean eu tellus ac eros placerat aliquam. Nam consectetur neque sed massa accumsan mollis. Pellentesque in mi erat, eget tristique elit. Praesent mattis magna sed est placerat bibendum venenatis nulla facilisis. Duis nec mollis nisi. Vestibulum et eros vitae felis vestibulum scelerisque. Donec venenatis, nulla vel rutrum tempus, purus nulla feugiat felis, eu semper diam nibh tincidunt metus. 
+
+Praesent venenatis aliquet vulputate. In suscipit, nulla ut pulvinar ullamcorper, diam ligula sagittis enim, fermentum tempus nunc neque sed nisi. Vivamus aliquam rutrum scelerisque. Phasellus suscipit, quam sed suscipit pretium, massa nunc elementum lectus, et adipiscing arcu turpis sed dolor. Suspendisse potenti. Proin nisl mauris, sodales tincidunt ultricies sed, placerat quis enim. Nulla elementum nunc vel sapien venenatis venenatis vel eu ligula. Sed vitae erat ante. Etiam nec sapien nec sapien sagittis hendrerit. Duis at odio dolor. Sed condimentum euismod felis, ut congue dolor luctus quis. Duis non tellus enim. Quisque quis odio erat. Nulla nulla mi, dapibus ut euismod ut, adipiscing nec lacus. Aliquam faucibus dui at est accumsan ut laoreet erat pellentesque. Nullam id malesuada tellus. Donec et ligula tincidunt metus rutrum pretium. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; 
+
+Sed lacinia dignissim scelerisque. Duis pharetra elit et nisl euismod viverra. Nam semper, purus ut luctus tincidunt, eros nisi aliquam nunc, non semper lorem enim sit amet augue. Vestibulum adipiscing tortor a magna tristique fringilla. Etiam porta volutpat odio, eu posuere velit mollis non. Mauris ut arcu quis lectus dapibus condimentum. Pellentesque non bibendum nisi. In hac habitasse platea dictumst. Maecenas laoreet lorem ut sem pellentesque id facilisis nibh pulvinar. Vivamus tempus erat placerat diam condimentum ac bibendum felis egestas. Quisque mollis hendrerit risus, ac euismod metus dapibus nec. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Phasellus quis ipsum euismod dolor pharetra viverra eget a augue. Morbi lorem enim, porta ut congue quis, pretium et enim.
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock FontWeight="Bold"
+                                   FontSize="20">Lorem Ipsum</TextBlock>
+                        <Image Grid.Row="1"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Source="/ScratchPrintingProject;component/SLaB Logo.png" />
+                    </Grid>
+                </DataTemplate>
+            </SLaB:ObservableObjectCollection>
+            <Style x:Key="PrintStyle"
+                   TargetType="SLaB:CollectionPrinter">
+                <Setter Property="MaximumItemsPerPage"
+                        Value="1" />
+                <Setter Property="BodyTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <ContentControl ContentTemplate="{Binding CurrentItems[0]}"
+                                            HorizontalContentAlignment="Stretch"
+                                            VerticalContentAlignment="Stretch" />
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="HeaderTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <StackPanel HorizontalAlignment="Stretch">
+                                <StackPanel.Resources>
+                                    <SLaB:BoolConverter x:Key="BoolConverter" />
+                                </StackPanel.Resources>
+                                <StackPanel HorizontalAlignment="Right"
+                                            Orientation="Horizontal">
+                                    <TextBlock Text="{Binding CurrentPage, StringFormat='{}Page {0} '}" />
+                                    <TextBlock Text="{Binding PageCount, StringFormat='{}/ {0}'}" />
+                                </StackPanel>
+                                <TextBlock HorizontalAlignment="Center"
+                                           Visibility="{Binding IsFirstPage, Converter={StaticResource BoolConverter}}"
+                                           FontSize="32">This is a test document!</TextBlock>
+                                <TextBlock HorizontalAlignment="Center"
+                                           Visibility="{Binding IsLastPage, Converter={StaticResource BoolConverter}}"
+                                           FontSize="16">This is the last page!</TextBlock>
+                                <TextBlock HorizontalAlignment="Center"
+                                           FontSize="14">
+                    <TextBlock.Foreground>
+                        <Binding Path="CurrentPage">
+                            <Binding.Converter>
+                                <SLaB:EvenOddConverter>
+                                    <SLaB:EvenOddConverter.Even>
+                                        <SolidColorBrush Color="Blue" />
+                                    </SLaB:EvenOddConverter.Even>
+                                    <SLaB:EvenOddConverter.Odd>
+                                        <SolidColorBrush Color="Red" />
+                                    </SLaB:EvenOddConverter.Odd>
+                                </SLaB:EvenOddConverter>
+                            </Binding.Converter>
+                        </Binding>
+                    </TextBlock.Foreground>
+                    <TextBlock.Text>
+                        <Binding Path="CurrentPage"
+                                        StringFormat="This page is {0}">
+                            <Binding.Converter>
+                                <SLaB:EvenOddConverter>
+                                    <SLaB:EvenOddConverter.Even>
+                                        Even
+                                    </SLaB:EvenOddConverter.Even>
+                                    <SLaB:EvenOddConverter.Odd>
+                                        Odd
+                                    </SLaB:EvenOddConverter.Odd>
+                                </SLaB:EvenOddConverter>
+                            </Binding.Converter>
+                        </Binding>
+                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <SLaB:CollectionPrinter x:Name="printer"
+                                    ItemsSource="{StaticResource Pages}"
+                                    Style="{StaticResource PrintStyle}" />
+        </ResourceDictionary>
+    </navigation:Page.Resources>
+
+    <toolkit:BusyIndicator IsBusy="{Binding CurrentlyPrintingPage, ElementName=printer, Converter={StaticResource BoolConverter}}"
+                           BusyContent="{Binding CurrentlyPrintingPage, ElementName=printer, StringFormat='Printing page {0}'}"
+                           DisplayAfter="0:0:0">
+        <toolkit:BusyIndicator IsBusy="{Binding CurrentlySpoolingPage, ElementName=printer, Converter={StaticResource BoolConverter}}"
+                               BusyContent="{Binding CurrentlySpoolingPage, ElementName=printer, StringFormat='Spooling page {0}'}">
+            <Grid x:Name="LayoutRoot">
+                <ScrollViewer>
+                    <StackPanel x:Name="ContentStackPanel"
+                                Background="White">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center">Display Page:</TextBlock>
+                            <toolkit:NumericUpDown Value="{Binding CurrentPageIndex, ElementName=printPreview, Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <Button Command="{Binding PrintCommand, ElementName=printer}">Print</Button>
+                        <Border BorderBrush="Black"
+                                BorderThickness="1"
+                                HorizontalAlignment="Center">
+                            <SLaB:CollectionPrinter x:Name="printPreview"
+                                                    Style="{StaticResource PrintStyle}"
+                                                    ItemsSource="{StaticResource Pages}" />
+                        </Border>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+            </Grid>
+        </toolkit:BusyIndicator>
+    </toolkit:BusyIndicator>
+</navigation:Page>

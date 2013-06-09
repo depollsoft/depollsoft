@@ -1,0 +1,105 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:SLaB="http://www.davidpoll.com/SLaB"
+                    SLaB:XapContentLoader.EnablePackUris="True">
+    <SLaB:Sitemap x:Key="OnDemandSitemap"
+                  Title="On-Demand Xaps"
+                  Description="Pages in Xaps that will be loaded on-demand.">
+        <SLaB:SitemapNode Title="This Domain">
+            <SLaB:SitemapNode TargetName="ContentFrame"
+                              Title="Page in a big xap"
+                              Uri="pack://siteoforigin:,,SecondaryXap.xap/SecondaryXap;component/Page1.xaml" />
+            <SLaB:SitemapNode TargetName="ContentFrame"
+                              Title="Awesome Page"
+                              Uri="pack://siteoforigin:,,TernaryXap.xap/TernaryXap;component/AwesomePage.xaml" />
+            <SLaB:SitemapNode TargetName="ContentFrame"
+                              Title="Penguins (mapped Uri + metadata)"
+                              Uri="/remote/TernaryXap/AwesomePage.xaml?Site=http://www.davidpoll.com&amp;First Name=David&amp;Last Name=Poll&amp;Title=Penguins!&amp;Please rate..." />
+        </SLaB:SitemapNode>
+        <SLaB:SitemapNode Title="Cross-Domain">
+            <SLaB:SitemapNode TargetName="ContentFrame"
+                              Title="http://open.depoll.com Page"
+                              Uri="pack://http:,,open.depoll.com,SimpleApplication,SimpleApplication.xap/SimpleApplication;component/Depoll.xaml?Source=http://open.depoll.com&amp;File=wildlife.wmv" />
+        </SLaB:SitemapNode>
+    </SLaB:Sitemap>
+    <SLaB:Sitemap x:Key="PrintingSitemap"
+                  Title="Printing"
+                  Description="Pages that demonstrate printing utilities that simplify pagination of data and printing of complex data sets.">
+        <SLaB:SitemapNode Title="Collection Printing (DataGrid)"
+                          Uri="pack://siteoforigin:,,ScratchPrintingProject.xap/ScratchPrintingProject;component/PrintingPage.xaml"
+                          TargetName="ContentFrame" />
+        <SLaB:SitemapNode Title="Collection Printing (Template-based)"
+                          Uri="pack://siteoforigin:,,ScratchPrintingProject.xap/ScratchPrintingProject;component/ItemTemplatePrinting.xaml"
+                          TargetName="ContentFrame" />
+        <SLaB:SitemapNode Title="Pre-defined page printing (Template-based)"
+                          Uri="pack://siteoforigin:,,ScratchPrintingProject.xap/ScratchPrintingProject;component/PredefinedPages.xaml"
+                          TargetName="ContentFrame" />
+    </SLaB:Sitemap>
+    <SLaB:Sitemap x:Key="XamlSitemap"
+                  Title="Xaml Serialization"
+                  Description="Pages that demonstrate the Xaml serialization utilities in SLaB.">
+        <SLaB:SitemapNode Title="POCO Xaml Serialization"
+                          Uri="pack://siteoforigin:,,UtilitiesContent.xap/UtilitiesContent;component/XamlSerializerDemo.xaml"
+                          TargetName="ContentFrame" />
+        <SLaB:SitemapNode Title="UI Xaml Serialization"
+                          Uri="pack://siteoforigin:,,UtilitiesContent.xap/UtilitiesContent;component/UiXamlSerializerDemo.xaml"
+                          TargetName="ContentFrame" />
+        <SLaB:SitemapNode Title="Rich Text Xaml Serialization"
+                          Uri="pack://siteoforigin:,,UtilitiesContent.xap/UtilitiesContent;component/RichTextSerializationDemo.xaml"
+                          TargetName="ContentFrame" />
+    </SLaB:Sitemap>
+    <SLaB:Sitemap x:Key="Sitemap"
+                  Title="DavidPoll.com"
+                  Description="My homepage.  Check it out and see what it's all about!">
+        <SLaB:SitemapNode TargetName="ContentFrame"
+                          Title="Home"
+                          Description="The home page."
+                          Uri="/Views/Home.xaml" />
+        <SLaB:SitemapNode Title="SLaB Features"
+                          Description="Demonstrations of Silverlight and Beyond features.">
+            <SLaB:SitemapNode Title="Navigation">
+                <SLaB:SitemapNode Title="Local Pages">
+                    <SLaB:SitemapNode TargetName="ContentFrame"
+                                      Title="About"
+                                      Description="The about page."
+                                      Roles="Foo"
+                                      Uri="/Views/About.xaml" />
+                    <SLaB:SitemapNode TargetName="ContentFrame"
+                                      Title="A broken link"
+                                      Uri="/Views/NonExistent.xaml" />
+                </SLaB:SitemapNode>
+                <SLaB:ImportSitemapNode SitemapSource="{StaticResource OnDemandSitemap}"
+                                        TargetName="ContentFrame"
+                                        Uri="/Views/SitemapPage.xaml?sitemapname=OnDemandSitemap" />
+            </SLaB:SitemapNode>
+            <SLaB:ImportSitemapNode SitemapSource="{StaticResource PrintingSitemap}"
+                                    TargetName="ContentFrame"
+                                    Uri="/Views/SitemapPage.xaml?sitemapname=PrintingSitemap" />
+            <SLaB:ImportSitemapNode SitemapSource="{StaticResource XamlSitemap}"
+                                    TargetName="ContentFrame"
+                                    Uri="/Views/SitemapPage.xaml?sitemapname=XamlSitemap" />
+            <SLaB:SitemapNode Title="Useful XAML Tools">
+                <SLaB:SitemapNode TargetName="ContentFrame"
+                                  Title="Demo (simple QueryString)"
+                                  Uri="/Views/ObservableDictionaryDemo.xaml?a=b&amp;c=d&amp;e=f&amp;g=h" />
+                <SLaB:SitemapNode TargetName="ContentFrame"
+                                  Title="Demo (more complex QueryString)"
+                                  Uri="/Views/ObservableDictionaryDemo.xaml?a=b&amp;Name=David Eitan Poll&amp;Url=http://www.davidpoll.com&amp;No Value&amp;Order=Dictionary" />
+            </SLaB:SitemapNode>
+        </SLaB:SitemapNode>
+        <SLaB:SitemapNode Title="DavidPoll.com">
+            <SLaB:SitemapNode TargetName="_blank"
+                              Title="Home Page"
+                              Uri="http://www.davidpoll.com" />
+            <SLaB:SitemapNode TargetName="_blank"
+                              Title="Navigation Posts"
+                              Uri="http://www.davidpoll.com/tag/navigation/" />
+            <SLaB:SitemapNode TargetName="_blank"
+                              Title="SLaB Posts"
+                              Uri="http://www.davidpoll.com/tag/silverlight-and-beyond-slab/" />
+            <SLaB:SitemapNode TargetName="_blank"
+                              Title="SLaB Download Page"
+                              Uri="http://www.davidpoll.com/downloads-and-samples/#SLaB" />
+        </SLaB:SitemapNode>
+    </SLaB:Sitemap>
+</ResourceDictionary>

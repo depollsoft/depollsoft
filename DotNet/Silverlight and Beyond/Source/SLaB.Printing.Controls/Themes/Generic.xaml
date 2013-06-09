@@ -1,0 +1,116 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:SLaB="http://www.davidpoll.com/SLaB"
+                    xmlns:local="clr-namespace:SLaB.Printing.Controls">
+
+    <Style TargetType="local:CollectionPrinter">
+        <Setter Property="Background"
+                Value="White" />
+        <Setter Property="Width"
+                Value="816" />
+        <Setter Property="Height"
+                Value="1056" />
+        <Setter Property="IsHitTestVisible"
+                Value="False" />
+        <Setter Property="IgnoreHorizontalOverflow"
+                Value="True" />
+        <Setter Property="BodyTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.Resources>
+                            <SLaB:BoolConverter x:Key="BoolConverter" />
+                        </Grid.Resources>
+                        <ItemsControl ItemsSource="{Binding CurrentItems}"
+                                      ItemTemplate="{Binding Host.ItemTemplate}"
+                                      ItemsPanel="{Binding Host.ItemsPanel}"
+                                      Visibility="{Binding CurrentItems.Count, Converter={StaticResource BoolConverter}}" />
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:CollectionPrinter">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border.Resources>
+                            <SLaB:BoolConverter x:Key="BoolConverter" />
+                        </Border.Resources>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Vertical Margin -->
+                            <Rectangle Grid.Row="0"
+                                       Grid.ColumnSpan="3"
+                                       Height="{Binding CurrentPrintContext.PageMargins.Top, Source={RelativeSource TemplatedParent}}" />
+                            <Rectangle Grid.Row="2"
+                                       Grid.ColumnSpan="3"
+                                       Height="{Binding CurrentPrintContext.PageMargins.Bottom, Source={RelativeSource TemplatedParent}}" />
+                            <!-- Horizontal Margin -->
+                            <Rectangle Grid.Column="0"
+                                       Grid.RowSpan="3"
+                                       Width="{Binding CurrentPrintContext.PageMargins.Left, Source={RelativeSource TemplatedParent}}" />
+                            <Rectangle Grid.Column="2"
+                                       Grid.RowSpan="3"
+                                       Width="{Binding CurrentPrintContext.PageMargins.Right, Source={RelativeSource TemplatedParent}}" />
+
+                            <Grid Grid.Row="1"
+                                  Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--Background-->
+                                <ContentPresenter Grid.ColumnSpan="3"
+                                                  Grid.RowSpan="3"
+                                                  Visibility="{Binding PageBackgroundTemplate, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolConverter}}"
+                                                  Content="{TemplateBinding CurrentPrintContext}"
+                                                  ContentTemplate="{TemplateBinding PageBackgroundTemplate}" />
+
+                                <!--Header-->
+                                <ContentPresenter Grid.Column="1"
+                                                  Visibility="{Binding HeaderTemplate, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolConverter}}"
+                                                  Content="{TemplateBinding CurrentPrintContext}"
+                                                  ContentTemplate="{TemplateBinding HeaderTemplate}" />
+
+                                <!--Body-->
+
+                                <ContentPresenter Grid.Row="1"
+                                                  Grid.Column="1"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch"
+                                                  Content="{TemplateBinding CurrentPrintContext}"
+                                                  ContentTemplate="{TemplateBinding BodyTemplate}" />
+
+                                <!--Footer-->
+                                <ContentPresenter Grid.Column="1"
+                                                  Grid.Row="2"
+                                                  Visibility="{Binding FooterTemplate, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolConverter}}"
+                                                  Content="{TemplateBinding CurrentPrintContext}"
+                                                  ContentTemplate="{TemplateBinding FooterTemplate}" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

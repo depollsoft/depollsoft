@@ -1,0 +1,248 @@
+﻿<UserControl xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+             x:Class="UtilitiesTests.TestUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:UtilitiesTests"
+             mc:Ignorable="d"
+             d:DesignHeight="300"
+             d:DesignWidth="400"
+             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit">
+
+    <Grid x:Name="LayoutRoot"
+          Background="White">
+        <Grid.Resources>
+            <local:Person x:Key="David"
+                          FirstName="David"
+                          LastName="Poll"
+                          Age="22"></local:Person>
+            <local:NestedObject x:Key="NO1"
+                                UriValue="http://www.davidpoll.com"
+                                IntValue="1337" />
+            <local:NestedObject x:Key="NO2"
+                                DoubleValue="1234.56"
+                                NestedValue="{StaticResource NO1}" />
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5*" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="Group1">
+                <VisualState x:Name="State1">
+                    <Storyboard Duration="0:0:1.1"
+                                BeginTime="0:0:0.1"
+                                Storyboard.TargetProperty="(local:AttachedProps.AttachedDpString)" />
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Button Content="{Binding Name, RelativeSource={RelativeSource Self}}"
+                local:AttachedProps.AttachedDpString="Testing"
+                Height="147"
+                HorizontalAlignment="Left"
+                Margin="73,58,0,0"
+                Name="button1"
+                FontFamily="Courier New"
+                FontStyle="Italic"
+                FontWeight="Bold"
+                FontStretch="Condensed"
+                VerticalAlignment="Top"
+                Grid.Row="1"
+                Width="216">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="local:AttachedProps.AttachedDpString"
+                            Value="Some other value" />
+                    <Setter Property="Background"
+                            Value="#FF1F3B53" />
+                    <Setter Property="Foreground"
+                            Value="#FF000000" />
+                    <Setter Property="Padding"
+                            Value="3" />
+                    <Setter Property="BorderThickness"
+                            Value="1" />
+                    <Setter Property="BorderBrush">
+                        <Setter.Value>
+                            <LinearGradientBrush EndPoint="0.5,1"
+                                                 StartPoint="0.5,0">
+                                <GradientStop Color="#FFA3AEB9"
+                                              Offset="0" />
+                                <GradientStop Color="#FF8399A9"
+                                              Offset="0.375" />
+                                <GradientStop Color="#FF718597"
+                                              Offset="0.375" />
+                                <GradientStop Color="#FF617584"
+                                              Offset="1" />
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Grid>
+                                    <VisualStateManager.VisualStateGroups>
+                                        <VisualStateGroup x:Name="CommonStates">
+                                            <VisualState x:Name="Normal" />
+                                            <VisualState x:Name="MouseOver">
+                                                <Storyboard>
+                                                    <DoubleAnimation Duration="0"
+                                                                     Storyboard.TargetName="BackgroundAnimation"
+                                                                     Storyboard.TargetProperty="Opacity"
+                                                                     To="1" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                                    To="#F2FFFFFF" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[2].(GradientStop.Color)"
+                                                                    To="#CCFFFFFF" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[3].(GradientStop.Color)"
+                                                                    To="#7FFFFFFF" />
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Pressed">
+                                                <Storyboard>
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="Background"
+                                                                    Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                    To="#FF6DBDD1" />
+                                                    <DoubleAnimation Duration="0"
+                                                                     Storyboard.TargetName="BackgroundAnimation"
+                                                                     Storyboard.TargetProperty="Opacity"
+                                                                     To="1" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[0].(GradientStop.Color)"
+                                                                    To="#D8FFFFFF" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[1].(GradientStop.Color)"
+                                                                    To="#C6FFFFFF" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[2].(GradientStop.Color)"
+                                                                    To="#8CFFFFFF" />
+                                                    <ColorAnimation Duration="0"
+                                                                    Storyboard.TargetName="BackgroundGradient"
+                                                                    Storyboard.TargetProperty="(Rectangle.Fill).(GradientBrush.GradientStops)[3].(GradientStop.Color)"
+                                                                    To="#3FFFFFFF" />
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Disabled">
+                                                <Storyboard>
+                                                    <DoubleAnimation Duration="0"
+                                                                     Storyboard.TargetName="DisabledVisualElement"
+                                                                     Storyboard.TargetProperty="Opacity"
+                                                                     To=".55" />
+                                                </Storyboard>
+                                            </VisualState>
+                                        </VisualStateGroup>
+                                        <VisualStateGroup x:Name="FocusStates">
+                                            <VisualState x:Name="Focused">
+                                                <Storyboard>
+                                                    <DoubleAnimation Duration="0"
+                                                                     Storyboard.TargetName="FocusVisualElement"
+                                                                     Storyboard.TargetProperty="Opacity"
+                                                                     To="1" />
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="Unfocused" />
+                                        </VisualStateGroup>
+                                    </VisualStateManager.VisualStateGroups>
+                                    <Border x:Name="Background"
+                                            CornerRadius="3"
+                                            Background="White"
+                                            BorderThickness="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=BorderThickness}"
+                                            BorderBrush="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=BorderBrush}">
+                                        <Grid Background="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Background}"
+                                              Margin="1">
+                                            <Border Opacity="0"
+                                                    x:Name="BackgroundAnimation"
+                                                    Background="#FF448DCA" />
+                                            <Rectangle x:Name="BackgroundGradient">
+                                                <Rectangle.Fill>
+                                                    <LinearGradientBrush StartPoint=".7,0"
+                                                                         EndPoint=".7,1">
+                                                        <GradientStop Color="#FFFFFFFF"
+                                                                      Offset="0" />
+                                                        <GradientStop Color="#F9FFFFFF"
+                                                                      Offset="0.375" />
+                                                        <GradientStop Color="#E5FFFFFF"
+                                                                      Offset="0.625" />
+                                                        <GradientStop Color="#C6FFFFFF"
+                                                                      Offset="1" />
+                                                    </LinearGradientBrush>
+                                                </Rectangle.Fill>
+                                            </Rectangle>
+                                        </Grid>
+                                    </Border>
+                                    <ContentPresenter x:Name="contentPresenter"
+                                                      Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content}"
+                                                      ContentTemplate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ContentTemplate}"
+                                                      VerticalAlignment="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=VerticalContentAlignment}"
+                                                      HorizontalAlignment="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=HorizontalContentAlignment}"
+                                                      Margin="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Padding}" />
+                                    <Rectangle x:Name="DisabledVisualElement"
+                                               RadiusX="3"
+                                               RadiusY="3"
+                                               Fill="#FFFFFFFF"
+                                               Opacity="0"
+                                               IsHitTestVisible="false" />
+                                    <Rectangle x:Name="FocusVisualElement"
+                                               RadiusX="2"
+                                               RadiusY="2"
+                                               Margin="1"
+                                               Stroke="#FF6DBDD1"
+                                               StrokeThickness="1"
+                                               Opacity="0"
+                                               IsHitTestVisible="false" />
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+        </Button>
+        <Canvas>
+            <Path Stroke="Black"
+                  Fill="Gray"
+                  Data="M 10,100 C 10,300 300,-200 300,100" />
+        </Canvas>
+        <Image Source="Panorama.jpg" />
+        <Image>
+            <Image.Source>
+                <BitmapImage UriSource="Panorama.jpg"
+                             CreateOptions="DelayCreation, IgnoreImageCache" />
+            </Image.Source>
+        </Image>
+        <ListBox>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <CheckBox IsChecked="{Binding Checked}">Please check me!</CheckBox>
+                        <Button Content="{Binding ElementName=button1, Path=Content}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+        </ListBox>
+        <Button Content="Test">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <CheckBox Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content}"
+                              ContentTemplate="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ContentTemplate}" />
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+        <ContentControl Grid.RowSpan="2"
+                        Content="{StaticResource David}" />
+    </Grid>
+</UserControl>

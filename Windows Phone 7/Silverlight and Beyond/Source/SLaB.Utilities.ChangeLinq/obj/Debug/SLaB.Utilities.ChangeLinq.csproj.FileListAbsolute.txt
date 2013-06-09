@@ -1,7 +1,0 @@
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\Bin\Debug\SLaB.Utilities.ChangeLinq.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\Bin\Debug\SLaB.Utilities.ChangeLinq.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\Bin\Debug\SLaB.Utilities.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\Bin\Debug\SLaB.Utilities.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\obj\Debug\SLaB.Utilities.ChangeLinq.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.ChangeLinq\obj\Debug\SLaB.Utilities.ChangeLinq.pdb

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 12.0.1, SVG Export Plug-In  --><svg enable-background="new -1 0 290 289" height="290" id="svg2" inkscape:output_extension="org.inkscape.output.svg.inkscape" inkscape:version="0.46" sodipodi:docname="road-sign-MUTCD-W21-1a-construction.svg" sodipodi:version="0.32" space="preserve" version="1.0" viewBox="-1 0 290 289" width="290" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg">
+  <metadata>
+    <rdf:RDF xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <cc:Work rdf:about="">
+        <dc:title></dc:title>
+        <dc:description></dc:description>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>unsorted</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://www.openclipart.org/">
+            <dc:title>Open Clip Art Library, Source: Wikimedia Commons, Source: Wikimedia Commons, Source: Wikimedia Commons</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date></dc:date>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://en.wikipedia.org/wiki/Public_domain"/>
+        <dc:language>en</dc:language>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview bordercolor="#666666" borderopacity="1.0" gridtolerance="10.0" guidetolerance="10.0" id="base" inkscape:current-layer="svg2" inkscape:cx="145" inkscape:cy="144.5" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:window-height="674" inkscape:window-width="640" inkscape:window-x="18" inkscape:window-y="92" inkscape:zoom="1.6055363" objecttolerance="10.0" pagecolor="#ffffff" showgrid="false"/>
+  <defs id="defs4">
+    <inkscape:perspective id="perspective19" inkscape:persp3d-origin="145 : 96.333333 : 1" inkscape:vp_x="0 : 144.5 : 1" inkscape:vp_y="0 : 1000 : 0" inkscape:vp_z="290 : 144.5 : 1" sodipodi:type="inkscape:persp3d"/>
+  </defs>
+  <path d="M 136.328,284.065 L 3.991,151.703 C -0.237,147.474 -0.237,140.58 3.991,136.353 L 136.321,3.999 C 140.55,-0.234 147.448,-0.238 151.675,3.992 L 284.007,136.36 C 288.236,140.59 288.236,147.478 284.007,151.706 L 151.676,284.065 C 147.499,288.236 140.505,288.242 136.328,284.065" id="path6" style="fill:#f7921e"/>
+  <path d="M 144.002,0 C 140.874,0 137.941,1.216 135.741,3.418 L 3.41,135.772 C 1.209,137.97 0,140.901 0,144.026 C -0.003,147.151 1.209,150.083 3.41,152.283 L 135.747,284.646 L 136.909,283.484 L 4.572,151.122 C 2.682,149.232 1.639,146.711 1.643,144.026 C 1.643,141.34 2.683,138.824 4.572,136.934 L 136.902,4.58 C 138.792,2.687 141.314,1.643 144.002,1.643 C 146.688,1.643 149.206,2.684 151.096,4.574 L 283.426,136.941 C 285.316,138.831 286.356,141.351 286.356,144.036 C 286.356,146.719 285.316,149.236 283.426,151.126 L 151.096,283.485 C 147.249,287.326 140.752,287.329 136.909,283.485 L 135.747,284.647 C 140.219,289.119 147.778,289.119 152.257,284.647 L 284.587,152.288 C 289.14,147.738 289.137,140.331 284.587,135.78 L 152.257,3.412 C 150.056,1.209 147.127,0 144.002,0 z" id="path8"/>
+  <path clip-rule="evenodd" d="M 138.432,281.909 L 6.147,149.599 C 3.105,146.551 3.112,141.508 6.147,138.458 L 138.426,6.155 C 141.474,3.107 146.511,3.113 149.572,6.155 L 281.845,138.465 C 284.886,141.514 284.893,146.548 281.845,149.599 L 149.571,281.909 C 146.518,284.938 141.48,284.951 138.432,281.909" id="path10" style="fill-rule:evenodd"/>
+  <path clip-rule="evenodd" d="M 141.377,278.888 L 9.169,146.653 C 7.706,145.235 7.706,142.822 9.169,141.401 L 141.377,9.177 C 142.789,7.714 145.202,7.714 146.62,9.177 L 278.829,141.402 C 280.292,142.826 280.292,145.239 278.822,146.66 L 146.627,278.888 C 145.209,280.351 142.795,280.351 141.377,278.888" id="path12" style="fill:#f7921e;fill-rule:evenodd"/>
+  <path clip-rule="evenodd" d="M 84.991,113.41 L 94.327,104.525 L 89.322,116.944 L 84.991,113.41 M 116.655,123.895 L 122.006,153.401 L 111.413,143.715 L 116.655,123.895 z M 91.259,214.683 L 79.415,214.683 L 81.917,135.055 L 84.65,128.22 L 70.527,114.436 C 82.186,102.668 93.838,90.899 105.489,79.125 C 111.392,84.359 117.674,85.508 124.174,84.362 L 132.605,162.171 C 144.484,172.193 156.365,182.216 168.254,192.244 C 159.599,176.348 163.519,159.091 178.616,163.65 L 217.454,175.385 L 177.93,214.8 L 136.127,214.8 L 151.623,184.609 L 112.213,151.571 L 119.159,171.401 L 117.905,214.682 L 108.453,214.682 L 106.862,178.119 L 96.955,160.23 L 91.259,214.683 z M 119.562,47.683 C 128.622,47.683 136.013,55.077 136.013,64.141 C 136.013,73.209 128.621,80.605 119.562,80.605 C 110.496,80.605 103.098,73.209 103.098,64.141 C 103.098,55.076 110.496,47.683 119.562,47.683 z" id="path14" style="fill-rule:evenodd"/>
+</svg>

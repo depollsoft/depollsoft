@@ -1,0 +1,119 @@
+﻿<navigation:Page x:Class="ScratchContent.Views.ErrorPage"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:toolkit="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Toolkit"
+                 xmlns:SLaBControls="clr-namespace:SLaB.Navigation.Controls;assembly=SLaB.Navigation.Controls"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 mc:Ignorable="d"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480" Title="An Error Has Occurred...">
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="368*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="509*" />
+        </Grid.ColumnDefinitions>
+        <Image Name="image1"
+               Stretch="Fill"
+               Source="/ScratchContent;component/Assets/noConnect.png"
+               Margin="4" />
+        <TextBlock Name="textBlock1"
+                   Text="This page cannot be displayed"
+                   Grid.Column="1"
+                   FontSize="24"
+                   VerticalAlignment="Center"
+                   Margin="4" />
+        <Rectangle Height="1"
+                   Grid.Column="1"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Bottom"
+                   Stroke="Gray"
+                   Margin="4,0" />
+        <ScrollViewer Grid.Column="1"
+                      Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      BorderThickness="0">
+            <StackPanel Name="stackPanel1"
+                        Background="White"
+                        Margin="4">
+                <StackPanel.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="FontSize"
+                                Value="12" />
+                        <Setter Property="Margin"
+                                Value="4" />
+                        <Setter Property="HorizontalAlignment"
+                                Value="Left" />
+                        <Setter Property="TextWrapping"
+                                Value="Wrap" />
+                    </Style>
+                </StackPanel.Resources>
+                <TextBlock Name="textBlock2"
+                           Text="An error has occurred that prevented this page from loading." />
+                <TextBlock Name="textBlock3"
+                           Text="Try clicking on one of the following links:" />
+                <SLaBControls:TreeViewNavigator BorderThickness="0"
+                                                ExpandAll="True"
+                                                SitemapHeaderVisibility="Collapsed"
+                                                Sitemap="{StaticResource Sitemap}">
+                </SLaBControls:TreeViewNavigator>
+                <TextBlock Name="textBlock4"
+                           Text="If this problem persists, please contact the website administrator." />
+                <toolkit:Expander IsExpanded="False"
+                                  Margin="4">
+                    <toolkit:Expander.Header>
+                        <TextBlock Margin="0"
+                                   Text="More Information"
+                                   FontStyle="Italic"
+                                   FontWeight="Bold"
+                                   Foreground="Gray" />
+                    </toolkit:Expander.Header>
+                    <Grid Margin="25,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Requested Uri: "
+                                   Margin="0,4,4,4"
+                                   FontWeight="Bold" />
+                        <HyperlinkButton x:Name="uriLink"
+                                         Grid.Column="1"
+                                         Content="{Binding RelativeSource={RelativeSource Self}, Path=NavigateUri}"
+                                         Margin="0,4" />
+                        <TextBlock Grid.Row="1"
+                                   Margin="0,4,4,4"
+                                   Text="Error details:"
+                                   FontWeight="Bold" />
+                        <ContentControl x:Name="errorInformation"
+                                        Margin="0,4"
+                                        Grid.Row="1"
+                                        Grid.Column="1">
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12" />
+                                        <Button Content="Copy to Clipboard"
+                                                HorizontalAlignment="Center"
+                                                Margin="4"
+                                                Click="ButtonClick" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                    </Grid>
+                </toolkit:Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</navigation:Page>

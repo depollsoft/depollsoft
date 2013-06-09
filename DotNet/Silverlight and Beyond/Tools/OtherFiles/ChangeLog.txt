@@ -1,0 +1,95 @@
+Silverlight and Beyond (SLaB) Changelog
+***************************************
+v0.11, 4:39 PM 1/26/2011
+---------------------------------------
+-Added the Tombstoner utility class and a variety of helpers for Windows Phone 7, which make tombstoning of UI state simple and XAML-friendly
+-Added the SequenceGrid panel for Windows Phone 7, which lays out its children in a grid (with a fixed number of columns) in the order they are added
+-Other minor bugfixes
+
+v0.10, 12:40 AM 11/21/2010
+---------------------------------------
+-Ported various components (e.g. XamlSerializer, etc.) to work on Windows Phone 7
+-Added BusyIndicator for Windows Phone 7
+-Added ContinuousButton for Windows Phone 7, allowing a bound value to be true while the button is being held down by the user
+-Added the DelayCreateContentControl for Windows Phone 7, which delays creation of its content until it has been loaded
+-Added the DelayLoadItemsControl for Windows Phone 7, which fires an event when scrolling nears the end of the vertical space so that more content can be loaded
+-Added the DetailsLayout for Windows Phone 7, which makes creating a 2-column table of headers and content easier
+-Added the MarketplaceNavigator for Windows Phone 7, which makes it easy to create HyperlinkButtons that point to marketplace content
+-Added the TrialBlocker control and PhoneUtilities static methods for Windows Phone 7, which make blocking functionality for trial applications easy and testable
+-Improved progress indication for network downloads
+-Other minor bugfixes
+
+v0.9, 9:38 PM 7/23/2010
+---------------------------------------
+-Added XamlSerializer and UiXamlSerializer for producing Xaml from POCOs or UI/DependencyObjects
+-Updated MEFContentLoader to include Glenn Block's changes from his talk, supporting MEF's Xap loading (sorry for the long delay on this -- didn't realize those changes had been made until someone brought it up to me!)
+-Fixed a bug with PackUriParser that caused navigations between pages within the same assembly (using full pack Uris) not to update the browser's address bar as users moved from page to page
+-Other minor bugfixes
+
+v0.85, 1:55 AM 5/29/2010
+---------------------------------------
+-Fixed a bug with ZipUtilities that caused files in folders within zips not to have the correct path
+-Updated the CreateExtmap build task, which should hopefully resolve issues people were having using it
+
+v0.8, 9:54 AM 5/24/2010
+---------------------------------------
+-Added RemoteControl, which downloads and instantiates a control from a remote XAP, which is useful for making installable apps that use assembly caching.
+-Added SLaB:PageResourceContentLoader, a replacement for the built-in PageResourceContentLoader, which supports loading pages in dynamically-loaded XAPs.
+-Fixed bugs with the XapLoader that prevented it from working with certain app manifests (in particular, those that have out of browser settings)
+-Other minor bugfixes
+
+v0.7, 12:39 PM 5/7/2010
+---------------------------------------
+-Added TryImportResourceDictionary that allows XAML resource dictionaries to be imported but fail quietly (so that if not all dependencies for a control are met, other controls in the library (that share the same generic.xaml) can still be used.
+-Added XamlDependencyAttribute, which ensures that Xaml-only assembly dependencies can be declared and appear as dependencies in the assembly metadata.
+-Other minor bugfixes
+
+v0.6, 5:45 PM 4/25/2010
+---------------------------------------
+-Made CollectionPrinter work for controls like DataGrid when they auto-generate columns for generic collections (based on the type in IEnumerable<T>)
+-Added a utility method that allows you to get the MethodInfo for an arbitrary method, including private ones (from anywhere that the method is accessible)
+-Other minor bugfixes
+
+v0.5, 5:21 PM 4/15/2010
+---------------------------------------
+-Updated for SL4 RTW
+-Added CollectionPrinter for printing collections of items
+-Fixed a bug with Sitemap-based controls that caused some pack Uris to be evaluated as "equivalent" (and thus highlighted) even when they were not
+-Added EvenOddConverter that allows you to select an arbitrary value based on whether the input value was even or odd
+-Other minor bugfixes
+
+v0.4, 5:34 PM 3/15/2010
+---------------------------------------
+-Added ZipUtilities so that the contents of a zip file can be discovered
+-Updated XapLoader to use ZipUtilities, allowing all TPEs to work rather than being limited to single-file TPEs where the file is named the same as the zip
+-Added Sitemap-based controls: BreadCrumbNavigator and TreeViewNavigator
+-Added ChangeLinq libraries for working with INotifyCollectionChanged collections and LINQ
+-Added ObservableDictionary and BindableDictionary, which raise INotifyCollectionChanged and INotifyPropertyChanged events as the dictionary changes, making it more usable with Binding
+-Added a basic MEFContentLoader
+-Updated to use XmlnsDefinitionAttribute wherever possible
+-Added XmlnsDefinition attributes to all libraries and updated ScratchApplication to use them
+-Other minor bugfixes
+
+v0.3, 7:25 PM 1/31/2010
+---------------------------------------
+-Added more extensible UriMapper that replicates the built-in UriMapper's behavior but allows UriMappings to be more extensible.
+-Added UiUtilities, the first of which allows you to execute a function on the UI thread and block the calling thread until it has completed (safe to call even from the UI thread)
+-Added XapLoader, which downloads a Xap and any "cached assemblies"
+-Added XapContentLoader, which uses the XapLoader to navigate to pages in downloaded assemblies
+-Added PackUri utilities so that pack Uris can be used to download and navigate to pages in Xaps
+-Signed all assemblies (public binaries use a private key, another key is distributed with source)
+-Added a build task that will generate extmap files for all libraries -- now assembly caching works with SLaB assemblies
+-Fixed a bug with the AuthLoader where all rules would be run, even if one rule already allowed access
+-Other minor bugfixes
+
+v0.0.2, 11:24 AM 12/31/2009
+---------------------------------------
+-Moved ErrorPageLoader into its own project
+-Added auth content loader for producing role-based UI when used with authn/authx.  Just bind to an IPrincipal!
+
+v0.0.1, 6:02 PM 12/6/2009
+---------------------------------------
+-Created the SLaB project
+-Added License.txt, ChangeLog.txt, and Readme.txt
+-Added ErrorPageLoader for handling errors during loading
+-Added SynchronousEventContentLoader for easy creation of one-off INavigationContentLoaders using events that can be handled in XAML

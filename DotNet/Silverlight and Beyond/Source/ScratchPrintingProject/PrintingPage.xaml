@@ -1,0 +1,57 @@
+﻿<navigation:Page x:Class="ScratchPrintingProject.PrintingPage"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 mc:Ignorable="d"
+                 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                 xmlns:SLaB="http://www.davidpoll.com/SLaB"
+                 xmlns:controls="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Toolkit"
+                 xmlns:input="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Input.Toolkit"
+                 xmlns:local="clr-namespace:ScratchPrintingProject"
+                 x:Name="printingPage"
+                 d:DesignWidth="640"
+                 d:DesignHeight="480"
+                 Title="DataGrid-based Printing">
+    <navigation:Page.Resources>
+        <ResourceDictionary>
+            <SLaB:BoolConverter x:Key="BoolConverter" />
+            <local:TestPrinter x:Name="printer" />
+        </ResourceDictionary>
+    </navigation:Page.Resources>
+
+    <controls:BusyIndicator IsBusy="{Binding CurrentlyPrintingPage, ElementName=printer, Converter={StaticResource BoolConverter}}"
+                            BusyContent="{Binding CurrentlyPrintingPage, ElementName=printer, StringFormat='Printing page {0}'}"
+                            DisplayAfter="0:0:0">
+        <controls:BusyIndicator IsBusy="{Binding CurrentlySpoolingPage, ElementName=printer, Converter={StaticResource BoolConverter}}"
+                                BusyContent="{Binding CurrentlySpoolingPage, ElementName=printer, StringFormat='Spooling page {0}'}">
+            <Grid x:Name="LayoutRoot">
+                <ScrollViewer>
+                    <StackPanel x:Name="ContentStackPanel"
+                                Background="White">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center">Items to print:</TextBlock>
+                            <input:NumericUpDown x:Name="slider"
+                                                 Value="{Binding ItemCount, ElementName=printingPage, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center">Display Page:</TextBlock>
+                            <input:NumericUpDown Value="{Binding CurrentPageIndex, ElementName=printPreview, Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <Button Command="{Binding PrintCommand, ElementName=printer}">Print</Button>
+                        <Border BorderBrush="Black"
+                                BorderThickness="1"
+                                HorizontalAlignment="Center">
+                            <local:TestPrinter x:Name="printPreview" />
+                        </Border>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+            </Grid>
+        </controls:BusyIndicator>
+    </controls:BusyIndicator>
+</navigation:Page>

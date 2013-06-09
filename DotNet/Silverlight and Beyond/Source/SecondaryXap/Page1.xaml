@@ -1,0 +1,21 @@
+﻿<navigation:Page x:Class="SecondaryXap.Page1" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation" d:DesignWidth="640" d:DesignHeight="480" Title="Page1 Page" xmlns:chartingToolkit="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit">
+	<Grid x:Name="LayoutRoot">
+		<chartingToolkit:Chart Name="chart1" Title="Page in a dynamically-loaded xap">
+			<chartingToolkit:Chart.DataContext>
+				<PointCollection>
+					<Point>10,10</Point>
+					<Point>3,20</Point>
+					<Point>17,30</Point>
+					<Point>15,40</Point>
+					<Point>19,50</Point>
+					<Point>9,60</Point>
+					<Point>11,70</Point>
+					<Point>4,80</Point>
+				</PointCollection>
+			</chartingToolkit:Chart.DataContext>
+			<chartingToolkit:ColumnSeries DependentValuePath="X" IsSelectionEnabled="True" IndependentValuePath="Y" ItemsSource="{Binding}" />
+			<chartingToolkit:LineSeries DependentValuePath="X" IsSelectionEnabled="True" IndependentValuePath="Y" ItemsSource="{Binding}" />
+
+		</chartingToolkit:Chart>
+	</Grid>
+</navigation:Page>

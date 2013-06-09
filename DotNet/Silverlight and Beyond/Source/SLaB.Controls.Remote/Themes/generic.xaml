@@ -1,0 +1,50 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:SLaB="http://www.davidpoll.com/SLaB">
+	<Style TargetType="SLaB:RemoteControl">
+		<Setter Property="ProgressStyle">
+			<Setter.Value>
+				<Style TargetType="ProgressBar">
+					<Setter Property="HorizontalAlignment" Value="Center" />
+					<Setter Property="VerticalAlignment" Value="Center" />
+					<Setter Property="MinWidth" Value="150" />
+					<Setter Property="MinHeight" Value="25" />
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="ProgressBar">
+								<Grid>
+									<ProgressBar Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Foreground="{TemplateBinding Foreground}" IsIndeterminate="{TemplateBinding IsIndeterminate}" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" />
+									<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4" Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat=Loading... \{0:P\}}" />
+								</Grid>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="SLaB:RemoteControl">
+					<Grid Background="{TemplateBinding Background}">
+						<VisualStateManager.VisualStateGroups>
+							<VisualStateGroup x:Name="RemoteContentStatus">
+								<VisualState x:Name="RemoteContentLoading">
+									<Storyboard>
+										<DoubleAnimation BeginTime="0:0:0.3" Duration="0:0:0.5" To="1" Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="progressBar" />
+									</Storyboard>
+								</VisualState>
+								<VisualState x:Name="RemoteContentLoaded">
+									<Storyboard>
+										<ObjectAnimationUsingKeyFrames Storyboard.TargetName="progressBar" Storyboard.TargetProperty="Visibility">
+											<DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Collapsed" />
+										</ObjectAnimationUsingKeyFrames>
+									</Storyboard>
+								</VisualState>
+							</VisualStateGroup>
+						</VisualStateManager.VisualStateGroups>
+						<ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Canvas.ZIndex="2" />
+						<ProgressBar x:Name="progressBar" Minimum="0" Maximum="1" Value="{TemplateBinding Progress}" Style="{TemplateBinding ProgressStyle}" Opacity="0" Canvas.ZIndex="1" />
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

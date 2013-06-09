@@ -1,5 +1,0 @@
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer\Bin\Debug\SLaB.Utilities.Xaml.Serializer.Phone.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer\Bin\Debug\SLaB.Utilities.Xaml.Serializer.Phone.pdb
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer\obj\Debug\SLaB.Utilities.Xaml.Serializer.Phone.dll
-C:\Users\David\Documents\depollsoft\Windows Phone 7\Silverlight and Beyond\Source\SLaB.Utilities.Xaml.Serializer\obj\Debug\SLaB.Utilities.Xaml.Serializer.Phone.pdb

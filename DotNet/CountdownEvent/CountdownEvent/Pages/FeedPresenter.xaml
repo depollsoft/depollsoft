@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="CountdownEvent.Pages.FeedPresenter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:xamlUtil="clr-namespace:SLaB.Utilities.Xaml;assembly=SLaB.Utilities.Xaml.Phone"
+             xmlns:slabControls="clr-namespace:SLaB.Controls.Phone;assembly=SLaB.Controls.Phone">
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <slabControls:DelayLoadItemsControl ItemsSource="{Binding Feed.Items}"
+                                            HasMoreItems="{Binding HasMoreItems}"
+                                            ItemTemplate="{Binding ItemTemplate}"
+                                            ItemsPanel="{Binding ItemsPanel}"
+                                            DelayLoadAction="DelayLoadAction"
+                                            xamlUtil:Tombstoner.TombstoneId="FeedItemsControl" />
+        <slabControls:BusyIndicator Grid.Row="1"
+                                    IsBusy="{Binding Feed.IsLoading}"
+                                    BusyContent="Loading..." />
+    </Grid>
+</UserControl>
