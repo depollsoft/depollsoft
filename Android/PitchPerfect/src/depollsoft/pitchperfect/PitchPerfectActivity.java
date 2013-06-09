@@ -20,7 +20,6 @@ import android.widget.TabHost.OnTabChangeListener;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
@@ -162,7 +161,6 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("PitchPerfectActivity");
     if (SettingsModel.getWakeLock()) {
       this.wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");

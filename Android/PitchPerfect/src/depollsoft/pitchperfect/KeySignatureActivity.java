@@ -15,7 +15,6 @@ import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.pitchperfect.lib.Key;
 
@@ -112,7 +111,6 @@ public class KeySignatureActivity extends Activity {
     super.onResume();
     this.runOnUiThread(new Runnable() {
       public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView("KeySignatureActivity");
         FlurryAgent.logEvent("KeySignatureActivity");
       }
     });

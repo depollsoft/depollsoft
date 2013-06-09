@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 
-import com.bindroid.Binding;
 import com.bindroid.BindingMode;
 import com.bindroid.converters.AdapterConverter;
 import com.bindroid.converters.BoolConverter;

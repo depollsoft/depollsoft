@@ -21,7 +21,6 @@ import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.MenuItems;
@@ -163,7 +162,6 @@ public class AddSongActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("AddSongActivity");
     FlurryAgent.logEvent("AddSongActivity");
   }
 

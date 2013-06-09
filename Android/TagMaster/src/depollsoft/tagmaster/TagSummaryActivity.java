@@ -17,7 +17,6 @@ import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.bindroid.Binding;
 import com.bindroid.BindingMode;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.converters.ToStringConverter;

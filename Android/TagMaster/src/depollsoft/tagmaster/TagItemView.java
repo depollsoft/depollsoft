@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.bindroid.Binding;
 import com.bindroid.BindingMode;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.converters.ToStringConverter;

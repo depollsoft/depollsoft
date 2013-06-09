@@ -1,7 +1,5 @@
 package depollsoft.pitchperfect;
 
-import java.util.Arrays;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -23,11 +21,9 @@ import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
-import com.parse.ParseFacebookUtils.Permissions;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -108,7 +104,7 @@ public class SettingsActivity extends Activity {
         progress.setMessage("Logging in...");
         loggingIn = true;
         progress.show();
-        ParseFacebookUtils.logIn(Arrays.asList(Permissions.Extended.OFFLINE_ACCESS),
+        ParseFacebookUtils.logIn(null,
             SettingsActivity.this, new LogInCallback() {
               @Override
               public void done(ParseUser user, ParseException err) {
@@ -215,7 +211,6 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    GoogleAnalyticsTracker.getInstance().trackPageView("SettingsActivity");
     FlurryAgent.logEvent("SettingsActivity", true);
   }
 

@@ -19,7 +19,6 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -147,9 +146,8 @@ public class SongListActivity extends Activity {
     super.onResume();
     this.runOnUiThread(new Runnable() {
       public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView("SongListActivity");
         FlurryAgent.logEvent("SongListActivity",
-            Collections.singletonMap("SongCount", SongsModel.get().getSongs().size()), true);
+            Collections.singletonMap("SongCount", "" + SongsModel.get().getSongs().size()), true);
       }
     });
   }

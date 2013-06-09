@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.bindroid.trackable.TrackableCollection;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
@@ -36,8 +35,7 @@ public class PitchPerfectApplication extends RichApplication {
 
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
-        getString(R.string.app_store))
-        + (isDebugSigned ? " debug" : ""));
+        getString(R.string.app_store)) + (isDebugSigned ? " debug" : ""));
 
     JsonSerializer.registerAlias(Integer.class, "Integer");
     JsonSerializer.registerAlias(Integer.TYPE, "int");
@@ -54,22 +52,19 @@ public class PitchPerfectApplication extends RichApplication {
     JsonSerializer.registerAlias(Double.TYPE, "double");
     JsonSerializer.registerAlias(TrackableCollection.class, "List");
 
-    GoogleAnalyticsTracker.getInstance().startNewSession("UA-24315533-2", 10, this);
-    GoogleAnalyticsTracker.getInstance().setProductVersion("Pitch Perfect",
-        this.getString(R.string.app_version));
-    GoogleAnalyticsTracker.getInstance().setCustomVar(1, "Version",
-        this.getString(R.string.app_version), 2);
     if (isDebugSigned) {
       Log.d(this.getPackageName(), "Initializing with debug key");
       Parse.initialize(this, "fIRF0tfJBkE2XbiJf4diG2LsRphoqPe4q4GazAKu",
           "Edcy5i5CKUTLwJe7m56MeIT1LrjBb9ZP1by89Rd4");
-      ParseFacebookUtils.initialize(PitchPerfectApplication.FACEBOOK_DEBUG, true);
-    }
-    else {
+      ParseFacebookUtils.initialize(PitchPerfectApplication.FACEBOOK_DEBUG);
+      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_DEBUG);
+    } else {
       Parse.initialize(this, "cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9",
           "Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE");
-      ParseFacebookUtils.initialize(PitchPerfectApplication.FACEBOOK_PRODUCTION, true);
+      ParseFacebookUtils.initialize(PitchPerfectApplication.FACEBOOK_PRODUCTION);
+      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_PRODUCTION);
     }
+
   }
 
   public static void startupRefreshFromParse() {
@@ -86,8 +81,7 @@ public class PitchPerfectApplication extends RichApplication {
             }
           }
         });
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         // It's ok -- it just means there's already a query going on.
       }
     }
@@ -95,8 +89,6 @@ public class PitchPerfectApplication extends RichApplication {
 
   @Override
   public void onTerminate() {
-    GoogleAnalyticsTracker.getInstance().dispatch();
-    GoogleAnalyticsTracker.getInstance().stopSession();
     super.onTerminate();
   }
 }

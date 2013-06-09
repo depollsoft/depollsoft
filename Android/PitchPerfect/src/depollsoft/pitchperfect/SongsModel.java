@@ -128,9 +128,9 @@ public class SongsModel {
 
   public void refreshFromParse() {
     refreshing = true;
-    ParseQuery query = new ParseQuery("SongList");
+    ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("SongList");
     try {
-      query.getFirstInBackground(new GetCallback() {
+      query.getFirstInBackground(new GetCallback<ParseObject>() {
 
         @Override
         public void done(ParseObject main, ParseException ex) {

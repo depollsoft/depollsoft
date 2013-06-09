@@ -9,7 +9,6 @@ import com.bindroid.converters.AdapterConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.pitchperfect.lib.Note;
 
@@ -66,7 +65,6 @@ public class NoteListActivity extends Activity {
     super.onResume();
     this.runOnUiThread(new Runnable() {
       public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView("NoteListActivity");
         FlurryAgent.logEvent("NoteListActivity", true);
       }
     });

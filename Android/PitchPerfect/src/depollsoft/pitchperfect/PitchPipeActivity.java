@@ -10,7 +10,6 @@ import android.widget.RadioButton;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
 import depollsoft.pitchperfect.lib.Note;
@@ -129,7 +128,6 @@ public class PitchPipeActivity extends Activity {
     super.onResume();
     this.runOnUiThread(new Runnable() {
       public void run() {
-        GoogleAnalyticsTracker.getInstance().trackPageView("PitchPipeActivity");
         FlurryAgent.logEvent("PitchPipeActivity", true);
       }
     });
