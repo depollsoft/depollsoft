@@ -7,6 +7,7 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/DepollSoftCommon"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/DepollSoftCommon.Compat"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/facebook"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/facebook"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/Bindroid"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

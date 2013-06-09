@@ -2,11 +2,13 @@ package depollsoft.tagmaster;
 
 import android.util.Log;
 
+import com.bindroid.trackable.TrackableCollection;
 import com.flurry.android.FlurryAgent;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 
 import depollsoft.lib.activity.RichApplication;
+import depollsoft.lib.json.JsonSerializer;
 import depollsoft.lib.util.DebugTools;
 
 public class TagMasterApplication extends RichApplication {
@@ -20,6 +22,9 @@ public class TagMasterApplication extends RichApplication {
     super.onCreate();
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(getString(R.string.app_version));
+
+    JsonSerializer.registerAlias(TrackableCollection.class,
+        "depollsoft.lib.binding.ObservableCollection");
 
     if (DebugTools.isDebugSigned(TagMasterApplication.DEBUG_SIGNATURE)) {
       Log.d(this.getPackageName(), "Initializing with debug key");
