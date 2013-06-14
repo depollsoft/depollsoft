@@ -3,13 +3,13 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <ImageView
+    <depollsoft.lib.ui.ScaledBitmapView
         android:id="@+id/imageView1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:scaleType="matrix"
         android:src="@drawable/panobackground" >
-    </ImageView>
+    </depollsoft.lib.ui.ScaledBitmapView>
 
     <LinearLayout
         android:id="@+id/linearLayout1"
