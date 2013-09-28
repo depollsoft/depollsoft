@@ -167,7 +167,7 @@
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    [self.view setBackgroundColor:[UIColor blackColor]];
+    //[self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];

@@ -44,7 +44,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    VLayoutView *topLayout = [[VLayoutView alloc] init];
+    //VLayoutView *topLayout = [[VLayoutView alloc] init];
     self.noteButtons = [NSMutableArray arrayWithCapacity:12];
     self.model = [[DPPitchPipeModel alloc] init];
 	// Do any additional setup after loading the view, typically from a nib.
@@ -55,24 +55,23 @@
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    [self.view setBackgroundColor:[UIColor blackColor]];
+    //[self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
+    toolbar.barStyle = UIBarStyleDefault;
     
     [toolbar sizeToFit];
-    [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
-    [topLayout sizeToFit];
-    [self.view addSubview:topLayout];
+    //[topLayout addSubview:toolbar];
+    //[topLayout addSubview:bannerView];
+    //[topLayout sizeToFit];
+    //[self.view addSubview:topLayout];
     
+    //CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
     
-    CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
-    
-    KJGridLayoutView *glv = [[KJGridLayoutView alloc] initWithFrame:gridLayoutViewBounds];
+    KJGridLayoutView *glv = [[KJGridLayoutView alloc] init];
     
     glv.rowSpacing = 4;
     glv.columnSpacing = 4;
@@ -108,6 +107,30 @@
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
     
     [self.view addSubview:glv];
+    [self.view addSubview:toolbar];
+    [self.view addSubview:bannerView];
+    
+    [glv setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [bannerView setTranslatesAutoresizingMaskIntoConstraints:NO];
+    UITabBar *tabBar = self.tabBarController.tabBar;
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][toolbar][bannerView][glv][bottomLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv, tabBar)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolbar]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[bannerView]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[glv]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated {

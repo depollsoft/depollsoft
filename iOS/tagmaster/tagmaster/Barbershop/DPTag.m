@@ -32,7 +32,6 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 @synthesize posted;
 @synthesize rating;
 @synthesize sungBy;
-@synthesize tracks;
 @synthesize videos;
 @synthesize tagType;
 @synthesize teacher;
@@ -169,7 +168,7 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 }
 
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache {
-    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:minimumRating minimumDownloads:minimumDownloads cache:cache fieldList:@"id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4"];
+    return [DPTag query:query numberOfResults:numberOfResults start:start parts:parts learningTracks:learningTracks sheetMusic:sheetMusic collection:tagCollection sortBy:sortBy minimumRating:minimumRating minimumDownloads:minimumDownloads cache:cache fieldList:@"id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,AllParts,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4"];
 }
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache fieldList:(NSString *)fieldList {
     NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
@@ -191,7 +190,7 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
         [builtString appendFormat:@"&SheetMusic=%@", [sheetMusic boolValue] ? @"Yes" : @"No"];
     }
     if (sortBy) {
-        [builtString appendString:@"&SortBy="];
+        [builtString appendString:@"&Sortby="];
         switch (sortBy) {
             case DPTagSortNone:
                 break;
@@ -251,6 +250,38 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
     DPTag.tagCache[@(self.tagId)] = self;
     [DPFileCache writeObject:self forKey:self.cacheKey];
     return;
+}
+
+- (NSArray *)tracks {
+    NSMutableArray *arr = [NSMutableArray array];
+    if (self.allPartsTrackUri) {
+        [arr addObject:self.allPartsTrackUri];
+    }
+    if (self.tenorTrackUri) {
+        [arr addObject:self.tenorTrackUri];
+    }
+    if (self.leadTrackUri) {
+        [arr addObject:self.leadTrackUri];
+    }
+    if (self.baritoneTrackUri) {
+        [arr addObject:self.baritoneTrackUri];
+    }
+    if (self.bassTrackUri) {
+        [arr addObject:self.bassTrackUri];
+    }
+    if (self.other1TrackUri) {
+        [arr addObject:self.other1TrackUri];
+    }
+    if (self.other2TrackUri) {
+        [arr addObject:self.other2TrackUri];
+    }
+    if (self.other3TrackUri) {
+        [arr addObject:self.other3TrackUri];
+    }
+    if (self.other4TrackUri) {
+        [arr addObject:self.other4TrackUri];
+    }
+    return arr;
 }
 
 @end

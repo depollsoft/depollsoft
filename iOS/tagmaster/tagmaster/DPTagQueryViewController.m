@@ -9,17 +9,21 @@
 #import "DPTagQueryViewController.h"
 #import "DPTagCell.h"
 #import "DPUtils+Subscripts.h"
+#import "DPTagViewController.h"
 
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (atomic, retain) DPTagQueryResult *mostRecentResult;
 @property (nonatomic, retain) UIActivityIndicatorView *activity;
-@property (nonatomic, retain) UILabel *statusLabel;
+@property (nonatomic, retain) UITextView *statusLabel;
 @property (nonatomic, retain) UITableView *tagTable;
+@property (nonatomic, retain) UIRefreshControl *refreshControl;
 
 @end
 
 @implementation DPTagQueryViewController
+
+@synthesize tagTable;
 
 - (id)init {
     if (self = [super init]) {
@@ -54,7 +58,7 @@
     self.maxResults = 1000;
     self.tags = [NSMutableArray array];
     
-    self.query = @"lover come back";
+    //self.query = @"lover come back";
 }
 
 - (void)viewDidLoad
@@ -62,18 +66,47 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
     
-    self.tagTable = [[UITableView alloc] initWithFrame:self.view.frame];
+    self.tagTable = [[UITableView alloc] init];
+    self.tagTable.translatesAutoresizingMaskIntoConstraints = NO;
     self.tagTable.delegate = self;
     self.tagTable.dataSource = self;
+    [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
     self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     self.activity.hidesWhenStopped = YES;
     
-    self.statusLabel = [[UILabel alloc] init];
+    self.statusLabel = [[UITextView alloc] init];
     
     self.tagTable.tableFooterView = self.activity;
     
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
+    [self.tagTable addSubview:self.refreshControl];
+    
     [self.view addSubview:self.tagTable];
+    
+    NSMutableDictionary *bindings = [NSMutableDictionary dictionaryWithDictionary:NSDictionaryOfVariableBindings(tagTable)];
+    bindings[@"topLayoutGuide"] = self.topLayoutGuide;
+    bindings[@"bottomLayoutGuide"] = self.bottomLayoutGuide;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tagTable]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:bindings]];
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[tagTable]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:bindings]];
+    
+    [self fetchResults];
+}
+
+- (void)refresh {
+    self.mostRecentResult = [[DPTagQueryResult alloc] init];
+    self.mostRecentResult.start = 0;
+    self.mostRecentResult.count = 0;
+    self.tags = [NSMutableArray array];
     [self fetchResults];
 }
 
@@ -90,19 +123,24 @@
 
 - (void)refreshViews {
     if (self.isLoading) {
+        self.tagTable.tableFooterView = self.activity;
         [self.activity startAnimating];
     } else {
         [self.activity stopAnimating];
+        self.tagTable.tableFooterView = nil;
     }
     
     if (self.statusText) {
         self.statusLabel.text = self.statusText;
         self.tagTable.tableHeaderView = self.statusLabel;
     } else {
-        self.tagTable.tableHeaderView = self.statusLabel;
+        self.tagTable.tableHeaderView = nil;
     }
     [self.statusLabel sizeToFit];
     [self.activity sizeToFit];
+    if ([self.refreshControl isRefreshing]) {
+        [self.refreshControl endRefreshing];
+    }
     
     [self.tagTable reloadData];
 }
@@ -151,10 +189,20 @@
     return self.tags.count;
 }
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    DPTagViewController *controller = [[DPTagViewController alloc] init];
+    controller.tagId = [self.tags[indexPath.row] tagId];
+    [self.navigationController pushViewController:controller animated:YES];
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPTagCell *cell = [[DPTagCell alloc] init];
+    DPTagCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
     cell.tag = self.tags[indexPath.row];
     return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [DPTagCell tagHeight:self.tags[indexPath.row]];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {

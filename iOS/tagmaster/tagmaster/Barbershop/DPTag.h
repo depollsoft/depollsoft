@@ -53,7 +53,6 @@
 @property (nonatomic, strong) DPRemoteLocation *other3TrackUri;
 @property (nonatomic, strong) DPRemoteLocation *other4TrackUri;
 @property (nonatomic, strong) NSArray *videos;
-@property (nonatomic, strong) NSArray *tracks;
 @property (nonatomic, copy) NSString *lyrics;
 
 + (void)clearCache;
@@ -75,5 +74,6 @@
 + (DPTag *)queryById:(int)tagId;
 
 - (void)cache;
+- (NSArray *)tracks;
 
 @end

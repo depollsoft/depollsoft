@@ -12,7 +12,7 @@
 
 - (UIColor *)invert {
     CGColorRef oldCGColor = self.CGColor;
-    int numberOfComponents = CGColorGetNumberOfComponents(oldCGColor);
+    size_t numberOfComponents = CGColorGetNumberOfComponents(oldCGColor);
     
     // can not invert - the only component is the alpha
     // e.g. self == [UIColor groupTableViewBackgroundColor]
@@ -37,7 +37,7 @@
 
 - (UIColor *)withAlpha:(CGFloat)alpha {
     CGColorRef oldCGColor = self.CGColor;
-    int numberOfComponents = CGColorGetNumberOfComponents(oldCGColor);
+    size_t numberOfComponents = CGColorGetNumberOfComponents(oldCGColor);
     
     const CGFloat *oldComponentColors = CGColorGetComponents(oldCGColor);
     CGFloat newComponentColors[numberOfComponents];

@@ -8,6 +8,7 @@
 
 #import "DPAppDelegate.h"
 #import "DPBarbershop.h"
+#import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 
 @implementation DPAppDelegate
@@ -16,9 +17,11 @@
 @synthesize managedObjectContext = __managedObjectContext;
 @synthesize managedObjectModel = __managedObjectModel;
 @synthesize persistentStoreCoordinator = __persistentStoreCoordinator;
+@synthesize navigationController;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
         return [url absoluteString];
     } deserializer:^NSURL *(NSString *input) {
@@ -35,6 +38,13 @@
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+    
+    UINavigationController *navController = [[UINavigationController alloc] init];
+    self.window.rootViewController = navController;
+    [navController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
+    navigationController = navController;
+    [self.window makeKeyAndVisible];
+
     return YES;
 }
 

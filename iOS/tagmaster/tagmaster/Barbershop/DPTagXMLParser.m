@@ -68,11 +68,12 @@
     }
     if ([result.lastObject isKindOfClass:[NSString class]]) {
         NSString *data = result.lastObject;
+        NSString *noCommas = [data stringByReplacingOccurrencesOfString:@"," withString:@""];
         [result removeLastObject];
         if ([result.lastObject isKindOfClass:[DPTag class]]) {
             DPTag *tag = result.lastObject;
             if ([elementName isEqualToString:@"id"]) {
-                tag.tagId = [data intValue];
+                tag.tagId = [noCommas intValue];
             } else if ([elementName isEqualToString:@"Title"]) {
                 tag.title = data;
             } else if ([elementName isEqualToString:@"AltTitle"]) {
@@ -82,7 +83,7 @@
             } else if ([elementName isEqualToString:@"WritKey"]) {
                 tag.writtenKey = data;
             } else if ([elementName isEqualToString:@"Parts"]) {
-                tag.parts = [data intValue];
+                tag.parts = [noCommas intValue];
             } else if ([elementName isEqualToString:@"Type"]) {
                 tag.tagType = data;
             } else if ([elementName isEqualToString:@"Recording"]) {
@@ -98,13 +99,13 @@
             } else if ([elementName isEqualToString:@"ArrWebsite"]) {
                 tag.arrangerWebsite = [NSURL URLWithString:data];
             } else if ([elementName isEqualToString:@"Arranged"]) {
-                tag.yearArranged = [data intValue];
+                tag.yearArranged = [noCommas intValue];
             } else if ([elementName isEqualToString:@"SungBy"]) {
                 tag.sungBy = data;
             } else if ([elementName isEqualToString:@"SungWebsite"]) {
                 tag.sungByWebsite = [NSURL URLWithString:data];
             } else if ([elementName isEqualToString:@"SungYear"]) {
-                tag.sungYear = [data intValue];
+                tag.sungYear = [noCommas intValue];
             } else if ([elementName isEqualToString:@"Quartet"]) {
                 tag.learningTrackQuartet = data;
             } else if ([elementName isEqualToString:@"QWebsite"]) {
@@ -120,11 +121,11 @@
             } else if ([elementName isEqualToString:@"Posted"]) {
                 tag.posted = [dayNameDateFormatter dateFromString: data];
             } else if ([elementName isEqualToString:@"Classic"]) {
-                tag.classicTagNumber = [data intValue];
+                tag.classicTagNumber = [noCommas intValue];
             } else if ([elementName isEqualToString:@"Rating"]) {
                 tag.rating = [data doubleValue];
             } else if ([elementName isEqualToString:@"Downloaded"]) {
-                tag.downloadCount = [data intValue];
+                tag.downloadCount = [noCommas intValue];
             }
         } else if ([result.lastObject isKindOfClass:[DPRemoteLocation class]]) {
             DPRemoteLocation *location = result.lastObject;
@@ -155,7 +156,7 @@
         } else if ([result.lastObject isKindOfClass:[DPVideo class]]) {
             DPVideo *video = result.lastObject;
             if ([elementName isEqualToString:@"id"]) {
-                video.videoId = [data intValue];
+                video.videoId = [noCommas intValue];
             } else if ([elementName isEqualToString:@"Desc"]) {
                 video.description = data;
             } else if ([elementName isEqualToString:@"SungKey"]) {

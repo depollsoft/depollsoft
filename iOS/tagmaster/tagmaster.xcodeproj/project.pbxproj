@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
+		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
+		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
+		63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */; };
 		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
 		636455741515731A002AD091 /* DPTagQueryResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 636455731515731A002AD091 /* DPTagQueryResult.m */; };
 		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
@@ -26,8 +30,6 @@
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
 		63D9472815145EDD000C8784 /* DPTrack.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472715145EDD000C8784 /* DPTrack.m */; };
-		63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */; };
-		63E8666E15DCACE100E0FC17 /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */; };
 		63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */; };
 		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
 		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
@@ -45,6 +47,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		63336A3417F584DC00BC1EE2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "../pitchperfect/Default-568h@2x.png"; sourceTree = "<group>"; };
+		63336A3517F585BD00BC1EE2 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "../pitchperfect/Default@2x.png"; sourceTree = "<group>"; };
+		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
+		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
+		63336A4317F6342400BC1EE2 /* DPTagViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagViewController.h; sourceTree = "<group>"; };
+		63336A4417F6342400BC1EE2 /* DPTagViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagViewController.m; sourceTree = "<group>"; };
+		63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagSummaryController.h; sourceTree = "<group>"; };
+		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
+		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
 		6364557015156B3A002AD091 /* DPTagXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagXMLParser.m; path = Barbershop/DPTagXMLParser.m; sourceTree = "<group>"; };
 		636455721515731A002AD091 /* DPTagQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagQueryResult.h; path = Barbershop/DPTagQueryResult.h; sourceTree = "<group>"; };
@@ -76,8 +87,6 @@
 		63D9472615145EDD000C8784 /* DPTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTrack.h; path = Barbershop/DPTrack.h; sourceTree = "<group>"; };
 		63D9472715145EDD000C8784 /* DPTrack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTrack.m; path = Barbershop/DPTrack.m; sourceTree = "<group>"; };
 		63D9472A15145FD3000C8784 /* DPConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = DPConstants.h; path = Barbershop/DPConstants.h; sourceTree = "<group>"; };
-		63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpitchperfectlib.a; path = "../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
-		63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
 		63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagQueryViewController.h; sourceTree = "<group>"; };
 		63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagQueryViewController.m; sourceTree = "<group>"; };
 		63E8667215DCB86300E0FC17 /* DPTagCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagCell.h; sourceTree = "<group>"; };
@@ -93,8 +102,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
-				63E1497F15C2697F00E72AC9 /* libpitchperfectlib.a in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
@@ -120,11 +129,12 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				63336A3517F585BD00BC1EE2 /* Default@2x.png */,
+				63336A3417F584DC00BC1EE2 /* Default-568h@2x.png */,
 				63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */,
 				63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */,
 				63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */,
 				63E8667815DCCB9B00E0FC17 /* AudioUnit.framework */,
-				63E1497E15C2697F00E72AC9 /* libpitchperfectlib.a */,
 				63712EF715130B21007997CC /* tagmaster */,
 				63712F1315130B21007997CC /* tagmasterTests */,
 				63712EEE15130B21007997CC /* Frameworks */,
@@ -144,6 +154,7 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */,
 				63712EEF15130B21007997CC /* UIKit.framework */,
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
@@ -159,12 +170,17 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
-				63712EF815130B21007997CC /* Supporting Files */,
-				63E8666D15DCACE100E0FC17 /* Storyboard.storyboard */,
-				63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */,
-				63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */,
+				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
+				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
+				63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */,
+				63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */,
+				63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */,
+				63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */,
+				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
+				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
+				63712EF815130B21007997CC /* Supporting Files */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -292,7 +308,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
-				63E8666E15DCACE100E0FC17 /* Storyboard.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,14 +342,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
+				63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */,
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
 				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,
 				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
+				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
 			);

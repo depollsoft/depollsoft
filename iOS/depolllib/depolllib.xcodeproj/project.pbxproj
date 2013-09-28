@@ -9,6 +9,14 @@
 /* Begin PBXBuildFile section */
 		631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */ = {isa = PBXBuildFile; fileRef = 631C911C15942383004733F1 /* DPUtils+UIColor.h */; };
 		631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C911D15942383004733F1 /* DPUtils+UIColor.m */; };
+		63336A3D17F6284800BC1EE2 /* DPTabBarController.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A3B17F6284800BC1EE2 /* DPTabBarController.h */; };
+		63336A3E17F6284800BC1EE2 /* DPTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3C17F6284800BC1EE2 /* DPTabBarController.m */; };
+		63336A4D17F6500100BC1EE2 /* DPGridLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A4B17F6500100BC1EE2 /* DPGridLayout.h */; };
+		63336A4E17F6500100BC1EE2 /* DPGridLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4C17F6500100BC1EE2 /* DPGridLayout.m */; };
+		63336A5317F677BE00BC1EE2 /* UIView+DPUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A5117F677BE00BC1EE2 /* UIView+DPUtils.h */; };
+		63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */; };
+		63336A5717F69E9B00BC1EE2 /* DPTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A5517F69E9B00BC1EE2 /* DPTextView.h */; };
+		63336A5817F69E9B00BC1EE2 /* DPTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A5617F69E9B00BC1EE2 /* DPTextView.m */; };
 		63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */; };
 		63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */; };
 		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
@@ -44,6 +52,14 @@
 /* Begin PBXFileReference section */
 		631C911C15942383004733F1 /* DPUtils+UIColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DPUtils+UIColor.h"; sourceTree = "<group>"; };
 		631C911D15942383004733F1 /* DPUtils+UIColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "DPUtils+UIColor.m"; sourceTree = "<group>"; };
+		63336A3B17F6284800BC1EE2 /* DPTabBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTabBarController.h; sourceTree = "<group>"; };
+		63336A3C17F6284800BC1EE2 /* DPTabBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTabBarController.m; sourceTree = "<group>"; };
+		63336A4B17F6500100BC1EE2 /* DPGridLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPGridLayout.h; sourceTree = "<group>"; };
+		63336A4C17F6500100BC1EE2 /* DPGridLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPGridLayout.m; sourceTree = "<group>"; };
+		63336A5117F677BE00BC1EE2 /* UIView+DPUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIView+DPUtils.h"; path = "utils/UIView+DPUtils.h"; sourceTree = "<group>"; };
+		63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIView+DPUtils.m"; path = "utils/UIView+DPUtils.m"; sourceTree = "<group>"; };
+		63336A5517F69E9B00BC1EE2 /* DPTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTextView.h; sourceTree = "<group>"; };
+		63336A5617F69E9B00BC1EE2 /* DPTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTextView.m; sourceTree = "<group>"; };
 		63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+UIControl.h"; path = "utils/DPUtils+UIControl.h"; sourceTree = "<group>"; };
 		63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+UIControl.m"; path = "utils/DPUtils+UIControl.m"; sourceTree = "<group>"; };
 		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +111,12 @@
 		63A99D6015882D6900C78CC0 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				63336A3B17F6284800BC1EE2 /* DPTabBarController.h */,
+				63336A3C17F6284800BC1EE2 /* DPTabBarController.m */,
+				63336A4B17F6500100BC1EE2 /* DPGridLayout.h */,
+				63336A4C17F6500100BC1EE2 /* DPGridLayout.m */,
+				63336A5517F69E9B00BC1EE2 /* DPTextView.h */,
+				63336A5617F69E9B00BC1EE2 /* DPTextView.m */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -199,6 +221,8 @@
 				631C911C15942383004733F1 /* DPUtils+UIColor.h */,
 				631C911D15942383004733F1 /* DPUtils+UIColor.m */,
 				63E1498115C26E0800E72AC9 /* DPUtils+Subscripts.h */,
+				63336A5117F677BE00BC1EE2 /* UIView+DPUtils.h */,
+				63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -212,11 +236,15 @@
 			files = (
 				63DC375F151E93A8007C46DB /* DPJsonSerializer.h in Headers */,
 				63DC3768151E94CC007C46DB /* DPJsonPrimitive.h in Headers */,
+				63336A4D17F6500100BC1EE2 /* DPGridLayout.h in Headers */,
+				63336A3D17F6284800BC1EE2 /* DPTabBarController.h in Headers */,
 				63F17816154E112000C2AB59 /* DPEnum.h in Headers */,
 				63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */,
 				63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */,
+				63336A5317F677BE00BC1EE2 /* UIView+DPUtils.h in Headers */,
 				631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */,
 				63E1497C15C2614400E72AC9 /* DPFileCache.h in Headers */,
+				63336A5717F69E9B00BC1EE2 /* DPTextView.h in Headers */,
 				63E1498315C26E0800E72AC9 /* DPUtils+Subscripts.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -266,7 +294,7 @@
 		63DC372A151E9263007C46DB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */;
@@ -319,12 +347,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63336A4E17F6500100BC1EE2 /* DPGridLayout.m in Sources */,
 				63DC3760151E93A8007C46DB /* DPJsonSerializer.m in Sources */,
 				63DC3769151E94CC007C46DB /* DPJsonPrimitive.m in Sources */,
 				63F17817154E112000C2AB59 /* DPEnum.m in Sources */,
+				63336A3E17F6284800BC1EE2 /* DPTabBarController.m in Sources */,
+				63336A5817F69E9B00BC1EE2 /* DPTextView.m in Sources */,
 				63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */,
 				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
 				631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */,
+				63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */,
 				63E1497D15C2614400E72AC9 /* DPFileCache.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -363,8 +395,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -375,10 +412,14 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -387,13 +428,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				SDKROOT = iphoneos;
@@ -404,9 +453,12 @@
 		63DC3758151E9263007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -416,9 +468,11 @@
 		63DC3759151E9263007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
