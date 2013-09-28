@@ -55,6 +55,8 @@
     NSMutableArray *controllers = [NSMutableArray array];
     
     self.summaryController = [[DPTagSummaryController alloc] init];
+    self.summaryController.tabBarItem = [[UITabBarItem alloc] init];
+    self.summaryController.tabBarItem.title = @"Summary";
     [controllers addObject:self.summaryController];
     
     self.viewControllers = controllers;

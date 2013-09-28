@@ -70,6 +70,7 @@
     self.tagTable.translatesAutoresizingMaskIntoConstraints = NO;
     self.tagTable.delegate = self;
     self.tagTable.dataSource = self;
+    self.tagTable.backgroundColor = [UIColor clearColor];
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
     self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
@@ -190,6 +191,7 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
     DPTagViewController *controller = [[DPTagViewController alloc] init];
     controller.tagId = [self.tags[indexPath.row] tagId];
     [self.navigationController pushViewController:controller animated:YES];

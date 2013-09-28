@@ -14,5 +14,7 @@
 + (NSData *)readDataForKey:(NSString *)key;
 + (void)writeObject:(id)object forKey:(NSString *)key;
 + (id)readObjectForKey:(NSString *)key;
++ (NSString *)pathForKey:(NSString *)key;
++ (NSString *)keyForURL:(NSURL *)url;
 
 @end

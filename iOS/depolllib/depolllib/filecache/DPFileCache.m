@@ -49,4 +49,15 @@ static NSString *basePath = nil;
     return [DPJsonSerializer deserializeDictionary:dataDict];
 }
 
++ (NSString *)pathForKey:(NSString *)key {
+    return [basePath stringByAppendingPathComponent:key];
+}
+
++ (NSString *)keyForURL:(NSURL *)url {
+    NSString *str = [NSString stringWithFormat:@"%@", url];
+    str = [str stringByReplacingOccurrencesOfString:@"/" withString:@"_SLASH_"];
+    str = [str stringByReplacingOccurrencesOfString:@":" withString:@"_COLON_"];
+    return str;
+}
+
 @end

@@ -7,10 +7,15 @@
 //
 
 #import "DPRemoteLocation.h"
+#import "DPFileCache.h"
 
 @implementation DPRemoteLocation
 
 @synthesize uri;
 @synthesize type;
+
+- (NSString *)cacheKey {
+    return [NSString stringWithFormat:@"%@.%@", [DPFileCache keyForURL:self.uri], self.type];
+}
 
 @end

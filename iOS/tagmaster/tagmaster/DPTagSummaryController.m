@@ -10,8 +10,21 @@
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPTextView.h"
+#import "DPFileCache.h"
+#import <QuickLook/QuickLook.h>
 
-@interface DPTagSummaryController ()
+@interface DPSheetMusicPreview : NSObject <QLPreviewItem>
+
+@property (atomic, strong) NSURL *previewItemURL;
+@property (atomic, strong) NSString *previewItemTitle;
+
+@end
+
+@implementation DPSheetMusicPreview
+
+@end
+
+@interface DPTagSummaryController () <QLPreviewControllerDataSource>
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *akaLabel;
@@ -61,7 +74,6 @@
     akaLabel.text = [NSString stringWithFormat:@"a.k.a. %@", self.tag.alternativeTitle];
     [grid setView:akaLabel hidden:!self.tag.alternativeTitle];
     
-    // TODO: Populate rating UI
     ratingLabel.text = [NSString stringWithFormat:@"%1.2f", self.tag.rating];
     ratingBar.progress = self.tag.rating / 5;
     
@@ -118,7 +130,7 @@
     scroller.contentSize = CGSizeMake(100, 0);
     
     titleLabel = [[UILabel alloc] init];
-    titleLabel.font = [UIFont boldSystemFontOfSize:30];
+    titleLabel.font = [UIFont boldSystemFontOfSize:24];
     titleLabel.numberOfLines = 0;
     akaLabel = [[UILabel alloc] init];
     akaLabel.font = [akaLabel.font fontWithSize:18];
@@ -136,6 +148,7 @@
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
+    [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
     lyricsLabel = [self makeBodyLabel];
     lyricsLabel.numberOfLines = 0;
     notesLabel = [self makeBodyLabel];
@@ -207,6 +220,7 @@
     [ratingGrid addSubview:[ratingLabel centeredHorizontally] row:0 column:0];
     [ratingGrid addSubview:[ratingBar centeredVertically] row:1 column:0];
     [ratingGrid addSubview:[ratingButton padHorizontal:8 vertical:0] row:0 column:1 rowSpan:2 colSpan:1];
+    [ratingGrid setView:ratingButton hidden:YES];
     [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:1];
     
     
@@ -241,6 +255,36 @@
                                                                         views:NSDictionaryOfVariableBindings(scroller)]];
     
     [self refreshView];
+}
+
+- (void)openSheetMusic {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @try {
+            NSString *key = self.tag.sheetMusicUri.cacheKey;
+            if (![[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:key]]) {
+                [DPFileCache writeData:[NSData dataWithContentsOfURL:self.tag.sheetMusicUri.uri] forKey:key];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                QLPreviewController *previewer = [[QLPreviewController alloc] init];
+                previewer.dataSource = self;
+                [self.navigationController pushViewController:previewer animated:YES];
+            });
+        } @catch (NSException *exception) {
+            NSLog(@"%@", exception);
+        }
+    });
+}
+
+- (id<QLPreviewItem>)previewController:(QLPreviewController *)controller previewItemAtIndex:(NSInteger)index {
+    NSURL *url = [NSURL fileURLWithPath:[DPFileCache pathForKey:self.tag.sheetMusicUri.cacheKey]];
+    DPSheetMusicPreview *preview = [[DPSheetMusicPreview alloc] init];
+    preview.previewItemURL = url;
+    preview.previewItemTitle = self.tag.title;
+    return preview;
+}
+
+- (NSInteger)numberOfPreviewItemsInPreviewController:(QLPreviewController *)controller {
+    return 1;
 }
 
 - (void)didReceiveMemoryWarning

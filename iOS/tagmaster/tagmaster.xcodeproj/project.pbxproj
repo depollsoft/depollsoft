@@ -11,6 +11,9 @@
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
 		63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */; };
+		63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A5917F6BC2300BC1EE2 /* QuickLook.framework */; };
+		63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */; };
+		63336A6017F6CB4000BC1EE2 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */; };
 		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
 		636455741515731A002AD091 /* DPTagQueryResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 636455731515731A002AD091 /* DPTagQueryResult.m */; };
 		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
@@ -56,6 +59,9 @@
 		63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagSummaryController.h; sourceTree = "<group>"; };
 		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
 		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
+		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
+		63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenbackground.png; sourceTree = "<group>"; };
+		63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
 		6364557015156B3A002AD091 /* DPTagXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagXMLParser.m; path = Barbershop/DPTagXMLParser.m; sourceTree = "<group>"; };
 		636455721515731A002AD091 /* DPTagQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagQueryResult.h; path = Barbershop/DPTagQueryResult.h; sourceTree = "<group>"; };
@@ -102,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */,
 				63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
@@ -129,7 +136,9 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */,
 				63336A3517F585BD00BC1EE2 /* Default@2x.png */,
+				63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */,
 				63336A3417F584DC00BC1EE2 /* Default-568h@2x.png */,
 				63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */,
 				63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */,
@@ -154,6 +163,7 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63336A5917F6BC2300BC1EE2 /* QuickLook.framework */,
 				63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */,
 				63712EEF15130B21007997CC /* UIKit.framework */,
 				63712EF115130B21007997CC /* Foundation.framework */,
@@ -308,6 +318,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
+				63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */,
+				63336A6017F6CB4000BC1EE2 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

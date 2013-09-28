@@ -26,6 +26,7 @@
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
+        self.backgroundColor = [UIColor clearColor];
         self.rootView = [[UIView alloc] init];
         self.rootView.translatesAutoresizingMaskIntoConstraints = NO;
         [self.contentView addSubview:self.rootView];

@@ -42,6 +42,20 @@
     UINavigationController *navController = [[UINavigationController alloc] init];
     self.window.rootViewController = navController;
     [navController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
+    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
+    backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
+    backgroundImage.userInteractionEnabled = NO;
+    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
+    [navController.view addSubview:backgroundImage];
+    [navController.view sendSubviewToBack:backgroundImage];
+    [navController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
+                                                                               options:0
+                                                                               metrics:nil
+                                                                                 views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    [navController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-60-[backgroundImage]-44-|"
+                                                                               options:0
+                                                                               metrics:nil
+                                                                                 views:NSDictionaryOfVariableBindings(backgroundImage)]];
     navigationController = navController;
     [self.window makeKeyAndVisible];
 
