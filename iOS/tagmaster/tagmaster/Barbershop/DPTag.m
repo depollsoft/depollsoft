@@ -114,19 +114,27 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 
 + (DPTag *)loadTagById:(int)tagId refresh:(BOOL)refresh {
     if (!refresh) {
-        if (self.tagCache[@(tagId)]) {
-            return self.tagCache[@(tagId)];
-        }
-        DPTag *cachedTag = [DPFileCache readObjectForKey:[self cacheKeyForId:tagId]];
-        if (cachedTag && cachedTag.appVersion == APP_VERSION) {
-            self.tagCache[@(tagId)] = cachedTag;
-            return cachedTag;
+        DPTag *cached = [self loadFromCache:tagId];
+        if (cached) {
+            return cached;
         }
     }
     
     DPTag *foundTag = [self queryById:tagId];
     [foundTag cache];
     return foundTag;
+}
+
++ (DPTag *)loadFromCache:(int)tagId {
+    if (self.tagCache[@(tagId)]) {
+        return self.tagCache[@(tagId)];
+    }
+    DPTag *cachedTag = [DPFileCache readObjectForKey:[self cacheKeyForId:tagId]];
+    if (cachedTag && cachedTag.appVersion == APP_VERSION) {
+        self.tagCache[@(tagId)] = cachedTag;
+        return cachedTag;
+    }
+    return nil;
 }
 
 + (DPTagQueryResult *)query:(NSString *)query {

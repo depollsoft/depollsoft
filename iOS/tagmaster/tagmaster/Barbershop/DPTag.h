@@ -57,6 +57,7 @@
 
 + (void)clearCache;
 + (long)getCurrentCacheSize;
++ (DPTag *)loadFromCache:(int)tagId;
 + (DPTag *)loadTagById:(int)tagId;
 + (DPTag *)loadTagById:(int)tagId refresh:(BOOL)refresh;
 + (DPTagQueryResult *)query:(NSString *)query;

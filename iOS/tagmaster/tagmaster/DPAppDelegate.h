@@ -21,4 +21,15 @@
 - (void)saveContext;
 - (NSURL *)applicationDocumentsDirectory;
 
++ (NSArray *)favorites;
++ (BOOL)containsFavorite:(int)tagId;
++ (void)moveFavoriteAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
++ (void)addFavorite:(int)tagId;
++ (void)removeFavorite:(int)tagId;
++ (NSArray *)teachable;
++ (BOOL)containsTeachable:(int)tagId;
++ (void)moveTeachableAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
++ (void)addTeachable:(int)tagId;
++ (void)removeTeachable:(int)tagId;
+
 @end

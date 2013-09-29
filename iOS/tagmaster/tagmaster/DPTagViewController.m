@@ -11,6 +11,7 @@
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
 #import "DPTagTracksController.h"
+#import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
 
 @interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate>
@@ -104,8 +105,17 @@
                                                 cancelButtonTitle:nil
                                            destructiveButtonTitle:nil
                                                 otherButtonTitles:nil];
-    self.favoriteButtonIndex = [actions addButtonWithTitle:@"Add Favorite"];
-    self.teachableButtonIndex = [actions addButtonWithTitle:@"Mark as Teachable"];
+    
+    if (![DPAppDelegate containsFavorite:self.tagId]) {
+        self.favoriteButtonIndex = [actions addButtonWithTitle:@"Add Favorite"];
+    } else {
+        self.favoriteButtonIndex = [actions addButtonWithTitle:@"Remove Favorite"];
+    }
+    if (![DPAppDelegate containsTeachable:self.tagId]) {
+        self.teachableButtonIndex = [actions addButtonWithTitle:@"Mark as Teachable"];
+    } else {
+        self.teachableButtonIndex = [actions addButtonWithTitle:@"Unmark as Favorite"];
+    }
     
     if ([MFMessageComposeViewController canSendText]) {
         self.smsButtonIndex = [actions addButtonWithTitle:@"Send as SMS"];
@@ -144,8 +154,19 @@
         [mailController setMessageBody:[NSString stringWithFormat:@"%@\n%@\n\nSent from Tag Master for iOS\nhttp://apps.depoll.com/barbershop/tag-master", self.tag.title, self.tag.tagUri] isHTML:NO];
         mailController.mailComposeDelegate = self;
         [self presentViewController:mailController animated:YES completion:nil];
+    } else if (buttonIndex == self.favoriteButtonIndex) {
+        if ([DPAppDelegate containsFavorite:self.tagId]) {
+            [DPAppDelegate removeFavorite:self.tagId];
+        } else {
+            [DPAppDelegate addFavorite:self.tagId];
+        }
+    } else if (buttonIndex == self.teachableButtonIndex) {
+        if ([DPAppDelegate containsTeachable:self.tagId]) {
+            [DPAppDelegate removeTeachable:self.tagId];
+        } else {
+            [DPAppDelegate addTeachable:self.tagId];
+        }
     }
-    // TODO Handle favorites/teachable
 }
 
 - (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result {

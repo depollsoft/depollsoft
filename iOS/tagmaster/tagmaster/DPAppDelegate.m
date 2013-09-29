@@ -8,6 +8,7 @@
 
 #import "DPAppDelegate.h"
 #import "DPBarbershop.h"
+#import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 
@@ -41,7 +42,7 @@
     
     UINavigationController *navController = [[UINavigationController alloc] init];
     self.window.rootViewController = navController;
-    [navController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
+    [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
     UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
     backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
     backgroundImage.userInteractionEnabled = NO;
@@ -206,9 +207,79 @@
 /**
  Returns the URL to the application's Documents directory.
  */
-- (NSURL *)applicationDocumentsDirectory
-{
+- (NSURL *)applicationDocumentsDirectory {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
+
++ (NSArray *)favorites {
+    NSArray *array = [[NSUserDefaults standardUserDefaults] arrayForKey:@"favorites"];
+    if (array) {
+        return array;
+    }
+    return @[];
+}
+
++ (BOOL)containsFavorite:(int)tagId {
+    return [self.favorites containsObject:@(tagId)];
+}
+
++ (void)moveFavoriteAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex {
+    NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
+    id toMove = self.favorites[fromIndex];
+    [favorites removeObjectAtIndex:fromIndex];
+    [favorites insertObject:toMove atIndex:toIndex];
+    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+}
+
++ (void)addFavorite:(int)tagId {
+    if ([self.favorites containsObject:@(tagId)]) {
+        return;
+    }
+    NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
+    [favorites addObject:@(tagId)];
+    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+}
+
++ (void)removeFavorite:(int)tagId {
+    NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
+    [favorites removeObject:@(tagId)];
+    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+}
+
++ (NSArray *)teachable {
+    NSArray *array = [[NSUserDefaults standardUserDefaults] arrayForKey:@"teachable"];
+    if (array) {
+        return array;
+    }
+    return @[];
+}
+
++ (BOOL)containsTeachable:(int)tagId {
+    return [self.teachable containsObject:@(tagId)];
+}
+
++ (void)moveTeachableAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex {
+    NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
+    id toMove = teachable[fromIndex];
+    [teachable removeObjectAtIndex:fromIndex];
+    [teachable insertObject:toMove atIndex:toIndex];
+    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+}
+
++ (void)addTeachable:(int)tagId {
+    if ([self.teachable containsObject:@(tagId)]) {
+        return;
+    }
+    NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
+    [teachable addObject:@(tagId)];
+    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+}
+
++ (void)removeTeachable:(int)tagId {
+    NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
+    [teachable removeObject:@(tagId)];
+    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+}
+
 
 @end

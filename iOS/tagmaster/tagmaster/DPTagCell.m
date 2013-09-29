@@ -106,6 +106,30 @@
     // Configure the view for the selected state
 }
 
+- (void)setTagId:(int)tId {
+    _tagId = tId;
+    [self loadTag:NO];
+}
+
+- (void)loadTag:(BOOL)refresh {
+    if (!refresh) {
+        DPTag *t = [DPTag loadFromCache:self.tagId];
+        if (t) {
+            self.tag = t;
+            return;
+        }
+    }
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        DPTag *t = [DPTag loadTagById:self.tagId refresh:refresh];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.tag = t;
+            UITableView *tableView = (UITableView *)self.superview;
+            [tableView reloadRowsAtIndexPaths:@[[tableView indexPathForCell:self]] withRowAnimation:UITableViewRowAnimationAutomatic];
+        });
+    });
+}
+
 - (void)setTag:(DPTag *)newTag {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     formatter.dateFormat = @"MM/dd/yy";
