@@ -36,23 +36,23 @@
     
     DPTagQueryViewController *latest = [[DPTagQueryViewController alloc] init];
     latest.sortBy = DPTagSortPosted;
-    latest.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Latest" image:nil selectedImage:nil];
+    latest.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Latest" image:[UIImage imageNamed:@"History.png"] tag:0];
     [controllers addObject:latest];
     
     DPTagQueryViewController *rating = [[DPTagQueryViewController alloc] init];
     rating.sortBy = DPTagSortRating;
-    rating.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Rating" image:nil selectedImage:nil];
+    rating.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Rating" image:[UIImage imageNamed:@"Favorites.png"] tag:0];
     [controllers addObject:rating];
     
     DPTagQueryViewController *downloads = [[DPTagQueryViewController alloc] init];
     downloads.sortBy = DPTagSortDownloaded;
-    downloads.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Downloads" image:nil selectedImage:nil];
+    downloads.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Downloads" image:[UIImage imageNamed:@"Downloads.png"] tag:0];
     [controllers addObject:downloads];
     
     DPTagQueryViewController *classic = [[DPTagQueryViewController alloc] init];
     classic.sortBy = DPTagSortClassic;
     classic.collection = DPTagCollectionClassicTags;
-    classic.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Classic" image:nil selectedImage:nil];
+    classic.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Classic" image:[UIImage imageNamed:@"Bookmarks.png"] tag:0];
     [controllers addObject:classic];
     
     self.viewControllers = controllers;

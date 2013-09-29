@@ -9,12 +9,14 @@
 #import "DPTagViewController.h"
 #import "DPBarbershop.h"
 #import "DPTagSummaryController.h"
+#import "DPTagDetailController.h"
 
 @interface DPTagViewController ()
 
 @property (nonatomic, strong) DPTag *tag;
 
 @property (nonatomic, strong) DPTagSummaryController *summaryController;
+@property (nonatomic, strong) DPTagDetailController *detailController;
 
 @end
 
@@ -45,7 +47,9 @@
     tag = t;
     
     self.title = t.title;
-    self.summaryController.tag = t;
+    for (DPTagPageControllerBase *page in self.viewControllers) {
+        page.tag = t;
+    }
 }
 
 - (void)viewDidLoad
@@ -59,7 +63,14 @@
     self.summaryController.tabBarItem.title = @"Summary";
     [controllers addObject:self.summaryController];
     
+    self.detailController = [[DPTagDetailController alloc] init];
+    self.detailController.tabBarItem = [[UITabBarItem alloc] init];
+    self.detailController.tabBarItem.title = @"Details";
+    [controllers addObject:self.detailController];
+    
     self.viewControllers = controllers;
+    
+    [self setTag:self.tag];
 }
 
 - (void)didReceiveMemoryWarning

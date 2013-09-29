@@ -1,8 +1,8 @@
 //
-//  DPTagSummaryController.h
+//  DPTagDetailController.h
 //  tagmaster
 //
-//  Created by David Poll on 9/27/13.
+//  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
 
@@ -10,6 +10,6 @@
 #import "DPBarbershop.h"
 #import "DPTagPageControllerBase.h"
 
-@interface DPTagSummaryController : DPTagPageControllerBase
+@interface DPTagDetailController : DPTagPageControllerBase
 
 @end

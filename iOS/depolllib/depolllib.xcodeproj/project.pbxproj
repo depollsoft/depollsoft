@@ -17,6 +17,10 @@
 		63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */; };
 		63336A5717F69E9B00BC1EE2 /* DPTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A5517F69E9B00BC1EE2 /* DPTextView.h */; };
 		63336A5817F69E9B00BC1EE2 /* DPTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A5617F69E9B00BC1EE2 /* DPTextView.m */; };
+		638E736217F76F61000FFE53 /* UIButton+Hyperlink.h in Headers */ = {isa = PBXBuildFile; fileRef = 638E736017F76F61000FFE53 /* UIButton+Hyperlink.h */; };
+		638E736317F76F61000FFE53 /* UIButton+Hyperlink.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E736117F76F61000FFE53 /* UIButton+Hyperlink.m */; };
+		638E738B17F78D4D000FFE53 /* DPLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 638E738917F78D4D000FFE53 /* DPLabel.h */; };
+		638E738C17F78D4D000FFE53 /* DPLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E738A17F78D4D000FFE53 /* DPLabel.m */; };
 		63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */; };
 		63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */; };
 		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
@@ -60,6 +64,10 @@
 		63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIView+DPUtils.m"; path = "utils/UIView+DPUtils.m"; sourceTree = "<group>"; };
 		63336A5517F69E9B00BC1EE2 /* DPTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTextView.h; sourceTree = "<group>"; };
 		63336A5617F69E9B00BC1EE2 /* DPTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTextView.m; sourceTree = "<group>"; };
+		638E736017F76F61000FFE53 /* UIButton+Hyperlink.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIButton+Hyperlink.h"; path = "utils/UIButton+Hyperlink.h"; sourceTree = "<group>"; };
+		638E736117F76F61000FFE53 /* UIButton+Hyperlink.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIButton+Hyperlink.m"; path = "utils/UIButton+Hyperlink.m"; sourceTree = "<group>"; };
+		638E738917F78D4D000FFE53 /* DPLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLabel.h; sourceTree = "<group>"; };
+		638E738A17F78D4D000FFE53 /* DPLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLabel.m; sourceTree = "<group>"; };
 		63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+UIControl.h"; path = "utils/DPUtils+UIControl.h"; sourceTree = "<group>"; };
 		63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+UIControl.m"; path = "utils/DPUtils+UIControl.m"; sourceTree = "<group>"; };
 		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -117,6 +125,8 @@
 				63336A4C17F6500100BC1EE2 /* DPGridLayout.m */,
 				63336A5517F69E9B00BC1EE2 /* DPTextView.h */,
 				63336A5617F69E9B00BC1EE2 /* DPTextView.m */,
+				638E738917F78D4D000FFE53 /* DPLabel.h */,
+				638E738A17F78D4D000FFE53 /* DPLabel.m */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -223,6 +233,8 @@
 				63E1498115C26E0800E72AC9 /* DPUtils+Subscripts.h */,
 				63336A5117F677BE00BC1EE2 /* UIView+DPUtils.h */,
 				63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */,
+				638E736017F76F61000FFE53 /* UIButton+Hyperlink.h */,
+				638E736117F76F61000FFE53 /* UIButton+Hyperlink.m */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -236,6 +248,7 @@
 			files = (
 				63DC375F151E93A8007C46DB /* DPJsonSerializer.h in Headers */,
 				63DC3768151E94CC007C46DB /* DPJsonPrimitive.h in Headers */,
+				638E736217F76F61000FFE53 /* UIButton+Hyperlink.h in Headers */,
 				63336A4D17F6500100BC1EE2 /* DPGridLayout.h in Headers */,
 				63336A3D17F6284800BC1EE2 /* DPTabBarController.h in Headers */,
 				63F17816154E112000C2AB59 /* DPEnum.h in Headers */,
@@ -244,6 +257,7 @@
 				63336A5317F677BE00BC1EE2 /* UIView+DPUtils.h in Headers */,
 				631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */,
 				63E1497C15C2614400E72AC9 /* DPFileCache.h in Headers */,
+				638E738B17F78D4D000FFE53 /* DPLabel.h in Headers */,
 				63336A5717F69E9B00BC1EE2 /* DPTextView.h in Headers */,
 				63E1498315C26E0800E72AC9 /* DPUtils+Subscripts.h in Headers */,
 			);
@@ -347,6 +361,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				638E738C17F78D4D000FFE53 /* DPLabel.m in Sources */,
 				63336A4E17F6500100BC1EE2 /* DPGridLayout.m in Sources */,
 				63DC3760151E93A8007C46DB /* DPJsonSerializer.m in Sources */,
 				63DC3769151E94CC007C46DB /* DPJsonPrimitive.m in Sources */,
@@ -357,6 +372,7 @@
 				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
 				631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */,
 				63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */,
+				638E736317F76F61000FFE53 /* UIButton+Hyperlink.m in Sources */,
 				63E1497D15C2614400E72AC9 /* DPFileCache.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

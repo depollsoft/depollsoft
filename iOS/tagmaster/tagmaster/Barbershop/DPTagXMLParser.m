@@ -35,7 +35,9 @@
         queryResult.tags = [NSMutableArray arrayWithCapacity:queryResult.count];
         [result addObject:queryResult];
     } else if ([elementName isEqualToString:@"tag"]) {
-        [result addObject:[[DPTag alloc] init]];
+        DPTag *tag = [[DPTag alloc] init];
+        tag.lastRefreshed = [NSDate date];
+        [result addObject:tag];
     } else if ([elementName isEqualToString:@"videos"]) {
         [result addObject:[NSMutableArray arrayWithCapacity:[[attributeDict objectForKey:@"count"] intValue]]];
     } else if ([elementName isEqualToString:@"video"]) {

@@ -98,7 +98,7 @@
                                                                            attribute:NSLayoutAttributeNotAnAttribute
                                                                           multiplier:1
                                                                             constant:100000];
-    starWidthConstraint.priority = UILayoutPriorityFittingSizeLevel - 1;
+    starWidthConstraint.priority = 1;
     [self addConstraint:starWidthConstraint];
     NSLayoutConstraint *starHeightConstraint = [NSLayoutConstraint constraintWithItem:self.starSpacer
                                                                             attribute:NSLayoutAttributeHeight
@@ -107,7 +107,7 @@
                                                                             attribute:NSLayoutAttributeNotAnAttribute
                                                                            multiplier:1
                                                                              constant:100000];
-    starHeightConstraint.priority = UILayoutPriorityFittingSizeLevel - 1;
+    starHeightConstraint.priority = 1;
     [self addConstraint:starHeightConstraint];
     
     // Ensure at least one row/column
@@ -331,8 +331,8 @@
 }
 
 - (void)setView:(UIView *)view hidden:(BOOL)isHidden {
-    NSUInteger childrenIndex;
-    NSUInteger hiddenChildrenIndex;
+    NSUInteger childrenIndex = NSNotFound;
+    NSUInteger hiddenChildrenIndex = NSNotFound;
     while (view &&
            !((childrenIndex = [self.children indexOfObjectIdenticalTo:view]) != NSNotFound ||
              (hiddenChildrenIndex = [self.hiddenChildren indexOfObjectIdenticalTo:view]) != NSNotFound)) {

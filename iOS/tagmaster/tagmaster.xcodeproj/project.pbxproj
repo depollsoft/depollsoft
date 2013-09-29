@@ -29,6 +29,22 @@
 		63712F1015130B21007997CC /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF515130B21007997CC /* CoreData.framework */; };
 		63712F1815130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712F1615130B21007997CC /* InfoPlist.strings */; };
 		63712F1B15130B21007997CC /* tagmasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F1A15130B21007997CC /* tagmasterTests.m */; };
+		638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E735A17F769E7000FFE53 /* DPTagDetailController.m */; };
+		638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */; };
+		638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736917F786CF000FFE53 /* PlusMostViewed@2x.png */; };
+		638E736C17F786CF000FFE53 /* PeopleMostViewed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736A17F786CF000FFE53 /* PeopleMostViewed@2x.png */; };
+		638E737217F78726000FFE53 /* Bookmarks@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736D17F78726000FFE53 /* Bookmarks@2x.png */; };
+		638E737317F78726000FFE53 /* Downloads@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736E17F78726000FFE53 /* Downloads@2x.png */; };
+		638E737417F78726000FFE53 /* Favorites@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736F17F78726000FFE53 /* Favorites@2x.png */; };
+		638E737517F78726000FFE53 /* History@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737017F78726000FFE53 /* History@2x.png */; };
+		638E737617F78726000FFE53 /* MostViewed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737117F78726000FFE53 /* MostViewed@2x.png */; };
+		638E737C17F78770000FFE53 /* Bookmarks.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737717F78770000FFE53 /* Bookmarks.png */; };
+		638E737D17F78770000FFE53 /* Downloads.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737817F78770000FFE53 /* Downloads.png */; };
+		638E737E17F78770000FFE53 /* Favorites.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737917F78770000FFE53 /* Favorites.png */; };
+		638E737F17F78770000FFE53 /* History.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737A17F78770000FFE53 /* History.png */; };
+		638E738017F78770000FFE53 /* MostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737B17F78770000FFE53 /* MostViewed.png */; };
+		638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E738117F7878F000FFE53 /* PlusMostViewed.png */; };
+		638E738417F7878F000FFE53 /* PeopleMostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E738217F7878F000FFE53 /* PeopleMostViewed.png */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -58,7 +74,7 @@
 		63336A4417F6342400BC1EE2 /* DPTagViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagViewController.m; sourceTree = "<group>"; };
 		63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagSummaryController.h; sourceTree = "<group>"; };
 		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
-		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
+		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenbackground.png; sourceTree = "<group>"; };
 		63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
@@ -84,6 +100,24 @@
 		63712F1715130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63712F1915130B21007997CC /* tagmasterTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tagmasterTests.h; sourceTree = "<group>"; };
 		63712F1A15130B21007997CC /* tagmasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = tagmasterTests.m; sourceTree = "<group>"; };
+		638E735917F769E7000FFE53 /* DPTagDetailController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagDetailController.h; sourceTree = "<group>"; };
+		638E735A17F769E7000FFE53 /* DPTagDetailController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagDetailController.m; sourceTree = "<group>"; };
+		638E735D17F76B13000FFE53 /* DPTagPageControllerBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagPageControllerBase.h; sourceTree = "<group>"; };
+		638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagPageControllerBase.m; sourceTree = "<group>"; };
+		638E736917F786CF000FFE53 /* PlusMostViewed@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "PlusMostViewed@2x.png"; sourceTree = "<group>"; };
+		638E736A17F786CF000FFE53 /* PeopleMostViewed@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "PeopleMostViewed@2x.png"; sourceTree = "<group>"; };
+		638E736D17F78726000FFE53 /* Bookmarks@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Bookmarks@2x.png"; sourceTree = "<group>"; };
+		638E736E17F78726000FFE53 /* Downloads@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Downloads@2x.png"; sourceTree = "<group>"; };
+		638E736F17F78726000FFE53 /* Favorites@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Favorites@2x.png"; sourceTree = "<group>"; };
+		638E737017F78726000FFE53 /* History@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "History@2x.png"; sourceTree = "<group>"; };
+		638E737117F78726000FFE53 /* MostViewed@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "MostViewed@2x.png"; sourceTree = "<group>"; };
+		638E737717F78770000FFE53 /* Bookmarks.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Bookmarks.png; sourceTree = "<group>"; };
+		638E737817F78770000FFE53 /* Downloads.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Downloads.png; sourceTree = "<group>"; };
+		638E737917F78770000FFE53 /* Favorites.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Favorites.png; sourceTree = "<group>"; };
+		638E737A17F78770000FFE53 /* History.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = History.png; sourceTree = "<group>"; };
+		638E737B17F78770000FFE53 /* MostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MostViewed.png; sourceTree = "<group>"; };
+		638E738117F7878F000FFE53 /* PlusMostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PlusMostViewed.png; sourceTree = "<group>"; };
+		638E738217F7878F000FFE53 /* PeopleMostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PeopleMostViewed.png; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -177,6 +211,7 @@
 		63712EF715130B21007997CC /* tagmaster */ = {
 			isa = PBXGroup;
 			children = (
+				638E736417F786A5000FFE53 /* Icons */,
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
@@ -191,6 +226,10 @@
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
 				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
 				63712EF815130B21007997CC /* Supporting Files */,
+				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
+				638E735A17F769E7000FFE53 /* DPTagDetailController.m */,
+				638E735D17F76B13000FFE53 /* DPTagPageControllerBase.h */,
+				638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -223,6 +262,27 @@
 				63712F1615130B21007997CC /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		638E736417F786A5000FFE53 /* Icons */ = {
+			isa = PBXGroup;
+			children = (
+				638E737717F78770000FFE53 /* Bookmarks.png */,
+				638E736D17F78726000FFE53 /* Bookmarks@2x.png */,
+				638E737817F78770000FFE53 /* Downloads.png */,
+				638E736E17F78726000FFE53 /* Downloads@2x.png */,
+				638E737917F78770000FFE53 /* Favorites.png */,
+				638E736F17F78726000FFE53 /* Favorites@2x.png */,
+				638E737A17F78770000FFE53 /* History.png */,
+				638E737017F78726000FFE53 /* History@2x.png */,
+				638E737B17F78770000FFE53 /* MostViewed.png */,
+				638E737117F78726000FFE53 /* MostViewed@2x.png */,
+				638E738217F7878F000FFE53 /* PeopleMostViewed.png */,
+				638E736A17F786CF000FFE53 /* PeopleMostViewed@2x.png */,
+				638E738117F7878F000FFE53 /* PlusMostViewed.png */,
+				638E736917F786CF000FFE53 /* PlusMostViewed@2x.png */,
+			);
+			name = Icons;
 			sourceTree = "<group>";
 		};
 		63D9472B151465B5000C8784 /* Barbershop */ = {
@@ -317,9 +377,23 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
+				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
+				638E737217F78726000FFE53 /* Bookmarks@2x.png in Resources */,
+				638E737E17F78770000FFE53 /* Favorites.png in Resources */,
+				638E737F17F78770000FFE53 /* History.png in Resources */,
+				638E738417F7878F000FFE53 /* PeopleMostViewed.png in Resources */,
 				63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */,
+				638E737417F78726000FFE53 /* Favorites@2x.png in Resources */,
+				638E737D17F78770000FFE53 /* Downloads.png in Resources */,
 				63336A6017F6CB4000BC1EE2 /* Default-568h@2x.png in Resources */,
+				638E737517F78726000FFE53 /* History@2x.png in Resources */,
+				638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */,
+				638E737317F78726000FFE53 /* Downloads@2x.png in Resources */,
+				638E737C17F78770000FFE53 /* Bookmarks.png in Resources */,
+				638E736C17F786CF000FFE53 /* PeopleMostViewed@2x.png in Resources */,
+				638E737617F78726000FFE53 /* MostViewed@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +441,8 @@
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
+				638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */,
+				638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
