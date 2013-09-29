@@ -11,7 +11,9 @@
 
 @interface DPTrack : NSObject
 
++ (DPTrack *)trackWithTitle:(NSString *)title source:(DPRemoteLocation *)source;
+
 @property (nonatomic, copy) NSString *title;
-@property (nonatomic, copy) DPRemoteLocation *source;
+@property (nonatomic, strong) DPRemoteLocation *source;
 
 @end

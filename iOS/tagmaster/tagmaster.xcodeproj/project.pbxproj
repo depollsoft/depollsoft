@@ -13,7 +13,6 @@
 		63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */; };
 		63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A5917F6BC2300BC1EE2 /* QuickLook.framework */; };
 		63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */; };
-		63336A6017F6CB4000BC1EE2 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */; };
 		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
 		636455741515731A002AD091 /* DPTagQueryResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 636455731515731A002AD091 /* DPTagQueryResult.m */; };
 		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
@@ -45,6 +44,12 @@
 		638E738017F78770000FFE53 /* MostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E737B17F78770000FFE53 /* MostViewed.png */; };
 		638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E738117F7878F000FFE53 /* PlusMostViewed.png */; };
 		638E738417F7878F000FFE53 /* PeopleMostViewed.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E738217F7878F000FFE53 /* PeopleMostViewed.png */; };
+		638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E738E17F7B872000FFE53 /* DPTagTracksController.m */; };
+		638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638E739017F7C097000FFE53 /* MediaPlayer.framework */; };
+		638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638E739217F7CAB3000FFE53 /* MessageUI.framework */; };
+		638E739717F7DE1B000FFE53 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E739617F7D3F7000FFE53 /* Icon.png */; };
+		638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E739817F7E00D000FFE53 /* LaunchImage-568h@2x.png */; };
+		638E739B17F7E00D000FFE53 /* LaunchImage@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E739917F7E00D000FFE53 /* LaunchImage@2x.png */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -66,8 +71,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		63336A3417F584DC00BC1EE2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "../pitchperfect/Default-568h@2x.png"; sourceTree = "<group>"; };
-		63336A3517F585BD00BC1EE2 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "../pitchperfect/Default@2x.png"; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
 		63336A4317F6342400BC1EE2 /* DPTagViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagViewController.h; sourceTree = "<group>"; };
@@ -77,7 +80,6 @@
 		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenbackground.png; sourceTree = "<group>"; };
-		63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
 		6364557015156B3A002AD091 /* DPTagXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagXMLParser.m; path = Barbershop/DPTagXMLParser.m; sourceTree = "<group>"; };
 		636455721515731A002AD091 /* DPTagQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagQueryResult.h; path = Barbershop/DPTagQueryResult.h; sourceTree = "<group>"; };
@@ -118,6 +120,13 @@
 		638E737B17F78770000FFE53 /* MostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MostViewed.png; sourceTree = "<group>"; };
 		638E738117F7878F000FFE53 /* PlusMostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PlusMostViewed.png; sourceTree = "<group>"; };
 		638E738217F7878F000FFE53 /* PeopleMostViewed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PeopleMostViewed.png; sourceTree = "<group>"; };
+		638E738D17F7B871000FFE53 /* DPTagTracksController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagTracksController.h; sourceTree = "<group>"; };
+		638E738E17F7B872000FFE53 /* DPTagTracksController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagTracksController.m; sourceTree = "<group>"; };
+		638E739017F7C097000FFE53 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		638E739217F7CAB3000FFE53 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		638E739617F7D3F7000FFE53 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		638E739817F7E00D000FFE53 /* LaunchImage-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchImage-568h@2x.png"; sourceTree = "<group>"; };
+		638E739917F7E00D000FFE53 /* LaunchImage@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchImage@2x.png"; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -142,6 +151,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */,
+				638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */,
 				63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */,
 				63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
@@ -170,10 +181,10 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
-				63336A5F17F6CB4000BC1EE2 /* Default-568h@2x.png */,
-				63336A3517F585BD00BC1EE2 /* Default@2x.png */,
+				638E739817F7E00D000FFE53 /* LaunchImage-568h@2x.png */,
+				638E739917F7E00D000FFE53 /* LaunchImage@2x.png */,
+				638E739617F7D3F7000FFE53 /* Icon.png */,
 				63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */,
-				63336A3417F584DC00BC1EE2 /* Default-568h@2x.png */,
 				63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */,
 				63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */,
 				63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */,
@@ -197,6 +208,8 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				638E739217F7CAB3000FFE53 /* MessageUI.framework */,
+				638E739017F7C097000FFE53 /* MediaPlayer.framework */,
 				63336A5917F6BC2300BC1EE2 /* QuickLook.framework */,
 				63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */,
 				63712EEF15130B21007997CC /* UIKit.framework */,
@@ -211,7 +224,6 @@
 		63712EF715130B21007997CC /* tagmaster */ = {
 			isa = PBXGroup;
 			children = (
-				638E736417F786A5000FFE53 /* Icons */,
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
@@ -219,17 +231,20 @@
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
-				63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */,
-				63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */,
-				63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */,
-				63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */,
-				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
-				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
-				63712EF815130B21007997CC /* Supporting Files */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
 				638E735A17F769E7000FFE53 /* DPTagDetailController.m */,
 				638E735D17F76B13000FFE53 /* DPTagPageControllerBase.h */,
 				638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */,
+				63E8666F15DCADF000E0FC17 /* DPTagQueryViewController.h */,
+				63E8667015DCADF000E0FC17 /* DPTagQueryViewController.m */,
+				63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */,
+				63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */,
+				638E738D17F7B871000FFE53 /* DPTagTracksController.h */,
+				638E738E17F7B872000FFE53 /* DPTagTracksController.m */,
+				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
+				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
+				638E736417F786A5000FFE53 /* Icons */,
+				63712EF815130B21007997CC /* Supporting Files */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -288,20 +303,20 @@
 		63D9472B151465B5000C8784 /* Barbershop */ = {
 			isa = PBXGroup;
 			children = (
-				63D9471D1513198D000C8784 /* DPTag.h */,
-				63D9471E1513198D000C8784 /* DPTag.m */,
+				63645575151588E2002AD091 /* DPBarbershop.h */,
+				63D9472A15145FD3000C8784 /* DPConstants.h */,
 				63D9472015145BBC000C8784 /* DPRemoteLocation.h */,
 				63D9472115145BBC000C8784 /* DPRemoteLocation.m */,
-				63D9472315145DE0000C8784 /* DPVideo.h */,
-				63D9472415145DE0000C8784 /* DPVideo.m */,
-				63D9472615145EDD000C8784 /* DPTrack.h */,
-				63D9472715145EDD000C8784 /* DPTrack.m */,
-				63D9472A15145FD3000C8784 /* DPConstants.h */,
-				6364556F15156B3A002AD091 /* DPTagXMLParser.h */,
-				6364557015156B3A002AD091 /* DPTagXMLParser.m */,
+				63D9471D1513198D000C8784 /* DPTag.h */,
+				63D9471E1513198D000C8784 /* DPTag.m */,
 				636455721515731A002AD091 /* DPTagQueryResult.h */,
 				636455731515731A002AD091 /* DPTagQueryResult.m */,
-				63645575151588E2002AD091 /* DPBarbershop.h */,
+				6364556F15156B3A002AD091 /* DPTagXMLParser.h */,
+				6364557015156B3A002AD091 /* DPTagXMLParser.m */,
+				63D9472615145EDD000C8784 /* DPTrack.h */,
+				63D9472715145EDD000C8784 /* DPTrack.m */,
+				63D9472315145DE0000C8784 /* DPVideo.h */,
+				63D9472415145DE0000C8784 /* DPVideo.m */,
 			);
 			name = Barbershop;
 			sourceTree = "<group>";
@@ -377,6 +392,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				638E739717F7DE1B000FFE53 /* Icon.png in Resources */,
 				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
 				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
@@ -387,11 +403,12 @@
 				63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */,
 				638E737417F78726000FFE53 /* Favorites@2x.png in Resources */,
 				638E737D17F78770000FFE53 /* Downloads.png in Resources */,
-				63336A6017F6CB4000BC1EE2 /* Default-568h@2x.png in Resources */,
+				638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */,
 				638E737517F78726000FFE53 /* History@2x.png in Resources */,
 				638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */,
 				638E737317F78726000FFE53 /* Downloads@2x.png in Resources */,
 				638E737C17F78770000FFE53 /* Bookmarks.png in Resources */,
+				638E739B17F7E00D000FFE53 /* LaunchImage@2x.png in Resources */,
 				638E736C17F786CF000FFE53 /* PeopleMostViewed@2x.png in Resources */,
 				638E737617F78726000FFE53 /* MostViewed@2x.png in Resources */,
 			);
@@ -442,6 +459,7 @@
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
 				638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */,
+				638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */,
 				638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -538,12 +556,14 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
 				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
 			};
@@ -556,12 +576,14 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
 				OTHER_LDFLAGS = "-all_load";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
 				USER_HEADER_SEARCH_PATHS = "../../../**";
 				WRAPPER_EXTENSION = app;
 			};

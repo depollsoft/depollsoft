@@ -13,4 +13,11 @@
 @synthesize title;
 @synthesize source;
 
++ (DPTrack *)trackWithTitle:(NSString *)title source:(DPRemoteLocation *)source {
+    DPTrack *track = [[DPTrack alloc] init];
+    track.title = title;
+    track.source = source;
+    return track;
+}
+
 @end

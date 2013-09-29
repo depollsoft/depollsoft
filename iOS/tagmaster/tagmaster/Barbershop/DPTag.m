@@ -11,6 +11,8 @@
 #import "DPFileCache.h"
 #import "DPUtils+Subscripts.h"
 #import "DPUtils+NSString.h"
+#import "DPTrack.h"
+#import <objc/runtime.h>
 
 const int APP_VERSION = 1;
 NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=TagMaster&";
@@ -253,35 +255,44 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 }
 
 - (NSArray *)tracks {
-    NSMutableArray *arr = [NSMutableArray array];
-    if (self.allPartsTrackUri) {
-        [arr addObject:self.allPartsTrackUri];
-    }
-    if (self.tenorTrackUri) {
-        [arr addObject:self.tenorTrackUri];
-    }
-    if (self.leadTrackUri) {
-        [arr addObject:self.leadTrackUri];
-    }
-    if (self.baritoneTrackUri) {
-        [arr addObject:self.baritoneTrackUri];
-    }
-    if (self.bassTrackUri) {
-        [arr addObject:self.bassTrackUri];
-    }
-    if (self.other1TrackUri) {
-        [arr addObject:self.other1TrackUri];
-    }
-    if (self.other2TrackUri) {
-        [arr addObject:self.other2TrackUri];
-    }
-    if (self.other3TrackUri) {
-        [arr addObject:self.other3TrackUri];
-    }
-    if (self.other4TrackUri) {
-        [arr addObject:self.other4TrackUri];
+    static char key;
+    NSMutableArray *arr = objc_getAssociatedObject(self, &key);
+    if (!arr) {
+        arr = [NSMutableArray array];
+        if (self.allPartsTrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"All Parts" source:self.allPartsTrackUri]];
+        }
+        if (self.tenorTrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Tenor" source:self.tenorTrackUri]];
+        }
+        if (self.leadTrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Lead" source:self.leadTrackUri]];
+        }
+        if (self.baritoneTrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Baritone" source:self.baritoneTrackUri]];
+        }
+        if (self.bassTrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Bass" source:self.bassTrackUri]];
+        }
+        if (self.other1TrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Other 1" source:self.other1TrackUri]];
+        }
+        if (self.other2TrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Other 2" source:self.other2TrackUri]];
+        }
+        if (self.other3TrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Other 3" source:self.other3TrackUri]];
+        }
+        if (self.other4TrackUri) {
+            [arr addObject:[DPTrack trackWithTitle:@"Other 4" source:self.other4TrackUri]];
+        }
+        objc_setAssociatedObject(self, &key, arr, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return arr;
+}
+
+- (NSURL *)tagUri {
+    return [NSURL URLWithString:[NSString stringWithFormat:@"http://tags.depoll.com/tag.php?id=%d", self.tagId]];
 }
 
 @end
