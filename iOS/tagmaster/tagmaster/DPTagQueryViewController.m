@@ -96,10 +96,17 @@
     bindings[@"topLayoutGuide"] = self.topLayoutGuide;
     bindings[@"bottomLayoutGuide"] = self.bottomLayoutGuide;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tagTable]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:bindings]];
+    if (![self.parentViewController isKindOfClass:[DPTabBarController class]]) {
+        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][tagTable]|"
+                                                                          options:0
+                                                                          metrics:nil
+                                                                            views:bindings]];
+    } else {
+        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tagTable]|"
+                                                                          options:0
+                                                                          metrics:nil
+                                                                            views:bindings]];
+    }
     
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[tagTable]|"
                                                                       options:0
