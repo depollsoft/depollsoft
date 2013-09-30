@@ -10,6 +10,7 @@
 #import "DPTagCell.h"
 #import "DPUtils+Subscripts.h"
 #import "DPTagViewController.h"
+#import "DPAppDelegate.h"
 
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
@@ -64,6 +65,11 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    if (![self.parentViewController isKindOfClass:[DPTabBarController class]]) {
+        [DPAppDelegate setUpBackground:self.view];
+    }
+    
 	// Do any additional setup after loading the view.
     
     self.tagTable = [[UITableView alloc] init];
@@ -101,6 +107,8 @@
                                                                         views:bindings]];
     
     [self fetchResults];
+    
+    self.navigationItem.title = !self.query || self.query.length == 0 ? @"Search Results" : self.query;
 }
 
 - (void)refresh {

@@ -8,6 +8,7 @@
 
 #import "DPBrowseViewController.h"
 #import "DPTagQueryViewController.h"
+#import "DPAppDelegate.h"
 
 @interface DPBrowseViewController ()
 
@@ -28,9 +29,9 @@
     return self;
 }
 
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
+    [DPAppDelegate setUpBackground:self.view];
     
 	NSMutableArray *controllers = [NSMutableArray array];
     

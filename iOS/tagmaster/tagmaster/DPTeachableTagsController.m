@@ -32,12 +32,11 @@
     return self;
 }
 
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
-    
+    [DPAppDelegate setUpBackground:self.view];
+
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
-    self.tableView.backgroundColor = [UIColor clearColor];
     
     self.navigationItem.title = @"Teachable Tags";
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];

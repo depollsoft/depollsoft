@@ -52,6 +52,7 @@
 		638E739B17F7E00D000FFE53 /* LaunchImage@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E739917F7E00D000FFE53 /* LaunchImage@2x.png */; };
 		638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E73A017F7E21A000FFE53 /* DPHomeViewController.m */; };
 		638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */; };
+		639F292617F94E9300517583 /* DPSearchViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F292517F94E9300517583 /* DPSearchViewController.m */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -133,6 +134,8 @@
 		638E73A017F7E21A000FFE53 /* DPHomeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPHomeViewController.m; sourceTree = "<group>"; };
 		638E73A217F7F8B3000FFE53 /* DPTeachableTagsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTeachableTagsController.h; sourceTree = "<group>"; };
 		638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTeachableTagsController.m; sourceTree = "<group>"; };
+		639F292417F94E9300517583 /* DPSearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSearchViewController.h; sourceTree = "<group>"; };
+		639F292517F94E9300517583 /* DPSearchViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewController.m; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -235,6 +238,8 @@
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
+				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
+				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
@@ -249,12 +254,12 @@
 				638E738E17F7B872000FFE53 /* DPTagTracksController.m */,
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
 				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
-				638E736417F786A5000FFE53 /* Icons */,
-				63712EF815130B21007997CC /* Supporting Files */,
-				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
-				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
 				638E73A217F7F8B3000FFE53 /* DPTeachableTagsController.h */,
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
+				638E736417F786A5000FFE53 /* Icons */,
+				63712EF815130B21007997CC /* Supporting Files */,
+				639F292417F94E9300517583 /* DPSearchViewController.h */,
+				639F292517F94E9300517583 /* DPSearchViewController.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -465,6 +470,7 @@
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
 				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,
 				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
+				639F292617F94E9300517583 /* DPSearchViewController.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
@@ -568,7 +574,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
@@ -588,7 +594,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",

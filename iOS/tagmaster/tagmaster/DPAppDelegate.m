@@ -43,20 +43,7 @@
     UINavigationController *navController = [[UINavigationController alloc] init];
     self.window.rootViewController = navController;
     [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
-    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
-    backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
-    backgroundImage.userInteractionEnabled = NO;
-    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
-    [navController.view addSubview:backgroundImage];
-    [navController.view sendSubviewToBack:backgroundImage];
-    [navController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
-                                                                               options:0
-                                                                               metrics:nil
-                                                                                 views:NSDictionaryOfVariableBindings(backgroundImage)]];
-    [navController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-60-[backgroundImage]-44-|"
-                                                                               options:0
-                                                                               metrics:nil
-                                                                                 views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    
     navigationController = navController;
     [self.window makeKeyAndVisible];
 
@@ -279,6 +266,30 @@
     NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
     [teachable removeObject:@(tagId)];
     [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+}
+
++ (void)setUpBackground:(UIView *)view {
+    view.backgroundColor = [UIColor whiteColor];
+    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
+    backgroundImage.userInteractionEnabled = NO;
+    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
+    backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
+
+    if ([view isKindOfClass:[UITableView class]]) {
+        UITableView *tableView = (UITableView *)view;
+        view = tableView.backgroundView = [[UIView alloc] init];
+    }
+
+    [view addSubview:backgroundImage];
+    [view sendSubviewToBack:backgroundImage];
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-60-[backgroundImage]-44-|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
 }
 
 

@@ -12,6 +12,7 @@
 #import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
 #import "DPTeachableTagsController.h"
+#import "DPSearchViewController.h"
 
 @interface DPHomeViewController ()
 
@@ -32,9 +33,9 @@
     return self;
 }
 
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
+    [DPAppDelegate setUpBackground:self.view];
     
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     self.tableView.backgroundColor = [UIColor clearColor];
@@ -67,7 +68,7 @@
     [arr addObject:@{
                      @"title": @"Search",
                      @"action": ^() {
-        // Handle Search.
+        [self.navigationController pushViewController:[[DPSearchViewController alloc] init] animated:YES];
     }
                      }];
     [arr addObject:@{

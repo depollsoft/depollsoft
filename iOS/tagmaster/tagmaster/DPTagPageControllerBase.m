@@ -68,6 +68,7 @@
 }
 
 - (void)setUpGrid:(DPGridLayout *)grid withScroller:(UIScrollView *)scroller {
+    id topLayoutGuide = self.topLayoutGuide;
     grid.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
     NSDictionary *bindings = NSDictionaryOfVariableBindings(grid);
@@ -94,10 +95,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(scroller)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[scroller]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][scroller]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(scroller)]];
+                                                                        views:NSDictionaryOfVariableBindings(scroller, topLayoutGuide)]];
 }
 
 @end

@@ -32,4 +32,6 @@
 + (void)addTeachable:(int)tagId;
 + (void)removeTeachable:(int)tagId;
 
++ (void)setUpBackground:(UIView *)view;
+
 @end

@@ -68,10 +68,10 @@
     }
 }
 
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
-	
+    [DPAppDelegate setUpBackground:self.view];
+
     NSMutableArray *controllers = [NSMutableArray array];
     
     self.summaryController = [[DPTagSummaryController alloc] init];
