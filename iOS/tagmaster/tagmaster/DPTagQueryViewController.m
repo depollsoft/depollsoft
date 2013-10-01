@@ -222,10 +222,6 @@
     return [DPTagCell tagHeight:self.tags[indexPath.row]];
 }
 
-- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [DPTagCell withAkaHeight];
-}
-
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGFloat currentOffset = scrollView.contentOffset.y;
     CGFloat threshold = scrollView.contentSize.height * 7 / 8 - scrollView.frame.size.height;

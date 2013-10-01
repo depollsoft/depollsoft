@@ -20,7 +20,7 @@
 
 
 - (id)init {
-    return [self initWithStyle:UITableViewStyleGrouped];
+    return [self initWithStyle:UITableViewStylePlain];
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -95,11 +95,6 @@
     DPTag *tag = [DPTag loadFromCache:[[DPAppDelegate teachable][indexPath.row] intValue]];
     return [DPTagCell tagHeight:tag];
 }
-
-- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [DPTagCell withAkaHeight];
-}
-
 
 // Override to support rearranging the table view.
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {

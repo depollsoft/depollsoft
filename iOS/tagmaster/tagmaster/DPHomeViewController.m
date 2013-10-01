@@ -13,6 +13,7 @@
 #import "DPTagViewController.h"
 #import "DPTeachableTagsController.h"
 #import "DPSearchViewController.h"
+#import "DPSettingsController.h"
 
 @interface DPHomeViewController ()
 
@@ -45,9 +46,17 @@
     self.navigationItem.backBarButtonItem.title = @"Home";
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
- 
+    
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.navigationItem.leftBarButtonItem = self.editButtonItem;
+    
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
+                                                                                           target:self
+                                                                                           action:@selector(search)];
+}
+
+- (void)search {
+    [self.navigationController pushViewController:[[DPSearchViewController alloc] init] animated:YES];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -66,12 +75,6 @@
 - (NSArray *)navigationItems {
     NSMutableArray *arr = [NSMutableArray array];
     [arr addObject:@{
-                     @"title": @"Search",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPSearchViewController alloc] init] animated:YES];
-    }
-                     }];
-    [arr addObject:@{
                      @"title": @"Browse",
                      @"action": ^() {
         [self.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
@@ -89,6 +92,13 @@
                      @"title": @"Random Tag",
                      @"action": ^() {
         // Handle Teachable Tag
+    }
+                     }];
+    
+    [arr addObject:@{
+                     @"title": @"Settings",
+                     @"action": ^() {
+        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
     }
                      }];
     return arr;
@@ -168,8 +178,11 @@
     }
 }
 
-- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [DPTagCell withAkaHeight];
+- (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
+    if (proposedDestinationIndexPath.section == 0) {
+        return [NSIndexPath indexPathForRow:0 inSection:1];
+    }
+    return proposedDestinationIndexPath;
 }
 
 

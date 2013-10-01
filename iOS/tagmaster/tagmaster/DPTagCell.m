@@ -13,8 +13,8 @@
 @property (nonatomic, strong) UILabel *title;
 @property (nonatomic, strong) UILabel *aka;
 @property (nonatomic, strong) UILabel *details;
-@property (nonatomic, strong) UISwitch *hasSheetMusic;
-@property (nonatomic, strong) UISwitch *hasLearningTracks;
+@property (nonatomic, strong) UIImageView *hasSheetMusic;
+@property (nonatomic, strong) UIImageView *hasLearningTracks;
 
 @end
 
@@ -56,14 +56,10 @@
         self.details = [[UILabel alloc] init];
         self.details.translatesAutoresizingMaskIntoConstraints = NO;
         self.details.font = [self.aka.font fontWithSize:12];
-        self.hasSheetMusic = [[UISwitch alloc] init];
+        self.hasSheetMusic = [[UIImageView alloc] initWithImage:[DPTagCell offImage]];
         self.hasSheetMusic.translatesAutoresizingMaskIntoConstraints = NO;
-        self.hasSheetMusic.transform = CGAffineTransformMakeScale(0.5, 0.5);
-        [self.hasSheetMusic setEnabled:NO];
-        self.hasLearningTracks = [[UISwitch alloc] init];
+        self.hasLearningTracks = [[UIImageView alloc] initWithImage:[DPTagCell offImage]];
         self.hasLearningTracks.translatesAutoresizingMaskIntoConstraints = NO;
-        self.hasLearningTracks.transform = CGAffineTransformMakeScale(0.5, 0.5);
-        [self.hasLearningTracks setEnabled:NO];
         
         [self.rootView addSubview:self.title];
         [self.rootView addSubview:self.aka];
@@ -75,7 +71,7 @@
         
         NSDictionary *bindings = NSDictionaryOfVariableBindings(title, aka, details, hasSheetMusic, hasLearningTracks, hasLearningTracksLabel, hasSheetMusicLabel);
         
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|->=15-[title][aka][details][hasSheetMusic]->=15-|"
+        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-15-[title][aka][details][hasSheetMusic]-15-|"
                                                                                  options:0
                                                                                  metrics:nil
                                                                                    views:bindings]];
@@ -130,15 +126,52 @@
     });
 }
 
++ (NSDateFormatter *)dateFormatter {
+    static NSDateFormatter *formatter;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        formatter = [[NSDateFormatter alloc] init];
+        formatter.dateFormat = @"MM/dd/yy";
+    });
+    return formatter;
+}
+
++ (UIImage *)onImage {
+    static UIImage *image;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        image = [UIImage imageNamed:@"ic_check_yes.png"];
+    });
+    return image;
+}
+
++ (UIImage *)offImage {
+    static UIImage *image;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        image = [UIImage imageNamed:@"ic_check_no.png"];
+    });
+    return image;
+}
+
 - (void)setTag:(DPTag *)newTag {
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    formatter.dateFormat = @"MM/dd/yy";
+    NSDateFormatter *formatter = [DPTagCell dateFormatter];
     tag = newTag;
     self.title.text = tag.title;
     self.aka.text = tag.alternativeTitle ? [@"a.k.a. " stringByAppendingString:tag.alternativeTitle] : nil;
-    self.details.text = [NSString stringWithFormat:@"Rating: %1.2f  Posted: %@  DLs: %d", tag.rating, [formatter stringFromDate:tag.posted], tag.downloadCount];
-    [self.hasLearningTracks setOn:tag.tracks.count > 0];
-    [self.hasSheetMusic setOn:tag.sheetMusicUri];
+    NSString *detailsString = nil;
+    if (tag) {
+        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tag.posted]];
+        if (tag.rating != 0) {
+            detailsString = [[NSString stringWithFormat:@"Rating: %1.2f ", tag.rating] stringByAppendingString:detailsString];
+        }
+        if (tag.downloadCount != 0) {
+            detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tag.downloadCount];
+        }
+    }
+    self.details.text = detailsString;
+    self.hasLearningTracks.image = tag.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
+    self.hasSheetMusic.image = tag.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
 }
 
 - (CGFloat)calculatedHeight {
@@ -156,6 +189,7 @@
         DPTag *tag = [[DPTag alloc] init];
         tag.title = @"A";
         tag.alternativeTitle = @"A";
+        tag.posted = [NSDate date];
         DPTagCell *cell = [[DPTagCell alloc] init];
         cell.tag = tag;
         height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;
@@ -169,6 +203,7 @@
     dispatch_once(&onceToken, ^{
         DPTag *tag = [[DPTag alloc] init];
         tag.title = @"A";
+        tag.posted = [NSDate date];
         DPTagCell *cell = [[DPTagCell alloc] init];
         cell.tag = tag;
         height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;

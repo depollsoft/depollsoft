@@ -12,7 +12,7 @@
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
 		63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */; };
 		63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A5917F6BC2300BC1EE2 /* QuickLook.framework */; };
-		63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */; };
+		63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */; };
 		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
 		636455741515731A002AD091 /* DPTagQueryResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 636455731515731A002AD091 /* DPTagQueryResult.m */; };
 		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
@@ -53,6 +53,9 @@
 		638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E73A017F7E21A000FFE53 /* DPHomeViewController.m */; };
 		638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */; };
 		639F292617F94E9300517583 /* DPSearchViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F292517F94E9300517583 /* DPSearchViewController.m */; };
+		639F292917FA643700517583 /* DPSettingsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F292817FA643700517583 /* DPSettingsController.m */; };
+		639F293017FA70AC00517583 /* ic_check_no@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292E17FA70AC00517583 /* ic_check_no@2x.png */; };
+		639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292F17FA70AC00517583 /* ic_check_yes@2x.png */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -82,7 +85,7 @@
 		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
 		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
-		63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = screenbackground.png; sourceTree = "<group>"; };
+		63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "screenbackground@2x.png"; sourceTree = "<group>"; };
 		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
 		6364557015156B3A002AD091 /* DPTagXMLParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTagXMLParser.m; path = Barbershop/DPTagXMLParser.m; sourceTree = "<group>"; };
 		636455721515731A002AD091 /* DPTagQueryResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagQueryResult.h; path = Barbershop/DPTagQueryResult.h; sourceTree = "<group>"; };
@@ -136,6 +139,10 @@
 		638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTeachableTagsController.m; sourceTree = "<group>"; };
 		639F292417F94E9300517583 /* DPSearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSearchViewController.h; sourceTree = "<group>"; };
 		639F292517F94E9300517583 /* DPSearchViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewController.m; sourceTree = "<group>"; };
+		639F292717FA643700517583 /* DPSettingsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsController.h; sourceTree = "<group>"; };
+		639F292817FA643700517583 /* DPSettingsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsController.m; sourceTree = "<group>"; };
+		639F292E17FA70AC00517583 /* ic_check_no@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_check_no@2x.png"; sourceTree = "<group>"; };
+		639F292F17FA70AC00517583 /* ic_check_yes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_check_yes@2x.png"; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -190,10 +197,12 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				639F292E17FA70AC00517583 /* ic_check_no@2x.png */,
+				639F292F17FA70AC00517583 /* ic_check_yes@2x.png */,
 				638E739817F7E00D000FFE53 /* LaunchImage-568h@2x.png */,
 				638E739917F7E00D000FFE53 /* LaunchImage@2x.png */,
 				638E739617F7D3F7000FFE53 /* Icon.png */,
-				63336A5D17F6C4FF00BC1EE2 /* screenbackground.png */,
+				63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */,
 				63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */,
 				63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */,
 				63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */,
@@ -240,6 +249,8 @@
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
 				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
+				639F292417F94E9300517583 /* DPSearchViewController.h */,
+				639F292517F94E9300517583 /* DPSearchViewController.m */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
@@ -258,8 +269,8 @@
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
 				638E736417F786A5000FFE53 /* Icons */,
 				63712EF815130B21007997CC /* Supporting Files */,
-				639F292417F94E9300517583 /* DPSearchViewController.h */,
-				639F292517F94E9300517583 /* DPSearchViewController.m */,
+				639F292717FA643700517583 /* DPSettingsController.h */,
+				639F292817FA643700517583 /* DPSettingsController.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -410,12 +421,14 @@
 				638E739717F7DE1B000FFE53 /* Icon.png in Resources */,
 				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
 				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,
+				639F293017FA70AC00517583 /* ic_check_no@2x.png in Resources */,
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
 				638E737217F78726000FFE53 /* Bookmarks@2x.png in Resources */,
 				638E737E17F78770000FFE53 /* Favorites.png in Resources */,
 				638E737F17F78770000FFE53 /* History.png in Resources */,
 				638E738417F7878F000FFE53 /* PeopleMostViewed.png in Resources */,
-				63336A5E17F6C4FF00BC1EE2 /* screenbackground.png in Resources */,
+				639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */,
+				63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */,
 				638E737417F78726000FFE53 /* Favorites@2x.png in Resources */,
 				638E737D17F78770000FFE53 /* Downloads.png in Resources */,
 				638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */,
@@ -466,6 +479,7 @@
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */,
+				639F292917FA643700517583 /* DPSettingsController.m in Sources */,
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
 				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,

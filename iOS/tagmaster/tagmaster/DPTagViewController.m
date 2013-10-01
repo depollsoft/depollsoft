@@ -114,7 +114,7 @@
     if (![DPAppDelegate containsTeachable:self.tagId]) {
         self.teachableButtonIndex = [actions addButtonWithTitle:@"Mark as Teachable"];
     } else {
-        self.teachableButtonIndex = [actions addButtonWithTitle:@"Unmark as Favorite"];
+        self.teachableButtonIndex = [actions addButtonWithTitle:@"Unmark as Teachable"];
     }
     
     if ([MFMessageComposeViewController canSendText]) {
