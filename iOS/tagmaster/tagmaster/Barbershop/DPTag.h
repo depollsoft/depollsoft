@@ -24,7 +24,7 @@
 @property (nonatomic) int parts;
 @property (nonatomic, copy) NSString *tagType;
 @property (nonatomic, copy) NSString *recordingMethod;
-@property (nonatomic, copy) NSURL *teachingVideo;
+@property (nonatomic, copy) NSString *teachingVideo;
 @property (nonatomic, copy) NSString *notes;
 @property (nonatomic, copy) NSString *arranger;
 @property (nonatomic, copy) NSURL *arrangerWebsite;

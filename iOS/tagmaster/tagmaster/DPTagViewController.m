@@ -11,6 +11,7 @@
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
 #import "DPTagTracksController.h"
+#import "DPTagVideoController.h"
 #import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
 
@@ -21,6 +22,7 @@
 @property (nonatomic, strong) DPTagSummaryController *summaryController;
 @property (nonatomic, strong) DPTagDetailController *detailController;
 @property (nonatomic, strong) DPTagTracksController *tagTracksController;
+@property (nonatomic, strong) DPTagVideoController *tagVideoController;
 
 @property (nonatomic, strong) UIActionSheet *actions;
 @property (nonatomic) NSInteger favoriteButtonIndex;
@@ -114,6 +116,12 @@
     self.tagTracksController.tabBarItem.title = @"Tracks";
     self.tagTracksController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.tagTracksController];
+    
+    self.tagVideoController = [[DPTagVideoController alloc] init];
+    self.tagVideoController.tabBarItem = [[UITabBarItem alloc] init];
+    self.tagVideoController.tabBarItem.title = @"Videos";
+    self.tagVideoController.busyIndicator = self.busyIndicator;
+    [controllers addObject:self.tagVideoController];
     
     self.viewControllers = controllers;
     

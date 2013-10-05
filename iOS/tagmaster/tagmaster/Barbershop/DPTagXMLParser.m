@@ -91,7 +91,7 @@
             } else if ([elementName isEqualToString:@"Recording"]) {
                 tag.recordingMethod = data;
             } else if ([elementName isEqualToString:@"TeachVid"]) {
-                tag.teachingVideo = [NSURL URLWithString:data];
+                tag.teachingVideo = data;
             } else if ([elementName isEqualToString:@"Lyrics"]) {
                 tag.lyrics = data;
             } else if ([elementName isEqualToString:@"Notes"]) {
@@ -162,6 +162,8 @@
             } else if ([elementName isEqualToString:@"Desc"]) {
                 video.description = data;
             } else if ([elementName isEqualToString:@"SungKey"]) {
+                data = [data stringByReplacingOccurrencesOfString:@"&#9837;" withString:@"\u266D"];
+                data = [data stringByReplacingOccurrencesOfString:@"&#9839;" withString:@"\u266F"];
                 video.sungKey = data;
             } else if ([elementName isEqualToString:@"Multitrack"]) {
                 video.isMultitrack = [data isEqualToString:@"Yes"];

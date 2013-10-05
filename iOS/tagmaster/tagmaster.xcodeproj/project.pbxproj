@@ -56,6 +56,7 @@
 		639F293017FA70AC00517583 /* ic_check_no@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292E17FA70AC00517583 /* ic_check_no@2x.png */; };
 		639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292F17FA70AC00517583 /* ic_check_yes@2x.png */; };
 		639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F293818001DD000517583 /* libpitchperfectlib.a */; };
+		639F293C1800C45300517583 /* DPTagVideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F293B1800C45300517583 /* DPTagVideoController.m */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -145,6 +146,8 @@
 		639F292F17FA70AC00517583 /* ic_check_yes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_check_yes@2x.png"; sourceTree = "<group>"; };
 		639F293618001D8100517583 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libpitchperfectlib.a; path = "../pitchperfect/pitchperfectlib/build/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
 		639F293818001DD000517583 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libpitchperfectlib.a; path = "../pitchperfect/pitchperfectlib/build/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
+		639F293A1800C45300517583 /* DPTagVideoController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagVideoController.h; sourceTree = "<group>"; };
+		639F293B1800C45300517583 /* DPTagVideoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagVideoController.m; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -275,6 +278,8 @@
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
 				638E736417F786A5000FFE53 /* Icons */,
 				63712EF815130B21007997CC /* Supporting Files */,
+				639F293A1800C45300517583 /* DPTagVideoController.h */,
+				639F293B1800C45300517583 /* DPTagVideoController.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -496,6 +501,7 @@
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
 				638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */,
 				638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */,
+				639F293C1800C45300517583 /* DPTagVideoController.m in Sources */,
 				638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
