@@ -251,6 +251,8 @@
 				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
 				639F292417F94E9300517583 /* DPSearchViewController.h */,
 				639F292517F94E9300517583 /* DPSearchViewController.m */,
+				639F292717FA643700517583 /* DPSettingsController.h */,
+				639F292817FA643700517583 /* DPSettingsController.m */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
@@ -269,8 +271,6 @@
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
 				638E736417F786A5000FFE53 /* Icons */,
 				63712EF815130B21007997CC /* Supporting Files */,
-				639F292717FA643700517583 /* DPSettingsController.h */,
-				639F292817FA643700517583 /* DPSettingsController.m */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";

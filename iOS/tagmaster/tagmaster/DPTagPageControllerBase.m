@@ -42,6 +42,7 @@
     UILabel *label = [[UILabel alloc] init];
     label.text = name;
     label.font = [UIFont boldSystemFontOfSize:12];
+    [label setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     return label;
 }
 

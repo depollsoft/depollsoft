@@ -22,11 +22,13 @@
 - (NSURL *)applicationDocumentsDirectory;
 
 + (NSArray *)favorites;
++ (void)setFavorites:(NSArray *)favorites;
 + (BOOL)containsFavorite:(int)tagId;
 + (void)moveFavoriteAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
 + (void)addFavorite:(int)tagId;
 + (void)removeFavorite:(int)tagId;
 + (NSArray *)teachable;
++ (void)setTeachable:(NSArray *)teachable;
 + (BOOL)containsTeachable:(int)tagId;
 + (void)moveTeachableAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
 + (void)addTeachable:(int)tagId;

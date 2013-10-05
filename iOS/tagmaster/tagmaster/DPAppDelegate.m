@@ -206,6 +206,10 @@
     return @[];
 }
 
++ (void)setFavorites:(NSArray *)favorites {
+    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+}
+
 + (BOOL)containsFavorite:(int)tagId {
     return [self.favorites containsObject:@(tagId)];
 }
@@ -215,7 +219,7 @@
     id toMove = self.favorites[fromIndex];
     [favorites removeObjectAtIndex:fromIndex];
     [favorites insertObject:toMove atIndex:toIndex];
-    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+    [self setFavorites:favorites];
 }
 
 + (void)addFavorite:(int)tagId {
@@ -224,13 +228,13 @@
     }
     NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
     [favorites addObject:@(tagId)];
-    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+    [self setFavorites:favorites];
 }
 
 + (void)removeFavorite:(int)tagId {
     NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
     [favorites removeObject:@(tagId)];
-    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+    [self setFavorites:favorites];
 }
 
 + (NSArray *)teachable {
@@ -239,6 +243,10 @@
         return array;
     }
     return @[];
+}
+
++ (void)setTeachable:(NSArray *)teachable {
+    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
 }
 
 + (BOOL)containsTeachable:(int)tagId {
@@ -250,7 +258,7 @@
     id toMove = teachable[fromIndex];
     [teachable removeObjectAtIndex:fromIndex];
     [teachable insertObject:toMove atIndex:toIndex];
-    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+    [self setTeachable:teachable];
 }
 
 + (void)addTeachable:(int)tagId {
@@ -259,13 +267,13 @@
     }
     NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
     [teachable addObject:@(tagId)];
-    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+    [self setTeachable:teachable];
 }
 
 + (void)removeTeachable:(int)tagId {
     NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
     [teachable removeObject:@(tagId)];
-    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+    [self setTeachable:teachable];
 }
 
 + (void)setUpBackground:(UIView *)view {

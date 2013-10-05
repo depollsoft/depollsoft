@@ -7,7 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DPTagPageControllerBase.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
-@interface DPSettingsController : UIViewController
+@interface DPSettingsController : DPTagPageControllerBase
+
++ (NSNumber *)minDownloads;
++ (NSNumber *)minRating;
++ (NSNumber *)sheetMusic;
++ (NSNumber *)learningTracks;
 
 @end
