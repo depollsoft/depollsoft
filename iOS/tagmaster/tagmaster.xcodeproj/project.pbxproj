@@ -10,7 +10,6 @@
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
-		63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */; };
 		63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A5917F6BC2300BC1EE2 /* QuickLook.framework */; };
 		63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */; };
 		6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6364557015156B3A002AD091 /* DPTagXMLParser.m */; };
@@ -56,6 +55,7 @@
 		639F292917FA643700517583 /* DPSettingsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F292817FA643700517583 /* DPSettingsController.m */; };
 		639F293017FA70AC00517583 /* ic_check_no@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292E17FA70AC00517583 /* ic_check_no@2x.png */; };
 		639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292F17FA70AC00517583 /* ic_check_yes@2x.png */; };
+		639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F293818001DD000517583 /* libpitchperfectlib.a */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -143,6 +143,8 @@
 		639F292817FA643700517583 /* DPSettingsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsController.m; sourceTree = "<group>"; };
 		639F292E17FA70AC00517583 /* ic_check_no@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_check_no@2x.png"; sourceTree = "<group>"; };
 		639F292F17FA70AC00517583 /* ic_check_yes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ic_check_yes@2x.png"; sourceTree = "<group>"; };
+		639F293618001D8100517583 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libpitchperfectlib.a; path = "../pitchperfect/pitchperfectlib/build/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
+		639F293818001DD000517583 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libpitchperfectlib.a; path = "../pitchperfect/pitchperfectlib/build/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -167,10 +169,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */,
 				638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */,
 				638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */,
 				63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */,
-				63336A5017F65F1A00BC1EE2 /* libdepolllib.a in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
@@ -226,6 +228,8 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				639F293818001DD000517583 /* libpitchperfectlib.a */,
+				639F293618001D8100517583 /* libpitchperfectlib.a */,
 				638E739217F7CAB3000FFE53 /* MessageUI.framework */,
 				638E739017F7C097000FFE53 /* MediaPlayer.framework */,
 				63336A5917F6BC2300BC1EE2 /* QuickLook.framework */,
@@ -588,7 +592,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
@@ -608,7 +612,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",

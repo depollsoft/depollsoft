@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "DPRemoteLocation.h"
 #import "DPConstants.h"
+#import "DPNote.h"
 #import "DPTagQueryResult.h"
 
 @interface DPTag : NSObject
@@ -77,5 +78,6 @@
 - (NSURL *)tagUri;
 - (void)cache;
 - (NSArray *)tracks;
+- (DPNote *)keyNote;
 
 @end

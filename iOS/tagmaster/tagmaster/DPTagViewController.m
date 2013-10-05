@@ -30,6 +30,8 @@
 
 @property (nonatomic, strong) UIBarButtonItem *actionBarButton;
 
+@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
+
 @end
 
 @implementation DPTagViewController
@@ -40,9 +42,21 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        // Custom initialization
+        [self commonInit];
     }
     return self;
+}
+
+- (id)init {
+    if (self = [super init]) {
+        [self commonInit];
+    }
+    return self;
+}
+
+- (void)commonInit {
+    self.busyIndicator = [[DPBusyIndicator alloc] init];
+    self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
 }
 
 - (void)setTagId:(int)tId {
@@ -51,11 +65,20 @@
 }
 
 - (void)loadTag:(BOOL)refresh {
+    [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.tag = t;
-        });
+        @try {
+            DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.tag = t;
+                [self.busyIndicator decrementBusyCount];
+            });
+        }
+        @catch (NSException *exception) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+            });
+        }
     });
 }
 
@@ -77,16 +100,19 @@
     self.summaryController = [[DPTagSummaryController alloc] init];
     self.summaryController.tabBarItem = [[UITabBarItem alloc] init];
     self.summaryController.tabBarItem.title = @"Summary";
+    self.summaryController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.summaryController];
     
     self.detailController = [[DPTagDetailController alloc] init];
     self.detailController.tabBarItem = [[UITabBarItem alloc] init];
     self.detailController.tabBarItem.title = @"Details";
+    self.detailController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.detailController];
     
     self.tagTracksController = [[DPTagTracksController alloc] init];
     self.tagTracksController.tabBarItem = [[UITabBarItem alloc] init];
     self.tagTracksController.tabBarItem.title = @"Tracks";
+    self.tagTracksController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.tagTracksController];
     
     self.viewControllers = controllers;
@@ -97,6 +123,25 @@
                           ];
     
     [self setTag:self.tag];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    UIView *navView = self.navigationController.view;
+    [navView addSubview:self.busyIndicator];
+    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_busyIndicator]|"
+                                                                    options:0
+                                                                    metrics:nil
+                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_busyIndicator]|"
+                                                                    options:0
+                                                                    metrics:nil
+                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [self.busyIndicator removeFromSuperview];
 }
 
 - (void)showActions {

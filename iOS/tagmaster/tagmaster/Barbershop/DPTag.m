@@ -12,6 +12,7 @@
 #import "DPUtils+Subscripts.h"
 #import "DPUtils+NSString.h"
 #import "DPTrack.h"
+#import "DPAccidental.h"
 #import <objc/runtime.h>
 
 const int APP_VERSION = 1;
@@ -301,6 +302,21 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
 
 - (NSURL *)tagUri {
     return [NSURL URLWithString:[NSString stringWithFormat:@"http://tags.depoll.com/tag.php?id=%d", self.tagId]];
+}
+
+- (DPNote *)keyNote {
+    if (!self.writtenKey) {
+        return nil;
+    }
+    NSString *noteName = [self.writtenKey.uppercaseString stringByReplacingOccurrencesOfString:@"MAJOR" withString:@""];
+    noteName = [noteName stringByReplacingOccurrencesOfString:@"MINOR" withString:@""];
+    noteName = [noteName stringByReplacingOccurrencesOfString:@":" withString:@""];
+    noteName = [noteName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    DPAccidental *accidental = [DPAccidental enumWithInt:Natural];
+    if (noteName.length > 1) {
+        accidental = [DPAccidental enumWithInt:[noteName characterAtIndex:1] == '#' ? Sharp : Flat];
+    }
+    return [DPNote findNoteWithName:[noteName substringToIndex:1] accidental:accidental octave:4];
 }
 
 @end

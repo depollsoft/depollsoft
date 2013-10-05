@@ -17,6 +17,8 @@
 
 @interface DPHomeViewController ()
 
+@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
+
 @end
 
 @implementation DPHomeViewController
@@ -37,6 +39,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [DPAppDelegate setUpBackground:self.view];
+    
+    self.busyIndicator = [[DPBusyIndicator alloc] init];
+    self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     self.tableView.backgroundColor = [UIColor clearColor];
@@ -62,6 +67,21 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
+    
+    UIView *navView = self.navigationController.view;
+    [navView addSubview:self.busyIndicator];
+    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_busyIndicator]|"
+                                                                    options:0
+                                                                    metrics:nil
+                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_busyIndicator]|"
+                                                                    options:0
+                                                                    metrics:nil
+                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [self.busyIndicator removeFromSuperview];
 }
 
 - (void)didReceiveMemoryWarning
@@ -91,38 +111,45 @@
     [arr addObject:@{
                      @"title": @"Random Tag",
                      @"action": ^() {
+        [self.busyIndicator incrementBusyCount];
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            DPTagQueryResult *result = [DPTag query:nil
-                                    numberOfResults:0
-                                              start:0
-                                              parts:nil
-                                     learningTracks:[DPSettingsController learningTracks]
-                                         sheetMusic:[DPSettingsController sheetMusic]
-                                         collection:DPTagCollectionNone
-                                             sortBy:DPTagSortNone
-                                      minimumRating:[DPSettingsController minRating]
-                                   minimumDownloads:[DPSettingsController minDownloads]
-                                              cache:NO
-                                          fieldList:@"id"];
-            int chosenResult = arc4random_uniform(result.available);
-            result = [DPTag query:nil
-                  numberOfResults:1
-                            start:chosenResult
-                            parts:nil
-                   learningTracks:[DPSettingsController learningTracks]
-                       sheetMusic:[DPSettingsController sheetMusic]
-                       collection:DPTagCollectionNone
-                           sortBy:DPTagSortNone
-                    minimumRating:[DPSettingsController minRating]
-                 minimumDownloads:[DPSettingsController minDownloads]
-                            cache:NO
-                        fieldList:@"id"];
-            DPTag *tag = result.tags[0];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                DPTagViewController *tagController = [[DPTagViewController alloc] init];
-                tagController.tagId = tag.tagId;
-                [self.navigationController pushViewController:tagController animated:YES];
-            });
+            @try {
+                DPTagQueryResult *result = [DPTag query:nil
+                                        numberOfResults:0
+                                                  start:0
+                                                  parts:nil
+                                         learningTracks:[DPSettingsController learningTracks]
+                                             sheetMusic:[DPSettingsController sheetMusic]
+                                             collection:DPTagCollectionNone
+                                                 sortBy:DPTagSortNone
+                                          minimumRating:[DPSettingsController minRating]
+                                       minimumDownloads:[DPSettingsController minDownloads]
+                                                  cache:NO
+                                              fieldList:@"id"];
+                int chosenResult = arc4random_uniform(result.available);
+                result = [DPTag query:nil
+                      numberOfResults:1
+                                start:chosenResult
+                                parts:nil
+                       learningTracks:[DPSettingsController learningTracks]
+                           sheetMusic:[DPSettingsController sheetMusic]
+                           collection:DPTagCollectionNone
+                               sortBy:DPTagSortNone
+                        minimumRating:[DPSettingsController minRating]
+                     minimumDownloads:[DPSettingsController minDownloads]
+                                cache:NO
+                            fieldList:@"id"];
+                DPTag *tag = result.tags[0];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    DPTagViewController *tagController = [[DPTagViewController alloc] init];
+                    tagController.tagId = tag.tagId;
+                    [self.navigationController pushViewController:tagController animated:YES];
+                    [self.busyIndicator decrementBusyCount];
+                });
+            }
+            @catch (NSException *exception) {
+                [self.busyIndicator decrementBusyCount];
+            }
         });
     }
                      }];

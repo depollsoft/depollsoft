@@ -79,7 +79,7 @@
     self.tagTable.backgroundColor = [UIColor clearColor];
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
-    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     self.activity.hidesWhenStopped = YES;
     
     self.statusLabel = [[UITextView alloc] init];

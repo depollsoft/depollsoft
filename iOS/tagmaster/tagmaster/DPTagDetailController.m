@@ -8,6 +8,7 @@
 
 #import "DPTagDetailController.h"
 #import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 @interface DPTagDetailController ()
 
@@ -158,12 +159,12 @@
     [self.grid addSubview:self.tagIdLabel row:1 column:2];
     [self.grid addSubview:self.lastRefreshedLabel row:2 column:2];
     [self.grid addSubview:self.downloadsLabel row:3 column:2];
-    [self.grid addSubview:self.linkButton row:4 column:2];
-    [self.grid addSubview:self.postedByButton row:5 column:2];
+    [self.grid addSubview:[self.linkButton alignLeft] row:4 column:2];
+    [self.grid addSubview:[self.postedByButton alignLeft] row:5 column:2];
     [self.grid addSubview:self.postedLabel row:6 column:2];
-    [self.grid addSubview:self.arrangedByButton row:7 column:2];
+    [self.grid addSubview:[self.arrangedByButton alignLeft] row:7 column:2];
     [self.grid addSubview:self.yearArrangedLabel row:8 column:2];
-    [self.grid addSubview:self.sungByButton row:9 column:2];
+    [self.grid addSubview:[self.sungByButton alignLeft] row:9 column:2];
     [self.grid addSubview:self.yearSungLabel row:10 column:2];
     
     UIScrollView *scroller = [[UIScrollView alloc] init];

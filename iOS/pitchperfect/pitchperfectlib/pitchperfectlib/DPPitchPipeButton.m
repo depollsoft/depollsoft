@@ -36,28 +36,35 @@
     [button removeTarget:downEvent action:@selector(invoke) forControlEvents:UIControlEventAllEvents];
     [button removeFromSuperview];
     button = newButton;
-    button.frame = self.frame;
+    button.translatesAutoresizingMaskIntoConstraints = NO;
     __weak DPPitchPipeButton *me = self;
     downEvent = [button addBlock:^{
-        if (self.toggle) {
-            if (self.note.isPlaying) {
-                [self.note stop];
+        if (me.toggle) {
+            if (me.note.isPlaying) {
+                [me.note stop];
             } else {
-                [self.note play];
+                [me.note play];
             }
         } else {
-            [self.note play];
+            [me.note play];
         }
     } forControlEvents:UIControlEventTouchDown];
     upEvent = [button addBlock:^{
-        if (!self.toggle) {
-            [self.note stop];
+        if (!me.toggle) {
+            [me.note stop];
         } else {
             [me performSelector:@selector(doHighlight) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
         }
     } forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside];
-    button.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self addSubview:button];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[button]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(button)]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[button]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(button)]];
 }
 
 - (void)doHighlight {

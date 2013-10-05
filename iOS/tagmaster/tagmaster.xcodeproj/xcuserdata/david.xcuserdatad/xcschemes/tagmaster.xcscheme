@@ -28,6 +28,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "63DC36EE151E9079007C46DB"
+               BuildableName = "libpitchperfectlib.a"
+               BlueprintName = "pitchperfectlib"
+               ReferencedContainer = "container:../pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "63712EEA15130B21007997CC"
                BuildableName = "tagmaster.app"
                BlueprintName = "tagmaster"

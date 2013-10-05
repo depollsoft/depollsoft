@@ -11,6 +11,7 @@
 #import "UIView+DPUtils.h"
 #import "DPTextView.h"
 #import "DPFileCache.h"
+#import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
 
 @interface DPSheetMusicPreview : NSObject <QLPreviewItem>
@@ -33,7 +34,7 @@
 @property (nonatomic, strong) UIButton *ratingButton;
 @property (nonatomic, strong) UILabel *partsLabel;
 @property (nonatomic, strong) UILabel *typeLabel;
-@property (nonatomic, strong) UIButton *keyButton;
+@property (nonatomic, strong) DPPitchPipeButton *keyButton;
 @property (nonatomic, strong) UILabel *classicTagNumberLabel;
 @property (nonatomic, strong) UIButton *sheetMusicButton;
 @property (nonatomic, strong) UILabel *lyricsLabel;
@@ -76,7 +77,8 @@
     
     typeLabel.text = self.tag.tagType;
     
-    [keyButton setTitle:self.tag.writtenKey forState:UIControlStateNormal];
+    keyButton.note = [self.tag keyNote];
+    [keyButton.button setTitle:self.tag.writtenKey forState:UIControlStateNormal];
     [grid setView:keyButton hidden:!self.tag.writtenKey];
     [grid setView:keyHeader hidden:!self.tag.writtenKey];
     
@@ -114,7 +116,7 @@
     [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
     partsLabel = [self makeBodyLabel];
     typeLabel = [self makeBodyLabel];
-    keyButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    keyButton = [[DPPitchPipeButton alloc] init];
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
@@ -172,7 +174,7 @@
     // Add content
     [grid addSubview:partsLabel row:3 column:2];
     [grid addSubview:typeLabel row:4 column:2];
-    [grid addSubview:keyButton row:5 column:2];
+    [grid addSubview:[keyButton alignLeft] row:5 column:2];
     [grid addSubview:classicTagNumberLabel row:6 column:2];
     [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:8 column:2];
     [grid addSubview:notesLabel row:9 column:2];
@@ -200,6 +202,7 @@
 }
 
 - (void)openSheetMusic {
+    [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
             NSString *key = self.tag.sheetMusicUri.cacheKey;
@@ -207,12 +210,15 @@
                 [DPFileCache writeData:[NSData dataWithContentsOfURL:self.tag.sheetMusicUri.uri] forKey:key];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
                 [self.navigationController pushViewController:previewer animated:YES];
             });
         } @catch (NSException *exception) {
-            NSLog(@"%@", exception);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+            });
         }
     });
 }

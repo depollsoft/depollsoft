@@ -10,9 +10,11 @@
 #import "DPBarbershop.h"
 #import "UIButton+Hyperlink.h"
 #import "DPGridLayout.h"
+#import "DPBusyIndicator.h"
 
 @interface DPTagPageControllerBase : UIViewController
 
+@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 @property (nonatomic, strong) DPTag *tag;
 - (UILabel *)makeHeader:(NSString *)name;
 - (UILabel *)makeBodyLabel;
