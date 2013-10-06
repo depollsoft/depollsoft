@@ -40,6 +40,8 @@
 }
 
 - (void)viewDidLoad {
+    UIFont *font = [UIFont fontWithName:@"wickhop handwriting" size:20];
+    
     [super viewDidLoad];
     [DPAppDelegate setUpBackground:self.view];
     
@@ -80,7 +82,12 @@
     aboutFooter.frame = CGRectMake(0, 0, aboutFooterSize.width, aboutFooterSize.height);
     self.tableView.tableFooterView = aboutFooter;
     
-    self.navigationItem.title = @"Tag Master";
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.font = font;
+    titleLabel.text = @"Tag Master";
+    [titleLabel sizeToFit];
+    titleLabel.frame = CGRectMake(titleLabel.frame.origin.x, titleLabel.frame.origin.y, titleLabel.frame.size.width, titleLabel.frame.size.height * 2);
+    self.navigationItem.titleView = titleLabel;
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";
     // Uncomment the following line to preserve selection between presentations.

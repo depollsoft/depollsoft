@@ -20,11 +20,7 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        self.title = @"Tag Master";
-        self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse"
-                                                                                 style:UIBarButtonItemStyleBordered
-                                                                                target:nil
-                                                                                action:nil];
+        self.title = @"Browse";
     }
     return self;
 }

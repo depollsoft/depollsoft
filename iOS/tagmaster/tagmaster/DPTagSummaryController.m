@@ -164,7 +164,7 @@
              colSpan:3];
     
     // Add headers
-    [grid addSubview:ratingHeader row:2 column:0];
+    [grid addSubview:[ratingHeader centeredVertically] row:2 column:0];
     [grid addSubview:partsHeader row:3 column:0];
     [grid addSubview:typeHeader row:4 column:0];
     [grid addSubview:keyHeader row:5 column:0];
@@ -193,7 +193,7 @@
                                  ];
     
     [ratingGrid addSubview:[ratingLabel centeredHorizontally] row:0 column:0];
-    [ratingGrid addSubview:[ratingBar centeredVertically] row:1 column:0];
+    [ratingGrid addSubview:[ratingBar alignTop] row:1 column:0];
     [ratingGrid addSubview:[ratingButton padHorizontal:8 vertical:0] row:0 column:1 rowSpan:2 colSpan:1];
     [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:2];
     

@@ -70,6 +70,7 @@
 		639F295218010A2F00517583 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295118010A2F00517583 /* StoreKit.framework */; };
 		639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295318010A3A00517583 /* SystemConfiguration.framework */; };
 		639F295718010ACB00517583 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295618010ACB00517583 /* FacebookSDK.framework */; };
+		639F2959180125EC00517583 /* wickhop-handwriting.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 639F2958180125EC00517583 /* wickhop-handwriting.ttf */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -174,6 +175,7 @@
 		639F295118010A2F00517583 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		639F295318010A3A00517583 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		639F295618010ACB00517583 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
+		639F2958180125EC00517583 /* wickhop-handwriting.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "wickhop-handwriting.ttf"; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				639F2958180125EC00517583 /* wickhop-handwriting.ttf */,
 				639F292E17FA70AC00517583 /* ic_check_no@2x.png */,
 				639F292F17FA70AC00517583 /* ic_check_yes@2x.png */,
 				638E739817F7E00D000FFE53 /* LaunchImage-568h@2x.png */,
@@ -477,6 +480,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				639F293E1800E84200517583 /* TagSummary@2x.png in Resources */,
+				639F2959180125EC00517583 /* wickhop-handwriting.ttf in Resources */,
 				638E739717F7DE1B000FFE53 /* Icon.png in Resources */,
 				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
 				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,

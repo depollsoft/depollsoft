@@ -11,7 +11,7 @@
 #import <Parse/Parse.h>
 #import "DPAppDelegate.h"
 
-@interface DPSettingsController ()
+@interface DPSettingsController () <UIAlertViewDelegate>
 
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
@@ -268,11 +268,32 @@
 }
 
 - (void)clearFavorites {
-    [DPAppDelegate setFavorites:@[]];
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Favorite Tags"
+                                                    message:@"Are you sure you want to clear your favorites?"
+                                                   delegate:self
+                                          cancelButtonTitle:@"No"
+                                          otherButtonTitles:@"Yes", nil];
+    [alert show];
 }
 
 - (void)clearTeachable {
-    [DPAppDelegate setTeachable:@[]];
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Teachable Tags"
+                                                    message:@"Are you sure you want to clear your teachable tags list?"
+                                                   delegate:self
+                                          cancelButtonTitle:@"No"
+                                          otherButtonTitles:@"Yes", nil];
+    [alert show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == alertView.cancelButtonIndex) {
+        return;
+    }
+    if ([alertView.title isEqualToString:@"Favorite Tags"]) {
+        [DPAppDelegate setFavorites:@[]];
+    } else {
+        [DPAppDelegate setTeachable:@[]];
+    }
 }
 
 - (void)didReceiveMemoryWarning
