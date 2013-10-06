@@ -319,4 +319,10 @@ NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=
     return [DPNote findNoteWithName:[noteName substringToIndex:1] accidental:accidental octave:4];
 }
 
+- (void)rate:(NSUInteger)r {
+    NSString *ratingPattern = @"http://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d";
+    NSURL *ratingURL = [NSURL URLWithString:[NSString stringWithFormat:ratingPattern, self.tagId, r]];
+    [NSString stringWithContentsOfURL:ratingURL usedEncoding:nil error:nil];
+}
+
 @end

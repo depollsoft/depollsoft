@@ -25,7 +25,7 @@
 
 @end
 
-@interface DPTagSummaryController () <QLPreviewControllerDataSource>
+@interface DPTagSummaryController () <QLPreviewControllerDataSource, UIActionSheetDelegate>
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *akaLabel;
@@ -95,6 +95,8 @@
     notesLabel.text = self.tag.notes;
     [grid setView:notesLabel hidden:!self.tag.notes];
     [grid setView:notesHeader hidden:!self.tag.notes];
+    
+    [self.ratingButton setEnabled:YES];
 }
 
 - (void)viewDidLoad
@@ -193,12 +195,44 @@
     [ratingGrid addSubview:[ratingLabel centeredHorizontally] row:0 column:0];
     [ratingGrid addSubview:[ratingBar centeredVertically] row:1 column:0];
     [ratingGrid addSubview:[ratingButton padHorizontal:8 vertical:0] row:0 column:1 rowSpan:2 colSpan:1];
-    [ratingGrid setView:ratingButton hidden:YES];
     [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:2];
+    
+    [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
     
     [self setUpGrid:grid withScroller:scroller];
     
     [self refreshView];
+}
+
+- (void)rate {
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                             delegate:self
+                                                    cancelButtonTitle:@"Cancel"
+                                               destructiveButtonTitle:nil
+                                                    otherButtonTitles:@"★★★★★", @"★★★★", @"★★★", @"★★", @"★", nil];
+    [actionSheet showFromRect:ratingButton.frame inView:ratingButton animated:YES];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    NSInteger rating = 5 - buttonIndex;
+    if (rating == 0) {
+        return;
+    }
+    [self.busyIndicator incrementBusyCount];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @try {
+            [self.tag rate:rating];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+                [self.ratingButton setEnabled:NO];
+            });
+        }
+        @catch (NSException *exception) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+            });
+        }
+    });
 }
 
 - (void)openSheetMusic {

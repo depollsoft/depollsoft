@@ -149,11 +149,12 @@
         DPGridLayout *multitrackGrid = [[DPGridLayout alloc] init];
         multitrackGrid.columnDimensions = @[
                                             [DPGridDimension dimension],
+                                            [DPGridDimension dimensionWithSize:8],
                                             [DPGridDimension dimension]
                                             ];
         UILabel *multitrackLabel = [self makeBodyLabel];
         multitrackLabel.text = @"Multitrack";
-        [multitrackGrid addSubview:multitrackLabel row:0 column:1];
+        [multitrackGrid addSubview:multitrackLabel row:0 column:2];
         UIImageView *multitrackImage = [[UIImageView alloc] initWithImage:video.isMultitrack ? [DPTagVideoController onImage] : [DPTagVideoController offImage]];
         [multitrackGrid addSubview:multitrackImage row:0 column:0];
         

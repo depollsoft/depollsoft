@@ -11,6 +11,7 @@
 #import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
+#import "DPTagViewController.h"
 
 @implementation DPAppDelegate
 
@@ -48,6 +49,22 @@
     [self.window makeKeyAndVisible];
 
     return YES;
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
+        NSString *tagNumberString = url.pathComponents[2];
+        @try {
+            int tagId = tagNumberString.intValue;
+            DPTagViewController *controller = [[DPTagViewController alloc] init];
+            controller.tagId = tagId;
+            [self.navigationController pushViewController:controller animated:YES];
+        }
+        @catch (NSException *exception) {
+        }
+        return NO;
+    }
+    return NO;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

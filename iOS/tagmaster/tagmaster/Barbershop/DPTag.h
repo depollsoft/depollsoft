@@ -79,5 +79,6 @@
 - (void)cache;
 - (NSArray *)tracks;
 - (DPNote *)keyNote;
+- (void)rate:(NSUInteger)rating;
 
 @end
