@@ -34,6 +34,7 @@
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.tableView.backgroundColor = [UIColor clearColor];
     
     [self.view addSubview:self.tableView];
     
@@ -173,6 +174,7 @@
     }
     
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewStyleGrouped reuseIdentifier:nil];
+    cell.backgroundColor = [UIColor clearColor];
     [cell.contentView addSubview:grid];
     [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[grid]|"
                                                                              options:0

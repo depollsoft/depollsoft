@@ -102,24 +102,28 @@
     self.summaryController = [[DPTagSummaryController alloc] init];
     self.summaryController.tabBarItem = [[UITabBarItem alloc] init];
     self.summaryController.tabBarItem.title = @"Summary";
+    self.summaryController.tabBarItem.image = [UIImage imageNamed:@"TagSummary"];
     self.summaryController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.summaryController];
     
     self.detailController = [[DPTagDetailController alloc] init];
     self.detailController.tabBarItem = [[UITabBarItem alloc] init];
     self.detailController.tabBarItem.title = @"Details";
+    self.detailController.tabBarItem.image = [UIImage imageNamed:@"MostViewed"];
     self.detailController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.detailController];
     
     self.tagTracksController = [[DPTagTracksController alloc] init];
     self.tagTracksController.tabBarItem = [[UITabBarItem alloc] init];
     self.tagTracksController.tabBarItem.title = @"Tracks";
+    self.tagTracksController.tabBarItem.image = [UIImage imageNamed:@"Tracks"];
     self.tagTracksController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.tagTracksController];
     
     self.tagVideoController = [[DPTagVideoController alloc] init];
     self.tagVideoController.tabBarItem = [[UITabBarItem alloc] init];
     self.tagVideoController.tabBarItem.title = @"Videos";
+    self.tagVideoController.tabBarItem.image = [UIImage imageNamed:@"Videos"];
     self.tagVideoController.busyIndicator = self.busyIndicator;
     [controllers addObject:self.tagVideoController];
     

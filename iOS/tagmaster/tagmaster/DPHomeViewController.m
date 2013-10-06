@@ -46,6 +46,37 @@
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     self.tableView.backgroundColor = [UIColor clearColor];
     
+    DPGridLayout *aboutFooter = [[DPGridLayout alloc] init];
+    aboutFooter.rowDimensions = @[
+                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
+                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
+                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
+                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5]
+                                  ];
+    UIButton *copyrightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [copyrightButton setTitle:@"Depollsoft © 2013" forState:UIControlStateNormal];
+    copyrightButton.url = [NSURL URLWithString:@"http://apps.depoll.com"];
+    copyrightButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    UIButton *bbsTagsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [bbsTagsButton setTitle:@"Content provided by BarbershopTags.com" forState:UIControlStateNormal];
+    bbsTagsButton.url = [NSURL URLWithString:@"http://www.barbershoptags.com"];
+    bbsTagsButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    UIButton *touButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [touButton setTitle:@"Terms of Use" forState:UIControlStateNormal];
+    touButton.url = [NSURL URLWithString:@"http://apps.depoll.com/terms-of-use"];
+    touButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    UIButton *donateButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [donateButton setTitle:@"Donate" forState:UIControlStateNormal];
+    donateButton.url = [NSURL URLWithString:@"http://www.davidpoll.com/applications/tag-master/donate"];
+    donateButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    [aboutFooter addSubview:copyrightButton row:0 column:0];
+    [aboutFooter addSubview:bbsTagsButton row:1 column:0];
+    [aboutFooter addSubview:touButton row:2 column:0];
+    [aboutFooter addSubview:donateButton row:3 column:0];
+    CGSize aboutFooterSize = [aboutFooter systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    aboutFooter.frame = CGRectMake(0, 0, aboutFooterSize.width, aboutFooterSize.height);
+    self.tableView.tableFooterView = aboutFooter;
+    
     self.navigationItem.title = @"Tag Master";
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";

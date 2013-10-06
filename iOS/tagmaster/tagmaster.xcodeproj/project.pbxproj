@@ -57,6 +57,9 @@
 		639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F292F17FA70AC00517583 /* ic_check_yes@2x.png */; };
 		639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F293818001DD000517583 /* libpitchperfectlib.a */; };
 		639F293C1800C45300517583 /* DPTagVideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 639F293B1800C45300517583 /* DPTagVideoController.m */; };
+		639F293E1800E84200517583 /* TagSummary@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F293D1800E84200517583 /* TagSummary@2x.png */; };
+		639F29411800EEE000517583 /* Tracks@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F293F1800EEDF00517583 /* Tracks@2x.png */; };
+		639F29421800EEE000517583 /* Videos@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F29401800EEDF00517583 /* Videos@2x.png */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -148,6 +151,9 @@
 		639F293818001DD000517583 /* libpitchperfectlib.a */ = {isa = PBXFileReference; lastKnownFileType = file; name = libpitchperfectlib.a; path = "../pitchperfect/pitchperfectlib/build/Debug-iphoneos/libpitchperfectlib.a"; sourceTree = "<group>"; };
 		639F293A1800C45300517583 /* DPTagVideoController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagVideoController.h; sourceTree = "<group>"; };
 		639F293B1800C45300517583 /* DPTagVideoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagVideoController.m; sourceTree = "<group>"; };
+		639F293D1800E84200517583 /* TagSummary@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "TagSummary@2x.png"; sourceTree = "<group>"; };
+		639F293F1800EEDF00517583 /* Tracks@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Tracks@2x.png"; sourceTree = "<group>"; };
+		639F29401800EEDF00517583 /* Videos@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Videos@2x.png"; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -317,6 +323,9 @@
 		638E736417F786A5000FFE53 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				639F293F1800EEDF00517583 /* Tracks@2x.png */,
+				639F29401800EEDF00517583 /* Videos@2x.png */,
+				639F293D1800E84200517583 /* TagSummary@2x.png */,
 				638E737717F78770000FFE53 /* Bookmarks.png */,
 				638E736D17F78726000FFE53 /* Bookmarks@2x.png */,
 				638E737817F78770000FFE53 /* Downloads.png */,
@@ -427,6 +436,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				639F293E1800E84200517583 /* TagSummary@2x.png in Resources */,
 				638E739717F7DE1B000FFE53 /* Icon.png in Resources */,
 				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
 				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,
@@ -438,10 +448,12 @@
 				638E738417F7878F000FFE53 /* PeopleMostViewed.png in Resources */,
 				639F293117FA70AC00517583 /* ic_check_yes@2x.png in Resources */,
 				63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */,
+				639F29421800EEE000517583 /* Videos@2x.png in Resources */,
 				638E737417F78726000FFE53 /* Favorites@2x.png in Resources */,
 				638E737D17F78770000FFE53 /* Downloads.png in Resources */,
 				638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */,
 				638E737517F78726000FFE53 /* History@2x.png in Resources */,
+				639F29411800EEE000517583 /* Tracks@2x.png in Resources */,
 				638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */,
 				638E737317F78726000FFE53 /* Downloads@2x.png in Resources */,
 				638E737C17F78770000FFE53 /* Bookmarks.png in Resources */,
