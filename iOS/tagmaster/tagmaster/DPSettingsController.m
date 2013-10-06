@@ -7,9 +7,13 @@
 //
 
 #import "DPSettingsController.h"
+
+#import <Parse/Parse.h>
 #import "DPAppDelegate.h"
 
 @interface DPSettingsController ()
+
+@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
 @property (nonatomic, strong) UIButton *logInButton;
 @property (nonatomic, strong) UIButton *clearFavoritesButton;
@@ -22,6 +26,8 @@
 @end
 
 @implementation DPSettingsController
+
+@synthesize busyIndicator;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -36,6 +42,8 @@
     [super viewDidLoad];
     
     [DPAppDelegate setUpBackground:self.view];
+    
+    self.busyIndicator = [[DPBusyIndicator alloc] init];
     
     self.title = @"Settings";
     
@@ -85,6 +93,7 @@
     logInHeader.text = @"Log In";
     UILabel *logInText = [self makeBodyLabel];
     logInText.text = @"Log in using Facebook to back up and synchronize your tag lists.";
+    logInText.numberOfLines = 0;
     UILabel *favoritesHeader = [self makeTitleLabel];
     favoritesHeader.text = @"Favorites";
     UILabel *teachableHeader = [self makeTitleLabel];
@@ -113,7 +122,51 @@
     [grid addSubview:learningTracksHeader row:11 column:0];
     [grid addSubview:[self.learningTracks padHorizontal:0 vertical:8] row:11 column:2];
     
-    [self setUpGrid:grid withScroller:scroller];
+    [self.logInButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
+    
+    [self setUpRootView:grid withScroller:scroller];
+    
+    self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:self.busyIndicator];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[busyIndicator]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(busyIndicator)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[busyIndicator]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(busyIndicator)]];
+    
+    [self refreshLoginButton];
+}
+
+- (void)refreshLoginButton {
+    if (![PFUser currentUser]) {
+        [self.logInButton setTitle:@"Log In With Facebook" forState:UIControlStateNormal];
+    } else {
+        [self.logInButton setTitle:@"Log Out" forState:UIControlStateNormal];
+    }
+}
+
+- (void)logInClick {
+    if (![PFUser currentUser]) {
+        [self.busyIndicator incrementBusyCount];
+        [PFFacebookUtils logInWithPermissions:nil block:^(PFUser *user, NSError *error) {
+            if (user.isNew) {
+                user[@"FavoriteIds"] = [DPAppDelegate favorites];
+                user[@"TeachableIds"] = [DPAppDelegate teachable];
+                [user saveEventually];
+            } else {
+                [DPAppDelegate setFavorites:user[@"FavoriteIds"]];
+                [DPAppDelegate setTeachable:user[@"TeachableIds"]];
+            }
+            [self.busyIndicator decrementBusyCount];
+            [self refreshLoginButton];
+        }];
+    } else {
+        [PFUser logOut];
+        [self refreshLoginButton];
+    }
 }
 
 - (NSInteger)minDownloadsValue {

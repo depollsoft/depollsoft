@@ -89,7 +89,7 @@
     
     UIScrollView *scroller = [[UIScrollView alloc] init];
     
-    [self setUpGrid:grid withScroller:scroller];
+    [self setUpRootView:grid withScroller:scroller];
     [DPAppDelegate setUpBackground:self.view];
     //[self.view bringSubviewToFront:scroller];
     

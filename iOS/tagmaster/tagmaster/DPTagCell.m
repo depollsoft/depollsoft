@@ -7,6 +7,7 @@
 //
 
 #import "DPTagCell.h"
+#import "DPBusyIndicator.h"
 
 @interface DPTagCell ()
 
@@ -15,12 +16,13 @@
 @property (nonatomic, strong) UILabel *details;
 @property (nonatomic, strong) UIImageView *hasSheetMusic;
 @property (nonatomic, strong) UIImageView *hasLearningTracks;
+@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
 @end
 
 @implementation DPTagCell
 
-@synthesize tag, title, aka, details, hasLearningTracks, hasSheetMusic, rootView;
+@synthesize tag, title, aka, details, hasLearningTracks, hasSheetMusic, rootView, busyIndicator;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -29,15 +31,20 @@
         self.backgroundColor = [UIColor clearColor];
         self.rootView = [[UIView alloc] init];
         self.rootView.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.contentView addSubview:self.rootView];
-        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootView]|"
+        
+        self.busyIndicator = [[DPBusyIndicator alloc] init];
+        self.busyIndicator.child = self.rootView;
+        self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        [self.contentView addSubview:self.busyIndicator];
+        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[busyIndicator]|"
                                                                                  options:0
                                                                                  metrics:nil
-                                                                                   views:NSDictionaryOfVariableBindings(rootView)]];
-        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootView]|"
+                                                                                   views:NSDictionaryOfVariableBindings(busyIndicator)]];
+        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[busyIndicator]|"
                                                                                  options:0
                                                                                  metrics:nil
-                                                                                   views:NSDictionaryOfVariableBindings(rootView)]];
+                                                                                   views:NSDictionaryOfVariableBindings(busyIndicator)]];
         
         UILabel *hasSheetMusicLabel = [[UILabel alloc] init];
         hasSheetMusicLabel.translatesAutoresizingMaskIntoConstraints = NO;
@@ -115,14 +122,28 @@
             return;
         }
     }
-    
+    self.tag = nil;
+    [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        DPTag *t = [DPTag loadTagById:self.tagId refresh:refresh];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.tag = t;
-            UITableView *tableView = (UITableView *)self.superview;
-            [tableView reloadRowsAtIndexPaths:@[[tableView indexPathForCell:self]] withRowAnimation:UITableViewRowAnimationAutomatic];
-        });
+        @try {
+            DPTag *t = [DPTag loadTagById:self.tagId refresh:refresh];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.tag = t;
+                UITableView *tableView = (UITableView *)self.superview;
+                while (tableView && ![tableView isKindOfClass:[UITableView class]]) {
+                    tableView = (UITableView *)tableView.superview;
+                }
+                NSIndexPath *indexPath = [tableView indexPathForCell:self];
+                if (indexPath) {
+                    [tableView reloadRowsAtIndexPaths:@[indexPath]
+                                     withRowAnimation:UITableViewRowAnimationAutomatic];
+                }
+                [self.busyIndicator decrementBusyCount];
+            });
+        }
+        @catch (NSException *exception) {
+            [self.busyIndicator decrementBusyCount];
+        }
     });
 }
 
@@ -157,7 +178,7 @@
 - (void)setTag:(DPTag *)newTag {
     NSDateFormatter *formatter = [DPTagCell dateFormatter];
     tag = newTag;
-    self.title.text = tag.title;
+    self.title.text = tag.title ?: @"Tag";
     self.aka.text = tag.alternativeTitle ? [@"a.k.a. " stringByAppendingString:tag.alternativeTitle] : nil;
     NSString *detailsString = nil;
     if (tag) {
@@ -169,7 +190,7 @@
             detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tag.downloadCount];
         }
     }
-    self.details.text = detailsString;
+    self.details.text = detailsString ?: @"Posted: Rating: DLs:";
     self.hasLearningTracks.image = tag.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
     self.hasSheetMusic.image = tag.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
 }

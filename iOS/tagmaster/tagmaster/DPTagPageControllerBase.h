@@ -20,6 +20,6 @@
 - (UILabel *)makeBodyLabel;
 - (UILabel *)makeTitleLabel;
 - (void)refreshView;
-- (void)setUpGrid:(DPGridLayout *)grid withScroller:(UIScrollView *)scroller;
+- (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller;
 
 @end

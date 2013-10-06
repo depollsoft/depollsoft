@@ -68,22 +68,22 @@
     // Override in child classes.
 }
 
-- (void)setUpGrid:(DPGridLayout *)grid withScroller:(UIScrollView *)scroller {
+- (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller {
     id topLayoutGuide = self.topLayoutGuide;
-    grid.translatesAutoresizingMaskIntoConstraints = NO;
+    view.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
-    NSDictionary *bindings = NSDictionaryOfVariableBindings(grid);
-    [scroller addSubview:grid];
-    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-4-[grid]-4-|"
+    NSDictionary *bindings = NSDictionaryOfVariableBindings(view);
+    [scroller addSubview:view];
+    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-4-[view]-4-|"
                                                                      options:0
                                                                      metrics:nil
                                                                        views:bindings]];
     
-    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[grid]|"
+    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[view]|"
                                                                      options:0
                                                                      metrics:nil
                                                                        views:bindings]];
-    [scroller addConstraint:[NSLayoutConstraint constraintWithItem:grid
+    [scroller addConstraint:[NSLayoutConstraint constraintWithItem:view
                                                          attribute:NSLayoutAttributeWidth
                                                          relatedBy:NSLayoutRelationEqual
                                                             toItem:scroller

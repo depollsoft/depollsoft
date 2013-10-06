@@ -7,6 +7,9 @@
 //
 
 #import "DPAppDelegate.h"
+
+#import <Parse/Parse.h>
+
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
@@ -23,6 +26,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [Parse setApplicationId:@"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj"
+                  clientKey:@"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4"];
+    [PFFacebookUtils initializeFacebook];
+    
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
         return [url absoluteString];

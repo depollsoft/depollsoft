@@ -169,7 +169,7 @@
     
     UIScrollView *scroller = [[UIScrollView alloc] init];
     
-    [self setUpGrid:self.grid withScroller:scroller];
+    [self setUpRootView:self.grid withScroller:scroller];
     
     [self refreshView];
 }

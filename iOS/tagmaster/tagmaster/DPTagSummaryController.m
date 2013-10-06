@@ -199,7 +199,7 @@
     
     [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
     
-    [self setUpGrid:grid withScroller:scroller];
+    [self setUpRootView:grid withScroller:scroller];
     
     [self refreshView];
 }
