@@ -59,6 +59,9 @@
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    if ([PFFacebookUtils handleOpenURL:url]) {
+        return YES;
+    }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
         NSString *tagNumberString = url.pathComponents[2];
         @try {
@@ -97,8 +100,7 @@
      */
 }
 
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{
+- (void)applicationDidBecomeActive:(UIApplication *)application {
     /*
      Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
      */
@@ -231,7 +233,12 @@
 }
 
 + (void)setFavorites:(NSArray *)favorites {
+    NSArray *oldFavorites = [self favorites];
     [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
+    if ([PFUser currentUser] && ![favorites isEqualToArray:oldFavorites]) {
+        [PFUser currentUser][@"FavoriteIds"] = favorites;
+        [[PFUser currentUser] saveEventually];
+    }
 }
 
 + (BOOL)containsFavorite:(int)tagId {
@@ -270,7 +277,12 @@
 }
 
 + (void)setTeachable:(NSArray *)teachable {
+    NSArray *oldTeachable = [self teachable];
     [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
+    if ([PFUser currentUser] && ![teachable isEqualToArray:oldTeachable]) {
+        [PFUser currentUser][@"TeachableIds"] = teachable;
+        [[PFUser currentUser] saveEventually];
+    }
 }
 
 + (BOOL)containsTeachable:(int)tagId {

@@ -115,8 +115,9 @@
 }
 
 - (void)loadTag:(BOOL)refresh {
+    int tagId = self.tagId;
     if (!refresh) {
-        DPTag *t = [DPTag loadFromCache:self.tagId];
+        DPTag *t = [DPTag loadFromCache:tagId];
         if (t) {
             self.tag = t;
             return;
@@ -126,17 +127,19 @@
     [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
-            DPTag *t = [DPTag loadTagById:self.tagId refresh:refresh];
+            DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
-                self.tag = t;
-                UITableView *tableView = (UITableView *)self.superview;
-                while (tableView && ![tableView isKindOfClass:[UITableView class]]) {
-                    tableView = (UITableView *)tableView.superview;
-                }
-                NSIndexPath *indexPath = [tableView indexPathForCell:self];
-                if (indexPath) {
-                    [tableView reloadRowsAtIndexPaths:@[indexPath]
-                                     withRowAnimation:UITableViewRowAnimationAutomatic];
+                if (t.tagId == self.tagId) {
+                    self.tag = t;
+                    UITableView *tableView = (UITableView *)self.superview;
+                    while (tableView && ![tableView isKindOfClass:[UITableView class]]) {
+                        tableView = (UITableView *)tableView.superview;
+                    }
+                    NSIndexPath *indexPath = [tableView indexPathForCell:self];
+                    if (indexPath) {
+                        [tableView reloadRowsAtIndexPaths:@[indexPath]
+                                         withRowAnimation:UITableViewRowAnimationAutomatic];
+                    }
                 }
                 [self.busyIndicator decrementBusyCount];
             });

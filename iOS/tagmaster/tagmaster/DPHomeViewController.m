@@ -7,6 +7,9 @@
 //
 
 #import "DPHomeViewController.h"
+
+#import <Parse/Parse.h>
+
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"
 #import "DPBrowseViewController.h"
@@ -109,6 +112,16 @@
                                                                     options:0
                                                                     metrics:nil
                                                                       views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+    
+    if ([PFUser currentUser]) {
+        [[PFUser currentUser] fetchInBackgroundWithBlock:^(PFObject *object, NSError *error) {
+            if (!error) {
+                [DPAppDelegate setFavorites:object[@"FavoriteIds"]];
+                [DPAppDelegate setTeachable:object[@"TeachableIds"]];
+                [self.tableView reloadData];
+            }
+        }];
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
