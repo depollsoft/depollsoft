@@ -578,7 +578,7 @@ public class Tag {
   }
 
   public String getTagUri() {
-    return String.format("http://www.barbershoptags.com/dbpage.php?pg=view&dbase=tags&id=%s",
+    return String.format("http://tags.depoll.com/tag.php?id=%s",
         this.getId());
   }
 
