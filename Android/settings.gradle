@@ -1,4 +1,4 @@
-include ':PitchPerfect'
+include ':PitchPerfect', ':PitchPerfectWear'
 include ':PitchPerfectLicense'
 include ':TagMaster'
 include ':Bindroid:BindroidTest'
