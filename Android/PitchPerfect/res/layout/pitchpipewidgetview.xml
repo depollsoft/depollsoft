@@ -9,130 +9,137 @@
         android:layout_height="fill_parent"
         android:orientation="vertical" >
 
-        <TableLayout
-            android:id="@+id/tableLayout1"
+        <LinearLayout
+            android:id="@+id/tableRow1"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:stretchColumns="*" >
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
 
-            <TableRow
-                android:id="@+id/tableRow1"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
+            <Button
+                android:id="@+id/pitchButton0"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" >
+            </Button>
 
-                <Button
-                    android:id="@+id/pitchButton0"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" >
-                </Button>
+            <Button
+                android:id="@+id/pitchButton1"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" >
+            </Button>
 
-                <Button
-                    android:id="@+id/pitchButton1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" >
-                </Button>
+            <Button
+                android:id="@+id/pitchButton2"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" >
+            </Button>
 
-                <Button
-                    android:id="@+id/pitchButton2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" >
-                </Button>
+            <Button
+                android:id="@+id/pitchButton3"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" >
+            </Button>
+        </LinearLayout>
 
-                <Button
-                    android:id="@+id/pitchButton3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" >
-                </Button>
-            </TableRow>
+        <LinearLayout
+            android:id="@+id/tableRow2"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
 
-            <TableRow
-                android:id="@+id/tableRow2"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
+            <Button
+                android:id="@+id/pitchButton11"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
 
-                <Button
-                    android:id="@+id/pitchButton11"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
+            <FrameLayout
+                android:id="@+id/cToCButton"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="2" />
 
-                <RadioButton
-                    android:id="@+id/cToCButton"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_span="2"
-                    android:text="@string/CtoC" />
+            <Button
+                android:id="@+id/pitchButton4"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
+        </LinearLayout>
 
-                <Button
-                    android:id="@+id/pitchButton4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
-            </TableRow>
+        <LinearLayout
+            android:id="@+id/tableRow3"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
 
-            <TableRow
-                android:id="@+id/tableRow3"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
+            <Button
+                android:id="@+id/pitchButton10"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
 
-                <Button
-                    android:id="@+id/pitchButton10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
+            <FrameLayout
+                android:id="@+id/fToFButton"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="2" />
 
-                <RadioButton
-                    android:id="@+id/fToFButton"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_span="2"
-                    android:text="@string/FtoF" />
+            <Button
+                android:id="@+id/pitchButton5"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
+        </LinearLayout>
 
-                <Button
-                    android:id="@+id/pitchButton5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
-            </TableRow>
+        <LinearLayout
+            android:id="@+id/tableRow4"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal" >
 
-            <TableRow
-                android:id="@+id/tableRow4"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
+            <Button
+                android:id="@+id/pitchButton9"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
 
-                <Button
-                    android:id="@+id/pitchButton9"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
+            <Button
+                android:id="@+id/pitchButton8"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
 
-                <Button
-                    android:id="@+id/pitchButton8"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
+            <Button
+                android:id="@+id/pitchButton7"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
 
-                <Button
-                    android:id="@+id/pitchButton7"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
-
-                <Button
-                    android:id="@+id/pitchButton6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="fill_parent"
-                    android:textSize="18dp" />
-            </TableRow>
-        </TableLayout>
+            <Button
+                android:id="@+id/pitchButton6"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:textSize="18dp" />
+        </LinearLayout>
     </LinearLayout>
 
 </FrameLayout>

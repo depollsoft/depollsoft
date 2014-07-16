@@ -32,5 +32,6 @@
     <string name="LogOut">Log out</string>
     <string name="LogInInfo">Log in using Facebook to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
+    <string name="widget_name">Pitch Pipe</string>
 
 </resources>
