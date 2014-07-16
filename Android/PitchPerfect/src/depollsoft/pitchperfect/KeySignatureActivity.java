@@ -71,7 +71,7 @@ public class KeySignatureActivity extends Activity {
     this.majorView = (ListView) this.findViewById(R.id.majorKeySignatureListView);
     this.minorView = (ListView) this.findViewById(R.id.minorKeySignatureListView);
 
-    ((ToggleButton) this.findViewById(R.id.majorMinorToggleButton))
+    this.findViewById(R.id.majorMinorToggleButton)
         .setOnClickListener(new OnClickListener() {
           public void onClick(View v) {
             if (KeySignatureActivity.this.getModel().getIsMajor())

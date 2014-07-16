@@ -29,8 +29,8 @@
     <string name="TeachingVideo">Teaching Video</string>
     <string name="NoVideos">Sorry, this tag does not have any videos associated with it.</string>
     <string name="Teacher">Teacher</string>
-    <string name="RatingColon" xml:space="preserve">Rating: </string>
-    <string name="PostedColon" xml:space="preserve">Posted: </string>
+    <string name="RatingColon">Rating:\u0020</string>
+    <string name="PostedColon">Posted:\u0020</string>
     <string name="DLs">DLs: </string>
     <string name="LearningTracks">Learning tracks</string>
     <string name="SheetMusicCheck">Sheet music</string>
@@ -140,7 +140,6 @@
     <string name="CurrentCacheSize">Current cache size:</string>
     <string name="TermsOfUse">Terms of Use</string>
     <string name="Stop">Stop</string>
-    <string name="Play">Play</string>
     <string name="Pause">Pause</string>
     <string name="LogIn">Log in with Facebook</string>
     <string name="LogOut">Log out</string>

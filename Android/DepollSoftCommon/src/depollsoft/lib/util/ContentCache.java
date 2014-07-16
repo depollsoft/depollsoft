@@ -9,16 +9,15 @@ import java.util.Stack;
 import android.content.Context;
 
 public class ContentCache {
-  private Context context;
-  private File privateDir;
+    private File privateDir;
   private File publicDir;
 
   public ContentCache(Context context) {
-    this.context = context;
-    this.privateDir = this.context.getDir("depollsoft_lib_private",
-        Context.MODE_PRIVATE);
-    this.publicDir = this.context.getDir("depollsoft_lib_public",
-        Context.MODE_WORLD_WRITEABLE | Context.MODE_WORLD_READABLE);
+      Context context1 = context;
+    this.privateDir = context1.getDir("depollsoft_lib_private",
+            Context.MODE_PRIVATE);
+    this.publicDir = context1.getDir("depollsoft_lib_public",
+            Context.MODE_WORLD_WRITEABLE | Context.MODE_WORLD_READABLE);
   }
 
   private String canonicalizeFileName(String url, String extension) {

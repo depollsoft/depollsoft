@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import com.bindroid.utils.Pair;
 
+@SuppressWarnings("ALL")
 public class JsonSerializer {
   private static class JsonPrimitive {
     private Object value;

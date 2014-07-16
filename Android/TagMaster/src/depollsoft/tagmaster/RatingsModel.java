@@ -20,7 +20,7 @@ public class RatingsModel {
 
   private static List<Integer> getRatedIds() {
     List<Integer> ratedIds;
-    if ((ratedIds = (List<Integer>) Preferences.get(RatingsModel.ratedIdsKey)) == null)
+    if ((ratedIds = Preferences.get(RatingsModel.ratedIdsKey)) == null)
       Preferences.set(RatingsModel.ratedIdsKey,
           ratedIds = new ArrayList<Integer>());
     return ratedIds;

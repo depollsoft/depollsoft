@@ -28,12 +28,12 @@ public class SettingsModel {
 
   public static boolean getToggleNotes() {
     SettingsModel.toggleNoteTrackable.track();
-    return Preferences.get(SettingsModel.ToggleNoteKey);
+    return Preferences.<Boolean>get(SettingsModel.ToggleNoteKey);
   }
 
   public static boolean getWakeLock() {
     SettingsModel.wakeLockTrackable.track();
-    return Preferences.get(SettingsModel.WakeLockKey);
+    return Preferences.<Boolean>get(SettingsModel.WakeLockKey);
   }
 
   public static void refreshUser() {

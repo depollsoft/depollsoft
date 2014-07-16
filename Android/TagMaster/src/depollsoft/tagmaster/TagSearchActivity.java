@@ -45,7 +45,7 @@ public class TagSearchActivity extends Activity {
     UiBinder.bind(this, new EditTextTextProperty((EditText) this.findViewById(R.id.searchTextBox)),
         "Model.Query", BindingMode.TWO_WAY);
 
-    ((EditText) this.findViewById(R.id.searchTextBox)).setOnKeyListener(new OnKeyListener() {
+    this.findViewById(R.id.searchTextBox).setOnKeyListener(new OnKeyListener() {
       public boolean onKey(View v, int keyCode, KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN
             && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
