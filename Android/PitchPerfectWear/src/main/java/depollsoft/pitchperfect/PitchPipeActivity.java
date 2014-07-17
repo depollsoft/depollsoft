@@ -3,14 +3,21 @@ package depollsoft.pitchperfect;
 import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.support.wearable.view.BoxInsetLayout;
 import android.support.wearable.view.WatchViewStub;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.RadioButton;
+import android.widget.Toast;
 
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
+import com.google.android.gms.wearable.Node;
 
+import java.util.List;
+
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
 import depollsoft.pitchperfect.lib.Note;
 
@@ -43,6 +50,18 @@ public class PitchPipeActivity extends Activity {
       @Override
       public void onLayoutInflated(WatchViewStub watchViewStub) {
         setupAfterInflation();
+      }
+    });
+
+    PitchPerfectApplication.getNodesAsync(this).onSuccess(new Continuation<List<Node>, Void>() {
+      @Override
+      public Void then(Task<List<Node>> listTask) throws Exception {
+        if (listTask.getResult().isEmpty()) {
+          Toast.makeText(PitchPipeActivity.this,
+              "Your watch must be connected to your phone to use Pitch Perfect.",
+              Toast.LENGTH_LONG).show();
+        }
+        return null;
       }
     });
   }

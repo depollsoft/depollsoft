@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_name">Pitch Perfect</string>
-    <string name="CtoC">From C to B</string>
-    <string name="FtoF">From F to E</string>
+    <string name="CtoC">C - B</string>
+    <string name="FtoF">F - E</string>
     <string name="AddSong">Add Song</string>
     <string name="SongTitle">Song Title</string>
     <string name="SongKey">Song Key</string>
