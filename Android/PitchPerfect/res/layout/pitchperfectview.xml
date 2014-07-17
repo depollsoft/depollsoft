@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TabHost xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
+         xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:id="@android:id/tabhost"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
@@ -65,15 +65,12 @@
                     android:layout_weight="1" >
                 </FrameLayout>
 
-                <com.google.ads.AdView
+                <com.google.android.gms.ads.AdView
                     android:id="@+id/adView"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     ads:adSize="SMART_BANNER"
-                    ads:adUnitId="a14de989831d633"
-                    ads:loadAdOnCreate="true" 
-                    ads:keywords="music, musician, singer, a cappella, notes, harmony, sheet music, songs, instrument, pitch pipe, barbershop">
-                </com.google.ads.AdView>
+                    ads:adUnitId="ca-app-pub-2903856737482177/7395059449" />
             </LinearLayout>
         </FrameLayout>
     </LinearLayout>
