@@ -7,10 +7,6 @@ dependencies {
     compile project(':DepollSoftCommon.Compat')
     compile project(':facebook')
     compile project(':Bindroid:Bindroid')
-    compile project(':DepollSoftCommon')
-    compile project(':DepollSoftCommon.Compat')
-    compile project(':facebook')
-    compile project(':Bindroid:Bindroid')
     compile 'com.android.support:support-v4:20.0.0'
 }
 

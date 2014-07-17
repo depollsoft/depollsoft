@@ -6,9 +6,6 @@ dependencies {
     compile project(':DepollSoftCommon')
     compile project(':DepollSoftCommon.Compat')
     compile project(':facebook')
-    compile project(':PitchPerfectLib')
-    compile project(':DepollSoftCommon.Compat')
-    compile project(':facebook')
     compile 'com.android.support:support-v4:20.0.0'
     compile 'com.google.android.gms:play-services:+'
     wearApp project(':PitchPerfectWear')
