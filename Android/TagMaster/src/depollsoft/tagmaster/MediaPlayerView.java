@@ -158,7 +158,6 @@ public class MediaPlayerView extends LinearLayout {
       public void onClick(View v) {
         if (MediaPlayerView.this.getIsPlaying()) {
           MediaPlayerView.this.pause();
-          return;
         } else if (!MediaPlayerView.this.rlChangedSinceLastPlay) {
           MediaPlayerView.this.player.start();
           MediaPlayerView.this.setIsPlaying(true);

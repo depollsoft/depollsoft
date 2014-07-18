@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Pitch Perfect</string>
+    <string name="CtoC">C - B</string>
+    <string name="FtoF">F - E</string>
+    <string name="AddSong">Add Song</string>
+    <string name="SongTitle">Song Title</string>
+    <string name="SongKey">Song Key</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Ok">OK</string>
+    <string name="EditSongList">Edit Songs</string>
+    <string name="StopEditing">Stop Editing</string>
+    <string name="EditSong">Edit Song</string>
+    <string name="RemoveSong">Remove Song</string>
+    <string name="MoveUp">Move Up</string>
+    <string name="MoveDown">Move Down</string>
+    <string name="NoSongsInList">There are currently no songs in your song list.</string>
+    <string name="Settings">Settings</string>
+    <string name="Copyright">© 2014</string>
+    <string name="HomePage">apps.depoll.com</string>
+    <string name="ClearSongList">Clear Song List</string>
+    <string name="NotesToggle">Notes play until pressed a second time</string>
+    <string name="Purchase">Purchase to remove ads</string>
+    <string name="Purchased">(Licensed)</string>
+    <string name="DepollSoft">DepollSoft</string>
+    <string name="RateReview">Rate &amp; Review</string>
+    <string name="TermsOfUse">Terms of Use</string>
+    <string name="SortAll">Sort all songs by title</string>
+    <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
+    <string name="LogIn">Log in</string>
+    <string name="LogOut">Log out</string>
+    <string name="LogInInfo">Log in using Facebook to back up and synchronize your song list and settings.</string>
+    <string name="ViewChangelog">View Changelog</string>
+    <string name="title_activity_my">MyActivity</string>
+    <string name="hello_round">Hello Round World!</string>
+    <string name="hello_square">Hello Square World!</string>
+
+</resources>

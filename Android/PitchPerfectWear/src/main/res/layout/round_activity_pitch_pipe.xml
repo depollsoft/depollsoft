@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent">
+
+    <depollsoft.lib.ui.ScaledBitmapView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:src="@drawable/panobackground">
+    </depollsoft.lib.ui.ScaledBitmapView>
+
+    <android.support.wearable.view.BoxInsetLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        app:layout_box="all">
+
+        <TableLayout
+            android:id="@+id/tableLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:stretchColumns="*"
+            android:weightSum="4">
+
+            <TableRow
+                android:id="@+id/tableRow1"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1">
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton0"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp">
+                </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp">
+                </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp">
+                </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp">
+                </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow2"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1">
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton11"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+
+                <RadioButton
+                    android:id="@+id/cToCButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="2"
+                    android:minHeight="0dp"
+                    android:text="@string/CtoC"/>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow3"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1">
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+
+                <RadioButton
+                    android:id="@+id/fToFButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="2"
+                    android:minHeight="0dp"
+                    android:text="@string/FtoF"/>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow4"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1">
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+
+                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                    android:id="@+id/pitchButton6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:background="@drawable/pitchpipe_button_background"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:textSize="18sp"/>
+            </TableRow>
+        </TableLayout>
+    </android.support.wearable.view.BoxInsetLayout>
+</FrameLayout>

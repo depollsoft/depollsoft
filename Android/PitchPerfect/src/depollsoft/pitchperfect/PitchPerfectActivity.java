@@ -20,6 +20,8 @@ import android.widget.TabHost.OnTabChangeListener;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
 import com.flurry.android.FlurryAgent;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
@@ -103,6 +105,14 @@ public class PitchPerfectActivity extends TabActivity {
     viewer.setTitle("Pitch Perfect Changelog");
     viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
     viewer.showIfAppropriate();
+
+
+    AdView adView = (AdView) findViewById(R.id.adView);
+
+    AdRequest adRequest = new AdRequest.Builder()
+        .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+        .build();
+    adView.loadAd(adRequest);
   }
 
   @Override

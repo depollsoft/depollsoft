@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent"
+    android:padding="@dimen/widget_margin">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/launchIcon"
+        android:src="@drawable/icon"
+        android:layout_gravity="center"/>
 
     <LinearLayout
         android:id="@+id/linearLayout1"
@@ -16,37 +24,37 @@
             android:layout_weight="1"
             android:orientation="horizontal" >
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton0"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" >
-            </Button>
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton1"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" >
-            </Button>
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton2"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" >
-            </Button>
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton3"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" >
-            </Button>
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -56,12 +64,13 @@
             android:layout_weight="1"
             android:orientation="horizontal" >
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton11"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
             <FrameLayout
                 android:id="@+id/cToCButton"
@@ -69,12 +78,13 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="2" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton4"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -84,12 +94,13 @@
             android:layout_weight="1"
             android:orientation="horizontal" >
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton10"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
             <FrameLayout
                 android:id="@+id/fToFButton"
@@ -97,12 +108,13 @@
                 android:layout_height="fill_parent"
                 android:layout_weight="2" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton5"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -112,33 +124,37 @@
             android:layout_weight="1"
             android:orientation="horizontal" >
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton9"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton8"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton7"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/pitchButton6"
                 android:layout_width="0dp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:textSize="18dp" />
+                android:background="@drawable/button_background"
+                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
 

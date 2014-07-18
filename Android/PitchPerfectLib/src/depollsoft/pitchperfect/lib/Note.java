@@ -1,19 +1,57 @@
 package depollsoft.pitchperfect.lib;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
 import com.bindroid.trackable.TrackableField;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
+
 public class Note {
+  public interface NotePlayer {
+    public void play(Note n);
+
+    public void stop(Note n);
+  }
+
   private static List<Note> commonNotes;
 
   private static List<Note> prunedNotes;
 
   private static Note c4;
+
+  public static final NotePlayer DEFAULT_PLAYER = new NotePlayer() {
+    private WeakHashMap<Note, AudioTrack> tracks = new WeakHashMap<Note, AudioTrack>();
+
+    @Override
+    public void play(Note n) {
+      AudioTrack track = tracks.get(n);
+      if (track == null) {
+        track = PitchAudioTrackGenerator.getPitchAudioTrack(n.getFrequency(), 8000,
+            AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000);
+        tracks.put(n, track);
+      }
+      track.play();
+    }
+
+    @Override
+    public void stop(Note n) {
+      AudioTrack track = tracks.get(n);
+      if (track != null && !n.isAttemptingToPlay
+          && track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+        PitchAudioTrackGenerator.stop(track);
+        tracks.remove(n);
+      }
+    }
+  };
+
+  private static NotePlayer player = DEFAULT_PLAYER;
+
+  public static void setPlayer(NotePlayer player) {
+    Note.player = player;
+  }
 
   public static Note findNote(String name, Accidental accidental, int octave) {
     for (Note n : Note.getCommonNotes()) {
@@ -85,8 +123,6 @@ public class Note {
     Note.prunedNotes = notes;
     return Note.prunedNotes;
   }
-
-  private AudioTrack track;
 
   private TrackableField<String> friendlyName = new TrackableField<String>();
 
@@ -164,10 +200,7 @@ public class Note {
       if (this.isAttemptingToPlay)
         return;
       this.isAttemptingToPlay = true;
-      if (this.track == null)
-        this.track = PitchAudioTrackGenerator.getPitchAudioTrack(this.getFrequency(), 8000,
-            AudioFormat.CHANNEL_CONFIGURATION_MONO, 2000);
-      this.track.play();
+      player.play(this);
       this.setIsPlaying(true);
       this.isAttemptingToPlay = false;
     }
@@ -190,11 +223,15 @@ public class Note {
   }
 
   public void setIsPlaying(boolean value) {
-    if (value)
-      this.play();
-    else
-      this.stop();
-    this.isPlaying.set(value);
+    if (this.getIsPlaying() != value) {
+      this.isPlaying.set(value);
+
+      if (value) {
+        this.play();
+      } else {
+        this.stop();
+      }
+    }
   }
 
   public void setKeyNumber(Integer value) {
@@ -209,24 +246,20 @@ public class Note {
 
   public void stop() {
     synchronized (this.synchronizer) {
-      if (this.track != null && !this.isAttemptingToPlay
-          && this.track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-        PitchAudioTrackGenerator.stop(this.track);
-        this.track = null;
-        this.setIsPlaying(false);
-      }
+      player.stop(this);
+      this.setIsPlaying(false);
     }
   }
 
   @Override
   public String toString() {
     switch (this.getAccidental()) {
-    case Natural:
-      return this.getFriendlyName();
-    case Sharp:
-      return this.getFriendlyName() + "#";
-    case Flat:
-      return this.getFriendlyName() + "b";
+      case Natural:
+        return this.getFriendlyName();
+      case Sharp:
+        return this.getFriendlyName() + "#";
+      case Flat:
+        return this.getFriendlyName() + "b";
     }
     return this.getFriendlyName();
   }

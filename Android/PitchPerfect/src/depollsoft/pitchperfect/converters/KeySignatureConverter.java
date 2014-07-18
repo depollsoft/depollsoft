@@ -20,7 +20,7 @@ public class KeySignatureConverter extends ValueConverter {
     SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan("MusiQwik",
         CommonModel.getMusiQwik()));
     if (k.getNumAccidentals() > 0) {
-      char sharps = (char) ('Á' + k.getNumAccidentals() - 1);
+      char sharps = (char) ('Â¡' + k.getNumAccidentals() - 1);
       res.append(sharps);
       SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
           "MusiQwik", CommonModel.getMusiQwik()));
@@ -28,9 +28,9 @@ public class KeySignatureConverter extends ValueConverter {
     else if (k.getNumAccidentals() < 0) {
       char flats;
       if (k.getNumAccidentals() != -6)
-        flats = (char) ('¬' - k.getNumAccidentals() - 1);
+        flats = (char) ('Â¨' - k.getNumAccidentals() - 1);
       else
-        flats = 'Û';
+        flats = 'â‚¬';
       res.append(flats);
       SpannableUtilities.applyToLastChar(res, new CustomTypefaceSpan(
           "MusiQwik", CommonModel.getMusiQwik()));

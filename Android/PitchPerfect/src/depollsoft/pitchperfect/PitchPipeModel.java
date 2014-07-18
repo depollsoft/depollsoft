@@ -51,7 +51,7 @@ public class PitchPipeModel {
   }
 
   public boolean getIsFromFToF() {
-    return Preferences.get(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF");
+    return Preferences.<Boolean>get(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF");
   }
 
   public TrackableCollection<Note> getNotes() {
@@ -64,6 +64,7 @@ public class PitchPipeModel {
       this.setNotes(this.fToF);
     else
       this.setNotes(this.cToC);
+    PitchPipeAppWidget.updateWidgets();
   }
 
   public void setNotes(TrackableCollection<Note> value) {

@@ -32,11 +32,11 @@ public class SettingsModel {
   }
 
   public static int getMinimumRandomDownloads() {
-    return Preferences.get(SettingsModel.minimumRandomDownloadsKey);
+    return Preferences.<Integer>get(SettingsModel.minimumRandomDownloadsKey);
   }
 
   public static double getMinimumRandomTagRating() {
-    return Preferences.get(SettingsModel.minimumRandomTagRatingKey);
+    return Preferences.<Double>get(SettingsModel.minimumRandomTagRatingKey);
   }
 
   public static Boolean getRandomLearningTracksFilter() {

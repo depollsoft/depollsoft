@@ -33,6 +33,20 @@ public class PitchPerfectApplication extends RichApplication {
     super.onCreate();
     boolean isDebugSigned = false;
 
+    Note.setPlayer(new Note.NotePlayer() {
+      @Override
+      public void play(Note n) {
+        Note.DEFAULT_PLAYER.play(n);
+        PitchPipeAppWidget.updateWidgets();
+      }
+
+      @Override
+      public void stop(Note n) {
+        Note.DEFAULT_PLAYER.stop(n);
+        PitchPipeAppWidget.updateWidgets();
+      }
+    });
+
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
         getString(R.string.app_store)) + (isDebugSigned ? " debug" : ""));

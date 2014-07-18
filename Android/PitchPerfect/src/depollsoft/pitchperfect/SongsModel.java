@@ -95,7 +95,7 @@ public class SongsModel {
   }
 
   private long getLastChangeTime() {
-    return Preferences.get(SongsModel.SongsChangedKey);
+    return Preferences.<Long>get(SongsModel.SongsChangedKey);
   }
 
   public TrackableCollection<PitchedSong> getSongs() {

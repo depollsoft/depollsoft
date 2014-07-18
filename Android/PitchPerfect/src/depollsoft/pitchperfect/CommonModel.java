@@ -10,8 +10,8 @@ public class CommonModel {
   private static Typeface musiSync;
   private static Typeface noteHedz;
 
-  public static final String sharpString = "“";
-  public static final String flatString = "’";
+  public static final String sharpString = "Ã¬";
+  public static final String flatString = "Ã­";
 
   public static Typeface getMusiQwik() {
     if (CommonModel.musiQwik == null)

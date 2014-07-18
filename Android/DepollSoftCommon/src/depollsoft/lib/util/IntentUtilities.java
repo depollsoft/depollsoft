@@ -12,9 +12,6 @@ public class IntentUtilities {
     final PackageManager packageManager = context.getPackageManager();
     List<ResolveInfo> resolveInfo = packageManager.queryIntentActivities(intent,
         PackageManager.MATCH_DEFAULT_ONLY);
-    if (resolveInfo.size() > 0) {
-      return true;
-    }
-    return false;
+    return resolveInfo.size() > 0;
   }
 }
