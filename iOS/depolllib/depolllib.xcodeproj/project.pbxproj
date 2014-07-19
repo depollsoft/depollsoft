@@ -315,7 +315,7 @@
 		63DC372A151E9263007C46DB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */;
@@ -477,7 +477,6 @@
 		63DC3758151E9263007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
@@ -492,7 +491,6 @@
 		63DC3759151E9263007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";

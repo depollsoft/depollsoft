@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		635F57991979DB170009B003 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63FF00661554C25C00C28218 /* libdepolllib.a */; };
 		63A99D85158840C000C78CC0 /* DPPitchPipeButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D83158840C000C78CC0 /* DPPitchPipeButton.h */; };
 		63A99D86158840C000C78CC0 /* DPPitchPipeButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D84158840C000C78CC0 /* DPPitchPipeButton.m */; };
 		63C14A901579E4DE00348592 /* DPAudioSynthesizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 63C14A8E1579E4DE00348592 /* DPAudioSynthesizer.h */; };
@@ -20,7 +21,6 @@
 		63DC3710151E9079007C46DB /* pitchperfectlibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC370F151E9079007C46DB /* pitchperfectlibTests.m */; };
 		63DC3726151E9196007C46DB /* DPAccidental.h in Headers */ = {isa = PBXBuildFile; fileRef = 63DC3724151E9196007C46DB /* DPAccidental.h */; };
 		63DC3727151E9196007C46DB /* DPAccidental.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC3725151E9196007C46DB /* DPAccidental.m */; };
-		63FF00671554C25C00C28218 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63FF00661554C25C00C28218 /* libdepolllib.a */; };
 		63FF006F1554CD4A00C28218 /* DPKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF006D1554CD4A00C28218 /* DPKey.h */; };
 		63FF00701554CD4A00C28218 /* DPKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF006E1554CD4A00C28218 /* DPKey.m */; };
 		63FF00711554CD4A00C28218 /* DPKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF006E1554CD4A00C28218 /* DPKey.m */; };
@@ -78,8 +78,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				635F57991979DB170009B003 /* libdepolllib.a in Frameworks */,
 				63C14A9B157AA4C600348592 /* CoreAudio.framework in Frameworks */,
-				63FF00671554C25C00C28218 /* libdepolllib.a in Frameworks */,
 				63DC36F3151E9079007C46DB /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,7 +238,8 @@
 		63DC36E6151E9079007C46DB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastTestingUpgradeCheck = 0510;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63DC36E9151E9079007C46DB /* Build configuration list for PBXProject "pitchperfectlib" */;
@@ -364,7 +365,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(BUILT_PRODUCTS_DIR)\"/**";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				USER_HEADER_SEARCH_PATHS = "../../../**";
 			};
@@ -412,10 +413,12 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 					"\"$(SRCROOT)/../GoogleAdMobAdsSDK.framework\"",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = "./** ../../depolllib/**";
 			};
 			name = Debug;
 		};
@@ -433,10 +436,12 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 					"\"$(SRCROOT)/../GoogleAdMobAdsSDK.framework\"",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = "./** ../../depolllib/**";
 			};
 			name = Release;
 		};

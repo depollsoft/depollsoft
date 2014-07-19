@@ -15,6 +15,8 @@
 #import "DPAccidental.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -34,7 +36,7 @@
     UILabel *noteName = [[UILabel alloc] init];
     noteName.font = [UIFont boldSystemFontOfSize:16];
     noteName.text = n.friendlyName;
-    noteName.textColor = self.textLabel.textColor.invert;
+    noteName.textColor = self.textLabel.textColor;
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
@@ -42,7 +44,7 @@
     
     UILabel *accidental = [[UILabel alloc] init];
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor.invert;
+    accidental.textColor = self.textLabel.textColor;
     accidental.backgroundColor = [UIColor clearColor];
     accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
@@ -62,7 +64,7 @@
     UILabel *octave = [[UILabel alloc] init];
     octave.font = [UIFont systemFontOfSize:10];
     octave.text = [NSString stringWithFormat:@"%d", n.octave];
-    octave.textColor = self.textLabel.textColor.invert;
+    octave.textColor = self.textLabel.textColor;
     octave.backgroundColor = [UIColor clearColor];
     octave.userInteractionEnabled = NO;
     [octave sizeToFit];
@@ -85,7 +87,7 @@
     if (note.alternate) {
         UILabel *slash = [[UILabel alloc] init];
         slash.text = @"/";
-        slash.textColor = self.textLabel.textColor.invert;
+        slash.textColor = self.textLabel.textColor;
         slash.font = [UIFont systemFontOfSize:24];
         slash.backgroundColor = [UIColor clearColor];
         [slash sizeToFit];
@@ -98,7 +100,7 @@
     [self addSubview:flow];
     
     self.detailTextLabel.text = [NSString stringWithFormat:@"%1.2f Hz", note.frequency];
-    self.detailTextLabel.textColor = [UIColor lightTextColor];
+    self.detailTextLabel.textColor = [UIColor darkGrayColor];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -135,8 +137,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
-    topLayout.vAlignment = UIControlContentVerticalAlignmentTop;
+    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
     
     notes = [DPNote prunedNotes];
 	// Do any additional setup after loading the view, typically from a nib.
@@ -146,11 +152,9 @@
     bannerView.rootViewController = self;
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
     
-    [toolbar sizeToFit];
-    [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
+    [rootLayout addSubview:toolbar row:0 column:0];
+    [rootLayout addSubview:bannerView row:1 column:0];
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
@@ -158,26 +162,42 @@
     [self.view addSubview:background];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
-
-    [topLayout sizeToFit];
-    
-    [self.view addSubview:topLayout];
     
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
     tableView.allowsSelection = NO;
-    tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:tableView];
+    [rootLayout addSubview:tableView row:2 column:0];
     
-    [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+    });
     
     UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
+    [toolbar sizeToFit];
+    
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [self.view addSubview:rootLayout];
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    id bottomLayoutGuide = self.bottomLayoutGuide;
+    
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
 }
 
 - (void)viewDidUnload
@@ -199,6 +219,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPNote *note = [notes objectAtIndex:indexPath.row];
     DPNoteCell *cell = [[DPNoteCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
+    cell.backgroundColor = [UIColor clearColor];
     cell.note = note;
     
     return cell;
@@ -215,13 +236,13 @@
             [popover dismissPopoverAnimated:YES];
             return;
         }
-        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        settings.preferredContentSize = CGSizeMake(320, 480);
         popover = [[UIPopoverController alloc] initWithContentViewController:settings];
         settings.popoverController = popover;
         [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         
     } else {
-        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         [self presentViewController:settings animated:YES completion:^{
         }];
     }

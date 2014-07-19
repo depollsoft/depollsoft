@@ -6,8 +6,8 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
-@interface pitchperfectTests : SenTestCase
+@interface pitchperfectTests : XCTestCase
 
 @end

@@ -79,11 +79,11 @@
     }
     
     UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to B", @"F to E", nil]];
-    typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBar;
+    __weak UISegmentedControl *weakTypeSwitcher = typeSwitcher;
     typeSwitcher.tintColor = [UIColor darkGrayColor];
     typeSwitcher.alpha = 0.75;
     [typeSwitcher addBlock:^{
-        self.model.isFromFToF = typeSwitcher.selectedSegmentIndex == 1;
+        self.model.isFromFToF = weakTypeSwitcher.selectedSegmentIndex == 1;
         [self refreshButtons];
     } forControlEvents:UIControlEventValueChanged];
     [glv addSubview:typeSwitcher row:2 rowSpan:2 column:1 columnSpan:2 options:KJGridLayoutFixedHeight];

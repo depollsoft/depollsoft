@@ -34,7 +34,7 @@
         
 #ifdef PRODUCTION
     [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
-    [PFFacebookUtils initializeWithApplicationId:@"263872380333771"];
+    [PFFacebookUtils initializeFacebook];
     [Flurry setCrashReportingEnabled:YES];
     [Flurry startSession:@"JMG2ZWM6HXCZTC33YHKF"];
 #else
@@ -112,13 +112,11 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
-- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    return [PFFacebookUtils handleOpenURL:url];
-}
-
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
   sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    return [PFFacebookUtils handleOpenURL:url]; 
+    return [FBAppCall handleOpenURL:url
+                  sourceApplication:sourceApplication
+                        withSession:[PFFacebookUtils session]];
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {
@@ -145,7 +143,7 @@
 
 + (GADRequest *)adRequest {
     GADRequest *request = [GADRequest request];
-    request.testing = [DPAppDelegate testAds];
+    request.testDevices = @[ GAD_SIMULATOR_ID ];
     request.keywords = [NSMutableArray arrayWithObjects:@"music", @"musician", @"singer", @"a cappella", @"notes", @"harmony", @"sheet music", @"songs", @"instrument", @"pitch pipe", @"barbershop", nil];
     return request;
 }

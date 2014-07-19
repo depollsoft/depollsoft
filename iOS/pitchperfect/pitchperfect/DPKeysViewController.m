@@ -16,6 +16,8 @@
 #import "DPUtils+UIColor.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -42,7 +44,7 @@
     }
     label.text = [NSString stringWithString:string];
     label.font = [UIFont fontWithName:@"MusiQwik" size:30];
-    label.textColor = self.textLabel.textColor.invert;
+    label.textColor = self.textLabel.textColor;
     label.backgroundColor = [UIColor clearColor];
     label.userInteractionEnabled = NO;
     [label sizeToFit];
@@ -55,7 +57,7 @@
     UILabel *noteName = [[UILabel alloc] init];
     noteName.font = [UIFont boldSystemFontOfSize:16];
     noteName.text = k.friendlyName;
-    noteName.textColor = self.textLabel.textColor.invert;
+    noteName.textColor = self.textLabel.textColor;
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
@@ -63,7 +65,7 @@
     
     UILabel *accidental = [[UILabel alloc] init];
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor.invert;
+    accidental.textColor = self.textLabel.textColor;
     accidental.backgroundColor = [UIColor clearColor];
     accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
@@ -147,9 +149,12 @@
 {
     [super viewDidLoad];
     
-	// Do any additional setup after loading the view.
-    VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
-    topLayout.vAlignment = UIControlContentVerticalAlignmentTop;
+	DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
     
     keys = [DPKey majorKeys];
 	// Do any additional setup after loading the view, typically from a nib.
@@ -159,11 +164,9 @@
     bannerView.rootViewController = self;
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
     
-    [toolbar sizeToFit];
-    [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
+    [rootLayout addSubview:toolbar row:0 column:0];
+    [rootLayout addSubview:bannerView row:1 column:0];
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
@@ -174,14 +177,15 @@
     
     UISegmentedControl *majorMinorChooser = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Major", @"Minor", nil]];
     majorMinorChooser.selectedSegmentIndex = 0;
-    majorMinorChooser.segmentedControlStyle = UISegmentedControlStyleBar;
     [majorMinorChooser sizeToFit];
+    
+    __weak UISegmentedControl *weakMajorMinorChooser = majorMinorChooser;
     
     [majorMinorChooser addBlock:^{
         for (DPKey *key in self.keys) {
             [key.note stop];
         }
-        switch(majorMinorChooser.selectedSegmentIndex) {
+        switch(weakMajorMinorChooser.selectedSegmentIndex) {
             case 0:
                 keys = [DPKey majorKeys];
                 break;
@@ -192,16 +196,11 @@
         [tableView reloadData];
     } forControlEvents:UIControlEventValueChanged];
     
-    [topLayout sizeToFit];
-    
-    [self.view addSubview:topLayout];
-    
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
     tableView.allowsSelection = NO;
-    tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:tableView];
+    [rootLayout addSubview:tableView row:2 column:0];
     
     [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(keys.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     
@@ -209,8 +208,27 @@
         
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
+    [toolbar sizeToFit];
+    
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [self.view addSubview:rootLayout];
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    id bottomLayoutGuide = self.bottomLayoutGuide;
+    
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -236,6 +254,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPKey *key = [keys objectAtIndex:indexPath.row];
     DPKeyCell *cell = [[DPKeyCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
+    cell.backgroundColor = [UIColor clearColor];
     cell.key = key;
     return cell;
 }
@@ -251,13 +270,13 @@
             [popover dismissPopoverAnimated:YES];
             return;
         }
-        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        settings.preferredContentSize = CGSizeMake(320, 480);
         popover = [[UIPopoverController alloc] initWithContentViewController:settings];
         settings.popoverController = popover;
         [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         
     } else {
-        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         [self presentViewController:settings animated:YES completion:^{
         }];
     }

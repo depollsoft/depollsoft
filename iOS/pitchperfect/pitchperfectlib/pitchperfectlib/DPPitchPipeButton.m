@@ -8,6 +8,7 @@
 
 #import "DPPitchPipeButton.h"
 #import "DPUtils+UIControl.h"
+#import "UIView+DPUtils.h"
 
 @interface DPPitchPipeButton ()
 
@@ -25,10 +26,31 @@
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.button = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+        self.button = [UIButton buttonWithType:UIButtonTypeCustom];
+        [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:0.9 alpha:1]]
+                               forState:UIControlStateNormal];
+        [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:1 alpha:1]]
+                               forState:UIControlStateHighlighted];
+        [button.layer setBorderColor:[[UIColor colorWithWhite:0.5 alpha:1] CGColor]];
+        [button.layer setBorderWidth:2];
+        [button.layer setCornerRadius:4];
         self.autoresizesSubviews = YES;
     }
     return self;
+}
+
++ (UIImage *)imageWithColor:(UIColor *)color {
+    CGRect rect = CGRectMake(0.0f, 0.0f, 1.0f, 1.0f);
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    CGContextSetFillColorWithColor(context, [color CGColor]);
+    CGContextFillRect(context, rect);
+    
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return image;
 }
 
 - (void)setButton:(UIButton *)newButton {
@@ -56,15 +78,17 @@
             [me performSelector:@selector(doHighlight) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
         }
     } forControlEvents:UIControlEventTouchUpInside|UIControlEventTouchUpOutside];
-    [self addSubview:button];
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[button]|"
+    UIView *padded = [button pad:2];
+    padded.translatesAutoresizingMaskIntoConstraints = NO;
+    [self addSubview:padded];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[padded]|"
                                                                  options:0
                                                                  metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(button)]];
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[button]|"
+                                                                   views:NSDictionaryOfVariableBindings(padded)]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[padded]|"
                                                                  options:0
                                                                  metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(button)]];
+                                                                   views:NSDictionaryOfVariableBindings(padded)]];
 }
 
 - (void)doHighlight {

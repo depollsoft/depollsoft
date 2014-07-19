@@ -93,6 +93,9 @@ static NSNumber *kFalse;
         [boxers setValue:[^(double *value) {
             return [NSNumber numberWithDouble:*value];
         } copy] forKey:[NSString stringWithUTF8String:@encode(double)]];
+        [boxers setValue:[^(BOOL *value) {
+            return [NSNumber numberWithBool:*value];
+        } copy] forKey:[NSString stringWithUTF8String:@encode(BOOL)]];
         
         unboxers = [[NSMutableDictionary alloc] init];
         
@@ -136,6 +139,9 @@ static NSNumber *kFalse;
         [unboxers setValue:[^(NSNumber *value, float *retValue) {
             *retValue = [value floatValue];
         } copy] forKey:[NSString stringWithUTF8String:@encode(float)]];
+        [unboxers setValue:[^(NSNumber *value, BOOL *retValue) {
+            *retValue = [value boolValue];
+        } copy] forKey:[NSString stringWithUTF8String:@encode(BOOL)]];
     }
 }
 

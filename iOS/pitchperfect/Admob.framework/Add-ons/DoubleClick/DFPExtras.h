@@ -1,15 +1,14 @@
 //
 //  DFPExtras.h
-//  Google Ads iOS SDK
+//  Google Mobile Ads SDK
 //
-//  Copyright (c) 2012 Google Inc. All rights reserved.
+//  Copyright 2012 Google Inc. All rights reserved.
 //
 //  To add DFP extras to an ad request:
 //    DFPExtras *extras = [[[DFPExtras alloc] init] autorelease];
-//    extras.additionalParameters =
-//        [NSDictionary dictionaryWithObjectsAndKeys:
-//          @"value", @"key",
-//          nil];
+//    extras.additionalParameters = @{
+//      @"key" : @"value"
+//    };
 //    GADRequest *request = [GADRequest request];
 //    [request registerAdNetworkExtras:extras];
 //
@@ -18,6 +17,7 @@
 
 @interface DFPExtras : GADAdMobExtras
 
-@property (nonatomic, copy) NSString *publisherProvidedID;
+/// Publisher provided user ID.
+@property(nonatomic, copy) NSString *publisherProvidedID;
 
 @end

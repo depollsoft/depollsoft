@@ -18,6 +18,8 @@
 #import "DPSongsModel.h"
 #import "DPAppDelegate.h"
 #import <Parse/Parse.h>
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 @interface DPSettingsViewController ()
 
@@ -48,8 +50,12 @@
     }
     
 	// Do any additional setup after loading the view.
-    VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
-    topLayout.vAlignment = UIControlContentVerticalAlignmentTop;
+    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
     
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
@@ -58,42 +64,54 @@
     bannerView.rootViewController = self;
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
     
     [toolbar sizeToFit];
     toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    self.view.backgroundColor = [UIColor colorWithRed:200.0/255 green:200.0/255 blue:200.0/255 alpha:1];
+    self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:background];
     
-    [topLayout addSubview:toolbar];
+    [rootLayout addSubview:toolbar row:0 column:0];
 
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        [topLayout addSubview:bannerView];
+        [rootLayout addSubview:bannerView row:1 column:0];
         
         [bannerView loadRequest:DPAppDelegate.adRequest];
     }
-    
-    [topLayout sizeToFit];
-    
-    [self.view addSubview:topLayout];
     
     tableView = [[UITableView alloc] initWithFrame:CGRectInfinite style:UITableViewStyleGrouped];
     tableView.dataSource = self;
     tableView.delegate = self;
     tableView.allowsSelection = NO;
-    tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
     tableView.backgroundView = nil;
-    [self.view addSubview:tableView];
+    [rootLayout addSubview:tableView row:2 column:0];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
     
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneItem, nil];
+    
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [self.view addSubview:rootLayout];
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    id bottomLayoutGuide = self.bottomLayoutGuide;
+    
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
 }
 
 - (void)viewDidUnload
@@ -123,10 +141,11 @@
                     cell.textLabel.text = @"Toggle Notes";
                     cell.detailTextLabel.text = @"Play until pressed again";
                     UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+                    __weak UISwitch *weakSwitchView = switchView;
                     [switchView setOn:[DPSettingsModel sharedInstance].toggleNotes];
                     cell.accessoryView = switchView;
                     [switchView addBlock:^{
-                        [DPSettingsModel sharedInstance].toggleNotes = switchView.isOn;
+                        [DPSettingsModel sharedInstance].toggleNotes = weakSwitchView.isOn;
                     } forControlEvents:UIControlEventValueChanged];
                     break;
                 }
@@ -136,10 +155,11 @@
                     cell.textLabel.text = @"Wake Lock";
                     cell.detailTextLabel.text = @"Prevent device from sleeping";
                     UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
+                    __weak UISwitch *weakSwitchView = switchView;
                     [switchView setOn:[DPSettingsModel sharedInstance].wakeLock];
                     cell.accessoryView = switchView;
                     [switchView addBlock:^{
-                        [DPSettingsModel sharedInstance].wakeLock = switchView.isOn;
+                        [DPSettingsModel sharedInstance].wakeLock = weakSwitchView.isOn;
                     } forControlEvents:UIControlEventValueChanged];
                     break;
                 }
@@ -231,7 +251,9 @@
 }
 
 - (void)complete {
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:^{
+        
+    }];
     [popoverController dismissPopoverAnimated:YES];
 }
 

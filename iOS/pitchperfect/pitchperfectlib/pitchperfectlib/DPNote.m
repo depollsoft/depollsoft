@@ -65,7 +65,7 @@ static NSArray *prunedNotes = nil;
     [temp addObject:[[DPNote alloc] initWithFriendlyName:@"B" octave:0 accidental:[DPAccidental enumWithInt:Flat] keyNumber:2]];
     [temp addObject:[[DPNote alloc] initWithFriendlyName:@"B" octave:0 accidental:[DPAccidental enumWithInt:Natural] keyNumber:3]];
     
-    int originalCount = [temp count];
+    NSUInteger originalCount = [temp count];
     for (int octave = 1; octave < 8; octave++) {
         for (int i = 0; i < originalCount; i++) {
             DPNote *cur = [temp objectAtIndex:i];

@@ -1,44 +1,45 @@
 //
 //  GADSearchRequest.h
-//  Google Search Ads iOS SDK
+//  Google Mobile Ads SDK
 //
 //  Copyright 2011 Google Inc. All rights reserved.
 //
 
-#import "GADRequest.h"
 #import <UIKit/UIKit.h>
 
+@class GADRequest;
+
 // Types of borders for search ads.
-typedef enum {
+typedef NS_ENUM(NSUInteger, GADSearchBorderType) {
   kGADSearchBorderTypeNone,
   kGADSearchBorderTypeDashed,
   kGADSearchBorderTypeDotted,
   kGADSearchBorderTypeSolid
-} GADSearchBorderType;
+};
 
-typedef enum {
+typedef NS_ENUM(NSUInteger, GADSearchCallButtonColor) {
   kGADSearchCallButtonLight,
   kGADSearchCallButtonMedium,
   kGADSearchCallButtonDark
-} GADSearchCallButtonColor;
+};
 
 // Specifies parameters and controls for search ads.
 @interface GADSearchRequest : NSObject
 
-@property (nonatomic, copy) NSString *query;
-@property (nonatomic, readonly) UIColor *backgroundColor;
-@property (nonatomic, readonly) UIColor *gradientFrom;
-@property (nonatomic, readonly) UIColor *gradientTo;
-@property (nonatomic, retain) UIColor *headerColor;
-@property (nonatomic, retain) UIColor *descriptionTextColor;
-@property (nonatomic, retain) UIColor *anchorTextColor;
-@property (nonatomic, copy) NSString *fontFamily;
-@property (nonatomic) int headerTextSize;
-@property (nonatomic, retain) UIColor *borderColor;
-@property (nonatomic) GADSearchBorderType borderType;
-@property (nonatomic) int borderThickness;
-@property (nonatomic, copy) NSString *customChannels;
-@property (nonatomic) GADSearchCallButtonColor callButtonColor;
+@property(nonatomic, copy) NSString *query;
+@property(nonatomic, strong, readonly) UIColor *backgroundColor;
+@property(nonatomic, strong, readonly) UIColor *gradientFrom;
+@property(nonatomic, strong, readonly) UIColor *gradientTo;
+@property(nonatomic, strong) UIColor *headerColor;
+@property(nonatomic, strong) UIColor *descriptionTextColor;
+@property(nonatomic, strong) UIColor *anchorTextColor;
+@property(nonatomic, copy) NSString *fontFamily;
+@property(nonatomic, assign) NSUInteger headerTextSize;
+@property(nonatomic, strong) UIColor *borderColor;
+@property(nonatomic, assign) GADSearchBorderType borderType;
+@property(nonatomic, assign) NSUInteger borderThickness;
+@property(nonatomic, copy) NSString *customChannels;
+@property(nonatomic, assign) GADSearchCallButtonColor callButtonColor;
 
 // The request object used to request ad. Pass the value returned by the method
 // to GADSearchBannerView to get the ad in the format specified.

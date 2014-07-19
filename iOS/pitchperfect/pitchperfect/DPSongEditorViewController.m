@@ -18,6 +18,8 @@
 #import "LayoutManagers.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -44,7 +46,14 @@
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
     
-    VLayoutView *topLayout = [[VLayoutView alloc] init];
+    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
+    
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
     bannerView.adUnitID = @"a14fd7eba4542f0";
@@ -58,24 +67,17 @@
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-        self.view.backgroundColor = [UIColor colorWithRed:200.0/255 green:200.0/255 blue:200.0/255 alpha:1];
-    } else {
-        [self.view setBackgroundColor:[UIColor blackColor]];
-    }
+    self.view.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:background];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
     
     [toolbar sizeToFit];
     toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
-    VLayoutView *controlsLayout = [[VLayoutView alloc] initWithFrame:CGRectZero spacing:5];
-    
     nameField = [[UITextField alloc] init];
     UILabel *nameLabel = [[UILabel alloc] init];
-    nameLabel.text = @"Name:";
+    nameLabel.text = @" Name:";
     nameLabel.textColor = [UIColor lightGrayColor];
     [nameLabel sizeToFit];
     nameField.leftView = nameLabel;
@@ -87,32 +89,26 @@
     nameField.autocapitalizationType = UITextAutocapitalizationTypeWords;
     nameField.delegate = self;
     [nameField sizeToFit];
-    nameField.frame = CGRectMake(nameField.frame.origin.x, nameField.frame.origin.y, self.view.frame.size.width, nameField.frame.size.height);
     
-    [controlsLayout addSubview:nameField];
-    
-    [controlsLayout sizeToFit];
-    
-    [topLayout addSubview:toolbar];
+    [rootLayout addSubview:toolbar row:0 column:0];
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        [topLayout addSubview:bannerView];
+        [rootLayout addSubview:bannerView row:1 column:0];
         
         [bannerView loadRequest:DPAppDelegate.adRequest];
     }
-    [topLayout addSubview:[[UIView alloc] initWithFrame:CGRectMake(0, 0, 1, 5)]];
-    [topLayout addSubview:controlsLayout];
-    [topLayout sizeToFit];
-    [self.view addSubview:topLayout];
+    [rootLayout addSubview:[nameField pad:5] row:2 column:0];
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
     keyPicker = [[UIPickerView alloc] init];
     keyPicker.dataSource = self;
     keyPicker.delegate = self;
     keyPicker.showsSelectionIndicator = YES;
     [keyPicker sizeToFit];
-    keyPicker.frame = CGRectMake(self.view.frame.size.width / 2 - keyPicker.frame.size.width / 2, self.view.frame.size.height - keyPicker.frame.size.height, keyPicker.frame.size.width, keyPicker.frame.size.height);
     [keyPicker selectRow:[allKeys indexOfObject:song.key] inComponent:0 animated:YES];
     
-    [self.view addSubview:keyPicker];
+    [rootLayout addSubview:[keyPicker alignBottom] row:3 column:0];
+    
+    [self.view addSubview:rootLayout];
     
     UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
     
@@ -122,7 +118,18 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, cancelItem, doneItem, nil];
+    toolbar.items = [NSArray arrayWithObjects:cancelItem, flexibleSpace, titleItem, flexibleSpace, doneItem, nil];
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[topLayoutGuide][rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout, topLayoutGuide)]];
     
 }
 
@@ -135,12 +142,16 @@
     song.name = nameField.text;
     song.key = [allKeys objectAtIndex:[keyPicker selectedRowInComponent:0]];
     [self onComplete:NO];
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:^{
+        
+    }];
 }
 
 - (void)cancel {
     [self onComplete:YES];
-    [self dismissModalViewControllerAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:^{
+        
+    }];
 }
 
 - (void)viewDidUnload

@@ -20,12 +20,14 @@
 #import "DPSettingsViewController.h"
 #import "DPSettingsModel.h"
 #import "DPAppDelegate.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
 #define LAYOUT_TAG 1337
 
-@interface DPPitchPipeViewController ()
+@interface DPPitchPipeViewController () <UIPopoverControllerDelegate>
 
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) NSMutableArray *noteButtons;
@@ -55,7 +57,6 @@
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
-    //[self.view setBackgroundColor:[UIColor blackColor]];
     [self.view addSubview:background];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
@@ -64,17 +65,20 @@
     toolbar.barStyle = UIBarStyleDefault;
     
     [toolbar sizeToFit];
-    //[topLayout addSubview:toolbar];
-    //[topLayout addSubview:bannerView];
-    //[topLayout sizeToFit];
-    //[self.view addSubview:topLayout];
     
-    //CGRect gridLayoutViewBounds = CGRectInset(CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height), 4, 4);
-    
-    KJGridLayoutView *glv = [[KJGridLayoutView alloc] init];
-    
-    glv.rowSpacing = 4;
-    glv.columnSpacing = 4;
+    DPGridLayout *buttonLayout = [[DPGridLayout alloc] init];
+    buttonLayout.rowDimensions = @[
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
+    buttonLayout.columnDimensions = @[
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
     
     int rowMap[12] = { 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 2, 1 };
     int colMap[12] = { 0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0, 0 };
@@ -82,20 +86,20 @@
     for (int buttonNumber = 0; buttonNumber < 12; buttonNumber++) {
         id button = [[DPPitchPipeButton alloc] initWithFrame:self.view.bounds];
         [noteButtons addObject:button];
-        [glv addSubview:button row:rowMap[buttonNumber] column:colMap[buttonNumber]];
+        [buttonLayout addSubview:button row:rowMap[buttonNumber] column:colMap[buttonNumber]];
     }
     
     UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to B", @"F to E", nil]];
-    typeSwitcher.segmentedControlStyle = UISegmentedControlStyleBar;
     typeSwitcher.tintColor = [UIColor darkGrayColor];
     typeSwitcher.alpha = 0.75;
+    __weak UISegmentedControl *weakTypeSwitcher = typeSwitcher;
     [typeSwitcher addBlock:^{
         [self stopNotes];
-        self.model.isFromFToF = typeSwitcher.selectedSegmentIndex == 1;
+        self.model.isFromFToF = weakTypeSwitcher.selectedSegmentIndex == 1;
         [self refreshButtons];
     } forControlEvents:UIControlEventValueChanged];
     typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
-    [glv addSubview:typeSwitcher row:2 rowSpan:2 column:1 columnSpan:2 options:KJGridLayoutFixedHeight];
+    [buttonLayout addSubview:[typeSwitcher centered] row:1 column:1 rowSpan:2 colSpan:2];
     
     UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
     
@@ -103,33 +107,39 @@
     
     
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
     
-    [self.view addSubview:glv];
-    [self.view addSubview:toolbar];
-    [self.view addSubview:bannerView];
+    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
+    rootLayout.columnDimensions = @[
+                                    [DPGridDimension dimensionWithStars:1]
+                                    ];
     
-    [glv setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [toolbar setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [bannerView setTranslatesAutoresizingMaskIntoConstraints:NO];
-    UITabBar *tabBar = self.tabBarController.tabBar;
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][toolbar][bannerView][glv][bottomLayoutGuide]"
+    [rootLayout addSubview:toolbar row:0 column:0];
+    [rootLayout addSubview:bannerView  row:1 column:0];
+    [rootLayout addSubview:buttonLayout row:2 column:0];
+    
+    [self.view addSubview:rootLayout];
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    id bottomLayoutGuide = self.bottomLayoutGuide;
+    
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv, tabBar)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolbar]|"
+                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[bannerView]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[glv]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, bannerView, glv)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     
 }
 
@@ -178,7 +188,6 @@
                 sharpLabel.backgroundColor = [UIColor clearColor];
                 sharpLabel.userInteractionEnabled = NO;
                 [sharpLabel sizeToFit];
-                sharpLabel.textAlignment = UITextAlignmentCenter;
                 UILabel *slashLabel = [[UILabel alloc] initWithFrame:button.frame];
                 slashLabel.text = @"/";
                 slashLabel.textColor = [UIColor blackColor];
@@ -197,10 +206,19 @@
                 [layout addSubview:slashLabel];
                 [layout addSubview:flatLabel];
                 [layout sizeToFit];
-                layout.center = CGPointMake(button.button.frame.size.width / 2, button.button.frame.size.height / 2);
+                layout.translatesAutoresizingMaskIntoConstraints = NO;
                 
                 [button.button addSubview:layout];
                 [button.button bringSubviewToFront:layout];
+                
+                [button addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[layout]|"
+                                                                               options:0
+                                                                               metrics:nil
+                                                                                 views:NSDictionaryOfVariableBindings(layout)]];
+                [button addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[layout]|"
+                                                                               options:0
+                                                                               metrics:nil
+                                                                                 views:NSDictionaryOfVariableBindings(layout)]];
                 break;
             }
         }
@@ -221,16 +239,21 @@
             [popover dismissPopoverAnimated:YES];
             return;
         }
-        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        settings.preferredContentSize = CGSizeMake(320, 480);
         popover = [[UIPopoverController alloc] initWithContentViewController:settings];
+        popover.delegate = self;
         settings.popoverController = popover;
         [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         
     } else {
-        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         [self presentViewController:settings animated:YES completion:^{
         }];
     }
+}
+
+- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController {
+    [self refreshButtons];
 }
 
 @end

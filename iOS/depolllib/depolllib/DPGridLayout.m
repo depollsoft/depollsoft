@@ -98,7 +98,7 @@
                                                                            attribute:NSLayoutAttributeNotAnAttribute
                                                                           multiplier:1
                                                                             constant:100000];
-    starWidthConstraint.priority = 1;
+    starWidthConstraint.priority = UILayoutPriorityDefaultLow + 1;
     [self addConstraint:starWidthConstraint];
     NSLayoutConstraint *starHeightConstraint = [NSLayoutConstraint constraintWithItem:self.starSpacer
                                                                             attribute:NSLayoutAttributeHeight
@@ -107,7 +107,7 @@
                                                                             attribute:NSLayoutAttributeNotAnAttribute
                                                                            multiplier:1
                                                                              constant:100000];
-    starHeightConstraint.priority = 1;
+    starHeightConstraint.priority = UILayoutPriorityDefaultLow + 1;
     [self addConstraint:starHeightConstraint];
     
     // Ensure at least one row/column

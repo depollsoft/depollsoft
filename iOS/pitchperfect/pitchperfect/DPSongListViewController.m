@@ -19,6 +19,8 @@
 #import "DPSettingsViewController.h"
 #import "DPSongEditorViewController.h"
 #import "DPAppDelegate.h"
+#import "DPGridLayout.h"
+#import "UIView+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -39,7 +41,7 @@
     UILabel *noteName = [[UILabel alloc] init];
     noteName.font = [UIFont boldSystemFontOfSize:16];
     noteName.text = k.friendlyName;
-    noteName.textColor = self.textLabel.textColor.invert;
+    noteName.textColor = self.textLabel.textColor;
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     
@@ -48,7 +50,7 @@
     
     UILabel *accidental = [[UILabel alloc] init];
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor.invert;
+    accidental.textColor = self.textLabel.textColor;
     accidental.backgroundColor = [UIColor clearColor];
     accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
@@ -82,7 +84,7 @@
     flowRight.userInteractionEnabled = NO;
     
     self.textLabel.text = song.name;
-    self.textLabel.textColor = self.textLabel.textColor.invert;
+    self.textLabel.textColor = self.textLabel.textColor;
     self.textLabel.userInteractionEnabled = NO;
     
     [self.contentView addSubview:flowRight];
@@ -135,8 +137,12 @@
     [super viewDidLoad];
     
 	// Do any additional setup after loading the view.
-    VLayoutView *topLayout = [[VLayoutView alloc] initWithFrame:self.view.bounds spacing:4];
-    topLayout.vAlignment = UIControlContentVerticalAlignmentTop;
+    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithStars:1]
+                                 ];
     
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
@@ -145,11 +151,9 @@
     bannerView.rootViewController = self;
     
     toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleBlackTranslucent;
     
-    [toolbar sizeToFit];
-    [topLayout addSubview:toolbar];
-    [topLayout addSubview:bannerView];
+    [rootLayout addSubview:toolbar row:0 column:0];
+    [rootLayout addSubview:bannerView row:1 column:0];
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
     background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
@@ -158,22 +162,18 @@
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
-    [topLayout sizeToFit];
-    
-    [self.view addSubview:topLayout];
     
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
     tableView.delegate = self;
     tableView.allowsSelection = NO;
-    tableView.frame = CGRectMake(0, topLayout.frame.size.height, self.view.frame.size.width, self.view.frame.size.height - topLayout.frame.size.height - self.tabBarController.tabBar.frame.size.height);
     tableView.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:tableView];
+    [rootLayout addSubview:tableView row:2 column:0];
     
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPageCurl target:self action:@selector(openSettings)];
+    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
     
     addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
     
@@ -188,7 +188,27 @@
     
     toolbar.items = normalButtons;
     
+    [toolbar sizeToFit];
+    
     [DPSongsModel sharedInstance].delegate = self;
+    
+    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    [self.view addSubview:rootLayout];
+    
+    id topLayoutGuide = self.topLayoutGuide;
+    id bottomLayoutGuide = self.bottomLayoutGuide;
+    
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
 }
 
 - (void)sort {
@@ -223,6 +243,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPPitchedSong *song = [[[DPSongsModel sharedInstance] songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
+    cell.backgroundColor = [UIColor clearColor];
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
     __block __weak UIButton *weakDisclosureButton = disclosureButton;
     cell.editingAccessoryView = disclosureButton;
@@ -282,13 +303,13 @@
             [popover dismissPopoverAnimated:YES];
             return;
         }
-        settings.contentSizeForViewInPopover = CGSizeMake(320, 480);
+        settings.preferredContentSize = CGSizeMake(320, 480);
         popover = [[UIPopoverController alloc] initWithContentViewController:settings];
         settings.popoverController = popover;
         [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
         
     } else {
-        settings.modalTransitionStyle = UIModalTransitionStylePartialCurl;
+        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         [self presentViewController:settings animated:YES completion:^{
         }];
     }
@@ -296,7 +317,7 @@
 
 - (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.contentSizeForViewInPopover = CGSizeMake(320, 480);
+    editor.preferredContentSize = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
@@ -313,13 +334,15 @@
         popover = [[UIPopoverController alloc] initWithContentViewController:editor];
         [popover presentPopoverFromRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height) inView:view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
     } else {
-        [self presentModalViewController:editor animated:YES];
+        [self presentViewController:editor animated:YES completion:^{
+            
+        }];
     }
 }
 
 - (void)addSong {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.contentSizeForViewInPopover = CGSizeMake(320, 480);
+    editor.preferredContentSize = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
@@ -344,7 +367,9 @@
         popover = [[UIPopoverController alloc] initWithContentViewController:editor];
         [popover presentPopoverFromBarButtonItem:addButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
     } else {
-        [self presentModalViewController:editor animated:YES];
+        [self presentViewController:editor animated:YES completion:^{
+            
+        }];
     }
 }
 
