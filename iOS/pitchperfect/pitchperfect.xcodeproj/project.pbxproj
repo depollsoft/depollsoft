@@ -54,7 +54,6 @@
 		63A99D8115883F2900C78CC0 /* MusiSync.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7D15883F2900C78CC0 /* MusiSync.ttf */; };
 		63A99D8215883F2900C78CC0 /* NoteHedz170.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */; };
 		63A99D8915884EE600C78CC0 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D8815884EE600C78CC0 /* CoreText.framework */; };
-		63B301B81597DF450045935E /* DPSplashScreenViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63B301B71597DF450045935E /* DPSplashScreenViewController.m */; };
 		63B403D41588703200FCA77C /* panobackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D31588703200FCA77C /* panobackground.png */; };
 		63B403DC1588768700FCA77C /* pitchpipe.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403DB1588768700FCA77C /* pitchpipe.png */; };
 		63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403DD1588771C00FCA77C /* pitchpipe@2x.png */; };
@@ -192,8 +191,6 @@
 		63A99D7D15883F2900C78CC0 /* MusiSync.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MusiSync.ttf; sourceTree = "<group>"; };
 		63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = NoteHedz170.ttf; sourceTree = "<group>"; };
 		63A99D8815884EE600C78CC0 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		63B301B61597DF450045935E /* DPSplashScreenViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSplashScreenViewController.h; sourceTree = "<group>"; };
-		63B301B71597DF450045935E /* DPSplashScreenViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSplashScreenViewController.m; sourceTree = "<group>"; };
 		63B403D31588703200FCA77C /* panobackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = panobackground.png; sourceTree = SOURCE_ROOT; };
 		63B403DB1588768700FCA77C /* pitchpipe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pitchpipe.png; sourceTree = "<group>"; };
 		63B403DD1588771C00FCA77C /* pitchpipe@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "pitchpipe@2x.png"; sourceTree = "<group>"; };
@@ -485,8 +482,6 @@
 				631C912915957B58004733F1 /* DPSongListViewController.m */,
 				631C912E15958022004733F1 /* DPSongsModel.h */,
 				631C912F15958022004733F1 /* DPSongsModel.m */,
-				63B301B61597DF450045935E /* DPSplashScreenViewController.h */,
-				63B301B71597DF450045935E /* DPSplashScreenViewController.m */,
 				63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */,
 				63DC36A8151E9000007C46DB /* Supporting Files */,
 				63336A3117F51CF800BC1EE2 /* UIViewController+Helpers.h */,
@@ -695,7 +690,6 @@
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
 				63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */,
-				63B301B81597DF450045935E /* DPSplashScreenViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -814,7 +808,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/**";
-				VALID_ARCHS = "";
+				VALID_ARCHS = "arm64 armv7s armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -842,7 +836,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/**";
-				VALID_ARCHS = "";
+				VALID_ARCHS = "arm64 armv7s armv7";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

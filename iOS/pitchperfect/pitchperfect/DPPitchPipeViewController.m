@@ -56,7 +56,7 @@
     bannerView.rootViewController = self;
     
     UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
-    background.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]];
+    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
     [self.view addSubview:background];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
