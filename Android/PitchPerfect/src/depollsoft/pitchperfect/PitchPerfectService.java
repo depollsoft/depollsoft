@@ -17,6 +17,9 @@ public class PitchPerfectService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
+    if (intent == null) {
+      return super.onStartCommand(intent, flags, startId);
+    }
     String noteName = intent.getStringExtra("noteName");
     String accidentalName = intent.getStringExtra("accidental");
     int octave = intent.getIntExtra("octave", 4);
