@@ -13,14 +13,14 @@
 
     <android.support.wearable.view.BoxInsetLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        app:layout_box="all">
+        android:layout_height="fill_parent">
 
         <LinearLayout
             android:id="@+id/tableLayout1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            app:layout_box="all"
             android:weightSum="4">
 
             <LinearLayout

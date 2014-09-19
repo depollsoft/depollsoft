@@ -68,7 +68,7 @@
     
     [self.postedByButton setTitle:self.tag.provider forState:UIControlStateNormal];
     self.postedByButton.url = self.tag.providerWebsite;
-    [self.postedByButton setEnabled:self.tag.providerWebsite];
+    [self.postedByButton setEnabled:!!self.tag.providerWebsite];
     [self.grid setView:self.postedByHeader hidden:!self.tag.provider];
     [self.grid setView:self.postedByButton hidden:!self.tag.provider];
     
@@ -76,7 +76,7 @@
     
     [self.arrangedByButton setTitle:self.tag.arranger forState:UIControlStateNormal];
     self.arrangedByButton.url = self.tag.arrangerWebsite;
-    [self.arrangedByButton setEnabled:self.tag.arrangerWebsite];
+    [self.arrangedByButton setEnabled:!!self.tag.arrangerWebsite];
     [self.grid setView:self.arrangedByHeader hidden:!self.tag.arranger];
     [self.grid setView:self.arrangedByButton hidden:!self.tag.arranger];
     
@@ -86,7 +86,7 @@
     
     [self.sungByButton setTitle:self.tag.sungBy forState:UIControlStateNormal];
     self.sungByButton.url = self.tag.sungByWebsite;
-    [self.sungByButton setEnabled:self.tag.sungByWebsite];
+    [self.sungByButton setEnabled:!!self.tag.sungByWebsite];
     [self.grid setView:self.sungByHeader hidden:!self.tag.sungBy];
     [self.grid setView:self.sungByButton hidden:!self.tag.sungBy];
     

@@ -119,6 +119,7 @@
     partsLabel = [self makeBodyLabel];
     typeLabel = [self makeBodyLabel];
     keyButton = [[DPPitchPipeButton alloc] init];
+    [keyButton.button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
@@ -167,7 +168,7 @@
     [grid addSubview:[ratingHeader centeredVertically] row:2 column:0];
     [grid addSubview:partsHeader row:3 column:0];
     [grid addSubview:typeHeader row:4 column:0];
-    [grid addSubview:keyHeader row:5 column:0];
+    [grid addSubview:[keyHeader pad:4] row:5 column:0];
     [grid addSubview:classicTagNumberHeader row:6 column:0];
     [grid addSubview:sheetMusicButton row:7 column:0 rowSpan:1 colSpan:3];
     [grid addSubview:[lyricsHeader alignTop] row:8 column:0];
@@ -176,7 +177,7 @@
     // Add content
     [grid addSubview:partsLabel row:3 column:2];
     [grid addSubview:typeLabel row:4 column:2];
-    [grid addSubview:[keyButton alignLeft] row:5 column:2];
+    [grid addSubview:keyButton row:5 column:2];
     [grid addSubview:classicTagNumberLabel row:6 column:2];
     [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:8 column:2];
     [grid addSubview:notesLabel row:9 column:2];
