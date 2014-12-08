@@ -65,10 +65,20 @@
     [keys addObjectsFromArray:[DPKey minorKeys]];
     allKeys = [NSArray arrayWithArray:keys];
     
-    UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
+    UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
-    self.view.backgroundColor = [UIColor whiteColor];
+    //[self.view setBackgroundColor:[UIColor blackColor]];
+    background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
+    self.view.backgroundColor = [UIColor whiteColor];
     
     UIToolbar *toolbar = [[UIToolbar alloc] init];
     
@@ -131,6 +141,34 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout, topLayoutGuide)]];
     
+}
+
+- (void)resetBannerViewSize {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        return;
+    }
+    switch ([UIApplication sharedApplication].statusBarOrientation) {
+        case UIInterfaceOrientationLandscapeLeft:
+        case UIInterfaceOrientationLandscapeRight:
+            self.bannerView.adSize = kGADAdSizeSmartBannerLandscape;
+            break;
+        case UIInterfaceOrientationPortrait:
+        case UIInterfaceOrientationPortraitUpsideDown:
+            self.bannerView.adSize = kGADAdSizeSmartBannerPortrait;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [self resetBannerViewSize];
+    [super viewDidAppear:animated];
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [self resetBannerViewSize];
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {

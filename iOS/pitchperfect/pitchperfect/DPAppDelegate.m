@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#import <ParseFacebookUtils/PFFacebookUtils.h>
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>

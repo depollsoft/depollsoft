@@ -55,9 +55,19 @@
     
     bannerView.rootViewController = self;
     
-    UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
+    UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    //[self.view setBackgroundColor:[UIColor blackColor]];
+    background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
@@ -143,8 +153,29 @@
     
 }
 
+- (void)resetBannerViewSize {
+    switch ([UIApplication sharedApplication].statusBarOrientation) {
+        case UIInterfaceOrientationLandscapeLeft:
+        case UIInterfaceOrientationLandscapeRight:
+            self.bannerView.adSize = kGADAdSizeSmartBannerLandscape;
+            break;
+        case UIInterfaceOrientationPortrait:
+        case UIInterfaceOrientationPortraitUpsideDown:
+            self.bannerView.adSize = kGADAdSizeSmartBannerPortrait;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [self resetBannerViewSize];
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+}
+
 - (void)viewDidAppear:(BOOL)animated {
     [self refreshButtons];
+    [self resetBannerViewSize];
     [super viewDidAppear:animated];
 }
 

@@ -18,6 +18,7 @@
 #import "DPSongsModel.h"
 #import "DPAppDelegate.h"
 #import <Parse/Parse.h>
+#import <ParseFacebookUtils/PFFacebookUtils.h>
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 
@@ -68,10 +69,22 @@
     [toolbar sizeToFit];
     toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
-    UIView *background = [[UIView alloc] initWithFrame:self.view.frame];
+    
+    UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
-    self.view.backgroundColor = [UIColor whiteColor];
+    //[self.view setBackgroundColor:[UIColor blackColor]];
+    background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
     
     [rootLayout addSubview:toolbar row:0 column:0];
 
@@ -114,6 +127,29 @@
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
 }
 
+- (void)resetBannerViewSize {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        return;
+    }
+    switch ([UIApplication sharedApplication].statusBarOrientation) {
+        case UIInterfaceOrientationLandscapeLeft:
+        case UIInterfaceOrientationLandscapeRight:
+            self.bannerView.adSize = kGADAdSizeSmartBannerLandscape;
+            break;
+        case UIInterfaceOrientationPortrait:
+        case UIInterfaceOrientationPortraitUpsideDown:
+            self.bannerView.adSize = kGADAdSizeSmartBannerPortrait;
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [self resetBannerViewSize];
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+}
+
 - (void)viewDidUnload
 {
     [super viewDidUnload];
@@ -121,7 +157,9 @@
 }
 
 - (void)viewDidAppear:(BOOL)animated {
+    [self resetBannerViewSize];
     [tableView reloadData];
+    [super viewDidAppear:animated];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
