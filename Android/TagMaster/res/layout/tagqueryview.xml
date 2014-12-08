@@ -11,7 +11,7 @@
         android:clickable="false"
         android:linksClickable="false"
         android:longClickable="false"
-        android:textSize="12dp" >
+        android:textSize="12sp" >
     </TextView>
 
     <ListView

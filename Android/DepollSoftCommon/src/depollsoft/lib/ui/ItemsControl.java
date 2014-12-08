@@ -5,6 +5,7 @@ import java.util.Map;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.support.v4.util.LongSparseArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Adapter;
@@ -27,7 +28,7 @@ public class ItemsControl extends LinearLayout {
     }
   }
 
-  private Map<Long, View> idToView;
+  private LongSparseArray<View> idToView;
 
   private Observer observer;
 
@@ -48,7 +49,7 @@ public class ItemsControl extends LinearLayout {
   }
 
   protected void init() {
-    this.idToView = new HashMap<Long, View>();
+    this.idToView = new LongSparseArray<View>();
     this.observer = new Observer();
     this.setOrientation(LinearLayout.VERTICAL);
   }
@@ -61,7 +62,7 @@ public class ItemsControl extends LinearLayout {
       this.idToView.clear();
     }
     int count = this.getAdapter().getCount();
-    Map<Long, View> newViews = new HashMap<Long, View>();
+    LongSparseArray<View> newViews = new LongSparseArray<View>();
     for (int x = 0; x < count; x++) {
       long itemId = this.getAdapter().getItemId(x);
       View view = this.idToView.get(itemId);

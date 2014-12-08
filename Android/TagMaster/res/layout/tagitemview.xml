@@ -52,7 +52,7 @@
             android:focusable="false"
             android:linksClickable="false"
             android:longClickable="false"
-            android:textSize="12dp" >
+            android:textSize="12sp" >
         </TextView>
 
         <LinearLayout
@@ -75,7 +75,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="@string/RatingColon"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
 
                 <TextView
@@ -87,7 +87,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="3.26"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </LinearLayout>
 
@@ -100,7 +100,7 @@
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/PostedColon"
-                android:textSize="12dp" >
+                android:textSize="12sp" >
             </TextView>
 
             <TextView
@@ -112,7 +112,7 @@
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="12/7/2008"
-                android:textSize="12dp" >
+                android:textSize="12sp" >
             </TextView>
 
             <LinearLayout
@@ -130,7 +130,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="@string/DLs"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
 
                 <TextView
@@ -142,7 +142,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="4633"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </LinearLayout>
         </LinearLayout>
@@ -161,7 +161,7 @@
                 android:clickable="false"
                 android:focusable="false"
                 android:text="@string/SheetMusicCheck"
-                android:textSize="12dp" >
+                android:textSize="12sp" >
             </CheckBox>
 
             <CheckBox
@@ -173,7 +173,7 @@
                 android:clickable="false"
                 android:focusable="false"
                 android:text="@string/LearningTracks"
-                android:textSize="12dp" >
+                android:textSize="12sp" >
             </CheckBox>
         </LinearLayout>
     </LinearLayout>

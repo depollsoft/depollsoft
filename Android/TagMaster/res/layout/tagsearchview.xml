@@ -44,7 +44,7 @@
             android:layout_marginBottom="10dp"
             android:layout_marginTop="10dp"
             android:text="@string/SearchOptions"
-            android:textSize="24dp"
+            android:textSize="24sp"
             android:textStyle="bold" >
         </TextView>
 
@@ -70,7 +70,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/SortBy"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -95,7 +95,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/SheetMusicSentence"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -120,7 +120,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/LearningTracks"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -145,7 +145,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/Parts"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -170,7 +170,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/TagCollectionSentence"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 

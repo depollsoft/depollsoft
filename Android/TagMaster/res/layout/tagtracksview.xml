@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:maxWidth="75dp"
             android:text="@string/RecordingNotes"
-            android:textSize="12dp"
+            android:textSize="12sp"
             android:textStyle="bold" >
         </TextView>
 
@@ -24,7 +24,7 @@
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textSize="12dp" >
+            android:textSize="12sp" >
         </TextView>
     </LinearLayout>
 
@@ -38,7 +38,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/SorryNoTracks"
-        android:textSize="12dp" >
+        android:textSize="12sp" >
     </TextView>
 
     <ScrollView

@@ -55,6 +55,7 @@
     self.searchBar = [[UISearchBar alloc] init];
     self.searchBar.placeholder = @"Search";
     self.searchBar.barTintColor = [UIColor clearColor];
+    self.searchBar.backgroundImage = [[UIImage alloc] init];
     self.searchBar.delegate = self;
     self.sortBy = [[UISegmentedControl alloc] initWithItems:@[@"Title", @"Downloads", @"Recent", @"Rating"]];
     self.sortBy.apportionsSegmentWidthsByContent = YES;

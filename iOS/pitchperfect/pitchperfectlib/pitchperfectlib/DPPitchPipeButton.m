@@ -27,6 +27,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         self.button = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.button.layer.masksToBounds = YES;
         [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:0.9 alpha:1]]
                                forState:UIControlStateNormal];
         [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:1 alpha:1]]

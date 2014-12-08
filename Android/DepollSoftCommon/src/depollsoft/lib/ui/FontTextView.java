@@ -23,7 +23,7 @@ public class FontTextView extends TextView {
 
   private void init(AttributeSet attrs) {
     if (!this.isInEditMode()) {
-      String assetPath = attrs.getAttributeValue("depollsoft", "fontAssetPath");
+      String assetPath = attrs.getAttributeValue("http://apps.depoll.com", "fontAssetPath");
       if (assetPath != null) {
         Typeface typeface = Typeface.createFromAsset(this.getContext()
             .getAssets(), assetPath);

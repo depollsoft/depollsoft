@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/TeachingVideo"
-            android:textSize="20dp" >
+            android:textSize="20sp" >
         </TextView>
 
         <depollsoft.tagmaster.TeachingVideoDisplay
@@ -38,7 +38,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="@string/UserSubmissions"
-            android:textSize="20dp" >
+            android:textSize="20sp" >
         </TextView>
 
         <TextView
@@ -46,7 +46,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="@string/NoVideos"
-            android:textSize="12dp" >
+            android:textSize="12sp" >
         </TextView>
 
         <ListView

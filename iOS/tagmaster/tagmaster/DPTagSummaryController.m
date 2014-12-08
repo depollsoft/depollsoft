@@ -120,6 +120,8 @@
     typeLabel = [self makeBodyLabel];
     keyButton = [[DPPitchPipeButton alloc] init];
     [keyButton.button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    keyButton.button.titleLabel.font = [UIFont systemFontOfSize:12];
+    keyButton.button.contentEdgeInsets = UIEdgeInsetsMake(4, 0, 4, 0);
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
@@ -168,7 +170,7 @@
     [grid addSubview:[ratingHeader centeredVertically] row:2 column:0];
     [grid addSubview:partsHeader row:3 column:0];
     [grid addSubview:typeHeader row:4 column:0];
-    [grid addSubview:[keyHeader pad:4] row:5 column:0];
+    [grid addSubview:keyHeader row:5 column:0];
     [grid addSubview:classicTagNumberHeader row:6 column:0];
     [grid addSubview:sheetMusicButton row:7 column:0 rowSpan:1 colSpan:3];
     [grid addSubview:[lyricsHeader alignTop] row:8 column:0];

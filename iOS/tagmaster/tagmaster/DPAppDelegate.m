@@ -9,6 +9,7 @@
 #import "DPAppDelegate.h"
 
 #import <Parse/Parse.h>
+#import <ParseFacebookUtils/PFFacebookUtils.h>
 
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
@@ -59,7 +60,7 @@
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    if ([PFFacebookUtils handleOpenURL:url]) {
+    if ([FBAppCall handleOpenURL:url sourceApplication:sourceApplication]) {
         return YES;
     }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {

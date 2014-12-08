@@ -26,7 +26,7 @@
                     android:id="@+id/titleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="24dp" >
+                    android:textSize="24sp" >
                 </TextView>
             </LinearLayout>
 
@@ -42,7 +42,7 @@
                     android:layout_gravity="left|center_vertical"
                     android:layout_marginRight="5dip"
                     android:text="@string/TagId"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -51,7 +51,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
 
@@ -67,7 +67,7 @@
                     android:layout_gravity="left|center_vertical"
                     android:layout_marginRight="5dip"
                     android:text="@string/LastRefreshed"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -76,7 +76,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
 
@@ -92,7 +92,7 @@
                     android:layout_gravity="left|center_vertical"
                     android:layout_marginRight="5dip"
                     android:text="@string/Downloads"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -100,7 +100,7 @@
                     android:id="@+id/downloadsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
 
@@ -116,7 +116,7 @@
                     android:layout_gravity="left|center_vertical"
                     android:layout_marginRight="5dip"
                     android:text="@string/Link"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -125,7 +125,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/BarbershopTagsCom"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
@@ -141,7 +141,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/PostedBy"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -150,7 +150,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
@@ -166,7 +166,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/Posted"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -175,7 +175,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
 
@@ -191,7 +191,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/ArrangedBy"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -200,7 +200,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
@@ -216,7 +216,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/YearArranged"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -225,7 +225,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
 
@@ -241,7 +241,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/SungBy"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -250,7 +250,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
@@ -266,7 +266,7 @@
                     android:layout_gravity="left"
                     android:layout_marginRight="5dip"
                     android:text="@string/YearSung"
-                    android:textSize="12dp"
+                    android:textSize="12sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -275,7 +275,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12dp" >
+                    android:textSize="12sp" >
                 </TextView>
             </TableRow>
         </TableLayout>

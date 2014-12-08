@@ -94,7 +94,7 @@
                                                                                  options:0
                                                                                  metrics:nil
                                                                                    views:bindings]];
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[hasSheetMusicLabel]-[hasSheetMusic]-[hasLearningTracksLabel]-[hasLearningTracks]->=0-|"
+        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[hasSheetMusic]-[hasSheetMusicLabel]->=40-[hasLearningTracks]-[hasLearningTracksLabel]->=0-|"
                                                                                  options:NSLayoutFormatAlignAllCenterY
                                                                                  metrics:nil
                                                                                    views:bindings]];

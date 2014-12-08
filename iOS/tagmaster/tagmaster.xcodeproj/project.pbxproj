@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
+		63225BFF1A3560D200857B44 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225BFC1A3560D200857B44 /* FacebookSDK.framework */; };
+		63225C041A35618500857B44 /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C011A35618500857B44 /* Parse.framework */; };
+		63225C051A35618500857B44 /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C021A35618500857B44 /* ParseFacebookUtils.framework */; };
+		63225C061A35618500857B44 /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C031A35618500857B44 /* ParseUI.framework */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
@@ -59,7 +64,6 @@
 		639F293E1800E84200517583 /* TagSummary@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F293D1800E84200517583 /* TagSummary@2x.png */; };
 		639F29411800EEE000517583 /* Tracks@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F293F1800EEDF00517583 /* Tracks@2x.png */; };
 		639F29421800EEE000517583 /* Videos@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 639F29401800EEDF00517583 /* Videos@2x.png */; };
-		639F2944180109C000517583 /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F2943180109C000517583 /* Parse.framework */; };
 		639F294618010A0500517583 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294518010A0400517583 /* CFNetwork.framework */; };
 		639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294718010A0D00517583 /* CoreLocation.framework */; };
 		639F294A18010A1500517583 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294918010A1500517583 /* libz.1.1.3.dylib */; };
@@ -68,8 +72,8 @@
 		639F295018010A2800517583 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294F18010A2800517583 /* Security.framework */; };
 		639F295218010A2F00517583 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295118010A2F00517583 /* StoreKit.framework */; };
 		639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295318010A3A00517583 /* SystemConfiguration.framework */; };
-		639F295718010ACB00517583 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295618010ACB00517583 /* FacebookSDK.framework */; };
 		639F2959180125EC00517583 /* wickhop-handwriting.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 639F2958180125EC00517583 /* wickhop-handwriting.ttf */; };
+		63A54E1B19F457ED00F0364E /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63A54E1A19F457ED00F0364E /* Images.xcassets */; };
 		63D9471F1513198D000C8784 /* DPTag.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9471E1513198D000C8784 /* DPTag.m */; };
 		63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472115145BBC000C8784 /* DPRemoteLocation.m */; };
 		63D9472515145DE0000C8784 /* DPVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 63D9472415145DE0000C8784 /* DPVideo.m */; };
@@ -91,6 +95,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
+		63225BFB1A3560D200857B44 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
+		63225BFC1A3560D200857B44 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
+		63225C011A35618500857B44 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
+		63225C021A35618500857B44 /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
+		63225C031A35618500857B44 /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
 		63336A4317F6342400BC1EE2 /* DPTagViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagViewController.h; sourceTree = "<group>"; };
@@ -163,7 +173,6 @@
 		639F293D1800E84200517583 /* TagSummary@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "TagSummary@2x.png"; sourceTree = "<group>"; };
 		639F293F1800EEDF00517583 /* Tracks@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Tracks@2x.png"; sourceTree = "<group>"; };
 		639F29401800EEDF00517583 /* Videos@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Videos@2x.png"; sourceTree = "<group>"; };
-		639F2943180109C000517583 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
 		639F294518010A0400517583 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		639F294718010A0D00517583 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		639F294918010A1500517583 /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
@@ -172,8 +181,8 @@
 		639F294F18010A2800517583 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		639F295118010A2F00517583 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		639F295318010A3A00517583 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		639F295618010ACB00517583 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 		639F2958180125EC00517583 /* wickhop-handwriting.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "wickhop-handwriting.ttf"; sourceTree = "<group>"; };
+		63A54E1A19F457ED00F0364E /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		63D9471D1513198D000C8784 /* DPTag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTag.h; path = Barbershop/DPTag.h; sourceTree = "<group>"; };
 		63D9471E1513198D000C8784 /* DPTag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPTag.m; path = Barbershop/DPTag.m; sourceTree = "<group>"; };
 		63D9472015145BBC000C8784 /* DPRemoteLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPRemoteLocation.h; path = Barbershop/DPRemoteLocation.h; sourceTree = "<group>"; };
@@ -198,11 +207,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63225C051A35618500857B44 /* ParseFacebookUtils.framework in Frameworks */,
 				639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */,
-				639F295718010ACB00517583 /* FacebookSDK.framework in Frameworks */,
+				63225BFF1A3560D200857B44 /* FacebookSDK.framework in Frameworks */,
 				639F295218010A2F00517583 /* StoreKit.framework in Frameworks */,
 				639F295018010A2800517583 /* Security.framework in Frameworks */,
+				63225C061A35618500857B44 /* ParseUI.framework in Frameworks */,
 				639F294E18010A2100517583 /* QuartzCore.framework in Frameworks */,
+				63225C041A35618500857B44 /* Parse.framework in Frameworks */,
 				639F294C18010A1B00517583 /* MobileCoreServices.framework in Frameworks */,
 				639F294A18010A1500517583 /* libz.1.1.3.dylib in Frameworks */,
 				639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */,
@@ -213,7 +225,6 @@
 				63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
-				639F2944180109C000517583 /* Parse.framework in Frameworks */,
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
@@ -237,6 +248,7 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				63225BF91A35523100857B44 /* LaunchScreen.xib */,
 				639F2958180125EC00517583 /* wickhop-handwriting.ttf */,
 				639F292E17FA70AC00517583 /* ic_check_no@2x.png */,
 				639F292F17FA70AC00517583 /* ic_check_yes@2x.png */,
@@ -267,7 +279,11 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				639F295618010ACB00517583 /* FacebookSDK.framework */,
+				63225C011A35618500857B44 /* Parse.framework */,
+				63225C021A35618500857B44 /* ParseFacebookUtils.framework */,
+				63225C031A35618500857B44 /* ParseUI.framework */,
+				63225BFB1A3560D200857B44 /* Bolts.framework */,
+				63225BFC1A3560D200857B44 /* FacebookSDK.framework */,
 				639F295318010A3A00517583 /* SystemConfiguration.framework */,
 				639F295118010A2F00517583 /* StoreKit.framework */,
 				639F294F18010A2800517583 /* Security.framework */,
@@ -276,7 +292,6 @@
 				639F294918010A1500517583 /* libz.1.1.3.dylib */,
 				639F294718010A0D00517583 /* CoreLocation.framework */,
 				639F294518010A0400517583 /* CFNetwork.framework */,
-				639F2943180109C000517583 /* Parse.framework */,
 				639F293818001DD000517583 /* libpitchperfectlib.a */,
 				639F293618001D8100517583 /* libpitchperfectlib.a */,
 				638E739217F7CAB3000FFE53 /* MessageUI.framework */,
@@ -324,6 +339,7 @@
 				638E73A217F7F8B3000FFE53 /* DPTeachableTagsController.h */,
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
 				638E736417F786A5000FFE53 /* Icons */,
+				63A54E1A19F457ED00F0364E /* Images.xcassets */,
 				63712EF815130B21007997CC /* Supporting Files */,
 			);
 			path = tagmaster;
@@ -450,8 +466,13 @@
 			isa = PBXProject;
 			attributes = {
 				LastTestingUpgradeCheck = 0510;
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = DepollSoft;
+				TargetAttributes = {
+					63712EEA15130B21007997CC = {
+						DevelopmentTeam = 43AWMS3YJX;
+					};
+				};
 			};
 			buildConfigurationList = 63712EE515130B21007997CC /* Build configuration list for PBXProject "tagmaster" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -479,6 +500,7 @@
 				639F293E1800E84200517583 /* TagSummary@2x.png in Resources */,
 				639F2959180125EC00517583 /* wickhop-handwriting.ttf in Resources */,
 				638E739717F7DE1B000FFE53 /* Icon.png in Resources */,
+				63A54E1B19F457ED00F0364E /* Images.xcassets in Resources */,
 				638E738017F78770000FFE53 /* MostViewed.png in Resources */,
 				638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */,
 				639F293017FA70AC00517583 /* ic_check_no@2x.png in Resources */,
@@ -491,6 +513,7 @@
 				63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */,
 				639F29421800EEE000517583 /* Videos@2x.png in Resources */,
 				638E737417F78726000FFE53 /* Favorites@2x.png in Resources */,
+				63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */,
 				638E737D17F78770000FFE53 /* Downloads.png in Resources */,
 				638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */,
 				638E737517F78726000FFE53 /* History@2x.png in Resources */,
@@ -607,9 +630,11 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -643,9 +668,11 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -667,9 +694,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/david/Documents/depollsoft/iOS/tagmaster,
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
@@ -691,9 +721,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/david/Documents/depollsoft/iOS/tagmaster,
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";

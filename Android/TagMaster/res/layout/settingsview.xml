@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:text="@string/Settings"
-            android:textSize="24dp"
+            android:textSize="24sp"
             android:textStyle="bold" >
         </TextView>
 
@@ -47,7 +47,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginRight="8dp"
                         android:text="@string/CurrentCacheSize"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -56,7 +56,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:textSize="12dp" >
+                        android:textSize="12sp" >
                     </TextView>
                 </TableRow>
 
@@ -74,7 +74,7 @@
                     android:layout_marginBottom="5dp"
                     android:layout_marginLeft="10dp"
                     android:text="@string/LogInTitle"
-                    android:textSize="20dp"
+                    android:textSize="20sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -103,7 +103,7 @@
                     android:layout_marginBottom="5dp"
                     android:layout_marginLeft="10dp"
                     android:text="@string/Favorites"
-                    android:textSize="20dp"
+                    android:textSize="20sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -121,7 +121,7 @@
                     android:layout_marginBottom="5dp"
                     android:layout_marginLeft="10dp"
                     android:text="@string/TeachableTags"
-                    android:textSize="20dp"
+                    android:textSize="20sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -139,7 +139,7 @@
                     android:layout_marginBottom="5dp"
                     android:layout_marginLeft="10dp"
                     android:text="@string/RandomTagSettings"
-                    android:textSize="20dp"
+                    android:textSize="20sp"
                     android:textStyle="bold" >
                 </TextView>
 
@@ -155,7 +155,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/MinimumRating"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -181,7 +181,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/MinimumDownloads"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -207,7 +207,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/SheetMusicCheck"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 
@@ -233,7 +233,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="8dp"
                         android:text="@string/LearningTracks"
-                        android:textSize="12dp"
+                        android:textSize="12sp"
                         android:textStyle="bold" >
                     </TextView>
 

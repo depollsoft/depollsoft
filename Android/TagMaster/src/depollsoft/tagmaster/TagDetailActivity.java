@@ -104,7 +104,13 @@ public class TagDetailActivity extends TabActivity {
           public void run() {
             TagDetailActivity.this.setTag(null);
             TagDetailActivity.this.setTag(parameter);
-            TagDetailActivity.this.progress.dismiss();
+            try {
+              if (TagDetailActivity.this.progress.isShowing()) {
+                TagDetailActivity.this.progress.dismiss();
+              }
+            } catch (Exception e) {
+              // Sometimes this throws.
+            }
             Activities.invalidateOptionsMenu(TagDetailActivity.this);
           }
         });
@@ -112,7 +118,13 @@ public class TagDetailActivity extends TabActivity {
     }, new Action<Exception>() {
 
       public void invoke(Exception parameter) {
-        TagDetailActivity.this.progress.dismiss();
+        try {
+          if (TagDetailActivity.this.progress.isShowing()) {
+            TagDetailActivity.this.progress.dismiss();
+          }
+        } catch (Exception e) {
+          // Sometimes this throws.
+        }
       }
     });
   }

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
         android:text="@string/Search"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold" >
     </TextView>
 
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
         android:text="@string/BrowseTags"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold" >
     </TextView>
 
@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
         android:text="@string/TeachableTags"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold" >
     </TextView>
 
@@ -41,7 +41,7 @@
         android:layout_marginBottom="15dp"
         android:layout_marginLeft="20dp"
         android:text="@string/RandomTag"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold" >
     </TextView>
 
@@ -54,7 +54,7 @@
         android:clickable="false"
         android:longClickable="false"
         android:text="@string/Favorites"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold" >
     </TextView>
 
