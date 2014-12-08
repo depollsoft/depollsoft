@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Navigation.ContentLoaders</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Navigation.ContentLoaders.Event.SynchronousEventLoad">
+            <summary>
+              A delegate to be called for synchronous loading of content.
+            </summary>
+            <param name = "targetUri">The Uri to load.</param>
+            <param name = "currentUri">The currently loaded Uri.</param>
+            <returns>LoadResult containing the loaded content or a redirect.</returns>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Event.EventCanLoad">
+            <summary>
+              A delegate to be called to determine whether the INavigationContentLoader can load content for the given
+              <paramref name = "targetUri" /> and <paramref name = "currentUri" />.
+            </summary>
+            <param name = "targetUri">The Uri to load.</param>
+            <param name = "currentUri">The currently loaded Uri.</param>
+            <returns>true if the Uri can be loaded, false otherwise.</returns>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Event.SynchronousEventContentLoader">
+            <summary>
+              An INavigationContentLoader that raises events that can be handled using XAML markup
+              in order to load pages synchrnously.
+            </summary>
+        </member>
+        <member name="E:SLaB.Navigation.ContentLoaders.Event.SynchronousEventContentLoader.CanLoad">
+            <summary>
+              Event raised to determine whether the given Uri can be loaded.
+            </summary>
+        </member>
+        <member name="E:SLaB.Navigation.ContentLoaders.Event.SynchronousEventContentLoader.Load">
+            <summary>
+              Event raised when loading from a Uri.
+            </summary>
+        </member>
+    </members>
+</doc>

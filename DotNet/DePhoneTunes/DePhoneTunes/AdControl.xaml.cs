@@ -36,7 +36,7 @@ namespace DePhoneTunes {
 #if TESTADS
 #else
 #if ADS
-            admobControl.AdUnitID = "a14d816355ba4de";
+            admobControl.AdUnitID = "ca-app-pub-2903856737482177/7572933041";
             admobControl.KeywordList = "music|notes|barbershop|sing|pitch pipe|pitch|guitar".Split('|');
 #else
       this.Visibility = System.Windows.Visibility.Collapsed;
@@ -69,8 +69,8 @@ namespace DePhoneTunes {
 #endif
 #if TESTADS
             Microsoft.Advertising.Mobile.UI.AdControl.TestMode = true;
-            adControl.ApplicationId = "test_client";k
-            adControl.AdUnitId = "Image480_80";
+            pubcenterControl.ApplicationId = "test_client";
+            pubcenterControl.AdUnitId = "Image480_80";
 #else
       Microsoft.Advertising.Mobile.UI.AdControl.TestMode = false;
 #endif

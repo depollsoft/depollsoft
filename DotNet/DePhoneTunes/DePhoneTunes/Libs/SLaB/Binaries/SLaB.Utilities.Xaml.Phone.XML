@@ -1,0 +1,662 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Utilities.Xaml.Phone</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2">
+            <summary>
+              Represents a KeyValuePair where the value can change (and supports being bound to).
+            </summary>
+            <typeparam name = "TKey">The type of the key.</typeparam>
+            <typeparam name = "TValue">The type of the value.</typeparam>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2.#ctor(`0)">
+            <summary>
+              Creates an ObservableKeyValuePair with the given key.
+            </summary>
+            <param name = "key">The key for the pair.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2.ToString">
+            <summary>
+              Converts the ObservableKeyValuePair into a string.
+            </summary>
+            <returns>A string representation of the ObservableKeyValuePair.</returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2.Key">
+            <summary>
+              Gets the key for this KeyValuePair.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2.Value">
+            <summary>
+              Gets or sets the value for this KeyValuePair.
+            </summary>
+        </member>
+        <member name="E:SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair`2.PropertyChanged">
+            <summary>
+              An event raised whenever the Value of this ObservableKeyValuePair changes.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2">
+            <summary>
+              A dictionary that supports INotifyPropertyChanged on its KeyValuePairs and INotifyCollectionChanged on itself, making it friendly for
+              observation and binding.
+            </summary>
+            <typeparam name = "TKey">The Key type.</typeparam>
+            <typeparam name = "TValue">The Value type.</typeparam>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.#ctor(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{`0,`1}},System.Collections.Generic.IEqualityComparer{`0})">
+            <summary>
+              Creates an ObservableDictionary.
+            </summary>
+            <param name = "dictionary">A source dictionary to import KeyValuePairs from.</param>
+            <param name = "comparer">An equality comparer used for comparing and doing lookups.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <summary>
+              Raises the CollectionChanged event.
+            </summary>
+            <param name = "args">The NotifyCollectionChangedEventArgs to raise the event with.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.OnPropertyChanged(System.String)">
+            <summary>
+              Raises the PropertyChanged event.
+            </summary>
+            <param name = "propertyName">The name of the property that has changed.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Add(SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair{`0,`1})">
+            <summary>
+              Adds an item to the dictionary.
+            </summary>
+            <param name = "item">The item to add.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Contains(SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair{`0,`1})">
+            <summary>
+              Checks to see whether the item is in the dictionary.
+            </summary>
+            <param name = "item">The item to search for.</param>
+            <returns>true if the item is in the dictionary.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.CopyTo(SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair{`0,`1}[],System.Int32)">
+            <summary>
+              Copies the dictionary into an array.
+            </summary>
+            <param name = "array">The array to copy into.</param>
+            <param name = "arrayIndex">The index in the array where copying should begin.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Remove(SLaB.Utilities.Xaml.Collections.ObservableKeyValuePair{`0,`1})">
+            <summary>
+              Removes an item from the dictionary.
+            </summary>
+            <param name = "item">The item to remove.</param>
+            <returns>true if the item was removed.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.GetEnumerator">
+            <summary>
+              Gets an enumerator over the values in the dictionary.
+            </summary>
+            <returns>The enumerator over the ObservableDictionary.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Clear">
+            <summary>
+              Clears the dictionary.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Add(`0,`1)">
+            <summary>
+              Adds an item to the dictionary.
+            </summary>
+            <param name = "key">The key to add.</param>
+            <param name = "value">The value to associate with the key.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.ContainsKey(`0)">
+            <summary>
+              Checks whether the dictionary contains the given key.
+            </summary>
+            <param name = "key">The key to search for.</param>
+            <returns>true if the dictionary contains the given key.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Remove(`0)">
+            <summary>
+              Removes an item from the dictionary.
+            </summary>
+            <param name = "key">The key of the item to remove.</param>
+            <returns>true if the item was removed.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.TryGetValue(`0,`1@)">
+            <summary>
+              Attempts to get the value for the given key.
+            </summary>
+            <param name = "key">The key to look up.</param>
+            <param name = "value">An output parameter set to the value corresponding to the given key.</param>
+            <returns>true if the value was successfully retrieved.  false otherwise.</returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Comparer">
+            <summary>
+              Gets the equality comparer for the ObservableDictionary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Count">
+            <summary>
+              Gets the number of items in the dictionary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.IsReadOnly">
+            <summary>
+              Gets whether the dictionary is read-only.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Keys">
+            <summary>
+              Gets the set of keys in the dictionary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Values">
+            <summary>
+              Gets the set of values in the dictionary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.Item(`0)">
+            <summary>
+              Gets or sets the value for a given key.
+            </summary>
+            <param name = "key">The key for the item in the dictionary.</param>
+            <returns>The value corresponding to the given key.</returns>
+        </member>
+        <member name="E:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.CollectionChanged">
+            <summary>
+              An event raised when the collection changes.
+            </summary>
+        </member>
+        <member name="E:SLaB.Utilities.Xaml.Collections.ObservableDictionary`2.PropertyChanged">
+            <summary>
+              An event raised when a property changes.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.SimpleWrapper">
+            <summary>
+              Wraps a value of any type in a POCO.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.SimpleWrapper.Value">
+            <summary>
+              The wrapped value.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.SwitchConverter">
+            <summary>
+            Returns values as part of conversion switched on a key.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.SwitchConverter.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.Xaml.Converters.SwitchConverter"/> class.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.SwitchConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            Modifies the source data before passing it to the target for display in the UI.
+            </summary>
+            <param name="value">The source data being passed to the target.</param>
+            <param name="targetType">The <see cref="T:System.Type"/> of data expected by the target dependency property.</param>
+            <param name="parameter">An optional parameter to be used in the converter logic.</param>
+            <param name="culture">The culture of the conversion.</param>
+            <returns>
+            The value to be passed to the target dependency property.
+            </returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.SwitchConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            Modifies the target data before passing it to the source object.  This method is called only in <see cref="F:System.Windows.Data.BindingMode.TwoWay"/> bindings.
+            </summary>
+            <param name="value">The target data being passed to the source.</param>
+            <param name="targetType">The <see cref="T:System.Type"/> of data expected by the source object.</param>
+            <param name="parameter">An optional parameter to be used in the converter logic.</param>
+            <param name="culture">The culture of the conversion.</param>
+            <returns>
+            The value to be passed to the source object.
+            </returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.SwitchConverter.Vals">
+            <summary>
+            Gets the Key/Value pairings that the converter will use for conversion.
+            </summary>
+            <value>The vals.</value>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.KeyValue">
+            <summary>
+            Represents a XAML-instantiable key-value pair.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.KeyValue.Key">
+            <summary>
+            Gets or sets the key.
+            </summary>
+            <value>The key.</value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.KeyValue.Value">
+            <summary>
+            Gets or sets the value.
+            </summary>
+            <value>The value.</value>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.EvenOddConverter">
+            <summary>
+              A value converter that returns one value if its input is even, and another if its input is odd.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.EvenOddConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Converts a number into a either the value of Even or Odd.
+            </summary>
+            <param name = "value">The value to convert.</param>
+            <param name = "targetType">The type of the target.</param>
+            <param name = "parameter">The converter parameter.</param>
+            <param name = "culture">The culture to use for conversion.</param>
+            <returns>The value of EvenOddConverter.Even if the input is even, the value of EvenOddConverter.Odd if the input is odd,
+              or else the value itself.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.EvenOddConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Not implemented.
+            </summary>
+            <param name = "value">The value to convert.</param>
+            <param name = "targetType">The type of the target.</param>
+            <param name = "parameter">The converter parameter.</param>
+            <param name = "culture">The culture to use for conversion.</param>
+            <returns>Not implemented.</returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.EvenOddConverter.Even">
+            <summary>
+              Gets or sets the value to return if the input is even.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.EvenOddConverter.Odd">
+            <summary>
+              Gets or sets the value to return if the input is odd.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.StringFormatConverter">
+            <summary>
+            For applications pre-SL4 when StringFormat was added to bindings, this converter uses the ConverterParameter to
+            fromat a string from an object for rendering.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.StringFormatConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            Modifies the source data before passing it to the target for display in the UI.
+            </summary>
+            <param name="value">The source data being passed to the target.</param>
+            <param name="targetType">The <see cref="T:System.Type"/> of data expected by the target dependency property.</param>
+            <param name="parameter">An optional parameter to be used in the converter logic.</param>
+            <param name="culture">The culture of the conversion.</param>
+            <returns>
+            The value to be passed to the target dependency property.
+            </returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.StringFormatConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            Modifies the target data before passing it to the source object.  This method is called only in <see cref="F:System.Windows.Data.BindingMode.TwoWay"/> bindings.
+            </summary>
+            <param name="value">The target data being passed to the source.</param>
+            <param name="targetType">The <see cref="T:System.Type"/> of data expected by the source object.</param>
+            <param name="parameter">An optional parameter to be used in the converter logic.</param>
+            <param name="culture">The culture of the conversion.</param>
+            <returns>
+            The value to be passed to the source object.
+            </returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.ComposableConverter">
+            <summary>
+              Creates a DependencyObject that wraps an IValueConverter.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposableConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Proxies the call into the Converter.
+            </summary>
+            <param name = "value"></param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposableConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Proxies the call into the Converter.
+            </summary>
+            <param name = "value"></param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns></returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.ComposableConverter.Converter">
+            <summary>
+              Gets or sets the Converter for this ComposableConverter.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.CollectionConverter">
+            <summary>
+              Converts a collection into a boolean/Visibility/etc. based upon whether the collection is empty.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.CollectionConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Converts the value.
+            </summary>
+            <param name = "value">The value to convert.</param>
+            <param name = "targetType">The target type for the conversion.</param>
+            <param name = "parameter">The converter parameter.  If this value is "!", the boolean value will be inverted.</param>
+            <param name = "culture">The culture to use for conversion.</param>
+            <returns>A value of the TargetType.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.CollectionConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Not implemented.
+            </summary>
+            <param name = "value"></param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.TryImportResourceDictionary">
+            <summary>
+              Creates a ResourceDictionary that silently fails if the Source for the ResourceDictionary is invalid or dependencies can't be resolved.
+            </summary>
+        </member>
+        <member name="F:SLaB.Utilities.Xaml.TryImportResourceDictionary.SourceProperty">
+            <summary>
+              Gets or sets the source for the TryImportResourceDictionary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TryImportResourceDictionary.Source">
+            <summary>
+              Gets or sets the source for the TryImportResourceDictionary.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.WrappingConverter">
+            <summary>
+              Wraps a value in a POCO to avoid sharing issues.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.WrappingConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Wraps the value in a SimpleWrapper.
+            </summary>
+            <param name = "value">The value to wrap.</param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns>A SimpleWrapper contianing the value.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.WrappingConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Not implemented.
+            </summary>
+            <param name = "value"></param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.BoolConverter">
+            <summary>
+              A ValueConverter that converts a boolean into a visibility, an integer, or inverts the boolean value.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.BoolConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Converts the value.
+            </summary>
+            <param name = "value">The value to convert.</param>
+            <param name = "targetType">The target type for the conversion.</param>
+            <param name = "parameter">The converter parameter.  If this value is "!", the boolean value will be inverted.</param>
+            <param name = "culture">The culture to use for conversion.</param>
+            <returns>A value of the TargetType.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.BoolConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Not implemented.
+            </summary>
+            <param name = "value"></param>
+            <param name = "targetType"></param>
+            <param name = "parameter"></param>
+            <param name = "culture"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Collections.ObservableObjectCollection">
+            <summary>
+              Provides a class that can be declared in XAML to hold a list of objects.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Collections.BindableDictionary`1">
+            <summary>
+              An ObservableDictionary that can be bound to because it has an explicit string indexer and does not throw when
+              a missing key is indexed.
+            </summary>
+            <typeparam name = "TValue">The type of the Values in the dictionary.</typeparam>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Collections.BindableDictionary`1.Item(System.String)">
+            <summary>
+              Gets or sets the value for the given key.
+            </summary>
+            <param name = "key">The key for the dictionary.</param>
+            <returns>The value for the given key.</returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Collections.BindableDictionary">
+            <summary>
+              An ObservableDictionary that can be declared in XAML.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Tombstoner">
+            <summary>
+            Manages tombstoning of controls through easy-to-use attached properties.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.Xaml.Tombstoner"/> class.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.GetTombstoner(System.Windows.FrameworkElement)">
+            <summary>
+            Gets the tombstoner for the control.
+            </summary>
+            <param name="obj">The control being tombstoned.</param>
+            <returns>The tombstoner for the control.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.SetTombstoner(System.Windows.FrameworkElement,SLaB.Utilities.Xaml.Tombstoner)">
+            <summary>
+            Sets the tombstoner for the control.
+            </summary>
+            <param name="obj">The control being tombstoned.</param>
+            <param name="value">The tombstoner for the control.</param>
+        </member>
+        <member name="F:SLaB.Utilities.Xaml.Tombstoner.TombstonerProperty">
+            <summary>
+            Represents the Tombstoner attached dependency property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.GetShouldTombstone(System.Windows.FrameworkElement)">
+            <summary>
+            Gets the whether the tombstoner should store values for the control.  Can be bound so conditionalize this within
+            templates upon whether a TombstoneId has been set.
+            </summary>
+            <param name="obj">The object to tombstone.</param>
+            <returns>Whether the tombstoner should store values for the control.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.SetShouldTombstone(System.Windows.FrameworkElement,System.Boolean)">
+            <summary>
+            Sets the whether the tombstoner should store values for the control.  Can be bound so conditionalize this within
+            templates upon whether a TombstoneId has been set.
+            </summary>
+            <param name="obj">The object to tombstone.</param>
+            <param name="value">if set to <c>true</c>, the object will be tombstoned.</param>
+        </member>
+        <member name="F:SLaB.Utilities.Xaml.Tombstoner.ShouldTombstoneProperty">
+            <summary>
+            Represents the ShouldTombstone attached dependency property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.GetTombstoneId(System.Windows.FrameworkElement)">
+            <summary>
+            Gets the tombstone id.  This value must be set on any control that will be tombstoned, and should be unique within the scope
+            of any visual parent that also has a TombstoneId, or else within a Page.
+            </summary>
+            <param name="obj">The object to tombstone.</param>
+            <returns>The TombstoneId of the control.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Tombstoner.SetTombstoneId(System.Windows.FrameworkElement,System.String)">
+            <summary>
+            Gets the tombstone id.  This value must be set on any control that will be tombstoned, and should be unique within the scope
+            of any visual parent that also has a TombstoneId, or else within a Page.
+            </summary>
+            <param name="obj">The object to tombstone.</param>
+            <param name="value">The tombstone id to assign to the control.</param>
+        </member>
+        <member name="F:SLaB.Utilities.Xaml.Tombstoner.TombstoneIdProperty">
+            <summary>
+            Represents the TombstoneId attached dependency property.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Tombstoner.Properties">
+            <summary>
+            Gets the set of properties to tombstone.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.TombstoneFailureEventArgs">
+            <summary>
+            Represents a failure to restore a value from tombstoning.  Primarily used for debugging purposes.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneFailureEventArgs.Reason">
+            <summary>
+            Gets the reason.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.TombstoneProperty">
+            <summary>
+            Represents a property on a control that should be tombstoned.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.PropertyName">
+            <summary>
+            Gets or sets the name of the property to tombstone.
+            </summary>
+            <value>
+            The name of the property.
+            </value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.AttachedPropertyTargetTypeStyle">
+            <summary>
+            Gets or sets the a style whose TargetType indicates the type on which to find the property
+            named PropertyName when tombstoning an attached property.
+            </summary>
+            <value>
+            The attached property target type style.
+            </value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.RepeatUntilSuccess">
+            <summary>
+            Gets or sets a value indicating whether attempting to restore a tombstoned value for this property should
+            be repeated until the operation does not throw an exception.
+            </summary>
+            <value>
+              <c>true</c> if the tombstoner should repeat restoration of the property value until success; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.RepeatUntilRoundTrip">
+            <summary>
+            Gets or sets a value indicating whetherattempting to restore a tombstoned value for this property should
+            be repeated until the operation results in a the value round-tripping (i.e. getting after setting returns the just-set value).
+            </summary>
+            <value>
+            	<c>true</c> if the tombstoner should repeat restoration of the property value until it round-trips; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.StopRepeatingIfChanged">
+            <summary>
+            Gets or sets a value indicating whether attempting to repeat setting the value (due to RepeatUntilRoundTrip)
+            should be halted if something else explicitly changes the value in the interim (e.g. the user scrolls a ScrollViewer).
+            </summary>
+            <value>
+            	<c>true</c> if the tombstoner should stop repeating restoration if the property's value changes; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.TombstoneProperty.RetryRate">
+            <summary>
+            Gets or sets the retry rate for repeating restoration of values.
+            </summary>
+            <value>
+            The retry rate.
+            </value>
+        </member>
+        <member name="E:SLaB.Utilities.Xaml.TombstoneProperty.TombstoneRestoreFailure">
+            <summary>
+            Occurs when a restoring a tombstoned value fails.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.XamlDependencyAttribute">
+            <summary>
+              Allows a type to be specified as a dependent type where the dependency is only in XAML.
+              This creates an assembly dependency that tools will recognize.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.XamlDependencyAttribute.#ctor(System.Type)">
+            <summary>
+              Creates a XamlDependencyAttribute.
+            </summary>
+            <param name = "type">The dependant type.</param>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.XamlDependencyAttribute.Type">
+            <summary>
+              Gets or sets the dependant type.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Converters.ComposeConverter">
+            <summary>
+              Chains a set of converters together, passing one coverter's result into the next converter.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposeConverter.#ctor">
+            <summary>
+              Creates a ComposeConverter.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposeConverter.GetConverterParameter(System.Windows.Data.IValueConverter)">
+            <summary>
+              Gets the ConverterParameter that can be attached to a given converter.
+            </summary>
+            <param name = "obj">The object to check the converter parameter for.</param>
+            <returns>The object's converter parameter.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposeConverter.Convert(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Chains the converters together.
+            </summary>
+            <param name = "value">The initial value to convert.</param>
+            <param name = "targetType">The target type.</param>
+            <param name = "parameter">The converter parameter.</param>
+            <param name = "culture">The culture for the conversion.</param>
+            <returns>The result of chaining the converters together for the given value.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Converters.ComposeConverter.ConvertBack(System.Object,System.Type,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+              Chains the converters together.
+            </summary>
+            <param name = "value">The initial value to convert back.</param>
+            <param name = "targetType">The target type.</param>
+            <param name = "parameter">The converter parameter.</param>
+            <param name = "culture">The culture for the conversion.</param>
+            <returns>The result of chaining the converters together for the given value.</returns>
+        </member>
+        <member name="P:SLaB.Utilities.Xaml.Converters.ComposeConverter.Converters">
+            <summary>
+              Gets the set of converters to chain together.
+            </summary>
+        </member>
+    </members>
+</doc>

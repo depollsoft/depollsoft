@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Utilities.Phone</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Utilities.UriUtilities">
+            <summary>
+              Provides utility functions for working with Uris.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UriUtilities.Equals(System.Uri,System.Uri)">
+            <summary>
+              Does a simplified check for equality, ignoring case, user/password, and fragment.
+            </summary>
+            <param name = "uri1">The first Uri to compare.</param>
+            <param name = "uri2">The second Uri to compare.</param>
+            <returns>true if the first Uri was equal to the second Uri.  false otherwise.</returns>
+        </member>
+        <member name="T:SLaB.Utilities.IRefreshable">
+            <summary>
+              Represents an object whose contents can be explicitly refreshed.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.IRefreshable.Refresh">
+            <summary>
+              Refreshes the object.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.LambdaCommand`1">
+            <summary>
+              An ICommand that can be created easily using lambdas and explicitly refreshed.
+            </summary>
+            <typeparam name = "T">The CommandParameter type.</typeparam>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.#ctor(System.Action{`0},System.Func{`0,System.Boolean})">
+            <summary>
+              Constructs a LambdaCommand.
+            </summary>
+            <param name = "execute">The action to execute.</param>
+            <param name = "canExecute">The CanExecute predicate for the command.</param>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.RefreshCanExecute">
+            <summary>
+              Raises CanExecuteChanged on the LambdaCommand.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.CanExecute(System.Object)">
+            <summary>
+              Indicates whether the command can be executed.
+            </summary>
+            <param name = "parameter">The CommandParameter.</param>
+            <returns>true if the command can be executed.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.Execute(System.Object)">
+            <summary>
+              Executes the command with the given parameter.
+            </summary>
+            <param name = "parameter">The CommandParameter.</param>
+        </member>
+        <member name="E:SLaB.Utilities.LambdaCommand`1.CanExecuteChanged">
+            <summary>
+              Indicates that the result of CanExecute may have changed.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.Phone.XnaDispatcherService">
+            <summary>
+            Invokes FrameworkDispatcher.Update() occasionally.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Phone.XnaDispatcherService.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.Phone.XnaDispatcherService"/> class.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Phone.XnaDispatcherService.StartService(System.Windows.ApplicationServiceContext)">
+            <summary>
+            Called by an application in order to initialize the application extension service.
+            </summary>
+            <param name="context">Provides information about the application state.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Phone.XnaDispatcherService.StopService">
+            <summary>
+            Called by an application in order to stop the application extension service.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.PhoneUtilities">
+            <summary>
+            Provides utilities useful in Windows Phone applications.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.PhoneUtilities.IsTrial">
+            <summary>
+            Gets a value indicating whether this application is in trial mode.
+            </summary>
+            <value><c>true</c> if this application is in trial mode; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:SLaB.Utilities.PhoneUtilities.SimulateTrialMode">
+            <summary>
+            Gets or sets a value indicating whether trial mode should be simulated.  Consider
+            placing this in a #if so that you can produce a "trial mode" build of your application for
+            testing.
+            </summary>
+            <value><c>true</c> if trial mode should be simulated; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="T:SLaB.Utilities.IsolatedStorageUtilities">
+            <summary>
+            Contains utilities for working with IsolatedStorage.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.IsolatedStorageUtilities.SetIfContainsKey``1(System.Collections.Generic.IDictionary{System.String,System.Object},System.String,System.Action{``0})">
+            <summary>
+            Invokes the setter if the dictionary contains the given key.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="settings">The settings.</param>
+            <param name="key">The key.</param>
+            <param name="setter">The setter.</param>
+        </member>
+        <member name="M:SLaB.Utilities.IsolatedStorageUtilities.SetIfNotInDesignMode(System.Collections.Generic.IDictionary{System.String,System.Object},System.String,System.Object)">
+            <summary>
+            Sets the key in the dictionary to the value if not in design mode.
+            </summary>
+            <param name="settings">The settings.</param>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="T:SLaB.Utilities.UiUtilities">
+            <summary>
+              A collection of useful functions for working with UI in Silverlight.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.DelayUntil(System.Windows.Threading.Dispatcher,System.Action,System.Func{System.Boolean})">
+            <summary>
+              Delays taking some action by enqueuing dispatcher BeginInvokes until the condition is true.
+            </summary>
+            <param name = "dispatcher">The dispatcher to use.</param>
+            <param name = "action">The action to take.</param>
+            <param name = "condition">The condition to be met before taking the action.</param>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.DependencyPropertyFromName(System.String,System.Type)">
+            <summary>
+            Gets the registered DependencyProperty based on the name and ownerType.
+            </summary>
+            <param name="name">The name.</param>
+            <param name="ownerType">Type of the owner.</param>
+            <returns>The registered DependencyProperty based on the name and ownerType.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.ExecuteOnUiThread``1(System.Func{``0})">
+            <summary>
+              Executes a function on the UI thread, blocking until the result has been retrieved.
+              This method is safe to use whether or not execution is already on the UI thread, since
+              it only switches threads if necessary.
+            </summary>
+            <typeparam name="T">The return type of the function.</typeparam>
+            <param name="func">The function to execute (usually a lambda).</param>
+            <returns>The value returned by the function.</returns>
+            <exception cref="T:System.Exception">Any exception thrown by the function will be re-thrown by this method
+              on the initiating thread.</exception>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.ExecuteOnUiThread(System.Action)">
+            <summary>
+              Executes an action on the UI thread, blocking until the execution has completed.
+              This method is safe to use whether or not execution is already on the UI thread, since
+              it only switches threads if necessary.
+            </summary>
+            <param name="action">The action to execute (usually a lambda).</param>
+            <exception cref="T:System.Exception">Any exception thrown by the action will be re-thrown by this method
+              on the initiating thread.</exception>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.InitializeExecuteOnUiThread">
+            <summary>
+              Sets up UiUtilities for use.  Only needs to be called explicitly in design mode.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.Raise(System.Delegate,System.Object[])">
+            <summary>
+              Invokes a delegate (or no-ops if the delegate is null).
+            </summary>
+            <param name = "del">The delegate to invoke.</param>
+            <param name = "arguments">Arguments to the delegate.</param>
+            <returns>The value returned by the delegate.  Null if the delegate is null.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.Raise``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+              Raises an EventHandler&lt;T&gt; or no-ops if the event handler is null.
+            </summary>
+            <typeparam name = "T">The type of EventArgs for the event handler.</typeparam>
+            <param name = "eh">The event handler to raise.</param>
+            <param name = "sender">The sender.</param>
+            <param name = "args">The event arguments.</param>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.RaiseOnUiThread``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+              Raises an EventHandler&lt;T&gt; on the UI thread or no-ops if the event handler is null.
+            </summary>
+            <typeparam name = "T">The type of EventArgs for the event handler.</typeparam>
+            <param name = "eh">The event handler to raise.</param>
+            <param name = "sender">The sender.</param>
+            <param name = "args">The event arguments.</param>
+        </member>
+        <member name="P:SLaB.Utilities.UiUtilities.Dispatcher">
+            <summary>
+            Gets an always-accessible dispatcher.
+            </summary>
+        </member>
+    </members>
+</doc>

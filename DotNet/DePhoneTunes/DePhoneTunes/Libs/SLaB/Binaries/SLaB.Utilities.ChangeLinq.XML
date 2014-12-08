@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Utilities.ChangeLinq</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Utilities.ChangeLinq.IChangeLinq`1">
+            <summary>
+              Represents an enumerable INotifyCollectionChanged.  Generally, this is an INotifyCollectionChanged collection that
+              wraps some operation over an existing INotifyCollectionChanged.
+            </summary>
+            <typeparam name = "T"></typeparam>
+        </member>
+        <member name="T:SLaB.Utilities.ChangeLinq.IChangeValue`1">
+            <summary>
+              Represents a value that can change over time.
+            </summary>
+            <typeparam name = "T">The type of the value that the IChangeValue represents.</typeparam>
+        </member>
+        <member name="P:SLaB.Utilities.ChangeLinq.IChangeValue`1.Value">
+            <summary>
+              The current value of the item.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.ChangeLinq.ChangeLinq">
+            <summary>
+              Provides a collection of operators for working with INotifyCollectionChanged collections.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.Aggregate``2(SLaB.Utilities.ChangeLinq.IChangeLinq{``0},System.Func{``1,``0,``1},``1)">
+            <summary>
+              Produces an IChangeValue that is the aggregate of the items in a collection.
+            </summary>
+            <typeparam name = "TIn">The input collection type.</typeparam>
+            <typeparam name = "TOut">The type of the output from aggregating the items.</typeparam>
+            <param name = "source">The collection of items being aggregated.</param>
+            <param name = "aggregator">A function that aggregates items onto the value so far.</param>
+            <param name = "initialValue">A seed value for aggregation.</param>
+            <returns></returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.AsChangeLinq(System.Collections.IEnumerable)">
+            <summary>
+              Converts an IEnumerable into an IChangeLinq&lt;object&gt;.
+            </summary>
+            <param name = "source"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.AsChangeLinq``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+              Creates an IChangeLinq from any IEnumerable source.  If the source is INotifyCollectionChanged, the IChangeLinq will
+              remain in sync with the source.
+            </summary>
+            <typeparam name = "T">The type of the IEnumerable.</typeparam>
+            <param name = "source">The source collection.</param>
+            <returns>An IChangeLinq that wraps the source.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.AsChangeLinq``1(SLaB.Utilities.ChangeLinq.IChangeValue{System.Collections.Generic.IEnumerable{``0}})">
+            <summary>
+              Converts an IChangeValue that contains an IEnumerable into an IChangeLinq that will notify both when the collection and
+              when the value changes.
+            </summary>
+            <typeparam name = "T">The input collection type.</typeparam>
+            <param name = "source">The input IChangeValue.</param>
+            <returns>An IChangeLinq over the IChangeValue.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.Concat``1(SLaB.Utilities.ChangeLinq.IChangeLinq{``0},System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+              Creates an IChangeLinq that concatenates two collections.  INotifyCollectionChanged notifications across both collections
+              will be correctly maintained.
+            </summary>
+            <typeparam name = "T">The input collection type.</typeparam>
+            <param name = "first">The left-hand-side of the concat operation.</param>
+            <param name = "second">The right-hand-side of the concat operation.</param>
+            <returns>An IChangeLinq that contains the concatenated items.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.Select``2(SLaB.Utilities.ChangeLinq.IChangeLinq{``0},System.Func{``0,``1})">
+            <summary>
+              Creates an IChangeLinq that maintains a select operation over the source.  INotifyCollectionChanged notifications
+              will be correctly maintained.
+            </summary>
+            <typeparam name = "TIn">The input collection type.</typeparam>
+            <typeparam name = "TOut">The output collection type.</typeparam>
+            <param name = "source">The collection to select over.</param>
+            <param name = "selector">A function converting a TIn into a TOut.</param>
+            <returns>An IChangeLinq that maps items into the source using the selector.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.ToString``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.String},System.String,System.String,System.String)">
+            <summary>
+              Converts an enumerable to a string, calling ToString on each child item.
+            </summary>
+            <typeparam name = "T">The type of the enumerable.</typeparam>
+            <param name = "source">The collection being converted to a string.</param>
+            <param name = "toString">A function that returns a string for a given item.</param>
+            <param name = "delimiter">A delimiter to use between items.</param>
+            <param name = "prefix">A prefix to be used to surround the collection.</param>
+            <param name = "suffix">A suffix to be used to surround the collection.</param>
+            <returns>The string representation of the source enumerable.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.Traverse``1(SLaB.Utilities.ChangeLinq.IChangeLinq{``0},System.Func{``0,System.Collections.Generic.IEnumerable{``0}})">
+            <summary>
+              Produces an IChangeLinq full traversal of a tree of values.
+            </summary>
+            <typeparam name = "T">The input collection type.</typeparam>
+            <param name = "source">The collection being traversed.</param>
+            <param name = "selector">A function that takes an item and produces a list of child items.</param>
+            <returns>A flattened list of items in the tree.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ChangeLinq.ChangeLinq.Where``1(SLaB.Utilities.ChangeLinq.IChangeLinq{``0},System.Func{``0,System.Boolean})">
+            <summary>
+              Creates an IChangeLinq that maintains a where operation over the source.  INotifyCollectionChanged notifications
+              will be correctly maintained.
+            </summary>
+            <typeparam name = "T">The input collection type.</typeparam>
+            <param name = "source">The collection being filtered.</param>
+            <param name = "predicate">A predicate indicating whether to filter the item.</param>
+            <returns>An IChangeLinq that contains the filtered items.</returns>
+        </member>
+    </members>
+</doc>

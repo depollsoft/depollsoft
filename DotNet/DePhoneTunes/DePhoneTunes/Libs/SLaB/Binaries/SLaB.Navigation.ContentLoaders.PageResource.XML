@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Navigation.ContentLoaders.PageResource</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Navigation.ContentLoaders.PageResource.PageResourceContentLoader">
+            <summary>
+              Mimics the behavior of the built-in PageResourceContentLoader, but also works against dynamically-loaded libraries.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.PageResource.PageResourceContentLoader.CreateLoader">
+            <summary>
+              Creates an instance of a LoaderBase that will be used to handle loading.
+            </summary>
+            <returns>An instance of a LoaderBase.</returns>
+        </member>
+    </members>
+</doc>

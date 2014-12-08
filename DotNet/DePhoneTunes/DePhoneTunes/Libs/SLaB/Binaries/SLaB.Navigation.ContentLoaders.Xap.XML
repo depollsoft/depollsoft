@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Navigation.ContentLoaders.Xap</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader">
+            <summary>
+              An INavigationContentLoader that loads pages in Xaps specified by a pack Uri.  This loader will download the Xap if it has not already been downloaded
+              and then load a page within that Xap, making it easy to build multi-Xap applications using Navigation.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.EnableCrossDomainProperty">
+            <summary>
+              Gets or sets whether the XapContentLoader is allowed to download Xaps from a domain other than the domain of origin for the application.
+              This feature is disabled by default, but can be enabled to load arbitrary Xaps.  If you enable this feature, please limit access to other domains
+              using some other mechanism.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.IsBusyProperty">
+            <summary>
+              Gets a boolean indicating whether the XapContentLoader is in the process of downloading or loading a page.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.ProgressProperty">
+            <summary>
+              Gets the progress of any ongoing downloads that the XapContentLoader is performing.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.#ctor">
+            <summary>
+              Constructs a XapContentLoader.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.CanLoad(System.Uri,System.Uri)">
+            <summary>
+              Gets a value that indicates whether the specified URI can be loaded.
+            </summary>
+            <param name = "targetUri">The URI to test.</param>
+            <param name = "currentUri">The URI that is currently loaded.</param>
+            <returns>true if the URI can be loaded; otherwise, false.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.GetEnablePackUris(System.Object)">
+            <summary>
+              An attached property that enables Pack Uris.  Place this at the top of a XAML file to ensure that pack URIs
+              are safe to use in that context.
+            </summary>
+            <param name = "obj">The element of the XAML for which pack Uris should be enabled.</param>
+            <returns>True.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.SetEnablePackUris(System.Object,System.Boolean)">
+            <summary>
+              An attached property that enables Pack Uris.  Place this at the top of a XAML file to ensure that pack URIs
+              are safe to use in that context.
+            </summary>
+            <param name = "obj">The element of the XAML for which pack Uris should be enabled.</param>
+            <param name = "value">An ignored value.</param>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.CreateLoader">
+            <summary>
+              Creates an instance of a LoaderBase that will be used to handle loading.
+            </summary>
+            <returns>An instance of a LoaderBase.</returns>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.EnableCrossDomain">
+            <summary>
+              Gets or sets whether the XapContentLoader is allowed to download Xaps from a domain other than the domain of origin for the application.
+              This feature is disabled by default, but can be enabled to load arbitrary Xaps.  If you enable this feature, please limit access to other domains
+              using some other mechanism.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.IsBusy">
+            <summary>
+              Gets a boolean indicating whether the XapContentLoader is in the process of downloading or loading a page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.XapContentLoader.Progress">
+            <summary>
+              Gets the progress of any ongoing downloads that the XapContentLoader is performing.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Xap.XapPageResourceContentLoader">
+            <summary>
+              An INavigationContentLoader that loads a page within a given Xap.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Xap.XapPageResourceContentLoader.XapProperty">
+            <summary>
+              Gets or sets the Xap from which the XapPageResourceContentLoader should load.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.XapPageResourceContentLoader.CreateLoader">
+            <summary>
+              Creates an instance of a LoaderBase that will be used to handle loading.
+            </summary>
+            <returns>An instance of a LoaderBase.</returns>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.XapPageResourceContentLoader.Xap">
+            <summary>
+              Gets or sets the Xap from which the XapPageResourceContentLoader should load.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping">
+            <summary>
+              A UriMapping to simplify creating Uris for the XapContentLoader.  This allows developers to avoid using
+              pack Uris altogether.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.AssemblyNameToken">
+            <summary>
+              Token that can be used in patterns in lieu of setting the AssemblyName property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.MapUri(System.Uri)">
+            <summary>
+              Converts the specified uniform resource identifier (Uri) to a new Uri, if the specified Uri matches the defined template for converting.
+            </summary>
+            <param name = "uri">The Uri to convert.</param>
+            <returns>The Uri that has been converted or null if the Uri cannot be converted.</returns>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.AssemblyName">
+            <summary>
+              The name of the assembly within the Xap where the page can be found.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.MappedPath">
+            <summary>
+              Gets or sets the resulting path after running the mapping.  This is equivalent to the UriMapping.MappedUri property,
+              but only represents the path at the end of the pack Uri.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.Uri">
+            <summary>
+              Gets or sets the pattern to match when determining if the requested uniform resource identifier (Uri) is converted to a mapped Uri.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Xap.PackUriMapping.XapLocation">
+            <summary>
+              Uri to the Xap in which the page being navigated to can be found.  This property must be set in order
+              for mapping to occur.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Xap.PackUriParser">
+            <summary>
+              A UriParser for pack Uris.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.Initialize">
+            <summary>
+              Registers the PackUriParser so that pack Uris can be created.  Call this method at least once in any application that will create
+              pack Uris.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.GetComponents(System.Uri,System.UriComponents,System.UriFormat)">
+            <summary>
+              Gets the components from a Uri.
+            </summary>
+            <param name="uri">The System.Uri to parse.</param>
+            <param name="components">The System.UriComponents to retrieve from uri.</param>
+            <param name="format">One of the System.UriFormat values that controls how special characters are escaped.</param>
+            <returns>A string that contains the components.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">format is invalid- or -components is not a combination of valid System.UriComponents values.</exception>
+            <exception cref="T:System.InvalidOperationException">uri requires user-driven parsing- or -uri is not an absolute URI. Relative URIs cannot be used with this method.</exception>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.InitializeAndValidate(System.Uri,System.UriFormatException@)">
+            <summary>
+              Initialize the state of the parser and validate the Uri.
+            </summary>
+            <param name = "uri">The System.Uri to validate.</param>
+            <param name = "parsingError">Validation errors, if any.</param>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.OnNewUri">
+            <summary>
+              Invoked by a System.Uri constructor to get a System.UriParser instance
+            </summary>
+            <returns>A System.UriParser for the constructed System.Uri.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.OnRegister(System.String,System.Int32)">
+            <summary>
+              Invoked by the Framework when a System.UriParser method is registered.
+            </summary>
+            <param name = "schemeName">The scheme that is associated with this System.UriParser.</param>
+            <param name = "defaultPort">The port number of the scheme.</param>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Xap.PackUriParser.Resolve(System.Uri,System.Uri,System.UriFormatException@)">
+            <summary>
+              Called by System.Uri constructors and Overload:System.Uri.TryCreate to resolve a relative Uri.
+            </summary>
+            <param name = "baseUri">A base URI.</param>
+            <param name = "relativeUri">A relative URI.</param>
+            <param name = "parsingError">Errors during the resolve process, if any.</param>
+            <returns>The string of the resolved relative System.Uri.</returns>
+        </member>
+    </members>
+</doc>

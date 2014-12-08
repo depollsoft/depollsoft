@@ -1,0 +1,305 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Printing.Controls</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Printing.Controls.CollectionPrinter">
+            <summary>
+              A control that can be used to either preview or print a paginated collection.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.BodyTemplateProperty">
+            <summary>
+              Gets or sets the template for the body of each page.  This usually contains some sort of collection-displaying
+              control that grows as more items are added to the CurrentPrintContext.CurrentItems collection.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.CanPrintProperty">
+            <summary>
+              Gets whether the control is ready for printing.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.CurrentPageIndexProperty">
+            <summary>
+              Gets or sets the index of the page being displayed by the control.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.CurrentPrintContextProperty">
+            <summary>
+              Gets the CollectionPrintContext for the page being printed or displayed.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.CurrentlyPrintingPageProperty">
+            <summary>
+              Gets the one-based index of the page being printed.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.CurrentlySpoolingPageProperty">
+            <summary>
+              Gets the one-based index of the page being spooled.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.FooterTemplateProperty">
+            <summary>
+              Gets or sets the template that will be used for the footer of each page.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.HeaderTemplateProperty">
+            <summary>
+              Gets or sets the template that will be used for the header of each page.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.IgnoreHorizontalOverflowProperty">
+            <summary>
+              Gets or sets whether the CollectionPrinter should ignore overflow in the horizontal direction when paginating.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.IsPrintingProperty">
+            <summary>
+              Gets whether the CollectionPrinter is currently printing.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.ItemTemplateProperty">
+            <summary>
+              Gets or sets the template for each item (used in the default ItemsControl-based template for
+              the CollectionPrinter).
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.ItemsPanelProperty">
+            <summary>
+              Gets or sets the ItemsPanelTemplate for the ItemsControl-based default template for printing.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.ItemsSourceProperty">
+            <summary>
+              Gets or sets the collection to be printed.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.MaximumItemsPerPageProperty">
+            <summary>
+              Gets or sets the maximum number of items to place on a page.  Set this value to -1 to
+              print as many items as possible on the page.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.PageBackgroundTemplateProperty">
+            <summary>
+              Gets or sets the template for the background of each page.
+            </summary>
+        </member>
+        <member name="F:SLaB.Printing.Controls.CollectionPrinter.PrintDocumentNameProperty">
+            <summary>
+              Gets or sets the name of the document to be printed.
+            </summary>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrinter.#ctor">
+            <summary>
+              Creates a CollectionPrinter.
+            </summary>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrinter.OnApplyTemplate">
+            <summary>
+              Called when a template is applied to the control.
+            </summary>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrinter.Print">
+            <summary>
+              Prints a document from end to end.
+            </summary>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrinter.Print(System.Windows.Printing.PrintDocument)">
+            <summary>
+              Prints the collection into an existing PrintDocument.  The CollectionPrinter will never set
+              HasMorePages to be true -- that is left to the original creator of the PrintDocument.
+            </summary>
+            <param name = "document">PrintDocument on which to print.</param>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.BodyTemplate">
+            <summary>
+              Gets or sets the template for the body of each page.  This usually contains some sort of collection-displaying
+              control that grows as more items are added to the CurrentPrintContext.CurrentItems collection.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.CanPrint">
+            <summary>
+              Gets whether the control is ready for printing.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.CurrentPageIndex">
+            <summary>
+              Gets or sets the index of the page being displayed by the control.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.CurrentPrintContext">
+            <summary>
+              Gets the CollectionPrintContext for the page being printed or displayed.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.CurrentlyPrintingPage">
+            <summary>
+              Gets the one-based index of the page being printed.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.CurrentlySpoolingPage">
+            <summary>
+              Gets the one-based index of the page being spooled.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.FooterTemplate">
+            <summary>
+              Gets or sets the template that will be used for the footer of each page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.HeaderTemplate">
+            <summary>
+              Gets or sets the template that will be used for the header of each page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.IgnoreHorizontalOverflow">
+            <summary>
+              Gets or sets whether the CollectionPrinter should ignore overflow in the horizontal direction when paginating.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.IsPrinting">
+            <summary>
+              Gets whether the CollectionPrinter is currently printing.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.ItemTemplate">
+            <summary>
+              Gets or sets the template for each item (used in the default ItemsControl-based template for
+              the CollectionPrinter).
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.ItemsPanel">
+            <summary>
+              Gets or sets the ItemsPanelTemplate for the ItemsControl-based default template for printing.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.ItemsSource">
+            <summary>
+              Gets or sets the collection to be printed.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.MaximumItemsPerPage">
+            <summary>
+              Gets or sets the maximum number of items to place on a page.  Set this value to -1 to
+              print as many items as possible on the page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.PageBackgroundTemplate">
+            <summary>
+              Gets or sets the template for the background of each page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.PrintCommand">
+            <summary>
+              A command that will cause printing to occur when executed.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrinter.PrintDocumentName">
+            <summary>
+              Gets or sets the name of the document to be printed.
+            </summary>
+        </member>
+        <member name="T:SLaB.Printing.Controls.CollectionPrintContext">
+            <summary>
+            Represents the context for a page that is being printed, containing such information as
+            items to be printed, page number, page count, page size, and margins.
+            </summary>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrintContext.#ctor(System.Object)">
+            <summary>
+            Creates a CollectionPrintContext.
+            </summary>
+            <param name="host">Specifies a host for the context (usually a control such as the
+            CollectionPrinter).</param>
+        </member>
+        <member name="M:SLaB.Printing.Controls.CollectionPrintContext.NotifyPropertiesChanged">
+            <summary>
+            Raises property change notifications for all properties, forcing a binding refresh.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.Host">
+            <summary>
+            Gets the host for the CollectionPrintContext (usually a control such as the CollectionPrinter).
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.PrintableArea">
+            <summary>
+            Gets the PrintableArea for the printing page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.PageMargins">
+            <summary>
+            Gets the PageMargins for the printing page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.FirstItemIndex">
+            <summary>
+            Gets the index of the first item in the source collection.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.FirstItem">
+            <summary>
+            Gets the one-based index of the first item in the source collection.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.FirstItemValue">
+            <summary>
+            Gets the value of the first item on the page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.LastItemIndex">
+            <summary>
+            Gets the index of the last item in the source collection.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.LastItem">
+            <summary>
+            Gets the one-based index of the last item in the source collection.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.LastItemValue">
+            <summary>
+            Gets the value of the last item on the page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.CurrentItems">
+            <summary>
+            Gets the set of items that should be displayed on the current page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.CurrentPageIndex">
+            <summary>
+            Gets the index of the current page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.CurrentPage">
+            <summary>
+            Gets the one-based index of the current page.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.PageCount">
+            <summary>
+            Gets the total number of pages in the print job.  This value will be null if
+            this number cannot be calculated without printing timing out.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.IsLastPage">
+            <summary>
+            Gets whether this page is the last page in the print job.
+            </summary>
+        </member>
+        <member name="P:SLaB.Printing.Controls.CollectionPrintContext.IsFirstPage">
+            <summary>
+            Gets whether this page is the first page in the print job.
+            </summary>
+        </member>
+        <member name="E:SLaB.Printing.Controls.CollectionPrintContext.PropertyChanged">
+            <summary>
+            An event raised when a property's value changes.
+            </summary>
+        </member>
+    </members>
+</doc>

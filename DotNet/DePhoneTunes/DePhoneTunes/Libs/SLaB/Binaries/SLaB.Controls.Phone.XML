@@ -1,0 +1,1153 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Controls.Phone</name>
+    </assembly>
+    <members>
+        <member name="T:Delay.LowProfileImageLoader">
+            <summary>
+            Provides access to the Image.UriSource attached property which allows
+            Images to be loaded by Windows Phone with less impact to the UI thread.
+            </summary>
+        </member>
+        <member name="M:Delay.LowProfileImageLoader.GetUriSource(System.Windows.Controls.Image)">
+            <summary>
+            Gets the value of the Uri to use for providing the contents of the Image's Source property.
+            </summary>
+            <param name="obj">Image needing its Source property set.</param>
+            <returns>Uri to use for providing the contents of the Source property.</returns>
+        </member>
+        <member name="M:Delay.LowProfileImageLoader.SetUriSource(System.Windows.Controls.Image,System.Uri)">
+            <summary>
+            Sets the value of the Uri to use for providing the contents of the Image's Source property.
+            </summary>
+            <param name="obj">Image needing its Source property set.</param>
+            <param name="value">Uri to use for providing the contents of the Source property.</param>
+        </member>
+        <member name="F:Delay.LowProfileImageLoader.UriSourceProperty">
+            <summary>
+            Identifies the UriSource attached DependencyProperty.
+            </summary>
+        </member>
+        <member name="P:Delay.LowProfileImageLoader.IsEnabled">
+            <summary>
+            Gets or sets a value indicating whether low-profile image loading is enabled.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.MarketplaceNavigator">
+            <summary>
+            A control within which HyperlinkButtons can navigate to marketplace items using a
+            "marketplace://&lt;content-id&gt;" scheme.  "marketplace:///" will launch the marketplace
+            for the running application.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.MarketplaceNavigator.Navigate(System.Uri)">
+            <summary>
+            Displays the content located at the specified URI.
+            </summary>
+            <param name="source">The URI of the content to display.</param>
+            <returns>
+            true if the content was successfully displayed; otherwise, false.
+            </returns>
+        </member>
+        <member name="T:SLaB.Controls.Phone.BusyIndicator">
+            <summary>
+            A control to provide a visual indicator when an application is busy.
+            </summary>
+            <QualityBand>Preview</QualityBand>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator._displayAfterTimer">
+            <summary>
+            Timer used to delay the initial display and avoid flickering.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.BusyContentProperty">
+            <summary>
+            Identifies the BusyContent dependency property.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.BusyContentTemplateProperty">
+            <summary>
+            Identifies the BusyTemplate dependency property.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.DisplayAfterProperty">
+            <summary>
+            Identifies the DisplayAfter dependency property.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.IsBusyProperty">
+            <summary>
+            Identifies the IsBusy dependency property.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.OverlayStyleProperty">
+            <summary>
+            Identifies the OverlayStyle dependency property.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.BusyIndicator.ProgressBarStyleProperty">
+            <summary>
+            Identifies the ProgressBarStyle dependency property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.#ctor">
+            <summary>
+            Instantiates a new instance of the BusyIndicator control.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.OnApplyTemplate">
+            <summary>
+            Overrides the OnApplyTemplate method.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.ChangeVisualState(System.Boolean)">
+            <summary>
+            Changes the control's visual state(s).
+            </summary>
+            <param name="useTransitions">True if state transitions should be used.</param>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.OnIsBusyChanged(System.Windows.DependencyPropertyChangedEventArgs)">
+            <summary>
+            IsBusyProperty property changed handler.
+            </summary>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.DisplayAfterTimerElapsed(System.Object,System.EventArgs)">
+            <summary>
+            Handler for the DisplayAfterTimer.
+            </summary>
+            <param name="sender">Event sender.</param>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="M:SLaB.Controls.Phone.BusyIndicator.OnIsBusyChanged(System.Windows.DependencyObject,System.Windows.DependencyPropertyChangedEventArgs)">
+            <summary>
+            IsBusyProperty property changed handler.
+            </summary>
+            <param name="d">BusyIndicator that changed its IsBusy.</param>
+            <param name="e">Event arguments.</param>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.BusyContent">
+            <summary>
+            Gets or sets a value indicating the busy content to display to the user.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.BusyContentTemplate">
+            <summary>
+            Gets or sets a value indicating the template to use for displaying the busy content to the user.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.DisplayAfter">
+            <summary>
+            Gets or sets a value indicating how long to delay before displaying the busy content.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.IsBusy">
+            <summary>
+            Gets or sets a value indicating whether the busy indicator should show.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.IsContentVisible">
+            <summary>
+            Gets or sets a value indicating whether the BusyContent is visible.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.OverlayStyle">
+            <summary>
+            Gets or sets a value indicating the style to use for the overlay.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.BusyIndicator.ProgressBarStyle">
+            <summary>
+            Gets or sets a value indicating the style to use for the progress bar.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.ScrollViewerHelper">
+            <summary>
+            Provides attached properties that can be used with tombstoning.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.ScrollViewerHelper.GetVerticalOffset(System.Windows.Controls.ScrollViewer)">
+            <summary>
+            Gets the vertical offset of the ScrollViewer.
+            </summary>
+            <param name="obj">The ScrollViewer.</param>
+            <returns>The ScrollViewer's vertical offset.</returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.ScrollViewerHelper.SetVerticalOffset(System.Windows.Controls.ScrollViewer,System.Double)">
+            <summary>
+            Sets the vertical offset of the ScrollViewer, scrolling to the offset if necessary.
+            </summary>
+            <param name="obj">The ScrollViewer.</param>
+            <param name="value">The new vertical offset.</param>
+        </member>
+        <member name="F:SLaB.Controls.Phone.ScrollViewerHelper.VerticalOffsetProperty">
+            <summary>
+            Represents the VerticalOffset attached property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.ScrollViewerHelper.GetHorizontalOffset(System.Windows.Controls.ScrollViewer)">
+            <summary>
+            Gets the horizontal offset of the ScrollViewer.
+            </summary>
+            <param name="obj">The ScrollViewer.</param>
+            <returns>The ScrollViewer's horizontal offset.</returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.ScrollViewerHelper.SetHorizontalOffset(System.Windows.Controls.ScrollViewer,System.Double)">
+            <summary>
+            Sets the horizontal offset of the ScrollViewer, scrolling to that offset if necessary.
+            </summary>
+            <param name="obj">The ScrollViewer.</param>
+            <param name="value">The new horizontal offset.</param>
+        </member>
+        <member name="F:SLaB.Controls.Phone.ScrollViewerHelper.HorizontalOffsetProperty">
+            <summary>
+            Represents the HorizontalOffset attached property.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.DelayCreateContentControl">
+            <summary>
+            A pseudo-content control that delays creation of its content from a template
+            until it has been loaded.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayCreateContentControl.ContentProperty">
+            <summary>
+            Gets or sets the content.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayCreateContentControl.ContentTemplateProperty">
+            <summary>
+            Gets or sets the content template.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DelayCreateContentControl.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Controls.Phone.DelayCreateContentControl"/> class.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayCreateContentControl.Content">
+            <summary>
+            Gets or sets the content.
+            </summary>
+            <value>The content.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayCreateContentControl.ContentTemplate">
+            <summary>
+            Gets or sets the content template.
+            </summary>
+            <value>The content template.</value>
+        </member>
+        <member name="T:SLaB.Controls.Phone.ContinuousButton">
+            <summary>
+            A button that can be bound in order to take some action while it is depressed.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.ContinuousButton.DelayTimeProperty">
+            <summary>
+            Gets or sets the delay time.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.ContinuousButton.IsDepressedProperty">
+            <summary>
+            Gets or sets a value indicating whether this button is depressed.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.ContinuousButton.OnIsPressedChanged(System.Windows.DependencyPropertyChangedEventArgs)">
+            <summary>
+            Called when the value of the <see cref="P:System.Windows.Controls.Primitives.ButtonBase.IsPressed"/> property changes.
+            </summary>
+            <param name="e">The data for <see cref="T:System.Windows.DependencyPropertyChangedEventArgs"/>.</param>
+        </member>
+        <member name="P:SLaB.Controls.Phone.ContinuousButton.DelayTime">
+            <summary>
+            Gets or sets the delay time.
+            </summary>
+            <value>The delay time.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.ContinuousButton.IsDepressed">
+            <summary>
+            Gets or sets a value indicating whether this button is depressed.
+            </summary>
+            <value>
+            	<c>true</c> if this button is depressed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:SLaB.Controls.Phone.PanoramaHelper">
+            <summary>
+            Provides attached properties to help with tombstoning
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.PanoramaHelper.GetDefaultIndex(Microsoft.Phone.Controls.Panorama)">
+            <summary>
+            Gets the currently selected index of the Panorama.
+            </summary>
+            <param name="obj">The panorama.</param>
+            <returns>Panorama.SelectedIndex</returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.PanoramaHelper.SetDefaultIndex(Microsoft.Phone.Controls.Panorama,System.Int32)">
+            <summary>
+            Sets the DefaultItem of the Panorama based upon the given index.
+            </summary>
+            <param name="obj">The panorma.</param>
+            <param name="value">The index to use as the new DefaultItem.</param>
+        </member>
+        <member name="F:SLaB.Controls.Phone.PanoramaHelper.DefaultIndexProperty">
+            <summary>
+            Represents the DefaultIndex attached dependency property.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.RelativeSource">
+            <summary>
+            Allows RelativeSource to be specified in XAML without using {} syntax.
+            </summary>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl">
+            <summary>
+            A very specialized primitive control that works around a specific visual
+            state manager issue. The platform does not support relative sized
+            translation values, and this special control walks through visual state
+            animation storyboards looking for magic numbers to use as percentages.
+            This control is not supported, unofficial, and is a hack in many ways.
+            It is used to enable a Windows Phone native platform-style progress bar
+            experience in indeterminate mode that remains performant.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.SimpleDoubleComparisonEpsilon">
+            <summary>
+            A simple Epsilon-style value used for trying to determine the magic 
+            state, if any, of a double.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl._knownHeight">
+            <summary>
+            The last known height of the control.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl._knownWidth">
+            <summary>
+            The last known width of the control.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl._specialAnimations">
+            <summary>
+            A set of custom animation adapters used to update the animation
+            storyboards when the size of the control changes.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.#ctor">
+            <summary>
+            Initializes a new instance of the RelativeAnimatingContentControl
+            type.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.OnSizeChanged(System.Object,System.Windows.SizeChangedEventArgs)">
+            <summary>
+            Handles the size changed event.
+            </summary>
+            <param name="sender">The source object.</param>
+            <param name="e">The event arguments.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.ProcessDoubleAnimation(System.Windows.Media.Animation.DoubleAnimation)">
+            <summary>
+            Processes a double animation looking for special values.
+            </summary>
+            <param name="da">The double animation instance.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.ProcessDoubleAnimationWithKeys(System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames)">
+            <summary>
+            Processes a double animation with keyframes, looking for known 
+            special values to store with an adapter.
+            </summary>
+            <param name="da">The double animation using key frames instance.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.UpdateAnyAnimationValues">
+            <summary>
+            Walks through the known storyboards in the control's template that
+            may contain magic double animation values, storing them for future
+            use and updates.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.UpdateKnownAnimations">
+            <summary>
+            Walks through all special animations, updating based on the current
+            size of the control.
+            </summary>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension">
+            <summary>
+            A selection of dimensions of interest for updating an animation.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension.Width">
+            <summary>
+            The width (horizontal) dimension.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension.Height">
+            <summary>
+            The height (vertical) dimension.
+            </summary>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.AnimationValueAdapter">
+            <summary>
+            A simple class designed to store information about a specific 
+            animation instance and its properties. Able to update the values at
+            runtime.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.AnimationValueAdapter.#ctor(Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension)">
+            <summary>
+            Initializes a new instance of the AnimationValueAdapter type.
+            </summary>
+            <param name="dimension">The dimension of interest for updates.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.AnimationValueAdapter.UpdateWithNewDimension(System.Double,System.Double)">
+            <summary>
+            Updates the original instance based on new dimension information
+            from the control. Takes both and allows the subclass to make the
+            decision on which ratio, values, and dimension to use.
+            </summary>
+            <param name="width">The width of the control.</param>
+            <param name="height">The height of the control.</param>
+        </member>
+        <member name="P:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.AnimationValueAdapter.OriginalValue">
+            <summary>
+            Gets or sets the original double value.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.AnimationValueAdapter.Dimension">
+            <summary>
+            Gets the dimension of interest for the control.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.GetValue">
+            <summary>
+            Gets the value of the underlying property of interest.
+            </summary>
+            <returns>Returns the value of the property.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.SetValue(System.Double)">
+            <summary>
+            Sets the value for the underlying property of interest.
+            </summary>
+            <param name="newValue">The new value for the property.</param>
+        </member>
+        <member name="F:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1._ratio">
+            <summary>
+            The ratio based on the original magic value, used for computing
+            the updated animation property of interest when the size of the
+            control changes.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.#ctor(Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension,`0)">
+            <summary>
+            Initializes a new instance of the GeneralAnimationValueAdapter
+            type.
+            </summary>
+            <param name="d">The dimension of interest.</param>
+            <param name="instance">The animation type instance.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.StripMagicNumberOff(System.Double)">
+            <summary>
+            Approximately removes the magic number state from a value.
+            </summary>
+            <param name="number">The initial number.</param>
+            <returns>Returns a double with an adjustment for the magic
+            portion of the number.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.GetDimensionFromMagicNumber(System.Double)">
+            <summary>
+            Retrieves the dimension, if any, from the number. If the number
+            is not magic, null is returned instead.
+            </summary>
+            <param name="number">The double value.</param>
+            <returns>Returs a double animation dimension, if the number was
+            partially magic; otherwise, returns null.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.UpdateWithNewDimension(System.Double,System.Double)">
+            <summary>
+            Updates the animation instance based on the dimensions of the
+            control.
+            </summary>
+            <param name="width">The width of the control.</param>
+            <param name="height">The height of the control.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.UpdateValue(System.Double)">
+            <summary>
+            Updates the value of the property.
+            </summary>
+            <param name="sizeToUse">The size of interest to use with a ratio
+            computation.</param>
+        </member>
+        <member name="P:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.Instance">
+            <summary>
+            Stores the animation instance.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.GeneralAnimationValueAdapter`1.InitialValue">
+            <summary>
+            Gets the initial value (minus the magic number portion) that the
+            designer stored within the visual state animation property.
+            </summary>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationToAdapter">
+            <summary>
+            Adapter for DoubleAnimation's To property.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationToAdapter.GetValue">
+            <summary>
+            Gets the value of the underlying property of interest.
+            </summary>
+            <returns>Returns the value of the property.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationToAdapter.SetValue(System.Double)">
+            <summary>
+            Sets the value for the underlying property of interest.
+            </summary>
+            <param name="newValue">The new value for the property.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationToAdapter.#ctor(Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension,System.Windows.Media.Animation.DoubleAnimation)">
+            <summary>
+            Initializes a new instance of the DoubleAnimationToAdapter type.
+            </summary>
+            <param name="dimension">The dimension of interest.</param>
+            <param name="instance">The instance of the animation type.</param>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFromAdapter">
+            <summary>
+            Adapter for DoubleAnimation's From property.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFromAdapter.GetValue">
+            <summary>
+            Gets the value of the underlying property of interest.
+            </summary>
+            <returns>Returns the value of the property.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFromAdapter.SetValue(System.Double)">
+            <summary>
+            Sets the value for the underlying property of interest.
+            </summary>
+            <param name="newValue">The new value for the property.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFromAdapter.#ctor(Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension,System.Windows.Media.Animation.DoubleAnimation)">
+            <summary>
+            Initializes a new instance of the DoubleAnimationFromAdapter 
+            type.
+            </summary>
+            <param name="dimension">The dimension of interest.</param>
+            <param name="instance">The instance of the animation type.</param>
+        </member>
+        <member name="T:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFrameAdapter">
+            <summary>
+            Adapter for double key frames.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFrameAdapter.GetValue">
+            <summary>
+            Gets the value of the underlying property of interest.
+            </summary>
+            <returns>Returns the value of the property.</returns>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFrameAdapter.SetValue(System.Double)">
+            <summary>
+            Sets the value for the underlying property of interest.
+            </summary>
+            <param name="newValue">The new value for the property.</param>
+        </member>
+        <member name="M:Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationFrameAdapter.#ctor(Microsoft.Phone.Controls.Unsupported.RelativeAnimatingContentControl.DoubleAnimationDimension,System.Windows.Media.Animation.DoubleKeyFrame)">
+            <summary>
+            Initializes a new instance of the DoubleAnimationFrameAdapter
+            type.
+            </summary>
+            <param name="dimension">The dimension of interest.</param>
+            <param name="frame">The frame.</param>
+        </member>
+        <member name="T:SLaB.Controls.Phone.DelayLoadItemsControl">
+            <summary>
+            An ItemsControl that raises an event when users scroll down to allow more items to be
+            loaded.  When no items remain, it stops raising the event.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayLoadItemsControl.DelayLoadCommandProperty">
+            <summary>
+            Gets or sets the delay load command.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayLoadItemsControl.DelayLoadTriggerDistanceProperty">
+            <summary>
+            Gets or sets the distance from the bottom of the ScrollViewer at which loading should occur.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayLoadItemsControl.HasMoreItemsProperty">
+            <summary>
+            Gets or sets a value indicating whether the list has more items.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayLoadItemsControl.RetryTimeProperty">
+            <summary>
+            Gets or sets the retry time for loading new content.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DelayLoadItemsControl.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Controls.Phone.DelayLoadItemsControl"/> class.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DelayLoadItemsControl.ItemContainerStyleProperty">
+            <summary>
+            Represents the ItemContainerStyle dependency property.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DelayLoadItemsControl.GetContainerForItemOverride">
+            <summary>
+            Creates or identifies the element that is used to display the given item.
+            </summary>
+            <returns>
+            The element that is used to display the given item.
+            </returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DelayLoadItemsControl.OnApplyTemplate">
+            <summary>
+            When overridden in a derived class, is invoked whenever application code or internal processes (such as a rebuilding layout pass) call <see cref="M:System.Windows.Controls.Control.ApplyTemplate"/>. In simplest terms, this means the method is called just before a UI element displays in an application. For more information, see Remarks.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DelayLoadItemsControl.OnItemsChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <summary>
+            Called when the value of the <see cref="P:System.Windows.Controls.ItemsControl.Items"/> property changes.
+            </summary>
+            <param name="e">A <see cref="T:System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> that contains the event data</param>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayLoadItemsControl.DelayLoadCommand">
+            <summary>
+            Gets or sets the delay load command.
+            </summary>
+            <value>The delay load command.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayLoadItemsControl.DelayLoadTriggerDistance">
+            <summary>
+            Gets or sets the distance from the bottom of the ScrollViewer at which loading should occur.
+            </summary>
+            <value>The delay load trigger distance.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayLoadItemsControl.HasMoreItems">
+            <summary>
+            Gets or sets a value indicating whether the list has more items.
+            </summary>
+            <value>
+            	<c>true</c> if the list has more items; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayLoadItemsControl.RetryTime">
+            <summary>
+            Gets or sets the retry time for loading new content.
+            </summary>
+            <value>The retry time.</value>
+        </member>
+        <member name="E:SLaB.Controls.Phone.DelayLoadItemsControl.DelayLoadAction">
+            <summary>
+            Occurs when new items are needed.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DelayLoadItemsControl.ItemContainerStyle">
+            <summary>
+            Gets or sets the item container style.
+            </summary>
+            <value>
+            The item container style.
+            </value>
+        </member>
+        <member name="T:SLaB.Controls.Phone.TrialBlocker">
+            <summary>
+            A control that displays a link to the marketplace to purchase an app when running in trial mode.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.TrialBlocker.IsTrialProperty">
+            <summary>
+            Gets a value indicating whether the app is running in trial mode.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.TrialBlocker.TrialContentProperty">
+            <summary>
+            Gets or sets the content to display when the app is in trial mode.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.TrialBlocker.TrialContentTemplateProperty">
+            <summary>
+            Gets or sets the trial content template.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.TrialBlocker.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Controls.Phone.TrialBlocker"/> class.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.TrialBlocker.IsTrial">
+            <summary>
+            Gets a value indicating whether the app is running in trial mode.
+            </summary>
+            <value><c>true</c> if this instance is trial; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.TrialBlocker.TrialContent">
+            <summary>
+            Gets or sets the content to display when the app is in trial mode.
+            </summary>
+            <value>The content of the trial.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.TrialBlocker.TrialContentTemplate">
+            <summary>
+            Gets or sets the trial content template.
+            </summary>
+            <value>The trial content template.</value>
+        </member>
+        <member name="T:Microsoft.Unsupported.TiltEffect">
+            <summary>
+            Provides attached properties for adding a 'tilt' effect to all controls within a container
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.MaxAngle">
+            <summary>
+            Maximum amount of tilt, in radians
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.MaxDepression">
+            <summary>
+            Maximum amount of depression, in pixels
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.#ctor">
+            <summary>
+            This is not a constructable class, but can't be static because it derives from DependencyObject
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.#cctor">
+            <summary>
+            Initialize the static properties
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.TiltReturnAnimationDelay">
+            <summary>
+            Delay between releasing an element and the tilt release animation playing
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.TiltReturnAnimationDuration">
+            <summary>
+            Duration of tilt release animation
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.currentTiltElement">
+            <summary>
+            The control that is currently being tilted
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.tiltReturnStoryboard">
+            <summary>
+            The single instance of a storyboard used for all tilts
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.tiltReturnXAnimation">
+            <summary>
+            The single instance of an X rotation used for all tilts
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.tiltReturnYAnimation">
+            <summary>
+            The single instance of a Y rotation used for all tilts
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.tiltReturnZAnimation">
+            <summary>
+            The single instance of a Z depression used for all tilts
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.currentTiltElementCenter">
+            <summary>
+            The center of the tilt element
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.wasPauseAnimation">
+            <summary>
+            Whether the animation just completed was for a 'pause' or not
+            </summary>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.IsTiltEnabledProperty">
+            <summary>
+            Whether the tilt effect is enabled on a container (and all its children)
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.GetIsTiltEnabled(System.Windows.DependencyObject)">
+            <summary>
+            Gets the IsTiltEnabled dependency property from an object
+            </summary>
+            <param name="source">The object to get the property from</param>
+            <returns>The property's value</returns>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.SetIsTiltEnabled(System.Windows.DependencyObject,System.Boolean)">
+            <summary>
+            Sets the IsTiltEnabled dependency property on an object
+            </summary>
+            <param name="source">The object to set the property on</param>
+            <param name="value">The value to set</param>
+        </member>
+        <member name="F:Microsoft.Unsupported.TiltEffect.SuppressTiltProperty">
+            <summary>
+            Suppresses the tilt effect on a single control that would otherwise be tilted
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.GetSuppressTilt(System.Windows.DependencyObject)">
+            <summary>
+            Gets the SuppressTilt dependency property from an object
+            </summary>
+            <param name="source">The object to get the property from</param>
+            <returns>The property's value</returns>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.SetSuppressTilt(System.Windows.DependencyObject,System.Boolean)">
+            <summary>
+            Sets the SuppressTilt dependency property from an object
+            </summary>
+            <param name="source">The object to get the property from</param>
+            <param name="value">if set to <c>true</c> suppress tilt for the source.</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.OnIsTiltEnabledChanged(System.Windows.DependencyObject,System.Windows.DependencyPropertyChangedEventArgs)">
+            <summary>
+            Property change handler for the IsTiltEnabled dependency property
+            </summary>
+            <param name="target">The element that the property is atteched to</param>
+            <param name="args">Event args</param>
+            <remarks>
+            Adds or removes event handlers from the element that has (un)registered for tilting
+            </remarks>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.TiltEffect_ManipulationStarted(System.Object,System.Windows.Input.ManipulationStartedEventArgs)">
+            <summary>
+            Event handler for ManipulationStarted
+            </summary>
+            <param name="sender">sender of the event - this will be the tilt container (eg, entire page)</param>
+            <param name="e">event args</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.TiltEffect_ManipulationDelta(System.Object,System.Windows.Input.ManipulationDeltaEventArgs)">
+            <summary>
+            Event handler for ManipulationDelta
+            </summary>
+            <param name="sender">sender of the event - this will be the tilting object (eg a button)</param>
+            <param name="e">event args</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.TiltEffect_ManipulationCompleted(System.Object,System.Windows.Input.ManipulationCompletedEventArgs)">
+            <summary>
+            Event handler for ManipulationCompleted
+            </summary>
+            <param name="sender">sender of the event - this will be the tilting object (eg a button)</param>
+            <param name="e">event args</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.TryStartTiltEffect(System.Windows.FrameworkElement,System.Windows.Input.ManipulationStartedEventArgs)">
+            <summary>
+            Checks if the manipulation should cause a tilt, and if so starts the tilt effect
+            </summary>
+            <param name="source">The source of the manipulation (the tilt container, eg entire page)</param>
+            <param name="e">The args from the ManipulationStarted event</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.GetCenterToCenterDelta(System.Windows.FrameworkElement,System.Windows.FrameworkElement)">
+            <summary>
+            Computes the delta between the centre of an element and its container
+            </summary>
+            <param name="element">The element to compare</param>
+            <param name="container">The element to compare against</param>
+            <returns>A point that represents the delta between the two centers</returns>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.BeginTiltEffect(System.Windows.FrameworkElement,System.Windows.Point,System.Windows.Point,System.Windows.Point)">
+            <summary>
+            Begins the tilt effect by preparing the control and doing the initial animation
+            </summary>
+            <param name="element">The element to tilt </param>
+            <param name="touchPoint">The touch point, in element coordinates</param>
+            <param name="centerPoint">The center point of the element in element coordinates</param>
+            <param name="centerDelta">The delta between the <paramref name="element"/>'s center and 
+            the container's center</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.PrepareControlForTilt(System.Windows.FrameworkElement,System.Windows.Point)">
+            <summary>
+            Prepares a control to be tilted by setting up a plane projection and some event handlers
+            </summary>
+            <param name="element">The control that is to be tilted</param>
+            <param name="centerDelta">Delta between the element's center and the tilt container's</param>
+            <returns>true if successful; false otherwise</returns>
+            <remarks>
+            This method is pretty conservative; it will fail any attempt to tilt a control that already
+            has a projection on it
+            </remarks>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.RevertPrepareControlForTilt(System.Windows.FrameworkElement)">
+            <summary>
+            Removes modifications made by PrepareControlForTilt
+            </summary>
+            <param name="element">THe control to be un-prepared</param>
+            <remarks>
+            This method is pretty basic; it doesn't do anything to detect if the control being un-prepared
+            was previously prepared
+            </remarks>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.PrepareTiltReturnStoryboard(System.Windows.FrameworkElement)">
+            <summary>
+            Creates the tilt return storyboard (if not already created) and targets it to the projection
+            </summary>
+            <param name="element">The element.</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.ContinueTiltEffect(System.Windows.FrameworkElement,System.Windows.Input.ManipulationDeltaEventArgs)">
+            <summary>
+            Continues a tilt effect that is currently applied to an element, presumably because
+            the user moved their finger
+            </summary>
+            <param name="element">The element being tilted</param>
+            <param name="e">The manipulation event args</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.EndTiltEffect(System.Windows.FrameworkElement)">
+            <summary>
+            Ends the tilt effect by playing the animation  
+            </summary>
+            <param name="element">The element being tilted</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.TiltReturnStoryboard_Completed(System.Object,System.EventArgs)">
+            <summary>
+            Handler for the storyboard complete event
+            </summary>
+            <param name="sender">sender of the event</param>
+            <param name="e">event args</param>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.ResetTiltEffect(System.Windows.FrameworkElement)">
+            <summary>
+            Resets the tilt effect on the control, making it appear 'normal' again 
+            </summary>
+            <param name="element">The element to reset the tilt on</param>
+            <remarks>
+            This method doesn't turn off the tilt effect or cancel any current
+            manipulation; it just temporarily cancels the effect
+            </remarks>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.StopTiltReturnStoryboardAndCleanup">
+            <summary>
+            Stops the tilt effect and release resources applied to the currently-tilted control
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.PauseTiltEffect">
+            <summary>
+            Pauses the tilt effect so that the control returns to the 'at rest' position, but doesn't
+            stop the tilt effect (handlers are still attached, etc.)
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.ResetTiltReturnStoryboard">
+            <summary>
+            Resets the storyboard to not running
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.ApplyTiltEffect(System.Windows.FrameworkElement,System.Windows.Point,System.Windows.Point)">
+            <summary>
+            Applies the tilt effect to the control
+            </summary>
+            <param name="element">the control to tilt</param>
+            <param name="touchPoint">The touch point, in the container's coordinates</param>
+            <param name="centerPoint">The center point of the container</param>
+        </member>
+        <member name="P:Microsoft.Unsupported.TiltEffect.UseLogarithmicEase">
+            <summary>
+            Whether to use a slightly more accurate (but slightly slower) tilt animation easing function
+            </summary>
+        </member>
+        <member name="P:Microsoft.Unsupported.TiltEffect.TiltableItems">
+            <summary>
+            Default list of items that are tiltable
+            </summary>
+        </member>
+        <member name="T:Microsoft.Unsupported.TiltEffect.LogarithmicEase">
+            <summary>
+            Provides an easing function for the tilt return
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TiltEffect.LogarithmicEase.EaseInCore(System.Double)">
+            <summary>
+            Computes the easing function
+            </summary>
+            <param name="normalizedTime">The time</param>
+            <returns>The eased value</returns>
+        </member>
+        <member name="T:Microsoft.Unsupported.TreeHelpers">
+            <summary>
+            Couple of simple helpers for walking the visual tree
+            </summary>
+        </member>
+        <member name="M:Microsoft.Unsupported.TreeHelpers.GetVisualAncestors(System.Windows.FrameworkElement)">
+            <summary>
+            Gets the ancestors of the element, up to the root
+            </summary>
+            <param name="node">The element to start from</param>
+            <returns>An enumerator of the ancestors</returns>
+        </member>
+        <member name="M:Microsoft.Unsupported.TreeHelpers.GetVisualParent(System.Windows.FrameworkElement)">
+            <summary>
+            Gets the visual parent of the element
+            </summary>
+            <param name="node">The element to check</param>
+            <returns>The visual parent</returns>
+        </member>
+        <member name="T:SLaB.Controls.Phone.PivotHelper">
+            <summary>
+            Provides attached properties to help with tombstoning.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.PivotHelper.GetSelectedIndex(Microsoft.Phone.Controls.Pivot)">
+            <summary>
+            Gets the selected index.
+            </summary>
+            <param name="obj">The pivot.</param>
+            <returns>The selected index.</returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.PivotHelper.SetSelectedIndex(Microsoft.Phone.Controls.Pivot,System.Int32)">
+            <summary>
+            Sets the selected index.
+            </summary>
+            <param name="obj">The pivot.</param>
+            <param name="value">The selected index.</param>
+        </member>
+        <member name="F:SLaB.Controls.Phone.PivotHelper.SelectedIndexProperty">
+            <summary>
+            Represents the attached SelectedIndex property.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.SequenceGrid">
+            <summary>
+            SequenceGrid is a panel that lays out items in a number of columns, wrapping them as they go exceed the number of columns.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.SequenceGrid.#ctor">
+            <summary>
+            Constructs a SequenceGrid.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.SequenceGrid.MaxRowHeightProperty">
+            <summary>
+            Gets or sets the maximum row height for rows in the grid.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.SequenceGrid.ColumnCountProperty">
+            <summary>
+            Gets or sets the number of Columns in the SequenceGrid.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.SequenceGrid.MeasureOverride(System.Windows.Size)">
+            <summary>
+            Provides the behavior for the Measure pass of Silverlight layout. Classes can override this method to define their own Measure pass behavior.
+            </summary>
+            <param name="availableSize">The available size that this object can give to child objects. Infinity (<see cref="F:System.Double.PositiveInfinity"/>) can be specified as a value to indicate that the object will size to whatever content is available.</param>
+            <returns>
+            The size that this object determines it needs during layout, based on its calculations of the allocated sizes for child objects; or based on other considerations, such as a fixed container size.
+            </returns>
+        </member>
+        <member name="M:SLaB.Controls.Phone.SequenceGrid.ArrangeOverride(System.Windows.Size)">
+            <summary>
+            Provides the behavior for the Arrange pass of Silverlight layout. Classes can override this method to define their own Arrange pass behavior.
+            </summary>
+            <param name="finalSize">The final area within the parent that this object should use to arrange itself and its children.</param>
+            <returns>
+            The actual size that is used after the element is arranged in layout.
+            </returns>
+        </member>
+        <member name="P:SLaB.Controls.Phone.SequenceGrid.MaxRowHeight">
+            <summary>
+            Gets or sets the maximum row height for rows in the grid.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.SequenceGrid.ColumnCount">
+            <summary>
+            Gets or sets the number of Columns in the SequenceGrid.
+            </summary>
+        </member>
+        <member name="T:SLaB.Controls.Phone.DetailsLayout">
+            <summary>
+            Produces a layout using a grid of Header-content rows where columns are sized based upon the largest
+            header size.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DetailsLayout.ContentColumnWidthProperty">
+            <summary>
+            Gets or sets the width of the content column.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DetailsLayout.DetailDescriptionsProperty">
+            <summary>
+            Gets or sets the detail descriptions.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.DetailsLayout.HeaderColumnWidthProperty">
+            <summary>
+            Gets or sets the width of the header column.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DetailsLayout.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Controls.Phone.DetailsLayout"/> class.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Phone.DetailsLayout.OnApplyTemplate">
+            <summary>
+            When overridden in a derived class, is invoked whenever application code or internal processes (such as a rebuilding layout pass) call <see cref="M:System.Windows.Controls.Control.ApplyTemplate"/>. In simplest terms, this means the method is called just before a UI element displays in an application. For more information, see Remarks.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DetailsLayout.ContentColumnWidth">
+            <summary>
+            Gets or sets the width of the content column.
+            </summary>
+            <value>The width of the content column.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DetailsLayout.DetailDescriptions">
+            <summary>
+            Gets or sets the detail descriptions.
+            </summary>
+            <value>The detail descriptions.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.DetailsLayout.HeaderColumnWidth">
+            <summary>
+            Gets or sets the width of the header column.
+            </summary>
+            <value>The width of the header column.</value>
+        </member>
+        <member name="T:SLaB.Controls.Phone.Detail">
+            <summary>
+            Represents an item (header/content) within a DetailsLayout.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.Detail.ContentProperty">
+            <summary>
+            Gets or sets the content.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.Detail.ExtendContentProperty">
+            <summary>
+            Gets or sets a value indicating whether content should be extended to both columns.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Phone.Detail.HeaderProperty">
+            <summary>
+            Gets or sets the header.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Phone.Detail.Content">
+            <summary>
+            Gets or sets the content.
+            </summary>
+            <value>The content.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.Detail.ExtendContent">
+            <summary>
+            Gets or sets a value indicating whether content should be extended to both columns.
+            </summary>
+            <value><c>true</c> if [extend content]; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:SLaB.Controls.Phone.Detail.Header">
+            <summary>
+            Gets or sets the header.
+            </summary>
+            <value>The header.</value>
+        </member>
+    </members>
+</doc>

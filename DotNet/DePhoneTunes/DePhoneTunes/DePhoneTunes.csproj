@@ -218,7 +218,7 @@
     <Reference Include="Microsoft.Expression.Interactions, Version=3.7.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls, Version=8.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls.Toolkit">
-      <HintPath>..\..\DepollSoft\packages\WPtoolkit.4.2012.10.30\lib\sl4-windowsphone71\Microsoft.Phone.Controls.Toolkit.dll</HintPath>
+      <HintPath>..\packages\WPtoolkit.4.2013.08.16\lib\sl4-windowsphone71\Microsoft.Phone.Controls.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SLaB.Controls.Phone">
       <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Controls.Phone.dll</HintPath>
@@ -229,6 +229,8 @@
     <Reference Include="SLaB.Utilities.Xaml.Phone">
       <HintPath>..\..\Silverlight and Beyond\Source\Bin\Release\SLaB.Utilities.Xaml.Phone.dll</HintPath>
     </Reference>
+    <Reference Include="SLaB.Utilities.Xaml.Serializer.Phone, Version=0.11.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL" />
+    <Reference Include="SLaB.Utilities.Xaml.Serializer.UI.Phone, Version=0.11.5.0, Culture=neutral, PublicKeyToken=c1adbec159a0aa41, processorArchitecture=MSIL" />
     <Reference Include="SOMAWP7, Version=1.1.4080.27537, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Interactivity, Version=3.7.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
@@ -366,6 +368,7 @@
       <Numbers>True</Numbers>
       <Punctuation>True</Punctuation>
     </Resource>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">
@@ -381,14 +384,117 @@
     <Content Include="Background.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Libs\Google.AdMob.Ads.WindowsPhone7.dll" />
+    <Content Include="Libs\GoogleAds.dll" />
+    <Content Include="Libs\GoogleAds.XML" />
+    <Content Include="Libs\SLaB\Binaries\Microsoft.Phone.Controls.dll" />
+    <Content Include="Libs\SLaB\Binaries\Microsoft.Phone.Controls.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Phone.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Phone.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Phone.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Remote.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Remote.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Remote.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Controls.Remote.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Auth.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Auth.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Auth.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Auth.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Error.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Error.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Error.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Error.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.MEF.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.MEF.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.MEF.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.PageResource.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.PageResource.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.PageResource.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.PageResource.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Utilities.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Utilities.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Utilities.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Utilities.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Xap.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Xap.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Xap.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.Xap.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.ContentLoaders.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Controls.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Controls.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Controls.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Controls.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Utilities.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Utilities.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Utilities.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Navigation.Utilities.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Printing.Controls.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Printing.Controls.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Printing.Controls.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Printing.Controls.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.ChangeLinq.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.ChangeLinq.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.ChangeLinq.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.ChangeLinq.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Phone.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Phone.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Phone.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Phone.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Phone.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Phone.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.Phone.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.Phone.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.Phone.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.Phone.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.Phone.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.Phone.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.UI.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.Serializer.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xaml.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xap.dll" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xap.extmap.xml" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xap.pdb" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.Xap.XML" />
+    <Content Include="Libs\SLaB\Binaries\SLaB.Utilities.XML" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.Composition.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.Composition.Initialization.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.Composition.Initialization.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.Composition.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.DataAnnotations.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.ComponentModel.DataAnnotations.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Data.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Data.Input.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Data.Input.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Data.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Navigation.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.Navigation.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Controls.xml" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Data.dll" />
+    <Content Include="Libs\SLaB\Binaries\System.Windows.Data.xml" />
     <Content Include="README_FIRST.txt" />
+    <Content Include="Toolkit.Content\ApplicationBar.Add.png" />
     <Content Include="Toolkit.Content\ApplicationBar.Cancel.png" />
     <Content Include="Toolkit.Content\ApplicationBar.Check.png" />
     <Content Include="Toolkit.Content\ApplicationBar.Delete.png" />
     <Content Include="Toolkit.Content\ApplicationBar.Select.png" />
     <Resource Include="SettingsIcon.png" />
     <Resource Include="PanoBackground.png" />
-    <None Include="Libs\Google.AdMob.Ads.WindowsPhone7.dll" />
     <None Include="Libs\SOMAWP7.dll" />
     <None Include="Libs\Microsoft.Advertising.Mobile.UI.dll" />
     <Content Include="SplashScreenImage.jpg" />

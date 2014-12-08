@@ -1,0 +1,290 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Utilities</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Utilities.UriUtilities">
+            <summary>
+              Provides utility functions for working with Uris.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UriUtilities.Equals(System.Uri,System.Uri)">
+            <summary>
+              Does a simplified check for equality, ignoring case, user/password, and fragment.
+            </summary>
+            <param name = "uri1">The first Uri to compare.</param>
+            <param name = "uri2">The second Uri to compare.</param>
+            <returns>true if the first Uri was equal to the second Uri.  false otherwise.</returns>
+        </member>
+        <member name="T:SLaB.Utilities.IRefreshable">
+            <summary>
+              Represents an object whose contents can be explicitly refreshed.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.IRefreshable.Refresh">
+            <summary>
+              Refreshes the object.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.LambdaCommand`1">
+            <summary>
+              An ICommand that can be created easily using lambdas and explicitly refreshed.
+            </summary>
+            <typeparam name = "T">The CommandParameter type.</typeparam>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.#ctor(System.Action{`0},System.Func{`0,System.Boolean})">
+            <summary>
+              Constructs a LambdaCommand.
+            </summary>
+            <param name = "execute">The action to execute.</param>
+            <param name = "canExecute">The CanExecute predicate for the command.</param>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.RefreshCanExecute">
+            <summary>
+              Raises CanExecuteChanged on the LambdaCommand.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.CanExecute(System.Object)">
+            <summary>
+              Indicates whether the command can be executed.
+            </summary>
+            <param name = "parameter">The CommandParameter.</param>
+            <returns>true if the command can be executed.  false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.LambdaCommand`1.Execute(System.Object)">
+            <summary>
+              Executes the command with the given parameter.
+            </summary>
+            <param name = "parameter">The CommandParameter.</param>
+        </member>
+        <member name="E:SLaB.Utilities.LambdaCommand`1.CanExecuteChanged">
+            <summary>
+              Indicates that the result of CanExecute may have changed.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.ReflectionUtilities">
+            <summary>
+              Provides a set of methods that can be used to simplify reflection operations.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.ReflectionUtilities.GetFieldInfo``1(System.Linq.Expressions.Expression{System.Func{``0,System.Object}})">
+            <summary>
+              Gets the FieldInfo for a property access in the expression passed in.  Also works for private fields.
+            </summary>
+            <typeparam name = "TTargetType">The delegate type from which to get the expression.</typeparam>
+            <param name = "expression">The expression to use to get the FieldInfo.</param>
+            <returns>The FieldInfo for the last field access in the expression.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ReflectionUtilities.GetMethodInfo``1(System.Linq.Expressions.Expression{System.Action{``0}})">
+            <summary>
+              Gets the MethodInfo for a method call in the expression passed in.  Also works for private methods.
+            </summary>
+            <typeparam name = "TTargetType">The delegate type from which to get the expression.</typeparam>
+            <param name = "expression">The expression to use to get the MethodInfo.</param>
+            <returns>The MethodInfo for the last method call in the expression.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ReflectionUtilities.GetPropertyInfo``1(System.Linq.Expressions.Expression{System.Func{``0,System.Object}})">
+            <summary>
+              Gets the PropertyInfo for a property access in the expression passed in.  Also works for private properties.
+            </summary>
+            <typeparam name = "TTargetType">The delegate type from which to get the expression.</typeparam>
+            <param name = "expression">The expression to use to get the PropertyInfo.</param>
+            <returns>The PropertyInfo for the last property access in the expression.</returns>
+        </member>
+        <member name="T:SLaB.Utilities.ZipUtilities">
+            <summary>
+              Provides static methods for working with zip files.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.ZipUtilities.GetFile(System.IO.Stream,System.String)">
+            <summary>
+              Gets a stream containing the file given a zip file and the path to the file.
+            </summary>
+            <param name = "zipFileStream">The stream of the zip file.</param>
+            <param name = "filename">The file name to load.</param>
+            <returns>A stream representing the file within the zip file.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.ZipUtilities.GetFilenames(System.IO.Stream)">
+            <summary>
+              Reads the central directory of a zip file to find the file names contained within.
+            </summary>
+            <param name = "zipFileStream">The stream of the zip file.</param>
+            <returns>The list of file names contained in the zip.</returns>
+        </member>
+        <member name="T:SLaB.Utilities.IsolatedStorageUtilities">
+            <summary>
+            Contains utilities for working with IsolatedStorage.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.IsolatedStorageUtilities.SetIfContainsKey``1(System.Collections.Generic.IDictionary{System.String,System.Object},System.String,System.Action{``0})">
+            <summary>
+            Invokes the setter if the dictionary contains the given key.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="settings">The settings.</param>
+            <param name="key">The key.</param>
+            <param name="setter">The setter.</param>
+        </member>
+        <member name="M:SLaB.Utilities.IsolatedStorageUtilities.SetIfNotInDesignMode(System.Collections.Generic.IDictionary{System.String,System.Object},System.String,System.Object)">
+            <summary>
+            Sets the key in the dictionary to the value if not in design mode.
+            </summary>
+            <param name="settings">The settings.</param>
+            <param name="key">The key.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="T:SLaB.Utilities.UiUtilities">
+            <summary>
+              A collection of useful functions for working with UI in Silverlight.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.DelayUntil(System.Windows.Threading.Dispatcher,System.Action,System.Func{System.Boolean})">
+            <summary>
+              Delays taking some action by enqueuing dispatcher BeginInvokes until the condition is true.
+            </summary>
+            <param name = "dispatcher">The dispatcher to use.</param>
+            <param name = "action">The action to take.</param>
+            <param name = "condition">The condition to be met before taking the action.</param>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.DependencyPropertyFromName(System.String,System.Type)">
+            <summary>
+            Gets the registered DependencyProperty based on the name and ownerType.
+            </summary>
+            <param name="name">The name.</param>
+            <param name="ownerType">Type of the owner.</param>
+            <returns>The registered DependencyProperty based on the name and ownerType.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.ExecuteOnUiThread``1(System.Func{``0})">
+            <summary>
+              Executes a function on the UI thread, blocking until the result has been retrieved.
+              This method is safe to use whether or not execution is already on the UI thread, since
+              it only switches threads if necessary.
+            </summary>
+            <typeparam name="T">The return type of the function.</typeparam>
+            <param name="func">The function to execute (usually a lambda).</param>
+            <returns>The value returned by the function.</returns>
+            <exception cref="T:System.Exception">Any exception thrown by the function will be re-thrown by this method
+              on the initiating thread.</exception>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.ExecuteOnUiThread(System.Action)">
+            <summary>
+              Executes an action on the UI thread, blocking until the execution has completed.
+              This method is safe to use whether or not execution is already on the UI thread, since
+              it only switches threads if necessary.
+            </summary>
+            <param name="action">The action to execute (usually a lambda).</param>
+            <exception cref="T:System.Exception">Any exception thrown by the action will be re-thrown by this method
+              on the initiating thread.</exception>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.InitializeExecuteOnUiThread">
+            <summary>
+              Sets up UiUtilities for use.  Only needs to be called explicitly in design mode.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.Raise(System.Delegate,System.Object[])">
+            <summary>
+              Invokes a delegate (or no-ops if the delegate is null).
+            </summary>
+            <param name = "del">The delegate to invoke.</param>
+            <param name = "arguments">Arguments to the delegate.</param>
+            <returns>The value returned by the delegate.  Null if the delegate is null.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.Raise``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+              Raises an EventHandler&lt;T&gt; or no-ops if the event handler is null.
+            </summary>
+            <typeparam name = "T">The type of EventArgs for the event handler.</typeparam>
+            <param name = "eh">The event handler to raise.</param>
+            <param name = "sender">The sender.</param>
+            <param name = "args">The event arguments.</param>
+        </member>
+        <member name="M:SLaB.Utilities.UiUtilities.RaiseOnUiThread``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+              Raises an EventHandler&lt;T&gt; on the UI thread or no-ops if the event handler is null.
+            </summary>
+            <typeparam name = "T">The type of EventArgs for the event handler.</typeparam>
+            <param name = "eh">The event handler to raise.</param>
+            <param name = "sender">The sender.</param>
+            <param name = "args">The event arguments.</param>
+        </member>
+        <member name="P:SLaB.Utilities.UiUtilities.Dispatcher">
+            <summary>
+            Gets an always-accessible dispatcher.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.SimpleWebClient">
+            <summary>
+            Mimics the behavior of the WebClient class but works with any WebRequest (allowing progress information,
+            etc. to be transmitted).
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.SimpleWebClient.#ctor(System.Net.WebRequest)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.SimpleWebClient"/> class.
+            </summary>
+            <param name="request">The request.</param>
+        </member>
+        <member name="M:SLaB.Utilities.SimpleWebClient.CancelAsync">
+            <summary>
+            Cancels the operation.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.SimpleWebClient.MakeAbsolute(System.Uri)">
+            <summary>
+            Makes the Uri absolute.
+            </summary>
+            <param name="uri">The URI.</param>
+            <returns></returns>
+        </member>
+        <member name="M:SLaB.Utilities.SimpleWebClient.OpenReadAsync">
+            <summary>
+            Opens the WebRequest for reading asynchronously.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.SimpleWebClient.Request">
+            <summary>
+            Gets the request.
+            </summary>
+            <value>The request.</value>
+        </member>
+        <member name="E:SLaB.Utilities.SimpleWebClient.DownloadProgressChanged">
+            <summary>
+            Occurs when download progress has changed.
+            </summary>
+        </member>
+        <member name="E:SLaB.Utilities.SimpleWebClient.OpenReadCompleted">
+            <summary>
+            Occurs when download has completed.
+            </summary>
+        </member>
+        <member name="T:SLaB.Utilities.OpenReadCompletedEventArgs">
+            <summary>
+            Represents an OpenRead completion.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.OpenReadCompletedEventArgs.Result">
+            <summary>
+            Gets the result.
+            </summary>
+            <value>The result.</value>
+        </member>
+        <member name="T:SLaB.Utilities.DownloadProgressChangedEventArgs">
+            <summary>
+            Represents download progress changing.
+            </summary>
+        </member>
+        <member name="P:SLaB.Utilities.DownloadProgressChangedEventArgs.BytesReceived">
+            <summary>
+            Gets or the number of bytes received.
+            </summary>
+            <value>The bytes received.</value>
+        </member>
+        <member name="P:SLaB.Utilities.DownloadProgressChangedEventArgs.TotalBytesToReceive">
+            <summary>
+            Gets or sets the total bytes that will eventually be received.
+            </summary>
+            <value>The total bytes to receive.</value>
+        </member>
+    </members>
+</doc>

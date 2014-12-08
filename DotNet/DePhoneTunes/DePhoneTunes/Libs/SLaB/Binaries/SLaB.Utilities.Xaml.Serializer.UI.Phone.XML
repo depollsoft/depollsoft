@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Utilities.Xaml.Serializer.UI.Phone</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer">
+            <summary>
+              A utility class for serializing UI objects into Xaml such as controls and DependencyObjects.  Understands concepts like Bindings, StaticResources, Styles, and Templates.
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.#ctor(System.Boolean,System.Boolean)">
+            <summary>
+              Constructs a UiXamlSerializer.
+            </summary>
+            <param name = "serializeBindings">Determines whether bindings will be serialized.</param>
+            <param name = "includeUnsetValues">Determines whether unset dependency properties will be serialized.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.GetPropertyOrder(System.Reflection.PropertyInfo)">
+            <summary>
+              Gets a string for a property used to determine the order in which properties will be serialized.
+            </summary>
+            <param name = "prop">The property being serialized.</param>
+            <returns>A sortable string representation for the property.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.IsInlinable(System.Object,System.Object,System.Reflection.MemberInfo,System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Determines whether the given property can be written inline (as an attribute) rather than using object-element syntax.
+            </summary>
+            <param name = "obj">The object on which the property is being set.</param>
+            <param name = "propValue">The value of the property being set.</param>
+            <param name = "inf">The identifier for the property being set (a PropertyInfo for a property, and the getter MethodInfo for an attached property).</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+            <returns></returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.PostSerialize(System.Object,System.String@)">
+            <summary>
+              Called after serialization (and can be used for cleanup).
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "str">The serialized Xaml, which can be modified for cleanup during this method.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.PreSerialize(System.Object,System.Collections.Generic.Dictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called before serialization (and can be used for initialization).
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "prefixMappings">The initial dictionary of prefixes, which can be primed for custom serializers.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack, which can be primed if certain objects must be avoided.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.ShouldSerialize(System.Object,System.Object,System.Reflection.PropertyInfo)">
+            <summary>
+              Determines whether a property should be serialized (based upon the DefaultAttribute and ShouldSerialize methods).
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "propValue">The value of the property being serialized.</param>
+            <param name = "prop">The property being serialized.</param>
+            <returns>true if the property should be serialized, false otherwise.</returns>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitAfterAttributes(System.Object,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called after all properties that can be written as attributes (rather than in object-element syntax) are written, but before an object-element content is written.  Use this virtual as an opportunity to inject additional attributes before the object is written.
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitAfterBeginElement(System.Object,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called immediately after the BeginElement for the object being serialized has been written.
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitAlternateContent(System.Object,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called when an object's Content property was not set, allowing special types (e.g. Templates) whose content properties are not discoverable publicly, to be serialized.
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitAttachedProperty(System.Object,System.Object,System.String,System.Reflection.MethodInfo,System.Reflection.MethodInfo,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Serializes an attached property on an object.
+            </summary>
+            <param name = "obj">The object on which the attached property is set.</param>
+            <param name = "propValue">The value of the attached property.</param>
+            <param name = "propertyName">The name of the attached property.</param>
+            <param name = "getter">The getter method for the attached property.</param>
+            <param name = "setter">The setter method for the attached property.</param>
+            <param name = "writer">The writer being used to serialize the object.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects currently on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitBeforeEndElement(System.Object,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called immediately before the EndElement for the object being serialized is called.  Can be used for cleanup.
+            </summary>
+            <param name = "obj">The object being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitDictionaryContents(System.Collections.IDictionary,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Serializes the contents of a dictionary.
+            </summary>
+            <param name = "dict">The dictionary being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitProperty(System.Object,System.Object,System.Reflection.PropertyInfo,System.Boolean,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Serializes a property.
+            </summary>
+            <param name = "obj">The object on which the property is set.</param>
+            <param name = "propValue">The value of the property.</param>
+            <param name = "prop">The property being set.</param>
+            <param name = "isContentProperty">A value indicating that the property is the ContentProperty for the object, and thus no property elements need to be generated.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitPropertyPath(System.String,System.String,System.String,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Serializes a PropertyPath.
+            </summary>
+            <param name = "path">The path being serialized.</param>
+            <param name = "propertyName">The name of the property being serialized.</param>
+            <param name = "propNs">The namespace for the property being serialized.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.VisitRootAttribute(System.Object,System.Xml.XmlWriter,System.Collections.Generic.IDictionary{System.String,System.String},System.Collections.Generic.ISet{System.Object})">
+            <summary>
+              Called during attribute serialization on the root object.  Can be used for global namespace declaration.
+            </summary>
+            <param name = "obj">The root object.</param>
+            <param name = "writer">The writer being used for serialization.</param>
+            <param name = "prefixMappings">A mapping of xml namespaces to prefixes.</param>
+            <param name = "cycleCheckObjects">The set of objects on the stack (for cycle detection).</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.UiXamlSerializer.CanWriteObject(System.Object,System.Collections.Generic.ISet{System.Object})">
+            <summary>
+            Checks to see whether an object can be serialized in Xaml.
+            </summary>
+            <param name="obj">The object to be serialized.</param>
+            <param name="cycleCheckObjects">The set of objects currently on the stack (used to avoid cycles).</param>
+            <returns>
+            true if the object can be serialized, false otherwise.
+            </returns>
+        </member>
+        <member name="T:SLaB.Utilities.Xaml.Serializer.UI.Phone.DerivedRelativeSource">
+            <summary>
+            Provides a RelativeSource that can be instantiated in XAML without using curly-brace syntax
+            (for pre-SL4 parsers).
+            </summary>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.Phone.DerivedRelativeSource.#ctor(System.Windows.Data.RelativeSource)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.Xaml.Serializer.UI.Phone.DerivedRelativeSource"/> class.
+            </summary>
+            <param name="rs">The source RelativeSource.</param>
+        </member>
+        <member name="M:SLaB.Utilities.Xaml.Serializer.UI.Phone.DerivedRelativeSource.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:SLaB.Utilities.Xaml.Serializer.UI.Phone.DerivedRelativeSource"/> class.
+            </summary>
+        </member>
+    </members>
+</doc>

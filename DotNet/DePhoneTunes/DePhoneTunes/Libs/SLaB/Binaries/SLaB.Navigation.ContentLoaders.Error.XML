@@ -1,0 +1,213 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Navigation.ContentLoaders.Error</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.ErrorPage">
+            <summary>
+              Represents an IErrorPage that redirects to a Uri if given an Exception that matches the ExceptionType,
+              or if the ExceptionType is empty, redirects all errors to that Uri.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.IErrorPage">
+            <summary>
+              Matches an exception with a Uri for an error page.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.IErrorPage.Map(System.Exception)">
+            <summary>
+              Maps an exception to a Uri.
+            </summary>
+            <param name = "ex">The exception to map.</param>
+            <returns>The Uri that should be loaded for the given exception.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.IErrorPage.Matches(System.Exception)">
+            <summary>
+              Checks whether the exception matches this IErrorPage.
+            </summary>
+            <param name = "ex">The exception to check.</param>
+            <returns>
+              true if the exception matches.
+            </returns>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Error.ErrorPage.ErrorPageUriProperty">
+            <summary>
+              The Uri of the page to load if the exception matches this ErrorPage.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Error.ErrorPage.ExceptionTypeProperty">
+            <summary>
+              The type name of the exception.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPage.Map(System.Exception)">
+            <summary>
+              Maps an exception to a Uri.
+            </summary>
+            <param name = "ex">The exception to map.</param>
+            <returns>The Uri that should be loaded for the given exception.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPage.Matches(System.Exception)">
+            <summary>
+              Checks whether the exception matches the ExceptionType.
+            </summary>
+            <param name = "ex">The exception to check.</param>
+            <returns>
+              true if the ExceptionType is null or empty, or if the exception inherits from the
+              ExceptionType type.  false otherwise.
+            </returns>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.ErrorPage.ErrorPageUri">
+            <summary>
+              The Uri of the page to load if the exception matches this ErrorPage.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.ErrorPage.ExceptionType">
+            <summary>
+              The type name of the exception.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.ErrorRedirector">
+            <summary>
+              An INavigationContentLoader that redirects to an error page rather than loading it in place.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorRedirector.CreateLoader">
+            <summary>
+              Creates an instance of a LoaderBase that will be used to handle loading.
+            </summary>
+            <returns>An instance of a LoaderBase.</returns>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.InvalidContentException">
+            <summary>
+              An Exception thrown by the ErrorPageLoader when content from an INavigationContentLoader
+              when the content was not a UserControl or a Page.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.InvalidContentException.#ctor(System.Object)">
+            <summary>
+              Creates an InvalidContentException.
+            </summary>
+            <param name = "content">The invalid content.</param>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.InvalidContentException.Content">
+            <summary>
+              The invalid content.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader">
+            <summary>
+              An INavigationContentLoader that loads a different page when an error is encountered in the loading process.
+              This INavigationContentLoader allows you to provide error pages akin to a 404 page on the web.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ContentLoaderProperty">
+            <summary>
+              The INavigationContentLoader being wrapped by the ErrorPageLoader.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ErrorContentLoaderProperty">
+            <summary>
+              The INavigationContentLoader to use to load the error pages.  If this is unset, the ErrorPageLoader will use
+              the ContentLoader to load the ErrorPage.
+            </summary>
+        </member>
+        <member name="F:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ErrorProperty">
+            <summary>
+              The attached "Error" property, set when an ErrorPageLoader loads a page for an error.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.#ctor">
+            <summary>
+              Constructs an ErrorPageLoader.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.GetError(System.Windows.DependencyObject)">
+            <summary>
+              Gets the attached "Error" property, set when an ErrorPageLoader loads a page for an error.
+            </summary>
+            <param name = "obj">A dependency object that the error is attached to.</param>
+            <returns>The exception that caused the error page to be shown.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.SetError(System.Windows.DependencyObject,System.Exception)">
+            <summary>
+              Sets the attached "Error" property, automatically when an ErrorPageLoader loads a page for an error.
+            </summary>
+            <param name = "obj">A dependency object that the error is attached to.</param>
+            <param name = "value">The exception that caused the error page to be shown.</param>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.CreateLoader">
+            <summary>
+              Creates an instance of a LoaderBase that will be used to handle loading.
+            </summary>
+            <returns>An instance of a LoaderBase.</returns>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ContentLoader">
+            <summary>
+              The INavigationContentLoader being wrapped by the ErrorPageLoader.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ErrorContentLoader">
+            <summary>
+              The INavigationContentLoader to use to load the error pages.  If this is unset, the ErrorPageLoader will use
+              the ContentLoader to load the ErrorPage.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.ErrorPageLoader.ErrorPages">
+            <summary>
+              The set of IErrorPages that will be used to determine what Uri to load when an error is encountered.
+            </summary>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.ErrorContentLoaderConverter">
+            <summary>
+              TypeConverter that converts a string into an INavigationContentLoader for the purposes of the ErrorPageLoader.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorContentLoaderConverter.CanConvertFrom(System.ComponentModel.ITypeDescriptorContext,System.Type)">
+            <summary>
+              Checks to see whether conversion is possible.
+            </summary>
+            <param name = "context">Context for the conversion.</param>
+            <param name = "sourceType">The type from which conversion is being requested.</param>
+            <returns>true if the sourceType is a string.</returns>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.ErrorContentLoaderConverter.ConvertFrom(System.ComponentModel.ITypeDescriptorContext,System.Globalization.CultureInfo,System.Object)">
+            <summary>
+              Converts a value to an INavigationContentLoader for the purposes of the ErrorPageLoader.
+            </summary>
+            <param name = "context">Context for the conversion.</param>
+            <param name = "culture">Culture for the conversion.</param>
+            <param name = "value">Value being converted.</param>
+            <returns>ErrorRedirector if the string is "Redirect", <paramref name = "value" /> otherwise.</returns>
+        </member>
+        <member name="T:SLaB.Navigation.ContentLoaders.Error.CannotLoadException">
+            <summary>
+              An Exception thrown by the ErrorPageLoader when its INavigationContentLoader's CanLoad method returns false.
+            </summary>
+        </member>
+        <member name="M:SLaB.Navigation.ContentLoaders.Error.CannotLoadException.#ctor(System.Windows.Navigation.INavigationContentLoader,System.Uri,System.Uri)">
+            <summary>
+              Constructs a CannotLoadException.
+            </summary>
+            <param name = "loader">The loader whose CanLoad method returned false.</param>
+            <param name = "targetUri">The targetUri passed into CanLoad.</param>
+            <param name = "currentUri">The currentUri passed into CanLoad.</param>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.CannotLoadException.CurrentUri">
+            <summary>
+              The currentUri passed into CanLoad.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.CannotLoadException.Loader">
+            <summary>
+              The loader whose CanLoad method returned false.
+            </summary>
+        </member>
+        <member name="P:SLaB.Navigation.ContentLoaders.Error.CannotLoadException.TargetUri">
+            <summary>
+              The targetUri passed into CanLoad.
+            </summary>
+        </member>
+    </members>
+</doc>

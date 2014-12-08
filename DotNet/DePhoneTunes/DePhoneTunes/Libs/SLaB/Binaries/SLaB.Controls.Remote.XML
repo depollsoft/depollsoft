@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SLaB.Controls.Remote</name>
+    </assembly>
+    <members>
+        <member name="T:SLaB.Controls.Remote.RemoteControl">
+            <summary>
+              A control that downloads a Xap and its dependencies, then displays some content given a class name to instantiate.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.RemoteContentLoadedState">
+            <summary>
+              The name of the RemoteContentLoaded state.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.RemoteContentLoadingState">
+            <summary>
+              The name of the RemoteContentLoading state.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.RemoteContentLoadingStatusGroup">
+            <summary>
+              The name of the state group for remote content loading.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.ContentProperty">
+            <summary>
+              Gets the loaded content.  Null if the content has not yet been loaded.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.ContentTemplateProperty">
+            <summary>
+              Gets or sets the DataTemplate for the content if necessary.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.ProgressProperty">
+            <summary>
+              Gets the progress of the Xap download.
+            </summary>
+        </member>
+        <member name="F:SLaB.Controls.Remote.RemoteControl.ProgressStyleProperty">
+            <summary>
+              Gets or sets the style for the progress bar that is displayed before the content has been loaded.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Remote.RemoteControl.#ctor">
+            <summary>
+              Constructs a RemoteControl.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Remote.RemoteControl.Load">
+            <summary>
+              Causes the control to load its content from the remote Xap.  Automatically called upon EndInit() for usages that
+              recognize/use ISupportInitialize, such as the XAML parser.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Remote.RemoteControl.System#ComponentModel#ISupportInitialize#BeginInit">
+            <summary>
+              Called when the component is being initialized.
+            </summary>
+        </member>
+        <member name="M:SLaB.Controls.Remote.RemoteControl.System#ComponentModel#ISupportInitialize#EndInit">
+            <summary>
+              Called when initialization has ended.  Automatically calls the Load() method.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.AssemblyName">
+            <summary>
+              Gets or sets the name of the assembly in which the class to be loaded can be found.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.ClassName">
+            <summary>
+              Gets or sets the full name of the class to load.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.Content">
+            <summary>
+              Gets the loaded content.  Null if the content has not yet been loaded.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.ContentTemplate">
+            <summary>
+              Gets or sets the DataTemplate for the content if necessary.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.Progress">
+            <summary>
+              Gets the progress of the Xap download.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.ProgressStyle">
+            <summary>
+              Gets or sets the style for the progress bar that is displayed before the content has been loaded.
+            </summary>
+        </member>
+        <member name="P:SLaB.Controls.Remote.RemoteControl.XapLocation">
+            <summary>
+              Gets or sets the Uri for the Xap from which the class will be loaded.
+            </summary>
+        </member>
+        <member name="E:SLaB.Controls.Remote.RemoteControl.RemoteContentLoaded">
+            <summary>
+              An event raised when remote content has finished loading.
+            </summary>
+        </member>
+    </members>
+</doc>
