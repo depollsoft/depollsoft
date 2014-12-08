@@ -213,10 +213,35 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Google.AdMob.Ads.WindowsPhone7, Version=4.0.1.27070, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Advertising.Mobile.UI, Version=2.1.11120.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="GoogleAds, Version=6.5.13.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.AdMediator.Core">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.0\ExtensionSDKs\Microsoft.AdMediator8\1.0\References\CommonConfiguration\neutral\Microsoft.AdMediator.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AdMediator.WindowsPhone8">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.0\ExtensionSDKs\Microsoft.AdMediator8\1.0\References\CommonConfiguration\neutral\Microsoft.AdMediator.WindowsPhone8.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AdMediator.WindowsPhone8.GoogleAdMob">
+      <HintPath>..\packages\Microsoft.AdMediator.WindowsPhone8.GoogleAdMob.1.0.12\lib\wp\Microsoft.AdMediator.WindowsPhone8.GoogleAdMob.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AdMediator.WindowsPhone8.MicrosoftAdvertising, Version=1.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AdMediator.WindowsPhone8.MicrosoftAdvertising.1.0.13\lib\wp\Microsoft.AdMediator.WindowsPhone8.MicrosoftAdvertising.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Advertising.Mobile, Version=6.2.40501.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Advertising.WindowsPhone.SL80.6.2.40501.1\lib\wp8\Microsoft.Advertising.Mobile.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Advertising.Mobile.Common, Version=6.2.40501.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Advertising.WindowsPhone.SL80.6.2.40501.1\lib\wp8\Microsoft.Advertising.Mobile.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Advertising.Mobile.UI, Version=6.2.40501.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Advertising.WindowsPhone.SL80.6.2.40501.1\lib\wp8\Microsoft.Advertising.Mobile.UI.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=3.7.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls, Version=8.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Phone.Controls.Maps, Version=8.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls.Toolkit">
       <HintPath>..\packages\WPtoolkit.4.2013.08.16\lib\sl4-windowsphone71\Microsoft.Phone.Controls.Toolkit.dll</HintPath>
     </Reference>
@@ -368,6 +393,7 @@
       <Numbers>True</Numbers>
       <Punctuation>True</Punctuation>
     </Resource>
+    <Content Include="AdMediator.config" />
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
@@ -496,7 +522,6 @@
     <Resource Include="SettingsIcon.png" />
     <Resource Include="PanoBackground.png" />
     <None Include="Libs\SOMAWP7.dll" />
-    <None Include="Libs\Microsoft.Advertising.Mobile.UI.dll" />
     <Content Include="SplashScreenImage.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />

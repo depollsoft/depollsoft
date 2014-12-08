@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
   <DefaultLanguage xmlns="" code="en" />
-  <App xmlns="" ProductID="{eb90151b-caa9-44a7-9571-6471f5e30b4c}" Title="Pitch Perfect" RuntimeType="Silverlight" Version="2.0.0.0" Genre="apps.normal" Author="DePhoneTunes author" Description="Sample description" Publisher="DePhoneTunes" PublisherID="{e9f3729c-727f-4161-9702-948bdb44813d}">
+  <App xmlns="" ProductID="{eb90151b-caa9-44a7-9571-6471f5e30b4c}" Title="Pitch Perfect" RuntimeType="Silverlight" Version="2.1.0.0" Genre="apps.normal" Author="DePhoneTunes author" Description="Sample description" Publisher="DePhoneTunes" PublisherID="{e9f3729c-727f-4161-9702-948bdb44813d}">
     <IconPath IsRelative="true" IsResource="false">ApplicationIcon.png</IconPath>
     <Capabilities>
-      <Capability Name="ID_CAP_GAMERSERVICES" />
       <Capability Name="ID_CAP_IDENTITY_DEVICE" />
       <Capability Name="ID_CAP_IDENTITY_USER" />
       <Capability Name="ID_CAP_LOCATION" />
@@ -28,10 +27,14 @@
           <Count>0</Count>
           <BackgroundImageURI IsResource="false" IsRelative="true">Background.png</BackgroundImageURI>
           <Title>Pitch Perfect</Title>
-          <BackContent></BackContent>
-          <BackBackgroundImageURI></BackBackgroundImageURI>
-          <BackTitle></BackTitle>
-          <DeviceLockImageURI></DeviceLockImageURI>
+          <BackContent>
+          </BackContent>
+          <BackBackgroundImageURI>
+          </BackBackgroundImageURI>
+          <BackTitle>
+          </BackTitle>
+          <DeviceLockImageURI>
+          </DeviceLockImageURI>
           <HasLarge>false</HasLarge>
         </TemplateFlip>
       </PrimaryToken>

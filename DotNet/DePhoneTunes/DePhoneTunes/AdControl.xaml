@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="DePhoneTunes.AdControl"
+﻿<UserControl xmlns:WindowsPhone8="clr-namespace:Microsoft.AdMediator.WindowsPhone8;assembly=Microsoft.AdMediator.WindowsPhone8"  x:Class="DePhoneTunes.AdControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -20,7 +20,13 @@
                              NavigateUri="marketplace://296ea25e-88e7-df11-9524-00237de2dca0"
                              FontStyle="Italic" />
             <ContentControl x:Name="adContainer"
-                            Height="80" />
+                            Height="80">
+                <WindowsPhone8:AdMediatorControl
+                    x:Name="AdMediator_804747"
+                    Height="80"
+                    Id="AdMediator-Id-821FDE9F-BDE9-4571-BC5D-2A09828E179E"
+                    Width="480"/>
+            </ContentControl>
         </StackPanel>
     </slabControls:MarketplaceNavigator>
 </UserControl>

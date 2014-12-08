@@ -3,6 +3,10 @@ using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using SLaB.Utilities;
+using System.Xml;
+using System;
+using System.Windows.Markup;
+using System.Diagnostics;
 
 namespace DePhoneTunes {
   public partial class App : Application {
@@ -77,6 +81,31 @@ namespace DePhoneTunes {
       if (System.Diagnostics.Debugger.IsAttached) {
         // An unhandled exception has occurred; break into the debugger
         System.Diagnostics.Debugger.Break();
+      }
+
+      if (e != null) {
+        Exception exception = e.ExceptionObject;
+        if ((exception is XmlException || exception is NullReferenceException) && exception.ToString().ToUpper().Contains("INNERACTIVE")) {
+          Debug.WriteLine("Handled Inneractive exception {0}", exception);
+          e.Handled = true;
+          return;
+        } else if (exception is NullReferenceException && exception.ToString().ToUpper().Contains("SOMA")) {
+          Debug.WriteLine("Handled Smaato null reference exception {0}", exception);
+          e.Handled = true;
+          return;
+        } else if ((exception is System.IO.IOException || exception is NullReferenceException) && exception.ToString().ToUpper().Contains("GOOGLE")) {
+          Debug.WriteLine("Handled Google exception {0}", exception);
+          e.Handled = true;
+          return;
+        } else if (exception is ObjectDisposedException && exception.ToString().ToUpper().Contains("MOBFOX")) {
+          Debug.WriteLine("Handled Mobfox exception {0}", exception);
+          e.Handled = true;
+          return;
+        } else if ((exception is NullReferenceException || exception is XamlParseException) && exception.ToString().ToUpper().Contains("MICROSOFT.ADVERTISING")) {
+          Debug.WriteLine("Handled Microsoft.Advertising exception {0}", exception);
+          e.Handled = true;
+          return;
+        }
       }
     }
 

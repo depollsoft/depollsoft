@@ -28,11 +28,11 @@
                     </slabControls:TrialBlocker.TrialContent>
                 </slabControls:TrialBlocker>
                 <TextBlock FontSize="{StaticResource PhoneFontSizeSmall}"
-                           Text="Version 2.0" />
+                           Text="Version 2.1" />
             </StackPanel>
             <TextBlock HorizontalAlignment="Center"
                        FontSize="{StaticResource PhoneFontSizeSmall}"
-                       Text="DepollSoft © 2011" />
+                       Text="DepollSoft © 2014" />
             <HyperlinkButton Content="DavidPoll.com"
                              NavigateUri="http://www.davidpoll.com"
                              TargetName="_blank"
