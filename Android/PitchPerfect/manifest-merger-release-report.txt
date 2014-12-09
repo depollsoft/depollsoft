@@ -1,0 +1,267 @@
+-- Merging decision tree log ---
+manifest
+ADDED from AndroidManifest.xml:2:1
+	package
+		ADDED from AndroidManifest.xml:3:5
+	android:versionName
+		ADDED from AndroidManifest.xml:5:5
+	android:versionCode
+		ADDED from AndroidManifest.xml:4:5
+		INJECTED from AndroidManifest.xml:0:0
+		INJECTED from AndroidManifest.xml:0:0
+	xmlns:android
+		ADDED from AndroidManifest.xml:2:11
+uses-permission#android.permission.INTERNET
+ADDED from AndroidManifest.xml:7:5
+	android:name
+		ADDED from AndroidManifest.xml:7:22
+supports-screens
+ADDED from AndroidManifest.xml:10:5
+	android:largeScreens
+		ADDED from AndroidManifest.xml:12:9
+	android:smallScreens
+		ADDED from AndroidManifest.xml:14:9
+	android:normalScreens
+		ADDED from AndroidManifest.xml:13:9
+	android:anyDensity
+		ADDED from AndroidManifest.xml:11:9
+uses-sdk
+ADDED from AndroidManifest.xml:16:5
+MERGED from Android:DepollSoftCommon:unspecified:7:5
+MERGED from Android.Bindroid:Bindroid:unspecified:7:5
+MERGED from com.android.support:support-v4:21.0.0:15:5
+MERGED from Android:PitchPerfectLib:unspecified:7:5
+MERGED from Android:DepollSoftCommon:unspecified:7:5
+MERGED from Android.Bindroid:Bindroid:unspecified:7:5
+MERGED from com.android.support:support-v4:21.0.0:15:5
+MERGED from Android:DepollSoftCommon.Compat:unspecified:7:5
+MERGED from Android:DepollSoftCommon:unspecified:7:5
+MERGED from Android.Bindroid:Bindroid:unspecified:7:5
+MERGED from com.android.support:support-v4:21.0.0:15:5
+MERGED from Android:facebook:unspecified:20:5
+MERGED from com.android.support:support-v4:21.0.0:15:5
+MERGED from Android.Bindroid:Bindroid:unspecified:7:5
+MERGED from com.android.support:support-v4:21.0.0:15:5
+	android:targetSdkVersion
+		ADDED from AndroidManifest.xml:18:9
+	android:minSdkVersion
+		ADDED from AndroidManifest.xml:17:9
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from AndroidManifest.xml:21:5
+	android:name
+		ADDED from AndroidManifest.xml:21:22
+application
+ADDED from AndroidManifest.xml:24:5
+MERGED from Android.Bindroid:Bindroid:unspecified:9:5
+MERGED from com.android.support:support-v4:21.0.0:16:5
+MERGED from Android:PitchPerfectLib:unspecified:9:5
+MERGED from Android.Bindroid:Bindroid:unspecified:9:5
+MERGED from com.android.support:support-v4:21.0.0:16:5
+MERGED from Android.Bindroid:Bindroid:unspecified:9:5
+MERGED from com.android.support:support-v4:21.0.0:16:5
+MERGED from Android:facebook:unspecified:22:5
+MERGED from com.android.support:support-v4:21.0.0:16:5
+MERGED from Android.Bindroid:Bindroid:unspecified:9:5
+MERGED from com.android.support:support-v4:21.0.0:16:5
+	android:label
+		ADDED from AndroidManifest.xml:29:9
+	android:hardwareAccelerated
+		ADDED from AndroidManifest.xml:27:9
+	android:allowBackup
+		ADDED from AndroidManifest.xml:26:9
+	android:icon
+		ADDED from AndroidManifest.xml:28:9
+	android:theme
+		ADDED from AndroidManifest.xml:30:9
+	android:name
+		ADDED from AndroidManifest.xml:25:9
+receiver#com.google.android.apps.analytics.AnalyticsReceiver
+ADDED from AndroidManifest.xml:33:9
+	android:exported
+		ADDED from AndroidManifest.xml:35:13
+	android:name
+		ADDED from AndroidManifest.xml:34:13
+intent-filter#com.android.vending.INSTALL_REFERRER
+ADDED from AndroidManifest.xml:36:13
+action#com.android.vending.INSTALL_REFERRER
+ADDED from AndroidManifest.xml:37:17
+	android:name
+		ADDED from AndroidManifest.xml:37:25
+activity#depollsoft.tagmaster.TagBrowser
+ADDED from AndroidManifest.xml:41:9
+	android:label
+		ADDED from AndroidManifest.xml:44:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:43:13
+	android:name
+		ADDED from AndroidManifest.xml:42:13
+activity#depollsoft.tagmaster.TagDetailActivity
+ADDED from AndroidManifest.xml:46:9
+	android:label
+		ADDED from AndroidManifest.xml:49:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:48:13
+	android:name
+		ADDED from AndroidManifest.xml:47:13
+activity#depollsoft.tagmaster.TagSummaryActivity
+ADDED from AndroidManifest.xml:51:9
+	android:label
+		ADDED from AndroidManifest.xml:54:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:53:13
+	android:name
+		ADDED from AndroidManifest.xml:52:13
+activity#depollsoft.tagmaster.TagMiscActivity
+ADDED from AndroidManifest.xml:56:9
+	android:label
+		ADDED from AndroidManifest.xml:59:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:58:13
+	android:name
+		ADDED from AndroidManifest.xml:57:13
+activity#depollsoft.tagmaster.TagVideosActivity
+ADDED from AndroidManifest.xml:61:9
+	android:label
+		ADDED from AndroidManifest.xml:64:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:63:13
+	android:name
+		ADDED from AndroidManifest.xml:62:13
+activity#depollsoft.tagmaster.TagTracksActivity
+ADDED from AndroidManifest.xml:66:9
+	android:label
+		ADDED from AndroidManifest.xml:69:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:68:13
+	android:name
+		ADDED from AndroidManifest.xml:67:13
+activity#depollsoft.tagmaster.TagQueryActivity
+ADDED from AndroidManifest.xml:71:9
+	android:label
+		ADDED from AndroidManifest.xml:74:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:73:13
+	android:name
+		ADDED from AndroidManifest.xml:72:13
+activity#depollsoft.tagmaster.TagSearchActivity
+ADDED from AndroidManifest.xml:76:9
+	android:configChanges
+		ADDED from AndroidManifest.xml:78:13
+	android:name
+		ADDED from AndroidManifest.xml:77:13
+activity#depollsoft.tagmaster.TagSearchResultsActivity
+ADDED from AndroidManifest.xml:80:9
+	android:label
+		ADDED from AndroidManifest.xml:84:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:82:13
+	android:icon
+		ADDED from AndroidManifest.xml:83:13
+	android:name
+		ADDED from AndroidManifest.xml:81:13
+activity#depollsoft.tagmaster.TagMasterBrowserActivity
+ADDED from AndroidManifest.xml:86:9
+	android:label
+		ADDED from AndroidManifest.xml:90:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:88:13
+	android:icon
+		ADDED from AndroidManifest.xml:89:13
+	android:name
+		ADDED from AndroidManifest.xml:87:13
+provider#depollsoft.lib.util.ContentCacheFileProvider
+ADDED from AndroidManifest.xml:93:9
+	android:authorities
+		ADDED from AndroidManifest.xml:95:13
+	android:enabled
+		ADDED from AndroidManifest.xml:96:13
+	android:exported
+		ADDED from AndroidManifest.xml:97:13
+	android:name
+		ADDED from AndroidManifest.xml:94:13
+activity#depollsoft.tagmaster.MeActivity
+ADDED from AndroidManifest.xml:100:9
+	android:label
+		ADDED from AndroidManifest.xml:104:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:102:13
+	android:icon
+		ADDED from AndroidManifest.xml:103:13
+	android:name
+		ADDED from AndroidManifest.xml:101:13
+intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
+ADDED from AndroidManifest.xml:105:13
+action#android.intent.action.MAIN
+ADDED from AndroidManifest.xml:106:17
+	android:name
+		ADDED from AndroidManifest.xml:106:25
+category#android.intent.category.LAUNCHER
+ADDED from AndroidManifest.xml:108:17
+	android:name
+		ADDED from AndroidManifest.xml:108:27
+activity#depollsoft.tagmaster.UrlHandlerActivity
+ADDED from AndroidManifest.xml:111:9
+	android:label
+		ADDED from AndroidManifest.xml:115:13
+	android:noHistory
+		ADDED from AndroidManifest.xml:116:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:113:13
+	android:icon
+		ADDED from AndroidManifest.xml:114:13
+	android:name
+		ADDED from AndroidManifest.xml:112:13
+intent-filter#android.intent.action.VIEW+android.intent.category.BROWSABLE+android.intent.category.DEFAULT
+ADDED from AndroidManifest.xml:117:13
+	android:label
+		ADDED from AndroidManifest.xml:119:17
+	android:icon
+		ADDED from AndroidManifest.xml:118:17
+action#android.intent.action.VIEW
+ADDED from AndroidManifest.xml:120:17
+	android:name
+		ADDED from AndroidManifest.xml:120:25
+category#android.intent.category.DEFAULT
+ADDED from AndroidManifest.xml:123:17
+	android:name
+		ADDED from AndroidManifest.xml:123:27
+category#android.intent.category.BROWSABLE
+ADDED from AndroidManifest.xml:125:17
+	android:name
+		ADDED from AndroidManifest.xml:125:27
+data
+ADDED from AndroidManifest.xml:128:17
+	android:host
+		ADDED from AndroidManifest.xml:129:21
+	android:scheme
+		ADDED from AndroidManifest.xml:131:21
+	android:pathPrefix
+		ADDED from AndroidManifest.xml:130:21
+activity#depollsoft.tagmaster.SettingsActivity
+ADDED from AndroidManifest.xml:140:9
+	android:label
+		ADDED from AndroidManifest.xml:143:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:142:13
+	android:name
+		ADDED from AndroidManifest.xml:141:13
+activity#depollsoft.tagmaster.TeachableTagsActivity
+ADDED from AndroidManifest.xml:145:9
+	android:label
+		ADDED from AndroidManifest.xml:149:13
+	android:configChanges
+		ADDED from AndroidManifest.xml:147:13
+	android:icon
+		ADDED from AndroidManifest.xml:148:13
+	android:name
+		ADDED from AndroidManifest.xml:146:13
+activity#com.facebook.LoginActivity
+ADDED from AndroidManifest.xml:151:9
+	android:name
+		ADDED from AndroidManifest.xml:151:19
+meta-data#com.facebook.sdk.ApplicationId
+ADDED from AndroidManifest.xml:154:9
+	android:value
+		ADDED from AndroidManifest.xml:156:13
+	android:name
+		ADDED from AndroidManifest.xml:155:13
