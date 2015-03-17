@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="depollsoft.pitchperfect"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="37"
     android:versionName="@string/app_version">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-sdk
         android:minSdkVersion="9"
-        android:targetSdkVersion="17">
-    </uses-sdk>
+        android:targetSdkVersion="17"></uses-sdk>
 
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".PitchPerfectApplication"
@@ -27,70 +25,74 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".KeySignatureActivity"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
+            android:configChanges="keyboardHidden|orientation"></activity>
         <activity
             android:name=".NoteListActivity"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
+            android:configChanges="keyboardHidden|orientation"></activity>
         <activity
             android:name=".PitchPipeActivity"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
+            android:configChanges="keyboardHidden|orientation"></activity>
         <activity
             android:name=".SongListActivity"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
-        <activity android:name=".AddSongActivity">
-        </activity>
+            android:configChanges="keyboardHidden|orientation"></activity>
+        <activity android:name=".AddSongActivity"></activity>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity
             android:name="com.google.android.gms.ads.AdActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
-        <activity android:name="com.facebook.LoginActivity">
-        </activity>
-
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
+        <activity android:name="com.facebook.LoginActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:label="@string/app_name" />
         <receiver
             android:name="PitchPipeAppWidget"
             android:label="@string/widget_name">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/pitchpipe_appwidget_info"/>
+                android:resource="@xml/pitchpipe_appwidget_info" />
         </receiver>
 
-        <meta-data
-            android:name="com.facebook.sdk.ApplicationId"
-            android:value="263872380333771"/>
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/app_id"/>
+
 
         <service
             android:name=".PitchPerfectService"
             android:enabled="true"
-            android:exported="true">
-        </service>
-        <service
-            android:name=".DataLayerListenerService">
+            android:exported="true"></service>
+        <service android:name=".DataLayerListenerService">
             <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER"/>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
         </service>
 
+        <activity android:name="co.hoomi.HoomiLoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="login"
+                    android:scheme="pitchperfect" />
+            </intent-filter>
+        </activity>
+
         <meta-data
             android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
+            android:value="@integer/google_play_services_version" />
     </application>
 
 </manifest>

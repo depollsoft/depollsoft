@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.support.v4.app.FragmentManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -106,6 +107,7 @@ public class PitchPerfectActivity extends TabActivity {
     viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
     viewer.showIfAppropriate();
 
+    LoginPrompt.buildDialog(this).show();
 
     AdView adView = (AdView) findViewById(R.id.adView);
 
