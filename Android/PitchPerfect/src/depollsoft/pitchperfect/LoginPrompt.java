@@ -10,6 +10,7 @@ import android.view.View;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.widget.LoginButton;
+import com.parse.ParseCloud;
 
 import java.util.Arrays;
 
