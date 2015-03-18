@@ -13,8 +13,11 @@ import com.facebook.widget.LoginButton;
 import com.parse.ParseCloud;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 import bolts.Capture;
+import bolts.Continuation;
+import bolts.Task;
 import co.hoomi.HoomiAccessToken;
 import co.hoomi.HoomiLoginButton;
 
@@ -32,6 +35,14 @@ public class LoginPrompt {
       @Override
       public void onLogIn(HoomiAccessToken token) {
         dialog.get().dismiss();
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("hoomiToken", token.getTokenString());
+        ParseCloud.callFunctionInBackground("HoomiSignUpOrLogInUser", parameters).continueWithTask(new Continuation<Object, Task<Object>>() {
+          @Override
+          public Task<Object> then(Task<Object> task) throws Exception {
+            return null;
+          }
+        });
       }
     });
 
