@@ -223,7 +223,7 @@ public class SongsModel {
   }
 
   public ParseObject toParseObject() {
-    if (this.serialized == null) {
+    if (this.serialized == null || !this.serialized.getParseUser("owner").getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
       this.serialized = new ParseObject("SongList");
       this.serialized.setACL(new ParseACL(ParseUser.getCurrentUser()));
       this.serialized.put("name", "*default");

@@ -14,15 +14,21 @@ dependencies {
 }
 
 android {
+    signingConfigs {
+        debug {
+            keyAlias 'depollsoft'
+            keyPassword 'depollsoft'
+            storeFile file('../debug.jks')
+            storePassword 'depollsoft'
+        }
+    }
     compileSdkVersion 21
     buildToolsVersion '19.1.0'
-
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 9
         targetSdkVersion 21
     }
-
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -45,5 +51,10 @@ android {
         // by a similar customization.
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
     }
 }
