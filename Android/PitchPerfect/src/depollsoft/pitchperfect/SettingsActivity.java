@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,16 +21,22 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
 import com.flurry.android.FlurryAgent;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
+import co.hoomi.HoomiClient;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
+  private UiLifecycleHelper uiHelper;
+
 
   private boolean loggingIn;
 
@@ -68,12 +75,20 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
+    uiHelper.onActivityResult(requestCode, resultCode, data);
   }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    uiHelper = new UiLifecycleHelper(this, new Session.StatusCallback() {
+      @Override
+      public void call(Session session, SessionState sessionState, Exception e) {
+
+      }
+    });
+    uiHelper.onCreate(savedInstanceState);
 
     if (!ActionBars.hasActionBar(this)) {
       this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -99,45 +114,14 @@ public class SettingsActivity extends Activity {
     this.findViewById(R.id.loginButton).setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(final View v) {
-        v.setEnabled(false);
-        final ProgressDialog progress = new ProgressDialog(SettingsActivity.this);
-        progress.setMessage("Logging in...");
-        loggingIn = true;
-        progress.show();
-        ParseFacebookUtils.logIn(null,
-            SettingsActivity.this, new LogInCallback() {
-              @Override
-              public void done(ParseUser user, ParseException err) {
-                try {
-                  loggingIn = false;
-                  progress.dismiss();
-                  v.setEnabled(true);
-                  if (err != null) {
-                    Toast.makeText(SettingsActivity.this, "Facebook login failed.",
-                        Toast.LENGTH_SHORT).show();
-                    Log.d("Pitch Perfect", "Failed to log in.", err);
-                    return;
-                  }
-
-                  if (user == null) {
-                    Log.d("Pitch Perfect", "User cancelled login.");
-                    return;
-                  }
-                  FlurryAgent.setUserId(user.getUsername());
-                  SettingsActivity.this.loginTrackable.updateTrackers();
-                  if (!user.isNew()) {
-                    SettingsModel.restoreUser();
-                    SongsModel.get().refreshFromParse();
-                  }
-                  else {
-                    SettingsModel.refreshUser();
-                    SongsModel.get().saveAllToParse(true);
-                  }
-                }
-                catch (Exception e) {
-                }
-              }
-            });
+        Dialog dlg = LoginPrompt.buildDialog(SettingsActivity.this);
+        dlg.setOnDismissListener(new DialogInterface.OnDismissListener() {
+          @Override
+          public void onDismiss(DialogInterface dialog) {
+            SettingsActivity.this.loginTrackable.updateTrackers();
+          }
+        });
+        dlg.show();
       }
     });
 
@@ -150,6 +134,12 @@ public class SettingsActivity extends Activity {
           protected Void doInBackground(Void... params) {
             ParseUser.logOut();
             SongsModel.get().handleLogOut();
+            if (Session.getActiveSession() != null) {
+              Session.getActiveSession().closeAndClearTokenInformation();
+            }
+            if (HoomiClient.getCurrentClient().getCurrentToken() != null) {
+              HoomiClient.getCurrentClient().setCurrentToken(null);
+            }
             return null;
           }
 
@@ -199,11 +189,13 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
+    uiHelper.onDestroy();
   }
 
   @Override
   protected void onPause() {
     super.onPause();
+    uiHelper.onPause();
     SettingsModel.refreshUser();
     FlurryAgent.endTimedEvent("SettingsActivity");
   }
@@ -211,6 +203,7 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
+    uiHelper.onResume();
     FlurryAgent.logEvent("SettingsActivity", true);
   }
 
@@ -234,4 +227,9 @@ public class SettingsActivity extends Activity {
     FlurryAgent.onEndSession(this);
   }
 
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    uiHelper.onSaveInstanceState(outState);
+  }
 }

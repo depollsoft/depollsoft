@@ -28,6 +28,7 @@ import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
 import depollsoft.lib.ui.ChangelogViewer;
+import depollsoft.lib.util.RunUtils;
 
 @SuppressWarnings("deprecation")
 public class PitchPerfectActivity extends TabActivity {
@@ -102,12 +103,14 @@ public class PitchPerfectActivity extends TabActivity {
       }
     });
 
-    ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
-    viewer.setTitle("Pitch Perfect Changelog");
-    viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
-    viewer.showIfAppropriate();
-
-    LoginPrompt.buildDialog(this).show();
+    if (RunUtils.runOnce("loginDialog")) {
+      LoginPrompt.buildDialog(this).show();
+    } else {
+      ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
+      viewer.setTitle("Pitch Perfect Changelog");
+      viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
+      viewer.showIfAppropriate();
+    }
 
     AdView adView = (AdView) findViewById(R.id.adView);
 

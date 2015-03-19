@@ -31,8 +31,22 @@
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
     <string name="LogIn">Log in</string>
     <string name="LogOut">Log out</string>
-    <string name="LogInInfo">Log in using Facebook to back up and synchronize your song list and settings.</string>
+    <string name="LogInInfo">Log in to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
+    <string name="MoreLogins"><u>More login options</u></string>
+    <string name="SkipLogin">Skip</string>
+    <string name="LoginTitle">Log in to Pitch Perfect</string>
+    <string name="LoginExplanation">
+        <![CDATA[<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>
+        <p>
+            When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device.
+            Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your
+            data goes where you go.
+        </p>
+        <p>
+            Pitch Perfect does not collect any of your personal data for this free service.
+        </p>]]>
+    </string>
 
 </resources>
