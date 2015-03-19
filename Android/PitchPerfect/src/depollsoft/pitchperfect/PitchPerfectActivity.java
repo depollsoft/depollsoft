@@ -7,9 +7,9 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.support.v4.app.FragmentManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,6 +20,9 @@ import android.widget.TabHost.OnTabChangeListener;
 
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -32,6 +35,8 @@ import depollsoft.lib.util.RunUtils;
 
 @SuppressWarnings("deprecation")
 public class PitchPerfectActivity extends TabActivity {
+  private UiLifecycleHelper uiHelper;
+
   private WakeLock wakeLock;
   private CompatTabHostWrapper tabHost;
   private boolean preparingMenu;
@@ -46,25 +51,35 @@ public class PitchPerfectActivity extends TabActivity {
     super.onConfigurationChanged(newConfig);
     View title = this.findViewById(R.id.titleLayout);
     switch (newConfig.orientation) {
-    case Configuration.ORIENTATION_SQUARE:
-    case Configuration.ORIENTATION_LANDSCAPE:
-      title.setVisibility(View.GONE);
-      break;
-    case Configuration.ORIENTATION_PORTRAIT:
-    case Configuration.ORIENTATION_UNDEFINED:
-      if (!ActionBars.hasActionBar(this)) {
-        title.setVisibility(View.VISIBLE);
-      } else {
+      case Configuration.ORIENTATION_SQUARE:
+      case Configuration.ORIENTATION_LANDSCAPE:
         title.setVisibility(View.GONE);
-      }
-      break;
+        break;
+      case Configuration.ORIENTATION_PORTRAIT:
+      case Configuration.ORIENTATION_UNDEFINED:
+        if (!ActionBars.hasActionBar(this)) {
+          title.setVisibility(View.VISIBLE);
+        } else {
+          title.setVisibility(View.GONE);
+        }
+        break;
     }
   }
 
-  /** Called when the activity is first created. */
+  /**
+   * Called when the activity is first created.
+   */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    uiHelper = new UiLifecycleHelper(this, new Session.StatusCallback() {
+      @Override
+      public void call(Session session, SessionState sessionState, Exception e) {
+
+      }
+    });
+    uiHelper.onCreate(savedInstanceState);
 
     if (!ActionBars.hasActionBar(this)) {
       requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -162,6 +177,7 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
+    uiHelper.onDestroy();
   }
 
   @Override
@@ -171,11 +187,13 @@ public class PitchPerfectActivity extends TabActivity {
       this.wakeLock = null;
     }
     super.onPause();
+    uiHelper.onPause();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
+    uiHelper.onResume();
     if (SettingsModel.getWakeLock()) {
       this.wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
@@ -197,6 +215,7 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
+    uiHelper.onActivityResult(requestCode, resultCode, data);
     handlingResult = true;
   }
 
@@ -209,6 +228,13 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onStop() {
     super.onStop();
+    uiHelper.onStop();
     FlurryAgent.onEndSession(this);
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+    super.onSaveInstanceState(outState, outPersistentState);
+    uiHelper.onSaveInstanceState(outState);
   }
 }

@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
@@ -44,7 +45,7 @@ public class LoginPrompt {
     }
   }
 
-  public static Dialog buildDialog(Context context) {
+  public static Dialog buildDialog(final Context context) {
     View view = LayoutInflater.from(context).inflate(R.layout.loginpromptview, null);
 
     final Capture<AlertDialog> dialog = new Capture<>(null);
@@ -61,18 +62,27 @@ public class LoginPrompt {
         HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("hoomiToken", token.getTokenString());
         final Capture<Boolean> isNew = new Capture<Boolean>();
+        final ProgressDialog progressDialog = new ProgressDialog(context);
+        progressDialog.setMessage("Please wait...");
+        progressDialog.show();
         ParseCloud.<Map<String, Object>>callFunctionInBackground("HoomiSignUpOrLogInUser", parameters)
-            .continueWithTask(new Continuation<Map<String, Object>, Task<ParseUser>>() {
+            .onSuccessTask(new Continuation<Map<String, Object>, Task<ParseUser>>() {
               @Override
               public Task<ParseUser> then(Task<Map<String, Object>> task) throws Exception {
                 isNew.set((Boolean) task.getResult().get("isNew"));
                 return ParseUser.becomeInBackground((String) task.getResult().get("token"));
               }
-            }).continueWith(new Continuation<ParseUser, Void>() {
+            }).onSuccess(new Continuation<ParseUser, Void>() {
           @Override
           public Void then(Task<ParseUser> task) throws Exception {
             completeLogin(isNew.get());
             dialog.get().dismiss();
+            return null;
+          }
+        }).continueWith(new Continuation<Void, Void>() {
+          @Override
+          public Void then(Task<Void> task) throws Exception {
+            progressDialog.dismiss();
             return null;
           }
         });
@@ -86,18 +96,30 @@ public class LoginPrompt {
         if (exception != null || session == null || state != SessionState.OPENED) {
           return;
         }
+        final ProgressDialog progressDialog = new ProgressDialog(context);
+        progressDialog.setMessage("Please wait...");
+        progressDialog.show();
         Request.newMeRequest(session, new Request.GraphUserCallback() {
           @Override
           public void onCompleted(GraphUser graphUser, Response response) {
+            if (response.getError() != null) {
+              progressDialog.dismiss();
+            }
             ParseFacebookUtils.logInInBackground(graphUser.getId(), session.getAccessToken(), session.getExpirationDate())
-                .continueWith(new Continuation<ParseUser, Void>() {
+                .onSuccess(new Continuation<ParseUser, Void>() {
                   @Override
                   public Void then(Task<ParseUser> task) throws Exception {
                     completeLogin(task.getResult().isNew());
                     dialog.get().dismiss();
                     return null;
                   }
-                });
+                }).continueWith(new Continuation<Void, Void>() {
+              @Override
+              public Void then(Task<Void> task) throws Exception {
+                progressDialog.dismiss();
+                return null;
+              }
+            });
           }
         }).executeAsync();
       }
