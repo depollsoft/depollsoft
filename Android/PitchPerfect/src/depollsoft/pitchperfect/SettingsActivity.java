@@ -36,8 +36,6 @@ import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
   private UiLifecycleHelper uiHelper;
-
-
   private boolean loggingIn;
 
   public static boolean getShowBuyLink() {
