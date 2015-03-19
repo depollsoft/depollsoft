@@ -26,6 +26,7 @@ import com.facebook.UiLifecycleHelper;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
@@ -118,7 +119,7 @@ public class PitchPerfectActivity extends TabActivity {
       }
     });
 
-    if (RunUtils.runOnce("loginDialog")) {
+    if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
       LoginPrompt.buildDialog(this).show();
     } else {
       ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));

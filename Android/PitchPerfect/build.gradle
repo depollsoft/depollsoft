@@ -6,9 +6,9 @@ dependencies {
     compile project(':DepollSoftCommon')
     compile project(':DepollSoftCommon.Compat')
     compile 'com.facebook.android:facebook-android-sdk:3.23.1'
-    compile 'com.android.support:support-v4:21.0.3'
+    compile 'com.android.support:support-v4:22.0.0'
     compile 'com.google.android.gms:play-services:6.5.87'
-    compile 'co.hoomi:hoomi-android:0.1.0'
+    compile 'co.hoomi:hoomi-android:0.1.1'
     wearApp project(':PitchPerfectWear')
     compile files('libs/Parse-1.8.3.jar')
 }
@@ -22,12 +22,12 @@ android {
             storePassword 'depollsoft'
         }
     }
-    compileSdkVersion 21
+    compileSdkVersion 22
     buildToolsVersion '19.1.0'
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
-        minSdkVersion 9
-        targetSdkVersion 21
+        minSdkVersion 15
+        targetSdkVersion 22
     }
     sourceSets {
         main {
