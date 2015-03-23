@@ -29,7 +29,6 @@
 #import "FBGraphPlace.h"
 #import "FBGraphUser.h"
 #import "FBInsights.h"
-#import "FBLikeControl.h"
 #import "FBLoginView.h"
 #import "FBNativeDialogs.h"         // deprecated, use FBDialogs.h
 #import "FBOpenGraphAction.h"
@@ -43,7 +42,6 @@
 #import "FBSettings.h"
 #import "FBShareDialogParams.h"
 #import "FBShareDialogPhotoParams.h"
-#import "FBTaggableFriendPickerViewController.h"
 #import "FBUserSettingsViewController.h"
 #import "FBWebDialogs.h"
 #import "NSError+FBError.h"
@@ -138,6 +136,5 @@
 
  */
 
-#define FB_IOS_SDK_VERSION_STRING @"3.21.1"
-#define FB_IOS_SDK_TARGET_PLATFORM_VERSION @"v2.2"
+#define FB_IOS_SDK_VERSION_STRING @"3.13.1"
 

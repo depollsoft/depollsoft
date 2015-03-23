@@ -7,7 +7,7 @@
 //
 
 #import "DPSettingsViewController.h"
-#import "GADBannerView.h"
+#import <GoogleMobileAds/GoogleMobileAds.h>
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
