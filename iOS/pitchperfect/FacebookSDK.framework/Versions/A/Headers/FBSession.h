@@ -17,8 +17,6 @@
 #import <Accounts/Accounts.h>
 #import <Foundation/Foundation.h>
 
-#import "FBSDKMacros.h"
-
 // up-front decl's
 @class FBAccessTokenData;
 @class FBSession;
@@ -33,29 +31,25 @@
  */
 
 /*! NSNotificationCenter name indicating that a new active session was set */
-FBSDK_EXTERN NSString *const FBSessionDidSetActiveSessionNotification;
+extern NSString *const FBSessionDidSetActiveSessionNotification;
 
 /*! NSNotificationCenter name indicating that an active session was unset */
-FBSDK_EXTERN NSString *const FBSessionDidUnsetActiveSessionNotification;
+extern NSString *const FBSessionDidUnsetActiveSessionNotification;
 
 /*! NSNotificationCenter name indicating that the active session is open */
-FBSDK_EXTERN NSString *const FBSessionDidBecomeOpenActiveSessionNotification;
+extern NSString *const FBSessionDidBecomeOpenActiveSessionNotification;
 
 /*! NSNotificationCenter name indicating that there is no longer an open active session */
-FBSDK_EXTERN NSString *const FBSessionDidBecomeClosedActiveSessionNotification;
+extern NSString *const FBSessionDidBecomeClosedActiveSessionNotification;
 
 /*!
  @typedef FBSessionState enum
 
  @abstract Passed to handler block each time a session state changes
 
- @discussion A typical `FBSession` lifecycle will start with `FBSessionStateCreated`. If a cached
-  token is available, it will transition to `FBSessionStateCreatedTokenLoaded`. When attempting to
-  open a session, it will become `FBSessionStateCreatedOpening` internally before going to
-  `FBSessionStateOpen` or `FBSessionStateClosedLoginFailed`. From `FBSessionStateOpen` it can
-  go to `FBSessionStateOpenTokenExtended` (when more permissions were granted) or `FBSessionStateClosed`.
+ @discussion
  */
-typedef NS_ENUM(NSUInteger, FBSessionState) {
+typedef enum {
     /*! One of two initial states indicating that no valid cached token was found */
     FBSessionStateCreated                   = 0,
     /*! One of two initial session states indicating that a cached token was loaded;
@@ -68,7 +62,7 @@ typedef NS_ENUM(NSUInteger, FBSessionState) {
 
     /*! Open session state indicating user has logged in or a cached token is available */
     FBSessionStateOpen                      = 1 | FB_SESSIONSTATEOPENBIT,
-    /*! Open session state indicating token has been extended, or the user has granted additional permissions */
+    /*! Open session state indicating token has been extended */
     FBSessionStateOpenTokenExtended         = 2 | FB_SESSIONSTATEOPENBIT,
 
     /*! Closed session state indicating that a login attempt failed */
@@ -76,7 +70,7 @@ typedef NS_ENUM(NSUInteger, FBSessionState) {
     /*! Closed session state indicating that the session was closed, but the users token
      remains cached on the device for later use */
     FBSessionStateClosed                    = 2 | FB_SESSIONSTATETERMINALBIT, // "
-};
+} FBSessionState;
 
 /*! helper macro to test for states that imply an open session */
 #define FB_ISSESSIONOPENWITHSTATE(state) (0 != (state & FB_SESSIONSTATEOPENBIT))
@@ -105,7 +99,7 @@ typedef NS_ENUM(NSUInteger, FBSessionState) {
  Facebook Login, and only falls back if needed. In rare cases, it may be preferable to disallow
  fallback Facebook Login completely, or to force a fallback login.
  */
-typedef NS_ENUM(NSUInteger, FBSessionLoginBehavior) {
+typedef enum {
     /*! Attempt Facebook Login, ask user for credentials if necessary */
     FBSessionLoginBehaviorWithFallbackToWebView      = 0,
     /*! Attempt Facebook Login, no direct request for credentials will be made */
@@ -114,9 +108,7 @@ typedef NS_ENUM(NSUInteger, FBSessionLoginBehavior) {
     FBSessionLoginBehaviorForcingWebView             = 2,
     /*! Attempt Facebook Login, prefering system account and falling back to fast app switch if necessary */
     FBSessionLoginBehaviorUseSystemAccountIfPresent  = 3,
-    /*! Attempt only to login with Safari */
-    FBSessionLoginBehaviorForcingSafari = 4,
-};
+} FBSessionLoginBehavior;
 
 /*!
  @typedef FBSessionDefaultAudience enum
@@ -130,7 +122,7 @@ typedef NS_ENUM(NSUInteger, FBSessionLoginBehavior) {
  publication ceiling for the application. This enumerated value allows the application to select which
  audience to ask the user to grant publish permission for.
  */
-typedef NS_ENUM(NSUInteger, FBSessionDefaultAudience) {
+typedef enum {
     /*! No audience needed; this value is useful for cases where data will only be read from Facebook */
     FBSessionDefaultAudienceNone                = 0,
     /*! Indicates that only the user is able to see posts made by the application */
@@ -139,7 +131,7 @@ typedef NS_ENUM(NSUInteger, FBSessionDefaultAudience) {
     FBSessionDefaultAudienceFriends             = 20,
     /*! Indicates that all Facebook users are able to see posts made by the application */
     FBSessionDefaultAudienceEveryone            = 30,
-};
+} FBSessionDefaultAudience;
 
 /*!
  @typedef FBSessionLoginType enum
@@ -154,7 +146,7 @@ typedef NS_ENUM(NSUInteger, FBSessionDefaultAudience) {
  given login does not matter, however for certain capabilities, the type of login can impact the behavior
  of other Facebook functionality.
  */
-typedef NS_ENUM(NSUInteger, FBSessionLoginType) {
+typedef enum {
     /*! A login type has not yet been established */
     FBSessionLoginTypeNone                      = 0,
     /*! A system integrated account was used to log the user into the application */
@@ -167,7 +159,7 @@ typedef NS_ENUM(NSUInteger, FBSessionLoginType) {
     FBSessionLoginTypeWebView                   = 4,
     /*! A test user was used to create an open session */
     FBSessionLoginTypeTestUser                  = 5,
-};
+} FBSessionLoginType;
 
 /*!
  @typedef
@@ -218,6 +210,7 @@ typedef FBSessionRequestPermissionResultHandler FBSessionReauthorizeResultHandle
  @typedef
 
  @abstract Block type used to define blocks called for system credential renewals.
+ @discussion
  */
 typedef void (^FBSessionRenewSystemCredentialsHandler)(ACAccountCredentialRenewResult result, NSError *error) ;
 
@@ -265,7 +258,8 @@ typedef void (^FBSessionRenewSystemCredentialsHandler)(ACAccountCredentialRenewR
  default values for parameters to <initWithAppID:permissions:urlSchemeSuffix:tokenCacheStrategy:>.
 
  @param permissions  An array of strings representing the permissions to request during the
- authentication flow.
+ authentication flow. The basic_info permission must be explicitly requested at first login, and is no
+ longer inferred, (subject to an active migration.) The default is nil.
 
  @discussion
  It is required that any single permission request request (including initial log in) represent read-only permissions
@@ -282,7 +276,7 @@ typedef void (^FBSessionRenewSystemCredentialsHandler)(ACAccountCredentialRenewR
  defaults when ommitted.
 
  @param permissions  An array of strings representing the permissions to request during the
- authentication flow.
+ authentication flow. The basic_info permission must be explicitly requested at first login, and is no longer inferred, (subject to an active migration.) The default is nil.
  @param appID  The Facebook App ID for the session. If nil is passed in the default App ID will be obtained from a call to <[FBSession defaultAppID]>. The default is nil.
  @param urlSchemeSuffix  The URL Scheme Suffix to be used in scenarious where multiple iOS apps use one Facebook App ID. A value of nil indicates that this information should be pulled from [FBSettings defaultUrlSchemeSuffix]. The default is nil.
  @param tokenCachingStrategy Specifies a key name to use for cached token information in NSUserDefaults, nil
@@ -305,7 +299,7 @@ typedef void (^FBSessionRenewSystemCredentialsHandler)(ACAccountCredentialRenewR
  defaults when ommitted.
 
  @param permissions  An array of strings representing the permissions to request during the
- authentication flow.
+ authentication flow. The basic_info permission must be explicitly requested at first login, and is no longer inferred, (subject to an active migration.) The default is nil.
  @param defaultAudience  Most applications use FBSessionDefaultAudienceNone here, only specifying an audience when using reauthorize to request publish permissions.
  @param appID  The Facebook App ID for the session. If nil is passed in the default App ID will be obtained from a call to <[FBSession defaultAppID]>. The default is nil.
  @param urlSchemeSuffix  The URL Scheme Suffix to be used in scenarious where multiple iOS apps use one Facebook App ID. A value of nil indicates that this information should be pulled from [FBSettings defaultUrlSchemeSuffix]. The default is nil.
@@ -357,18 +351,6 @@ __attribute__((deprecated));
 
 /*! @abstract Gets the FBAccessTokenData for the session */
 @property (readonly, copy) FBAccessTokenData *accessTokenData;
-
-/*!
- @abstract
- Returns a collection of permissions that have been declined by the user for this
- given session instance.
-
- @discussion
- A "declined" permission is one that had been requested but was either skipped or removed by
- the user during the login flow. Note that once the permission has been granted (either by
- requesting again or detected by a permissions refresh), it will be removed from this collection.
- */
-@property (readonly, copy) NSArray *declinedPermissions;
 
 /*!
  @methodgroup Instance methods
@@ -541,13 +523,6 @@ __attribute__((deprecated));
 - (void)requestNewPublishPermissions:(NSArray *)writePermissions
                      defaultAudience:(FBSessionDefaultAudience)defaultAudience
                    completionHandler:(FBSessionRequestPermissionResultHandler)handler;
-/*!
- @abstract Refreshes the current permissions for the session.
- @param handler Called after completion of the refresh.
- @discussion This will update the sessions' permissions array from the server. This can be
-  useful if you want to make sure the local permissions are up to date.
- */
-- (void)refreshPermissionsWithCompletionHandler:(FBSessionRequestPermissionResultHandler)handler;
 
 /*!
  @abstract
@@ -571,8 +546,6 @@ __attribute__((deprecated));
  @abstract
  Assign the block to be invoked for session state changes.
 
- @param stateChangeHandler the handler block.
-
  @discussion
  This will overwrite any state change handler that was already assigned. Typically,
  you should only use this setter if you were unable to assign a state change handler explicitly.
@@ -581,17 +554,6 @@ __attribute__((deprecated));
  opens a session from an app link.
  */
 - (void)setStateChangeHandler:(FBSessionStateHandler)stateChangeHandler;
-
-/*!
- @abstract
- Returns true if the specified permission has been granted to this session.
-
- @param permission the permission to verify.
-
- @discussion
- This is a convenience helper for checking if `pemission` is inside the permissions array.
- */
-- (BOOL)hasGranted:(NSString *)permission;
 
 /*!
  @methodgroup Class methods
@@ -669,7 +631,8 @@ __attribute__((deprecated));
  used by the application. This session becomes the active session, whether open succeeds or fails.
 
  @param readPermissions     An array of strings representing the read permissions to request during the
- authentication flow. It is not allowed to pass publish permissions to this method.
+ authentication flow. The basic_info permission must be explicitly requested at first login, and is no longer
+ inferred, (subject to an active migration.) It is not allowed to pass publish permissions to this method.
 
  @param allowLoginUI    Sometimes it is useful to attempt to open a session, but only if
  no login UI will be required to accomplish the operation. For example, at application startup it may not

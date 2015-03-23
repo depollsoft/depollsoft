@@ -7,7 +7,7 @@
 //
 
 #import "DPNotesViewController.h"
-#import "GADBannerView.h"
+#import <GoogleMobileAds/GoogleMobileAds.h>
 #import "LayoutManagers.h"
 #import "DPNote.h"
 #import "DPUtils+UIColor.h"

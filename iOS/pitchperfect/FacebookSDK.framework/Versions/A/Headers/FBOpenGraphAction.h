@@ -36,19 +36,10 @@
 @protocol FBOpenGraphAction<FBGraphObject>
 
 /*!
- @abstract use objectID instead
- @deprecated use objectID instead
- */
-@property (retain, nonatomic) NSString *id __attribute__ ((deprecated("use objectID instead")));
-
-/*!
  @property
- @abstract Typed access to the action's ID.
- @discussion Note this typically refers to the "id" field of the graph object (i.e., equivalent
- to `[self objectForKey:@"id"]`) but is differently named to avoid conflicting with Apple's
- non-public selectors.
+ @abstract Typed access to action's id
  */
-@property (retain, nonatomic) NSString *objectID;
+@property (retain, nonatomic) NSString              *id;
 
 /*!
  @property
