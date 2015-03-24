@@ -7,7 +7,7 @@
 //
 
 #import "DPSongListViewController.h"
-#import "GADBannerView.h"
+#import <GoogleMobileAds/GoogleMobileAds.h>
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -21,6 +21,7 @@
 #import "DPAppDelegate.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "UIToolbar+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -194,7 +195,7 @@
     
     normalButtons = [NSArray arrayWithObjects:editItem, flexibleSpace, settingsButton, nil];
     editingButtons = [NSArray arrayWithObjects:doneItem, sortItem, flexibleSpace, addButton, nil];
-    
+        
     toolbar.items = normalButtons;
     
     [toolbar sizeToFit];

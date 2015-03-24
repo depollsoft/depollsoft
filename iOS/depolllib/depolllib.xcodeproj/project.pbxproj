@@ -39,6 +39,8 @@
 		63E1497C15C2614400E72AC9 /* DPFileCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 63E1497A15C2614400E72AC9 /* DPFileCache.h */; };
 		63E1497D15C2614400E72AC9 /* DPFileCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E1497B15C2614400E72AC9 /* DPFileCache.m */; };
 		63E1498315C26E0800E72AC9 /* DPUtils+Subscripts.h in Headers */ = {isa = PBXBuildFile; fileRef = 63E1498115C26E0800E72AC9 /* DPUtils+Subscripts.h */; };
+		63ED0BCE1AC0B7C000535ED1 /* UIToolbar+DPUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 63ED0BCC1AC0B7C000535ED1 /* UIToolbar+DPUtils.h */; };
+		63ED0BCF1AC0B7C000535ED1 /* UIToolbar+DPUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCD1AC0B7C000535ED1 /* UIToolbar+DPUtils.m */; };
 		63F17816154E112000C2AB59 /* DPEnum.h in Headers */ = {isa = PBXBuildFile; fileRef = 63F17814154E112000C2AB59 /* DPEnum.h */; };
 		63F17817154E112000C2AB59 /* DPEnum.m in Sources */ = {isa = PBXBuildFile; fileRef = 63F17815154E112000C2AB59 /* DPEnum.m */; };
 		63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF00831554F90000C28218 /* DPUtils+NSString.h */; };
@@ -91,6 +93,8 @@
 		63E1497A15C2614400E72AC9 /* DPFileCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPFileCache.h; path = filecache/DPFileCache.h; sourceTree = "<group>"; };
 		63E1497B15C2614400E72AC9 /* DPFileCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DPFileCache.m; path = filecache/DPFileCache.m; sourceTree = "<group>"; };
 		63E1498115C26E0800E72AC9 /* DPUtils+Subscripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DPUtils+Subscripts.h"; sourceTree = "<group>"; };
+		63ED0BCC1AC0B7C000535ED1 /* UIToolbar+DPUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIToolbar+DPUtils.h"; path = "utils/UIToolbar+DPUtils.h"; sourceTree = "<group>"; };
+		63ED0BCD1AC0B7C000535ED1 /* UIToolbar+DPUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIToolbar+DPUtils.m"; path = "utils/UIToolbar+DPUtils.m"; sourceTree = "<group>"; };
 		63F17814154E112000C2AB59 /* DPEnum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPEnum.h; sourceTree = "<group>"; };
 		63F17815154E112000C2AB59 /* DPEnum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPEnum.m; sourceTree = "<group>"; };
 		63FF00831554F90000C28218 /* DPUtils+NSString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+NSString.h"; path = "utils/DPUtils+NSString.h"; sourceTree = "<group>"; };
@@ -241,6 +245,8 @@
 				63336A5217F677BE00BC1EE2 /* UIView+DPUtils.m */,
 				638E736017F76F61000FFE53 /* UIButton+Hyperlink.h */,
 				638E736117F76F61000FFE53 /* UIButton+Hyperlink.m */,
+				63ED0BCC1AC0B7C000535ED1 /* UIToolbar+DPUtils.h */,
+				63ED0BCD1AC0B7C000535ED1 /* UIToolbar+DPUtils.m */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -262,6 +268,7 @@
 				63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */,
 				639F293418000C4D00517583 /* DPBusyIndicator.h in Headers */,
 				63336A5317F677BE00BC1EE2 /* UIView+DPUtils.h in Headers */,
+				63ED0BCE1AC0B7C000535ED1 /* UIToolbar+DPUtils.h in Headers */,
 				631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */,
 				63E1497C15C2614400E72AC9 /* DPFileCache.h in Headers */,
 				638E738B17F78D4D000FFE53 /* DPLabel.h in Headers */,
@@ -373,6 +380,7 @@
 				63336A4E17F6500100BC1EE2 /* DPGridLayout.m in Sources */,
 				639F293518000C4D00517583 /* DPBusyIndicator.m in Sources */,
 				63DC3760151E93A8007C46DB /* DPJsonSerializer.m in Sources */,
+				63ED0BCF1AC0B7C000535ED1 /* UIToolbar+DPUtils.m in Sources */,
 				63DC3769151E94CC007C46DB /* DPJsonPrimitive.m in Sources */,
 				63F17817154E112000C2AB59 /* DPEnum.m in Sources */,
 				63336A3E17F6284800BC1EE2 /* DPTabBarController.m in Sources */,

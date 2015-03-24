@@ -3,19 +3,31 @@
 
 #import <Foundation/Foundation.h>
 
+#if TARGET_OS_IPHONE
+#import <Parse/PFNullability.h>
+#else
+#import <ParseOSX/PFNullability.h>
+#endif
+
 @class PFObject;
 @class PFUser;
 
-// Version
-#define PARSE_VERSION @"1.5.0"
+///--------------------------------------
+/// @name Version
+///--------------------------------------
+
+#define PARSE_VERSION @"1.6.5"
 
 extern NSInteger const PARSE_API_VERSION;
 
-// Platform
+///--------------------------------------
+/// @name Platform
+///--------------------------------------
+
 #define PARSE_IOS_ONLY (TARGET_OS_IPHONE)
 #define PARSE_OSX_ONLY (TARGET_OS_MAC && !(TARGET_OS_IPHONE))
 
-extern NSString *const kPFDeviceType;
+extern NSString *const PF_NONNULL_S kPFDeviceType;
 
 #if PARSE_IOS_ONLY
 #import <UIKit/UIKit.h>
@@ -26,22 +38,107 @@ extern NSString *const kPFDeviceType;
 @compatibility_alias UIView NSView;
 #endif
 
-// Server
-extern NSString *const kPFParseServer;
+///--------------------------------------
+/// @name Server
+///--------------------------------------
 
-// Cache policies
-typedef enum {
+extern NSString *const PF_NONNULL_S kPFParseServer;
+
+///--------------------------------------
+/// @name Cache Policies
+///--------------------------------------
+
+/*!
+ `PFCachePolicy` specifies different caching policies that could be used with <PFQuery>.
+
+ This lets you show data when the user's device is offline,
+ or when the app has just started and network requests have not yet had time to complete.
+ Parse takes care of automatically flushing the cache when it takes up too much space.
+
+ @warning Cache policy could only be set when Local Datastore is not enabled.
+
+ @see PFQuery
+ */
+typedef NS_ENUM(uint8_t, PFCachePolicy) {
+    /*!
+     @abstract The query does not load from the cache or save results to the cache.
+     This is the default cache policy.
+     */
     kPFCachePolicyIgnoreCache = 0,
+    /*!
+     @abstract The query only loads from the cache, ignoring the network.
+     If there are no cached results, this causes a `NSError` with `kPFErrorCacheMiss` code.
+     */
     kPFCachePolicyCacheOnly,
+    /*!
+     @abstract The query does not load from the cache, but it will save results to the cache.
+     */
     kPFCachePolicyNetworkOnly,
+    /*!
+     @abstract The query first tries to load from the cache, but if that fails, it loads results from the network.
+     If there are no cached results, this causes a `NSError` with `kPFErrorCacheMiss` code.
+     */
     kPFCachePolicyCacheElseNetwork,
+    /*!
+     @abstract The query first tries to load from the network, but if that fails, it loads results from the cache.
+     If there are no cached results, this causes a `NSError` with `kPFErrorCacheMiss` code.
+     */
     kPFCachePolicyNetworkElseCache,
+    /*!
+     @abstract The query first loads from the cache, then loads from the network.
+     The callback will be called twice - first with the cached results, then with the network results.
+     Since it returns two results at different times, this cache policy cannot be used with synchronous or task methods.
+     */
     kPFCachePolicyCacheThenNetwork
-} PFCachePolicy;
+};
 
-// Errors
+///--------------------------------------
+/// @name Logging Levels
+///--------------------------------------
 
-extern NSString *const PFParseErrorDomain;
+/*!
+ `PFLogLevel` enum specifies different levels of logging that could be used to limit or display more messages in logs.
+
+ @see [Parse setLogLevel:]
+ @see [Parse logLevel]
+ */
+typedef NS_ENUM(uint8_t, PFLogLevel) {
+    /*!
+     Log level that disables all logging.
+     */
+    PFLogLevelNone = 0,
+    /*!
+     Log level that if set is going to output error messages to the log.
+     */
+    PFLogLevelError = 1,
+    /*!
+     Log level that if set is going to output the following messages to log:
+     - Errors
+     - Warnings
+     */
+    PFLogLevelWarning = 2,
+    /*!
+     Log level that if set is going to output the following messages to log:
+     - Errors
+     - Warnings
+     - Informational messages
+     */
+    PFLogLevelInfo = 3,
+    /*!
+     Log level that if set is going to output the following messages to log:
+     - Errors
+     - Warnings
+     - Informational messages
+     - Debug messages
+     */
+    PFLogLevelDebug = 4
+};
+
+///--------------------------------------
+/// @name Errors
+///--------------------------------------
+
+extern NSString *const PF_NONNULL_S PFParseErrorDomain;
 
 /*! @abstract 1: Internal server error. No information available. */
 extern NSInteger const kPFErrorInternalServer;
@@ -118,6 +215,8 @@ extern NSInteger const kPFErrorInvalidImageData;
 extern NSInteger const kPFErrorUnsavedFile;
 /*! @abstract 153: Fail to delete file. */
 extern NSInteger const kPFErrorFileDeleteFailure;
+/*! @abstract 155: Application has exceeded its request limit. */
+extern NSInteger const kPFErrorRequestLimitExceeded;
 /*! @abstract 160: Invalid event name. */
 extern NSInteger const kPFErrorInvalidEventName;
 /*! @abstract 200: Username is missing or empty */
@@ -151,27 +250,34 @@ extern NSInteger const kPFErrorFacebookInvalidSession;
 /*! @abstract 251: Invalid linked session */
 extern NSInteger const kPFErrorInvalidLinkedSession;
 
-typedef void (^PFBooleanResultBlock)(BOOL succeeded, NSError *error);
-typedef void (^PFIntegerResultBlock)(int number, NSError *error);
-typedef void (^PFArrayResultBlock)(NSArray *objects, NSError *error);
-typedef void (^PFObjectResultBlock)(PFObject *object, NSError *error);
-typedef void (^PFSetResultBlock)(NSSet *channels, NSError *error);
-typedef void (^PFUserResultBlock)(PFUser *user, NSError *error);
-typedef void (^PFDataResultBlock)(NSData *data, NSError *error);
-typedef void (^PFDataStreamResultBlock)(NSInputStream *stream, NSError *error);
-typedef void (^PFStringResultBlock)(NSString *string, NSError *error);
-typedef void (^PFIdResultBlock)(id object, NSError *error);
+///--------------------------------------
+/// @name Blocks
+///--------------------------------------
+
+typedef void (^PFBooleanResultBlock)(BOOL succeeded, PF_NULLABLE_S NSError *error);
+typedef void (^PFIntegerResultBlock)(int number, PF_NULLABLE_S NSError *error);
+typedef void (^PFArrayResultBlock)(PF_NULLABLE_S NSArray *objects, PF_NULLABLE_S NSError *error);
+typedef void (^PFObjectResultBlock)(PF_NULLABLE_S PFObject *object, PF_NULLABLE_S NSError *error);
+typedef void (^PFSetResultBlock)(PF_NULLABLE_S NSSet *channels, PF_NULLABLE_S NSError *error);
+typedef void (^PFUserResultBlock)(PF_NULLABLE_S PFUser *user, PF_NULLABLE_S NSError *error);
+typedef void (^PFDataResultBlock)(PF_NULLABLE_S NSData *data, PF_NULLABLE_S NSError *error);
+typedef void (^PFDataStreamResultBlock)(PF_NULLABLE_S NSInputStream *stream, PF_NULLABLE_S NSError *error);
+typedef void (^PFStringResultBlock)(PF_NULLABLE_S NSString *string, PF_NULLABLE_S NSError *error);
+typedef void (^PFIdResultBlock)(PF_NULLABLE_S id object, PF_NULLABLE_S NSError *error);
 typedef void (^PFProgressBlock)(int percentDone);
 
-// Deprecated Macro
+///--------------------------------------
+/// @name Deprecated Macros
+///--------------------------------------
+
 #ifndef PARSE_DEPRECATED
-#ifdef __deprecated_msg
-#define PARSE_DEPRECATED(_MSG) __deprecated_msg(_MSG)
-#else
-#ifdef __deprecated
-#define PARSE_DEPRECATED(_MSG) __attribute__((deprecated))
-#else
-#define PARSE_DEPRECATED(_MSG)
-#endif
-#endif
+#  ifdef __deprecated_msg
+#    define PARSE_DEPRECATED(_MSG) __deprecated_msg(_MSG)
+#  else
+#    ifdef __deprecated
+#      define PARSE_DEPRECATED(_MSG) __attribute__((deprecated))
+#    else
+#      define PARSE_DEPRECATED(_MSG)
+#    endif
+#  endif
 #endif
