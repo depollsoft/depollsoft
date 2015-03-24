@@ -74,8 +74,6 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
-    
     UIToolbar *toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleDefault;
     
@@ -104,7 +102,11 @@
                                     ];
     
     [rootLayout addSubview:toolbar row:0 column:0];
-    [rootLayout addSubview:bannerView  row:1 column:0];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [rootLayout addSubview:bannerView row:1 column:0];
+        
+        [bannerView loadRequest:DPAppDelegate.adRequest];
+    }
     
     NSString *explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
     "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
@@ -216,6 +218,9 @@
 }
 
 - (void)resetBannerViewSize {
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        return;
+    }
     switch ([UIApplication sharedApplication].statusBarOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
