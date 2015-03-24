@@ -208,4 +208,40 @@
     return view;
 }
 
+- (UIView *)fixHeight:(CGFloat)height {
+    self.translatesAutoresizingMaskIntoConstraints = NO;
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:self];
+    
+    
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[self]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(self)]];
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[self(==height)]|"
+                                                                 options:0
+                                                                 metrics:@{@"height": @(height)}
+                                                                   views:NSDictionaryOfVariableBindings(self)]];
+    
+    return view;
+}
+
+- (UIView *)fixWidth:(CGFloat)width {
+    self.translatesAutoresizingMaskIntoConstraints = NO;
+    UIView *view = [[UIView alloc] init];
+    [view addSubview:self];
+    
+    
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[self(==width)]|"
+                                                                 options:0
+                                                                 metrics:@{@"width": @(width)}
+                                                                   views:NSDictionaryOfVariableBindings(self)]];
+    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[self]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(self)]];
+    
+    return view;
+}
+
 @end

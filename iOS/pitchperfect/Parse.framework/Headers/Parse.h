@@ -25,6 +25,7 @@
 #import <Parse/PFUser.h>
 #import <Parse/PFInstallation.h>
 #import <Parse/PFNetworkActivityIndicatorManager.h>
+#import <Parse/PFNullability.h>
 #import <Parse/PFProduct.h>
 #import <Parse/PFPurchase.h>
 #import <Parse/PFPush.h>
@@ -40,6 +41,7 @@
 #import <ParseOSX/PFConstants.h>
 #import <ParseOSX/PFFile.h>
 #import <ParseOSX/PFGeoPoint.h>
+#import <ParseOSX/PFNullability.h>
 #import <ParseOSX/PFObject+Subclass.h>
 #import <ParseOSX/PFObject.h>
 #import <ParseOSX/PFQuery.h>
@@ -49,6 +51,8 @@
 #import <ParseOSX/PFUser.h>
 
 #endif
+
+PF_ASSUME_NONNULL_BEGIN
 
 /*!
  The `Parse` class contains static functions that handle global configuration for the Parse framework.
@@ -77,6 +81,23 @@
  */
 + (NSString *)getClientKey;
 
+///--------------------------------------
+/// @name Enabling Local Datastore
+///--------------------------------------
+
+/*!
+ @abstract Enable pinning in your application. This must be called before your application can use
+ pinning. The recommended way is to call this method before `setApplicationId:clientKey:`.
+ */
++ (void)enableLocalDatastore;
+
+/*!
+ @abstract Flag that indicates whether Local Datastore is enabled.
+
+ @returns `YES` if Local Datastore is enabled, otherwise `NO`.
+ */
++ (BOOL)isLocalDatastoreEnabled;
+
 #if PARSE_IOS_ONLY
 
 ///--------------------------------------
@@ -88,17 +109,51 @@
 
  @param enabled Whether a `UIAlertView` should be shown when the device is offline
  and network access is required from a view or view controller.
+
+ @deprecated This method has no effect.
  */
-+ (void)offlineMessagesEnabled:(BOOL)enabled;
++ (void)offlineMessagesEnabled:(BOOL)enabled PARSE_DEPRECATED("This method is deprecated and has no effect.");
 
 /*!
  @abstract Set whether to show an error message when using a Parse view or view controller related classes
  and a Parse error was generated via a query.
 
  @param enabled Whether a `UIAlertView` should be shown when an error occurs.
+
+ @deprecated This method has no effect.
  */
-+ (void)errorMessagesEnabled:(BOOL)enabled;
++ (void)errorMessagesEnabled:(BOOL)enabled PARSE_DEPRECATED("This method is deprecated and has no effect.");
 
 #endif
 
+///--------------------------------------
+/// @name Logging
+///--------------------------------------
+
+/*!
+ @abstract Sets the level of logging to display.
+
+ @discussion By default:
+ - If running inside an app that was downloaded from iOS App Store - it is set to <PFLogLevelNone>
+ - All other cases - it is set to <PFLogLevelWarning>
+
+ @param logLevel Log level to set.
+ @see PFLogLevel
+ */
++ (void)setLogLevel:(PFLogLevel)logLevel;
+
+/*!
+ @abstract Log level that will be displayed.
+
+ @discussion By default:
+ - If running inside an app that was downloaded from iOS App Store - it is set to <PFLogLevelNone>
+ - All other cases - it is set to <PFLogLevelWarning>
+
+ @returns A <PFLogLevel> value.
+ @see PFLogLevel
+ */
++ (PFLogLevel)logLevel;
+
 @end
+
+PF_ASSUME_NONNULL_END

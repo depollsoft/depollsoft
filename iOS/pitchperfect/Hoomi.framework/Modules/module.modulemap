@@ -1,0 +1,6 @@
+framework module Hoomi {
+  umbrella header "Hoomi.h"
+
+  export *
+  module * { export * }
+}

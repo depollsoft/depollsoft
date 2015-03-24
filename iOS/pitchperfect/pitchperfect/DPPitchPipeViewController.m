@@ -11,7 +11,7 @@
 #import "DPPitchPipeViewController.h"
 #import "DPNote.h"
 #import "DPAccidental.h"
-#import "GADBannerView.h"
+#import <GoogleMobileAds/GoogleMobileAds.h>
 #import "KJGridLayoutView.h"
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
@@ -22,6 +22,7 @@
 #import "DPAppDelegate.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "UIToolbar+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -111,14 +112,12 @@
     typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
     [buttonLayout addSubview:[typeSwitcher centered] row:1 column:1 rowSpan:2 colSpan:2];
     
-    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
+    [toolbar addTitle:@"Pitch Perfect"];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    
-    
     settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
+    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, settingsButton, nil];
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
