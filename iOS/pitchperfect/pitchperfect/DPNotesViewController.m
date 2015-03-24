@@ -17,6 +17,7 @@
 #import "DPAppDelegate.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "UIToolbar+DPUtils.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -182,12 +183,12 @@
         [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     });
     
-    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
+    [toolbar addTitle:@"Pitch Perfect"];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, titleItem, flexibleSpace, settingsButton, nil];
+    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, settingsButton, nil];
     [toolbar sizeToFit];
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;

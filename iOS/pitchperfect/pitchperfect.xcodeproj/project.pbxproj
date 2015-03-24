@@ -79,12 +79,12 @@
 		63ED0BB61AC0989600535ED1 /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BB11AC0989600535ED1 /* Parse.framework */; };
 		63ED0BB81AC0989600535ED1 /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BB31AC0989600535ED1 /* ParseFacebookUtils.framework */; };
 		63ED0BB91AC0989600535ED1 /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BB41AC0989600535ED1 /* ParseUI.framework */; };
-		63ED0BBD1AC09C0000535ED1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */; };
 		63ED0BC11AC09CB100535ED1 /* Bolts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC01AC09CB100535ED1 /* Bolts.framework */; };
-		63ED0BC31AC0A47200535ED1 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC21AC0A47200535ED1 /* FacebookSDK.framework */; };
 		63ED0BC41AC0A55E00535ED1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */; };
-		63ED0BC51AC0A55E00535ED1 /* Hoomi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		63ED0BC81AC0A5D700535ED1 /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */; };
+		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
+		63ED0BD31AC1097600535ED1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BD21AC1097600535ED1 /* Hoomi.framework */; };
+		63ED0BD51AC117B000535ED1 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,7 +118,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				63ED0BC51AC0A55E00535ED1 /* Hoomi.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -221,10 +220,13 @@
 		63ED0BB11AC0989600535ED1 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
 		63ED0BB31AC0989600535ED1 /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
 		63ED0BB41AC0989600535ED1 /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
-		63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
+		63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hoomi.framework; path = /Users/david/Documents/depollsoft/iOS/pitchperfect/Hoomi.framework; sourceTree = "<absolute>"; };
 		63ED0BC01AC09CB100535ED1 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
-		63ED0BC21AC0A47200535ED1 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 		63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GoogleMobileAds.framework; sourceTree = "<group>"; };
+		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
+		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
+		63ED0BD21AC1097600535ED1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
+		63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,10 +242,9 @@
 				63237B8C1979DCC300EA08CC /* Accounts.framework in Frameworks */,
 				63237B8A1979DCB800EA08CC /* Social.framework in Frameworks */,
 				63336A2D17F50B0100BC1EE2 /* libpitchperfectlib.a in Frameworks */,
-				63ED0BC31AC0A47200535ED1 /* FacebookSDK.framework in Frameworks */,
+				63ED0BD31AC1097600535ED1 /* Hoomi.framework in Frameworks */,
 				63ED0BC41AC0A55E00535ED1 /* Hoomi.framework in Frameworks */,
 				63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */,
-				63ED0BBD1AC09C0000535ED1 /* Hoomi.framework in Frameworks */,
 				63ED0BC81AC0A5D700535ED1 /* GoogleMobileAds.framework in Frameworks */,
 				638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */,
 				63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */,
@@ -258,6 +259,7 @@
 				63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */,
 				63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */,
 				63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */,
+				63ED0BD51AC117B000535ED1 /* FacebookSDK.framework in Frameworks */,
 				63A99D8915884EE600C78CC0 /* CoreText.framework in Frameworks */,
 				63ED0BB91AC0989600535ED1 /* ParseUI.framework in Frameworks */,
 				63225C1B1A3575C200857B44 /* libFlurry_5.4.0.a in Frameworks */,
@@ -369,10 +371,10 @@
 		63DC36A0151E9000007C46DB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */,
+				63ED0BD21AC1097600535ED1 /* Hoomi.framework */,
 				63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */,
-				63ED0BC21AC0A47200535ED1 /* FacebookSDK.framework */,
 				63ED0BC01AC09CB100535ED1 /* Bolts.framework */,
-				63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */,
 				63ED0BB11AC0989600535ED1 /* Parse.framework */,
 				63ED0BB31AC0989600535ED1 /* ParseFacebookUtils.framework */,
 				63ED0BB41AC0989600535ED1 /* ParseUI.framework */,
@@ -433,6 +435,8 @@
 				63336A3117F51CF800BC1EE2 /* UIViewController+Helpers.h */,
 				63336A3217F51CF800BC1EE2 /* UIViewController+Helpers.m */,
 				6338EFC31979DFFA000187E2 /* Images.xcassets */,
+				63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */,
+				63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -641,6 +645,7 @@
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
+				63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */,
 				63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

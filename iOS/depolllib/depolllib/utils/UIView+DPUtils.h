@@ -20,5 +20,7 @@
 - (UIView *)alignLeft;
 - (UIView *)alignBottom;
 - (UIView *)alignRight;
+- (UIView *)fixHeight:(CGFloat)height;
+- (UIView *)fixWidth:(CGFloat)width;
 
 @end

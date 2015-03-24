@@ -21,6 +21,9 @@
 #import <ParseFacebookUtils/PFFacebookUtils.h>
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "DPLoginViewController.h"
+#import "UIToolbar+DPUtils.h"
+#import <Hoomi/Hoomi.h>
 
 @interface DPSettingsViewController ()
 
@@ -45,12 +48,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-        
+    
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
     
-	// Do any additional setup after loading the view.
+    // Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
                                  [DPGridDimension dimension],
@@ -58,7 +61,7 @@
                                  [DPGridDimension dimensionWithStars:1]
                                  ];
     
-	// Do any additional setup after loading the view, typically from a nib.
+    // Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
@@ -87,7 +90,7 @@
     self.view.backgroundColor = [UIColor whiteColor];
     
     [rootLayout addSubview:toolbar row:0 column:0];
-
+    
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
@@ -101,6 +104,8 @@
     tableView.backgroundColor = [UIColor clearColor];
     tableView.backgroundView = nil;
     [rootLayout addSubview:tableView row:2 column:0];
+    
+    [toolbar addTitle:@"Settings"];
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
@@ -212,14 +217,14 @@
             if ([PFUser currentUser]) {
                 cell.textLabel.text = @"Log out";
             } else {
-                cell.textLabel.text = @"Log in with Facebook";
+                cell.textLabel.text = @"Log in";
             }
             UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
             activityIndicator.hidesWhenStopped = YES;
             cell.accessoryView = activityIndicator;
             [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(loginButtonPress:)]];
             break;
-        }            
+        }
         default:
             break;
     }
@@ -232,24 +237,25 @@
 - (void)loginButtonPress:(UIGestureRecognizer *)recognizer {
     if ([PFUser currentUser]) {
         [PFUser logOut];
+        [[FBSession activeSession] closeAndClearTokenInformation];
+        [[HFClient currentClient] setCurrentToken:nil];
         [tableView reloadData];
     } else {
         UITableViewCell *cell = (UITableViewCell *)recognizer.view;
         UIActivityIndicatorView *activity = (UIActivityIndicatorView*)cell.accessoryView;
         [activity startAnimating];
-        [PFFacebookUtils logInWithPermissions:nil block:^(PFUser *user, NSError *error) {
-            [activity stopAnimating];
-            if (user) {
-                if (!user.isNew) {
-                    [[DPSettingsModel sharedInstance] restoreUser];
-                    [[DPSongsModel sharedInstance] refreshFromParse];
-                } else {
-                    [[DPSettingsModel sharedInstance] refreshUser];
-                    [[DPSongsModel sharedInstance] saveAllToParse:YES];
-                }
-            }
-            [tableView reloadData];
-        }];
+        DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+        [self presentViewController:loginViewController
+                           animated:YES
+                         completion:^{
+                             
+                         }];
+        [loginViewController.loginTask continueWithExecutor:[BFExecutor mainThreadExecutor]
+                                                  withBlock:^id(BFTask *task) {
+                                                      [activity stopAnimating];
+                                                      [tableView reloadData];
+                                                      return nil;
+                                                  }];
     }
 }
 
@@ -283,7 +289,7 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if (section == 1) {
-        return @"Log in using Facebook to back up and synchronize your song list and settings.";
+        return @"Log in to back up and synchronize your song list and settings.";
     }
     return nil;
 }
