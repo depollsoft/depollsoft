@@ -20,6 +20,8 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "Flurry.h"
+#import <Hoomi/Hoomi.h>
+#import "DPLoginViewController.h"
 
 #define PRODUCTION
 //#define TEST_ADS
@@ -32,7 +34,9 @@
 {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-        
+    
+    [HFClient clientWithApplicationId:@"1dhck14vv2te41y78qiij5hyw"];
+    
 #ifdef PRODUCTION
     [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
     [PFFacebookUtils initializeFacebook];
@@ -57,6 +61,17 @@
     
     // Initialize settings
     [DPSettingsModel sharedInstance];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"]) {
+            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
+            DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+            [self.window.rootViewController presentViewController:loginViewController
+                                                         animated:YES
+                                                       completion:^{
+                                                       }];
+        }
+    });
     
     // Override point for customization after application launch.
     return YES;
@@ -93,7 +108,7 @@
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
+    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
 
@@ -115,9 +130,16 @@
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
   sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    return [FBAppCall handleOpenURL:url
-                  sourceApplication:sourceApplication
-                        withSession:[PFFacebookUtils session]];
+    if ([FBAppCall handleOpenURL:url
+               sourceApplication:sourceApplication
+                     withSession:[PFFacebookUtils session]]) {
+        return YES;
+    }
+    BOOL value = [[HFClient currentClient] application:application
+                                         openURL:url
+                               sourceApplication:sourceApplication
+                                      annotation:annotation];
+    return value;
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {

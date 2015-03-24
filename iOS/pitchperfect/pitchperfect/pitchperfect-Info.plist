@@ -46,6 +46,16 @@
 				<string>fb292538514135026</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Pitch Perfect Hoomi</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>depollsoft.pitchperfect</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1.4.0</string>
