@@ -112,7 +112,7 @@
     "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
     "<p>"
     "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device."
-    "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your"
+    "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
     "data goes where you go."
     "</p>"
     "<p>"

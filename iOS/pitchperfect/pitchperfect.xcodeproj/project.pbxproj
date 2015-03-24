@@ -42,6 +42,7 @@
 		634C898A15886230000D9AFE /* MusiQwikB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */; };
 		634C898B15886230000D9AFE /* MusiSync.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7D15883F2900C78CC0 /* MusiSync.ttf */; };
 		634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */; };
+		635624D21AC1FECF0011697F /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 635624D11AC1FECF0011697F /* Hoomi.framework */; };
 		638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638F1BEB17F5069500906944 /* AdSupport.framework */; };
 		63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D52158826F800C78CC0 /* MessageUI.framework */; };
 		63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */; };
@@ -80,10 +81,8 @@
 		63ED0BB81AC0989600535ED1 /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BB31AC0989600535ED1 /* ParseFacebookUtils.framework */; };
 		63ED0BB91AC0989600535ED1 /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BB41AC0989600535ED1 /* ParseUI.framework */; };
 		63ED0BC11AC09CB100535ED1 /* Bolts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC01AC09CB100535ED1 /* Bolts.framework */; };
-		63ED0BC41AC0A55E00535ED1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */; };
 		63ED0BC81AC0A5D700535ED1 /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */; };
 		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
-		63ED0BD31AC1097600535ED1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BD21AC1097600535ED1 /* Hoomi.framework */; };
 		63ED0BD51AC117B000535ED1 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */; };
 /* End PBXBuildFile section */
 
@@ -110,19 +109,6 @@
 			remoteInfo = pitchperfect;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		63ED0BC61AC0A55E00535ED1 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
@@ -169,6 +155,7 @@
 		634C898015885F6A000D9AFE /* Readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Readme.txt; sourceTree = "<group>"; };
 		634C898115885F6A000D9AFE /* VLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLayoutView.h; sourceTree = "<group>"; };
 		634C898215885F6A000D9AFE /* VLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLayoutView.m; sourceTree = "<group>"; };
+		635624D11AC1FECF0011697F /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
 		638F1BEB17F5069500906944 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		63A99D52158826F800C78CC0 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -220,12 +207,10 @@
 		63ED0BB11AC0989600535ED1 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
 		63ED0BB31AC0989600535ED1 /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
 		63ED0BB41AC0989600535ED1 /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
-		63ED0BBC1AC09C0000535ED1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hoomi.framework; path = /Users/david/Documents/depollsoft/iOS/pitchperfect/Hoomi.framework; sourceTree = "<absolute>"; };
 		63ED0BC01AC09CB100535ED1 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
 		63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GoogleMobileAds.framework; sourceTree = "<group>"; };
 		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
-		63ED0BD21AC1097600535ED1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
 		63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -241,9 +226,8 @@
 				6338EFC01979DEB2000187E2 /* CoreLocation.framework in Frameworks */,
 				63237B8C1979DCC300EA08CC /* Accounts.framework in Frameworks */,
 				63237B8A1979DCB800EA08CC /* Social.framework in Frameworks */,
+				635624D21AC1FECF0011697F /* Hoomi.framework in Frameworks */,
 				63336A2D17F50B0100BC1EE2 /* libpitchperfectlib.a in Frameworks */,
-				63ED0BD31AC1097600535ED1 /* Hoomi.framework in Frameworks */,
-				63ED0BC41AC0A55E00535ED1 /* Hoomi.framework in Frameworks */,
 				63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */,
 				63ED0BC81AC0A5D700535ED1 /* GoogleMobileAds.framework in Frameworks */,
 				638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */,
@@ -371,8 +355,8 @@
 		63DC36A0151E9000007C46DB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				635624D11AC1FECF0011697F /* Hoomi.framework */,
 				63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */,
-				63ED0BD21AC1097600535ED1 /* Hoomi.framework */,
 				63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */,
 				63ED0BC01AC09CB100535ED1 /* Bolts.framework */,
 				63ED0BB11AC0989600535ED1 /* Parse.framework */,
@@ -481,7 +465,6 @@
 				63DC3699151E8FFF007C46DB /* Sources */,
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
-				63ED0BC61AC0A55E00535ED1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
