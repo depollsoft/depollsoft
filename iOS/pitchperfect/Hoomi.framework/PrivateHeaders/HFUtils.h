@@ -18,5 +18,7 @@
 + (void)loadFontFromResource:(NSString *)resourceName ofType:(NSString *)ofType bundle:(NSBundle *)bundle;
 + (UIImage *)imageWithColor:(UIColor *)color;
 + (UIImage *)scaleImage:(UIImage *)image size:(CGSize)newSize;
++ (NSDictionary *)queryItemsForComponents:(NSURLComponents *)components;
++ (void)setQueryItems:(NSDictionary *)queryItems forComponents:(NSURLComponents *)components;
 
 @end
