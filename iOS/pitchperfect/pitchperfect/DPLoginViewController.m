@@ -187,7 +187,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [self dismissViewControllerAnimated:YES completion:^{
         }];
-        [[PFFacebookUtils logInWithFacebookIdInBackground:user.id
+        [[PFFacebookUtils logInWithFacebookIdInBackground:user.objectID
                                               accessToken:[FBSession activeSession].accessTokenData.accessToken
                                            expirationDate:[FBSession activeSession].accessTokenData.expirationDate] continueWithExecutor:[BFExecutor mainThreadExecutor]
          withBlock:^id(BFTask *task) {
