@@ -42,7 +42,8 @@
 		634C898A15886230000D9AFE /* MusiQwikB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */; };
 		634C898B15886230000D9AFE /* MusiSync.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7D15883F2900C78CC0 /* MusiSync.ttf */; };
 		634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */; };
-		635624D21AC1FECF0011697F /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 635624D11AC1FECF0011697F /* Hoomi.framework */; };
+		635624E41ACC715F0011697F /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 635624E31ACC715F0011697F /* Hoomi.framework */; };
+		635624E61ACC71720011697F /* Hoomi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 635624E31ACC715F0011697F /* Hoomi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638F1BEB17F5069500906944 /* AdSupport.framework */; };
 		63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D52158826F800C78CC0 /* MessageUI.framework */; };
 		63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */; };
@@ -110,6 +111,20 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		635624E21ACC6FFA0011697F /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				635624E61ACC71720011697F /* Hoomi.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -155,7 +170,7 @@
 		634C898015885F6A000D9AFE /* Readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Readme.txt; sourceTree = "<group>"; };
 		634C898115885F6A000D9AFE /* VLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLayoutView.h; sourceTree = "<group>"; };
 		634C898215885F6A000D9AFE /* VLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLayoutView.m; sourceTree = "<group>"; };
-		635624D11AC1FECF0011697F /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
+		635624E31ACC715F0011697F /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
 		638F1BEB17F5069500906944 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		63A99D52158826F800C78CC0 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -226,13 +241,13 @@
 				6338EFC01979DEB2000187E2 /* CoreLocation.framework in Frameworks */,
 				63237B8C1979DCC300EA08CC /* Accounts.framework in Frameworks */,
 				63237B8A1979DCB800EA08CC /* Social.framework in Frameworks */,
-				635624D21AC1FECF0011697F /* Hoomi.framework in Frameworks */,
 				63336A2D17F50B0100BC1EE2 /* libpitchperfectlib.a in Frameworks */,
 				63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */,
 				63ED0BC81AC0A5D700535ED1 /* GoogleMobileAds.framework in Frameworks */,
 				638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */,
 				63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */,
 				63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */,
+				635624E41ACC715F0011697F /* Hoomi.framework in Frameworks */,
 				631C913C15958335004733F1 /* QuartzCore.framework in Frameworks */,
 				631C913A1595832F004733F1 /* Security.framework in Frameworks */,
 				631C913815958329004733F1 /* libz.1.1.3.dylib in Frameworks */,
@@ -355,7 +370,7 @@
 		63DC36A0151E9000007C46DB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				635624D11AC1FECF0011697F /* Hoomi.framework */,
+				635624E31ACC715F0011697F /* Hoomi.framework */,
 				63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */,
 				63ED0BC71AC0A5D700535ED1 /* GoogleMobileAds.framework */,
 				63ED0BC01AC09CB100535ED1 /* Bolts.framework */,
@@ -465,6 +480,7 @@
 				63DC3699151E8FFF007C46DB /* Sources */,
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
+				635624E21ACC6FFA0011697F /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -740,7 +756,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -772,7 +788,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
