@@ -36,11 +36,23 @@
 @property (nonatomic, readonly, copy) NSString *userId;
 
 /*!
- Creates an HFTokenInformation object with the given token, applicationId, issuance date, and user ID.
+ Whether the token was issued to an authenticated client.
+ */
+@property (nonatomic, readonly, assign) BOOL issuedToAuthenticatedClient;
+
+/*!
+ Creates an HFTokenInformation object.
+ 
+ @param token the token whose information is being represented
+ @param applicationId the applicationId for which the token was issued
+ @param issued the date and time the token was issued
+ @param userId the stable, unique user ID of the user for which the token was issued
+ @param issuedToAuthenticatedClient was the token issued to an authenticated client
  */
 + (instancetype)tokenInformationWithToken:(HFAccessToken *)token
                             applicationId:(NSString *)applicationId
                                    issued:(NSDate *)issued
-                                   userId:(NSString *)userId;
+                                   userId:(NSString *)userId
+              issuedToAuthenticatedClient:(BOOL)issuedToAuthenticatedClient;
 
 @end
