@@ -34,11 +34,17 @@
  Creates an HFAccessToken given just the token string, in case you are restoring
  a serialized token without additional information or retrieving a token from your
  server.
+ 
+ @param token the token string
  */
 + (instancetype)tokenWithString:(NSString *)token;
 
 /*!
  Creates an HFAccessToken with its known scopes and expiration.
+ 
+ @param token the token string
+ @param knownScopes the set of scopes known to be issued for this token
+ @param knownExpiration the known expiration time for this token
  */
 + (instancetype)tokenWithString:(NSString *)token
                     knownScopes:(NSArray *)knownScopes

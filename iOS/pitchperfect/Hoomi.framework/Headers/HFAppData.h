@@ -26,6 +26,9 @@
 
 /*!
  Creates an HFAppData instance with the given data and ETag.
+ 
+ @param data the app data for the user
+ @param ETag the ETag of the app data (used for optimistic concurrency)
  */
 + (instancetype)appDataWithData:(NSMutableDictionary *)data ETag:(NSString *)ETag;
 

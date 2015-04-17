@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 #import <Hoomi/HFLoginButtonDelegate.h>
 
+/*!
+ Defines login button styles for the HFLoginButton.
+ */
 typedef NS_ENUM(NSInteger, HFLoginButtonStyle) {
   /*!
    Makes the login button use a green background with a white text/image overlay.

@@ -36,6 +36,7 @@
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
     [HFClient clientWithApplicationId:@"1dhck14vv2te41y78qiij5hyw"];
+    [[HFClient currentClient] requireClientAuthentication];
     
 #ifdef PRODUCTION
     [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];

@@ -19,6 +19,8 @@
 
 /*!
  Creates an HFClient with the given application ID from Hoomi.
+ 
+ @param applicationId the application ID that this client will use
  */
 + (instancetype)clientWithApplicationId:(NSString *)applicationId;
 
@@ -29,8 +31,24 @@
 
 /*!
  Sets the default client to use for accessing Hoomi.
+ 
+ @param client the new current HFClient
  */
 + (void)setCurrentClient:(HFClient *)client;
+
+/*!
+ Enables client authentication, which will only be effective when not running in the simulator
+ and when an app receipt is available on the device (as will be the case when the app has been purchased
+ through the app store).
+ */
+- (void)enableClientAuthentication;
+
+/*!
+ Enables client authentication, and will request an app receipt if none is
+ available.  During testing, you won't be able to use the simulator, and may
+ need to register a sandbox account through iTunes Connect (https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnect_Guide/Chapters/SettingUpUserAccounts.html)
+ */
+- (void)requireClientAuthentication;
 
 #pragma mark Token Management
 
@@ -53,6 +71,13 @@
 /*!
  Pass through for completing the login process.  Call this method from your AppDelegate's
  application:openURL:sourceApplication:annotation: selector implementation.
+ 
+ @param application the UIApplication
+ @param url the URL being opened in the application
+ @param sourceApplication the bundle ID of the app that is requesting your app to open the URL
+ @param annotation a property list object supplied by the source app to communicate information to the receiving app
+ 
+ @return true if and only if the link was the result of a Hoomi callback and was handled by Hoomi
  */
 - (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
