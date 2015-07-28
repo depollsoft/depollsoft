@@ -23,7 +23,6 @@
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
 #import "UIToolbar+DPUtils.h"
-#import <Hoomi/Hoomi.h>
 
 @interface DPSettingsViewController ()
 
@@ -238,7 +237,6 @@
     if ([PFUser currentUser]) {
         [PFUser logOut];
         [[FBSession activeSession] closeAndClearTokenInformation];
-        [[HFClient currentClient] setCurrentToken:nil];
         [tableView reloadData];
     } else {
         UITableViewCell *cell = (UITableViewCell *)recognizer.view;

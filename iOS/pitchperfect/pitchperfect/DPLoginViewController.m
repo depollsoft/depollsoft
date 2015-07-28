@@ -13,7 +13,6 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <Hoomi/Hoomi.h>
 #import <FacebookSDK/FacebookSDK.h>
 #import <Parse/Parse.h>
 #import <ParseFacebookUtils/PFFacebookUtils.h>
@@ -21,7 +20,7 @@
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 
-@interface DPLoginViewController () <HFLoginButtonDelegate, FBLoginViewDelegate>
+@interface DPLoginViewController () <FBLoginViewDelegate>
 
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
@@ -108,16 +107,32 @@
         [bannerView loadRequest:DPAppDelegate.adRequest];
     }
     
-    NSString *explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
-    "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
-    "<p>"
-    "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device."
-    "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
-    "data goes where you go."
-    "</p>"
-    "<p>"
-    "Pitch Perfect does not collect any of your personal data for this free service."
-    "</p>";
+    NSString *explanationHtml;
+    if (!self.isHoomiLogout) {
+        explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
+        "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
+        "<p>"
+        "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "
+        "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
+        "data goes where you go."
+        "</p>"
+        "<p>"
+        "Pitch Perfect does not collect any of your personal data for this free service."
+        "</p>";
+    } else {
+        explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
+        "<p><b>Notice:</b> You have previously logged into Pitch Perfect with Hoomi, which is being discontinued. "
+        "You have been logged out of Pitch Perfect. "
+        "You may choose to log in with Facebook, or continue without logging in.</p>"
+        "<p>"
+        "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "
+        "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
+        "data goes where you go."
+        "</p>"
+        "<p>"
+        "Pitch Perfect does not collect any of your personal data for this free service."
+        "</p>";
+    }
     NSAttributedString *explanationText = [[NSAttributedString alloc] initWithData:[explanationHtml dataUsingEncoding:NSUTF8StringEncoding]
                                                                            options:@{NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType}
                                                                 documentAttributes:nil
@@ -130,27 +145,10 @@
     
     [rootLayout addSubview:explanation row:2 column:0];
     
-    HFLoginButton *loginButton = [[HFLoginButton alloc] init];
-    loginButton.redirectUri = [NSURL URLWithString:@"depollsoft.pitchperfect://login/"];
-    loginButton.scopes = @[@"user:id", @"user:app:data:read", @"user:app:data:write"];
-    loginButton.delegate = self;
-    [rootLayout addSubview:[[loginButton fixHeight:50] pad:4] row:3 column:0];
-    
     FBLoginView *fbLoginButton = [[FBLoginView alloc] initWithReadPermissions:@[]];
     UIView *fbLoginContainer = [[fbLoginButton fixHeight:50] pad:4];
     [rootLayout addSubview:fbLoginContainer row:4 column:0];
     fbLoginButton.delegate = self;
-    [rootLayout setView:fbLoginContainer hidden:YES];
-    
-    UIButton *moreOptionsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [moreOptionsButton setTitle:@"More options" forState:UIControlStateNormal];
-    UIView *moreOptionsContainer = [[moreOptionsButton alignRight] pad:4];
-    [rootLayout addSubview:moreOptionsContainer row:5 column:0];
-    __weak UIView *moc = moreOptionsContainer;
-    [moreOptionsButton addBlock:^{
-        [rootLayout setView:moc hidden:YES];
-        [rootLayout setView:fbLoginContainer hidden:NO];
-    } forControlEvents:UIControlEventTouchUpInside];
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
@@ -169,20 +167,6 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
     
-}
-
-- (void)button:(HFLoginButton *)button didPerformHoomiAuthorizationWithResult:(HFAccessToken *)token error:(NSError *)error {
-    [self dismissViewControllerAnimated:YES completion:^{
-    }];
-    __block BOOL isNew = NO;
-    [[[PFCloud callFunctionInBackground:@"HoomiSignUpOrLogInUser"
-                         withParameters:@{@"hoomiToken": token.tokenString}] continueWithSuccessBlock:^id(BFTask *task) {
-        isNew = [task.result[@"isNew"] boolValue];
-        return [PFUser becomeInBackground:task.result[@"token"]];
-    }] continueWithSuccessBlock:^id(BFTask *task) {
-        [self completeLogIn:isNew];
-        return nil;
-    }];
 }
 
 - (void)loginViewFetchedUserInfo:(FBLoginView *)loginView user:(id<FBGraphUser>)user {

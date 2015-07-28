@@ -20,7 +20,6 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "Flurry.h"
-#import <Hoomi/Hoomi.h>
 #import "DPLoginViewController.h"
 
 #define PRODUCTION
@@ -34,9 +33,6 @@
 {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
-    [HFClient clientWithApplicationId:@"1dhck14vv2te41y78qiij5hyw"];
-    [[HFClient currentClient] requireClientAuthentication];
     
 #ifdef PRODUCTION
     [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
@@ -63,10 +59,16 @@
     // Initialize settings
     [DPSettingsModel sharedInstance];
     
+    BOOL isHoomiLogin = [PFUser currentUser] && ![PFFacebookUtils isLinkedWithUser:[PFUser currentUser]];
+    if (isHoomiLogin) {
+        [PFUser logOut];
+    }
+    
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"]) {
+        if (isHoomiLogin || ![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"]) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+            loginViewController.isHoomiLogout = isHoomiLogin;
             [self.window.rootViewController presentViewController:loginViewController
                                                          animated:YES
                                                        completion:^{
@@ -136,11 +138,7 @@
                      withSession:[PFFacebookUtils session]]) {
         return YES;
     }
-    BOOL value = [[HFClient currentClient] application:application
-                                         openURL:url
-                               sourceApplication:sourceApplication
-                                      annotation:annotation];
-    return value;
+    return NO;
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {

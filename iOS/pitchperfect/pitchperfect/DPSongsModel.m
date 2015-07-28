@@ -54,6 +54,7 @@
 - (void)refreshFromParse {
     refreshing = YES;
     PFQuery *query = [PFQuery queryWithClassName:@"SongList"];
+    [query whereKey:@"owner" equalTo:[PFUser currentUser]];
     @try {
         [query getFirstObjectInBackgroundWithBlock:^(PFObject *object, NSError *error) {
             refreshing = NO;

@@ -46,9 +46,6 @@
 		63749B8F1AE0756300A31ACA /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */; };
 		63749B911AE075B000A31ACA /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63749B901AE075B000A31ACA /* ParseUI.framework */; };
 		638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638F1BEB17F5069500906944 /* AdSupport.framework */; };
-		6392E7C01AE1C66E0082AEC1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7BF1AE1C66E0082AEC1 /* Hoomi.framework */; };
-		6392E7C11AE1C67C0082AEC1 /* Hoomi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7BF1AE1C66E0082AEC1 /* Hoomi.framework */; };
-		6392E7C21AE1C67C0082AEC1 /* Hoomi.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7BF1AE1C66E0082AEC1 /* Hoomi.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6392E7C41AE1C6FA0082AEC1 /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */; };
 		6392E7C61AE1C7510082AEC1 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */; };
 		63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D52158826F800C78CC0 /* MessageUI.framework */; };
@@ -120,7 +117,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				6392E7C21AE1C67C0082AEC1 /* Hoomi.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -176,7 +172,6 @@
 		63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
 		63749B901AE075B000A31ACA /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
 		638F1BEB17F5069500906944 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
-		6392E7BF1AE1C66E0082AEC1 /* Hoomi.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hoomi.framework; sourceTree = "<group>"; };
 		6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GoogleMobileAds.framework; sourceTree = "<group>"; };
 		6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		63A99D52158826F800C78CC0 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
@@ -246,8 +241,6 @@
 				63237B8A1979DCB800EA08CC /* Social.framework in Frameworks */,
 				63336A2D17F50B0100BC1EE2 /* libpitchperfectlib.a in Frameworks */,
 				63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */,
-				6392E7C01AE1C66E0082AEC1 /* Hoomi.framework in Frameworks */,
-				6392E7C11AE1C67C0082AEC1 /* Hoomi.framework in Frameworks */,
 				638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */,
 				63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */,
 				63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */,
@@ -377,7 +370,6 @@
 			children = (
 				6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */,
 				6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */,
-				6392E7BF1AE1C66E0082AEC1 /* Hoomi.framework */,
 				63749B901AE075B000A31ACA /* ParseUI.framework */,
 				63749B8C1AE0756300A31ACA /* Parse.framework */,
 				63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */,
@@ -762,7 +754,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -794,7 +786,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

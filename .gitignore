@@ -17,3 +17,4 @@ gen/
 local.properties
 
 Thumbs.db
+.DS_Store
