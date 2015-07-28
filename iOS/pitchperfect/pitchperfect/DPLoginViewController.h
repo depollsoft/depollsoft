@@ -12,5 +12,6 @@
 @interface DPLoginViewController : UIViewController
 
 @property (nonatomic, readonly) BFTask *loginTask;
+@property (nonatomic, readwrite) BOOL isHoomiLogout;
 
 @end
