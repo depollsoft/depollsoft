@@ -129,6 +129,8 @@ public class SongsModel {
   public void refreshFromParse() {
     refreshing = true;
     ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("SongList");
+    query.whereEqualTo("owner", ParseUser.getCurrentUser());
+    query.orderByDescending("updatedAt");
     try {
       query.getFirstInBackground(new GetCallback<ParseObject>() {
 

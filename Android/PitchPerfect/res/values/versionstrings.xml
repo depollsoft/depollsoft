@@ -2,12 +2,12 @@
 <resources>
 
     <string name="app_store">google</string>
-    <string name="app_version">2.3.0</string>
-    <string name="VersionString">Version 2.3.0</string>
+    <string name="app_version">2.3.1</string>
+    <string name="VersionString">Version 2.3.1</string>
     <string name="Changelog">        <![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
             <p>
-                    <h5>Version 2.3.0</h5>
-                    -Adds <b>hoomi</b> login, preferred over Facebook since we don\'t have to ask for your personal information.<br />
+                    <h5>Version 2.3.1</h5>
+                    -Removes hoomi login, as the service is being discontinued.<br />
             </p>
             <p>
                     <h5>Version 2.2.0</h5>

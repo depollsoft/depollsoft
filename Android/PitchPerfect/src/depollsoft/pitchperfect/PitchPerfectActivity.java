@@ -20,12 +20,10 @@ import android.widget.TabHost.OnTabChangeListener;
 
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -36,7 +34,6 @@ import depollsoft.lib.util.RunUtils;
 
 @SuppressWarnings("deprecation")
 public class PitchPerfectActivity extends TabActivity {
-  private UiLifecycleHelper uiHelper;
 
   private WakeLock wakeLock;
   private CompatTabHostWrapper tabHost;
@@ -73,14 +70,6 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
-    uiHelper = new UiLifecycleHelper(this, new Session.StatusCallback() {
-      @Override
-      public void call(Session session, SessionState sessionState, Exception e) {
-
-      }
-    });
-    uiHelper.onCreate(savedInstanceState);
 
     if (!ActionBars.hasActionBar(this)) {
       requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -119,8 +108,13 @@ public class PitchPerfectActivity extends TabActivity {
       }
     });
 
-    if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
-      LoginPrompt.buildDialog(this).show();
+    boolean isHoomiLogin = ParseUser.getCurrentUser() != null && !ParseFacebookUtils.isLinked(ParseUser.getCurrentUser());
+    if (isHoomiLogin) {
+      ParseUser.logOutInBackground();
+    }
+
+    if (isHoomiLogin || RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
+      LoginPrompt.buildDialog(this, isHoomiLogin).show();
     } else {
       ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
       viewer.setTitle("Pitch Perfect Changelog");
@@ -178,7 +172,6 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    uiHelper.onDestroy();
   }
 
   @Override
@@ -188,13 +181,11 @@ public class PitchPerfectActivity extends TabActivity {
       this.wakeLock = null;
     }
     super.onPause();
-    uiHelper.onPause();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    uiHelper.onResume();
     if (SettingsModel.getWakeLock()) {
       this.wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(
           PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
@@ -216,7 +207,7 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    uiHelper.onActivityResult(requestCode, resultCode, data);
+    LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data);
     handlingResult = true;
   }
 
@@ -229,13 +220,11 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    uiHelper.onStop();
     FlurryAgent.onEndSession(this);
   }
 
   @Override
   public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
     super.onSaveInstanceState(outState, outPersistentState);
-    uiHelper.onSaveInstanceState(outState);
   }
 }
