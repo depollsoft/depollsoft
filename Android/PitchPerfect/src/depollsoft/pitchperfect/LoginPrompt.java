@@ -5,34 +5,26 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
-import com.facebook.Request;
-import com.facebook.Response;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.model.GraphUser;
-import com.facebook.widget.LoginButton;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.flurry.android.FlurryAgent;
-import com.parse.ParseCloud;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import bolts.Capture;
 import bolts.Continuation;
 import bolts.Task;
-import co.hoomi.HoomiAccessToken;
-import co.hoomi.HoomiLoginButton;
 
 public class LoginPrompt {
+  public static final CallbackManager FACEBOOK_CALLBACK_MANAGER = CallbackManager.Factory.create();
 
   private static void completeLogin(boolean isNew) {
     FlurryAgent.setUserId(ParseUser.getCurrentUser().getUsername());
@@ -45,41 +37,28 @@ public class LoginPrompt {
     }
   }
 
-  public static Dialog buildDialog(final Context context) {
+  public static Dialog buildDialog(final Context context, boolean isHoomiLogout) {
     View view = LayoutInflater.from(context).inflate(R.layout.loginpromptview, null);
 
     final Capture<AlertDialog> dialog = new Capture<>(null);
 
-    HoomiLoginButton button = (HoomiLoginButton) view.findViewById(R.id.login_button);
-    button.setRedirectUri(Uri.parse("pitchperfect://login"));
-    button.setScopes(Arrays.asList("user:app:data:read", "user:app:data:write"));
-    button.addLogInListener(new HoomiLoginButton.LogInListener() {
+    final LoginButton fbLoginButton = (LoginButton) view.findViewById(R.id.fb_login_button);
+    // Callback registration
+    fbLoginButton.registerCallback(FACEBOOK_CALLBACK_MANAGER, new FacebookCallback<LoginResult>() {
       @Override
-      public void onLogIn(HoomiAccessToken token) {
-        if (token == null) {
-          return;
-        }
-        HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("hoomiToken", token.getTokenString());
-        final Capture<Boolean> isNew = new Capture<Boolean>();
+      public void onSuccess(final LoginResult loginResult) {
         final ProgressDialog progressDialog = new ProgressDialog(context);
         progressDialog.setMessage("Please wait...");
         progressDialog.show();
-        ParseCloud.<Map<String, Object>>callFunctionInBackground("HoomiSignUpOrLogInUser", parameters)
-            .onSuccessTask(new Continuation<Map<String, Object>, Task<ParseUser>>() {
+        ParseFacebookUtils.logInInBackground(loginResult.getAccessToken())
+            .onSuccess(new Continuation<ParseUser, Void>() {
               @Override
-              public Task<ParseUser> then(Task<Map<String, Object>> task) throws Exception {
-                isNew.set((Boolean) task.getResult().get("isNew"));
-                return ParseUser.becomeInBackground((String) task.getResult().get("token"));
+              public Void then(Task<ParseUser> task) throws Exception {
+                completeLogin(task.getResult().isNew());
+                dialog.get().dismiss();
+                return null;
               }
-            }).onSuccess(new Continuation<ParseUser, Void>() {
-          @Override
-          public Void then(Task<ParseUser> task) throws Exception {
-            completeLogin(isNew.get());
-            dialog.get().dismiss();
-            return null;
-          }
-        }).continueWith(new Continuation<Void, Void>() {
+            }).continueWith(new Continuation<Void, Void>() {
           @Override
           public Void then(Task<Void> task) throws Exception {
             progressDialog.dismiss();
@@ -87,65 +66,32 @@ public class LoginPrompt {
           }
         });
       }
-    });
 
-    final LoginButton fbLoginButton = (LoginButton) view.findViewById(R.id.fb_login_button);
-    fbLoginButton.setSessionStatusCallback(new Session.StatusCallback() {
       @Override
-      public void call(final Session session, SessionState state, Exception exception) {
-        if (exception != null || session == null || state != SessionState.OPENED) {
-          return;
-        }
-        final ProgressDialog progressDialog = new ProgressDialog(context);
-        progressDialog.setMessage("Please wait...");
-        progressDialog.show();
-        Request.newMeRequest(session, new Request.GraphUserCallback() {
-          @Override
-          public void onCompleted(GraphUser graphUser, Response response) {
-            if (response.getError() != null) {
-              progressDialog.dismiss();
-            }
-            ParseFacebookUtils.logInInBackground(graphUser.getId(), session.getAccessToken(), session.getExpirationDate())
-                .onSuccess(new Continuation<ParseUser, Void>() {
-                  @Override
-                  public Void then(Task<ParseUser> task) throws Exception {
-                    completeLogin(task.getResult().isNew());
-                    dialog.get().dismiss();
-                    return null;
-                  }
-                }).continueWith(new Continuation<Void, Void>() {
-              @Override
-              public Void then(Task<Void> task) throws Exception {
-                progressDialog.dismiss();
-                return null;
-              }
-            });
-          }
-        }).executeAsync();
+      public void onCancel() {
+        // App code
       }
-    });
 
-    final View moreOptionsButton = view.findViewById(R.id.moreOptionsTextView);
-    moreOptionsButton.setOnClickListener(new View.OnClickListener() {
       @Override
-      public void onClick(View v) {
-        moreOptionsButton.setVisibility(View.GONE);
-        fbLoginButton.setVisibility(View.VISIBLE);
+      public void onError(FacebookException exception) {
+        // App code
       }
     });
 
     TextView explanationText = (TextView) view.findViewById(R.id.explanationTextView);
-    String explanation = context.getResources().getString(R.string.LoginExplanation);
+    String explanation = context.getResources().getString(isHoomiLogout ?
+        R.string.HoomiLoginExplanation : R.string.LoginExplanation);
     explanationText.setText(Html.fromHtml(explanation));
 
     dialog.set(new AlertDialog.Builder(context)
         .setView(view)
         .setNeutralButton(R.string.SkipLogin, new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            dialog.dismiss();
-          }
-        })
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+              }
+            }
+        )
         .setTitle(R.string.LoginTitle)
         .create());
     return dialog.get();

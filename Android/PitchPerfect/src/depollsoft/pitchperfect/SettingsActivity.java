@@ -3,12 +3,10 @@ package depollsoft.pitchperfect;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,21 +19,14 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
+import com.facebook.login.LoginManager;
 import com.flurry.android.FlurryAgent;
-import com.parse.LogInCallback;
-import com.parse.ParseException;
-import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
-import co.hoomi.HoomiClient;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends Activity {
-  private UiLifecycleHelper uiHelper;
   private boolean loggingIn;
 
   public static boolean getShowBuyLink() {
@@ -73,20 +64,12 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    uiHelper.onActivityResult(requestCode, resultCode, data);
+    LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data);
   }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
-    uiHelper = new UiLifecycleHelper(this, new Session.StatusCallback() {
-      @Override
-      public void call(Session session, SessionState sessionState, Exception e) {
-
-      }
-    });
-    uiHelper.onCreate(savedInstanceState);
 
     if (!ActionBars.hasActionBar(this)) {
       this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -112,7 +95,7 @@ public class SettingsActivity extends Activity {
     this.findViewById(R.id.loginButton).setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(final View v) {
-        Dialog dlg = LoginPrompt.buildDialog(SettingsActivity.this);
+        Dialog dlg = LoginPrompt.buildDialog(SettingsActivity.this, false);
         dlg.setOnDismissListener(new DialogInterface.OnDismissListener() {
           @Override
           public void onDismiss(DialogInterface dialog) {
@@ -132,12 +115,7 @@ public class SettingsActivity extends Activity {
           protected Void doInBackground(Void... params) {
             ParseUser.logOut();
             SongsModel.get().handleLogOut();
-            if (Session.getActiveSession() != null) {
-              Session.getActiveSession().closeAndClearTokenInformation();
-            }
-            if (HoomiClient.getCurrentClient().getCurrentToken() != null) {
-              HoomiClient.getCurrentClient().setCurrentToken(null);
-            }
+            LoginManager.getInstance().logOut();
             return null;
           }
 
@@ -165,9 +143,9 @@ public class SettingsActivity extends Activity {
                     .show();
               }
             }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog, int which) {
-              }
-            }).show();
+          public void onClick(DialogInterface dialog, int which) {
+          }
+        }).show();
       }
     });
 
@@ -187,13 +165,11 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    uiHelper.onDestroy();
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    uiHelper.onPause();
     SettingsModel.refreshUser();
     FlurryAgent.endTimedEvent("SettingsActivity");
   }
@@ -201,7 +177,6 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-    uiHelper.onResume();
     FlurryAgent.logEvent("SettingsActivity", true);
   }
 
@@ -228,6 +203,5 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    uiHelper.onSaveInstanceState(outState);
   }
 }

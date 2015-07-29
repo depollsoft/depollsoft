@@ -48,5 +48,18 @@
             Pitch Perfect does not collect any of your personal data for this free service.
         </p>]]>
     </string>
+        <string name="HoomiLoginExplanation">
+        <![CDATA[<p><b>Notice:</b> You have previously logged into Pitch Perfect with Hoomi, which is being discontinued.
+        You have been logged out of Pitch Perfect.
+        You may choose to log in with Facebook, or continue without logging in.</p>
+        <p>
+            When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device.
+            Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your
+            data goes where you go.
+        </p>
+        <p>
+            Pitch Perfect does not collect any of your personal data for this free service.
+        </p>]]>
+    </string>
 
 </resources>
