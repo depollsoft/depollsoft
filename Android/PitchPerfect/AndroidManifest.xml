@@ -9,7 +9,7 @@
 
     <uses-sdk
         android:minSdkVersion="15"
-        android:targetSdkVersion="22"></uses-sdk>
+        android:targetSdkVersion="22"/>
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -32,20 +32,20 @@
         </activity>
         <activity
             android:name=".KeySignatureActivity"
-            android:configChanges="keyboardHidden|orientation"></activity>
+            android:configChanges="keyboardHidden|orientation"/>
         <activity
             android:name=".NoteListActivity"
-            android:configChanges="keyboardHidden|orientation"></activity>
+            android:configChanges="keyboardHidden|orientation"/>
         <activity
             android:name=".PitchPipeActivity"
-            android:configChanges="keyboardHidden|orientation"></activity>
+            android:configChanges="keyboardHidden|orientation"/>
         <activity
             android:name=".SongListActivity"
-            android:configChanges="keyboardHidden|orientation"></activity>
-        <activity android:name=".AddSongActivity"></activity>
+            android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".AddSongActivity"/>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/app_name"></activity>
+            android:label="@string/app_name"/>
         <activity
             android:name="com.google.android.gms.ads.AdActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
@@ -72,25 +72,12 @@
         <service
             android:name=".PitchPerfectService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"/>
         <service android:name=".DataLayerListenerService">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
         </service>
-
-        <activity android:name="co.hoomi.HoomiLoginActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="login"
-                    android:scheme="pitchperfect" />
-            </intent-filter>
-        </activity>
 
         <meta-data
             android:name="com.google.android.gms.version"
