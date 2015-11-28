@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import depollsoft.lib.util.Versioning;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
 import depollsoft.pitchperfect.lib.Note;
 
@@ -118,7 +119,7 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
   public Uri buildUpdate(Context c, Note n) {
     File destDir = new File(c.getCacheDir(), "widget_cache");
     destDir.mkdirs();
-    File dest = new File(destDir, n.toString());
+    File dest = new File(destDir, n.toString() + Versioning.getCurrentVersion());
     if (!dest.exists()) {
       CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
           .convertToTarget(n, CharSequence.class);
