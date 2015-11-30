@@ -1,12 +1,15 @@
 package depollsoft.pitchperfect;
 
 import android.app.TabActivity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -17,6 +20,7 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.Window;
 import android.widget.TabHost.OnTabChangeListener;
+import android.widget.Toast;
 
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
@@ -26,6 +30,9 @@ import com.google.android.gms.ads.AdView;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
+import java.util.concurrent.Callable;
+
+import bolts.Task;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
@@ -41,7 +48,13 @@ public class PitchPerfectActivity extends TabActivity {
   static boolean handlingResult;
 
   public boolean getAdsShouldShow() {
-    return !SettingsModel.getLicensed();
+    if (SettingsModel.getAreAdsRemoved()) {
+      return false;
+    }
+    if (SettingsModel.getLicensed()) {
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -82,22 +95,32 @@ public class PitchPerfectActivity extends TabActivity {
     tabHost = new CompatTabHostWrapper(this, getTabHost());
 
     UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow", BoolConverter.get());
+    UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get());
+
+    findViewById(R.id.removeAds).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (PurchaseService.isSubscriptionBillingAvailable(PitchPerfectActivity.this)) {
+          PurchaseService.beginRemoveAds(PitchPerfectActivity.this, 666);
+        }
+      }
+    });
 
     tabHost.addTab(tabHost.newTabSpec("PitchPipe")
-        .setIndicator("Quick Pitch", this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
-        .setContent(new Intent(this, PitchPipeActivity.class)));
+            .setIndicator("Quick Pitch", this.getResources().getDrawable(R.drawable.ic_tab_pitchpipe))
+            .setContent(new Intent(this, PitchPipeActivity.class)));
 
     tabHost.addTab(tabHost.newTabSpec("NoteList")
-        .setIndicator("Notes", this.getResources().getDrawable(R.drawable.ic_tab_octaves))
-        .setContent(new Intent(this, NoteListActivity.class)));
+            .setIndicator("Notes", this.getResources().getDrawable(R.drawable.ic_tab_octaves))
+            .setContent(new Intent(this, NoteListActivity.class)));
 
     tabHost.addTab(tabHost.newTabSpec("KeySignatures")
-        .setIndicator("Keys", this.getResources().getDrawable(R.drawable.ic_tab_keys))
-        .setContent(new Intent(this, KeySignatureActivity.class)));
+            .setIndicator("Keys", this.getResources().getDrawable(R.drawable.ic_tab_keys))
+            .setContent(new Intent(this, KeySignatureActivity.class)));
 
     tabHost.addTab(tabHost.newTabSpec("Songs")
-        .setIndicator("Songs", this.getResources().getDrawable(R.drawable.ic_tab_songs))
-        .setContent(new Intent(this, SongListActivity.class)));
+            .setIndicator("Songs", this.getResources().getDrawable(R.drawable.ic_tab_songs))
+            .setContent(new Intent(this, SongListActivity.class)));
 
     this.onConfigurationChanged(Resources.getSystem().getConfiguration());
 
@@ -125,9 +148,16 @@ public class PitchPerfectActivity extends TabActivity {
     AdView adView = (AdView) findViewById(R.id.adView);
 
     AdRequest adRequest = new AdRequest.Builder()
-        .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
-        .build();
+            .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+            .build();
     adView.loadAd(adRequest);
+
+    PurchaseService.bind(this, new Runnable() {
+      @Override
+      public void run() {
+        SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(PitchPerfectActivity.this));
+      }
+    });
   }
 
   @Override
@@ -153,15 +183,15 @@ public class PitchPerfectActivity extends TabActivity {
       mi.inflate(R.menu.mainmenu, menu);
 
       menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener(
-          new OnMenuItemClickListener() {
+              new OnMenuItemClickListener() {
 
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-              Intent i = new Intent(PitchPerfectActivity.this, SettingsActivity.class);
-              PitchPerfectActivity.this.startActivity(i);
-              return true;
-            }
-          });
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                  Intent i = new Intent(PitchPerfectActivity.this, SettingsActivity.class);
+                  PitchPerfectActivity.this.startActivity(i);
+                  return true;
+                }
+              });
       getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
       return super.onPrepareOptionsMenu(menu);
     } finally {
@@ -171,6 +201,7 @@ public class PitchPerfectActivity extends TabActivity {
 
   @Override
   protected void onDestroy() {
+    PurchaseService.unbind(this);
     super.onDestroy();
   }
 
@@ -188,7 +219,7 @@ public class PitchPerfectActivity extends TabActivity {
     super.onResume();
     if (SettingsModel.getWakeLock()) {
       this.wakeLock = ((PowerManager) this.getSystemService(Context.POWER_SERVICE)).newWakeLock(
-          PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
+              PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity");
       this.wakeLock.acquire();
     }
 
@@ -207,8 +238,18 @@ public class PitchPerfectActivity extends TabActivity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data);
-    handlingResult = true;
+    if (requestCode == 666) {
+      Task.callInBackground(new Callable<Void>() {
+        @Override
+        public Void call() throws Exception {
+          SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(PitchPerfectActivity.this));
+          return null;
+        }
+      });
+    } else {
+      LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data);
+      handlingResult = true;
+    }
   }
 
   @Override

@@ -29,11 +29,6 @@ import depollsoft.lib.ui.ChangelogViewer;
 public class SettingsActivity extends Activity {
   private boolean loggingIn;
 
-  public static boolean getShowBuyLink() {
-    return !SettingsModel.getLicensed() && !SettingsModel.getAppStore().equals("amazon")
-        && !SettingsModel.getAppStore().equals("blackberry");
-  }
-
   private Trackable loginTrackable = new Trackable();
 
   public boolean getLicensed() {
@@ -85,7 +80,6 @@ public class SettingsActivity extends Activity {
         new CompoundButtonCheckedProperty((CheckBox) this.findViewById(R.id.wakeLockCheckBox)),
         "WakeLock", BindingMode.TWO_WAY);
 
-    UiBinder.bind(this, R.id.removeAdsHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
     UiBinder.bind(this, R.id.rateReviewHyperlink, "Visibility", "ShowBuyLink", BoolConverter.get());
     UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed", BoolConverter.get());
 

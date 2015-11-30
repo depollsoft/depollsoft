@@ -23,12 +23,12 @@ android {
             storePassword 'depollsoft'
         }
     }
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion '21.1.2'
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 15
-        targetSdkVersion 22
+        targetSdkVersion 23
         multiDexEnabled true
     }
     sourceSets {
@@ -36,7 +36,7 @@ android {
             manifest.srcFile 'AndroidManifest.xml'
             java.srcDirs = ['src']
             resources.srcDirs = ['src']
-            aidl.srcDirs = ['src']
+            aidl.srcDirs = ['src', 'aidl']
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
