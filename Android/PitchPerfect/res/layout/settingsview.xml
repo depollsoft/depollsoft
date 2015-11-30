@@ -37,16 +37,6 @@
                 android:layout_height="0dip"
                 android:orientation="vertical" >
 
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/removeAdsHyperlink"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:tag="https://market.android.com/details?id=depollsoft.pitchperfect.license"
-                    android:text="@string/Purchase"
-                    android:textSize="26dp" >
-                </depollsoft.lib.ui.Hyperlink>
-
                 <CheckBox
                     android:id="@+id/toggleNoteCheckBox"
                     android:layout_width="wrap_content"

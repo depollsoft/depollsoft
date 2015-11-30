@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect;
 
 import com.bindroid.trackable.Trackable;
+import com.bindroid.trackable.TrackableBoolean;
 import com.parse.ParseUser;
 
 import depollsoft.lib.activity.RichApplication;
@@ -10,16 +11,29 @@ import depollsoft.lib.util.Preferences;
 public class SettingsModel {
   private static final String ToggleNoteKey = "depollsoft.pitchperfect.ToggleNote";
   private static final String WakeLockKey = "depollsoft.pitchperfect.WakeLock";
+  private static final String AreAdsRemovedKey = "depollsoft.pitchperfect.AreAdsRemoved";
 
   private static Trackable toggleNoteTrackable = new Trackable();
   private static Trackable wakeLockTrackable = new Trackable();
+  private static Trackable areAdsRemovedTrackable = new Trackable();
   static {
     Preferences.initialize(SettingsModel.ToggleNoteKey, false);
     Preferences.initialize(SettingsModel.WakeLockKey, false);
+    Preferences.initialize(SettingsModel.AreAdsRemovedKey, false);
   }
 
   public static String getAppStore() {
     return RichApplication.getAppContext().getString(R.string.app_store);
+  }
+
+  public static void setAreAdsRemoved(boolean areAdsRemoved) {
+    Preferences.set(AreAdsRemovedKey, areAdsRemoved);
+    areAdsRemovedTrackable.updateTrackers();
+  }
+
+  public static boolean getAreAdsRemoved() {
+    areAdsRemovedTrackable.track();
+    return Preferences.<Boolean>get(AreAdsRemovedKey);
   }
 
   public static boolean getLicensed() {
