@@ -39,8 +39,8 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
     Intent i = new Intent(PitchPerfectApplication.getAppContext(), PitchPipeAppWidget.class);
     i.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
     int[] ids = AppWidgetManager.getInstance(PitchPerfectApplication.getAppContext())
-        .getAppWidgetIds(
-            new ComponentName(PitchPerfectApplication.getAppContext(), PitchPipeAppWidget.class));
+            .getAppWidgetIds(
+                    new ComponentName(PitchPerfectApplication.getAppContext(), PitchPipeAppWidget.class));
     i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
     PitchPerfectApplication.getAppContext().sendBroadcast(i);
   }
@@ -60,43 +60,39 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
   public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
     int[] ids = {
-        R.id.pitchButton0,
-        R.id.pitchButton1,
-        R.id.pitchButton2,
-        R.id.pitchButton3,
-        R.id.pitchButton4,
-        R.id.pitchButton5,
-        R.id.pitchButton6,
-        R.id.pitchButton7,
-        R.id.pitchButton8,
-        R.id.pitchButton9,
-        R.id.pitchButton10,
-        R.id.pitchButton11,
+            R.id.pitchButton0,
+            R.id.pitchButton1,
+            R.id.pitchButton2,
+            R.id.pitchButton3,
+            R.id.pitchButton4,
+            R.id.pitchButton5,
+            R.id.pitchButton6,
+            R.id.pitchButton7,
+            R.id.pitchButton8,
+            R.id.pitchButton9,
+            R.id.pitchButton10,
+            R.id.pitchButton11,
     };
 
     PitchPipeNoteTextConverter converter = new PitchPipeNoteTextConverter();
 
-    for (int awid = 0; awid < appWidgetIds.length; awid++) {
-      RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.pitchpipewidgetview);
+    RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.pitchpipewidgetview);
 
-      for (int i = 0; i < ids.length; i++) {
-        rv.setImageViewUri(ids[i], buildUpdate(context, model.getNotes().get(i)));
-        /*rv.setImageViewBitmap(ids[i],
-            buildUpdate((CharSequence) converter.convertToTarget(model.getNotes().get(i), CharSequence.class)));*/
-        rv.setOnClickPendingIntent(ids[i], getIntentForNote(model.getNotes().get(i), i));
-        int pressed = R.drawable.button_background_pressed;
-        int normal = R.drawable.button_background_normal;
-        int background = model.getNotes().get(i).getIsPlaying() ?
-            pressed :
-            normal;
-        rv.setInt(ids[i], "setBackgroundResource", background);
-      }
-
-      PendingIntent launchPitchPipe = PendingIntent.getActivity(context, 0, new Intent(context, PitchPerfectActivity.class), 0);
-      rv.setOnClickPendingIntent(R.id.launchIcon, launchPitchPipe);
-
-      appWidgetManager.updateAppWidget(appWidgetIds[awid], rv);
+    for (int i = 0; i < ids.length; i++) {
+      rv.setImageViewUri(ids[i], buildUpdate(context, model.getNotes().get(i)));
+      rv.setOnClickPendingIntent(ids[i], getIntentForNote(model.getNotes().get(i), i));
+      int pressed = R.drawable.button_background_pressed;
+      int normal = R.drawable.button_background_normal;
+      int background = model.getNotes().get(i).getIsPlaying() ?
+              pressed :
+              normal;
+      rv.setInt(ids[i], "setBackgroundResource", background);
     }
+
+    PendingIntent launchPitchPipe = PendingIntent.getActivity(context, 0, new Intent(context, PitchPerfectActivity.class), 0);
+    rv.setOnClickPendingIntent(R.id.launchIcon, launchPitchPipe);
+
+    appWidgetManager.updateAppWidget(new ComponentName(context, PitchPipeAppWidget.class), rv);
     super.onUpdate(context, appWidgetManager, appWidgetIds);
   }
 
@@ -122,7 +118,7 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
     File dest = new File(destDir, n.toString() + Versioning.getCurrentVersion());
     if (!dest.exists()) {
       CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
-          .convertToTarget(n, CharSequence.class);
+              .convertToTarget(n, CharSequence.class);
       TextView view = new TextView(PitchPerfectApplication.getAppContext());
       view.setText(string);
       view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * c.getResources().getDisplayMetrics().density);
@@ -150,7 +146,7 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
       }
     }
     Uri result = FileProvider.getUriForFile(c, c.getPackageName(), dest);
-    for (ApplicationInfo app: c.getPackageManager().getInstalledApplications(0)) {
+    for (ApplicationInfo app : c.getPackageManager().getInstalledApplications(0)) {
       c.grantUriPermission(app.packageName, result, Intent.FLAG_GRANT_READ_URI_PERMISSION);
     }
     return result;

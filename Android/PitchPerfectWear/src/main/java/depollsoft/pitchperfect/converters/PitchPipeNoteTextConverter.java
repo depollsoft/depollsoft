@@ -4,6 +4,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
+import android.text.style.UnderlineSpan;
 
 import com.bindroid.ValueConverter;
 
@@ -18,23 +19,21 @@ public class PitchPipeNoteTextConverter extends ValueConverter {
 
   static {
     PitchPipeNoteTextConverter.sharpFlat = new SpannableStringBuilder(
-        CommonModel.sharpString + "/" + CommonModel.flatString);
+            CommonModel.sharpString + "/" + CommonModel.flatString);
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new CustomTypefaceSpan(
-            "NoteHedz", CommonModel.getNoteHedz()), 0, 1,
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-    );
+                    "NoteHedz", CommonModel.getNoteHedz()), 0, 1,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.2f), 0,
-        1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new CustomTypefaceSpan(
-            "NoteHedz", CommonModel.getNoteHedz()),
-        PitchPipeNoteTextConverter.sharpFlat.length() - 1,
-        PitchPipeNoteTextConverter.sharpFlat.length(),
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-    );
+                    "NoteHedz", CommonModel.getNoteHedz()),
+            PitchPipeNoteTextConverter.sharpFlat.length() - 1,
+            PitchPipeNoteTextConverter.sharpFlat.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.2f),
-        PitchPipeNoteTextConverter.sharpFlat.length() - 1,
-        PitchPipeNoteTextConverter.sharpFlat.length(),
-        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            PitchPipeNoteTextConverter.sharpFlat.length() - 1,
+            PitchPipeNoteTextConverter.sharpFlat.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
   }
 
   @Override
