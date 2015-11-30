@@ -9,7 +9,7 @@ android {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 20
         targetSdkVersion 20
-        versionCode 40
+        versionCode 41
         versionName "2.4.0"
     }
     buildTypes {

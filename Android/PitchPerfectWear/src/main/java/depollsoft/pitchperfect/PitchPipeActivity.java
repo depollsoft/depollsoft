@@ -20,6 +20,7 @@ import bolts.Continuation;
 import bolts.Task;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
 import depollsoft.pitchperfect.lib.Note;
+import depollsoft.pitchperfect.lib.ui.PitchPipeButton;
 
 public class PitchPipeActivity extends Activity {
 
