@@ -27,6 +27,7 @@ import java.util.Map;
 
 import depollsoft.lib.util.Versioning;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
+import depollsoft.pitchperfect.lib.Accidental;
 import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeAppWidget extends AppWidgetProvider {
@@ -58,7 +59,6 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
 
   @Override
   public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-
     int[] ids = {
             R.id.pitchButton0,
             R.id.pitchButton1,
@@ -112,11 +112,15 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
     return PendingIntent.getService(PitchPerfectApplication.getAppContext(), index, i, PendingIntent.FLAG_UPDATE_CURRENT);
   }
 
+  private static Map<Note, Uri> builtImages = new HashMap<>();
   public Uri buildUpdate(Context c, Note n) {
+    if (builtImages.containsKey(n)) {
+      return builtImages.get(n);
+    }
     File destDir = new File(c.getCacheDir(), "widget_cache");
-    destDir.mkdirs();
     File dest = new File(destDir, n.toString() + Versioning.getCurrentVersion());
     if (!dest.exists()) {
+      destDir.mkdirs();
       CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
               .convertToTarget(n, CharSequence.class);
       TextView view = new TextView(PitchPerfectApplication.getAppContext());
@@ -149,6 +153,7 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
     for (ApplicationInfo app : c.getPackageManager().getInstalledApplications(0)) {
       c.grantUriPermission(app.packageName, result, Intent.FLAG_GRANT_READ_URI_PERMISSION);
     }
+    builtImages.put(n, result);
     return result;
   }
 }
