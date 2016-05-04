@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <string name="facebook_app_id">311400242255131</string>
     <string name="hello">Hello World, TagMaster!</string>
     <string name="app_name">Tag Master</string>
     <string name="Version">Version: </string>
