@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.FileProvider;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.widget.RemoteViews;
@@ -113,19 +114,21 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
   }
 
   private static Map<Note, Uri> builtImages = new HashMap<>();
+
   public Uri buildUpdate(Context c, Note n) {
     if (builtImages.containsKey(n)) {
       return builtImages.get(n);
     }
     File destDir = new File(c.getCacheDir(), "widget_cache");
-    File dest = new File(destDir, n.toString() + Versioning.getCurrentVersion());
+    File dest = new File(destDir, n.toString() + Versioning.getCurrentVersion() +
+            "_" + c.getResources().getDisplayMetrics().densityDpi);
     if (!dest.exists()) {
       destDir.mkdirs();
       CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
               .convertToTarget(n, CharSequence.class);
       TextView view = new TextView(PitchPerfectApplication.getAppContext());
       view.setText(string);
-      view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18 * c.getResources().getDisplayMetrics().density);
+      view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
       view.setTextColor(Color.WHITE);
       view.measure(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT);
       view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());

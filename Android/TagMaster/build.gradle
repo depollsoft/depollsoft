@@ -1,18 +1,18 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
+    compile fileTree(include: '*.jar', dir: 'libs')
     compile project(':DepollSoftCommon')
     compile project(':PitchPerfectLib')
     compile project(':DepollSoftCommon.Compat')
     compile project(':facebook')
     compile project(':Bindroid:Bindroid')
-    compile 'com.android.support:support-v4:22.2.1'
+    compile 'com.android.support:support-v4:24.2.1'
 }
 
 android {
     compileSdkVersion 13
-    buildToolsVersion '19.1.0'
+    buildToolsVersion '24.0.2'
 
     sourceSets {
         main {
