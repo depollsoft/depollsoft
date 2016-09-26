@@ -8,7 +8,6 @@ import android.widget.ListView;
 import com.bindroid.converters.AdapterConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.pitchperfect.lib.Note;
 
@@ -57,29 +56,6 @@ public class NoteListActivity extends Activity {
     super.onPause();
     for (Note n : this.getModel().getNotes())
       n.stop();
-    FlurryAgent.endTimedEvent("NoteListActivity");
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        FlurryAgent.logEvent("NoteListActivity", true);
-      }
-    });
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   public void setModel(NoteListModel value) {

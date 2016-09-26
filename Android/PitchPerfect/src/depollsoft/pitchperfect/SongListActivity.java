@@ -18,7 +18,6 @@ import com.bindroid.converters.AdapterConverter;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -138,18 +137,6 @@ public class SongListActivity extends Activity {
     if (ParseUser.getCurrentUser() != null) {
       SongsModel.get().saveAllToParse();
     }
-    FlurryAgent.endTimedEvent("SongListActivity");
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        FlurryAgent.logEvent("SongListActivity",
-            Collections.singletonMap("SongCount", "" + SongsModel.get().getSongs().size()), true);
-      }
-    });
   }
 
   public void setEditing(boolean value) {
@@ -164,17 +151,5 @@ public class SongListActivity extends Activity {
 
   public void setModel(SongsModel value) {
     this.model.set(value);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 }
