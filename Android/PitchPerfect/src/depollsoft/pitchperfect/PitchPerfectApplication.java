@@ -5,7 +5,6 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.bindroid.trackable.TrackableCollection;
-import com.flurry.android.FlurryAgent;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
@@ -49,10 +48,6 @@ public class PitchPerfectApplication extends RichApplication {
       }
     });
 
-    FlurryAgent.setUseHttps(true);
-    FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
-            getString(R.string.app_store)) + (isDebugSigned ? " debug" : ""));
-
     JsonSerializer.registerAlias(Integer.class, "Integer");
     JsonSerializer.registerAlias(Integer.TYPE, "int");
     JsonSerializer.registerAlias(Key.class, "Key");
@@ -78,7 +73,6 @@ public class PitchPerfectApplication extends RichApplication {
 
   public static void startupRefreshFromParse() {
     if (ParseUser.getCurrentUser() != null) {
-      FlurryAgent.setUserId(ParseUser.getCurrentUser().getUsername());
       SettingsModel.restoreUser();
       try {
         ParseUser.getCurrentUser().refreshInBackground(new RefreshCallback() {

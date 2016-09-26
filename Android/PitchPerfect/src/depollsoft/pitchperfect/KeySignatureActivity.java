@@ -14,7 +14,6 @@ import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.pitchperfect.lib.Key;
 
@@ -103,29 +102,6 @@ public class KeySignatureActivity extends Activity {
       k.getNote().stop();
     for (Key k : this.getModel().getMinorKeys())
       k.getNote().stop();
-    FlurryAgent.endTimedEvent("KeySignatureActivity");
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    this.runOnUiThread(new Runnable() {
-      public void run() {
-        FlurryAgent.logEvent("KeySignatureActivity");
-      }
-    });
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   public void setModel(KeySignatureModel value) {

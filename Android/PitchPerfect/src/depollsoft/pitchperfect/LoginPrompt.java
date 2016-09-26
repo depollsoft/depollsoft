@@ -15,7 +15,6 @@ import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.flurry.android.FlurryAgent;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
@@ -27,7 +26,6 @@ public class LoginPrompt {
   public static final CallbackManager FACEBOOK_CALLBACK_MANAGER = CallbackManager.Factory.create();
 
   private static void completeLogin(boolean isNew) {
-    FlurryAgent.setUserId(ParseUser.getCurrentUser().getUsername());
     if (!isNew) {
       SettingsModel.restoreUser();
       SongsModel.get().refreshFromParse();

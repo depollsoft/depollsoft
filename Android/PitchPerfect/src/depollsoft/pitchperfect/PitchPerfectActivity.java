@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.parse.ParseFacebookUtils;
@@ -250,18 +249,6 @@ public class PitchPerfectActivity extends TabActivity {
       LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data);
       handlingResult = true;
     }
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   @Override

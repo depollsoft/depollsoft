@@ -20,7 +20,6 @@ import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.CompoundButtonCheckedProperty;
 import com.bindroid.ui.UiBinder;
 import com.facebook.login.LoginManager;
-import com.flurry.android.FlurryAgent;
 import com.parse.ParseUser;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -165,13 +164,6 @@ public class SettingsActivity extends Activity {
   protected void onPause() {
     super.onPause();
     SettingsModel.refreshUser();
-    FlurryAgent.endTimedEvent("SettingsActivity");
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    FlurryAgent.logEvent("SettingsActivity", true);
   }
 
   public void setToggleNotes(boolean value) {
@@ -180,18 +172,6 @@ public class SettingsActivity extends Activity {
 
   public void setWakeLock(boolean value) {
     SettingsModel.setWakeLock(value);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "B8F71MSD6E6KWMAK479A");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   @Override
