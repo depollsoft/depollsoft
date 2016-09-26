@@ -51,7 +51,7 @@ public class PitchPerfectApplication extends RichApplication {
 
     FlurryAgent.setUseHttps(true);
     FlurryAgent.setVersionName(String.format("%s (%s)", getString(R.string.app_version),
-        getString(R.string.app_store)) + (isDebugSigned ? " debug" : ""));
+            getString(R.string.app_store)) + (isDebugSigned ? " debug" : ""));
 
     JsonSerializer.registerAlias(Integer.class, "Integer");
     JsonSerializer.registerAlias(Integer.TYPE, "int");
@@ -68,16 +68,12 @@ public class PitchPerfectApplication extends RichApplication {
     JsonSerializer.registerAlias(Double.TYPE, "double");
     JsonSerializer.registerAlias(TrackableCollection.class, "List");
 
-    if (isDebugSigned) {
-      Log.d(this.getPackageName(), "Initializing with debug key");
-      Parse.initialize(this, "fIRF0tfJBkE2XbiJf4diG2LsRphoqPe4q4GazAKu",
-          "Edcy5i5CKUTLwJe7m56MeIT1LrjBb9ZP1by89Rd4");
-      ParseFacebookUtils.initialize(this);
-    } else {
-      Parse.initialize(this, "cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9",
-          "Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE");
-      ParseFacebookUtils.initialize(this);
-    }
+    Parse.initialize(new Parse.Configuration.Builder(this)
+            .applicationId("cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9")
+            .clientKey("Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE")
+            .server("https://pitchperfect-api.depollsoft.xyz")
+            .build());
+    ParseFacebookUtils.initialize(this);
   }
 
   public static void startupRefreshFromParse() {
