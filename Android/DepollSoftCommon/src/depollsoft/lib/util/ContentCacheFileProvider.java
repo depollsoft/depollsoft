@@ -17,9 +17,11 @@ import android.util.*;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
+import bolts.Task;
+
 public class ContentCacheFileProvider extends ContentProvider {
   private static final String[] COLUMNS = {
-          OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE };
+          OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE};
   private ContentCache cache;
 
   public ContentCacheFileProvider() {
@@ -95,28 +97,34 @@ public class ContentCacheFileProvider extends ContentProvider {
 
   private File getFile(Uri uri) {
     List<String> pathSegments = uri.getPathSegments();
-    File f = this
+    Task<File> f = this
             .getCache()
             .loadContentPublic(
                     getFileName(uri),
-                    pathSegments.get(1), false).waitFor();
-    return f;
+                    pathSegments.get(1), false);
+    try {
+      f.waitForCompletion();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    return f.getResult();
   }
 
   @Override
   public ParcelFileDescriptor openFile(Uri uri, String mode)
-      throws FileNotFoundException {
+          throws FileNotFoundException {
     File f = getFile(uri);
     ParcelFileDescriptor parcel = ParcelFileDescriptor.open(f,
-        ParcelFileDescriptor.MODE_READ_ONLY);
+            ParcelFileDescriptor.MODE_READ_ONLY);
     return parcel;
   }
 
   @Override
   public Cursor query(Uri uri, String[] projection, String selection,
-      String[] selectionArgs, String sortOrder) {
+                      String[] selectionArgs, String sortOrder) {
     // ContentProvider has already checked granted permissions
     final File file = getFile(uri);
+
     if (file == null) {
       return null;
     }
@@ -144,7 +152,7 @@ public class ContentCacheFileProvider extends ContentProvider {
 
   @Override
   public int update(Uri uri, ContentValues values, String selection,
-      String[] selectionArgs) {
+                    String[] selectionArgs) {
     return 0;
   }
 
@@ -153,6 +161,7 @@ public class ContentCacheFileProvider extends ContentProvider {
     System.arraycopy(original, 0, result, 0, newLength);
     return result;
   }
+
   private static Object[] copyOf(Object[] original, int newLength) {
     final Object[] result = new Object[newLength];
     System.arraycopy(original, 0, result, 0, newLength);

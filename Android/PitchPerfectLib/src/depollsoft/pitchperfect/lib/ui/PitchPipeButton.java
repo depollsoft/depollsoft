@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import android.widget.Button;
 
 import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.ReflectedProperty;
@@ -42,7 +43,7 @@ public class PitchPipeButton extends Button {
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
     UiBinder.bind(new ReflectedProperty(this, "Pressed"), new ReflectedProperty(this,
-        "Note.IsPlaying"), BindingMode.ONE_WAY);
+        "Note.IsPlaying"), BindingMode.ONE_WAY, BoolConverter.get());
   }
 
   @Override

@@ -17,6 +17,8 @@ import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 import com.bindroid.utils.ObjectUtilities;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.tagmaster.barbershop.Tag;
 
 public class TeachableTagItemView extends FrameLayout implements BoundUi<Integer> {
@@ -46,15 +48,15 @@ public class TeachableTagItemView extends FrameLayout implements BoundUi<Integer
       return;
     this.setTagId(dataSource);
     this.setTag(null);
-    Tag.loadTagById(dataSource).continueWith(new Action<Tag>() {
-
-      public void invoke(final Tag parameter) {
-        TeachableTagItemView.this.setTag(parameter);
-      }
-    }, new Action<Exception>() {
-
-      public void invoke(Exception parameter) {
-        Log.e("depollsoft.tagmaster", "Failed to load tag", parameter);
+    Tag.loadTagById(dataSource).continueWith(new Continuation<Tag, Void>() {
+      @Override
+      public Void then(Task<Tag> task) throws Exception {
+        if (task.isFaulted()) {
+          Log.e("depollsoft.tagmaster", "Failed to load tag", task.getError());
+        } else {
+          TeachableTagItemView.this.setTag(task.getResult());
+        }
+        return null;
       }
     });
   }
@@ -90,12 +92,12 @@ public class TeachableTagItemView extends FrameLayout implements BoundUi<Integer
     mi.inflate(R.menu.teachabletagcontextmenu, menu);
 
     menu.findItem(R.id.removeTeachableTagMenuItem).setOnMenuItemClickListener(
-        new OnMenuItemClickListener() {
-          public boolean onMenuItemClick(MenuItem item) {
-            TeachableTagsModel.removeTeachableTag(TeachableTagItemView.this.getTagId());
-            return true;
-          }
-        });
+            new OnMenuItemClickListener() {
+              public boolean onMenuItemClick(MenuItem item) {
+                TeachableTagsModel.removeTeachableTag(TeachableTagItemView.this.getTagId());
+                return true;
+              }
+            });
 
     menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(new OnMenuItemClickListener() {
       public boolean onMenuItemClick(MenuItem item) {
@@ -105,7 +107,7 @@ public class TeachableTagItemView extends FrameLayout implements BoundUi<Integer
     });
 
     menu.findItem(R.id.moveDownMenuItem)
-        .setEnabled(TeachableTagsModel.canMoveDown(this.getTagId()));
+            .setEnabled(TeachableTagsModel.canMoveDown(this.getTagId()));
 
     menu.findItem(R.id.moveUpMenuItem).setEnabled(TeachableTagsModel.canMoveUp(this.getTagId()));
 

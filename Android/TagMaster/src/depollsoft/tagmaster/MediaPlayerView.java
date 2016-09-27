@@ -26,6 +26,8 @@ import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.lib.util.ContentCache;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 
@@ -91,7 +93,7 @@ public class MediaPlayerView extends LinearLayout {
 
   private void init() {
     LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
-        Context.LAYOUT_INFLATER_SERVICE);
+            Context.LAYOUT_INFLATER_SERVICE);
     inflater.inflate(R.layout.mediaplayerview, this, true);
 
     this.player = new MediaPlayer();
@@ -120,7 +122,7 @@ public class MediaPlayerView extends LinearLayout {
 
       public boolean onError(MediaPlayer mp, int what, int extra) {
         Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-            Toast.LENGTH_SHORT).show();
+                Toast.LENGTH_SHORT).show();
         MediaPlayerView.this.setIsPlaying(false);
         return true;
       }
@@ -164,49 +166,50 @@ public class MediaPlayerView extends LinearLayout {
         } else {
           MediaPlayerView.this.rlChangedSinceLastPlay = false;
           final ProgressDialog dialog = new ProgressDialog(
-              ((TagTracksActivity) MediaPlayerView.this.getContext()).getParent());
+                  ((TagTracksActivity) MediaPlayerView.this.getContext()).getParent());
           dialog.setMessage("Loading track...");
           dialog.show();
           MediaPlayerView.this.cache.loadContentPublic(
-              MediaPlayerView.this.getRemoteLocation().getUri(),
-              MediaPlayerView.this.getRemoteLocation().getType(), false).continueWith(
-              new Action<File>() {
-                public void invoke(final File parameter) {
-                  MediaPlayerView.this.post(new Runnable() {
+                  MediaPlayerView.this.getRemoteLocation().getUri(),
+                  MediaPlayerView.this.getRemoteLocation().getType(), false).continueWith(new Continuation<File, Void>() {
+            @Override
+            public Void then(final Task<File> task) throws Exception {
+              if (task.isFaulted()) {
+                MediaPlayerView.this.post(new Runnable() {
 
-                    public void run() {
-                      try {
-                        FileInputStream fis = new FileInputStream(parameter);
-                        MediaPlayerView.this.player.reset();
-                        MediaPlayerView.this.player.setDataSource(fis.getFD());
-                        MediaPlayerView.this.player.prepare();
-                        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
-                            .getDuration());
-                        fis.close();
-                        MediaPlayerView.this.player.start();
-                        MediaPlayerView.this.setIsPlaying(true);
-                      } catch (Exception e) {
-                        Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
+                  public void run() {
+                    dialog.dismiss();
+                    Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
                             Toast.LENGTH_SHORT).show();
-                        MediaPlayerView.this.setIsPlaying(false);
-                      } finally {
-                        dialog.dismiss();
-                      }
-                    }
-                  });
-                }
-              }, new Action<Exception>() {
-                public void invoke(Exception parameter) {
-                  MediaPlayerView.this.post(new Runnable() {
+                  }
+                });
+              } else {
+                MediaPlayerView.this.post(new Runnable() {
 
-                    public void run() {
-                      dialog.dismiss();
+                  public void run() {
+                    try {
+                      FileInputStream fis = new FileInputStream(task.getResult());
+                      MediaPlayerView.this.player.reset();
+                      MediaPlayerView.this.player.setDataSource(fis.getFD());
+                      MediaPlayerView.this.player.prepare();
+                      MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
+                              .getDuration());
+                      fis.close();
+                      MediaPlayerView.this.player.start();
+                      MediaPlayerView.this.setIsPlaying(true);
+                    } catch (Exception e) {
                       Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                          Toast.LENGTH_SHORT).show();
+                              Toast.LENGTH_SHORT).show();
+                      MediaPlayerView.this.setIsPlaying(false);
+                    } finally {
+                      dialog.dismiss();
                     }
-                  });
-                }
-              });
+                  }
+                });
+              }
+              return null;
+            }
+          });
         }
       }
     });
@@ -285,7 +288,7 @@ public class MediaPlayerView extends LinearLayout {
             public void run() {
               MediaPlayerView.this.refreshing = true;
               MediaPlayerView.this.setAudioPosition(MediaPlayerView.this.player
-                  .getCurrentPosition());
+                      .getCurrentPosition());
               MediaPlayerView.this.refreshing = false;
             }
           });

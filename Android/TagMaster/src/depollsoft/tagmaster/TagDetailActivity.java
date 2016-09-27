@@ -17,6 +17,8 @@ import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 import com.bindroid.utils.ReflectedProperty;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
 import depollsoft.lib.compat.ui.CompatTabHostWrapper;
@@ -40,11 +42,11 @@ public class TagDetailActivity extends TabActivity {
     Intent i = new Intent(Intent.ACTION_SEND);
     i.putExtra(Intent.EXTRA_SUBJECT, this.getTag().getTitle() + " - Tag Master for Android");
     i.putExtra(
-        Intent.EXTRA_TEXT,
-        String
-            .format(
-                "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
-                this.getTag().getTitle(), this.getTag().getTagUri()));
+            Intent.EXTRA_TEXT,
+            String
+                    .format(
+                            "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
+                            this.getTag().getTitle(), this.getTag().getTagUri()));
     i.setType("text/plain");
     return i;
   }
@@ -52,7 +54,7 @@ public class TagDetailActivity extends TabActivity {
   private Intent getSmsIntent() {
     Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"));
     i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this.getTag().getTitle(),
-        this.getTag().getTagUri()));
+            this.getTag().getTagUri()));
     return i;
   }
 
@@ -95,28 +97,9 @@ public class TagDetailActivity extends TabActivity {
 
     int tagId = this.getIntent().getExtras().getInt(TagDetailActivity.TAG_ID_EXTRA);
 
-    Tag.loadTagById(tagId, refresh).continueWith(new Action<Tag>() {
-
-      public void invoke(final Tag parameter) {
-        TagDetailActivity.this.runOnUiThread(new Runnable() {
-
-          public void run() {
-            TagDetailActivity.this.setTag(null);
-            TagDetailActivity.this.setTag(parameter);
-            try {
-              if (TagDetailActivity.this.progress.isShowing()) {
-                TagDetailActivity.this.progress.dismiss();
-              }
-            } catch (Exception e) {
-              // Sometimes this throws.
-            }
-            Activities.invalidateOptionsMenu(TagDetailActivity.this);
-          }
-        });
-      }
-    }, new Action<Exception>() {
-
-      public void invoke(Exception parameter) {
+    Tag.loadTagById(tagId, refresh).continueWith(new Continuation<Tag, Void>() {
+      @Override
+      public Void then(Task<Tag> task) throws Exception {
         try {
           if (TagDetailActivity.this.progress.isShowing()) {
             TagDetailActivity.this.progress.dismiss();
@@ -124,6 +107,13 @@ public class TagDetailActivity extends TabActivity {
         } catch (Exception e) {
           // Sometimes this throws.
         }
+        if (!task.isFaulted()) {
+          TagDetailActivity.this.setTag(task.getResult());
+          Activities.invalidateOptionsMenu(TagDetailActivity.this);
+        } else {
+          setTag(null);
+        }
+        return null;
       }
     });
   }
@@ -140,25 +130,25 @@ public class TagDetailActivity extends TabActivity {
     Intent summaryIntent = new Intent(this, TagSummaryActivity.class);
     summaryIntent.putExtras(this.getIntent().getExtras());
     this.tabHost.addTab(this.tabHost.newTabSpec("summary").setContent(summaryIntent)
-        .setIndicator("Summary"));
+            .setIndicator("Summary"));
 
     Intent detailsIntent = new Intent(this, TagMiscActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
     this.tabHost.addTab(this.tabHost.newTabSpec("details").setContent(detailsIntent)
-        .setIndicator("Details"));
+            .setIndicator("Details"));
 
     Intent tracksIntent = new Intent(this, TagTracksActivity.class);
     detailsIntent.putExtras(this.getIntent().getExtras());
     this.tabHost.addTab(this.tabHost.newTabSpec("tracks").setContent(tracksIntent)
-        .setIndicator("Tracks"));
+            .setIndicator("Tracks"));
 
     Intent videosIntent = new Intent(this, TagVideosActivity.class);
     videosIntent.putExtras(this.getIntent().getExtras());
     this.tabHost.addTab(this.tabHost.newTabSpec("videos").setContent(videosIntent)
-        .setIndicator("Videos"));
+            .setIndicator("Videos"));
 
     UiBinder.bind(new ReflectedProperty(this, "Title"), new ReflectedProperty(this, "Tag.Title"),
-        BindingMode.ONE_WAY);
+            BindingMode.ONE_WAY);
 
     UiBinder.bind(this, R.id.tabContentHolder, "Visibility", "Tag", BoolConverter.get());
 
@@ -171,14 +161,14 @@ public class TagDetailActivity extends TabActivity {
       return false;
     this.getMenuInflater().inflate(R.menu.tagdetailmenu, menu);
     MenuItems.setShowAsAction(menu.findItem(R.id.addFavoriteMenuItem),
-        MenuItems.SHOW_AS_ACTION_IF_ROOM);
+            MenuItems.SHOW_AS_ACTION_IF_ROOM);
     MenuItems.setShowAsAction(menu.findItem(R.id.removeFavoriteMenuItem),
-        MenuItems.SHOW_AS_ACTION_IF_ROOM);
+            MenuItems.SHOW_AS_ACTION_IF_ROOM);
     MenuItems.setShowAsAction(menu.findItem(R.id.smsMenuItem), MenuItems.SHOW_AS_ACTION_IF_ROOM);
     menu.findItem(R.id.smsMenuItem).setVisible(
-        IntentUtilities.isIntentAvailable(this, this.getSmsIntent()));
+            IntentUtilities.isIntentAvailable(this, this.getSmsIntent()));
     menu.findItem(R.id.emailMenuItem).setVisible(
-        IntentUtilities.isIntentAvailable(this, this.getEmailIntent()));
+            IntentUtilities.isIntentAvailable(this, this.getEmailIntent()));
     return true;
   }
 
@@ -229,13 +219,13 @@ public class TagDetailActivity extends TabActivity {
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
     menu.findItem(R.id.addFavoriteMenuItem).setVisible(
-        !FavoritesModel.getIsFavorite(this.getTag().getId()));
+            !FavoritesModel.getIsFavorite(this.getTag().getId()));
     menu.findItem(R.id.removeFavoriteMenuItem).setVisible(
-        FavoritesModel.getIsFavorite(this.getTag().getId()));
+            FavoritesModel.getIsFavorite(this.getTag().getId()));
     menu.findItem(R.id.addTeachableTagMenuItem).setVisible(
-        !TeachableTagsModel.getIsTeachableTag(this.getTag().getId()));
+            !TeachableTagsModel.getIsTeachableTag(this.getTag().getId()));
     menu.findItem(R.id.removeTeachableTagMenuItem).setVisible(
-        TeachableTagsModel.getIsTeachableTag(this.getTag().getId()));
+            TeachableTagsModel.getIsTeachableTag(this.getTag().getId()));
     return super.onPrepareOptionsMenu(menu);
   }
 
