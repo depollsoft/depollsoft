@@ -8,16 +8,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.bindroid.BindingMode;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.json.JsonSerializer;
@@ -53,6 +54,18 @@ public class TagSearchActivity extends Activity {
           return true;
         }
         return false;
+      }
+    });
+
+    ((EditText) this.findViewById(R.id.searchTextBox)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
+      @Override
+      public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        boolean handled = false;
+        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+          TagSearchActivity.this.search();
+          handled = true;
+        }
+        return handled;
       }
     });
 
@@ -163,18 +176,6 @@ public class TagSearchActivity extends Activity {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   private void search() {

@@ -7,7 +7,6 @@ import android.view.MenuItem;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.converters.ToStringConverter;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 public class TagMiscActivity extends Activity {
 
@@ -66,17 +65,4 @@ public class TagMiscActivity extends Activity {
       return this.getParent().onMenuItemSelected(featureId, item);
     return false;
   }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
-  }
-
 }

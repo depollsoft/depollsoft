@@ -10,7 +10,6 @@ import com.bindroid.converters.AdapterConverter;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
@@ -103,17 +102,4 @@ public class MeActivity extends Activity {
     this.startActivity(i);
     return true;
   }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
-  }
-
 }

@@ -2,9 +2,13 @@
 <resources>
 
     <string name="app_store">google</string>
-    <string name="app_version">2.4.1</string>
-    <string name="VersionString">Version 2.4.1</string>
+    <string name="app_version">2.4.2</string>
+    <string name="VersionString">Version 2.4.2</string>
     <string name="Changelog"><![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 2.4.2</h5>
+                    -Fixes an issue with the widget font rendering.<br />
+            </p>
             <p>
                     <h5>Version 2.4.1</h5>
                     -Minor bug fixes.<br />

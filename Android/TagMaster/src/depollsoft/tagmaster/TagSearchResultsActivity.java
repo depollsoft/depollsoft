@@ -9,7 +9,6 @@ import android.widget.FrameLayout;
 
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.json.JsonSerializer;
@@ -59,18 +58,6 @@ public class TagSearchResultsActivity extends ActivityGroup {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   public void setModel(QueryModel value) {

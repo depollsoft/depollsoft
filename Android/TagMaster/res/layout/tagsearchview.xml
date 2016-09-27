@@ -26,6 +26,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="@string/SearchBoxHint"
+                android:maxLines="1"
+                android:inputType="text"
                 android:imeOptions="actionSearch" >
             </EditText>
 

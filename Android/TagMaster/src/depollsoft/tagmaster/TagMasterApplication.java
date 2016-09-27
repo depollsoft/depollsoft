@@ -3,7 +3,8 @@ package depollsoft.tagmaster;
 import android.util.Log;
 
 import com.bindroid.trackable.TrackableCollection;
-import com.flurry.android.FlurryAgent;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 
@@ -20,24 +21,17 @@ public class TagMasterApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    FlurryAgent.setUseHttps(true);
-    FlurryAgent.setVersionName(getString(R.string.app_version));
-
     JsonSerializer.registerAlias(TrackableCollection.class,
-        "depollsoft.lib.binding.ObservableCollection");
+            "depollsoft.lib.binding.ObservableCollection");
 
-    if (DebugTools.isDebugSigned(TagMasterApplication.DEBUG_SIGNATURE)) {
-      Log.d(this.getPackageName(), "Initializing with debug key");
-      Parse.initialize(this, "BFOuL26qLCzpRLOZv0rZWYBHBJzbtFPScYioq506",
-          "TEe557a3ENSz5Y6fv2i2FyduZwY5HehM9pVinOie");
-      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_DEBUG);
-      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_DEBUG);
-    } else {
-      Parse.initialize(this, "RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj",
-          "7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4");
-      ParseFacebookUtils.initialize(TagMasterApplication.FACEBOOK_PRODUCTION);
-      com.facebook.Settings.publishInstallAsync(this, FACEBOOK_PRODUCTION);
-    }
+    Parse.initialize(new Parse.Configuration.Builder(this)
+            .server("https://tagmaster-api.depollsoft.xyz")
+            .applicationId("RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj")
+            .clientKey("7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4")
+            .build());
+    FacebookSdk.sdkInitialize(this);
+    ParseFacebookUtils.initialize(this);
+    AppEventsLogger.activateApp(this);
   }
 
   @Override

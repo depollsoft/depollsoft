@@ -10,7 +10,6 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 
@@ -115,15 +114,8 @@ public class TagTracksActivity extends Activity {
   }
 
   @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
   protected void onStop() {
     super.onStop();
-    FlurryAgent.onEndSession(this);
     stopMedia();
   }
 

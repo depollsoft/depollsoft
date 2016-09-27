@@ -126,9 +126,10 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
       destDir.mkdirs();
       CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
               .convertToTarget(n, CharSequence.class);
+
       TextView view = new TextView(PitchPerfectApplication.getAppContext());
       view.setText(string);
-      view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+      view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
       view.setTextColor(Color.WHITE);
       view.measure(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT);
       view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
