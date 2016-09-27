@@ -16,8 +16,8 @@ public class ContentCache {
       Context context1 = context;
     this.privateDir = context1.getDir("depollsoft_lib_private",
             Context.MODE_PRIVATE);
-    this.publicDir = context1.getDir("depollsoft_lib_public",
-            Context.MODE_WORLD_WRITEABLE | Context.MODE_WORLD_READABLE);
+    this.publicDir = context1.getDir("depollsoft_lib_public_1",
+            Context.MODE_PRIVATE);
   }
 
   private String canonicalizeFileName(String url, String extension) {

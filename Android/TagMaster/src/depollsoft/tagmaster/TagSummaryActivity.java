@@ -11,6 +11,7 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -26,7 +27,6 @@ import com.bindroid.utils.Action;
 import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.lib.ui.Hyperlink;
 import depollsoft.lib.util.ContentCache;
@@ -108,7 +108,7 @@ public class TagSummaryActivity extends Activity {
     link.setOnClickListener(new OnClickListener() {
 
       public void onClick(View v) {
-        Tag tag = ((TagDetailActivity) TagSummaryActivity.this.getParent()).getTag();
+        final Tag tag = ((TagDetailActivity) TagSummaryActivity.this.getParent()).getTag();
         final String sheetMusicType = tag.getSheetMusicUri().getType();
         final String sheetMusicUri = tag.getSheetMusicUri().getUri();
         final ProgressDialog progress = new ProgressDialog(TagSummaryActivity.this.getParent());
@@ -123,7 +123,8 @@ public class TagSummaryActivity extends Activity {
               public void invoke(File parameter) {
                 try {
                   String contentPath = "content://depollsoft.tagmaster/" + sheetMusicType + "/"
-                      + Uri.encode(sheetMusicUri);
+                      + Base64.encodeToString(sheetMusicUri.getBytes(), Base64.URL_SAFE) +
+                          "/" + tag.getId() + "." + sheetMusicType;
                   Uri path = Uri.parse(contentPath);
                   Intent intent = new Intent(Intent.ACTION_VIEW);
                   if (sheetMusicType.toLowerCase(Locale.US).equals("pdf")) {
@@ -222,17 +223,4 @@ public class TagSummaryActivity extends Activity {
       return this.getParent().onMenuItemSelected(featureId, item);
     return false;
   }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
-  }
-
 }

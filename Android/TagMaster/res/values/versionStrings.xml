@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">Version 3.1.0</string>
-    <string name="VersionNumber">3.1.0</string>
+    <string name="app_version">Version 3.2.0</string>
+    <string name="VersionNumber">3.2.0</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 3.2.0</h5>
+                    -You can now use the return key to start a search!<br />
+                    -Fixes a number of issues with opening PDFs on newer devices<br />
+                    -Improves performance when opening sheet music<br />
+                    -Now uses a secure connection to BarbershopTags.com<br />
+                    -Other minor bug fixes<br />
+            </p>
             <p>
                     <h5>Version 3.1.0</h5>
                     -New material icon!

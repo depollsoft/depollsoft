@@ -2,6 +2,8 @@
 <resources>
 
     <string name="hello">Hello World, TagMaster!</string>
+    <string name="facebook_app_id">311400242255131</string>
+    <string name="fb_login_protocol_scheme">fb311400242255131</string>
     <string name="app_name">Tag Master</string>
     <string name="Version">Version: </string>
     <string name="aka">a.k.a. </string>
@@ -107,7 +109,7 @@
     <string name="Balance">Balance</string>
     <string name="RandomTag">Random Tag</string>
     <string name="Favorites">Favorites</string>
-    <string name="Copyright">© 2014</string>
+    <string name="Copyright">© 2016</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="ContentProvider">Content provided by</string>
     <string name="BrowseTags">Browse</string>

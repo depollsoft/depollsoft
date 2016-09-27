@@ -1,7 +1,5 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.view.MenuItem;
@@ -23,18 +21,6 @@ public class TagMasterBrowserActivity extends BrowserActivity {
       return true;
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   @Override

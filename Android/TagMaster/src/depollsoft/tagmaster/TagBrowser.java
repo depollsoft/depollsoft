@@ -1,7 +1,5 @@
 package depollsoft.tagmaster;
 
-import com.flurry.android.FlurryAgent;
-
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -98,17 +96,5 @@ public class TagBrowser extends TabActivity {
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     this.tabHost.saveInstanceState("tabs", outState);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 }

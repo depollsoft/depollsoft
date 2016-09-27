@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
-import com.flurry.android.FlurryAgent;
-
 import depollsoft.lib.activity.BrowserActivity;
 
 @SuppressWarnings("deprecation")
@@ -46,17 +44,5 @@ public class UrlHandlerActivity extends ActivityGroup {
     Intent browser = new Intent(this, TagMasterBrowserActivity.class);
     browser.putExtra(BrowserActivity.URL_EXTRA, uri.toString());
     this.startActivity(browser);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 }

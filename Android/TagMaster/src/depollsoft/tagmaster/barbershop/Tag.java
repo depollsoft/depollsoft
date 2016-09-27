@@ -37,8 +37,8 @@ public class Tag {
   public static final int CURRENT_APP_VERSION = 2;
   private static final SparseArray<SoftReference<Tag>> TagCache = new SparseArray<SoftReference<Tag>>();
   private static final Object CacheWriteLock = new Object();
-  private static final String API_URI_STRING = "http://www.barbershoptags.com/api.php?client=TagMaster&";
-  private static final String RATING_URI_STRING = "http://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d";
+  private static final String API_URI_STRING = "https://www.barbershoptags.com/api.php?client=TagMaster&";
+  private static final String RATING_URI_STRING = "https://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d";
 
   public static void clearCache() {
     File directory = new File(RichApplication.getAppContext().getFilesDir(), "TagCache");
@@ -332,13 +332,13 @@ public class Tag {
 
   private TrackableField<String> arrangerWebsite = new TrackableField<String>();
 
-  private TrackableField<Integer> yearArranged = new TrackableField<Integer>();
+  private TrackableField<String> yearArranged = new TrackableField<String>();
 
   private TrackableField<String> sungBy = new TrackableField<String>();
 
   private TrackableField<String> sungByWebsite = new TrackableField<String>();
 
-  private TrackableField<Integer> sungYear = new TrackableField<Integer>();
+  private TrackableField<String> sungYear = new TrackableField<String>();
 
   private TrackableField<String> learningTrackQuartet = new TrackableField<String>();
 
@@ -569,7 +569,7 @@ public class Tag {
     return this.sungByWebsite.get();
   }
 
-  public Integer getSungYear() {
+  public String getSungYear() {
     return this.sungYear.get();
   }
 
@@ -640,7 +640,7 @@ public class Tag {
     return this.writtenKey.get();
   }
 
-  public Integer getYearArranged() {
+  public String getYearArranged() {
     return this.yearArranged.get();
   }
 
@@ -685,13 +685,13 @@ public class Tag {
         else if (property.getName().equals("ArrWebsite"))
           this.setArrangerWebsite(propValue);
         else if (property.getName().equals("Arranged") && propValue != null)
-          this.setYearArranged(Integer.parseInt(propValue));
+          this.setYearArranged(propValue);
         else if (property.getName().equals("SungBy"))
           this.setSungBy(propValue);
         else if (property.getName().equals("SungWebsite"))
           this.setSungByWebsite(propValue);
         else if (property.getName().equals("SungYear") && propValue != null)
-          this.setSungYear(Integer.parseInt(propValue));
+          this.setSungYear(propValue);
         else if (property.getName().equals("Quartet"))
           this.setLearningTrackQuartet(propValue);
         else if (property.getName().equals("QWebsite"))
@@ -949,7 +949,7 @@ public class Tag {
     this.sungByWebsite.set(value);
   }
 
-  public void setSungYear(Integer value) {
+  public void setSungYear(String value) {
     this.sungYear.set(value);
   }
 
@@ -989,7 +989,7 @@ public class Tag {
     this.writtenKey.set(value);
   }
 
-  public void setYearArranged(Integer value) {
+  public void setYearArranged(String value) {
     this.yearArranged.set(value);
   }
 

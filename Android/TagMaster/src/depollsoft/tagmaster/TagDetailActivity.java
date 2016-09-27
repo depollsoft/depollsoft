@@ -16,7 +16,6 @@ import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 import com.bindroid.utils.ReflectedProperty;
-import com.flurry.android.FlurryAgent;
 
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.compat.ui.Activities;
@@ -255,18 +254,6 @@ public class TagDetailActivity extends TabActivity {
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     this.tabHost.saveInstanceState("tabs", outState);
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   public void setTag(Tag value) {

@@ -1,7 +1,9 @@
 package depollsoft.tagmaster;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,12 +26,14 @@ import android.widget.Toast;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.Trackable;
 import com.bindroid.ui.UiBinder;
-import com.flurry.android.FlurryAgent;
+import com.facebook.login.LoginManager;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
@@ -57,8 +61,7 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-
-    ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
+    ParseFacebookUtils.onActivityResult(requestCode, resultCode, data);
   }
 
   @Override
@@ -201,34 +204,37 @@ public class SettingsActivity extends Activity {
         progress.setMessage("Logging in...");
         SettingsActivity.this.loggingIn = true;
         progress.show();
-        ParseFacebookUtils.logIn(null, SettingsActivity.this, new LogInCallback() {
+        ParseFacebookUtils.logInWithReadPermissionsInBackground(
+                SettingsActivity.this, Arrays.asList("public_profile")).continueWith(
+                new Continuation<ParseUser, Void>() {
           @Override
-          public void done(ParseUser user, ParseException err) {
+          public Void then(Task<ParseUser> task) throws Exception {
             SettingsActivity.this.loggingIn = false;
             progress.dismiss();
             v.setEnabled(true);
-            if (err != null) {
+            if (task.getError() != null) {
               Toast.makeText(SettingsActivity.this, "Facebook login failed.", Toast.LENGTH_SHORT)
-                  .show();
-              Log.d("Tag Master", "Failed to log in.", err);
-              return;
+                      .show();
+              Log.d("Tag Master", "Failed to log in.", task.getError());
+              return null;
             }
 
-            if (user == null) {
+            if (task.getResult() == null) {
               Log.d("Tag Master", "User cancelled login.");
-              return;
+              return null;
             }
             SettingsActivity.this.loginTrackable.updateTrackers();
-            if (user.isNew()) {
+            if (task.getResult().isNew()) {
               FavoritesModel.storeToUser();
               TeachableTagsModel.storeToUser();
-              user.saveEventually();
+              task.getResult().saveEventually();
             } else {
               FavoritesModel.restoreFromUser();
               TeachableTagsModel.restoreFromUser();
             }
+            return null;
           }
-        });
+        }, Task.UI_THREAD_EXECUTOR);
       }
     });
 
@@ -294,18 +300,6 @@ public class SettingsActivity extends Activity {
   @Override
   protected void onResume() {
     super.onResume();
-  }
-
-  @Override
-  protected void onStart() {
-    super.onStart();
-    FlurryAgent.onStartSession(this, "V5L1948BNDQCKZFPARJ9");
-  }
-
-  @Override
-  protected void onStop() {
-    super.onStop();
-    FlurryAgent.onEndSession(this);
   }
 
   private void refreshCacheSize() {
