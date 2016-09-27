@@ -28,6 +28,8 @@ import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.lib.ui.Hyperlink;
 import depollsoft.lib.util.ContentCache;
 import depollsoft.tagmaster.barbershop.Tag;
@@ -48,34 +50,34 @@ public class TagSummaryActivity extends Activity {
 
     UiBinder.bind(this, R.id.akaTextView, "Text", "Parent.Tag.AlternativeTitle");
     UiBinder.bind(this, R.id.akaLayout, "Visibility", "Parent.Tag.AlternativeTitle",
-        BoolConverter.get());
+            BoolConverter.get());
 
     UiBinder.bind(this, R.id.versionTextView, "Text", "Parent.Tag.Version");
     UiBinder
-        .bind(this, R.id.versionLayout, "Visibility", "Parent.Tag.Version", BoolConverter.get());
+            .bind(this, R.id.versionLayout, "Visibility", "Parent.Tag.Version", BoolConverter.get());
 
     UiBinder.bind(this, R.id.ratingTextView, "Text", "Parent.Tag.Rating", new ToStringConverter(
-        "%3.2f"));
+            "%3.2f"));
     UiBinder
-        .bind(this, R.id.ratingTextView, "Visibility", "Parent.Tag.Rating", BoolConverter.get());
+            .bind(this, R.id.ratingTextView, "Visibility", "Parent.Tag.Rating", BoolConverter.get());
     UiBinder.bind(this, R.id.ratingProgressBar, "Progress", "Parent.Tag.Rating",
-        new RatingConverter());
-    UiBinder.bind(this, R.id.rateButton, "Enabled", "CanRate");
+            new RatingConverter());
+    UiBinder.bind(this, R.id.rateButton, "Enabled", "CanRate", BoolConverter.get());
 
     UiBinder.bind(this, R.id.partsTextView, "Text", "Parent.Tag.Parts", new ToStringConverter());
     UiBinder.bind(this, R.id.partsRow, "Visibility", "Parent.Tag.Parts", BoolConverter.get());
 
     UiBinder
-        .bind(this, R.id.tagTypeTextView, "Text", "Parent.Tag.TagType", new ToStringConverter());
+            .bind(this, R.id.tagTypeTextView, "Text", "Parent.Tag.TagType", new ToStringConverter());
 
     UiBinder.bind(this, R.id.playKeyNoteButton, "Note", "Parent.Tag.KeyNote");
     UiBinder.bind(this, R.id.playKeyNoteButton, "Text", "Parent.Tag.WrittenKey");
     UiBinder.bind(this, R.id.keyRow, "Visibility", "Parent.Tag.WrittenKey", BoolConverter.get());
 
     UiBinder.bind(this, R.id.classicTagTextView, "Text", "Parent.Tag.ClassicTagNumber",
-        new ToStringConverter());
+            new ToStringConverter());
     UiBinder.bind(this, R.id.classicTagRow, "Visibility", "Parent.Tag.ClassicTagNumber",
-        BoolConverter.get());
+            BoolConverter.get());
 
     UiBinder.bind(this, R.id.notesTextView, "Text", "Parent.Tag.Notes");
     UiBinder.bind(this, R.id.notesRow, "Visibility", "Parent.Tag.Notes", BoolConverter.get());
@@ -85,22 +87,22 @@ public class TagSummaryActivity extends Activity {
 
     UiBinder.bind(this, R.id.sheetMusicLink, "HyperlinkUri", "Parent.Tag.SheetMusicUri.Uri");
     UiBinder.bind(this, R.id.sheetMusicLink, "Visibility", "Parent.Tag.SheetMusicUri",
-        BoolConverter.get());
+            BoolConverter.get());
 
     UiBinder.bind(new ReflectedProperty(this.findViewById(R.id.favoriteMarkerTextView),
-        "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
 
       public Boolean evaluate() {
         return FavoritesModel.getIsFavorite(((TagDetailActivity) TagSummaryActivity.this
-            .getParent()).getTag().getId());
+                .getParent()).getTag().getId());
       }
     }, null, Boolean.class), BindingMode.ONE_WAY, BoolConverter.get());
     UiBinder.bind(new ReflectedProperty(this.findViewById(R.id.teachableMarkerTextView),
-        "Visibility"), new Property<Boolean>(new Function<Boolean>() {
+            "Visibility"), new Property<Boolean>(new Function<Boolean>() {
 
       public Boolean evaluate() {
         return TeachableTagsModel.getIsTeachableTag(((TagDetailActivity) TagSummaryActivity.this
-            .getParent()).getTag().getId());
+                .getParent()).getTag().getId());
       }
     }, null, Boolean.class), BindingMode.ONE_WAY, BoolConverter.get());
 
@@ -117,56 +119,55 @@ public class TagSummaryActivity extends Activity {
         progress.show();
 
         ContentCache cache = new ContentCache(TagSummaryActivity.this);
-        cache.loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith(
-            new Action<File>() {
-
-              public void invoke(File parameter) {
-                try {
-                  String contentPath = "content://depollsoft.tagmaster/" + sheetMusicType + "/"
-                      + Base64.encodeToString(sheetMusicUri.getBytes(), Base64.URL_SAFE) +
-                          "/" + tag.getId() + "." + sheetMusicType;
-                  Uri path = Uri.parse(contentPath);
-                  Intent intent = new Intent(Intent.ACTION_VIEW);
-                  if (sheetMusicType.toLowerCase(Locale.US).equals("pdf")) {
-                    intent.setDataAndType(path, "application/pdf");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                  } else {
-                    MimeTypeMap map = MimeTypeMap.getSingleton();
-                    String mimeType = map.getMimeTypeFromExtension(sheetMusicType
-                        .toLowerCase(Locale.US));
-                    intent.setDataAndType(path, mimeType);
-                  }
-                  try {
-                    TagSummaryActivity.this.startActivity(intent);
-                  } catch (ActivityNotFoundException e) {
-                    TagSummaryActivity.this.runOnUiThread(new Runnable() {
-                      public void run() {
-                        Toast.makeText(
-                            TagSummaryActivity.this,
-                            "No application available to view this sheet music (" + sheetMusicType
-                                + ").", Toast.LENGTH_SHORT).show();
-                      }
-                    });
-                  }
-                } catch (Exception e) {
-                  e.printStackTrace();
-                } finally {
+        cache.loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith(new Continuation<File, Void>() {
+          @Override
+          public Void then(Task<File> task) throws Exception {
+            if (task.isFaulted()) {
+              TagSummaryActivity.this.runOnUiThread(new Runnable() {
+                public void run() {
+                  Toast.makeText(TagSummaryActivity.this,
+                          "Unable to load sheet music.  Please try again later.", Toast.LENGTH_SHORT)
+                          .show();
                   progress.dismiss();
                 }
+              });
+            } else {
+              try {
+                String contentPath = "content://depollsoft.tagmaster/" + sheetMusicType + "/"
+                        + Base64.encodeToString(sheetMusicUri.getBytes(), Base64.URL_SAFE) +
+                        "/" + tag.getId() + "." + sheetMusicType;
+                Uri path = Uri.parse(contentPath);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                if (sheetMusicType.toLowerCase(Locale.US).equals("pdf")) {
+                  intent.setDataAndType(path, "application/pdf");
+                  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                } else {
+                  MimeTypeMap map = MimeTypeMap.getSingleton();
+                  String mimeType = map.getMimeTypeFromExtension(sheetMusicType
+                          .toLowerCase(Locale.US));
+                  intent.setDataAndType(path, mimeType);
+                }
+                try {
+                  TagSummaryActivity.this.startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                  TagSummaryActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                      Toast.makeText(
+                              TagSummaryActivity.this,
+                              "No application available to view this sheet music (" + sheetMusicType
+                                      + ").", Toast.LENGTH_SHORT).show();
+                    }
+                  });
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+              } finally {
+                progress.dismiss();
               }
-            }, new Action<Exception>() {
-
-              public void invoke(Exception parameter) {
-                TagSummaryActivity.this.runOnUiThread(new Runnable() {
-                  public void run() {
-                    Toast.makeText(TagSummaryActivity.this,
-                        "Unable to load sheet music.  Please try again later.", Toast.LENGTH_SHORT)
-                        .show();
-                    progress.dismiss();
-                  }
-                });
-              }
-            });
+            }
+            return null;
+          }
+        });
       }
     });
 
@@ -185,24 +186,24 @@ public class TagSummaryActivity extends Activity {
             pd.setIndeterminate(true);
             pd.setMessage("Submitting rating...");
             pd.show();
-            tag.rate(popup.getRating()).continueWith(new Action<Boolean>() {
+            tag.rate(popup.getRating()).continueWith(new Continuation<Boolean, Void>() {
+              @Override
+              public Void then(Task<Boolean> task) throws Exception {
+                if (task.isFaulted()) {
+                  TagSummaryActivity.this.runOnUiThread(new Runnable() {
 
-              public void invoke(Boolean parameter) {
-                RatingsModel.addRating(tag.getId());
-                pd.dismiss();
-              }
-            }, new Action<Exception>() {
-
-              public void invoke(Exception parameter) {
-                TagSummaryActivity.this.runOnUiThread(new Runnable() {
-
-                  public void run() {
-                    Toast.makeText(TagSummaryActivity.this,
-                        "Failed to submit rating.  Please try again later.", Toast.LENGTH_SHORT)
-                        .show();
-                    pd.dismiss();
-                  }
-                });
+                    public void run() {
+                      Toast.makeText(TagSummaryActivity.this,
+                              "Failed to submit rating.  Please try again later.", Toast.LENGTH_SHORT)
+                              .show();
+                      pd.dismiss();
+                    }
+                  });
+                } else {
+                  RatingsModel.addRating(tag.getId());
+                  pd.dismiss();
+                }
+                return null;
               }
             });
           }

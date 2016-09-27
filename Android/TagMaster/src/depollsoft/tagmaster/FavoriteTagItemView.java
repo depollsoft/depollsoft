@@ -17,6 +17,8 @@ import com.bindroid.ui.UiBinder;
 import com.bindroid.utils.Action;
 import com.bindroid.utils.ObjectUtilities;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.tagmaster.barbershop.Tag;
 
 public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer> {
@@ -46,14 +48,15 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
       return;
     this.setTagId(dataSource);
     this.setTag(null);
-    Tag.loadTagById(dataSource).continueWith(new Action<Tag>() {
-
-      public void invoke(final Tag parameter) {
-        FavoriteTagItemView.this.setTag(parameter);
-      }
-    }, new Action<Exception>() {
-      public void invoke(Exception parameter) {
-        Log.e("depollsoft.tagmaster", "Failed to load tag", parameter);
+    Tag.loadTagById(dataSource).continueWith(new Continuation<Tag, Void>() {
+      @Override
+      public Void then(Task<Tag> task) throws Exception {
+        if (task.isFaulted()) {
+          Log.e("depollsoft.tagmaster", "Failed to load tag", task.getError());
+        } else {
+          FavoriteTagItemView.this.setTag(task.getResult());
+        }
+        return null;
       }
     });
   }

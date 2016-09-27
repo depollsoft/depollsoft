@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.BoundUi;
 import com.bindroid.ui.UiBinder;
@@ -53,7 +54,7 @@ public class KeySignatureListItemView extends LinearLayout implements BoundUi<Ke
     UiBinder.bind(this, R.id.keyNameTextView, "Text", "Key", new KeyNameConverter());
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"), "Key.Note.IsPlaying",
-        BindingMode.ONE_WAY);
+        BindingMode.ONE_WAY, BoolConverter.get());
   }
 
   @Override

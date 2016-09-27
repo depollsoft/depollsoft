@@ -101,6 +101,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="DepollSoftCommon" exported="" />
     <orderEntry type="library" exported="" name="support-annotations-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="bolts-tasks-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="support-compat-24.2.1" level="project" />
     <orderEntry type="library" exported="" name="support-media-compat-24.2.1" level="project" />

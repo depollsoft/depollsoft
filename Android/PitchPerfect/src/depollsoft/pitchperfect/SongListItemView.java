@@ -63,7 +63,7 @@ public class SongListItemView extends LinearLayout implements
         BoolConverter.get());
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
-        "Song.IsPlaying", BindingMode.ONE_WAY);
+        "Song.IsPlaying", BindingMode.ONE_WAY, BoolConverter.get());
 
     View editButton = this.findViewById(R.id.editButton);
     editButton.setOnClickListener(new OnClickListener() {

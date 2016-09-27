@@ -5,15 +5,20 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import android.content.Context;
+import android.util.Log;
+
+import bolts.Task;
+import bolts.TaskCompletionSource;
 
 public class ContentCache {
-    private File privateDir;
+  private File privateDir;
   private File publicDir;
 
   public ContentCache(Context context) {
-      Context context1 = context;
+    Context context1 = context;
     this.privateDir = context1.getDir("depollsoft_lib_private",
             Context.MODE_PRIVATE);
     this.publicDir = context1.getDir("depollsoft_lib_public_1",
@@ -22,7 +27,7 @@ public class ContentCache {
 
   private String canonicalizeFileName(String url, String extension) {
     return url.replaceAll("\\.|/|:", "_d_")
-        + (extension != null ? "." + extension : "");
+            + (extension != null ? "." + extension : "");
   }
 
   public void clearCache() {
@@ -47,7 +52,7 @@ public class ContentCache {
 
   public void deletePrivateContent(String url, String extension) {
     File f = new File(this.privateDir,
-        this.canonicalizeFileName(url, extension));
+            this.canonicalizeFileName(url, extension));
     if (f.exists())
       f.delete();
   }
@@ -76,17 +81,15 @@ public class ContentCache {
   }
 
   private Task<File> loadContent(final String url, String extension,
-      final File baseDir, boolean forceRefresh) {
-    final Task.TaskSource<File> source = new Task.TaskSource<File>();
+                                 final File baseDir, boolean forceRefresh) {
     final String fileName = this.canonicalizeFileName(url, extension);
     final File filePath = new File(baseDir, fileName);
     if (!forceRefresh && filePath.exists()) {
-      source.setResult(filePath);
-      return new Task<File>(source);
+      return Task.forResult(filePath);
     }
-    Thread t = new Thread() {
+    return Task.callInBackground(new Callable<File>() {
       @Override
-      public void run() {
+      public File call() throws Exception {
         InputStream is = null;
         FileOutputStream fos = null;
         try {
@@ -98,36 +101,28 @@ public class ContentCache {
           while ((numRead = is.read(buffer)) > 0) {
             fos.write(buffer, 0, numRead);
           }
-        }
-        catch (Exception e) {
-          source.setError(e);
-        }
-        finally {
+        } finally {
           try {
             if (is != null)
               is.close();
             if (fos != null)
               fos.close();
-          }
-          catch (Exception e) {
+          } catch (Exception e) {
             e.printStackTrace();
           }
         }
-        if (source.getError() == null)
-          source.setResult(filePath);
+        return filePath;
       }
-    };
-    t.start();
-    return new Task<File>(source);
+    });
   }
 
   public Task<File> loadContentPrivate(String url, String extension,
-      boolean forceRefresh) {
+                                       boolean forceRefresh) {
     return this.loadContent(url, extension, this.privateDir, forceRefresh);
   }
 
   public Task<File> loadContentPublic(String url, String extension,
-      boolean forceRefresh) {
+                                      boolean forceRefresh) {
     return this.loadContent(url, extension, this.publicDir, forceRefresh);
   }
 }

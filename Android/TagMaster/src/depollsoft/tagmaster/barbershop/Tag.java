@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
 
 import org.json.JSONObject;
 
@@ -25,9 +26,11 @@ import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.utils.Action;
 
+import bolts.Continuation;
+import bolts.Task;
+import bolts.TaskCompletionSource;
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.json.JsonSerializer;
-import depollsoft.lib.util.Task;
 import depollsoft.lib.xml.XmlDocument;
 import depollsoft.lib.xml.XmlElement;
 import depollsoft.pitchperfect.lib.Accidental;
@@ -60,15 +63,13 @@ public class Tag {
   }
 
   public static Task<Tag> loadTagById(final int id, boolean refresh) {
-    final Task.TaskSource<Tag> taskSource = new Task.TaskSource<Tag>();
     File directory = new File(RichApplication.getAppContext().getFilesDir(), "TagCache");
     File file = new File(directory, "" + id);
     boolean loadedFromCache = false;
     if (!refresh && Tag.TagCache.get(id) != null) {
       Tag cachedTag = Tag.TagCache.get(id).get();
       if (cachedTag != null) {
-        taskSource.setResult(cachedTag);
-        loadedFromCache = true;
+        return Task.forResult(cachedTag);
       }
     }
     if (!loadedFromCache && !refresh && file.exists()) {
@@ -84,36 +85,20 @@ public class Tag {
         if (tag == null || tag.getAppVersion() != Tag.CURRENT_APP_VERSION)
           throw new Exception();
         Tag.TagCache.put(id, new SoftReference<Tag>(tag));
-        taskSource.setResult(tag);
+        return Task.forResult(tag);
       } catch (Exception e) {
-        Tag.loadTagById(id, true).continueWith(new Action<Tag>() {
-
-          public void invoke(Tag parameter) {
-            taskSource.setResult(parameter);
-          }
-        }, new Action<Exception>() {
-
-          public void invoke(Exception parameter) {
-            taskSource.setError(parameter);
-          }
-        });
+        return Tag.loadTagById(id, true);
       }
     } else {
-      Tag.queryById(id).continueWith(new Action<Tag>() {
-
-        public void invoke(Tag parameter) {
-          parameter.cache();
-          Tag.TagCache.put(id, new SoftReference<Tag>(parameter));
-          taskSource.setResult(parameter);
-        }
-      }, new Action<Exception>() {
-
-        public void invoke(Exception parameter) {
-          taskSource.setError(parameter);
+      return Tag.queryById(id).onSuccess(new Continuation<Tag, Tag>() {
+        @Override
+        public Tag then(Task<Tag> task) throws Exception {
+          task.getResult().cache();
+          Tag.TagCache.put(id, new SoftReference<Tag>(task.getResult()));
+          return task.getResult();
         }
       });
     }
-    return new Task<Tag>(taskSource);
   }
 
   public static Task<TagQueryResult> query(String query) {
@@ -129,70 +114,70 @@ public class Tag {
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts) {
+                                           Integer parts) {
     return Tag.query(query, numberOfResults, start, parts, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts, Boolean learning) {
+                                           Integer parts, Boolean learning) {
     return Tag.query(query, numberOfResults, start, parts, learning, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts, Boolean learning, Boolean sheetMusic) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic) {
     return Tag.query(query, numberOfResults, start, parts, learning, sheetMusic, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection) {
     return Tag.query(query, numberOfResults, start, parts, learning, sheetMusic, collection, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
-      TagSortOptions sortBy) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
+                                           TagSortOptions sortBy) {
     return Tag.query(query, numberOfResults, start, parts, learning, sheetMusic, collection,
-        sortBy, null);
+            sortBy, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
-      TagSortOptions sortBy, Double minimumRating) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
+                                           TagSortOptions sortBy, Double minimumRating) {
     return Tag.query(query, numberOfResults, start, parts, learning, sheetMusic, collection,
-        sortBy, minimumRating, null);
+            sortBy, minimumRating, null);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, final int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
-      TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
+                                           TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads) {
     return Tag.query(query, numberOfResults, start, parts, learning, sheetMusic, collection,
-        sortBy, minimumRating, minimumDownloads, false);
+            sortBy, minimumRating, minimumDownloads, false);
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, final int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
-      TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads, final boolean cache) {
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
+                                           TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads, final boolean cache) {
     return Tag
-        .query(
-            query,
-            numberOfResults,
-            start,
-            parts,
-            learning,
-            sheetMusic,
-            collection,
-            sortBy,
-            minimumRating,
-            minimumDownloads,
-            cache,
-            "id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4");
+            .query(
+                    query,
+                    numberOfResults,
+                    start,
+                    parts,
+                    learning,
+                    sheetMusic,
+                    collection,
+                    sortBy,
+                    minimumRating,
+                    minimumDownloads,
+                    cache,
+                    "id,Title,AltTitle,Rating,Posted,Downloaded,SheetMusic,Bass,Bari,Lead,Tenor,Other1,Other2,Other3,Other4");
   }
 
   public static Task<TagQueryResult> query(String query, int numberOfResults, final int start,
-      Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
-      TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads, final boolean cache,
-      String fieldList) {
-    StringBuffer sb = new StringBuffer();
+                                           Integer parts, Boolean learning, Boolean sheetMusic, TagCollection collection,
+                                           TagSortOptions sortBy, Double minimumRating, Integer minimumDownloads, final boolean cache,
+                                           String fieldList) {
+    final StringBuffer sb = new StringBuffer();
     sb.append("n=" + numberOfResults);
     if (fieldList != null)
       sb.append("&fldlist=" + fieldList);
@@ -208,100 +193,80 @@ public class Tag {
     if (sortBy != null) {
       sb.append("&Sortby=");
       switch (sortBy) {
-      case Classic:
-        sb.append("Classic");
-        collection = TagCollection.ClassicTags;
-        break;
-      case Downloaded:
-        sb.append("Downloaded");
-        break;
-      case Posted:
-        sb.append("Posted");
-        break;
-      case Rating:
-        sb.append("Rating");
-        break;
-      case Title:
-        sb.append("Title");
-        break;
+        case Classic:
+          sb.append("Classic");
+          collection = TagCollection.ClassicTags;
+          break;
+        case Downloaded:
+          sb.append("Downloaded");
+          break;
+        case Posted:
+          sb.append("Posted");
+          break;
+        case Rating:
+          sb.append("Rating");
+          break;
+        case Title:
+          sb.append("Title");
+          break;
       }
     }
     if (collection != null) {
       sb.append("&Collection=");
       switch (collection) {
-      case ClassicTags:
-        sb.append("classic");
-        break;
-      case EasyTags:
-        sb.append("easy");
-        break;
+        case ClassicTags:
+          sb.append("classic");
+          break;
+        case EasyTags:
+          sb.append("easy");
+          break;
       }
     }
     if (minimumRating != null)
       sb.append("&MinRating=" + minimumRating);
     if (minimumDownloads != null)
       sb.append("&MinDownloaded=" + minimumDownloads);
-    final Task.TaskSource<TagQueryResult> source = new Task.TaskSource<TagQueryResult>();
-    try {
-      final URL url = new URL(Tag.API_URI_STRING + sb.toString());
-      Thread t = new Thread() {
-        @Override
-        public void run() {
-          try {
-            TagQueryResult result = new TagQueryResult();
-            InputStream is = url.openStream();
-            XmlDocument doc = XmlDocument.parse(is);
-            XmlElement tags = doc.elements("tags").get(0);
-            result.setAvailable(Integer.parseInt(tags.attribute("available").getValue()));
-            result.setCount(Integer.parseInt(tags.attribute("count").getValue()));
-            result.setStart(start);
-            ArrayList<Tag> resultTags = new ArrayList<Tag>();
-            for (XmlElement tagXml : tags.getElements()) {
-              Tag t = new Tag();
-              t.parseFromXml(tagXml);
-              resultTags.add(t);
-            }
-            result.setTags(resultTags);
-            if (cache)
-              for (Tag t : resultTags)
-                t.cache();
-            source.setResult(result);
-          } catch (Exception e) {
-            source.setError(e);
-          }
+
+    return Task.callInBackground(new Callable<TagQueryResult>() {
+      @Override
+      public TagQueryResult call() throws Exception {
+        final URL url = new URL(Tag.API_URI_STRING + sb.toString());
+        TagQueryResult result = new TagQueryResult();
+        InputStream is = url.openStream();
+        XmlDocument doc = XmlDocument.parse(is);
+        XmlElement tags = doc.elements("tags").get(0);
+        result.setAvailable(Integer.parseInt(tags.attribute("available").getValue()));
+        result.setCount(Integer.parseInt(tags.attribute("count").getValue()));
+        result.setStart(start);
+        ArrayList<Tag> resultTags = new ArrayList<Tag>();
+        for (XmlElement tagXml : tags.getElements()) {
+          Tag t = new Tag();
+          t.parseFromXml(tagXml);
+          resultTags.add(t);
         }
-      };
-      t.start();
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return new Task<TagQueryResult>(source);
+        result.setTags(resultTags);
+        if (cache)
+          for (Tag t : resultTags)
+            t.cache();
+        return result;
+      }
+    });
   }
 
-  public static Task<Tag> queryById(int id) {
-    final Task.TaskSource<Tag> source = new Task.TaskSource<Tag>();
-    try {
-      final URL url = new URL(Tag.API_URI_STRING + "id=" + id);
-      Thread t = new Thread() {
-        @Override
-        public void run() {
-          try {
-            InputStream is = url.openStream();
-            XmlDocument doc = XmlDocument.parse(is);
-            XmlElement tags = doc.elements("tags").get(0);
-            Tag t = new Tag();
-            t.parseFromXml(tags.elements("tag").get(0));
-            source.setResult(t);
-          } catch (Exception e) {
-            source.setError(e);
-          }
-        }
-      };
-      t.start();
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return new Task<Tag>(source);
+  public static Task<Tag> queryById(final int id) {
+    return Task.callInBackground(new Callable<Tag>() {
+      @Override
+      public Tag call() throws Exception {
+        final URL url = new URL(Tag.API_URI_STRING + "id=" + id);
+
+        InputStream is = url.openStream();
+        XmlDocument doc = XmlDocument.parse(is);
+        XmlElement tags = doc.elements("tags").get(0);
+        Tag t = new Tag();
+        t.parseFromXml(tags.elements("tag").get(0));
+        return t;
+      }
+    });
   }
 
   private TrackableField<Integer> appVersion = new TrackableField<Integer>(0);
@@ -478,7 +443,7 @@ public class Tag {
     if (this.getWrittenKey() == null)
       return null;
     String noteName = this.getWrittenKey().toUpperCase(Locale.ENGLISH).replace("MAJOR", "")
-        .replace("MINOR", "").replace(":", "").trim();
+            .replace("MINOR", "").replace(":", "").trim();
     Accidental acc = Accidental.Natural;
     if (noteName.length() > 1)
       acc = noteName.charAt(1) == '#' ? Accidental.Sharp : Accidental.Flat;
@@ -579,7 +544,7 @@ public class Tag {
 
   public String getTagUri() {
     return String.format("http://tags.depoll.com/tag.php?id=%s",
-        this.getId());
+            this.getId());
   }
 
   public String getTeacher() {
@@ -804,29 +769,19 @@ public class Tag {
     }
   }
 
-  public Task<Boolean> rate(int rating) {
-    final Task.TaskSource<Boolean> source = new Task.TaskSource<Boolean>();
-    try {
-      final URL url = new URL(String.format(Tag.RATING_URI_STRING, this.getId(), rating));
-      Thread t = new Thread() {
-        @Override
-        public void run() {
-          try {
-            InputStream is = url.openStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String value = br.readLine();
-            boolean result = value.trim().toLowerCase().equals("ok");
-            source.setResult(result);
-          } catch (Exception e) {
-            source.setError(e);
-          }
-        }
-      };
-      t.start();
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return new Task<Boolean>(source);
+  public Task<Boolean> rate(final int rating) {
+    return Task.callInBackground(new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        final URL url = new URL(String.format(Tag.RATING_URI_STRING, getId(), rating));
+
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String value = br.readLine();
+        boolean result = value.trim().toLowerCase().equals("ok");
+        return result;
+      }
+    });
   }
 
   public void setAllPartsTrackUri(RemoteLocation value) {

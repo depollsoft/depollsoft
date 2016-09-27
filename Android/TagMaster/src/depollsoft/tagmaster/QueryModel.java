@@ -4,6 +4,8 @@ import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.utils.Action;
 
+import bolts.Continuation;
+import bolts.Task;
 import depollsoft.lib.ui.ThreadSwitchContext;
 import depollsoft.tagmaster.barbershop.Tag;
 import depollsoft.tagmaster.barbershop.TagCollection;
@@ -59,48 +61,48 @@ public class QueryModel {
       return;
     this.setIsLoading(true);
     Tag.query(this.getQuery(), this.getResultSetSize(),
-        this.mostRecentResult.getStart() + this.mostRecentResult.getCount(), this.getParts(),
-        this.getHasLearningTracks(), this.getHasSheetMusic(), this.getCollection(),
-        this.getSortBy(), this.getMinimumRating(), this.getMinimumDownloads()).continueWith(
-        new Action<TagQueryResult>() {
+            this.mostRecentResult.getStart() + this.mostRecentResult.getCount(), this.getParts(),
+            this.getHasLearningTracks(), this.getHasSheetMusic(), this.getCollection(),
+            this.getSortBy(), this.getMinimumRating(), this.getMinimumDownloads())
+            .continueWith(new Continuation<TagQueryResult, Void>() {
+              @Override
+              public Void then(final Task<TagQueryResult> task) throws Exception {
+                if (task.isFaulted()) {
+                  context.post(new Runnable() {
 
-          public void invoke(final TagQueryResult parameter) {
-            context.post(new Runnable() {
+                    public void run() {
+                      QueryModel.this.setStatusText("An error has occurred: " + task.getError().getMessage());
+                      QueryModel.this.setIsLoading(false);
+                    }
+                  });
+                } else {
+                  context.post(new Runnable() {
 
-              public void run() {
-                try {
-                  QueryModel.this.setStatusText(null);
-                  QueryModel.this.mostRecentResult = parameter;
-                  for (Tag t : parameter.getTags())
-                    QueryModel.this.getTags().add(t);
-                  if (QueryModel.this.mostRecentResult.getStart()
-                      + QueryModel.this.mostRecentResult.getCount() >= Math.min(
-                      QueryModel.this.mostRecentResult.getAvailable(),
-                      QueryModel.this.getMaxResults()))
-                    QueryModel.this.setHasMoreResults(false);
-                  else
-                    QueryModel.this.setHasMoreResults(true);
-                  if (parameter.getAvailable() == 0)
-                    QueryModel.this
-                        .setStatusText("No tags could be found that matched your query.");
-                } finally {
-                  QueryModel.this.setIsLoading(false);
+                    public void run() {
+                      try {
+                        QueryModel.this.setStatusText(null);
+                        QueryModel.this.mostRecentResult = task.getResult();
+                        for (Tag t : task.getResult().getTags())
+                          QueryModel.this.getTags().add(t);
+                        if (QueryModel.this.mostRecentResult.getStart()
+                                + QueryModel.this.mostRecentResult.getCount() >= Math.min(
+                                QueryModel.this.mostRecentResult.getAvailable(),
+                                QueryModel.this.getMaxResults()))
+                          QueryModel.this.setHasMoreResults(false);
+                        else
+                          QueryModel.this.setHasMoreResults(true);
+                        if (task.getResult().getAvailable() == 0)
+                          QueryModel.this
+                                  .setStatusText("No tags could be found that matched your query.");
+                      } finally {
+                        QueryModel.this.setIsLoading(false);
+                      }
+                    }
+                  });
                 }
+                return null;
               }
             });
-          }
-        }, new Action<Exception>() {
-
-          public void invoke(final Exception parameter) {
-            context.post(new Runnable() {
-
-              public void run() {
-                QueryModel.this.setStatusText("An error has occurred: " + parameter.getMessage());
-                QueryModel.this.setIsLoading(false);
-              }
-            });
-          }
-        });
   }
 
   public TagCollection getCollection() {

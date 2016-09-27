@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.bindroid.BindingMode;
+import com.bindroid.converters.BoolConverter;
 import com.bindroid.converters.ToStringConverter;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.BoundUi;
@@ -53,7 +54,7 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
         new ToStringConverter("%1.2f Hz"));
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"), "Note.IsPlaying",
-        BindingMode.ONE_WAY);
+        BindingMode.ONE_WAY, BoolConverter.get());
   }
 
   @Override

@@ -129,5 +129,6 @@
     <orderEntry type="library" exported="" name="wearable-1.4.0" level="project" />
     <orderEntry type="module" module-name="PitchPerfectLib" exported="" />
     <orderEntry type="module" module-name="Bindroid-Bindroid" exported="" />
+    <orderEntry type="library" exported="" name="bolts-tasks-1.4.0" level="project" />
   </component>
 </module>
