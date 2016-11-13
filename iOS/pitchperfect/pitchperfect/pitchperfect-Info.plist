@@ -13,7 +13,7 @@
 	<key>CFBundleIcons~ipad</key>
 	<dict/>
 	<key>CFBundleIdentifier</key>
-	<string>depollsoft.$(PRODUCT_NAME:rfc1034identifier)</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -30,26 +30,6 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>Pitch Perfect</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>fb263872380333771</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>Pitch Perfect Test</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>fb292538514135026</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
 			<string>Pitch Perfect Hoomi</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
@@ -59,10 +39,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1.5.4</string>
-	<key>FacebookAppID</key>
-	<string>263872380333771</string>
-	<key>FacebookDisplayName</key>
-	<string>Pitch Perfect</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIAppFonts</key>
@@ -93,5 +69,25 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>fb263872380333771</string>
+            </array>
+        </dict>
+    </array>
+    <key>FacebookAppID</key>
+    <string>263872380333771</string>
+    <key>FacebookDisplayName</key>
+    <string>Pitch Perfect</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>fbapi</string>
+        <string>fb-messenger-api</string>
+        <string>fbauth2</string>
+        <string>fbshareextension</string>
+    </array>
 </dict>
 </plist>

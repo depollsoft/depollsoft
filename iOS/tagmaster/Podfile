@@ -1,0 +1,8 @@
+workspace '../iOS'
+
+target 'tagmaster' do
+    pod 'Parse'
+    pod 'ParseFacebookUtilsV4'
+    pod 'FBSDKCoreKit'
+    pod 'Firebase/Core'
+end

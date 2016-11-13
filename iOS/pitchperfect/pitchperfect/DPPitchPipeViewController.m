@@ -12,7 +12,6 @@
 #import "DPNote.h"
 #import "DPAccidental.h"
 #import <GoogleMobileAds/GoogleMobileAds.h>
-#import "KJGridLayoutView.h"
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"

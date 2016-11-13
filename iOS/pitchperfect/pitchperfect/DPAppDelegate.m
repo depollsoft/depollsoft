@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <ParseFacebookUtils/PFFacebookUtils.h>
+#import <ParseFacebookUtilsV4/PFFacebookUtils.h>
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>
@@ -19,8 +19,9 @@
 #import "DPAccidental.h"
 #import "DPNote.h"
 #import "DPPitchedSong.h"
-#import "Flurry.h"
 #import "DPLoginViewController.h"
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
+@import Firebase;
 
 #define PRODUCTION
 //#define TEST_ADS
@@ -31,18 +32,16 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [FIRApp configure];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
-#ifdef PRODUCTION
-    [Parse setApplicationId:@"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9" clientKey:@"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE"];
-    [PFFacebookUtils initializeFacebook];
-    [Flurry setCrashReportingEnabled:YES];
-    [Flurry startSession:@"JMG2ZWM6HXCZTC33YHKF"];
-#else
-    [Parse setApplicationId:@"fIRF0tfJBkE2XbiJf4diG2LsRphoqPe4q4GazAKu" clientKey:@"Edcy5i5CKUTLwJe7m56MeIT1LrjBb9ZP1by89Rd4"];
-    [PFFacebookUtils initializeWithApplicationId:@"292538514135026"];
-#endif
+    [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
+        configuration.applicationId = @"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9";
+        configuration.clientKey = @"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE";
+        configuration.server = @"https://pitchperfect-api.depollsoft.xyz";
+    }]];
+    [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     
     [DPJsonSerializer registerAlias:@"List" forClass:NSClassFromString(@"__NSArrayM")];
     [DPJsonSerializer registerAlias:@"Key" forClass:[DPKey class]];
@@ -75,6 +74,9 @@
                                                        }];
         }
     });
+    
+    [[FBSDKApplicationDelegate sharedInstance] application:application
+                             didFinishLaunchingWithOptions:launchOptions];
     
     // Override point for customization after application launch.
     return YES;
@@ -133,12 +135,12 @@
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
   sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    if ([FBAppCall handleOpenURL:url
-               sourceApplication:sourceApplication
-                     withSession:[PFFacebookUtils session]]) {
-        return YES;
-    }
-    return NO;
+    BOOL handled = [[FBSDKApplicationDelegate sharedInstance] application:application
+                                                                  openURL:url
+                                                        sourceApplication:sourceApplication
+                                                               annotation:annotation
+                    ];
+    return handled;
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {
