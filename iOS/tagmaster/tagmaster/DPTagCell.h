@@ -12,7 +12,7 @@
 @interface DPTagCell : UITableViewCell
 
 @property (nonatomic) int tagId;
-@property (nonatomic, retain) DPTag *tag;
+@property (nonatomic, retain) DPTag *tagInstance;
 @property (nonatomic, strong) UIView *rootView;
 - (CGFloat)calculatedHeight;
 + (CGFloat)withoutAkaHeight;

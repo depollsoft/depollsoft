@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */; };
+		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -19,13 +20,11 @@
 		63712EF015130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712EF215130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
 		63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF315130B21007997CC /* CoreGraphics.framework */; };
-		63712EF615130B21007997CC /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF515130B21007997CC /* CoreData.framework */; };
 		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
 		63712EFE15130B21007997CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712EFD15130B21007997CC /* main.m */; };
 		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
 		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
-		63712F1015130B21007997CC /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF515130B21007997CC /* CoreData.framework */; };
 		63712F1815130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712F1615130B21007997CC /* InfoPlist.strings */; };
 		63712F1B15130B21007997CC /* tagmasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F1A15130B21007997CC /* tagmasterTests.m */; };
 		638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E735A17F769E7000FFE53 /* DPTagDetailController.m */; };
@@ -92,6 +91,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
@@ -112,7 +112,6 @@
 		63712EEF15130B21007997CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		63712EF115130B21007997CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		63712EF315130B21007997CC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		63712EF515130B21007997CC /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		63712EF915130B21007997CC /* tagmaster-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmaster-Info.plist"; sourceTree = "<group>"; };
 		63712EFB15130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63712EFD15130B21007997CC /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -202,6 +201,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */,
 				639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */,
 				639F295218010A2F00517583 /* StoreKit.framework in Frameworks */,
 				639F295018010A2800517583 /* Security.framework in Frameworks */,
@@ -219,7 +219,6 @@
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
-				63712EF615130B21007997CC /* CoreData.framework in Frameworks */,
 				1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -230,7 +229,6 @@
 			files = (
 				63712F0E15130B21007997CC /* UIKit.framework in Frameworks */,
 				63712F0F15130B21007997CC /* Foundation.framework in Frameworks */,
-				63712F1015130B21007997CC /* CoreData.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +279,7 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1E8483E51DD86F5C00AF4EAB /* CoreData.framework */,
 				639F295318010A3A00517583 /* SystemConfiguration.framework */,
 				639F295118010A2F00517583 /* StoreKit.framework */,
 				639F294F18010A2800517583 /* Security.framework */,
@@ -298,7 +297,6 @@
 				63712EEF15130B21007997CC /* UIKit.framework */,
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
-				63712EF515130B21007997CC /* CoreData.framework */,
 				CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */,
 			);
 			name = Frameworks;
@@ -753,17 +751,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					/Users/david/Documents/depollsoft/iOS/tagmaster,
 					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -783,17 +777,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					/Users/david/Documents/depollsoft/iOS/tagmaster,
 					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";

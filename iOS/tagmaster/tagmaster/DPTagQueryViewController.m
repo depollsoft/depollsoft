@@ -214,7 +214,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPTagCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
-    cell.tag = self.tags[indexPath.row];
+    cell.tagInstance = self.tags[indexPath.row];
     return cell;
 }
 

@@ -19,11 +19,6 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>GoogleToolboxForMac.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>Parse.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -47,22 +42,17 @@
 			<key>primary</key>
 			<true/>
 		</dict>
+		<key>39F1EB1252555DB87BF1CFE9E384D2B4</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>3C7B23B3FE0CE1A6131C7E09B3F47DA3</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
 		<key>5DC7D7B380A5FEAE815A0DDD986A0174</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>A9B5062D80C6916DB274EAEF267035BB</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>E1BBB76ADBF2EF4EF2CE5DF6BBC77296</key>
 		<dict>
 			<key>primary</key>
 			<true/>
