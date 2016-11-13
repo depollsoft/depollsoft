@@ -16,7 +16,7 @@
 #import <objc/runtime.h>
 
 const int APP_VERSION = 1;
-NSString *const API_URI_STRING = @"http://www.barbershoptags.com/api.php?client=TagMaster&";
+NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client=TagMaster&";
 
 @implementation DPTag
 
