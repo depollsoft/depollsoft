@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E8483DB1DD85A6300AF4EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */; };
+		2489018ADFB0BD2AEB92831F /* libPods-pitchperfect.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
 		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
@@ -25,7 +27,6 @@
 		63225C0A1A35706100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225C091A35706100857B44 /* LaunchScreen.xib */; };
 		63225C171A35736600857B44 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C151A35736600857B44 /* EventKit.framework */; };
 		63225C181A35736600857B44 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C161A35736600857B44 /* EventKitUI.framework */; };
-		63225C1B1A3575C200857B44 /* libFlurry_5.4.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C1A1A3575C200857B44 /* libFlurry_5.4.0.a */; };
 		63237B8A1979DCB800EA08CC /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63237B891979DCB800EA08CC /* Social.framework */; };
 		63237B8C1979DCC300EA08CC /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63237B8B1979DCC300EA08CC /* Accounts.framework */; };
 		63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A2717F50A0300BC1EE2 /* CoreData.framework */; };
@@ -42,16 +43,10 @@
 		634C898A15886230000D9AFE /* MusiQwikB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */; };
 		634C898B15886230000D9AFE /* MusiSync.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7D15883F2900C78CC0 /* MusiSync.ttf */; };
 		634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */; };
-		63749B8E1AE0756300A31ACA /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63749B8C1AE0756300A31ACA /* Parse.framework */; };
-		63749B8F1AE0756300A31ACA /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */; };
-		63749B911AE075B000A31ACA /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63749B901AE075B000A31ACA /* ParseUI.framework */; };
 		638F1BEC17F5069500906944 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 638F1BEB17F5069500906944 /* AdSupport.framework */; };
-		6392E7C41AE1C6FA0082AEC1 /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */; };
 		6392E7C61AE1C7510082AEC1 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */; };
 		63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D52158826F800C78CC0 /* MessageUI.framework */; };
 		63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */; };
-		63A99D5E1588293A00C78CC0 /* KJGridLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D5B1588293A00C78CC0 /* KJGridLayout.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		63A99D5F1588293A00C78CC0 /* KJGridLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D5D1588293A00C78CC0 /* KJGridLayoutView.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		63A99D7A1588359700C78CC0 /* DPPitchPipeModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D791588359700C78CC0 /* DPPitchPipeModel.m */; };
 		63A99D7F15883F2900C78CC0 /* MusiQwik.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7B15883F2900C78CC0 /* MusiQwik.ttf */; };
 		63A99D8015883F2900C78CC0 /* MusiQwikB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */; };
@@ -81,9 +76,7 @@
 		63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36DA151E9000007C46DB /* pitchperfectTests.m */; };
 		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
 		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
-		63ED0BC11AC09CB100535ED1 /* Bolts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BC01AC09CB100535ED1 /* Bolts.framework */; };
 		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
-		63ED0BD51AC117B000535ED1 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,6 +117,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
+		40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
+		41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
 		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
@@ -147,8 +144,6 @@
 		63225C091A35706100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63225C151A35736600857B44 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		63225C161A35736600857B44 /* EventKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKitUI.framework; path = System/Library/Frameworks/EventKitUI.framework; sourceTree = SDKROOT; };
-		63225C191A3575C200857B44 /* Flurry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Flurry.h; sourceTree = "<group>"; };
-		63225C1A1A3575C200857B44 /* libFlurry_5.4.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libFlurry_5.4.0.a; sourceTree = "<group>"; };
 		63237B891979DCB800EA08CC /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
 		63237B8B1979DCC300EA08CC /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		63336A2717F50A0300BC1EE2 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -168,19 +163,10 @@
 		634C898015885F6A000D9AFE /* Readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Readme.txt; sourceTree = "<group>"; };
 		634C898115885F6A000D9AFE /* VLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLayoutView.h; sourceTree = "<group>"; };
 		634C898215885F6A000D9AFE /* VLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLayoutView.m; sourceTree = "<group>"; };
-		63749B8C1AE0756300A31ACA /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
-		63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
-		63749B901AE075B000A31ACA /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
 		638F1BEB17F5069500906944 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
-		6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GoogleMobileAds.framework; sourceTree = "<group>"; };
 		6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		63A99D52158826F800C78CC0 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		63A99D54158826FF00C78CC0 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		63A99D591588293A00C78CC0 /* KJGridLayout-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "KJGridLayout-Prefix.pch"; sourceTree = "<group>"; };
-		63A99D5A1588293A00C78CC0 /* KJGridLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KJGridLayout.h; sourceTree = "<group>"; };
-		63A99D5B1588293A00C78CC0 /* KJGridLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KJGridLayout.m; sourceTree = "<group>"; };
-		63A99D5C1588293A00C78CC0 /* KJGridLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KJGridLayoutView.h; sourceTree = "<group>"; };
-		63A99D5D1588293A00C78CC0 /* KJGridLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KJGridLayoutView.m; sourceTree = "<group>"; };
 		63A99D781588359700C78CC0 /* DPPitchPipeModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPPitchPipeModel.h; sourceTree = "<group>"; };
 		63A99D791588359700C78CC0 /* DPPitchPipeModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeModel.m; sourceTree = "<group>"; };
 		63A99D7B15883F2900C78CC0 /* MusiQwik.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MusiQwik.ttf; sourceTree = "<group>"; };
@@ -221,10 +207,9 @@
 		63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pitchperfectlib.xcodeproj; path = pitchperfectlib/pitchperfectlib.xcodeproj; sourceTree = "<group>"; };
 		63E363911602FEF700EA031C /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
-		63ED0BC01AC09CB100535ED1 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
 		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
-		63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
+		B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-pitchperfect.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -252,19 +237,13 @@
 				63A99D55158826FF00C78CC0 /* SystemConfiguration.framework in Frameworks */,
 				631C91341595830F004733F1 /* CFNetwork.framework in Frameworks */,
 				63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */,
-				63749B8F1AE0756300A31ACA /* ParseFacebookUtils.framework in Frameworks */,
 				63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */,
 				63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */,
-				63ED0BD51AC117B000535ED1 /* FacebookSDK.framework in Frameworks */,
-				63749B911AE075B000A31ACA /* ParseUI.framework in Frameworks */,
 				63A99D8915884EE600C78CC0 /* CoreText.framework in Frameworks */,
-				63225C1B1A3575C200857B44 /* libFlurry_5.4.0.a in Frameworks */,
-				63749B8E1AE0756300A31ACA /* Parse.framework in Frameworks */,
 				63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */,
-				63ED0BC11AC09CB100535ED1 /* Bolts.framework in Frameworks */,
 				63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */,
-				6392E7C41AE1C6FA0082AEC1 /* GoogleMobileAds.framework in Frameworks */,
 				63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */,
+				2489018ADFB0BD2AEB92831F /* libPods-pitchperfect.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,27 +277,6 @@
 			path = LayoutManagers;
 			sourceTree = "<group>";
 		};
-		63A99D581588293A00C78CC0 /* KJGridLayout */ = {
-			isa = PBXGroup;
-			children = (
-				63A99D591588293A00C78CC0 /* KJGridLayout-Prefix.pch */,
-				63A99D5A1588293A00C78CC0 /* KJGridLayout.h */,
-				63A99D5B1588293A00C78CC0 /* KJGridLayout.m */,
-				63A99D5C1588293A00C78CC0 /* KJGridLayoutView.h */,
-				63A99D5D1588293A00C78CC0 /* KJGridLayoutView.m */,
-			);
-			path = KJGridLayout;
-			sourceTree = "<group>";
-		};
-		63B301BC1598606E0045935E /* FlurryAnalytics */ = {
-			isa = PBXGroup;
-			children = (
-				63225C191A3575C200857B44 /* Flurry.h */,
-				63225C1A1A3575C200857B44 /* libFlurry_5.4.0.a */,
-			);
-			path = FlurryAnalytics;
-			sourceTree = "<group>";
-		};
 		63CB96D81595C01100116907 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -332,6 +290,7 @@
 			isa = PBXGroup;
 			children = (
 				63225C091A35706100857B44 /* LaunchScreen.xib */,
+				1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */,
 				631C9124159455F1004733F1 /* keys.png */,
 				631C9125159455F1004733F1 /* keys@2x.png */,
 				631C911515906D2B004733F1 /* notes.png */,
@@ -346,13 +305,12 @@
 				63A99D7D15883F2900C78CC0 /* MusiSync.ttf */,
 				63A99D7E15883F2900C78CC0 /* NoteHedz170.ttf */,
 				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
-				63B301BC1598606E0045935E /* FlurryAnalytics */,
 				63DC36A0151E9000007C46DB /* Frameworks */,
-				63A99D581588293A00C78CC0 /* KJGridLayout */,
 				634C897715885F6A000D9AFE /* LayoutManagers */,
 				63DC36A7151E9000007C46DB /* pitchperfect */,
 				63DC36D3151E9000007C46DB /* pitchperfectTests */,
 				63DC369E151E9000007C46DB /* Products */,
+				B65D69E002065EA6BC133A14 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -369,12 +327,6 @@
 			isa = PBXGroup;
 			children = (
 				6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */,
-				6392E7C31AE1C6FA0082AEC1 /* GoogleMobileAds.framework */,
-				63749B901AE075B000A31ACA /* ParseUI.framework */,
-				63749B8C1AE0756300A31ACA /* Parse.framework */,
-				63749B8D1AE0756300A31ACA /* ParseFacebookUtils.framework */,
-				63ED0BD41AC117B000535ED1 /* FacebookSDK.framework */,
-				63ED0BC01AC09CB100535ED1 /* Bolts.framework */,
 				63225C151A35736600857B44 /* EventKit.framework */,
 				63225C161A35736600857B44 /* EventKitUI.framework */,
 				6338EFC11979DEBD000187E2 /* CoreTelephony.framework */,
@@ -400,6 +352,7 @@
 				63DC36A1151E9000007C46DB /* UIKit.framework */,
 				63DC36A3151E9000007C46DB /* Foundation.framework */,
 				63DC36A5151E9000007C46DB /* CoreGraphics.framework */,
+				B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -407,6 +360,7 @@
 		63DC36A7151E9000007C46DB /* pitchperfect */ = {
 			isa = PBXGroup;
 			children = (
+				1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */,
 				63DC36B0151E9000007C46DB /* DPAppDelegate.h */,
 				63DC36B1151E9000007C46DB /* DPAppDelegate.m */,
 				631C912115945219004733F1 /* DPKeysViewController.h */,
@@ -468,6 +422,15 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		B65D69E002065EA6BC133A14 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */,
+				40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -475,10 +438,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63DC36DE151E9000007C46DB /* Build configuration list for PBXNativeTarget "pitchperfect" */;
 			buildPhases = (
+				648E8C12E61C4BA81C7C6843 /* [CP] Check Pods Manifest.lock */,
 				63DC3699151E8FFF007C46DB /* Sources */,
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
 				635624E21ACC6FFA0011697F /* Embed Frameworks */,
+				0DBC698A4214FD6A4C07464B /* [CP] Embed Pods Frameworks */,
+				A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -516,11 +482,16 @@
 			attributes = {
 				CLASSPREFIX = DP;
 				LastTestingUpgradeCheck = 0510;
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = DepollSoft;
 				TargetAttributes = {
 					63DC369C151E8FFF007C46DB = {
 						DevelopmentTeam = 43AWMS3YJX;
+						SystemCapabilities = {
+							com.apple.Keychain = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -581,6 +552,7 @@
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
 				6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */,
 				631C911715906D2B004733F1 /* notes.png in Resources */,
+				1E8483DB1DD85A6300AF4EAB /* GoogleService-Info.plist in Resources */,
 				631C911815906D2B004733F1 /* notes@2x.png in Resources */,
 				631C9126159455F1004733F1 /* keys.png in Resources */,
 				631C9127159455F1004733F1 /* keys@2x.png in Resources */,
@@ -605,6 +577,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0DBC698A4214FD6A4C07464B /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		63DC36CA151E9000007C46DB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -618,6 +605,36 @@
 			shellPath = /bin/sh;
 			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
 		};
+		648E8C12E61C4BA81C7C6843 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -629,9 +646,7 @@
 				63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */,
 				63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */,
 				63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */,
-				63A99D5E1588293A00C78CC0 /* KJGridLayout.m in Sources */,
 				63336A3317F51CF800BC1EE2 /* UIViewController+Helpers.m in Sources */,
-				63A99D5F1588293A00C78CC0 /* KJGridLayoutView.m in Sources */,
 				63A99D7A1588359700C78CC0 /* DPPitchPipeModel.m in Sources */,
 				634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */,
 				634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */,
@@ -697,11 +712,24 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -709,10 +737,13 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -723,15 +754,30 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_VERSION = "";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -741,9 +787,11 @@
 		};
 		63DC36DF151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_ENTITLEMENTS = pitchperfect/pitchperfect.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -754,18 +802,19 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/FlurryAnalytics",
 					"$(PROJECT_DIR)/Admob.framework",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/**";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ./pitchperfectlib/**";
 				VALID_ARCHS = "arm64 armv7s armv7";
 				WRAPPER_EXTENSION = app;
 			};
@@ -773,9 +822,11 @@
 		};
 		63DC36E0151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_ENTITLEMENTS = pitchperfect/pitchperfect.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -786,18 +837,19 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "pitchperfect/pitchperfect-Prefix.pch";
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/FlurryAnalytics",
 					"$(PROJECT_DIR)/Admob.framework",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/**";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ./pitchperfectlib/**";
 				VALID_ARCHS = "arm64 armv7s armv7";
 				WRAPPER_EXTENSION = app;
 			};
@@ -818,6 +870,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
@@ -838,6 +891,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};

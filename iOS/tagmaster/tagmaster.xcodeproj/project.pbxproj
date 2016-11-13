@@ -7,11 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
-		63225BFF1A3560D200857B44 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225BFC1A3560D200857B44 /* FacebookSDK.framework */; };
-		63225C041A35618500857B44 /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C011A35618500857B44 /* Parse.framework */; };
-		63225C051A35618500857B44 /* ParseFacebookUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C021A35618500857B44 /* ParseFacebookUtils.framework */; };
-		63225C061A35618500857B44 /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63225C031A35618500857B44 /* ParseUI.framework */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
@@ -95,12 +92,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
-		63225BFB1A3560D200857B44 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
-		63225BFC1A3560D200857B44 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
-		63225C011A35618500857B44 /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Parse.framework; sourceTree = "<group>"; };
-		63225C021A35618500857B44 /* ParseFacebookUtils.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseFacebookUtils.framework; sourceTree = "<group>"; };
-		63225C031A35618500857B44 /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
 		63336A4317F6342400BC1EE2 /* DPTagViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagViewController.h; sourceTree = "<group>"; };
@@ -200,6 +193,8 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.debug.xcconfig"; path = "Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.debug.xcconfig"; sourceTree = "<group>"; };
+		CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-tagmaster.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -207,14 +202,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63225C051A35618500857B44 /* ParseFacebookUtils.framework in Frameworks */,
 				639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */,
-				63225BFF1A3560D200857B44 /* FacebookSDK.framework in Frameworks */,
 				639F295218010A2F00517583 /* StoreKit.framework in Frameworks */,
 				639F295018010A2800517583 /* Security.framework in Frameworks */,
-				63225C061A35618500857B44 /* ParseUI.framework in Frameworks */,
 				639F294E18010A2100517583 /* QuartzCore.framework in Frameworks */,
-				63225C041A35618500857B44 /* Parse.framework in Frameworks */,
 				639F294C18010A1B00517583 /* MobileCoreServices.framework in Frameworks */,
 				639F294A18010A1500517583 /* libz.1.1.3.dylib in Frameworks */,
 				639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */,
@@ -229,6 +220,7 @@
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
 				63712EF615130B21007997CC /* CoreData.framework in Frameworks */,
+				1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +237,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		45190FF4DDFDC07A4A3F2AD9 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */,
+				5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
@@ -264,6 +265,7 @@
 				63712F1315130B21007997CC /* tagmasterTests */,
 				63712EEE15130B21007997CC /* Frameworks */,
 				63712EEC15130B21007997CC /* Products */,
+				45190FF4DDFDC07A4A3F2AD9 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -279,11 +281,6 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				63225C011A35618500857B44 /* Parse.framework */,
-				63225C021A35618500857B44 /* ParseFacebookUtils.framework */,
-				63225C031A35618500857B44 /* ParseUI.framework */,
-				63225BFB1A3560D200857B44 /* Bolts.framework */,
-				63225BFC1A3560D200857B44 /* FacebookSDK.framework */,
 				639F295318010A3A00517583 /* SystemConfiguration.framework */,
 				639F295118010A2F00517583 /* StoreKit.framework */,
 				639F294F18010A2800517583 /* Security.framework */,
@@ -302,6 +299,7 @@
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
 				63712EF515130B21007997CC /* CoreData.framework */,
+				CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -427,9 +425,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63712F1E15130B21007997CC /* Build configuration list for PBXNativeTarget "tagmaster" */;
 			buildPhases = (
+				181574B940F9F565193F04B8 /* [CP] Check Pods Manifest.lock */,
 				63712EE715130B21007997CC /* Sources */,
 				63712EE815130B21007997CC /* Frameworks */,
 				63712EE915130B21007997CC /* Resources */,
+				F8507DBFA6B725D197D7985F /* [CP] Embed Pods Frameworks */,
+				6335FEF2EE9FF3937C429D61 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -466,7 +467,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastTestingUpgradeCheck = 0510;
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = DepollSoft;
 				TargetAttributes = {
 					63712EEA15130B21007997CC = {
@@ -538,6 +539,36 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		181574B940F9F565193F04B8 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		6335FEF2EE9FF3937C429D61 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		63712F0915130B21007997CC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -550,6 +581,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+		F8507DBFA6B725D197D7985F /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -629,14 +675,18 @@
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -651,7 +701,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -667,13 +717,16 @@
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -682,7 +735,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -692,10 +745,12 @@
 		};
 		63712F1F15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/david/Documents/depollsoft/iOS/tagmaster,
@@ -704,25 +759,28 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
-				OTHER_LDFLAGS = "-all_load";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/** ../pitchperfect/**";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
 		};
 		63712F2015130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/david/Documents/depollsoft/iOS/tagmaster,
@@ -731,15 +789,16 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/iOS-btejviwtthepwbgmntxyrlztupkn/Build/Products/Debug-iphoneos\"",
 				);
-				OTHER_LDFLAGS = "-all_load";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "./** ../depolllib/** ../pitchperfect/**";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -755,6 +814,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
@@ -771,6 +831,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};

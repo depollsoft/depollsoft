@@ -1,0 +1,9 @@
+workspace '../iOS'
+
+target 'pitchperfect' do
+    pod 'Parse'
+    pod 'ParseFacebookUtilsV4'
+    pod 'FBSDKCoreKit'
+    pod 'Firebase/Core'
+    pod 'Firebase/AdMob'
+end

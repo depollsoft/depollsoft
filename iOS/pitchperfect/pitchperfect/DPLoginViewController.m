@@ -13,14 +13,14 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <FacebookSDK/FacebookSDK.h>
 #import <Parse/Parse.h>
-#import <ParseFacebookUtils/PFFacebookUtils.h>
+#import <ParseFacebookUtilsV4/PFFacebookUtils.h>
 #import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
+#import <FBSDKLoginKit/FBSDKLoginKit.h>
 
-@interface DPLoginViewController () <FBLoginViewDelegate>
+@interface DPLoginViewController () <FBSDKLoginButtonDelegate>
 
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
@@ -145,7 +145,8 @@
     
     [rootLayout addSubview:explanation row:2 column:0];
     
-    FBLoginView *fbLoginButton = [[FBLoginView alloc] initWithReadPermissions:@[]];
+    FBSDKLoginButton *fbLoginButton = [[FBSDKLoginButton alloc] init];
+    fbLoginButton.readPermissions = @[@"public_profile"];
     UIView *fbLoginContainer = [[fbLoginButton fixHeight:50] pad:4];
     [rootLayout addSubview:fbLoginContainer row:4 column:0];
     fbLoginButton.delegate = self;
@@ -169,19 +170,27 @@
     
 }
 
-- (void)loginViewFetchedUserInfo:(FBLoginView *)loginView user:(id<FBGraphUser>)user {
+- (void)loginButton:(FBSDKLoginButton *)loginButton
+didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
+              error:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
+        if (error || result.isCancelled) {
+            return;
+        }
         [self dismissViewControllerAnimated:YES completion:^{
         }];
-        [[PFFacebookUtils logInWithFacebookIdInBackground:user.objectID
-                                              accessToken:[FBSession activeSession].accessTokenData.accessToken
-                                           expirationDate:[FBSession activeSession].accessTokenData.expirationDate] continueWithExecutor:[BFExecutor mainThreadExecutor]
+        [[PFFacebookUtils logInInBackgroundWithAccessToken:result.token]
+         continueWithExecutor:[BFExecutor mainThreadExecutor]
          withBlock:^id(BFTask *task) {
              PFUser *user = task.result;
              [self completeLogIn:user.isNew];
              return nil;
          }];
     });
+}
+
+- (void)loginButtonDidLogOut:(FBSDKLoginButton *)loginButton {
+    
 }
 
 - (void)completeLogIn:(BOOL)isNew {

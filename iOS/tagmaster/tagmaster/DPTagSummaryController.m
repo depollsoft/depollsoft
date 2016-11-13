@@ -16,8 +16,8 @@
 
 @interface DPSheetMusicPreview : NSObject <QLPreviewItem>
 
-@property (atomic, strong) NSURL *previewItemURL;
-@property (atomic, strong) NSString *previewItemTitle;
+@property (nonatomic, strong) NSURL *previewItemURL;
+@property (nonatomic, strong) NSString *previewItemTitle;
 
 @end
 
