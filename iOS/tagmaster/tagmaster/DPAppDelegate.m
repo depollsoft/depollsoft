@@ -9,7 +9,7 @@
 #import "DPAppDelegate.h"
 
 #import <Parse/Parse.h>
-#import <ParseFacebookUtils/PFFacebookUtils.h>
+#import <ParseFacebookUtilsV4/ParseFacebookUtilsV4.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 
 #import "DPBarbershop.h"
@@ -17,6 +17,8 @@
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
+
+@import Firebase;
 
 @implementation DPAppDelegate
 
@@ -31,6 +33,7 @@
     [Parse setApplicationId:@"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj"
                   clientKey:@"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4"];
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
+    [FIRApp configure];
     
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
