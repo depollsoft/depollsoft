@@ -22,7 +22,7 @@
 
 @implementation DPTagCell
 
-@synthesize tag, title, aka, details, hasLearningTracks, hasSheetMusic, rootView, busyIndicator;
+@synthesize tagInstance, title, aka, details, hasLearningTracks, hasSheetMusic, rootView, busyIndicator;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -119,18 +119,18 @@
     if (!refresh) {
         DPTag *t = [DPTag loadFromCache:tagId];
         if (t) {
-            self.tag = t;
+            self.tagInstance = t;
             return;
         }
     }
-    self.tag = nil;
+    self.tagInstance = nil;
     [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
             DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (t.tagId == self.tagId) {
-                    self.tag = t;
+                    self.tagInstance = t;
                     UITableView *tableView = (UITableView *)self.superview;
                     while (tableView && ![tableView isKindOfClass:[UITableView class]]) {
                         tableView = (UITableView *)tableView.superview;
@@ -178,28 +178,28 @@
     return image;
 }
 
-- (void)setTag:(DPTag *)newTag {
+- (void)setTagInstance:(DPTag *)newTag {
     NSDateFormatter *formatter = [DPTagCell dateFormatter];
-    tag = newTag;
-    self.title.text = tag.title ?: @"Tag";
-    self.aka.text = tag.alternativeTitle ? [@"a.k.a. " stringByAppendingString:tag.alternativeTitle] : nil;
+    tagInstance = newTag;
+    self.title.text = self.tagInstance.title ?: @"Tag";
+    self.aka.text = self.tagInstance.alternativeTitle ? [@"a.k.a. " stringByAppendingString:self.tagInstance.alternativeTitle] : nil;
     NSString *detailsString = nil;
-    if (tag) {
-        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tag.posted]];
-        if (tag.rating != 0) {
-            detailsString = [[NSString stringWithFormat:@"Rating: %1.2f ", tag.rating] stringByAppendingString:detailsString];
+    if (tagInstance) {
+        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tagInstance.posted]];
+        if (tagInstance.rating != 0) {
+            detailsString = [[NSString stringWithFormat:@"Rating: %1.2f ", tagInstance.rating] stringByAppendingString:detailsString];
         }
-        if (tag.downloadCount != 0) {
-            detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tag.downloadCount];
+        if (tagInstance.downloadCount != 0) {
+            detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tagInstance.downloadCount];
         }
     }
     self.details.text = detailsString ?: @"Posted: Rating: DLs:";
-    self.hasLearningTracks.image = tag.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
-    self.hasSheetMusic.image = tag.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
+    self.hasLearningTracks.image = self.tagInstance.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
+    self.hasSheetMusic.image = self.tagInstance.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
 }
 
 - (CGFloat)calculatedHeight {
-    if (tag.alternativeTitle) {
+    if (tagInstance.alternativeTitle) {
         return [DPTagCell withAkaHeight];
     } else {
         return [DPTagCell withoutAkaHeight];
@@ -215,7 +215,7 @@
         tag.alternativeTitle = @"A";
         tag.posted = [NSDate date];
         DPTagCell *cell = [[DPTagCell alloc] init];
-        cell.tag = tag;
+        cell.tagInstance = tag;
         height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;
     });
     return height;
@@ -229,7 +229,7 @@
         tag.title = @"A";
         tag.posted = [NSDate date];
         DPTagCell *cell = [[DPTagCell alloc] init];
-        cell.tag = tag;
+        cell.tagInstance = tag;
         height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;
     });
     return height;

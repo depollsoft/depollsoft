@@ -152,18 +152,19 @@
 - (void)logInClick {
     if (![PFUser currentUser]) {
         [self.busyIndicator incrementBusyCount];
-        [PFFacebookUtils logInWithPermissions:nil block:^(PFUser *user, NSError *error) {
-            if (user.isNew) {
-                user[@"FavoriteIds"] = [DPAppDelegate favorites];
-                user[@"TeachableIds"] = [DPAppDelegate teachable];
-                [user saveEventually];
-            } else {
-                [DPAppDelegate setFavorites:user[@"FavoriteIds"]];
-                [DPAppDelegate setTeachable:user[@"TeachableIds"]];
-            }
-            [self.busyIndicator decrementBusyCount];
-            [self refreshLoginButton];
-        }];
+        [PFFacebookUtils logInInBackgroundWithReadPermissions:@[@"public_profile"]
+                                                        block:^(PFUser * _Nullable user, NSError * _Nullable error) {
+                                                            if (user.isNew) {
+                                                                user[@"FavoriteIds"] = [DPAppDelegate favorites];
+                                                                user[@"TeachableIds"] = [DPAppDelegate teachable];
+                                                                [user saveEventually];
+                                                            } else {
+                                                                [DPAppDelegate setFavorites:user[@"FavoriteIds"]];
+                                                                [DPAppDelegate setTeachable:user[@"TeachableIds"]];
+                                                            }
+                                                            [self.busyIndicator decrementBusyCount];
+                                                            [self refreshLoginButton];
+                                                        }];
     } else {
         [PFUser logOut];
         [self refreshLoginButton];

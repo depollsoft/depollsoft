@@ -10,6 +10,7 @@
 
 #import <Parse/Parse.h>
 #import <ParseFacebookUtils/PFFacebookUtils.h>
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
 
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
@@ -29,7 +30,7 @@
 {
     [Parse setApplicationId:@"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj"
                   clientKey:@"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4"];
-    [PFFacebookUtils initializeFacebook];
+    [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
@@ -60,7 +61,11 @@
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    if ([FBAppCall handleOpenURL:url sourceApplication:sourceApplication]) {
+    if([[FBSDKApplicationDelegate sharedInstance] application:application
+                                                                  openURL:url
+                                                        sourceApplication:sourceApplication
+                                                               annotation:annotation
+        ]) {
         return YES;
     }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
