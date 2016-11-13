@@ -30,8 +30,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    [Parse setApplicationId:@"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj"
-                  clientKey:@"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4"];
+    [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
+        configuration.applicationId = @"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj";
+        configuration.clientKey = @"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4";
+        configuration.server = @"https://tagmaster-api.depollsoft.xyz";
+    }]];
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     [FIRApp configure];
     
