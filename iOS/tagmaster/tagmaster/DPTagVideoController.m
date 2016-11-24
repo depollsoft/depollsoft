@@ -120,10 +120,10 @@
         UILabel *teacherLabel = [self makeBodyLabel];
         teacherLabel.text = self.tag.teacher;
         [grid addSubview:teacherLabel row:1 column:3];
-        thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"http://img.youtube.com/vi/%@/2.jpg", self.tag.teachingVideo]];
+        thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", self.tag.teachingVideo]];
     } else {
         DPVideo *video = self.tag.videos[indexPath.row];
-        thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"http://img.youtube.com/vi/%@/2.jpg", video.youTubeCode]];
+        thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", video.youTubeCode]];
         
         if (video.sungBy) {
             [grid addSubview:[self makeHeader:@"Sung By"] row:1 column:1];
@@ -202,7 +202,7 @@
         DPVideo *video = self.tag.videos[indexPath.row];
         youTubeCode = video.youTubeCode;
     }
-    NSURL *youTubeURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.youtube.com/watch?v=%@", youTubeCode]];
+    NSURL *youTubeURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.youtube.com/watch?v=%@", youTubeCode]];
     [[UIApplication sharedApplication] openURL:youTubeURL];
 }
 
