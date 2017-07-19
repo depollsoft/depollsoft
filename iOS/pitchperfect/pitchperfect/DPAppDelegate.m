@@ -10,6 +10,8 @@
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>
+#import <Fabric/Fabric.h>
+#import <Crashlytics/Crashlytics.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import "DPJsonSerializer.h"
@@ -33,6 +35,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [FIRApp configure];
+    [Fabric with:@[[Crashlytics class]]];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
