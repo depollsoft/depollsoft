@@ -445,6 +445,7 @@
 				635624E21ACC6FFA0011697F /* Embed Frameworks */,
 				0DBC698A4214FD6A4C07464B /* [CP] Embed Pods Frameworks */,
 				A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */,
+				1E6943E31F1EE46E00B7B425 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -594,6 +595,19 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		1E6943E31F1EE46E00B7B425 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Fabric/run\" 993f24292bd0a5a364bc802d41f76f29eacd59ae REMOVED_LEGACY_CREDENTIAL";
 		};
 		63DC36CA151E9000007C46DB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

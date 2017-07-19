@@ -6,4 +6,6 @@ target 'pitchperfect' do
     pod 'FBSDKCoreKit'
     pod 'Firebase/Core'
     pod 'Firebase/AdMob'
+    pod 'Fabric'
+    pod 'Crashlytics'
 end
