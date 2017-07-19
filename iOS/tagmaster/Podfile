@@ -5,4 +5,6 @@ target 'tagmaster' do
     pod 'ParseFacebookUtilsV4'
     pod 'FBSDKCoreKit'
     pod 'Firebase/Core'
+    pod 'Fabric'
+    pod 'Crashlytics'
 end
