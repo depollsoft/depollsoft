@@ -41,13 +41,6 @@
 #import "FBSDKProfile+Internal.h"
 #endif
 
-// TODO: t13635729 Remove when Sandcastle builds witn Xcode8
-@interface UIApplication (iOS10)
-
-- (void)openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options completionHandler:(void (^)(BOOL))completion;
-
-@end
-
 NSString *const FBSDKApplicationDidBecomeActiveNotification = @"com.facebook.sdk.FBSDKApplicationDidBecomeActiveNotification";
 
 static NSString *const FBSDKAppLinkInboundEvent = @"fb_al_inbound";
@@ -130,7 +123,7 @@ static NSString *const FBSDKAppLinkInboundEvent = @"fb_al_inbound";
 
 #pragma mark - UIApplicationDelegate
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_9_3
+#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_9_0
 - (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
             options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
@@ -193,6 +186,8 @@ static NSString *const FBSDKAppLinkInboundEvent = @"fb_al_inbound";
 {
   FBSDKAccessToken *cachedToken = [[FBSDKSettings accessTokenCache] fetchAccessToken];
   [FBSDKAccessToken setCurrentAccessToken:cachedToken];
+  // fetch app settings
+  [FBSDKServerConfigurationManager loadServerConfigurationWithCompletionBlock:NULL];
 
 #if !TARGET_OS_TV
   FBSDKProfile *cachedProfile = [FBSDKProfile fetchCachedProfile];
@@ -225,6 +220,10 @@ static NSString *const FBSDKAppLinkInboundEvent = @"fb_al_inbound";
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
+  // Auto log basic events in case autoLogAppEventsEnabled is set
+  if ([[FBSDKSettings autoLogAppEventsEnabled] boolValue]) {
+    [FBSDKAppEvents activateApp];
+  }
   //  _expectingBackground can be YES if the caller started doing work (like login)
   // within the app delegate's lifecycle like openURL, in which case there
   // might have been a "didBecomeActive" event pending that we want to ignore.
@@ -416,12 +415,14 @@ static NSString *const FBSDKAppLinkInboundEvent = @"fb_al_inbound";
     return;
   }
 
-  NSDictionary * applinkData = [FBSDKInternalUtility objectForJSONString:applinkDataString error:NULL];
+  NSDictionary *applinkData = [FBSDKInternalUtility objectForJSONString:applinkDataString error:NULL];
   if (!applinkData) {
     return;
   }
 
-  NSURL *targetURL = [NSURL URLWithString:applinkData[@"target_url"]];
+  NSString *targetURLString = applinkData[@"target_url"];
+  NSURL *targetURL = [targetURLString isKindOfClass:[NSString class]] ? [NSURL URLWithString:targetURLString] : nil;
+
   NSMutableDictionary *logData = [[NSMutableDictionary alloc] init];
   [FBSDKInternalUtility dictionary:logData setObject:[targetURL absoluteString] forKey:@"targetURL"];
   [FBSDKInternalUtility dictionary:logData setObject:[targetURL host] forKey:@"targetURLHost"];

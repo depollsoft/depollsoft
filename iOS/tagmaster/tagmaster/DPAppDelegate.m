@@ -11,6 +11,8 @@
 #import <Parse/Parse.h>
 #import <ParseFacebookUtilsV4/ParseFacebookUtilsV4.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import <Fabric/Fabric.h>
+#import <Crashlytics/Crashlytics.h>
 
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
@@ -37,6 +39,7 @@
     }]];
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     [FIRApp configure];
+    [Fabric with:@[[Crashlytics class]]];
     
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
