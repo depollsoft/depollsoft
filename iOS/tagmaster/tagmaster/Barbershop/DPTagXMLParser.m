@@ -20,6 +20,7 @@
     if (self = [super init]) {
         dayNameDateFormatter = [[NSDateFormatter alloc] init];
         [dayNameDateFormatter setDateFormat:@"E, d MMM yyyy"];
+        dayNameDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
     }
     return self;
 }
