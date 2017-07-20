@@ -5,6 +5,7 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.bindroid.trackable.TrackableCollection;
+import com.crashlytics.android.Crashlytics;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
@@ -19,6 +20,7 @@ import depollsoft.pitchperfect.lib.Key;
 import depollsoft.pitchperfect.lib.KeyType;
 import depollsoft.pitchperfect.lib.Note;
 import depollsoft.pitchperfect.lib.PitchedSong;
+import io.fabric.sdk.android.Fabric;
 
 public class PitchPerfectApplication extends RichApplication {
   @SuppressWarnings("unused")
@@ -32,6 +34,7 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+    Fabric.with(this, new Crashlytics());
     boolean isDebugSigned = false;
 
     Note.setPlayer(new Note.NotePlayer() {
