@@ -143,6 +143,7 @@
         UILabel *postedLabel = [self makeBodyLabel];
         NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
         otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
+        otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
         postedLabel.text = [otherDateFormatter stringFromDate:video.posted];
         [grid addSubview:postedLabel row:3 column:3];
         

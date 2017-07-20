@@ -57,10 +57,12 @@
     
     NSDateFormatter *lastRefreshedFormatter = [[NSDateFormatter alloc] init];
     lastRefreshedFormatter.dateFormat = @"MM/dd/yy hh:mm:ss a";
+    lastRefreshedFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
     self.lastRefreshedLabel.text = [lastRefreshedFormatter stringFromDate:self.tag.lastRefreshed];
     
     NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
     otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
+    otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
     
     self.downloadsLabel.text = [NSString stringWithFormat:@"%d", self.tag.downloadCount];
     

@@ -156,6 +156,7 @@
     dispatch_once(&onceToken, ^{
         formatter = [[NSDateFormatter alloc] init];
         formatter.dateFormat = @"MM/dd/yy";
+        formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
     });
     return formatter;
 }
@@ -185,7 +186,7 @@
     self.aka.text = self.tagInstance.alternativeTitle ? [@"a.k.a. " stringByAppendingString:self.tagInstance.alternativeTitle] : nil;
     NSString *detailsString = nil;
     if (tagInstance) {
-        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tagInstance.posted]];
+        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tagInstance.posted] ?: @"Unknown"];
         if (tagInstance.rating != 0) {
             detailsString = [[NSString stringWithFormat:@"Rating: %1.2f ", tagInstance.rating] stringByAppendingString:detailsString];
         }
