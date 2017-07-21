@@ -9,8 +9,8 @@ android {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 20
         targetSdkVersion 24
-        versionCode 42
-        versionName "2.4.0"
+        versionCode 43
+        versionName "2.4.1"
     }
     buildTypes {
         release {
@@ -22,9 +22,9 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.google.android.support:wearable:1.4.0'
-    compile 'com.google.android.gms:play-services-wearable:9.6.1'
+    compile 'com.google.android.support:wearable:2.0.3'
+    compile 'com.google.android.wearable:wearable:2.0.3'
+    compile 'com.google.android.gms:play-services-wearable:11.0.2'
     compile project(':Bindroid:Bindroid')
     compile project(':PitchPerfectLib')
-    compile files('libs/bolts.jar')
 }
