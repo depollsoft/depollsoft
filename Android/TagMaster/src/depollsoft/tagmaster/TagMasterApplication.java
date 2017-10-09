@@ -1,5 +1,7 @@
 package depollsoft.tagmaster;
 
+import android.content.Context;
+import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.bindroid.trackable.TrackableCollection;
@@ -42,4 +44,9 @@ public class TagMasterApplication extends RichApplication {
     super.onTerminate();
   }
 
+  @Override
+  protected void attachBaseContext(Context base) {
+    MultiDex.install(this);
+    super.attachBaseContext(base);
+  }
 }
