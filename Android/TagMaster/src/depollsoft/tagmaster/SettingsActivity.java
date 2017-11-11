@@ -265,7 +265,7 @@ public class SettingsActivity extends Activity {
         ChangelogViewer viewer = new ChangelogViewer(SettingsActivity.this, SettingsActivity.this
             .getString(R.string.Changelog));
         viewer.setTitle("Tag Master Changelog");
-        viewer.setIcon(SettingsActivity.this.getResources().getDrawable(R.drawable.icon));
+        viewer.setIcon(R.mipmap.ic_launcher);
         viewer.show();
       }
     });

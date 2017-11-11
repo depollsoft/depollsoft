@@ -20,9 +20,9 @@ dependencies {
     compile project(':PitchPerfectLib')
     compile project(':DepollSoftCommon.Compat')
     compile project(':Bindroid:Bindroid')
-    compile 'com.android.support:multidex:1.0.1'
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.google.firebase:firebase-core:11.4.2'
+    compile 'com.android.support:multidex:1.0.2'
+    compile 'com.android.support:support-v4:24.0.0'
+    compile 'com.google.firebase:firebase-core:11.6.0'
     compile 'com.parse:parse-android:1.13.1'
     compile 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
     compile 'com.parse.bolts:bolts-tasks:1.4.0'
@@ -33,11 +33,12 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         multiDexEnabled true
+        applicationId "depollsoft.tagmaster"
     }
 
     sourceSets {
