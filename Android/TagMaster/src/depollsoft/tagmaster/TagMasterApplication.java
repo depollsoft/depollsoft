@@ -46,7 +46,7 @@ public class TagMasterApplication extends RichApplication {
 
   @Override
   protected void attachBaseContext(Context base) {
-    MultiDex.install(this);
     super.attachBaseContext(base);
+    MultiDex.install(this);
   }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="depollsoft.tagmaster"
-    android:versionCode="40"
+    android:versionCode="41"
     android:versionName="@string/VersionNumber" >
 
     <uses-permission android:name="android.permission.INTERNET" >
@@ -15,7 +15,7 @@
 
     <uses-sdk
         android:minSdkVersion="15"
-        android:targetSdkVersion="24" >
+        android:targetSdkVersion="26" >
     </uses-sdk>
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" >
@@ -25,7 +25,7 @@
         android:name="TagMasterApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
-        android:icon="@drawable/icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo" >
 
@@ -71,13 +71,13 @@
         <activity
             android:name=".TagSearchResultsActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:icon="@drawable/icon"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name" >
         </activity>
         <activity
             android:name=".TagMasterBrowserActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:icon="@drawable/icon"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name" >
         </activity>
 
@@ -92,7 +92,7 @@
         <activity
             android:name=".MeActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:icon="@drawable/icon"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -103,11 +103,11 @@
         <activity
             android:name=".UrlHandlerActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:icon="@drawable/icon"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:noHistory="true" >
             <intent-filter
-                android:icon="@drawable/icon"
+                android:icon="@mipmap/ic_launcher"
                 android:label="@string/app_name" >
                 <action android:name="android.intent.action.VIEW" >
                 </action>
@@ -137,7 +137,7 @@
         <activity
             android:name=".TeachableTagsActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:icon="@drawable/icon"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name" >
         </activity>
         <activity

@@ -63,7 +63,7 @@ public class MeActivity extends Activity {
 
     ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
     viewer.setTitle("Tag Master Changelog");
-    viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
+    viewer.setIcon(R.mipmap.ic_launcher);
     viewer.showIfAppropriate();
   }
 
