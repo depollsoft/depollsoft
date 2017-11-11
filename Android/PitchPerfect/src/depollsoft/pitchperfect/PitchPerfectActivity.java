@@ -140,7 +140,7 @@ public class PitchPerfectActivity extends TabActivity {
     } else {
       ChangelogViewer viewer = new ChangelogViewer(this, this.getString(R.string.Changelog));
       viewer.setTitle("Pitch Perfect Changelog");
-      viewer.setIcon(this.getResources().getDrawable(R.drawable.icon));
+      viewer.setIcon(R.mipmap.ic_launcher);
       viewer.showIfAppropriate();
     }
 
