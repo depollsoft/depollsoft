@@ -47,7 +47,7 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:bindings]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide]->=0-[tabBar][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide]->=0-[tabBar]|"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:bindings]];
@@ -59,6 +59,14 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:bindings]];
+    [self.view layoutIfNeeded];
+    [tabBar invalidateIntrinsicContentSize];
+}
+    
+- (void)viewSafeAreaInsetsDidChange {
+    [super viewSafeAreaInsetsDidChange];
+    [self.view layoutIfNeeded];
+    [tabBar invalidateIntrinsicContentSize];
 }
 
 - (void)setViewControllers:(NSArray *)vc {

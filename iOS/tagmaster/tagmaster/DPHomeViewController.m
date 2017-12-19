@@ -255,7 +255,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     if (indexPath.section == 0) {
-        void (^block)() = [self navigationItems][indexPath.row][@"action"];
+        void (^block)(void) = [self navigationItems][indexPath.row][@"action"];
         block();
     } else {
         int tagId = [[DPAppDelegate favorites][indexPath.row] intValue];
