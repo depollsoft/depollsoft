@@ -8,6 +8,7 @@
 
 #import "DPTagPageControllerBase.h"
 #import "DPLabel.h"
+#import "UIView+DPUtils.h"
 
 @interface DPTagPageControllerBase ()
 
@@ -69,6 +70,7 @@
 }
 
 - (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller {
+    view = [view padHorizontal:8 vertical:0];
     id topLayoutGuide = self.topLayoutGuide;
     view.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
@@ -91,11 +93,14 @@
                                                         multiplier:1
                                                           constant:0]];
     
+    id leftGuide = self.view.leftSafeAreaLayoutGuide;
+    id rightGuide = self.view.rightSafeAreaLayoutGuide;
+    
     [self.view addSubview:scroller];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-4-[scroller]-4-|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[leftGuide][scroller][rightGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(scroller)]];
+                                                                        views:NSDictionaryOfVariableBindings(scroller, leftGuide, rightGuide)]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][scroller]|"
                                                                       options:0
                                                                       metrics:nil
