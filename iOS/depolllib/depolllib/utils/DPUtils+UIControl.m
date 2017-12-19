@@ -11,7 +11,7 @@
 
 @interface Delegator : NSObject
 
-@property (nonatomic, copy) void(^block)();
+@property (nonatomic, copy) void(^block)(void);
 
 - (void)invoke;
 
@@ -42,7 +42,7 @@ static char BLOCKS_LIST_KEY;
     return result;
 }
 
-- (id)addBlock:(void(^)())block forControlEvents:(UIControlEvents)controlEvents {
+- (id)addBlock:(void(^)(void))block forControlEvents:(UIControlEvents)controlEvents {
     Delegator *d = [[Delegator alloc] init];
     d.block = block;
     [self addTarget:d action:@selector(invoke) forControlEvents:controlEvents];

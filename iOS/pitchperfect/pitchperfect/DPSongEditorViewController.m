@@ -41,6 +41,8 @@
 {
     [super viewDidLoad];
     
+    UIToolbar *toolbar = self.toolbar;
+    
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
@@ -73,16 +75,11 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     self.view.backgroundColor = [UIColor whiteColor];
-    
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
-    
-    [toolbar sizeToFit];
-    toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
     
     nameField = [[UITextField alloc] init];
     UILabel *nameLabel = [[UILabel alloc] init];
@@ -99,7 +96,6 @@
     nameField.delegate = self;
     [nameField sizeToFit];
     
-    [rootLayout addSubview:toolbar row:0 column:0];
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
@@ -129,16 +125,14 @@
     
     toolbar.items = [NSArray arrayWithObjects:cancelItem, flexibleSpace, titleItem, flexibleSpace, doneItem, nil];
     
-    id topLayoutGuide = self.topLayoutGuide;
-    
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[topLayoutGuide][rootLayout]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout, topLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout, toolbar)]];
     
 }
 

@@ -11,6 +11,6 @@
 
 @interface UIControl (DPUtils)
 
-- (id)addBlock:(void(^)())block forControlEvents:(UIControlEvents)controlEvents;
+- (id)addBlock:(void(^)(void))block forControlEvents:(UIControlEvents)controlEvents;
 
 @end

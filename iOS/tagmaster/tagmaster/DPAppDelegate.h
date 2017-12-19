@@ -20,9 +20,6 @@
 
 @property (readonly, strong, nonatomic) UINavigationController *navigationController;
 
-- (void)saveContext;
-- (NSURL *)applicationDocumentsDirectory;
-
 + (NSArray *)favorites;
 + (void)setFavorites:(NSArray *)favorites;
 + (BOOL)containsFavorite:(int)tagId;

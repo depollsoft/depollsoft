@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DPToolbarViewController.h"
 
-@interface DPKeysViewController : UIViewController<UITableViewDataSource>
+@interface DPKeysViewController : DPToolbarViewController<UITableViewDataSource>
 
 @end

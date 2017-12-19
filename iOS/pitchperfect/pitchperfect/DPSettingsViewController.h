@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DPToolbarViewController.h"
 
-@interface DPSettingsViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
+@interface DPSettingsViewController : DPToolbarViewController<UITableViewDataSource, UITableViewDelegate>
 
 + (DPSettingsViewController *)sharedInstance;
 

@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DPToolbarViewController.h"
 
-@interface DPNotesViewController : UIViewController<UITableViewDataSource, UIGestureRecognizerDelegate>
+@interface DPNotesViewController : DPToolbarViewController<UITableViewDataSource, UIGestureRecognizerDelegate>
 
 @end

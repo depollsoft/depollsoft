@@ -52,8 +52,11 @@
 }
 
 - (UIView *)noteUi:(DPKey *)k {
+    DPGridLayout *flow = [[DPGridLayout alloc] init];
+    flow.columnDimensions = @[[DPGridDimension dimension],
+                              [DPGridDimension dimension]];
+    flow.rowDimensions = @[[DPGridDimension dimension]];
     DPNote *n = k.note;
-    HLayoutView *flow = [[HLayoutView alloc] init];
     UILabel *noteName = [[UILabel alloc] init];
     noteName.font = [UIFont boldSystemFontOfSize:16];
     noteName.text = k.friendlyName;
@@ -61,7 +64,7 @@
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
-    [flow addSubview:noteName];
+    [flow addSubview:noteName row:0 column:0];
     
     UILabel *accidental = [[UILabel alloc] init];
     accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
@@ -81,37 +84,40 @@
     [accidental sizeToFit];
     
     flow.userInteractionEnabled = NO;
-    [flow addSubview:accidental];
+    [flow addSubview:accidental row:0 column:1];
     
-    [flow sizeToFit];
     return flow;
 }
 
 - (void)setKey:(DPKey *)newKey {
     key = newKey;
     
-    HLayoutView *flowRight = [[HLayoutView alloc] init];
-    [flowRight addSubview:[self noteUi:newKey]];
+    DPGridLayout *gridLayout = [[DPGridLayout alloc] init];
+    gridLayout.columnDimensions = @[[DPGridDimension dimension],
+                                    [DPGridDimension dimensionWithStars:1],
+                                    [DPGridDimension dimension]];
+    gridLayout.rowDimensions = @[[DPGridDimension dimension]];
+    gridLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
-    flowRight.frame = CGRectInset(self.frame, 10, 0);
-    flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
-    flowRight.userInteractionEnabled = NO;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    UIView *flowRight = [self noteUi:newKey];
+    UIView *flowLeft = [self keyUi:newKey];
     
-    HLayoutView *flowLeft = [[HLayoutView alloc] init];
-    [flowLeft addSubview:[self keyUi:newKey]];
+    [gridLayout addSubview:flowLeft row:0 column:0];
+    [gridLayout addSubview:flowRight row:0 column:2];
     
-    flowLeft.frame = CGRectInset(self.frame, 10, 0);
-    flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    flowLeft.userInteractionEnabled = NO;
+    id leftLayoutGuide = self.contentView.leftSafeAreaLayoutGuide;
+    id rightLayoutGuide = self.contentView.rightSafeAreaLayoutGuide;
     
-    [self.contentView addSubview:flowRight];
-    [self.contentView addSubview:flowLeft];
-    [self sizeToFit];
-        
-    self.frame = CGRectInset(self.frame, 0, -20);
-    self.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill | UIControlContentHorizontalAlignmentFill;
+    [self.contentView addSubview:gridLayout];
+    
+    [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[leftLayoutGuide]-[gridLayout]-[rightLayoutGuide]"
+                                                                             options:0
+                                                                             metrics:nil
+                                                                               views:NSDictionaryOfVariableBindings(gridLayout, leftLayoutGuide, rightLayoutGuide)]];
+    [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[gridLayout]|"
+                                                                             options:0
+                                                                             metrics:nil
+                                                                               views:NSDictionaryOfVariableBindings(gridLayout)]];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -149,6 +155,8 @@
 {
     [super viewDidLoad];
     
+    UIToolbar *toolbar = self.toolbar;
+    
 	DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
                                  [DPGridDimension dimension],
@@ -163,9 +171,6 @@
     
     bannerView.rootViewController = self;
     
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
-    
-    [rootLayout addSubview:toolbar row:0 column:0];
     [rootLayout addSubview:bannerView row:1 column:0];
     
     UIView *background = [[UIView alloc] init];
@@ -177,10 +182,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
@@ -218,22 +223,20 @@
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
-    [toolbar sizeToFit];
+    self.toolbar.items = [NSArray arrayWithObjects:flexibleSpace, majorMinorChooserItem, flexibleSpace, settingsButton, nil];
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:rootLayout];
     
-    id topLayoutGuide = self.topLayoutGuide;
     id bottomLayoutGuide = self.bottomLayoutGuide;
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil

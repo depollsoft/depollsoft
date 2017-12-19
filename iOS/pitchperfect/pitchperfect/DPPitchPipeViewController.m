@@ -46,10 +46,13 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    UIToolbar *toolbar = self.toolbar;
+    
     //VLayoutView *topLayout = [[VLayoutView alloc] init];
     self.noteButtons = [NSMutableArray arrayWithCapacity:12];
     self.model = [[DPPitchPipeModel alloc] init];
-	// Do any additional setup after loading the view, typically from a nib.
+    // Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
@@ -64,31 +67,30 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
     toolbar.barStyle = UIBarStyleDefault;
     
     [toolbar sizeToFit];
     
     DPGridLayout *buttonLayout = [[DPGridLayout alloc] init];
     buttonLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1]
-                                 ];
+                                   [DPGridDimension dimensionWithStars:1],
+                                   [DPGridDimension dimensionWithStars:1],
+                                   [DPGridDimension dimensionWithStars:1],
+                                   [DPGridDimension dimensionWithStars:1]
+                                   ];
     buttonLayout.columnDimensions = @[
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimensionWithStars:1]
-                                 ];
+                                      [DPGridDimension dimensionWithStars:1],
+                                      [DPGridDimension dimensionWithStars:1],
+                                      [DPGridDimension dimensionWithStars:1],
+                                      [DPGridDimension dimensionWithStars:1]
+                                      ];
     
     int rowMap[12] = { 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 2, 1 };
     int colMap[12] = { 0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0, 0 };
@@ -128,27 +130,27 @@
                                     [DPGridDimension dimensionWithStars:1]
                                     ];
     
-    [rootLayout addSubview:toolbar row:0 column:0];
     [rootLayout addSubview:bannerView  row:1 column:0];
     [rootLayout addSubview:buttonLayout row:2 column:0];
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
-    id topLayoutGuide = self.topLayoutGuide;
     id bottomLayoutGuide = self.bottomLayoutGuide;
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
     
+    id leftLayoutGuide = self.view.leftSafeAreaLayoutGuide;
+    id rightLayoutGuide = self.view.rightSafeAreaLayoutGuide;
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[leftLayoutGuide][rootLayout][rightLayoutGuide]"
+                                                                      options:0
+                                                                      metrics:nil
+                                                                        views:NSDictionaryOfVariableBindings(leftLayoutGuide, rightLayoutGuide, rootLayout)]];
 }
 
 - (void)resetBannerViewSize {

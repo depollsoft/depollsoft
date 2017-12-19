@@ -8,8 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import "DPAudioSynthesizer.h"
+#import "DPToolbarViewController.h"
 
-
-@interface DPPitchPipeViewController : UIViewController
+@interface DPPitchPipeViewController : DPToolbarViewController
 
 @end
