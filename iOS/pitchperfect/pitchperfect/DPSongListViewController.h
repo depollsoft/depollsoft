@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DPToolbarViewController.h"
 
-@interface DPSongListViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
+@interface DPSongListViewController : DPToolbarViewController<UITableViewDataSource, UITableViewDelegate>
 
 @end

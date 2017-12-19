@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E5B19571FE74BE600241069 /* DPToolbarViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E5B19551FE74BE600241069 /* DPToolbarViewController.h */; };
+		1E5B19581FE74BE600241069 /* DPToolbarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E5B19561FE74BE600241069 /* DPToolbarViewController.m */; };
 		631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */ = {isa = PBXBuildFile; fileRef = 631C911C15942383004733F1 /* DPUtils+UIColor.h */; };
 		631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C911D15942383004733F1 /* DPUtils+UIColor.m */; };
 		63336A3D17F6284800BC1EE2 /* DPTabBarController.h in Headers */ = {isa = PBXBuildFile; fileRef = 63336A3B17F6284800BC1EE2 /* DPTabBarController.h */; };
@@ -58,6 +60,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1E5B19551FE74BE600241069 /* DPToolbarViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPToolbarViewController.h; sourceTree = "<group>"; };
+		1E5B19561FE74BE600241069 /* DPToolbarViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPToolbarViewController.m; sourceTree = "<group>"; };
 		631C911C15942383004733F1 /* DPUtils+UIColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DPUtils+UIColor.h"; sourceTree = "<group>"; };
 		631C911D15942383004733F1 /* DPUtils+UIColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "DPUtils+UIColor.m"; sourceTree = "<group>"; };
 		63336A3B17F6284800BC1EE2 /* DPTabBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTabBarController.h; sourceTree = "<group>"; };
@@ -137,6 +141,8 @@
 				638E738A17F78D4D000FFE53 /* DPLabel.m */,
 				639F293218000C4D00517583 /* DPBusyIndicator.h */,
 				639F293318000C4D00517583 /* DPBusyIndicator.m */,
+				1E5B19551FE74BE600241069 /* DPToolbarViewController.h */,
+				1E5B19561FE74BE600241069 /* DPToolbarViewController.m */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -269,6 +275,7 @@
 				639F293418000C4D00517583 /* DPBusyIndicator.h in Headers */,
 				63336A5317F677BE00BC1EE2 /* UIView+DPUtils.h in Headers */,
 				63ED0BCE1AC0B7C000535ED1 /* UIToolbar+DPUtils.h in Headers */,
+				1E5B19571FE74BE600241069 /* DPToolbarViewController.h in Headers */,
 				631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */,
 				63E1497C15C2614400E72AC9 /* DPFileCache.h in Headers */,
 				638E738B17F78D4D000FFE53 /* DPLabel.h in Headers */,
@@ -323,7 +330,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastTestingUpgradeCheck = 0610;
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 0920;
 				ORGANIZATIONNAME = DepollSoft;
 			};
 			buildConfigurationList = 63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */;
@@ -386,6 +393,7 @@
 				63336A3E17F6284800BC1EE2 /* DPTabBarController.m in Sources */,
 				63336A5817F69E9B00BC1EE2 /* DPTextView.m in Sources */,
 				63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */,
+				1E5B19581FE74BE600241069 /* DPToolbarViewController.m in Sources */,
 				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
 				631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */,
 				63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */,
@@ -429,12 +437,18 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -468,12 +482,18 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;

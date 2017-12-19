@@ -7,6 +7,7 @@
 //
 
 #import "UIView+DPUtils.h"
+#import <objc/runtime.h>
 
 @implementation UIView (DPUtils)
 
@@ -242,6 +243,159 @@
                                                                    views:NSDictionaryOfVariableBindings(self)]];
     
     return view;
+}
+
+static char safeAreaLayoutGuideCompatKey;
+- (UILayoutGuide *)safeAreaLayoutGuideCompat {
+    if (@available(iOS 11.0, *)) {
+        return self.safeAreaLayoutGuide;
+    } else {
+        UILayoutGuide *lg = objc_getAssociatedObject(self, &safeAreaLayoutGuideCompatKey);
+        if (lg) {
+            return lg;
+        }
+        lg = [[UILayoutGuide alloc] init];
+        objc_setAssociatedObject(self, &safeAreaLayoutGuideCompatKey, lg, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        
+        [self addLayoutGuide:lg];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[lg]|"
+                                                                     options:0
+                                                                     metrics:nil
+                                                                       views:NSDictionaryOfVariableBindings(lg)]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[lg]|"
+                                                                     options:0
+                                                                     metrics:nil
+                                                                       views:NSDictionaryOfVariableBindings(lg)]];
+        return lg;
+    }
+}
+
+static char topSafeAreaLayoutGuideKey;
+- (UILayoutGuide *)topSafeAreaLayoutGuide {
+    UILayoutGuide *lg = objc_getAssociatedObject(self, &topSafeAreaLayoutGuideKey);
+    if (lg) {
+        return lg;
+    }
+    lg = [[UILayoutGuide alloc] init];
+    lg.identifier = @"Top Guide";
+    [self addLayoutGuide:lg];
+    id safeAreaLayoutGuide = self.safeAreaLayoutGuideCompat;
+    
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeTop
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:self
+                                                     attribute:NSLayoutAttributeTop
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeBottom
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:safeAreaLayoutGuide
+                                                     attribute:NSLayoutAttributeTop
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[lg]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(lg)]];
+    return lg;
+}
+
+static char bottomSafeAreaLayoutGuideKey;
+- (UILayoutGuide *)bottomSafeAreaLayoutGuide {
+    UILayoutGuide *lg = objc_getAssociatedObject(self, &bottomSafeAreaLayoutGuideKey);
+    if (lg) {
+        return lg;
+    }
+    lg = [[UILayoutGuide alloc] init];
+    lg.identifier = @"Bottom Guide";
+    [self addLayoutGuide:lg];
+    id safeAreaLayoutGuide = self.safeAreaLayoutGuideCompat;
+    
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeBottom
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:self
+                                                     attribute:NSLayoutAttributeBottom
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeTop
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:safeAreaLayoutGuide
+                                                     attribute:NSLayoutAttributeBottom
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[lg]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(lg)]];
+    return lg;
+}
+
+static char leftSafeAreaLayoutGuideKey;
+- (UILayoutGuide *)leftSafeAreaLayoutGuide {
+    UILayoutGuide *lg = objc_getAssociatedObject(self, &leftSafeAreaLayoutGuideKey);
+    if (lg) {
+        return lg;
+    }
+    lg = [[UILayoutGuide alloc] init];
+    lg.identifier = @"Left Guide";
+    [self addLayoutGuide:lg];
+    id safeAreaLayoutGuide = self.safeAreaLayoutGuideCompat;
+    
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeLeft
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:self
+                                                     attribute:NSLayoutAttributeLeft
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeRight
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:safeAreaLayoutGuide
+                                                     attribute:NSLayoutAttributeLeft
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[lg]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(lg)]];
+    return lg;
+}
+
+static char rightSafeAreaLayoutGuideKey;
+- (UILayoutGuide *)rightSafeAreaLayoutGuide {
+    UILayoutGuide *lg = objc_getAssociatedObject(self, &rightSafeAreaLayoutGuideKey);
+    if (lg) {
+        return lg;
+    }
+    lg = [[UILayoutGuide alloc] init];
+    lg.identifier = @"Right Guide";
+    [self addLayoutGuide:lg];
+    id safeAreaLayoutGuide = self.safeAreaLayoutGuideCompat;
+    
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeRight
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:self
+                                                     attribute:NSLayoutAttributeRight
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraint:[NSLayoutConstraint constraintWithItem:lg
+                                                     attribute:NSLayoutAttributeLeft
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:safeAreaLayoutGuide
+                                                     attribute:NSLayoutAttributeRight
+                                                    multiplier:1
+                                                      constant:0]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[lg]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:NSDictionaryOfVariableBindings(lg)]];
+    return lg;
 }
 
 @end

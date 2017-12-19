@@ -123,9 +123,8 @@
     
     // Add column constraints
     for (DPGridDimension *dimension in self.columnDimensions) {
-        UIView *spacer = [[UIView alloc] init];
-        spacer.translatesAutoresizingMaskIntoConstraints = NO;
-        [self addSubview:spacer];
+        UILayoutGuide *spacer = [[UILayoutGuide alloc] init];
+        [self addLayoutGuide:spacer];
         
         if (self.colSpacers.count > 0) {
             // Trail the previous spacer
@@ -203,9 +202,8 @@
     
     // Add row constraints
     for (DPGridDimension *dimension in self.rowDimensions) {
-        UIView *spacer = [[UIView alloc] init];
-        spacer.translatesAutoresizingMaskIntoConstraints = NO;
-        [self addSubview:spacer];
+        UILayoutGuide *spacer = [[UILayoutGuide alloc] init];
+        [self addLayoutGuide:spacer];
         
         if (self.rowSpacers.count > 0) {
             // Trail the previous spacer

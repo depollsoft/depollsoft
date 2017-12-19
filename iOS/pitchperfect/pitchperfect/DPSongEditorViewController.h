@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 #import "DPPitchedSong.h"
+#import "DPToolbarViewController.h"
 
-@interface DPSongEditorViewController : UIViewController<UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource>
+@interface DPSongEditorViewController : DPToolbarViewController<UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource>
 
 @property (nonatomic, strong) DPPitchedSong *song;
 @property (nonatomic, copy) void(^completionCallback)(BOOL cancelled);

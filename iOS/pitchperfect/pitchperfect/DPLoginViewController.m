@@ -54,6 +54,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    UIToolbar *toolbar = self.toolbar;
+    
     // Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
     bannerView.adUnitID = @"a14fd7eba4542f0";
@@ -68,15 +71,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
-    
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
-    toolbar.barStyle = UIBarStyleDefault;
-    
-    [toolbar sizeToFit];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
     [toolbar addTitle:@"Log In To Pitch Perfect"];
     
@@ -100,7 +98,6 @@
                                     [DPGridDimension dimensionWithStars:1]
                                     ];
     
-    [rootLayout addSubview:toolbar row:0 column:0];
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
@@ -147,22 +144,21 @@
     
     FBSDKLoginButton *fbLoginButton = [[FBSDKLoginButton alloc] init];
     fbLoginButton.readPermissions = @[@"public_profile"];
-    UIView *fbLoginContainer = [[fbLoginButton fixHeight:50] pad:4];
+    UIView *fbLoginContainer = [fbLoginButton pad:4];
     [rootLayout addSubview:fbLoginContainer row:4 column:0];
     fbLoginButton.delegate = self;
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
-    id topLayoutGuide = self.topLayoutGuide;
     id bottomLayoutGuide = self.bottomLayoutGuide;
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil

@@ -23,4 +23,10 @@
 - (UIView *)fixHeight:(CGFloat)height;
 - (UIView *)fixWidth:(CGFloat)width;
 
+@property (nonatomic, readonly) UILayoutGuide *safeAreaLayoutGuideCompat;
+@property (nonatomic, readonly) UILayoutGuide *topSafeAreaLayoutGuide;
+@property (nonatomic, readonly) UILayoutGuide *bottomSafeAreaLayoutGuide;
+@property (nonatomic, readonly) UILayoutGuide *leftSafeAreaLayoutGuide;
+@property (nonatomic, readonly) UILayoutGuide *rightSafeAreaLayoutGuide;
+
 @end

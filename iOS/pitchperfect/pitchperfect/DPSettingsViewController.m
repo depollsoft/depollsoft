@@ -48,6 +48,8 @@
 {
     [super viewDidLoad];
     
+    UIToolbar *toolbar = self.toolbar;
+    
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
@@ -66,12 +68,6 @@
     
     bannerView.rootViewController = self;
     
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
-    
-    [toolbar sizeToFit];
-    toolbar.frame = CGRectMake(0, 0, self.view.frame.size.width, toolbar.frame.size.height);
-    
-    
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
     //[self.view setBackgroundColor:[UIColor blackColor]];
@@ -81,14 +77,12 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
     self.view.backgroundColor = [UIColor whiteColor];
-    
-    [rootLayout addSubview:toolbar row:0 column:0];
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
@@ -116,15 +110,14 @@
     
     [self.view addSubview:rootLayout];
     
-    id topLayoutGuide = self.topLayoutGuide;
     id bottomLayoutGuide = self.bottomLayoutGuide;
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
@@ -220,7 +213,9 @@
             }
             UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
             activityIndicator.hidesWhenStopped = YES;
-            cell.accessoryView = activityIndicator;
+            if (@available(iOS 10.0, *)) {
+                cell.accessoryView = activityIndicator;
+            }
             [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(loginButtonPress:)]];
             break;
         }

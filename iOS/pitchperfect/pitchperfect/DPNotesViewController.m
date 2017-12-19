@@ -98,7 +98,7 @@
         [flow addSubview:[self noteUi:note.alternate]];
     }
     
-    [self addSubview:flow];
+    [self.contentView addSubview:flow];
     
     self.detailTextLabel.text = [NSString stringWithFormat:@"%1.2f Hz", note.frequency];
     self.detailTextLabel.textColor = [UIColor darkGrayColor];
@@ -138,6 +138,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    UIToolbar *toolbar = self.toolbar;
+    
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
                                  [DPGridDimension dimension],
@@ -152,9 +155,6 @@
     
     bannerView.rootViewController = self;
     
-    UIToolbar *toolbar = [[UIToolbar alloc] init];
-    
-    [rootLayout addSubview:toolbar row:0 column:0];
     [rootLayout addSubview:bannerView row:1 column:0];
     
     UIView *background = [[UIView alloc] init];
@@ -166,10 +166,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
     [bannerView loadRequest:DPAppDelegate.adRequest];
     
@@ -195,15 +195,14 @@
     
     [self.view addSubview:rootLayout];
     
-    id topLayoutGuide = self.topLayoutGuide;
     id bottomLayoutGuide = self.bottomLayoutGuide;
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(topLayoutGuide, rootLayout, bottomLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil

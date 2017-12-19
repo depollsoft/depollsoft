@@ -200,7 +200,10 @@ static NSNumber *kFalse;
         inv.target = result;
         inv.selector = selector;
         NSString *propertyType = [NSString stringWithUTF8String:[meth getArgumentTypeAtIndex:2]];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wstrict-prototypes"
         void (^unboxer)() = [unboxers objectForKey:propertyType];
+#pragma clang diagnostic pop
         if (unboxer) {
             Byte buffer[sizeof(long long)];
             unboxer(cur, buffer);

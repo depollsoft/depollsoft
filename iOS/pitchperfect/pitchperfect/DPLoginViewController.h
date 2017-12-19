@@ -8,8 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import <Bolts/Bolts.h>
+#import "DPToolbarViewController.h"
 
-@interface DPLoginViewController : UIViewController
+@interface DPLoginViewController : DPToolbarViewController
 
 @property (nonatomic, readonly) BFTask *loginTask;
 @property (nonatomic, readwrite) BOOL isHoomiLogout;
