@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/pitchpipe_item"
+        android:icon="@drawable/ic_tab_pitchpipe"
+        android:title="@string/quick_pitch"/>
+    <item
+        android:id="@+id/notes_item"
+        android:icon="@drawable/ic_tab_octaves"
+        android:title="@string/notes"/>
+    <item
+        android:id="@+id/keys_item"
+        android:icon="@drawable/ic_tab_keys"
+        android:title="@string/keys"/>
+    <item
+        android:id="@+id/songs_item"
+        android:icon="@drawable/ic_tab_songs"
+        android:title="@string/songs"/>
+</menu>

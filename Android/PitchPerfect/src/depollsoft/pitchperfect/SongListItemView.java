@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
 import android.view.ContextMenu;
 import android.view.MenuInflater;
@@ -58,9 +59,6 @@ public class SongListItemView extends LinearLayout implements
 
     UiBinder.bind(this, R.id.songKeyTextView, "Text", "Song.Key",
         new KeyNameConverter());
-
-    UiBinder.bind(this, R.id.editButton, "Visibility", "Context.Editing",
-        BoolConverter.get());
 
     UiBinder.bind(this, new ReflectedProperty(this, "Pressed"),
         "Song.IsPlaying", BindingMode.ONE_WAY, BoolConverter.get());
