@@ -1,0 +1,220 @@
+package depollsoft.pitchperfect
+
+import android.content.Context
+import android.content.Intent
+import android.content.res.Resources
+import android.media.AudioManager
+import android.os.Bundle
+import android.os.PersistableBundle
+import android.os.PowerManager
+import android.support.design.widget.BottomNavigationView
+import android.support.design.widget.TabLayout
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.view.ViewPager
+import android.support.v7.app.AppCompatActivity
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.View
+import bolts.Task
+import com.bindroid.converters.BoolConverter
+import com.bindroid.ui.UiBinder
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.parse.ParseFacebookUtils
+import com.parse.ParseUser
+import depollsoft.lib.compat.ui.Activities
+import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.util.RunUtils
+
+class PitchPerfectActivity : AppCompatActivity() {
+
+    private lateinit var bottomNavigation: BottomNavigationView
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var preparingMenu: Boolean = false
+
+    val adsShouldShow: Boolean
+        get() {
+            if (SettingsModel.getAreAdsRemoved()) {
+                return false
+            }
+            return !SettingsModel.getLicensed()
+        }
+
+    /**
+     * Called when the activity is first created.
+     */
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        this.volumeControlStream = AudioManager.STREAM_MUSIC
+
+        this.setContentView(R.layout.pitchperfectview)
+
+        UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow", BoolConverter.get())
+        UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get())
+
+        findViewById<View>(R.id.removeAds).setOnClickListener {
+            if (PurchaseService.isSubscriptionBillingAvailable(this@PitchPerfectActivity)) {
+                PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
+            }
+        }
+
+        bottomNavigation = findViewById(R.id.bottomNavigation)
+        val viewPager = findViewById<ViewPager>(R.id.viewPager)
+
+        viewPager.adapter = object : FragmentPagerAdapter(this.supportFragmentManager) {
+            override fun getItem(position: Int): Fragment? {
+                when (position) {
+                    0 -> return PitchPipeFragment()
+                    1 -> return NoteListFragment()
+                    2 -> return KeySignatureFragment()
+                    3 -> return SongListFragment()
+                }
+                return null
+            }
+
+            override fun getCount(): Int {
+                return 4
+            }
+        }
+
+        this.onConfigurationChanged(Resources.getSystem().configuration)
+
+        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageSelected(position: Int) {
+                Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
+                bottomNavigation.selectedItemId = when (position) {
+                    0 -> R.id.pitchpipe_item
+                    1 -> R.id.notes_item
+                    2 -> R.id.keys_item
+                    3 -> R.id.songs_item
+                    else -> R.id.pitchpipe_item
+                }
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            }
+        })
+
+        bottomNavigation.setOnNavigationItemSelectedListener {
+            viewPager.setCurrentItem(when (it.itemId) {
+                R.id.pitchpipe_item -> 0
+                R.id.notes_item -> 1
+                R.id.keys_item -> 2
+                R.id.songs_item -> 3
+                else -> 0
+            }, true)
+            true
+        }
+
+        val isHoomiLogin = ParseUser.getCurrentUser() != null && !ParseFacebookUtils.isLinked(ParseUser.getCurrentUser())
+        if (isHoomiLogin) {
+            ParseUser.logOutInBackground()
+        }
+
+        if (isHoomiLogin || RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
+            LoginPrompt.buildDialog(this, isHoomiLogin).show()
+        } else {
+            val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
+            viewer.setTitle("Pitch Perfect Changelog")
+            viewer.setIcon(R.mipmap.ic_launcher)
+            viewer.showIfAppropriate()
+        }
+
+        val adView = findViewById<AdView>(R.id.adView)
+
+        val adRequest = AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build()
+        adView.loadAd(adRequest)
+
+        PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity)) }
+    }
+
+    override fun onRestoreInstanceState(state: Bundle) {
+        super.onRestoreInstanceState(state)
+        //tabHost.restoreInstanceState("tabs", state);
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        //tabHost.saveInstanceState("tabs", outState);
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        if (preparingMenu)
+            return false
+        preparingMenu = true
+        try {
+            menu.clear()
+            val mi = MenuInflater(this)
+            mi.inflate(R.menu.mainmenu, menu)
+
+            menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener {
+                val i = Intent(this@PitchPerfectActivity, SettingsActivity::class.java)
+                this@PitchPerfectActivity.startActivity(i)
+                true
+            }
+            //getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
+            return super.onPrepareOptionsMenu(menu)
+        } finally {
+            preparingMenu = false
+        }
+    }
+
+    override fun onDestroy() {
+        PurchaseService.unbind(this)
+        super.onDestroy()
+    }
+
+    override fun onPause() {
+        if (this.wakeLock != null) {
+            this.wakeLock!!.release()
+            this.wakeLock = null
+        }
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (SettingsModel.getWakeLock()) {
+            this.wakeLock = (this.getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(
+                    PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity")
+            this.wakeLock!!.acquire()
+        }
+
+        runOnUiThread(Runnable {
+            if (handlingResult) {
+                handlingResult = false
+                return@Runnable
+            }
+            PitchPerfectApplication.startupRefreshFromParse()
+        })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 666) {
+            Task.callInBackground {
+                SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity))
+                null
+            }
+        } else {
+            LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
+            handlingResult = true
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+    }
+
+    companion object {
+        @JvmField
+        internal var handlingResult: Boolean = false
+    }
+}

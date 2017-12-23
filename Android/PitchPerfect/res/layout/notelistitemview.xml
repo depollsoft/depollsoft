@@ -11,7 +11,7 @@
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:textSize="20dp" >
+        android:textSize="20sp" >
     </TextView>
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_marginBottom="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="8dp"
-        android:textSize="20dp" >
+        android:textSize="20sp" >
     </TextView>
 
 </LinearLayout>

@@ -28,16 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".KeySignatureActivity"
-            android:configChanges="keyboardHidden|orientation"/>
-        <activity
-            android:name=".NoteListActivity"
-            android:configChanges="keyboardHidden|orientation"/>
-        <activity
-            android:name=".PitchPipeActivity"
-            android:configChanges="keyboardHidden|orientation"/>
-        <activity
-            android:name=".SongListActivity"
+            android:name=".SongListFragment"
             android:configChanges="keyboardHidden|orientation"/>
         <activity android:name=".AddSongActivity"/>
         <activity

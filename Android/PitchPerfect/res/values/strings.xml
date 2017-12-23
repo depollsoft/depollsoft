@@ -62,5 +62,9 @@
         </p>]]>
     </string>
     <string name="RemoveAds"><u>Tired of Ads?</u></string>
+    <string name="quick_pitch">Quick Pitch</string>
+    <string name="notes">Notes</string>
+    <string name="keys">Keys</string>
+    <string name="songs">Songs</string>
 
 </resources>

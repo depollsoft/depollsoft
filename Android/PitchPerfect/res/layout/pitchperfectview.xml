@@ -1,85 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
-         xmlns:ads="http://schemas.android.com/apk/res-auto"
-    android:id="@android:id/tabhost"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:ads="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/mainLayout"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/mainLayout"
+    <FrameLayout
+        android:id="@+id/frameLayout1"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:layout_height="0dip"
+        android:layout_weight="1">
 
-        <TabWidget
-            android:id="@android:id/tabs"
+        <depollsoft.lib.ui.ScaledBitmapView
+            android:id="@+id/imageView1"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="fill_parent"
+            android:src="@drawable/panobackground">
+        </depollsoft.lib.ui.ScaledBitmapView>
 
-        <FrameLayout
-            android:id="@+id/frameLayout1"
+        <LinearLayout
+            android:id="@+id/linearLayout1"
             android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1" >
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
 
-            <depollsoft.lib.ui.ScaledBitmapView
-                android:id="@+id/imageView1"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:src="@drawable/panobackground" >
-            </depollsoft.lib.ui.ScaledBitmapView>
+            <com.google.android.gms.ads.AdView
+                android:id="@+id/adView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                ads:adSize="SMART_BANNER"
+                ads:adUnitId="ca-app-pub-2903856737482177/7395059449"/>
+            <TextView
+                android:id="@+id/removeAds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginRight="4dp"
+                android:text="@string/RemoveAds"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="italic"/>
 
-            <LinearLayout
-                android:id="@+id/linearLayout1"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:orientation="vertical" >
 
-                <LinearLayout
-                    android:id="@+id/titleLayout"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content" >
+            <android.support.v4.view.ViewPager
+                android:id="@+id/viewPager"
+                android:layout_width="match_parent"
+                android:layout_height="0dip"
+                android:layout_weight="1">
 
-                    <ImageView
-                        android:id="@+id/imageView2"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginRight="8dp"
-                        android:src="@mipmap/ic_launcher" >
-                    </ImageView>
+            </android.support.v4.view.ViewPager>
+        </LinearLayout>
+    </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/titleTextView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/app_name"
-                        android:textSize="42dp"
-                        android:textStyle="bold" >
-                    </TextView>
-                </LinearLayout>
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        ads:menu="@menu/navigationmenu">
 
-                <FrameLayout
-                    android:id="@android:id/tabcontent"
-                    android:layout_width="fill_parent"
-                    android:layout_height="0dip"
-                    android:layout_weight="1" >
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="@string/RemoveAds"
-                    android:id="@+id/removeAds" android:layout_gravity="right"
-                    android:layout_marginRight="4dp" android:textStyle="italic"/>
-                <com.google.android.gms.ads.AdView
-                    android:id="@+id/adView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    ads:adSize="SMART_BANNER"
-                    ads:adUnitId="ca-app-pub-2903856737482177/7395059449" />
-            </LinearLayout>
-        </FrameLayout>
-    </LinearLayout>
-
-</TabHost>
+    </android.support.design.widget.BottomNavigationView>
+</LinearLayout>

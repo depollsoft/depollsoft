@@ -13,7 +13,7 @@
         <LinearLayout
             android:id="@+id/tableRow1"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
+            android:layout_height="0sp"
             android:layout_weight="1"
             android:weightSum="4">
 
@@ -22,9 +22,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp">
+                android:alpha="0.8"
+                android:textSize="20sp">
             </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
@@ -32,9 +31,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp">
+                android:alpha="0.8"
+                android:textSize="20sp">
             </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
@@ -42,9 +40,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp">
+                android:alpha="0.8"
+                android:textSize="20sp">
             </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
@@ -52,120 +49,111 @@
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp">
+                android:alpha="0.8"
+                android:textSize="20sp">
             </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/tableRow2"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
+            android:layout_height="0sp"
             android:layout_weight="1"
             android:weightSum="4">
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton11"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
 
             <RadioButton
                 android:id="@+id/cToCButton"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:text="@string/CtoC"/>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton4"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/tableRow3"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
+            android:layout_height="0sp"
             android:layout_weight="1"
             android:weightSum="4">
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton10"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
 
             <RadioButton
                 android:id="@+id/fToFButton"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:text="@string/FtoF"/>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton5"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/tableRow4"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
+            android:layout_height="0sp"
             android:layout_weight="1"
             android:weightSum="4">
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton9"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton8"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton7"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
 
             <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                 android:id="@+id/pitchButton6"
-                android:layout_width="0dp"
+                android:layout_width="0sp"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textColor="#FFFFFF"
-                android:textSize="18dp"/>
+                android:alpha="0.8"
+                android:textSize="20sp"/>
         </LinearLayout>
     </LinearLayout>
 
