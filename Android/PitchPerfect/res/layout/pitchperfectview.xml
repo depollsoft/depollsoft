@@ -16,6 +16,7 @@
             android:id="@+id/imageView1"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
+            android:alpha="0.5"
             android:src="@drawable/panobackground">
         </depollsoft.lib.ui.ScaledBitmapView>
 
