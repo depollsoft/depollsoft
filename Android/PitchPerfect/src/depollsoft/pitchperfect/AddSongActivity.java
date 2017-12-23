@@ -2,6 +2,7 @@ package depollsoft.pitchperfect;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,7 +27,7 @@ import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.Key;
 import depollsoft.pitchperfect.lib.PitchedSong;
 
-public class AddSongActivity extends Activity {
+public class AddSongActivity extends AppCompatActivity {
   public static final String ID_EXTRA = "depollsoft.pitchperfect.AddSong.id";
   private boolean editing;
   private PitchedSong toEdit;
@@ -51,6 +52,8 @@ public class AddSongActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    this.setTitle("Edit Song");
 
     if (!ActionBars.hasActionBar(this)) {
       requestWindowFeature(Window.FEATURE_NO_TITLE);

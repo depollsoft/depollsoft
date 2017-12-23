@@ -1,47 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent">
 
     <depollsoft.lib.ui.ScaledBitmapView
         android:id="@+id/imageView1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:scaleType="matrix"
-        android:src="@drawable/panobackground" >
+        android:src="@drawable/panobackground">
     </depollsoft.lib.ui.ScaledBitmapView>
 
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
 
         <EditText
             android:id="@+id/songTitleEditText"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:hint="@string/SongTitle"
-            android:inputType="textCapWords|textAutoCorrect" >
+            android:inputType="textCapWords|textAutoCorrect">
         </EditText>
 
         <LinearLayout
             android:id="@+id/linearLayout2"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            >
 
             <TextView
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="@string/SongKey" >
+                android:text="@string/SongKey">
             </TextView>
 
             <Spinner
                 android:id="@+id/songKeySpinner"
                 android:layout_width="fill_parent"
-                android:layout_height="75dp" >
+                android:layout_height="75dp">
             </Spinner>
         </LinearLayout>
 
@@ -49,7 +52,7 @@
             android:id="@+id/linearLayout3"
             android:layout_width="fill_parent"
             android:layout_height="0dip"
-            android:layout_weight="1" >
+            android:layout_weight="1">
 
             <Button
                 android:id="@+id/cancelButton"
@@ -57,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_weight="1"
-                android:text="@string/Cancel" >
+                android:text="@string/Cancel">
             </Button>
 
             <Button
@@ -66,7 +69,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_weight="1"
-                android:text="@string/Ok" >
+                android:text="@string/Ok">
             </Button>
         </LinearLayout>
     </LinearLayout>

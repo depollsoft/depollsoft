@@ -3,18 +3,18 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/pitchpipe_item"
-        android:icon="@drawable/ic_tab_pitchpipe"
+        android:icon="@drawable/ic_pitchpipe"
         android:title="@string/quick_pitch"/>
     <item
         android:id="@+id/notes_item"
-        android:icon="@drawable/ic_tab_octaves"
+        android:icon="@drawable/ic_note"
         android:title="@string/notes"/>
     <item
         android:id="@+id/keys_item"
-        android:icon="@drawable/ic_tab_keys"
+        android:icon="@drawable/ic_keys"
         android:title="@string/keys"/>
     <item
         android:id="@+id/songs_item"
-        android:icon="@drawable/ic_tab_songs"
+        android:icon="@drawable/ic_songs"
         android:title="@string/songs"/>
 </menu>

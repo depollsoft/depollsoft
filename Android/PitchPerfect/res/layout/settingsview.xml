@@ -16,15 +16,6 @@
         android:layout_height="fill_parent"
         android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/settingsTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/Settings"
-            android:textSize="40dp"
-            android:textStyle="bold" >
-        </TextView>
-
         <ScrollView
             android:id="@+id/scrollView1"
             android:layout_width="fill_parent"
@@ -35,28 +26,30 @@
                 android:id="@+id/linearLayout3"
                 android:layout_width="fill_parent"
                 android:layout_height="0dip"
-                android:orientation="vertical" >
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:orientation="vertical">
 
                 <CheckBox
                     android:id="@+id/toggleNoteCheckBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/NotesToggle" >
+                    android:text="@string/NotesToggle">
                 </CheckBox>
 
                 <CheckBox
                     android:id="@+id/wakeLockCheckBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/WakeLock" />
+                    android:text="@string/WakeLock"/>
 
                 <Button
                     android:id="@+id/clearSongListButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/ClearSongList" >
+                    android:text="@string/ClearSongList">
                 </Button>
 
                 <TextView
@@ -64,36 +57,36 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/LogInInfo" />
+                    android:text="@string/LogInInfo"/>
 
                 <LinearLayout
                     android:id="@+id/loginButtonLayout"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp" >
+                    android:layout_marginBottom="16dp">
 
                     <Button
                         android:id="@+id/loginButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight=".5"
-                        android:text="@string/LogIn" />
+                        android:text="@string/LogIn"/>
 
                     <Button
                         android:id="@+id/logoutButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight=".5"
-                        android:text="@string/LogOut" />
+                        android:text="@string/LogOut"/>
                 </LinearLayout>
 
                 <Button
                     android:id="@+id/changelogButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/ViewChangelog" />
+                    android:text="@string/ViewChangelog"/>
 
-                <include layout="@layout/aboutfooter" />
+                <include layout="@layout/aboutfooter"/>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

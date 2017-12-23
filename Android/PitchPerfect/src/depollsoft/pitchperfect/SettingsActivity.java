@@ -1,12 +1,12 @@
 package depollsoft.pitchperfect;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,7 +25,7 @@ import com.parse.ParseUser;
 import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends AppCompatActivity {
   private boolean loggingIn;
 
   private Trackable loginTrackable = new Trackable();
@@ -65,9 +65,7 @@ public class SettingsActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (!ActionBars.hasActionBar(this)) {
-      this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-    }
+    this.setTitle("Pitch Perfect Settings");
 
     this.setContentView(R.layout.settingsview);
 
