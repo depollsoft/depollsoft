@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:ads="http://schemas.android.com/apk/res-auto"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
               android:id="@+id/mainLayout"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
@@ -12,13 +13,20 @@
         android:layout_height="0dip"
         android:layout_weight="1">
 
-        <depollsoft.lib.ui.ScaledBitmapView
+        <!--<depollsoft.lib.ui.ScaledBitmapView
             android:id="@+id/imageView1"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:alpha="0.5"
             android:src="@drawable/panobackground">
-        </depollsoft.lib.ui.ScaledBitmapView>
+        </depollsoft.lib.ui.ScaledBitmapView>-->
+        <depollsoft.pitchperfect.CropFillImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:alpha="0.2"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/ic_panobackground"/>
 
         <LinearLayout
             android:id="@+id/linearLayout1"
@@ -31,16 +39,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 ads:adSize="SMART_BANNER"
-                ads:adUnitId="ca-app-pub-2903856737482177/7395059449"/>
+                ads:adUnitId="ca-app-pub-2903856737482177/7395059449"
+                android:background="@color/dark"/>
             <TextView
                 android:id="@+id/removeAds"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
-                android:layout_marginRight="4dp"
                 android:text="@string/RemoveAds"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textStyle="italic"/>
+                android:textStyle="italic"
+                android:layout_marginEnd="4dp"/>
 
 
             <android.support.v4.view.ViewPager

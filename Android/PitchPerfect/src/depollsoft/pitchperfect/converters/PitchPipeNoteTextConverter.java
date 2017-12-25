@@ -21,14 +21,14 @@ public class PitchPipeNoteTextConverter extends ValueConverter {
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new CustomTypefaceSpan(
         "NoteHedz", CommonModel.getNoteHedz()), 0, 1,
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-    PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.2f), 0,
+    PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.5f), 0,
         1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     PitchPipeNoteTextConverter.sharpFlat.setSpan(new CustomTypefaceSpan(
         "NoteHedz", CommonModel.getNoteHedz()),
         PitchPipeNoteTextConverter.sharpFlat.length() - 1,
         PitchPipeNoteTextConverter.sharpFlat.length(),
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-    PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.2f),
+    PitchPipeNoteTextConverter.sharpFlat.setSpan(new RelativeSizeSpan(1.5f),
         PitchPipeNoteTextConverter.sharpFlat.length() - 1,
         PitchPipeNoteTextConverter.sharpFlat.length(),
         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

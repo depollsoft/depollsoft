@@ -66,5 +66,7 @@
     <string name="notes">Notes</string>
     <string name="keys">Keys</string>
     <string name="songs">Songs</string>
+    <string name="minor">Minor</string>
+    <string name="major">Major</string>
 
 </resources>
