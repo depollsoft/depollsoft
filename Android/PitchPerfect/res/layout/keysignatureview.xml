@@ -1,34 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent">
 
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <ToggleButton
-            android:id="@+id/majorMinorToggleButton"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:textOff="Minor"
-            android:textOn="Major" >
-        </ToggleButton>
+        android:orientation="vertical">
 
         <FrameLayout
             android:id="@+id/frameLayout1"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
+            android:layout_height="fill_parent">
 
             <ListView
                 android:id="@+id/majorKeySignatureListView"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:cacheColorHint="#00000000"
-                android:visibility="invisible" >
+                android:visibility="invisible">
             </ListView>
 
             <ListView
@@ -36,9 +27,18 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:cacheColorHint="#00000000"
-                android:visibility="invisible" >
+                android:visibility="invisible">
             </ListView>
         </FrameLayout>
+
+        <ToggleButton
+            android:id="@+id/majorMinorToggleButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:textOff="@string/minor"
+            android:textOn="@string/major">
+        </ToggleButton>
     </LinearLayout>
 
 </FrameLayout>
