@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
+import android.view.WindowManager
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
@@ -30,11 +31,11 @@ import depollsoft.lib.util.RunUtils
 class PitchPerfectActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigation: BottomNavigationView
-    private var wakeLock: PowerManager.WakeLock? = null
     private var preparingMenu: Boolean = false
 
     val adsShouldShow: Boolean
         get() {
+            return false
             if (SettingsModel.getAreAdsRemoved()) {
                 return false
             }
@@ -171,21 +172,8 @@ class PitchPerfectActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    override fun onPause() {
-        if (this.wakeLock != null) {
-            this.wakeLock!!.release()
-            this.wakeLock = null
-        }
-        super.onPause()
-    }
-
     override fun onResume() {
         super.onResume()
-        if (SettingsModel.getWakeLock()) {
-            this.wakeLock = (this.getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(
-                    PowerManager.SCREEN_DIM_WAKE_LOCK, "PitchPerfectActivity")
-            this.wakeLock!!.acquire()
-        }
 
         runOnUiThread(Runnable {
             if (handlingResult) {
@@ -194,6 +182,12 @@ class PitchPerfectActivity : AppCompatActivity() {
             }
             PitchPerfectApplication.startupRefreshFromParse()
         })
+
+        if (SettingsModel.getWakeLock()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -207,10 +201,6 @@ class PitchPerfectActivity : AppCompatActivity() {
             LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
             handlingResult = true
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
     }
 
     companion object {

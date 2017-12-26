@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment
 import android.view.*
 import android.view.View.OnClickListener
 import android.widget.Button
+import android.widget.ListView
 import com.bindroid.converters.AdapterConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
@@ -75,12 +76,21 @@ class SongListFragment : Fragment() {
         PitchPerfectActivity.handlingResult = true
     }
 
-    override fun onPause() {
-        super.onPause()
+    private fun stopPlaying() {
         for (song in this.model.songs)
             song.stop()
         if (ParseUser.getCurrentUser() != null) {
             SongsModel.get().saveAllToParse()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopPlaying()
+    }
+
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        stopPlaying()
     }
 }

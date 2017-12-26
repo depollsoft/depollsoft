@@ -11,6 +11,8 @@
 
         <TextView
             android:id="@+id/sorryText"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/NoSongsInList">
@@ -20,6 +22,8 @@
             android:id="@+id/songListView"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
+            android:paddingBottom="90dp"
+            android:clipToPadding="false"
             android:cacheColorHint="#00000000">
         </ListView>
 
