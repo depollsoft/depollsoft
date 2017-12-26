@@ -40,10 +40,18 @@ class NoteListFragment : Fragment() {
         return rootView
     }
 
-    override fun onPause() {
-        super.onPause()
+    private fun stopPlaying() {
         for (n in this.model.notes)
             n.stop()
     }
 
+    override fun onPause() {
+        super.onPause()
+        stopPlaying()
+    }
+
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        stopPlaying()
+    }
 }

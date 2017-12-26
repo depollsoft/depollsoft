@@ -3,42 +3,30 @@
              android:layout_width="fill_parent"
              android:layout_height="fill_parent">
 
-    <LinearLayout
-        android:id="@+id/linearLayout1"
+    <ListView
+        android:id="@+id/majorKeySignatureListView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical">
+        android:cacheColorHint="#00000000"
+        android:paddingBottom="90dp"
+        android:clipToPadding="false"
+        android:visibility="invisible">
+    </ListView>
 
-        <FrameLayout
-            android:id="@+id/frameLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+    <ListView
+        android:id="@+id/minorKeySignatureListView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:cacheColorHint="#00000000"
+        android:paddingBottom="90dp"
+        android:clipToPadding="false"
+        android:visibility="invisible">
+    </ListView>
 
-            <ListView
-                android:id="@+id/majorKeySignatureListView"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:cacheColorHint="#00000000"
-                android:visibility="invisible">
-            </ListView>
-
-            <ListView
-                android:id="@+id/minorKeySignatureListView"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:cacheColorHint="#00000000"
-                android:visibility="invisible">
-            </ListView>
-        </FrameLayout>
-
-        <ToggleButton
-            android:id="@+id/majorMinorToggleButton"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:textOff="@string/minor"
-            android:textOn="@string/major">
-        </ToggleButton>
-    </LinearLayout>
-
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/majorMinorFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"/>
 </FrameLayout>
