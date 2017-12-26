@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <string name="Copyright">© 2017</string>
     <string name="app_store">google</string>
     <string name="app_version">3.0.0</string>
     <string name="VersionString">Version 3.0.0</string>
