@@ -35,7 +35,6 @@ class PitchPerfectActivity : AppCompatActivity() {
 
     val adsShouldShow: Boolean
         get() {
-            return false
             if (SettingsModel.getAreAdsRemoved()) {
                 return false
             }
