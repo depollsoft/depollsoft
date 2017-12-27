@@ -23,6 +23,7 @@ class KeySignatureFragment : Fragment() {
     val model: KeySignatureModel by TrackableField(KeySignatureModel())
     private lateinit var majorView: ListView
     private lateinit var minorView: ListView
+    private var fab: FloatingActionButton? = null
 
 
     private fun centerList(list: ListView) {
@@ -69,8 +70,8 @@ class KeySignatureFragment : Fragment() {
         this.centerList(this.majorView)
         this.centerList(this.minorView)
 
-        val majorMinorFab = rootView.findViewById<FloatingActionButton>(R.id.majorMinorFab)
-        majorMinorFab.setOnClickListener {
+        fab = rootView.findViewById(R.id.majorMinorFab)
+        fab?.setOnClickListener {
             this.model.isMajor = !this.model.isMajor
             if (this@KeySignatureFragment.model.isMajor)
                 this@KeySignatureFragment.majorView.setSelection(this@KeySignatureFragment.minorView
@@ -83,6 +84,7 @@ class KeySignatureFragment : Fragment() {
             for (k in this@KeySignatureFragment.model.minorKeys)
                 k.note.stop()
         }
+        fab?.show()
 
         return rootView
     }
@@ -102,5 +104,10 @@ class KeySignatureFragment : Fragment() {
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         stopPlaying()
+        if (isVisibleToUser) {
+            fab?.show()
+        } else {
+            fab?.hide()
+        }
     }
 }
