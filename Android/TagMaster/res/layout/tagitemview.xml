@@ -183,7 +183,6 @@
                 android:text="@string/SheetMusicCheck"
                 android:textSize="12sp">
             </CheckBox>
-
             <CheckBox
                 android:id="@+id/learningTracksCheckBox"
                 android:layout_width="wrap_content"
