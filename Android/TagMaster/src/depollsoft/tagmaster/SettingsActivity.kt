@@ -79,11 +79,11 @@ class SettingsActivity : AppCompatActivity() {
             builder
                     .setMessage(
                             "Are you sure you want to clear your cache?  Cached sheet music and tracks will not be accessible until you are connected to the internet again.")
-                    .setPositiveButton("Yes") { dialog, which ->
+                    .setPositiveButton("Yes") { _, _ ->
                         SettingsModel.clearCache()
                         this@SettingsActivity.refreshCacheSize()
                         Toast.makeText(this@SettingsActivity, "Cache cleared.", Toast.LENGTH_SHORT).show()
-                    }.setNegativeButton("No") { dialog, which -> }.show()
+                    }.setNegativeButton("No") { _, _ -> }.show()
         })
 
         this.minDownloadSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
@@ -138,21 +138,21 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<View>(R.id.clearFavoritesButton).setOnClickListener(OnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
             builder.setMessage("Are you sure you want to clear your favorite tags list?")
-                    .setPositiveButton("Yes") { dialog, which ->
+                    .setPositiveButton("Yes") { _, _ ->
                         FavoritesModel.resetFavorites()
                         Toast.makeText(this@SettingsActivity, "Favorite tags cleared.", Toast.LENGTH_SHORT)
                                 .show()
-                    }.setNegativeButton("No") { dialog, which -> }.show()
+                    }.setNegativeButton("No") { _, _ -> }.show()
         })
         this.findViewById<View>(R.id.clearTeachableTags).setOnClickListener(OnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
             builder.setMessage("Are you sure you want to clear your teachable tags list?")
-                    .setPositiveButton("Yes") { dialog, which ->
+                    .setPositiveButton("Yes") { _, _ ->
                         TeachableTagsModel.resetTeachableTags()
                         Toast
                                 .makeText(this@SettingsActivity, "Teachable tags cleared.", Toast.LENGTH_SHORT)
                                 .show()
-                    }.setNegativeButton("No") { dialog, which -> }.show()
+                    }.setNegativeButton("No") { _, _ -> }.show()
         })
 
         UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true))

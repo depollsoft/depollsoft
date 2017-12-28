@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="depollsoft.tagmaster"
-          android:versionCode="42"
+          android:versionCode="43"
           android:versionName="@string/VersionNumber">
 
     <uses-permission android:name="android.permission.INTERNET">
@@ -41,7 +41,8 @@
         </activity>
         <activity
             android:name=".TagSearchActivity"
-            android:configChanges="keyboardHidden|orientation">
+            android:configChanges="keyboardHidden|orientation"
+            android:windowSoftInputMode="adjustResize">
         </activity>
         <activity
             android:name=".TagBrowserActivity"
