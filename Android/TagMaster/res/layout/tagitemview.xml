@@ -50,6 +50,37 @@
             android:layout_height="wrap_content">
 
             <LinearLayout
+                android:id="@+id/idContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_marginRight="10dp">
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="@string/IdColon"
+                    android:textSize="12sp">
+                </TextView>
+
+                <TextView
+                    android:id="@+id/idTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:linksClickable="false"
+                    android:longClickable="false"
+                    android:text="123"
+                    android:textSize="12sp">
+                </TextView>
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/ratingContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"

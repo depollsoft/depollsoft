@@ -92,7 +92,7 @@ class TagQueryFragment : Fragment() {
             val modelString = this.activity?.intent?.extras?.getString(QUERY_MODEL)
             this.model = JsonSerializer.deserialize(modelString) as QueryModel
         }
-        this.model!!.fetchResults(ThreadSwitchContext(this.activity))
+        this.model!!.refresh(ThreadSwitchContext(this.activity))
     }
 
     companion object {

@@ -37,7 +37,7 @@ class TagSearchActivity : AppCompatActivity() {
         UiBinder.bind(this, EditTextTextProperty(this.findViewById(R.id.searchTextBox) as EditText),
                 "Model.Query", BindingMode.TWO_WAY)
 
-        this.findViewById<View>(R.id.searchTextBox).setOnKeyListener(OnKeyListener { v, keyCode, event ->
+        this.findViewById<View>(R.id.searchTextBox).setOnKeyListener(OnKeyListener { _, _, event ->
             if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_ENTER) {
                 this@TagSearchActivity.search()
                 return@OnKeyListener true
@@ -45,7 +45,7 @@ class TagSearchActivity : AppCompatActivity() {
             false
         })
 
-        this.findViewById<EditText>(R.id.searchTextBox).setOnEditorActionListener { v, actionId, event ->
+        this.findViewById<EditText>(R.id.searchTextBox).setOnEditorActionListener { _, actionId, _ ->
             var handled = false
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 this@TagSearchActivity.search()

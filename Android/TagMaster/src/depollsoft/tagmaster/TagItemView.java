@@ -77,6 +77,8 @@ public class TagItemView extends LinearLayout implements BoundUi<Tag> {
     UiBinder
             .bind(this, R.id.akaTextView, "Visibility", "Tag.AlternativeTitle", BoolConverter.get());
 
+    UiBinder.bind(this, R.id.idTextView, "Text", "Tag.Id", new ToStringConverter());
+
     UiBinder.bind(this, R.id.ratingTextView, "Text", "Tag.Rating", new ToStringConverter(" %3.2f"));
     UiBinder.bind(this, R.id.ratingContainer, "Visibility", "Tag.Rating", BoolConverter.get());
 

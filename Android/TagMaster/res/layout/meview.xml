@@ -41,7 +41,10 @@
                     android:id="@+id/favoritesItemsControl"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1">
+                    android:layout_weight="1"
+                    android:animateLayoutChanges="true"
+                    android:divider="?attr/colorPrimary"
+                    android:showDividers="middle">
                 </depollsoft.lib.ui.ItemsControl>
 
                 <include layout="@layout/meviewfooter"/>

@@ -155,5 +155,6 @@
     <string name="latest">Latest</string>
     <string name="cache">Cache</string>
     <string name="classic">Classic</string>
+    <string name="IdColon">ID:</string>
 
 </resources>
