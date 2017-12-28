@@ -2,9 +2,13 @@
 <resources>
     <string name="Copyright">© 2017</string>
     <string name="app_store">google</string>
-    <string name="app_version">3.0.0</string>
-    <string name="VersionString">Version 3.0.0</string>
+    <string name="app_version">3.0.1</string>
+    <string name="VersionString">Version 3.0.1</string>
     <string name="Changelog"><![CDATA[Thank you for using Pitch Perfect!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 3.0.1</h5>
+                    -Minor visual tweaks.<br />
+            </p>
             <p>
                     <h5>Version 3.0.0</h5>
                     -Material design overhaul.<br />

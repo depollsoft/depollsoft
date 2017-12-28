@@ -24,6 +24,7 @@
             android:layout_height="fill_parent"
             android:paddingBottom="90dp"
             android:clipToPadding="false"
+            android:animateLayoutChanges="true"
             android:cacheColorHint="#00000000">
         </ListView>
 
