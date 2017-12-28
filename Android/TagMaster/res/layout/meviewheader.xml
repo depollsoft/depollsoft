@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
 
     <TextView
         android:id="@+id/browseButton"
@@ -11,7 +11,7 @@
         android:layout_marginLeft="20dp"
         android:text="@string/BrowseTags"
         android:textSize="24sp"
-        android:textStyle="bold" >
+        android:textStyle="bold">
     </TextView>
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_marginLeft="20dp"
         android:text="@string/TeachableTags"
         android:textSize="24sp"
-        android:textStyle="bold" >
+        android:textStyle="bold">
     </TextView>
 
     <TextView
@@ -32,7 +32,7 @@
         android:layout_marginLeft="20dp"
         android:text="@string/RandomTag"
         android:textSize="24sp"
-        android:textStyle="bold" >
+        android:textStyle="bold">
     </TextView>
 
     <TextView
@@ -45,7 +45,7 @@
         android:longClickable="false"
         android:text="@string/Favorites"
         android:textSize="24sp"
-        android:textStyle="bold" >
+        android:textStyle="bold">
     </TextView>
 
 </LinearLayout>
