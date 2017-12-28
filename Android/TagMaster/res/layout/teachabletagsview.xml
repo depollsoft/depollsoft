@@ -34,8 +34,11 @@
                 android:id="@+id/teachableTagsItemsControl"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:clipToPadding="false"
-                android:paddingTop="16dp">
+                android:divider="?attr/colorPrimary"
+                android:paddingTop="16dp"
+                android:showDividers="middle">
             </depollsoft.lib.ui.ItemsControl>
         </ScrollView>
     </LinearLayout>

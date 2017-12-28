@@ -54,6 +54,14 @@ public class QueryModel {
     this.setTags(new TrackableCollection<Tag>());
   }
 
+  public void refresh(ThreadSwitchContext context) {
+    this.mostRecentResult = new TagQueryResult();
+    this.mostRecentResult.setStart(0);
+    this.mostRecentResult.setCount(0);
+    this.getTags().clear();
+    fetchResults(context);
+  }
+
   public void fetchResults(final ThreadSwitchContext context) {
     if (this.getIsLoading())
       return;
