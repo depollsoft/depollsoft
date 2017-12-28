@@ -1,75 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:depollsoft="http://apps.depoll.com" >
+       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:scaleType="centerInside"
-        android:src="@drawable/screenbackground" >
+        app:srcCompat="@drawable/ic_barberpole">
     </ImageView>
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <LinearLayout
-            android:id="@+id/titleLayout"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-
-            <ImageView
-                android:id="@+id/imageView2"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginRight="8dp"
-                android:src="@mipmap/ic_launcher" >
-            </ImageView>
-
-            <depollsoft.lib.ui.FontTextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                depollsoft:fontAssetPath="fonts/wickhop-handwriting.ttf"
-                android:text="@string/app_name"
-                android:textSize="40sp"
-                android:textStyle="bold" >
-            </depollsoft.lib.ui.FontTextView>
-        </LinearLayout>
+        android:orientation="vertical">
 
         <ScrollView
             android:id="@+id/scrollView1"
             android:layout_width="fill_parent"
             android:layout_height="0dip"
-            android:layout_weight="1" >
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="56dp"
+            android:paddingTop="16dp">
 
             <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" >
+                android:orientation="vertical">
 
                 <depollsoft.tagmaster.MeHeaderView
                     android:id="@+id/meHeaderView1"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" >
+                    android:layout_weight="1">
                 </depollsoft.tagmaster.MeHeaderView>
 
                 <depollsoft.lib.ui.ItemsControl
                     android:id="@+id/favoritesItemsControl"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" >
+                    android:layout_weight="1">
                 </depollsoft.lib.ui.ItemsControl>
 
-                <include layout="@layout/meviewfooter" />
+                <include layout="@layout/meviewfooter"/>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/searchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:tint="#FFFFFF"
+        app:fabSize="normal"
+        app:srcCompat="@drawable/ic_search"/>
 
 </merge>

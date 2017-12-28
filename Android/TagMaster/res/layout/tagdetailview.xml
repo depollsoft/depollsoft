@@ -1,55 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/tabhost"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
 
-    <LinearLayout
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/frameLayout1"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical"
-        android:padding="5dp" >
+        android:layout_height="0dip"
+        android:layout_weight="1">
 
-        <TabWidget
-            android:id="@android:id/tabs"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/ic_barberpole">
+        </ImageView>
 
-        <LinearLayout
-            android:baselineAligned="false"
-            android:id="@+id/linearLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
-            android:orientation="vertical" >
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-            <FrameLayout
-                android:id="@+id/frameLayout1"
-                android:layout_width="fill_parent"
-                android:layout_height="0dip"
-                android:layout_weight="1" >
+        </android.support.v4.view.ViewPager>
+    </FrameLayout>
 
-                <ImageView
-                    android:id="@+id/imageView1"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/screenbackground" >
-                </ImageView>
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/tagdetailnavigation">
 
-                <FrameLayout
-                    android:id="@+id/tabContentHolder"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" >
-
-                    <FrameLayout
-                        android:id="@android:id/tabcontent"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent" >
-                    </FrameLayout>
-                </FrameLayout>
-            </FrameLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-</TabHost>
+    </android.support.design.widget.BottomNavigationView>
+</LinearLayout>

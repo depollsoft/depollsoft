@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
 
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="fill_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp">
 
         <TableLayout
             android:id="@+id/tableLayout1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:shrinkColumns="1"
-            android:stretchColumns="1" >
+            android:stretchColumns="1">
 
             <LinearLayout
                 android:id="@+id/linearLayout1"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" >
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/favoriteMarkerTextView"
@@ -29,7 +35,7 @@
                     android:layout_gravity="center_horizontal"
                     android:text="@string/FavoriteIndicator"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -39,7 +45,7 @@
                     android:layout_gravity="center_horizontal"
                     android:text="@string/TeachableIndicator"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -48,14 +54,14 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="24sp" >
+                    android:textSize="24sp">
                 </TextView>
 
                 <LinearLayout
                     android:id="@+id/akaLayout"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp" >
+                    android:layout_marginLeft="20dp">
 
                     <TextView
                         android:id="@+id/textView7"
@@ -64,7 +70,7 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:text="@string/aka"
-                        android:textSize="12sp" >
+                        android:textSize="12sp">
                     </TextView>
 
                     <TextView
@@ -75,7 +81,7 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:singleLine="false"
-                        android:textSize="12sp" >
+                        android:textSize="12sp">
                     </TextView>
                 </LinearLayout>
 
@@ -83,7 +89,7 @@
                     android:id="@+id/versionLayout"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp" >
+                    android:layout_marginLeft="20dp">
 
                     <TextView
                         android:id="@+id/textView8"
@@ -92,7 +98,7 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:text="@string/Version"
-                        android:textSize="12sp" >
+                        android:textSize="12sp">
                     </TextView>
 
                     <TextView
@@ -102,7 +108,7 @@
                         android:layout_marginLeft="5dp"
                         android:clickable="false"
                         android:longClickable="false"
-                        android:textSize="12sp" >
+                        android:textSize="12sp">
                     </TextView>
                 </LinearLayout>
             </LinearLayout>
@@ -111,7 +117,7 @@
                 android:id="@+id/ratingRow"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp" >
+                android:layout_marginTop="5dp">
 
                 <TextView
                     android:id="@+id/textView2"
@@ -123,13 +129,13 @@
                     android:longClickable="false"
                     android:text="@string/Rating"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <LinearLayout
                     android:id="@+id/linearLayout2"
                     android:layout_width="fill_parent"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <LinearLayout
                         android:id="@+id/linearLayout4"
@@ -137,7 +143,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        android:orientation="vertical" >
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/ratingTextView"
@@ -146,7 +152,7 @@
                             android:layout_gravity="center"
                             android:clickable="false"
                             android:longClickable="false"
-                            android:textSize="12sp" >
+                            android:textSize="12sp">
                         </TextView>
 
                         <ProgressBar
@@ -155,26 +161,29 @@
                             android:layout_width="fill_parent"
                             android:layout_height="15dp"
                             android:indeterminate="false"
-                            android:max="5000" >
+                            android:max="5000">
                         </ProgressBar>
                     </LinearLayout>
 
-                    <Button
+                    <ImageButton
                         android:id="@+id/rateButton"
+                        style="@style/Base.Widget.AppCompat.Button.Borderless"
                         android:layout_width="50dp"
                         android:layout_height="40dp"
                         android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="5dip"
                         android:layout_marginRight="5dip"
-                        android:text="@string/Rate"
-                        android:textSize="12sp" >
-                    </Button>
+                        android:textSize="12sp"
+                        android:tint="?attr/colorPrimary"
+                        app:srcCompat="@drawable/ic_rate">
+                    </ImageButton>
                 </LinearLayout>
             </TableRow>
 
             <TableRow
                 android:id="@+id/partsRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView3"
@@ -186,7 +195,7 @@
                     android:longClickable="false"
                     android:text="@string/Parts"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -196,14 +205,14 @@
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/tagTypeRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView1"
@@ -215,7 +224,7 @@
                     android:longClickable="false"
                     android:text="@string/Type"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -225,14 +234,14 @@
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/keyRow"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView4"
@@ -244,7 +253,7 @@
                     android:longClickable="false"
                     android:text="@string/Key"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <depollsoft.pitchperfect.lib.ui.PitchPipeButton
@@ -254,14 +263,15 @@
                     android:layout_marginLeft="-5dp"
                     android:layout_marginRight="5dp"
                     android:text="@string/Play"
-                    android:textSize="12sp" >
+                    android:textAllCaps="false"
+                    android:textSize="12sp">
                 </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
             </TableRow>
 
             <TableRow
                 android:id="@+id/classicTagRow"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView5"
@@ -273,7 +283,7 @@
                     android:longClickable="false"
                     android:text="@string/ClassicTag"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -282,7 +292,7 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
@@ -291,7 +301,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill"
-                android:orientation="vertical" >
+                android:orientation="vertical">
 
                 <depollsoft.lib.ui.Hyperlink
                     android:id="@+id/sheetMusicLink"
@@ -301,14 +311,14 @@
                     android:layout_margin="5dip"
                     android:text="@string/SheetMusic"
                     android:textSize="20sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </depollsoft.lib.ui.Hyperlink>
             </LinearLayout>
 
             <TableRow
                 android:id="@+id/lyricsRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/lyticsTitleTextView"
@@ -320,7 +330,7 @@
                     android:longClickable="false"
                     android:text="@string/Lyrics"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -330,14 +340,14 @@
                     android:layout_gravity="fill"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/notesRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView6"
@@ -349,7 +359,7 @@
                     android:longClickable="false"
                     android:text="@string/Notes"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -359,7 +369,7 @@
                     android:layout_gravity="fill"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
         </TableLayout>

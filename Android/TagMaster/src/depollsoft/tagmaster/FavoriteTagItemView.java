@@ -81,7 +81,6 @@ public class FavoriteTagItemView extends FrameLayout implements BoundUi<Integer>
     });
 
     this.regularView = (TagItemView) this.findViewById(R.id.tagItemView);
-    this.regularView.setHideFavoritesMarker(true);
 
     UiBinder.bind(this, R.id.loadingBar, "Visibility", "Tag", BoolConverter.get(true));
     UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag", BoolConverter.get());

@@ -1,48 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:scaleType="centerInside"
-        android:src="@drawable/screenbackground" >
+        app:srcCompat="@drawable/ic_barberpole">
     </ImageView>
 
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <TextView
-            android:id="@+id/teachableTagTitleTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/TeachableTags"
-            android:textSize="30sp"
-            android:textStyle="bold" >
-        </TextView>
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/noTeachableTagsTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/NoTeachableTags"
-            android:textSize="12sp" >
+            android:textSize="12sp">
         </TextView>
 
         <ScrollView
             android:id="@+id/scrollView1"
             android:layout_width="fill_parent"
             android:layout_height="0dip"
-            android:layout_weight="1" >
+            android:layout_weight="1">
 
             <depollsoft.lib.ui.ItemsControl
                 android:id="@+id/teachableTagsItemsControl"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingTop="16dp">
             </depollsoft.lib.ui.ItemsControl>
         </ScrollView>
     </LinearLayout>

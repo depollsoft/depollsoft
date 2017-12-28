@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:scaleType="centerInside"
-        android:src="@drawable/screenbackground" >
+        app:srcCompat="@drawable/ic_barberpole">
     </ImageView>
 
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/linearLayout1"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content">
 
             <EditText
                 android:id="@+id/searchTextBox"
@@ -26,16 +27,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="@string/SearchBoxHint"
-                android:maxLines="1"
+                android:imeOptions="actionSearch"
                 android:inputType="text"
-                android:imeOptions="actionSearch" >
+                android:maxLines="1">
             </EditText>
 
             <ImageButton
                 android:id="@+id/searchButton"
+                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_btn_search" >
+                android:src="@drawable/ic_search"
+                android:tint="?attr/colorPrimary">
             </ImageButton>
         </LinearLayout>
 
@@ -47,23 +50,23 @@
             android:layout_marginTop="10dp"
             android:text="@string/SearchOptions"
             android:textSize="24sp"
-            android:textStyle="bold" >
+            android:textStyle="bold">
         </TextView>
 
         <ScrollView
             android:id="@+id/scrollView1"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content">
 
             <TableLayout
                 android:id="@+id/tableLayout1"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TableRow
                     android:id="@+id/tableRow1"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/textView1"
@@ -73,7 +76,7 @@
                         android:layout_marginRight="8dp"
                         android:text="@string/SortBy"
                         android:textSize="12sp"
-                        android:textStyle="bold" >
+                        android:textStyle="bold">
                     </TextView>
 
                     <Spinner
@@ -81,14 +84,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:entries="@array/SortByChoices" >
+                        android:entries="@array/SortByChoices">
                     </Spinner>
                 </TableRow>
 
                 <TableRow
                     android:id="@+id/TableRow04"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/TextView04"
@@ -98,7 +101,7 @@
                         android:layout_marginRight="8dp"
                         android:text="@string/SheetMusicSentence"
                         android:textSize="12sp"
-                        android:textStyle="bold" >
+                        android:textStyle="bold">
                     </TextView>
 
                     <Spinner
@@ -106,14 +109,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:entries="@array/SheetMusicChoices" >
+                        android:entries="@array/SheetMusicChoices">
                     </Spinner>
                 </TableRow>
 
                 <TableRow
                     android:id="@+id/TableRow03"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/TextView03"
@@ -123,7 +126,7 @@
                         android:layout_marginRight="8dp"
                         android:text="@string/LearningTracks"
                         android:textSize="12sp"
-                        android:textStyle="bold" >
+                        android:textStyle="bold">
                     </TextView>
 
                     <Spinner
@@ -131,14 +134,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:entries="@array/LearningTracksChoices" >
+                        android:entries="@array/LearningTracksChoices">
                     </Spinner>
                 </TableRow>
 
                 <TableRow
                     android:id="@+id/TableRow02"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/TextView02"
@@ -148,7 +151,7 @@
                         android:layout_marginRight="8dp"
                         android:text="@string/Parts"
                         android:textSize="12sp"
-                        android:textStyle="bold" >
+                        android:textStyle="bold">
                     </TextView>
 
                     <Spinner
@@ -156,14 +159,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:entries="@array/PartsChoices" >
+                        android:entries="@array/PartsChoices">
                     </Spinner>
                 </TableRow>
 
                 <TableRow
                     android:id="@+id/TableRow01"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
                     <TextView
                         android:id="@+id/TextView01"
@@ -173,7 +176,7 @@
                         android:layout_marginRight="8dp"
                         android:text="@string/TagCollectionSentence"
                         android:textSize="12sp"
-                        android:textStyle="bold" >
+                        android:textStyle="bold">
                     </TextView>
 
                     <Spinner
@@ -181,7 +184,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:entries="@array/TagCollectionChoices" >
+                        android:entries="@array/TagCollectionChoices">
                     </Spinner>
                 </TableRow>
             </TableLayout>

@@ -1,39 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+              android:layout_width="wrap_content"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
 
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="fill_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp">
 
         <TableLayout
             android:id="@+id/tableLayout1"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:shrinkColumns="1"
-            android:stretchColumns="1" >
+            android:stretchColumns="1">
 
-            <LinearLayout
-                android:id="@+id/linearLayout1"
-                android:layout_width="fill_parent"
+            <TextView
+                android:id="@+id/titleTextView"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" >
-
-                <TextView
-                    android:id="@+id/titleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="24sp" >
-                </TextView>
-            </LinearLayout>
+                android:layout_marginBottom="16dp"
+                android:textSize="24sp">
+            </TextView>
 
             <TableRow
                 android:id="@+id/tagIdRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView3"
@@ -43,7 +42,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/TagId"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -51,14 +50,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/lastRefreshedRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView1"
@@ -68,7 +67,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/LastRefreshed"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -76,14 +75,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/downloadsRow"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView4"
@@ -93,21 +92,21 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/Downloads"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
                     android:id="@+id/downloadsTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/linkHyperlinkRow"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView5"
@@ -117,7 +116,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/Link"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <depollsoft.lib.ui.Hyperlink
@@ -125,14 +124,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/BarbershopTagsCom"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
             <TableRow
                 android:id="@+id/postedByRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView6"
@@ -142,7 +141,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/PostedBy"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <depollsoft.lib.ui.Hyperlink
@@ -150,14 +149,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
             <TableRow
                 android:id="@+id/postedRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/postedTitleTextView"
@@ -167,7 +166,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/Posted"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -175,14 +174,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/arrangedByRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/arrangedByTitleTextView"
@@ -192,7 +191,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/ArrangedBy"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <depollsoft.lib.ui.Hyperlink
@@ -200,14 +199,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
             <TableRow
                 android:id="@+id/yearArrangedRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/yearArrangedTitleTextView"
@@ -217,7 +216,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/YearArranged"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -225,14 +224,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/sungByRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/sungByTitleTextView"
@@ -242,7 +241,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/SungBy"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <depollsoft.lib.ui.Hyperlink
@@ -250,14 +249,14 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </depollsoft.lib.ui.Hyperlink>
             </TableRow>
 
             <TableRow
                 android:id="@+id/yearSungRow"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content" >
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/yearSungTitleTextView"
@@ -267,7 +266,7 @@
                     android:layout_marginRight="5dip"
                     android:text="@string/YearSung"
                     android:textSize="12sp"
-                    android:textStyle="bold" >
+                    android:textStyle="bold">
                 </TextView>
 
                 <TextView
@@ -275,7 +274,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
-                    android:textSize="12sp" >
+                    android:textSize="12sp">
                 </TextView>
             </TableRow>
         </TableLayout>

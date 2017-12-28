@@ -1,46 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/addFavoriteMenuItem"
-        android:icon="@drawable/ic_menu_star"
-        android:title="@string/AddFavorite">
+        android:icon="@drawable/ic_favorite_border"
+        android:title="@string/AddFavorite"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/removeFavoriteMenuItem"
-        android:icon="@drawable/ic_menu_revert"
-        android:title="@string/RemoveFavorite">
+        android:icon="@drawable/ic_favorite"
+        android:title="@string/RemoveFavorite"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/addTeachableTagMenuItem"
-        android:icon="@drawable/ic_menu_allfriends"
-        android:title="@string/AddTeachableTag">
+        android:icon="@drawable/ic_people_border"
+        android:title="@string/AddTeachableTag"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/removeTeachableTagMenuItem"
-        android:icon="@drawable/ic_menu_revert"
-        android:title="@string/RemoveTeachableTag">
+        android:icon="@drawable/ic_people"
+        android:title="@string/RemoveTeachableTag"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/refreshMenuItem"
-        android:icon="@drawable/ic_menu_refresh"
-        android:title="@string/RefreshTag">
+        android:icon="@drawable/ic_refresh"
+        android:title="@string/RefreshTag"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/emailMenuItem"
-        android:icon="@drawable/ic_menu_compose"
-        android:title="@string/EmailTag">
+        android:icon="@drawable/ic_email"
+        android:title="@string/EmailTag"
+        app:showAsAction="ifRoom">
     </item>
 
     <item
         android:id="@+id/smsMenuItem"
-        android:icon="@drawable/ic_menu_start_conversation"
-        android:title="@string/SmsTag">
+        android:icon="@drawable/ic_sms"
+        android:title="@string/SmsTag"
+        app:showAsAction="ifRoom">
     </item>
 
 </menu>

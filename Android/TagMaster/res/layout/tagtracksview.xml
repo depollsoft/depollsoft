@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/trackNotesLayout"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp">
 
         <TextView
             android:id="@+id/textView1"
@@ -16,7 +19,7 @@
             android:maxWidth="75dp"
             android:text="@string/RecordingNotes"
             android:textSize="12sp"
-            android:textStyle="bold" >
+            android:textStyle="bold">
         </TextView>
 
         <TextView
@@ -24,95 +27,106 @@
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textSize="12sp" >
+            android:textSize="12sp">
         </TextView>
     </LinearLayout>
 
     <depollsoft.tagmaster.MediaPlayerView
         android:id="@+id/mediaPlayer"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp"/>
 
     <TextView
         android:id="@+id/sorryTextView"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp"
         android:text="@string/SorryNoTracks"
-        android:textSize="12sp" >
+        android:textSize="12sp">
     </TextView>
 
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="fill_parent"
         android:layout_height="0dip"
-        android:layout_weight="1" >
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp">
 
         <RadioGroup
             android:id="@+id/partsRadioGroup"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content">
 
             <RadioButton
                 android:id="@+id/allPartsButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/AllParts" >
+                android:text="@string/AllParts">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/tenorButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Tenor" >
+                android:text="@string/Tenor">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/leadButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Lead" >
+                android:text="@string/Lead">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/bariButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Baritone" >
+                android:text="@string/Baritone">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/bassButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Bass" >
+                android:text="@string/Bass">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/other1Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Other1" >
+                android:text="@string/Other1">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/other2Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Other2" >
+                android:text="@string/Other2">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/other3Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Other3" >
+                android:text="@string/Other3">
             </RadioButton>
 
             <RadioButton
                 android:id="@+id/other4Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/Other4" >
+                android:text="@string/Other4">
             </RadioButton>
         </RadioGroup>
     </ScrollView>

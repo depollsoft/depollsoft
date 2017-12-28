@@ -1,4 +1,4 @@
-include ':PitchPerfect', ':PitchPerfectWear'
+include ':PitchPerfect', ':PitchPerfectWear', ':depollsoft.lib.kotlin'
 include ':PitchPerfectLicense'
 include ':TagMaster'
 include ':Bindroid:BindroidTest'
