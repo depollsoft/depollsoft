@@ -166,7 +166,7 @@ public class MediaPlayerView extends LinearLayout {
         } else {
           MediaPlayerView.this.rlChangedSinceLastPlay = false;
           final ProgressDialog dialog = new ProgressDialog(
-                  ((TagTracksActivity) MediaPlayerView.this.getContext()).getParent());
+                  MediaPlayerView.this.getContext());
           dialog.setMessage("Loading track...");
           dialog.show();
           MediaPlayerView.this.cache.loadContentPublic(

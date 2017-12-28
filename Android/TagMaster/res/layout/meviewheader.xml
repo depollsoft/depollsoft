@@ -5,16 +5,6 @@
     android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/searchButton"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="@string/Search"
-        android:textSize="24sp"
-        android:textStyle="bold" >
-    </TextView>
-
-    <TextView
         android:id="@+id/browseButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

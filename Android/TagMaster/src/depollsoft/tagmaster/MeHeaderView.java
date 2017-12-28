@@ -113,21 +113,11 @@ public class MeHeaderView extends LinearLayout {
         }
       });
 
-      View searchButton = this.findViewById(R.id.searchButton);
-      searchButton.setOnClickListener(new OnClickListener() {
-
-        public void onClick(View v) {
-          Intent i = new Intent(MeHeaderView.this.getContext(), TagSearchActivity.class);
-          MeHeaderView.this.getContext().startActivity(i);
-        }
-
-      });
-
       View browseButton = this.findViewById(R.id.browseButton);
       browseButton.setOnClickListener(new OnClickListener() {
 
         public void onClick(View v) {
-          Intent i = new Intent(MeHeaderView.this.getContext(), TagBrowser.class);
+          Intent i = new Intent(MeHeaderView.this.getContext(), TagBrowserActivity.class);
           MeHeaderView.this.getContext().startActivity(i);
         }
 

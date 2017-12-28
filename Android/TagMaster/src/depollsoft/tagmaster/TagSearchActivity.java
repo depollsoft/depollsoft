@@ -180,7 +180,7 @@ public class TagSearchActivity extends Activity {
 
   private void search() {
     Intent searchResultsIntent = new Intent(TagSearchActivity.this, TagSearchResultsActivity.class);
-    searchResultsIntent.putExtra(TagQueryActivity.QUERY_MODEL,
+    searchResultsIntent.putExtra(TagQueryFragment.QUERY_MODEL,
         JsonSerializer.serialize(TagSearchActivity.this.getModel()).toString());
     TagSearchActivity.this.startActivity(searchResultsIntent);
   }

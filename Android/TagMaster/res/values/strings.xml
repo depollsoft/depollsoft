@@ -148,5 +148,12 @@
     <string name="LogInInfo">Log in using Facebook to back up and synchronize your tag lists.</string>
     <string name="LogInTitle">Log in</string>
     <string name="ViewChangelog">View Changelog</string>
+    <string name="summary">Summary</string>
+    <string name="details">Details</string>
+    <string name="tracks">Tracks</string>
+    <string name="videos">Videos</string>
+    <string name="latest">Latest</string>
+    <string name="cache">Cache</string>
+    <string name="classic">Classic</string>
 
 </resources>
