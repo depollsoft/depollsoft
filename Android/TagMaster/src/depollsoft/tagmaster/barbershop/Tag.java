@@ -543,8 +543,12 @@ public class Tag {
   }
 
   public String getTagUri() {
+    return getTagUri(getId());
+  }
+
+  public static String getTagUri(int tagId) {
     return String.format("http://tags.depoll.com/tag.php?id=%s",
-            this.getId());
+            tagId);
   }
 
   public String getTeacher() {
