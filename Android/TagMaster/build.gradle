@@ -29,7 +29,7 @@ dependencies {
     compile 'com.parse:parse-android:1.13.1'
     compile 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
     compile 'com.parse.bolts:bolts-tasks:1.4.0'
-    compile 'com.facebook.android:facebook-android-sdk:4.15.0'
+    implementation 'com.facebook.android:facebook-login:4.29.0'
     compile('com.crashlytics.sdk.android:crashlytics:2.8.0@aar') {
         transitive = true;
     }
