@@ -16,6 +16,7 @@ import android.widget.Toast
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
+import com.bindroid.trackable.TrackableBoolean
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.Function
 import com.bindroid.utils.Property
@@ -28,8 +29,9 @@ import java.util.*
 class TagSummaryFragment : Fragment() {
     val parent: TagDetailActivity
         get() = this.activity as TagDetailActivity
+    private val _canRate = TrackableBoolean(true)
     val canRate: Boolean
-        get() = !RatingsModel.isRated(this.parent.tag!!.id)
+        get() = _canRate.get() && !RatingsModel.isRated(this.parent.tag!!.id)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
@@ -165,6 +167,7 @@ class TagSummaryFragment : Fragment() {
                         }
                     } else {
                         RatingsModel.addRating(tag.id)
+                        _canRate.set(false)
                         pd.dismiss()
                     }
                     null

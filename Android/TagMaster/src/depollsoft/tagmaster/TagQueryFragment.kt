@@ -11,7 +11,6 @@ import com.bindroid.converters.AdapterConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
 import com.bindroid.ui.UiBinder
-import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.ui.ThreadSwitchContext
 
@@ -24,6 +23,9 @@ class TagQueryFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setHasOptionsMenu(true)
+        this.retainInstance = true
+
+        this.refresh()
     }
 
 
@@ -58,8 +60,6 @@ class TagQueryFragment : Fragment() {
 
         UiBinder.bind(rootView, R.id.statusTextView, "Text", this, "Model.StatusText")
         UiBinder.bind(rootView, R.id.statusTextView, "Visibility", this, "Model.StatusText", BoolConverter.get())
-
-        this.refresh()
 
         return rootView
     }

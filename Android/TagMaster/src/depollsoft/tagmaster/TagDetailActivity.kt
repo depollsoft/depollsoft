@@ -133,14 +133,6 @@ class TagDetailActivity : AppCompatActivity() {
 
         bottomNavigation.attachToViewPager(viewPager)
 
-        /*
-
-        val tracksIntent = Intent(this, TagTracksActivity::class.java)
-        detailsIntent.putExtras(this.intent.extras!!)
-        this.tabHost!!.addTab(this.tabHost!!.newTabSpec("tracks").setContent(tracksIntent)
-                .setIndicator("Tracks"))
-                */
-
         UiBinder.bind(ReflectedProperty(this, "Title"), ReflectedProperty(this, "Tag.Title"),
                 BindingMode.ONE_WAY)
 
