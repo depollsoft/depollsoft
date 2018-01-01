@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
@@ -87,31 +88,31 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         this.minDownloadSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selected = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selected = arg0?.selectedItem as String
                 var amount = 0
                 if (selected != "Any")
                     amount = Integer.parseInt(selected)
                 SettingsModel.setMinimumRandomDownloads(amount)
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
         this.minRatingSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selected = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selected = arg0?.selectedItem as String
                 var amount = 0.0
                 if (selected != "Any")
                     amount = java.lang.Double.parseDouble(selected)
                 SettingsModel.setMinimumRandomTagRating(amount)
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
 
         this.learningTrackSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selected = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selected = arg0?.selectedItem as String
                 var result: Boolean? = null
                 if (selected == "Yes")
                     result = true
@@ -120,11 +121,11 @@ class SettingsActivity : AppCompatActivity() {
                 SettingsModel.setRandomLearningTracksFilter(result)
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
         this.sheetMusicSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selected = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selected = arg0?.selectedItem as String
                 var result: Boolean? = null
                 if (selected == "Yes")
                     result = true
@@ -133,7 +134,7 @@ class SettingsActivity : AppCompatActivity() {
                 SettingsModel.setRandomSheetMusicFilter(result)
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
         this.findViewById<View>(R.id.clearFavoritesButton).setOnClickListener(OnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
@@ -195,14 +196,15 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         this.findViewById<View>(R.id.logoutButton).setOnClickListener(OnClickListener {
-            val logOutTask = object : AsyncTask<Void, Void, Void>() {
+            val logOutTask = @SuppressLint("StaticFieldLeak")
+            object : AsyncTask<Void?, Void?, Void?>() {
 
-                override fun doInBackground(vararg params: Void): Void? {
+                override fun doInBackground(vararg params: Void?): Void? {
                     ParseUser.logOut()
                     return null
                 }
 
-                override fun onPostExecute(result: Void) {
+                override fun onPostExecute(result: Void?) {
                     super.onPostExecute(result)
                     this@SettingsActivity.loginTrackable.updateTrackers()
                 }
