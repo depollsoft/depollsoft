@@ -58,49 +58,48 @@ class TagSearchActivity : AppCompatActivity() {
 
         val sheetMusicSpinner = this.findViewById(R.id.sheetMusicSpinner) as Spinner
         sheetMusicSpinner.onItemSelectedListener = object : OnItemSelectedListener {
-
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selectedValue = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selectedValue = arg0?.selectedItem as String
                 if (selectedValue == "Not important")
                     this@TagSearchActivity.model.hasSheetMusic = null
                 else this@TagSearchActivity.model.hasSheetMusic = selectedValue == "Yes"
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
         }
 
         val learningTracksSpinner = this.findViewById(R.id.learningTracksSpinner) as Spinner
         learningTracksSpinner.onItemSelectedListener = object : OnItemSelectedListener {
 
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selectedValue = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selectedValue = arg0?.selectedItem as String
                 if (selectedValue == "Not important")
                     this@TagSearchActivity.model.hasLearningTracks = null
                 else this@TagSearchActivity.model.hasLearningTracks = selectedValue == "Yes"
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
 
         val partsSpinner = this.findViewById(R.id.partsSpinner) as Spinner
         partsSpinner.onItemSelectedListener = object : OnItemSelectedListener {
 
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selectedValue = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selectedValue = arg0?.selectedItem as String
                 if (selectedValue == "Any")
                     this@TagSearchActivity.model.parts = null
                 else
                     this@TagSearchActivity.model.parts = Integer.parseInt(selectedValue)
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
 
         val tagCollectionSpinner = this.findViewById(R.id.tagCollectionSpinner) as Spinner
         tagCollectionSpinner.onItemSelectedListener = object : OnItemSelectedListener {
 
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selectedValue = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selectedValue = arg0?.selectedItem as String
                 if (selectedValue == "Any")
                     this@TagSearchActivity.model.collection = null
                 else if (selectedValue == "Classic Tags")
@@ -109,13 +108,13 @@ class TagSearchActivity : AppCompatActivity() {
                     this@TagSearchActivity.model.collection = TagCollection.EasyTags
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
 
         val sortyBySpinner = this.findViewById(R.id.sortBySpinner) as Spinner
         sortyBySpinner.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>, arg1: View, arg2: Int, arg3: Long) {
-                val selectedValue = arg0.selectedItem as String
+            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
+                val selectedValue = arg0?.selectedItem as String
                 if (selectedValue == "Title")
                     this@TagSearchActivity.model.sortBy = TagSortOptions.Title
                 else if (selectedValue == "Downloads")
@@ -128,14 +127,14 @@ class TagSearchActivity : AppCompatActivity() {
                     this@TagSearchActivity.model.sortBy = TagSortOptions.Classic
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>) {}
+            override fun onNothingSelected(arg0: AdapterView<*>?) {}
         }
 
         supportActionBar?.title = "Tag Master".makeTitleString(this)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if (item != null && item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
             val intent = Intent(this, MeActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             this.startActivity(intent)
