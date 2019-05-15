@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="192" height="192" id="svg2" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <defs id="defs4">
+    <filter style="color-interpolation-filters:sRGB;" id="filter3845">
+      <feFlood flood-opacity="0.2" flood-color="rgb(0,0,0)" result="flood" id="feFlood3847"/>
+      <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" id="feComposite3849"/>
+      <feGaussianBlur in="composite" stdDeviation="6" result="blur" id="feGaussianBlur3851"/>
+      <feOffset dx="0" dy="6" result="offset" id="feOffset3853"/>
+      <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" id="feComposite3855"/>
+    </filter>
+    <radialGradient id="radialGradient3793" cx="57.67857" cy="80.035713" r="120.89286" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:#ffffff;stop-opacity:0.10196079;" offset="0" id="stop3789"/>
+      <stop id="stop3797" offset="0.66" style="stop-color:#ffffff;stop-opacity:0;"/>
+      <stop style="stop-color:#ffffff;stop-opacity:0;" offset="1" id="stop3791"/>
+    </radialGradient>
+    <clipPath clipPathUnits="userSpaceOnUse" id="clipPath3864">
+      <path transform="matrix(0.14472559,0,0,0.14472559,55.301314,43.559052)" d="m 817.14285,669.50507 a 382.85715,382.85715 0 1 1 -765.714292,0 382.85715,382.85715 0 1 1 765.714292,0 z" id="path3866" style="fill:#474747;fill-opacity:1;display:inline;filter:url(#filter3845)"/>
+    </clipPath>
+    <filter style="color-interpolation-filters:sRGB;" id="filter3976">
+      <feFlood flood-opacity="0.2" flood-color="rgb(0,0,0)" result="flood" id="feFlood3978"/>
+      <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" id="feComposite3980"/>
+      <feGaussianBlur in="composite" stdDeviation="6" result="blur" id="feGaussianBlur3982"/>
+      <feOffset dx="0" dy="6" result="offset" id="feOffset3984"/>
+      <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" id="feComposite3986"/>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="192" height="192" style="fill: rgb(71, 71, 71);"/>
+  <g id="circle" transform="translate(2.8571557,-717.50507)" style="display:inline" visibility="hidden">
+    <path style="fill:#474747;fill-opacity:1;filter:url(#filter3845)" id="path2985" d="m 817.14285,669.50507 a 382.85715,382.85715 0 1 1 -765.714292,0 382.85715,382.85715 0 1 1 765.714292,0 z" transform="matrix(0.22985074,0,0,0.22985074,-6.6326749,659.57346)"/>
+  </g>
+  <g id="circle-gradient" style="display:inline" visibility="visible">
+    <path style="fill: url(#radialGradient3793); stroke: none; fill-opacity: 0;" id="path3785" d="m 178.57143,80.035713 a 120.89286,120.89286 0 1 1 -241.785721,0 120.89286,120.89286 0 1 1 241.785721,0 z" transform="matrix(1.5881831,0,0,1.5881831,-91.604132,-127.11136)" clip-path="url(#clipPath3864)"/>
+  </g>
+  <g id="notes" transform="translate(0,-573.71429)" style="display:inline">
+    <text style="font-size: 30.72px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; line-height: 125%; letter-spacing: 0px; word-spacing: 0px; fill: rgb(255, 255, 255); fill-opacity: 1; stroke: none; font-family: MusiQwik; filter: url(#filter3976); white-space: pre;" x="36" y="705.42627" id="text2990"><tspan id="tspan2992" x="36" y="705.42627" style="font-size:96px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:MusiQwikB;-inkscape-font-specification:MusiQwikB;">&amp;«</tspan></text>
+  </g>
+</svg>
