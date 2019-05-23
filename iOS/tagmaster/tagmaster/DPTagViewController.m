@@ -70,7 +70,7 @@
     [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
-            DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
+            DPTag *t = [DPTag loadTagById:self->tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
                 self.tag = t;
                 [self.busyIndicator decrementBusyCount];

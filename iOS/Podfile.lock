@@ -79,6 +79,7 @@ PODS:
     - Parse/Core
 
 DEPENDENCIES:
+  - Bolts
   - Crashlytics
   - Fabric
   - FBSDKCoreKit (~> 4.44)
@@ -120,6 +121,6 @@ SPEC CHECKSUMS:
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
   Parse: 3b31a3dd1777b07ee7f0caee32fafbff544483a5
 
-PODFILE CHECKSUM: 852c1534bc7a525b018c5dff6683460bb86e9d9c
+PODFILE CHECKSUM: 21a7537ddae1e1b37af0ad91c14b5fdd66a02533
 
 COCOAPODS: 1.7.0
