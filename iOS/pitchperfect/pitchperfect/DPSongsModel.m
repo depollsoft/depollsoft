@@ -57,16 +57,16 @@
     [query whereKey:@"owner" equalTo:[PFUser currentUser]];
     @try {
         [query getFirstObjectInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-            refreshing = NO;
+            self->refreshing = NO;
             if (error) {
                 return;
             }
             if (![self lastChangedTime] || [object.updatedAt compare:[self lastChangedTime]] > 0) {
                 [self fromParseObject:object];
-            } else if (refreshPostponedSave) {
+            } else if (self->refreshPostponedSave) {
                 [self saveAllToParse];
             }
-            refreshPostponedSave = NO;
+            self->refreshPostponedSave = NO;
         }];
     }
     @catch (NSException *exception) {
@@ -108,11 +108,11 @@
     if (immediately) {
         saving = YES;
         [[self toParseObject] saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-            saving = false;
-            if (postponedSave) {
+            self->saving = false;
+            if (self->postponedSave) {
                 [self saveAllToParse:NO];
             }
-            postponedSave = NO;
+            self->postponedSave = NO;
         }];
     } else if (!serialized || serialized.updatedAt || [[self lastChangedTime] compare:serialized.updatedAt] > 0) {
         [[self toParseObject] saveEventually];

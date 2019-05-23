@@ -1,0 +1,26 @@
+workspace 'iOS'
+
+platform :ios, '8.0'
+
+project 'depolllib/depolllib.xcodeproj'
+
+target 'tagmaster' do
+    project 'tagmaster/tagmaster.xcodeproj'
+    pod 'Parse'
+    pod 'Parse/FacebookUtils'
+    pod 'FBSDKCoreKit', '~> 4.44'
+    pod 'Firebase/Analytics'
+    pod 'Fabric'
+    pod 'Crashlytics'
+end
+
+target 'pitchperfect' do
+    project 'pitchperfect/pitchperfect.xcodeproj'
+    pod 'Parse'
+    pod 'Parse/FacebookUtils'
+    pod 'FBSDKCoreKit', '~> 4.44'
+    pod 'Firebase/Analytics'
+    pod 'Firebase/AdMob'
+    pod 'Fabric'
+    pod 'Crashlytics'
+end

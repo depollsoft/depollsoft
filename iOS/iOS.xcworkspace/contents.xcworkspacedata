@@ -11,9 +11,6 @@
       location = "group:tagmaster/tagmaster.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:pitchperfect/Pods/Pods.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:tagmaster/Pods/Pods.xcodeproj">
+      location = "group:Pods/Pods.xcodeproj">
    </FileRef>
 </Workspace>

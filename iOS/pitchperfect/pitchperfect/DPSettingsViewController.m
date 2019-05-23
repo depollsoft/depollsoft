@@ -18,7 +18,7 @@
 #import "DPSongsModel.h"
 #import "DPAppDelegate.h"
 #import <Parse/Parse.h>
-#import <ParseFacebookUtilsV4/PFFacebookUtils.h>
+#import <Parse/PFFacebookUtils.h>
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"

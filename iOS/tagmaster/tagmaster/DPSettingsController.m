@@ -9,7 +9,7 @@
 #import "DPSettingsController.h"
 
 #import <Parse/Parse.h>
-#import <ParseFacebookUtilsV4/ParseFacebookUtilsV4.h>
+#import <Parse/PFFacebookUtils.h>
 #import "DPAppDelegate.h"
 
 @interface DPSettingsController () <UIAlertViewDelegate>
