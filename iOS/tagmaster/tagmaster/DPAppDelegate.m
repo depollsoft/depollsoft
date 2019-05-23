@@ -9,7 +9,7 @@
 #import "DPAppDelegate.h"
 
 #import <Parse/Parse.h>
-#import <ParseFacebookUtilsV4/ParseFacebookUtilsV4.h>
+#import <Parse/PFFacebookUtils.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <Fabric/Fabric.h>
 #import <Crashlytics/Crashlytics.h>

@@ -121,8 +121,8 @@
 		1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
-		41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
+		40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "../Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
+		41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
 		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
@@ -445,7 +445,6 @@
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
 				635624E21ACC6FFA0011697F /* Embed Frameworks */,
-				0DBC698A4214FD6A4C07464B /* [CP] Embed Pods Frameworks */,
 				A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */,
 				1E6943E31F1EE46E00B7B425 /* ShellScript */,
 			);
@@ -584,21 +583,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0DBC698A4214FD6A4C07464B /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		1E6943E31F1EE46E00B7B425 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -649,17 +633,18 @@
 			files = (
 			);
 			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh",
 				"${PODS_ROOT}/FBSDKCoreKit/FacebookSDKStrings.bundle",
-				"${PODS_ROOT}/Parse/Parse/Resources/en.lproj",
+				"${PODS_CONFIGURATION_BUILD_DIR}/Parse/Parse.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FacebookSDKStrings.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Parse.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
