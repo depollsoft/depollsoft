@@ -8,6 +8,7 @@ target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
     pod 'Parse'
     pod 'Parse/FacebookUtils'
+    pod 'Bolts', inhibit_warnings: true
     pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'
     pod 'Fabric'
@@ -18,6 +19,7 @@ target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     pod 'Parse'
     pod 'Parse/FacebookUtils'
+    pod 'Bolts', inhibit_warnings: true
     pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'
     pod 'Firebase/AdMob'
