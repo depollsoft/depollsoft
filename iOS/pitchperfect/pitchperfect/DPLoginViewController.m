@@ -14,7 +14,7 @@
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
 #import <Parse/Parse.h>
-#import <ParseFacebookUtilsV4/PFFacebookUtils.h>
+#import <Parse/PFFacebookUtils.h>
 #import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
@@ -224,11 +224,12 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
     }
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [self resetBannerViewSize];
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        [self resetBannerViewSize];
+    }];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
-
 - (void)viewDidAppear:(BOOL)animated {
     [self resetBannerViewSize];
     [super viewDidAppear:animated];
