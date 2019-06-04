@@ -238,9 +238,11 @@
     [super viewDidAppear:animated];
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [self resetBannerViewSize];
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        [self resetBannerViewSize];
+    }];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
 - (void)sort {
@@ -263,13 +265,12 @@
     [super viewDidDisappear:animated];
 }
 
-- (void)viewDidUnload {
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -353,9 +354,9 @@
     editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
-        [popover dismissPopoverAnimated:YES];
+        [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
-            [tableView reloadData];
+            [self->tableView reloadData];
             [[DPSongsModel sharedInstance] storeValue];
         }
     };
@@ -380,12 +381,12 @@
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
     editor.completionCallback = ^(BOOL cancelled) {
-        [popover dismissPopoverAnimated:YES];
+        [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [[DPSongsModel sharedInstance].songs addObject:newSong];
             [[DPSongsModel sharedInstance] storeValue];
-            [tableView reloadData];
-            [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+            [self->tableView reloadData];
+            [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
         } else {
             [[DPSongsModel sharedInstance].songs removeObject:newSong];
             [[DPSongsModel sharedInstance] storeValue];

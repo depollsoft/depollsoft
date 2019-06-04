@@ -201,13 +201,13 @@
         }
         switch(weakMajorMinorChooser.selectedSegmentIndex) {
             case 0:
-                keys = [DPKey majorKeys];
+                self->keys = [DPKey majorKeys];
                 break;
             case 1:
-                keys = [DPKey minorKeys];
+                self->keys = [DPKey minorKeys];
                 break;
         }
-        [tableView reloadData];
+        [self->tableView reloadData];
     } forControlEvents:UIControlEventValueChanged];
     
     tableView = [[UITableView alloc] init];
@@ -263,9 +263,11 @@
     [super viewDidAppear:animated];
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [self resetBannerViewSize];
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        [self resetBannerViewSize];
+    }];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -277,15 +279,12 @@
     [super viewDidDisappear:animated];
 }
 
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
