@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1E8483DB1DD85A6300AF4EAB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */; };
+		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
 		2489018ADFB0BD2AEB92831F /* libPods-pitchperfect.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
@@ -118,8 +118,8 @@
 
 /* Begin PBXFileReference section */
 		1E5B195A1FE74DA300241069 /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
+		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		40E224FEE0981CB24AB82ED6 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "../Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
 		41F043ABB4F5FF1B078FE7CE /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
@@ -291,7 +291,7 @@
 			isa = PBXGroup;
 			children = (
 				63225C091A35706100857B44 /* LaunchScreen.xib */,
-				1E8483DA1DD85A6200AF4EAB /* GoogleService-Info.plist */,
+				1E927AD122A6D0390018E370 /* GoogleService-Info.plist */,
 				631C9124159455F1004733F1 /* keys.png */,
 				631C9125159455F1004733F1 /* keys@2x.png */,
 				631C911515906D2B004733F1 /* notes.png */,
@@ -558,7 +558,7 @@
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
 				6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */,
 				631C911715906D2B004733F1 /* notes.png in Resources */,
-				1E8483DB1DD85A6300AF4EAB /* GoogleService-Info.plist in Resources */,
+				1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */,
 				631C911815906D2B004733F1 /* notes@2x.png in Resources */,
 				631C9126159455F1004733F1 /* keys.png in Resources */,
 				631C9127159455F1004733F1 /* keys@2x.png in Resources */,
@@ -766,6 +766,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -809,6 +810,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
