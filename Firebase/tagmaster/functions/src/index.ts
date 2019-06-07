@@ -3,7 +3,6 @@ import * as admin from 'firebase-admin';
 import { MongoClient } from 'mongodb';
 import fetch from 'node-fetch'
 
-
 admin.initializeApp();
 
 async function doParseImport(
@@ -14,7 +13,7 @@ async function doParseImport(
     const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl, {
         useNewUrlParser: true
     });
-    const db = mongoClient.db('pitchperfect-azure-2');
+    const db = mongoClient.db('tagmaster-azure-2');
     const collection = db.collection(collectionName);
 
     const lastWriteRef = admin.firestore().doc('appData/parseImport');
@@ -82,8 +81,8 @@ exports.parseImport = functions.runWith({
         const userPreferenceBatch = admin.firestore().batch();
 
         for (const user of users) {
-            const toggleNotes = user.ToggleNote || false;
-            const wakeLock = user.WakeLock || false;
+            const favoriteIds = user.FavoriteIds || false;
+            const teachableIds = user.TeachableIds || false;
 
             if (!user._auth_data_facebook) {
                 console.log('User missing auth data: ');
@@ -92,7 +91,7 @@ exports.parseImport = functions.runWith({
             }
             userPreferenceBatch.set(
                 admin.firestore().doc(`users/${user._id}`),
-                { wakeLock, toggleNotes },
+                { favoriteIds, teachableIds },
                 { merge: true });
 
             let existingUser = null;
@@ -114,29 +113,9 @@ exports.parseImport = functions.runWith({
         await admin.auth().importUsers(imports);
     }));
 
-    promises.push(doParseImport('SongList', 'lastSongUpdate', 500, async (songLists, isFirstTime) => {
-        const songPromises = [];
-        for (const songList of songLists) {
-            const batch = admin.firestore().batch();
-            const owner = songList._p_owner.split('$')[1];
-            batch.set(admin.firestore().doc(`users/${owner}/songLists/default`), {
-                name: "Default"
-            }, { merge: true });
-
-            let order = 0;
-            for (const song of songList.songs['*items']) {
-                batch.set(admin.firestore().doc(`users/${owner}/songLists/default/songs/${song.Id}`), {
-                    name: song.Name || "",
-                    key: song.Key,
-                    order: order++
-                }, { merge: true })
-            }
-            songPromises.push(batch.commit());
-        }
-        await Promise.all(songPromises);
-    }));
     await Promise.all(promises);
 });
+
 
 exports.exchangeAuthToken = functions.https.onCall(async (data, context) => {
     const result = await fetch(`${functions.config().parse.baseurl}/users/me`, {
