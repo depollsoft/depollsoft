@@ -49,7 +49,7 @@ async function doParseImport(
 }
 
 exports.parseImport = functions.pubsub.schedule('every 5 minutes').onRun(async context => {
-    let promises = [];
+    const promises = [];
     promises.push(doParseImport('_User', 'lastUserUpdate', 500, async (users) => {
         const imports: admin.auth.UserImportRecord[] = [];
         const userPreferenceBatch = admin.firestore().batch();
