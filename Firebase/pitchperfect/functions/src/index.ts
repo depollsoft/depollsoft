@@ -49,8 +49,8 @@ async function doParseImport(
 }
 
 exports.parseImport = functions.pubsub.schedule('every 5 minutes').onRun(async context => {
-
-    await doParseImport('_User', 'lastUserUpdate', 500, async (users) => {
+    let promises = [];
+    promises.push(doParseImport('_User', 'lastUserUpdate', 500, async (users) => {
         const imports: admin.auth.UserImportRecord[] = [];
         const userPreferenceBatch = admin.firestore().batch();
 
@@ -80,27 +80,28 @@ exports.parseImport = functions.pubsub.schedule('every 5 minutes').onRun(async c
 
         await userPreferenceBatch.commit();
         await admin.auth().importUsers(imports);
-    });
+    }));
 
-    await doParseImport('SongList', 'lastSongUpdate', 500, async (songLists) => {
-        const promises = [];
+    promises.push(doParseImport('SongList', 'lastSongUpdate', 500, async (songLists) => {
+        const songPromises = [];
         for (const songList of songLists) {
             const batch = admin.firestore().batch();
             const owner = songList._p_owner.split('$')[1];
-            batch.set(admin.firestore().doc(`users/${owner}/songLists/${songList._id}`), {
-                name: songList.name || ""
+            batch.set(admin.firestore().doc(`users/${owner}/songLists/default`), {
+                name: "Default"
             }, { merge: true });
 
             let order = 0;
             for (const song of songList.songs['*items']) {
-                batch.set(admin.firestore().doc(`users/${owner}/songLists/${songList._id}/songs/${song.Id}`), {
+                batch.set(admin.firestore().doc(`users/${owner}/songLists/default/songs/${song.Id}`), {
                     name: song.Name || "",
                     key: song.Key,
                     order: order++
                 }, { merge: true })
             }
-            promises.push(batch.commit());
+            songPromises.push(batch.commit());
         }
-        await Promise.all(promises);
-    });
+        await Promise.all(songPromises);
+    }));
+    await Promise.all(promises);
 });
