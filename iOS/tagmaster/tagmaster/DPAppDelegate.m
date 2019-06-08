@@ -9,7 +9,6 @@
 #import "DPAppDelegate.h"
 
 #import <Parse/Parse.h>
-#import <Parse/PFFacebookUtils.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <Fabric/Fabric.h>
 #import <Crashlytics/Crashlytics.h>
@@ -19,6 +18,7 @@
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
+#import "tagmaster-Swift.h"
 
 @import Firebase;
 
@@ -37,10 +37,9 @@
         configuration.clientKey = @"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4";
         configuration.server = @"https://tagmaster-api.depollsoft.xyz";
     }]];
-    [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     [FIRApp configure];
     [Fabric with:@[[Crashlytics class]]];
-    
+        
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
         return [url absoluteString];
@@ -65,6 +64,8 @@
     
     navigationController = navController;
     [self.window makeKeyAndVisible];
+    
+    [self extraInit];
 
     return YES;
 }
@@ -126,24 +127,6 @@
 
 }
 
-
-+ (NSArray *)favorites {
-    NSArray *array = [[NSUserDefaults standardUserDefaults] arrayForKey:@"favorites"];
-    if (array) {
-        return array;
-    }
-    return @[];
-}
-
-+ (void)setFavorites:(NSArray *)favorites {
-    NSArray *oldFavorites = [self favorites];
-    [[NSUserDefaults standardUserDefaults] setObject:favorites forKey:@"favorites"];
-    if ([PFUser currentUser] && ![favorites isEqualToArray:oldFavorites]) {
-        [PFUser currentUser][@"FavoriteIds"] = favorites;
-        [[PFUser currentUser] saveEventually];
-    }
-}
-
 + (BOOL)containsFavorite:(int)tagId {
     return [self.favorites containsObject:@(tagId)];
 }
@@ -169,23 +152,6 @@
     NSMutableArray *favorites = [NSMutableArray arrayWithArray:self.favorites];
     [favorites removeObject:@(tagId)];
     [self setFavorites:favorites];
-}
-
-+ (NSArray *)teachable {
-    NSArray *array = [[NSUserDefaults standardUserDefaults] arrayForKey:@"teachable"];
-    if (array) {
-        return array;
-    }
-    return @[];
-}
-
-+ (void)setTeachable:(NSArray *)teachable {
-    NSArray *oldTeachable = [self teachable];
-    [[NSUserDefaults standardUserDefaults] setObject:teachable forKey:@"teachable"];
-    if ([PFUser currentUser] && ![teachable isEqualToArray:oldTeachable]) {
-        [PFUser currentUser][@"TeachableIds"] = teachable;
-        [[PFUser currentUser] saveEventually];
-    }
 }
 
 + (BOOL)containsTeachable:(int)tagId {

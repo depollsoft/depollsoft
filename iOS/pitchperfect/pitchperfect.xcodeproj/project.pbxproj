@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
-		2489018ADFB0BD2AEB92831F /* libPods-pitchperfect.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
 		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
@@ -77,6 +76,7 @@
 		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
 		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
 		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
+		F8C04A7C1E53E3E0DFCB0BD2 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACE992ED6ADBEDFD489729DE /* Pods_pitchperfect.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -210,7 +210,7 @@
 		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
-		B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-pitchperfect.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACE992ED6ADBEDFD489729DE /* Pods_pitchperfect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -244,7 +244,7 @@
 				63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */,
 				63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */,
 				63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */,
-				2489018ADFB0BD2AEB92831F /* libPods-pitchperfect.a in Frameworks */,
+				F8C04A7C1E53E3E0DFCB0BD2 /* Pods_pitchperfect.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,7 +354,7 @@
 				63DC36A1151E9000007C46DB /* UIKit.framework */,
 				63DC36A3151E9000007C46DB /* Foundation.framework */,
 				63DC36A5151E9000007C46DB /* CoreGraphics.framework */,
-				B9CBB14E48F2438A191DF965 /* libPods-pitchperfect.a */,
+				ACE992ED6ADBEDFD489729DE /* Pods_pitchperfect.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -445,8 +445,8 @@
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
 				635624E21ACC6FFA0011697F /* Embed Frameworks */,
-				A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */,
 				1E6943E31F1EE46E00B7B425 /* ShellScript */,
+				E69E3CDD27B908DB91B26DAC /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -627,24 +627,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A55F774B8DA4F5561761B321 /* [CP] Copy Pods Resources */ = {
+		E69E3CDD27B908DB91B26DAC /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh",
-				"${PODS_ROOT}/FBSDKCoreKit/FacebookSDKStrings.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/Parse/Parse.bundle",
+				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Bolts/Bolts.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleUtilities-00567490/GoogleUtilities.framework",
+				"${BUILT_PRODUCTS_DIR}/Parse/Parse.framework",
+				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FacebookSDKStrings.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Parse.bundle",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Bolts.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Parse.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -723,7 +727,6 @@
 		63DC36DC151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -766,7 +769,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -775,7 +777,6 @@
 		63DC36DD151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -810,7 +811,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;

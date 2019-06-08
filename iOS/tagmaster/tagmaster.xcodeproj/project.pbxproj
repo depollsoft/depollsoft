@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
+		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
+		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
+		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -79,6 +81,7 @@
 		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
 		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
 		63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */; };
+		D4DA0C8E916BC32928585DAD /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26190D42A5B177DE5A1E34C8 /* Pods_tagmaster.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +98,11 @@
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
+		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
+		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
+		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
+		26190D42A5B177DE5A1E34C8 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
@@ -196,7 +204,6 @@
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.debug.xcconfig"; sourceTree = "<group>"; };
-		CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-tagmaster.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -222,7 +229,7 @@
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
-				1E023EA126EA89E4D4AC6135 /* libPods-tagmaster.a in Frameworks */,
+				D4DA0C8E916BC32928585DAD /* Pods_tagmaster.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,7 +308,7 @@
 				63712EEF15130B21007997CC /* UIKit.framework */,
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
-				CAADBAFE3917F6AFF5B11B84 /* libPods-tagmaster.a */,
+				26190D42A5B177DE5A1E34C8 /* Pods_tagmaster.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -309,14 +316,15 @@
 		63712EF715130B21007997CC /* tagmaster */ = {
 			isa = PBXGroup;
 			children = (
-				1E1E19791DD877B300DA766F /* tagmaster.entitlements */,
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
+				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
 				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
+				1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */,
 				639F292417F94E9300517583 /* DPSearchViewController.h */,
 				639F292517F94E9300517583 /* DPSearchViewController.m */,
 				639F292717FA643700517583 /* DPSettingsController.h */,
@@ -339,9 +347,12 @@
 				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
 				638E73A217F7F8B3000FFE53 /* DPTeachableTagsController.h */,
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
+				1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */,
 				638E736417F786A5000FFE53 /* Icons */,
 				63A54E1A19F457ED00F0364E /* Images.xcassets */,
 				63712EF815130B21007997CC /* Supporting Files */,
+				1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */,
+				1E1E19791DD877B300DA766F /* tagmaster.entitlements */,
 			);
 			path = tagmaster;
 			sourceTree = "<group>";
@@ -432,8 +443,9 @@
 				63712EE715130B21007997CC /* Sources */,
 				63712EE815130B21007997CC /* Frameworks */,
 				63712EE915130B21007997CC /* Resources */,
-				6335FEF2EE9FF3937C429D61 /* [CP] Copy Pods Resources */,
 				1E6943E01F1EDA3100B7B425 /* ShellScript */,
+				C3F8B3DA654B5107F22FBDAD /* [CP] Embed Pods Frameworks */,
+				AF69A8532BF165286ABA4A06 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -475,6 +487,7 @@
 				TargetAttributes = {
 					63712EEA15130B21007997CC = {
 						DevelopmentTeam = 43AWMS3YJX;
+						LastSwiftMigration = 1020;
 						SystemCapabilities = {
 							com.apple.Keychain = {
 								enabled = 1;
@@ -583,26 +596,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Fabric/run\" 993f24292bd0a5a364bc802d41f76f29eacd59ae 1996caf35ee55da1e6600835158d88bf39388d5ceb130debffb59c0a08240c13";
 		};
-		6335FEF2EE9FF3937C429D61 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh",
-				"${PODS_ROOT}/FBSDKCoreKit/FacebookSDKStrings.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/Parse/Parse.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FacebookSDKStrings.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Parse.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		63712F0915130B21007997CC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -616,6 +609,74 @@
 			shellPath = /bin/sh;
 			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
 		};
+		AF69A8532BF165286ABA4A06 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseUI/FirebaseAuthUI.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseUI/FirebaseEmailAuthUI.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseUI/FirebaseFacebookAuthUI.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseUI/FirebaseGoogleAuthUI.bundle",
+				"${PODS_ROOT}/GoogleSignIn/Resources/GoogleSignIn.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseAuthUI.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseEmailAuthUI.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFacebookAuthUI.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseGoogleAuthUI.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleSignIn.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C3F8B3DA654B5107F22FBDAD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/Bolts/Bolts.framework",
+				"${BUILT_PRODUCTS_DIR}/BoringSSL-GRPC/openssl_grpc.framework",
+				"${BUILT_PRODUCTS_DIR}/FBSDKCoreKit/FBSDKCoreKit.framework",
+				"${BUILT_PRODUCTS_DIR}/FBSDKLoginKit/FBSDKLoginKit.framework",
+				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleUtilities-ac14cd06/GoogleUtilities.framework",
+				"${BUILT_PRODUCTS_DIR}/Parse/Parse.framework",
+				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC-C++/grpcpp.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC-Core/grpc.framework",
+				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
+				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Bolts.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/openssl_grpc.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKLoginKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Parse.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpcpp.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpc.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -623,8 +684,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */,
 				63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
+				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
@@ -639,6 +702,7 @@
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
+				1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */,
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
 				638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */,
 				638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */,
@@ -688,7 +752,6 @@
 		63712F1C15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -710,6 +773,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -729,7 +793,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -739,7 +803,6 @@
 		63712F1D15130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -761,6 +824,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -772,7 +836,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -797,10 +861,14 @@
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "tagmaster/tagmaster-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 				WRAPPER_EXTENSION = app;
@@ -824,10 +892,13 @@
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "tagmaster/tagmaster-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 				WRAPPER_EXTENSION = app;
@@ -837,6 +908,7 @@
 		63712F2215130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -854,6 +926,7 @@
 		63712F2315130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",

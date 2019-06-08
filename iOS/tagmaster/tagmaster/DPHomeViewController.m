@@ -17,6 +17,7 @@
 #import "DPTeachableTagsController.h"
 #import "DPSearchViewController.h"
 #import "DPSettingsController.h"
+#import "tagmaster-Swift.h"
 
 @interface DPHomeViewController ()
 
@@ -99,6 +100,7 @@
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
                                                                                            target:self
                                                                                            action:@selector(search)];
+    [self viewDidLoadExtension];
 }
 
 - (void)search {
@@ -119,16 +121,6 @@
                                                                     options:0
                                                                     metrics:nil
                                                                       views:NSDictionaryOfVariableBindings(_busyIndicator)]];
-    
-    if ([PFUser currentUser]) {
-        [[PFUser currentUser] fetchInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-            if (!error) {
-                [DPAppDelegate setFavorites:object[@"FavoriteIds"]];
-                [DPAppDelegate setTeachable:object[@"TeachableIds"]];
-                [self.tableView reloadData];
-            }
-        }];
-    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -275,7 +267,6 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [DPAppDelegate removeFavorite:[[DPAppDelegate favorites][indexPath.row] intValue]];
-        [self.tableView reloadData];
     }
 }
 

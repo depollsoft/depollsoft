@@ -126,9 +126,9 @@ exports.exchangeAuthToken = functions.https.onCall(async (data, context) => {
         },
         method: 'GET'
     });
-    if (result.ok) {
-        throw result.statusText;
+    if (!result.ok) {
+        throw new functions.https.HttpsError('permission-denied', result.statusText);
     }
     const user = await result.json();
-    return admin.auth().createCustomToken(user.objectId);
+    return { token: await admin.auth().createCustomToken(user.objectId) };
 });
