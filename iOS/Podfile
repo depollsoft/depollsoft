@@ -1,26 +1,37 @@
 workspace 'iOS'
 
-platform :ios, '8.0'
+platform :ios, '9.0'
+use_frameworks!
 
 project 'depolllib/depolllib.xcodeproj'
+project 'pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj'
 
 target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
     pod 'Parse'
-    pod 'Parse/FacebookUtils'
     pod 'Bolts', inhibit_warnings: true
-    pod 'FBSDKCoreKit', '~> 4.44'
+#    pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'
+    pod 'Firebase/Auth'
+    pod 'Firebase/Firestore', inhibit_warnings: true
+    pod 'FirebaseFirestore', inhibit_warnings: true
+    pod 'Firebase/Performance'
+    pod 'Firebase/Functions'
+    pod 'FirebaseUI/Auth'
+    pod 'FirebaseUI/Email'
+    pod 'FirebaseUI/Google'
+    pod 'FirebaseUI/Facebook'
     pod 'Fabric'
     pod 'Crashlytics'
+    pod 'Protobuf', inhibit_warnings: true
 end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     pod 'Parse'
-    pod 'Parse/FacebookUtils'
+    #pod 'Parse/FacebookUtils'
     pod 'Bolts', inhibit_warnings: true
-    pod 'FBSDKCoreKit', '~> 4.44'
+    #pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'
     pod 'Google-Mobile-Ads-SDK'
     pod 'Fabric'

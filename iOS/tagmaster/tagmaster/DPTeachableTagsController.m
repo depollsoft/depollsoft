@@ -11,6 +11,7 @@
 #import "DPTagCell.h"
 #import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTeachableTagsController ()
 
@@ -46,6 +47,7 @@
     
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    [self viewDidLoadExtension];
 }
 
 - (void)viewDidAppear:(BOOL)animated {

@@ -8,9 +8,10 @@
 
 #import "DPSettingsController.h"
 
-#import <Parse/Parse.h>
-#import <Parse/PFFacebookUtils.h>
+@import Firebase;
+@import FirebaseUI;
 #import "DPAppDelegate.h"
+#import "tagmaster-Swift.h"
 
 @interface DPSettingsController () <UIAlertViewDelegate>
 
@@ -142,15 +143,15 @@
 }
 
 - (void)refreshLoginButton {
-    if (![PFUser currentUser]) {
-        [self.logInButton setTitle:@"Log In With Facebook" forState:UIControlStateNormal];
+    if (![FIRAuth auth].currentUser) {
+        [self.logInButton setTitle:@"Log In" forState:UIControlStateNormal];
     } else {
         [self.logInButton setTitle:@"Log Out" forState:UIControlStateNormal];
     }
 }
 
 - (void)logInClick {
-    if (![PFUser currentUser]) {
+    if (![FIRAuth auth].currentUser]) {
         [self.busyIndicator incrementBusyCount];
         [PFFacebookUtils logInInBackgroundWithReadPermissions:@[@"public_profile"]
                                                         block:^(PFUser * _Nullable user, NSError * _Nullable error) {
@@ -166,7 +167,7 @@
                                                             [self refreshLoginButton];
                                                         }];
     } else {
-        [PFUser logOut];
+        [[FIRAuth auth] signOut:nil];
         [self refreshLoginButton];
     }
 }
