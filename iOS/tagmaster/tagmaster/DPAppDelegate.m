@@ -8,6 +8,8 @@
 
 #import "DPAppDelegate.h"
 
+@import FirebaseUI;
+
 #import <Parse/Parse.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <Fabric/Fabric.h>
@@ -71,6 +73,9 @@
 }
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    if ([[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication]) {
+        return YES;
+    }
     if([[FBSDKApplicationDelegate sharedInstance] application:application
                                                                   openURL:url
                                                         sourceApplication:sourceApplication

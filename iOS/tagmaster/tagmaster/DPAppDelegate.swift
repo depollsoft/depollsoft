@@ -18,10 +18,14 @@ public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
     
     @objc static func setTeachable(_ teachables: [Int]) {
+        setTeachable(teachables, doSave: true)
+    }
+    
+    @objc static func setTeachable(_ teachables: [Int], doSave: Bool) {
         let oldTeachables = DPAppDelegate.teachable()
         UserDefaults.standard.set(teachables, forKey: "teachable")
         if !oldTeachables.elementsEqual(teachables) {
-            if userDoc != nil {
+            if doSave && userDoc != nil {
                 userDoc?.setData(["teachableIds": teachables], merge: true)
             }
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
@@ -37,10 +41,14 @@ public extension DPAppDelegate {
     }
     
     @objc static func setFavorites(_ favorites: [Int]) {
+        setFavorites(favorites, doSave: true)
+    }
+    
+    @objc static func setFavorites(_ favorites: [Int], doSave: Bool) {
         let oldFavorites = DPAppDelegate.favorites()
         UserDefaults.standard.set(favorites, forKey: "favorites")
         if !oldFavorites.elementsEqual(favorites) {
-            if userDoc != nil {
+            if doSave && userDoc != nil {
                 userDoc?.setData(["favoriteIds": favorites], merge: true)
             }
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
@@ -72,16 +80,20 @@ public extension DPAppDelegate {
                     }
                     let oldTeachable = DPAppDelegate.teachable()
                     let oldFavorites = DPAppDelegate.favorites()
-                    if snapshot == nil {
+                    if !snapshot!.exists {
                         // There was no existing user, so initialize the user
-                        DPAppDelegate.setTeachable(oldTeachable)
-                        DPAppDelegate.setFavorites(oldFavorites)
+                        DPAppDelegate.userDoc?.setData([
+                            "teachableIds": oldTeachable,
+                            "favoriteIds": oldFavorites
+                            ], merge:true)
                         return
                     }
                     let teachableIds = (snapshot?.get("teachableIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
-                    DPAppDelegate.setTeachable(teachableIds)
                     let favoriteIds = (snapshot?.get("favoriteIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
-                    DPAppDelegate.setFavorites(favoriteIds)
+                    
+                    // Don't try to write these back to the server -- they're already there.
+                    DPAppDelegate.setTeachable(teachableIds, doSave: false)
+                    DPAppDelegate.setFavorites(favoriteIds, doSave: false)
                 }
             } else {
                 DPAppDelegate.userDoc = nil
@@ -105,7 +117,8 @@ public extension DPAppDelegate {
                             print(error!)
                             return
                         }
-                        print(res!.user)
+                        PFUser.logOut()
+                        print("Logged out Parse: \(curUser!.objectId!) and logged in Firebase: \(res!.user.uid)")
                     }
             }
         }

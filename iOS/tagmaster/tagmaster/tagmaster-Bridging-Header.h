@@ -5,3 +5,4 @@
 #import "DPAppDelegate.h"
 #import "DPHomeViewController.h"
 #import "DPTeachableTagsController.h"
+#import "DPSettingsController.h"
