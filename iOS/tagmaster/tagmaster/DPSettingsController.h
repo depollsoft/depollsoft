@@ -18,4 +18,6 @@
 + (NSNumber *)sheetMusic;
 + (NSNumber *)learningTracks;
 
+- (void)refreshLoginButton;
+
 @end

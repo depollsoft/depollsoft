@@ -150,27 +150,6 @@
     }
 }
 
-- (void)logInClick {
-    if (![FIRAuth auth].currentUser]) {
-        [self.busyIndicator incrementBusyCount];
-        [PFFacebookUtils logInInBackgroundWithReadPermissions:@[@"public_profile"]
-                                                        block:^(PFUser * _Nullable user, NSError * _Nullable error) {
-                                                            if (user.isNew) {
-                                                                user[@"FavoriteIds"] = [DPAppDelegate favorites];
-                                                                user[@"TeachableIds"] = [DPAppDelegate teachable];
-                                                                [user saveEventually];
-                                                            } else {
-                                                                [DPAppDelegate setFavorites:user[@"FavoriteIds"]];
-                                                                [DPAppDelegate setTeachable:user[@"TeachableIds"]];
-                                                            }
-                                                            [self.busyIndicator decrementBusyCount];
-                                                            [self refreshLoginButton];
-                                                        }];
-    } else {
-        [[FIRAuth auth] signOut:nil];
-        [self refreshLoginButton];
-    }
-}
 
 - (NSInteger)minDownloadsValue {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"random.minDownloads": @2}];

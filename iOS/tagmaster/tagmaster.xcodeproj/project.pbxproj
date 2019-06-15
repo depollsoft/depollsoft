@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
@@ -95,6 +96,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -329,6 +331,7 @@
 				639F292517F94E9300517583 /* DPSearchViewController.m */,
 				639F292717FA643700517583 /* DPSettingsController.h */,
 				639F292817FA643700517583 /* DPSettingsController.m */,
+				1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */,
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
@@ -696,6 +699,7 @@
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,
 				63D9472815145EDD000C8784 /* DPTrack.m in Sources */,
+				1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */,
 				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
 				639F292617F94E9300517583 /* DPSearchViewController.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
