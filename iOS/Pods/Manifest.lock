@@ -185,6 +185,9 @@ PODS:
     - Parse/Core (= 1.17.2)
   - Parse/Core (1.17.2):
     - Bolts/Tasks (~> 1.9)
+  - Parse/FacebookUtils (1.17.2):
+    - Bolts (~> 1.9)
+    - Parse/Core
   - Protobuf (3.8.0)
 
 DEPENDENCIES:
@@ -202,7 +205,8 @@ DEPENDENCIES:
   - FirebaseUI/Facebook
   - FirebaseUI/Google
   - Google-Mobile-Ads-SDK
-  - Parse
+  - Parse (from `https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git`)
+  - Parse/FacebookUtils (from `https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git`)
   - Protobuf
 
 SPEC REPOS:
@@ -235,8 +239,16 @@ SPEC REPOS:
     - GTMSessionFetcher
     - leveldb-library
     - nanopb
-    - Parse
     - Protobuf
+
+EXTERNAL SOURCES:
+  Parse:
+    :git: https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git
+
+CHECKOUT OPTIONS:
+  Parse:
+    :commit: e16592a74aa80391a1201b2557d46a66f97156d8
+    :git: https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git
 
 SPEC CHECKSUMS:
   Bolts: ac6567323eac61e203f6a9763667d0f711be34c8
@@ -267,9 +279,9 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 61bb0f61a4cb560030f1222021178008a5727a23
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
-  Parse: 3b31a3dd1777b07ee7f0caee32fafbff544483a5
+  Parse: 9f0b73ca2edbcc1ffff52c17d0d370e0f2ecad38
   Protobuf: 3f617b9a6e73605565086864c9bc26b2bf2dd5a3
 
-PODFILE CHECKSUM: 42832f456ed68077830ef416e766cb1f5d9d54d9
+PODFILE CHECKSUM: f8760011d1d224faf7abec78aba0df5d89172e96
 
 COCOAPODS: 1.7.2

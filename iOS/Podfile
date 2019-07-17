@@ -8,7 +8,7 @@ project 'pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj'
 
 target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
-    pod 'Parse'
+    pod 'Parse', :git => 'https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git'
     pod 'Bolts', inhibit_warnings: true
 #    pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'
@@ -28,8 +28,8 @@ end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
-    pod 'Parse'
-    #pod 'Parse/FacebookUtils'
+    pod 'Parse', :git => 'https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git'
+    pod 'Parse/FacebookUtils', :git => 'https://github.com/tamir-maoz/Parse-SDK-iOS-OSX.git'
     pod 'Bolts', inhibit_warnings: true
     #pod 'FBSDKCoreKit', '~> 4.44'
     pod 'Firebase/Analytics'

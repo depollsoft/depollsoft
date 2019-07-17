@@ -159,6 +159,16 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>Parse.default-FacebookUtils-Parse.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>Parse.default-FacebookUtils.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>Parse.xcscheme</key>
 		<dict>
 			<key>isShown</key>
