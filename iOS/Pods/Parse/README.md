@@ -3,20 +3,22 @@
 [![Maintenance help wanted](https://img.shields.io/badge/maintenance-help%20wanted-red.svg)](https://github.com/parse-community/Parse-SDK-iOS-OSX/issues/1356)
 ![Platforms][platforms-svg]
 [![License][license-svg]][license-link]
-
 [![Podspec][podspec-svg]][podspec-link]
 [![Carthage compatible][carthage-svg]](carthage-link)
 [![Dependencies][dependencies-svg]][dependencies-link]
 [![References][references-svg]][references-link]
-
 [![Build Status][build-status-svg]][build-status-link]
 [![Build Status][circleci-status-svg]][circleci-status-link]
 [![Coverage Status][coverage-status-svg]][coverage-status-link]
-
-[![Join Chat][gitter-svg]][gitter-link]
+[![Join The Conversation](https://img.shields.io/discourse/https/community.parseplatform.org/topics.svg)](https://community.parseplatform.org/c/parse-server)
+[![Backers on Open Collective](https://opencollective.com/parse-server/backers/badge.svg)][open-collective-link]
+[![Sponsors on Open Collective](https://opencollective.com/parse-server/sponsors/badge.svg)][open-collective-link]
+[![Twitter Follow](https://img.shields.io/twitter/follow/ParsePlatform.svg?label=Follow%20us%20on%20Twitter&style=social)](https://twitter.com/intent/follow?screen_name=ParsePlatform)
 
 A library that gives you access to the powerful Parse cloud platform from your iOS or OS X app.
 For more information about Parse and its features, see the public [documentation][docs].
+
+Check out some of the [apps using Parse](https://www.appsight.io/sdk/parse).
 
 ## Getting Started
 
@@ -174,6 +176,6 @@ As of April 5, 2017, Parse, LLC has transferred this code to the parse-community
 
  [references-svg]: https://www.versioneye.com/objective-c/parse/reference_badge.svg
  [references-link]: https://www.versioneye.com/objective-c/parse/references
-
- [gitter-svg]: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-brightgreen.svg
- [gitter-link]: https://gitter.im/ParsePlatform/Chat
+ 
+ [open-collective-link]: https://opencollective.com/parse-server
+ 

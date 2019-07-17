@@ -21,7 +21,6 @@ extension DPSettingsController: FUIAuthDelegate {
             ]
             authUI?.providers = providers
             authUI?.delegate = self
-            authUI.backg
             
             self.present(authUI!.authViewController(), animated: true)
         } else {
