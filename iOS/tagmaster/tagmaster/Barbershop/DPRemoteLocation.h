@@ -12,6 +12,7 @@
 
 @property (nonatomic, copy) NSURL *uri;
 @property (nonatomic, copy) NSString *type;
-- (NSString *)cacheKey;
+@property (nonatomic, copy) NSURL *cachedUri;
+@property (nonatomic, readonly) NSString *cacheKey;
 
 @end
