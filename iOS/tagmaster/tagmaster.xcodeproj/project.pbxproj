@@ -13,6 +13,8 @@
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
+		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
+		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -104,6 +106,8 @@
 		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
+		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
+		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		26190D42A5B177DE5A1E34C8 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */,
 				1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */,
 				639F295418010A3A00517583 /* SystemConfiguration.framework in Frameworks */,
 				639F295218010A2F00517583 /* StoreKit.framework in Frameworks */,
@@ -292,6 +297,7 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1E989A2622F3EB4800EA9F2E /* AVKit.framework */,
 				1E8483E51DD86F5C00AF4EAB /* CoreData.framework */,
 				639F295318010A3A00517583 /* SystemConfiguration.framework */,
 				639F295118010A2F00517583 /* StoreKit.framework */,
@@ -344,6 +350,7 @@
 				63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */,
 				638E738D17F7B871000FFE53 /* DPTagTracksController.h */,
 				638E738E17F7B872000FFE53 /* DPTagTracksController.m */,
+				1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */,
 				639F293A1800C45300517583 /* DPTagVideoController.h */,
 				639F293B1800C45300517583 /* DPTagVideoController.m */,
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
@@ -703,6 +710,7 @@
 				6364557115156B3A002AD091 /* DPTagXMLParser.m in Sources */,
 				639F292617F94E9300517583 /* DPSearchViewController.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
+				1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */,
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,

@@ -111,12 +111,4 @@
     return @"Tracks";
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
-    DPTrack *track = self.tag.tracks[indexPath.row];
-    MPMoviePlayerViewController *player = [[MPMoviePlayerViewController alloc] initWithContentURL:track.source.uri];
-    [self presentMoviePlayerViewControllerAnimated:player];
-}
-
 @end

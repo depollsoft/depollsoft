@@ -11,6 +11,7 @@
 #import "DPConstants.h"
 #import "DPNote.h"
 #import "DPTagQueryResult.h"
+#import "DPTrack.h"
 
 @interface DPTag : NSObject
 
@@ -77,8 +78,9 @@
 
 - (NSURL *)tagUri;
 - (void)cache;
-- (NSArray *)tracks;
 - (DPNote *)keyNote;
 - (void)rate:(NSUInteger)rating;
+
+@property (readonly) NSArray<DPTrack *> *tracks;
 
 @end
