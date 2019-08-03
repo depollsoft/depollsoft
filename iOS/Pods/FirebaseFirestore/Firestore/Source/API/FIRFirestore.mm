@@ -27,6 +27,7 @@
 
 #import "FIRFirestoreSettings+Internal.h"
 
+#import "Firestore/Source/API/FIRCollectionReference+Internal.h"
 #import "Firestore/Source/API/FIRDocumentReference+Internal.h"
 #import "Firestore/Source/API/FIRFirestore+Internal.h"
 #import "Firestore/Source/API/FIRTransaction+Internal.h"
@@ -34,6 +35,7 @@
 #import "Firestore/Source/API/FSTFirestoreComponent.h"
 #import "Firestore/Source/API/FSTUserDataConverter.h"
 
+#include "Firestore/core/src/firebase/firestore/api/collection_reference.h"
 #include "Firestore/core/src/firebase/firestore/api/firestore.h"
 #include "Firestore/core/src/firebase/firestore/api/input_validation.h"
 #include "Firestore/core/src/firebase/firestore/api/write_batch.h"
@@ -78,11 +80,11 @@ NS_ASSUME_NONNULL_BEGIN
     ThrowIllegalState("Failed to get FirebaseApp instance. Please call FirebaseApp.configure() "
                       "before using Firestore");
   }
-  return [self firestoreForApp:app database:util::WrapNSString(DatabaseId::kDefault)];
+  return [self firestoreForApp:app database:util::MakeNSString(DatabaseId::kDefault)];
 }
 
 + (instancetype)firestoreForApp:(FIRApp *)app {
-  return [self firestoreForApp:app database:util::WrapNSString(DatabaseId::kDefault)];
+  return [self firestoreForApp:app database:util::MakeNSString(DatabaseId::kDefault)];
 }
 
 // TODO(b/62410906): make this public
@@ -156,7 +158,8 @@ NS_ASSUME_NONNULL_BEGIN
     ThrowInvalidArgument("Invalid path (%s). Paths must not contain // in them.", collectionPath);
   }
 
-  return _firestore->GetCollection(util::MakeString(collectionPath));
+  return [[FIRCollectionReference alloc]
+      initWithReference:_firestore->GetCollection(util::MakeString(collectionPath))];
 }
 
 - (FIRDocumentReference *)documentWithPath:(NSString *)documentPath {
@@ -180,7 +183,7 @@ NS_ASSUME_NONNULL_BEGIN
                          collectionID);
   }
 
-  return _firestore->GetCollectionGroup(collectionID);
+  return _firestore->GetCollectionGroup(util::MakeString(collectionID));
 }
 
 - (FIRWriteBatch *)batch {
@@ -264,6 +267,10 @@ NS_ASSUME_NONNULL_BEGIN
   _firestore->DisableNetwork(util::MakeCallback(completion));
 }
 
+- (void)clearPersistenceWithCompletion:(nullable void (^)(NSError *_Nullable error))completion {
+  _firestore->ClearPersistence(util::MakeCallback(completion));
+}
+
 @end
 
 @implementation FIRFirestore (Internal)
@@ -282,10 +289,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)isLoggingEnabled {
   return util::LogIsLoggable(util::kLogLevelDebug);
-}
-
-- (void)clearPersistenceWithCompletion:(nullable void (^)(NSError *_Nullable error))completion {
-  _firestore->ClearPersistence(util::MakeCallback(completion));
 }
 
 + (FIRFirestore *)recoverFromFirestore:(std::shared_ptr<Firestore>)firestore {

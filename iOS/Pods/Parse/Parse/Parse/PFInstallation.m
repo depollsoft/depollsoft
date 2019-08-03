@@ -278,13 +278,11 @@ static NSSet *protectedKeys;
 }
 
 - (void)_updateBadgeFromDevice {
-    if (@available(iOS 1.0, tvOS 10.0, *)) {
-        // Get the application icon and update the installation if necessary.
-        NSNumber *applicationBadge = @([PFApplication currentApplication].iconBadgeNumber);
-        NSNumber *installationBadge = [super objectForKey:PFInstallationKeyBadge];
-        if (installationBadge == nil || ![applicationBadge isEqualToNumber:installationBadge]) {
-            [super setObject:applicationBadge forKey:PFInstallationKeyBadge];
-        }
+    // Get the application icon and update the installation if necessary.
+    NSNumber *applicationBadge = @([PFApplication currentApplication].iconBadgeNumber);
+    NSNumber *installationBadge = [super objectForKey:PFInstallationKeyBadge];
+    if (installationBadge == nil || ![applicationBadge isEqualToNumber:installationBadge]) {
+        [super setObject:applicationBadge forKey:PFInstallationKeyBadge];
     }
 }
 

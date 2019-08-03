@@ -1,6 +1,0 @@
-framework module Parse {
-  umbrella header "Parse.default-FacebookUtils-umbrella.h"
-
-  export *
-  module * { export * }
-}

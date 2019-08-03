@@ -27,7 +27,7 @@
 #import "PFObjectSubclassingController.h"
 #import "Parse_Private.h"
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 #import "PFInstallationPrivate.h"
 #endif
 
@@ -93,24 +93,16 @@ static ParseClientConfiguration *currentParseConfiguration_;
     return currentParseManager_.configuration;
 }
 
-+ (NSString *)applicationId {
++ (NSString *)getApplicationId {
     PFConsistencyAssert(currentParseManager_,
                         @"You have to call setApplicationId:clientKey: on Parse to configure Parse.");
     return currentParseManager_.configuration.applicationId;
 }
 
-+ (NSString *)getApplicationId {
-    return [self applicationId];
-}
-
-+ (nullable NSString *)clientKey {
++ (nullable NSString *)getClientKey {
     PFConsistencyAssert(currentParseManager_,
                         @"You have to call setApplicationId:clientKey: on Parse to configure Parse.");
     return currentParseManager_.configuration.clientKey;
-}
-
-+ (nullable NSString *)getClientKey {
-    return [self clientKey];
 }
 
 ///--------------------------------------

@@ -64,8 +64,6 @@
 
 #elif TARGET_OS_TV
 
-#import <Parse/PFInstallation.h>
-#import <Parse/PFPush.h>
 #import <Parse/PFProduct.h>
 #import <Parse/PFPurchase.h>
 
@@ -104,21 +102,17 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return The current configuration in use by the SDK. Returns nil if the SDK has not been initialized yet.
  */
-@property (nonatomic, nullable, readonly, class) ParseClientConfiguration *currentConfiguration;
++ (nullable ParseClientConfiguration *)currentConfiguration;
 
 /**
  The current application id that was used to configure Parse framework.
  */
-@property (nonatomic, nonnull, readonly, class) NSString *applicationId;
-
-+ (NSString *)getApplicationId PARSE_DEPRECATED("Use applicationId property.");
++ (NSString *)getApplicationId;
 
 /**
  The current client key that was used to configure Parse framework.
  */
-@property (nonatomic, nullable, readonly, class) NSString *clientKey;
-
-+ (nullable NSString *)getClientKey PARSE_DEPRECATED("Use clientKey property.");
++ (nullable NSString *)getClientKey;
 
 ///--------------------------------------
 #pragma mark - Enabling Local Datastore
@@ -132,10 +126,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  Flag that indicates whether Local Datastore is enabled.
- 
+
  @return `YES` if Local Datastore is enabled, otherwise `NO`.
  */
-@property (nonatomic, readonly, class) BOOL isLocalDatastoreEnabled PF_TV_UNAVAILABLE;
++ (BOOL)isLocalDatastoreEnabled PF_TV_UNAVAILABLE;
 
 ///--------------------------------------
 #pragma mark - Enabling Extensions Data Sharing
@@ -215,16 +209,29 @@ NS_ASSUME_NONNULL_BEGIN
 ///--------------------------------------
 
 /**
- Gets or sets the level of logging to display.
+ Sets the level of logging to display.
 
  By default:
+ - If running inside an app that was downloaded from iOS App Store - it is set to `PFLogLevelNone`
+ - All other cases - it is set to `PFLogLevelWarning`
+
+ @param logLevel Log level to set.
+ @see PFLogLevel
+ */
++ (void)setLogLevel:(PFLogLevel)logLevel;
+
+/**
+ Log level that will be displayed.
+
+ By default:
+
  - If running inside an app that was downloaded from iOS App Store - it is set to `PFLogLevelNone`
  - All other cases - it is set to `PFLogLevelWarning`
 
  @return A `PFLogLevel` value.
  @see PFLogLevel
  */
-@property (nonatomic, readwrite, class) PFLogLevel logLevel;
++ (PFLogLevel)logLevel;
 
 @end
 

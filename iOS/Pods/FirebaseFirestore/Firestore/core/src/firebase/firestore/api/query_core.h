@@ -28,12 +28,12 @@
 #include "Firestore/core/src/firebase/firestore/core/event_listener.h"
 #include "Firestore/core/src/firebase/firestore/core/filter.h"
 #include "Firestore/core/src/firebase/firestore/core/listen_options.h"
+#include "Firestore/core/src/firebase/firestore/core/relation_filter.h"
+#include "Firestore/core/src/firebase/firestore/model/field_value.h"
 #include "Firestore/core/src/firebase/firestore/objc/objc_class.h"
 
 OBJC_CLASS(FSTBound);
-OBJC_CLASS(FSTFieldValue);
 OBJC_CLASS(FSTQuery);
-OBJC_CLASS(FSTRelationFilter);
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -51,9 +51,7 @@ class Query {
  public:
   Query() = default;
 
-  Query(FSTQuery* query, std::shared_ptr<Firestore> firestore)
-      : firestore_{std::move(firestore)}, query_{query} {
-  }
+  Query(FSTQuery* query, std::shared_ptr<Firestore> firestore);
 
   size_t Hash() const;
 
@@ -101,7 +99,7 @@ class Query {
    */
   Query Filter(model::FieldPath field_path,
                core::Filter::Operator op,
-               FSTFieldValue* field_value,
+               model::FieldValue field_value,
                const std::function<std::string()>& type_describer) const;
 
   /**
@@ -134,7 +132,7 @@ class Query {
    *
    * @return The created `Query`.
    */
-  Query Limit(int64_t limit) const;
+  Query Limit(int32_t limit) const;
 
   /**
    * Creates and returns a new `Query` that starts at the given bound.  The
@@ -166,7 +164,7 @@ class Query {
   }
 
  private:
-  void ValidateNewRelationFilter(FSTRelationFilter* filter) const;
+  void ValidateNewRelationFilter(const core::RelationFilter& filter) const;
   void ValidateNewOrderByPath(const model::FieldPath& fieldPath) const;
   void ValidateOrderByField(const model::FieldPath& orderByField,
                             const model::FieldPath& inequalityField) const;

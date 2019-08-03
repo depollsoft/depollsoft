@@ -311,7 +311,8 @@ typedef NS_ENUM(NSInteger, FIRAuthErrorCode) {
      */
     FIRAuthErrorCodeWebSignInUserInteractionFailure = 17063,
 
-    /** Indicates that the local player was not authenticated prior to attempting Game Center signin.
+    /** Indicates that the local player was not authenticated prior to attempting Game Center
+        signin.
      */
     FIRAuthErrorCodeLocalPlayerNotAuthenticated = 17066,
 
@@ -325,14 +326,18 @@ typedef NS_ENUM(NSInteger, FIRAuthErrorCode) {
      */
     FIRAuthErrorCodeInvalidProviderID = 17071,
 
-    /** Indicates that the Firebase Dynamic Link domain used is either not configured or is unauthorized
-        for the current project.
+    /** Indicates that the Firebase Dynamic Link domain used is either not configured or is
+        unauthorized for the current project.
      */
     FIRAuthErrorCodeInvalidDynamicLinkDomain = 17074,
 
     /** Indicates that the GameKit framework is not linked prior to attempting Game Center signin.
      */
     FIRAuthErrorCodeGameKitNotLinked = 17076,
+
+    /** Indicates an error for when the client identifier is missing.
+     */
+    FIRAuthErrorCodeMissingClientIdentifier = 17993,
 
     /** Indicates an error occurred while attempting to access the keychain.
      */

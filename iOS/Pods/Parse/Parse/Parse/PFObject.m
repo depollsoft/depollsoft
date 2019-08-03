@@ -343,7 +343,7 @@ static void PFObjectAssertValueIsKindOfValidClass(id object) {
 // @param error  The reason why it can't be serialized.
 + (BOOL)canBeSerializedAsValue:(id)value
                    afterSaving:(NSMutableArray *)saved
-                         error:(NSError **)error {
+                         error:(NSError * __autoreleasing *)error {
     if ([value isKindOfClass:[PFObject class]]) {
         PFObject *object = (PFObject *)value;
         if (!object.objectId && ![saved containsObject:object]) {
@@ -356,18 +356,14 @@ static void PFObjectAssertValueIsKindOfValidClass(id object) {
 
     } else if ([value isKindOfClass:[NSDictionary class]]) {
         __block BOOL retValue = YES;
-        __block NSError *localError = nil;
         [value enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
             if (![[self class] canBeSerializedAsValue:obj
                                           afterSaving:saved
-                                                error:&localError]) {
+                                                error:error]) {
                 retValue = NO;
                 *stop = YES;
             }
         }];
-        if (error) {
-            *error = localError;
-        }
         return retValue;
     } else if ([value isKindOfClass:[NSArray class]]) {
         NSArray *array = (NSArray *)value;
@@ -1330,10 +1326,6 @@ static void PFObjectAssertValueIsKindOfValidClass(id object) {
 
 - (void)_mergeAfterSaveWithResult:(NSDictionary *)result decoder:(PFDecoder *)decoder {
     @synchronized (lock) {
-        if (operationSetQueue.count == 0)
-        { // it should never be empty at this point. if it is, add a dummy:
-            [operationSetQueue addObject:[[PFOperationSet alloc] init]];
-        }
         PFOperationSet *operationsBeforeSave = operationSetQueue[0];
         [operationSetQueue removeObjectAtIndex:0];
 
