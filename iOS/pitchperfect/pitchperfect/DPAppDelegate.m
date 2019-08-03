@@ -6,7 +6,6 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <Parse/PFFacebookUtils.h>
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>
@@ -44,7 +43,6 @@
         configuration.clientKey = @"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE";
         configuration.server = @"https://pitchperfect-api.depollsoft.xyz";
     }]];
-    [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     
     [DPJsonSerializer registerAlias:@"List" forClass:NSClassFromString(@"__NSArrayM")];
     [DPJsonSerializer registerAlias:@"Key" forClass:[DPKey class]];
@@ -61,16 +59,10 @@
     // Initialize settings
     [DPSettingsModel sharedInstance];
     
-    BOOL isHoomiLogin = [PFUser currentUser] && ![PFFacebookUtils isLinkedWithUser:[PFUser currentUser]];
-    if (isHoomiLogin) {
-        [PFUser logOut];
-    }
-    
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (isHoomiLogin || ![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"]) {
+        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"]) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
-            loginViewController.isHoomiLogout = isHoomiLogin;
             [self.window.rootViewController presentViewController:loginViewController
                                                          animated:YES
                                                        completion:^{

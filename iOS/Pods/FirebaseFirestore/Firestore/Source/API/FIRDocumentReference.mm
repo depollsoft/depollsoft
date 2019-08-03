@@ -29,7 +29,6 @@
 #import "Firestore/Source/API/FSTUserDataConverter.h"
 #import "Firestore/Source/Core/FSTEventManager.h"
 #import "Firestore/Source/Core/FSTQuery.h"
-#import "Firestore/Source/Model/FSTFieldValue.h"
 
 #include "Firestore/core/src/firebase/firestore/api/document_reference.h"
 #include "Firestore/core/src/firebase/firestore/api/document_snapshot.h"
@@ -46,6 +45,7 @@
 #include "Firestore/core/src/firebase/firestore/util/string_apple.h"
 
 namespace util = firebase::firestore::util;
+using firebase::firestore::api::CollectionReference;
 using firebase::firestore::api::DocumentReference;
 using firebase::firestore::api::DocumentSnapshot;
 using firebase::firestore::api::Firestore;
@@ -114,16 +114,15 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (NSString *)documentID {
-  return util::WrapNSString(_documentReference.document_id());
+  return util::MakeNSString(_documentReference.document_id());
 }
 
 - (FIRCollectionReference *)parent {
-  return [FIRCollectionReference referenceWithPath:_documentReference.key().path().PopLast()
-                                         firestore:self.firestore];
+  return [[FIRCollectionReference alloc] initWithReference:_documentReference.Parent()];
 }
 
 - (NSString *)path {
-  return util::WrapNSString(_documentReference.Path());
+  return util::MakeNSString(_documentReference.Path());
 }
 
 - (FIRCollectionReference *)collectionWithPath:(NSString *)collectionPath {
@@ -131,9 +130,9 @@ NS_ASSUME_NONNULL_BEGIN
     ThrowInvalidArgument("Collection path cannot be nil.");
   }
 
-  ResourcePath subPath = ResourcePath::FromString(util::MakeString(collectionPath));
-  ResourcePath path = _documentReference.key().path().Append(subPath);
-  return [FIRCollectionReference referenceWithPath:path firestore:self.firestore];
+  CollectionReference child =
+      _documentReference.GetCollectionReference(util::MakeString(collectionPath));
+  return [[FIRCollectionReference alloc] initWithReference:std::move(child)];
 }
 
 - (void)setData:(NSDictionary<NSString *, id> *)documentData {

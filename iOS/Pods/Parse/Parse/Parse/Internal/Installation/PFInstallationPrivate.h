@@ -11,6 +11,7 @@
 
 #import <Parse/PFInstallation.h>
 
+PF_TV_UNAVAILABLE_WARNING
 PF_WATCH_UNAVAILABLE_WARNING
 
 @interface PFInstallation (Private)

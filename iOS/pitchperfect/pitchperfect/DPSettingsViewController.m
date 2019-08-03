@@ -18,7 +18,6 @@
 #import "DPSongsModel.h"
 #import "DPAppDelegate.h"
 #import <Parse/Parse.h>
-#import <Parse/PFFacebookUtils.h>
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
@@ -230,7 +229,7 @@
 - (void)loginButtonPress:(UIGestureRecognizer *)recognizer {
     if ([PFUser currentUser]) {
         [PFUser logOut];
-        [[[FBSDKLoginManager alloc] init] logOut];
+        //[[[FBSDKLoginManager alloc] init] logOut];
         [tableView reloadData];
     } else {
         UITableViewCell *cell = (UITableViewCell *)recognizer.view;

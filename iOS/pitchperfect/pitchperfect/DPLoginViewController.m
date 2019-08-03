@@ -14,13 +14,12 @@
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
 #import <Parse/Parse.h>
-#import <Parse/PFFacebookUtils.h>
 #import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
 
-@interface DPLoginViewController () <FBSDKLoginButtonDelegate>
+@interface DPLoginViewController ()
 
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
@@ -104,32 +103,16 @@
         [bannerView loadRequest:DPAppDelegate.adRequest];
     }
     
-    NSString *explanationHtml;
-    if (!self.isHoomiLogout) {
-        explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
-        "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
-        "<p>"
-        "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "
-        "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
-        "data goes where you go."
-        "</p>"
-        "<p>"
-        "Pitch Perfect does not collect any of your personal data for this free service."
-        "</p>";
-    } else {
-        explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
-        "<p><b>Notice:</b> You have previously logged into Pitch Perfect with Hoomi, which is being discontinued. "
-        "You have been logged out of Pitch Perfect. "
-        "You may choose to log in with Facebook, or continue without logging in.</p>"
-        "<p>"
-        "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "
-        "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
-        "data goes where you go."
-        "</p>"
-        "<p>"
-        "Pitch Perfect does not collect any of your personal data for this free service."
-        "</p>";
-    }
+    NSString *explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
+    "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
+    "<p>"
+    "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "
+    "Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your "
+    "data goes where you go."
+    "</p>"
+    "<p>"
+    "Pitch Perfect does not collect any of your personal data for this free service."
+    "</p>";
     NSAttributedString *explanationText = [[NSAttributedString alloc] initWithData:[explanationHtml dataUsingEncoding:NSUTF8StringEncoding]
                                                                            options:@{NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType}
                                                                 documentAttributes:nil
@@ -142,11 +125,13 @@
     
     [rootLayout addSubview:explanation row:2 column:0];
     
+    /*
     FBSDKLoginButton *fbLoginButton = [[FBSDKLoginButton alloc] init];
     fbLoginButton.readPermissions = @[@"public_profile"];
     UIView *fbLoginContainer = [fbLoginButton pad:4];
     [rootLayout addSubview:fbLoginContainer row:4 column:0];
     fbLoginButton.delegate = self;
+     */
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
@@ -166,6 +151,7 @@
     
 }
 
+/* TODO: Remove this
 - (void)loginButton:(FBSDKLoginButton *)loginButton
 didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
               error:(NSError *)error {
@@ -183,7 +169,7 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
              return nil;
          }];
     });
-}
+}*/
 
 - (void)loginButtonDidLogOut:(FBSDKLoginButton *)loginButton {
     

@@ -30,7 +30,7 @@
 #import "PFUserAuthenticationController.h"
 #import "PFUserController.h"
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 #import "PFCurrentInstallationController.h"
 #import "PFInstallationController.h"
 #endif
@@ -63,7 +63,7 @@
 @synthesize currentUserController = _currentUserController;
 @synthesize userController = _userController;
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 @synthesize currentInstallationController = _currentInstallationController;
 @synthesize installationController = _installationController;
 #endif
@@ -82,7 +82,7 @@
     _locationManagerAccessQueue = dispatch_queue_create("com.parse.core.locationManager", DISPATCH_QUEUE_SERIAL);
     _controllerAccessQueue = dispatch_queue_create("com.parse.core.controller.accessQueue", DISPATCH_QUEUE_SERIAL);
     _objectLocalIdStoreAccessQueue = dispatch_queue_create("com.parse.core.object.localIdStore", DISPATCH_QUEUE_SERIAL);
-    [self objectSubclassingController];
+
     return self;
 }
 
@@ -380,7 +380,7 @@
     });
 }
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 
 ///--------------------------------------
 #pragma mark - Current Installation Controller
@@ -438,7 +438,7 @@
     });
 }
 
-#if !TARGET_OS_WATCH
+#if !TARGET_OS_WATCH && !TARGET_OS_TV
 
 ///--------------------------------------
 #pragma mark - Installation Controller

@@ -34,12 +34,7 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Firebase-2dcc5fe7.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>Firebase-Analytics-Core-CoreOnly.xcscheme</key>
+		<key>Firebase.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -144,27 +139,12 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>GoogleUtilities-00567490.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>GoogleUtilities-ac14cd06.xcscheme</key>
+		<key>GoogleUtilities.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
 		<key>Parse-Parse.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>Parse.default-FacebookUtils-Parse.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>Parse.default-FacebookUtils.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
