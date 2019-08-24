@@ -22,6 +22,8 @@
 #import "DPPitchedSong.h"
 #import "DPLoginViewController.h"
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import "pitchperfect-Swift.h"
+
 @import Firebase;
 
 #define PRODUCTION
@@ -72,6 +74,8 @@
     
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
+    
+    [self extraInit];
     
     // Override point for customization after application launch.
     return YES;
