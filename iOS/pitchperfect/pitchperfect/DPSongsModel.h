@@ -6,7 +6,10 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#import "pitchperfect-Swift.h"
+/*
 #import <Foundation/Foundation.h>
+#import "DPPitchedSong.h"
 
 @interface DPSongsModel : NSObject
 
@@ -16,7 +19,8 @@
 - (void)refreshFromParse;
 - (void)storeValue;
 
-@property (nonatomic, strong) NSMutableArray *songs;
+@property (nonatomic, strong) NSMutableArray<DPPitchedSong *> *songs;
 @property (nonatomic, weak) id delegate;
 
 @end
+*/
