@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "qharmony-c4c7a"
+  },
+  "targets": {
+    "qharmony-c4c7a": {
+      "hosting": {
+        "qharmony": [
+          "qharmony"
+        ]
+      }
+    }
+  }
+}
