@@ -27,8 +27,6 @@
 #import "Firestore/Source/API/FIRFirestoreSource+Internal.h"
 #import "Firestore/Source/API/FIRListenerRegistration+Internal.h"
 #import "Firestore/Source/API/FSTUserDataConverter.h"
-#import "Firestore/Source/Core/FSTEventManager.h"
-#import "Firestore/Source/Core/FSTQuery.h"
 
 #include "Firestore/core/src/firebase/firestore/api/document_reference.h"
 #include "Firestore/core/src/firebase/firestore/api/document_snapshot.h"
@@ -41,7 +39,6 @@
 #include "Firestore/core/src/firebase/firestore/util/error_apple.h"
 #include "Firestore/core/src/firebase/firestore/util/status.h"
 #include "Firestore/core/src/firebase/firestore/util/statusor.h"
-#include "Firestore/core/src/firebase/firestore/util/statusor_callback.h"
 #include "Firestore/core/src/firebase/firestore/util/string_apple.h"
 
 namespace util = firebase::firestore::util;
@@ -211,7 +208,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (id<FIRListenerRegistration>)addSnapshotListenerInternalWithOptions:(ListenOptions)internalOptions
                                                              listener:(FIRDocumentSnapshotBlock)
                                                                           listener {
-  ListenerRegistration result = _documentReference.AddSnapshotListener(
+  std::unique_ptr<ListenerRegistration> result = _documentReference.AddSnapshotListener(
       std::move(internalOptions), [self wrapDocumentSnapshotBlock:listener]);
   return [[FSTListenerRegistration alloc] initWithRegistration:std::move(result)];
 }
