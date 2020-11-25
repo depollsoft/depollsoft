@@ -4,11 +4,6 @@ PODS:
     - AppAuth/ExternalUserAgent (= 1.2.0)
   - AppAuth/Core (1.2.0)
   - AppAuth/ExternalUserAgent (1.2.0)
-  - Bolts (1.9.0):
-    - Bolts/AppLinks (= 1.9.0)
-    - Bolts/Tasks (= 1.9.0)
-  - Bolts/AppLinks (1.9.0):
-    - Bolts/Tasks
   - Bolts/Tasks (1.9.0)
   - BoringSSL-GRPC (0.0.3):
     - BoringSSL-GRPC/Implementation (= 0.0.3)
@@ -211,7 +206,7 @@ PODS:
   - Protobuf (3.10.0)
 
 DEPENDENCIES:
-  - Bolts
+  - Bolts/Tasks
   - Crashlytics
   - Fabric
   - Firebase/Analytics
@@ -307,6 +302,6 @@ SPEC CHECKSUMS:
   Parse: c1ad2a04d2cab2b54b6fb7da05f741abf2cf57d1
   Protobuf: a4dc852ad69c027ca2166ed287b856697814375b
 
-PODFILE CHECKSUM: f87c1b752ee3b0e8f7e7b7c19aeaa703096ea99b
+PODFILE CHECKSUM: 11fb60b9140479224d9ef5b19ae9bcb63eebb60b
 
 COCOAPODS: 1.8.4
