@@ -22,10 +22,8 @@
 #import "FirebaseRemoteConfig/Sources/RCNDevice.h"
 #import "FirebaseRemoteConfig/Sources/RCNUserDefaultsManager.h"
 
-#import <FirebaseCore/FIRApp.h>
-#import <FirebaseCore/FIRLogger.h>
-#import <FirebaseCore/FIROptions.h>
-#import <GoogleUtilities/GULAppEnvironmentUtil.h>
+#import "FirebaseCore/Sources/Private/FirebaseCoreInternal.h"
+#import "GoogleUtilities/Environment/Private/GULAppEnvironmentUtil.h"
 
 static NSString *const kRCNGroupPrefix = @"frc.group.";
 static NSString *const kRCNUserDefaultsKeyNamelastETag = @"lastETag";
@@ -67,6 +65,8 @@ static const int kRCNExponentialBackoffMaximumInterval = 60 * 60 * 4;  // 4 hour
   NSString *_googleAppID;
   /// The user defaults manager scoped to this RC instance of FIRApp and namespace.
   RCNUserDefaultsManager *_userDefaultsManager;
+  /// The timestamp of last eTag update.
+  NSTimeInterval _lastETagUpdateTime;
 }
 @end
 
@@ -100,6 +100,14 @@ static const int kRCNExponentialBackoffMaximumInterval = 60 * 60 * 4;  // 4 hour
     _userDefaultsManager = [[RCNUserDefaultsManager alloc] initWithAppName:appName
                                                                   bundleID:_bundleIdentifier
                                                                  namespace:_FIRNamespace];
+
+    // Check if the config database is new. If so, clear the configs saved in userDefaults.
+    if ([_DBManager isNewDatabase]) {
+      FIRLogNotice(kFIRLoggerRemoteConfig, @"I-RCN000072",
+                   @"New config database created. Resetting user defaults.");
+      [_userDefaultsManager resetUserDefaults];
+    }
+
     _isFetchInProgress = NO;
   }
   return self;
@@ -111,11 +119,20 @@ static const int kRCNExponentialBackoffMaximumInterval = 60 * 60 * 4;  // 4 hour
 }
 
 - (void)setLastETag:(NSString *)lastETag {
+  [self setLastETagUpdateTime:[[NSDate date] timeIntervalSince1970]];
   [_userDefaultsManager setLastETag:lastETag];
+}
+
+- (void)setLastETagUpdateTime:(NSTimeInterval)lastETagUpdateTime {
+  [_userDefaultsManager setLastETagUpdateTime:lastETagUpdateTime];
 }
 
 - (NSTimeInterval)lastFetchTimeInterval {
   return _userDefaultsManager.lastFetchTime;
+}
+
+- (NSTimeInterval)lastETagUpdateTime {
+  return _userDefaultsManager.lastETagUpdateTime;
 }
 
 // TODO: Update logic for app extensions as required.
@@ -315,9 +332,9 @@ static const int kRCNExponentialBackoffMaximumInterval = 60 * 60 * 4;  // 4 hour
   // Note: We only set user properties as mentioned in the new REST API Design doc
   NSString *ret = [NSString stringWithFormat:@"{"];
   ret = [ret stringByAppendingString:[NSString stringWithFormat:@"app_instance_id:'%@'",
-                                                                _configInstanceID]];
+                                                                _configInstallationsIdentifier]];
   ret = [ret stringByAppendingString:[NSString stringWithFormat:@", app_instance_id_token:'%@'",
-                                                                _configInstanceIDToken]];
+                                                                _configInstallationsToken]];
   ret = [ret stringByAppendingString:[NSString stringWithFormat:@", app_id:'%@'", _googleAppID]];
 
   ret = [ret stringByAppendingString:[NSString stringWithFormat:@", country_code:'%@'",
@@ -333,8 +350,10 @@ static const int kRCNExponentialBackoffMaximumInterval = 60 * 60 * 4;  // 4 hour
                                                                 _bundleIdentifier]];
   ret = [ret stringByAppendingString:[NSString stringWithFormat:@", app_version:'%@'",
                                                                 FIRRemoteConfigAppVersion()]];
-  ret = [ret stringByAppendingString:[NSString stringWithFormat:@", sdk_version:'%d'",
-                                                                FIRRemoteConfigSDKVersion()]];
+  ret = [ret stringByAppendingString:[NSString stringWithFormat:@", app_build:'%@'",
+                                                                FIRRemoteConfigAppBuildVersion()]];
+  ret = [ret stringByAppendingString:[NSString stringWithFormat:@", sdk_version:'%@'",
+                                                                FIRRemoteConfigPodVersion()]];
 
   if (userProperties && userProperties.count > 0) {
     NSError *error;

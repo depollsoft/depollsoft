@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <GoogleUtilities/GULObjectSwizzler.h>
+#import "GoogleUtilities/ISASwizzler/Private/GULObjectSwizzler.h"
 
 #import <objc/runtime.h>
 
-#import "Private/GULSwizzledObject.h"
+#import "GoogleUtilities/ISASwizzler/Private/GULSwizzledObject.h"
 
 @implementation GULObjectSwizzler {
   // The swizzled object.
