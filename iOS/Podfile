@@ -9,7 +9,7 @@ project 'pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj'
 target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
     pod 'Parse'
-    pod 'Bolts', inhibit_warnings: true
+    pod 'Bolts/Tasks', inhibit_warnings: true
     pod 'Firebase/Analytics'
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore', inhibit_warnings: true
@@ -28,7 +28,7 @@ end
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     pod 'Parse'
-    pod 'Bolts', inhibit_warnings: true
+    pod 'Bolts/Tasks', inhibit_warnings: true
     pod 'Firebase/Analytics'
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore', inhibit_warnings: true

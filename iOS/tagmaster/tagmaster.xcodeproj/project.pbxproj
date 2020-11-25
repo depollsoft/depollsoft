@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
+		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
@@ -69,7 +70,6 @@
 		639F294618010A0500517583 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294518010A0400517583 /* CFNetwork.framework */; };
 		639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294718010A0D00517583 /* CoreLocation.framework */; };
 		639F294A18010A1500517583 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294918010A1500517583 /* libz.1.1.3.dylib */; };
-		639F294C18010A1B00517583 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294B18010A1B00517583 /* MobileCoreServices.framework */; };
 		639F294E18010A2100517583 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294D18010A2100517583 /* QuartzCore.framework */; };
 		639F295018010A2800517583 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F294F18010A2800517583 /* Security.framework */; };
 		639F295218010A2F00517583 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 639F295118010A2F00517583 /* StoreKit.framework */; };
@@ -101,6 +101,8 @@
 		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1E4373A82363633E00C8447F /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
+		1E4373AC236388A600C8447F /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SafariServices.framework; sourceTree = DEVELOPER_DIR; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
@@ -223,7 +225,6 @@
 				639F295218010A2F00517583 /* StoreKit.framework in Frameworks */,
 				639F295018010A2800517583 /* Security.framework in Frameworks */,
 				639F294E18010A2100517583 /* QuartzCore.framework in Frameworks */,
-				639F294C18010A1B00517583 /* MobileCoreServices.framework in Frameworks */,
 				639F294A18010A1500517583 /* libz.1.1.3.dylib in Frameworks */,
 				639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */,
 				639F294618010A0500517583 /* CFNetwork.framework in Frameworks */,
@@ -236,6 +237,7 @@
 				63712EF215130B21007997CC /* Foundation.framework in Frameworks */,
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
+				1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */,
 				D4DA0C8E916BC32928585DAD /* Pods_tagmaster.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -297,6 +299,8 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1E4373AC236388A600C8447F /* SafariServices.framework */,
+				1E4373A82363633E00C8447F /* CoreServices.framework */,
 				1E989A2622F3EB4800EA9F2E /* AVKit.framework */,
 				1E8483E51DD86F5C00AF4EAB /* CoreData.framework */,
 				639F295318010A3A00517583 /* SystemConfiguration.framework */,
@@ -870,6 +874,8 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
+				DEVELOPMENT_TEAM = 43AWMS3YJX;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -883,6 +889,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "tagmaster/tagmaster-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -901,6 +908,8 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
+				DEVELOPMENT_TEAM = 43AWMS3YJX;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -914,6 +923,7 @@
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "tagmaster/tagmaster-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
