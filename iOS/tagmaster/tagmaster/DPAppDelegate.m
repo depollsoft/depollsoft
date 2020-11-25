@@ -12,8 +12,6 @@
 
 #import <Parse/Parse.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
-#import <Fabric/Fabric.h>
-#import <Crashlytics/Crashlytics.h>
 
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
@@ -40,7 +38,6 @@
         configuration.server = @"https://tagmaster-api.depollsoft.xyz";
     }]];
     [FIRApp configure];
-    [Fabric with:@[[Crashlytics class]]];
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
