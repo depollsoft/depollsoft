@@ -336,6 +336,8 @@ PODS:
   - FirebaseUI/Google (8.5.1):
     - FirebaseUI/Auth
     - GoogleSignIn (~> 5.0)
+  - FirebaseUI/OAuth (8.5.1):
+    - FirebaseUI/Auth
   - Google-Mobile-Ads-SDK (7.67.0):
     - GoogleAppMeasurement (~> 6.0)
     - GoogleUserMessagingPlatform (~> 1.1)
@@ -421,6 +423,7 @@ PODS:
     - Bolts/Tasks (= 1.9.1)
   - PromisesObjC (1.2.11)
   - Protobuf (3.13.0)
+  - SmartlookConsentSDK (1.3.0)
 
 DEPENDENCIES:
   - Bolts/Tasks
@@ -435,9 +438,11 @@ DEPENDENCIES:
   - FirebaseUI/Email
   - FirebaseUI/Facebook
   - FirebaseUI/Google
+  - FirebaseUI/OAuth
   - Google-Mobile-Ads-SDK
   - Parse
   - Protobuf
+  - SmartlookConsentSDK
 
 SPEC REPOS:
   trunk:
@@ -476,6 +481,7 @@ SPEC REPOS:
     - Parse
     - PromisesObjC
     - Protobuf
+    - SmartlookConsentSDK
 
 SPEC CHECKSUMS:
   abseil: 6c8eb7892aefa08d929b39f9bb108e5367e3228f
@@ -513,7 +519,8 @@ SPEC CHECKSUMS:
   Parse: e40fdb9c7d665823b7fe9865949cac9a53eb2ce7
   PromisesObjC: 8c196f5a328c2cba3e74624585467a557dcb482f
   Protobuf: 3dac39b34a08151c6d949560efe3f86134a3f748
+  SmartlookConsentSDK: e2240b990e04481985f03f5e00436e588cc602b8
 
-PODFILE CHECKSUM: e709a3151c71fc0ef11d5a04dbba817c4edcb444
+PODFILE CHECKSUM: c80ee5c311c71536a439be23a75399ffd3d380a7
 
 COCOAPODS: 1.10.0

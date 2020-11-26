@@ -9,6 +9,8 @@
 import Foundation
 import Firebase
 import Parse
+import AVKit
+import SmartlookConsentSDK
 
 public extension Notification.Name {
     static let userDataChanged = Notification.Name("tagmaster.userDataChanged")
@@ -65,6 +67,8 @@ public extension DPAppDelegate {
     
     @objc func extraInit() {
         convertParseUser()
+        
+        try! AVAudioSession.sharedInstance().setCategory(.playback)
         
         var registration: ListenerRegistration? = nil
         Auth.auth().addStateDidChangeListener { (auth, user) in

@@ -1,0 +1,6 @@
+framework module SmartlookConsentSDK {
+  umbrella header "SmartlookConsentSDK-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -17,7 +17,8 @@ extension DPSettingsController: FUIAuthDelegate {
             let providers: [FUIAuthProvider] = [
                 FUIEmailAuth(),
                 FUIGoogleAuth(),
-                FUIFacebookAuth()
+                FUIFacebookAuth(),
+                FUIOAuth.appleAuthProvider()
             ]
             authUI?.providers = providers
             authUI?.delegate = self
