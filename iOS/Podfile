@@ -1,6 +1,6 @@
 workspace 'iOS'
 
-platform :ios, '9.0'
+platform :ios, '13.0'
 use_frameworks!
 
 project 'depolllib/depolllib.xcodeproj'
@@ -18,10 +18,12 @@ target 'tagmaster' do
     pod 'Firebase/Functions'
     pod 'Firebase/Crashlytics'
     pod 'FirebaseUI/Auth'
+    pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
     pod 'FirebaseUI/Google'
     pod 'FirebaseUI/Facebook'
     pod 'Protobuf', inhibit_warnings: true
+    pod 'SmartlookConsentSDK'
 end
 
 target 'pitchperfect' do
@@ -36,6 +38,7 @@ target 'pitchperfect' do
     pod 'Firebase/Functions'
     pod 'Firebase/Crashlytics'
     pod 'FirebaseUI/Auth'
+    pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
     pod 'FirebaseUI/Google'
     pod 'FirebaseUI/Facebook'

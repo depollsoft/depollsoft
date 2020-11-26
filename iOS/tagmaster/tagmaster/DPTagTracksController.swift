@@ -13,12 +13,13 @@ extension DPTagTracksController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let track = self.tag.tracks[indexPath.row]
-        
+        self.busyIndicator.incrementBusyCount()
         DispatchQueue.global().async {
             let tempFile = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(track.source.cacheKey)
             do {
                 try Data(contentsOf: track.source.uri).write(to: tempFile)
                 DispatchQueue.main.async {
+                    self.busyIndicator.decrementBusyCount()
                     let player = AVPlayer(url: tempFile)
                     let playerController = AVPlayerViewController()
                     playerController.showsPlaybackControls = true
@@ -28,7 +29,9 @@ extension DPTagTracksController: UITableViewDelegate {
                     }
                 }
             } catch {
-                
+                DispatchQueue.main.async {
+                    self.busyIndicator.decrementBusyCount()
+                }
             }
         }
     }

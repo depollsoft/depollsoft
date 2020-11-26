@@ -193,6 +193,7 @@
         if (tagInstance.downloadCount != 0) {
             detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tagInstance.downloadCount];
         }
+        detailsString = [[NSString stringWithFormat:@"ID: %d ", tagInstance.tagId] stringByAppendingString:detailsString];
     }
     self.details.text = detailsString ?: @"Posted: Rating: DLs:";
     self.hasLearningTracks.image = self.tagInstance.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
