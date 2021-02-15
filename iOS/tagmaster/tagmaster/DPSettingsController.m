@@ -80,16 +80,16 @@
     [self.clearTeachableButton addTarget:self action:@selector(clearTeachable) forControlEvents:UIControlEventTouchUpInside];
     self.minRating = [[UISegmentedControl alloc] initWithItems:@[@"Any", @"1", @"2", @"3", @"4"]];
     self.minRating.apportionsSegmentWidthsByContent = YES;
-    self.minRating.selectedSegmentIndex = [self minRatingValue];
+    self.minRating.selectedSegmentIndex = [DPSettingsController minRatingValue];
     self.minDownloads = [[UISegmentedControl alloc] initWithItems:@[@"Any", @"50", @"100", @"500", @"1000"]];
     self.minDownloads.apportionsSegmentWidthsByContent = YES;
-    self.minDownloads.selectedSegmentIndex = [self minDownloadsValue];
+    self.minDownloads.selectedSegmentIndex = [DPSettingsController minDownloadsValue];
     self.sheetMusic = [[UISegmentedControl alloc] initWithItems:@[@"Not Important", @"Yes", @"No"]];
     self.sheetMusic.apportionsSegmentWidthsByContent = YES;
-    self.sheetMusic.selectedSegmentIndex = [self sheetMusicValue];
+    self.sheetMusic.selectedSegmentIndex = [DPSettingsController sheetMusicValue];
     self.learningTracks = [[UISegmentedControl alloc] initWithItems:@[@"Not Important", @"Yes", @"No"]];
     self.learningTracks.apportionsSegmentWidthsByContent = YES;
-    self.learningTracks.selectedSegmentIndex = [self learningTracksValue];
+    self.learningTracks.selectedSegmentIndex = [DPSettingsController learningTracksValue];
     
     UILabel *logInHeader = [self makeTitleLabel];
     logInHeader.text = @"Log In";
@@ -151,17 +151,17 @@
 }
 
 
-- (NSInteger)minDownloadsValue {
++ (NSInteger)minDownloadsValue {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"random.minDownloads": @2}];
     return [[NSUserDefaults standardUserDefaults] integerForKey:@"random.minDownloads"];
 }
 
-- (void)setMinDownloadsValue:(NSInteger)value {
++ (void)setMinDownloadsValue:(NSInteger)value {
     [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"random.minDownloads"];
 }
 
 + (NSNumber *)minDownloads {
-    switch ([[[self alloc] init] minDownloadsValue]) {
+    switch (DPSettingsController.minDownloadsValue) {
         case 0:
             return nil;
         case 1:
@@ -177,7 +177,7 @@
 }
 
 + (NSNumber *)minRating {
-    switch ([[[self alloc] init] minRatingValue]) {
+    switch (DPSettingsController.minRatingValue) {
         case 0:
             return nil;
         case 1:
@@ -193,7 +193,7 @@
 }
 
 + (NSNumber *)learningTracks {
-    switch ([[[self alloc] init] learningTracksValue]) {
+    switch (DPSettingsController.learningTracksValue) {
         case 0:
             return nil;
         case 1:
@@ -205,7 +205,7 @@
 }
 
 + (NSNumber *)sheetMusic {
-    switch ([[[self alloc] init] sheetMusicValue]) {
+    switch (DPSettingsController.sheetMusicValue) {
         case 0:
             return nil;
         case 1:
@@ -216,37 +216,37 @@
     return nil;
 }
 
-- (NSInteger)minRatingValue {
++ (NSInteger)minRatingValue {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"random.minRating": @2}];
     return [[NSUserDefaults standardUserDefaults] integerForKey:@"random.minRating"];
 }
 
-- (void)setMinRatingValue:(NSInteger)value {
++ (void)setMinRatingValue:(NSInteger)value {
     [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"random.minRating"];
 }
 
-- (NSInteger)sheetMusicValue {
++ (NSInteger)sheetMusicValue {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"random.sheetMusic": @1}];
     return [[NSUserDefaults standardUserDefaults] integerForKey:@"random.sheetMusic"];
 }
 
-- (void)setSheetMusicValue:(NSInteger)value {
++ (void)setSheetMusicValue:(NSInteger)value {
     [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"random.sheetMusic"];
 }
 
-- (NSInteger)learningTracksValue {
++ (NSInteger)learningTracksValue {
     return [[NSUserDefaults standardUserDefaults] integerForKey:@"random.learningTracks"];
 }
 
-- (void)setLearningTracksValue:(NSInteger)value {
++ (void)setLearningTracksValue:(NSInteger)value {
     [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"random.learningTracks"];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
-    [self setMinDownloadsValue:self.minDownloads.selectedSegmentIndex];
-    [self setMinRatingValue:self.minRating.selectedSegmentIndex];
-    [self setSheetMusicValue:self.sheetMusic.selectedSegmentIndex];
-    [self setLearningTracksValue:self.learningTracks.selectedSegmentIndex];
+    [DPSettingsController setMinDownloadsValue:self.minDownloads.selectedSegmentIndex];
+    [DPSettingsController setMinRatingValue:self.minRating.selectedSegmentIndex];
+    [DPSettingsController setSheetMusicValue:self.sheetMusic.selectedSegmentIndex];
+    [DPSettingsController setLearningTracksValue:self.learningTracks.selectedSegmentIndex];
 }
 
 - (void)clearFavorites {

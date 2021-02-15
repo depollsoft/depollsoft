@@ -79,7 +79,7 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
-    self.view.backgroundColor = [UIColor whiteColor];
+    self.view.backgroundColor = [UIColor systemBackgroundColor];
     
     nameField = [[UITextField alloc] init];
     UILabel *nameLabel = [[UILabel alloc] init];

@@ -101,7 +101,7 @@
     [self.contentView addSubview:flow];
     
     self.detailTextLabel.text = [NSString stringWithFormat:@"%1.2f Hz", note.frequency];
-    self.detailTextLabel.textColor = [UIColor darkGrayColor];
+    self.detailTextLabel.textColor = [UIColor systemGrayColor];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {

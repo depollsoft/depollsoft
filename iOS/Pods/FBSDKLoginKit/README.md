@@ -1,7 +1,7 @@
 # Facebook SDK for iOS
 
 [![Platforms](https://img.shields.io/cocoapods/p/FBSDKCoreKit.svg)](https://cocoapods.org/pods/FBSDKCoreKit)
-[![Build Status](https://travis-ci.org/facebook/facebook-ios-sdk.svg?branch=master)](https://travis-ci.org/facebook/facebook-ios-sdk)
+[![circleci](https://circleci.com/gh/facebook/facebook-ios-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/facebook/facebook-ios-sdk/tree/master)
 
 [![CocoaPods](https://img.shields.io/cocoapods/v/FBSDKCoreKit.svg)](https://cocoapods.org/pods/FBSDKCoreKit)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
@@ -11,7 +11,8 @@ This open-source library allows you to integrate Facebook into your iOS app.
 Learn more about the provided samples, documentation, integrating the SDK into your app, accessing source code, and more
 at https://developers.facebook.com/docs/ios
 
-NOTE: By default, the Facebook SDK for iOS is installed in ~/Documents/FacebookSDK
+Please take a moment and [subscribe to releases](https://docs.github.com/en/enterprise/2.15/user/articles/watching-and-unwatching-repositories) so that you can be notified about new features, deprecations, and critical fixes. To see information about the latest release, consult our [changelog](CHANGELOG.md).
+
 
 ## TRY IT OUT
 
@@ -22,29 +23,32 @@ NOTE: By default, the Facebook SDK for iOS is installed in ~/Documents/FacebookS
 3. Check-out the tutorials available online at: <https://developers.facebook.com/docs/ios/getting-started>
 4. Start coding! Visit <https://developers.facebook.com/docs/ios> for tutorials and reference documentation.
 
-**Note:**
+**Note for Swift Package Manager Users:**
 
 If you explicitly **DO NOT** want to include Swift, import `FBSDKCoreKit` `FBSDKLoginKit` and `FBSDKShareKit`
-
-For projects that include Swift, use `FacebookCore`, `FacebookLogin`, and `FacebookShare`
+</br>For projects that include Swift, use `FacebookCore`, `FacebookLogin`, and `FacebookShare`
 
 ### CocoaPods
 
-1. If you explicitly **DO NOT** want to include Swift files, add the following to your `Podfile`:
+1. Add the following to your `Podfile`:
 
         pod 'FBSDKCoreKit'
         pod 'FBSDKLoginKit'
         pod 'FBSDKShareKit'
 
-   If you would like to use versions of the pods that include Swift, add the following to your `Podfile`:
-
-        pod 'FBSDKCoreKit/Swift'
-        pod 'FBSDKLoginKit/Swift'
-        pod 'FBSDKShareKit/Swift'
-
 2. Test your install by adding `import FBSDKCoreKit` to your `AppDelegate`
 3. Check-out the tutorials available online at: <https://developers.facebook.com/docs/ios/getting-started>
 4. Start coding! Visit <https://developers.facebook.com/docs/ios> for tutorials and reference documentation.
+
+## iOS 14 CHANGES
+
+### Data Disclosure
+
+Due to the release of iOS 14, tracking events that your app collects and sends to Facebook may require you to disclosed these data types in the App Store Connect questionnaire. It is your responsibility to ensure this is reflected in your application’s privacy policy. Visit our blogpost for information on affected Facebook SDKs, APIs, and products and the Apple App Store Privacy Details article to learn more about the data types you will need to disclose.
+
+link to FB blogpost https://developers.facebook.com/blog/post/2020/10/22/preparing-for-apple-app-store-data-disclosure-requirements/
+
+apple store details https://developer.apple.com/app-store/app-privacy-details/
 
 ## FEATURES
 
@@ -67,7 +71,7 @@ or open an issue in this repository.
 
 See the [LICENSE](LICENSE) file.
 
-## Security Policy
+## SECURITY POLICY
 
 See the [SECURITY POLICY](SECURITY.md) for more info on our bug bounty program.
 

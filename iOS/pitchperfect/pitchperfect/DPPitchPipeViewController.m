@@ -102,7 +102,7 @@
     }
     
     UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to B", @"F to E", nil]];
-    typeSwitcher.tintColor = [UIColor darkGrayColor];
+    typeSwitcher.tintColor = [UIColor systemGrayColor];
     typeSwitcher.alpha = 0.75;
     __weak UISegmentedControl *weakTypeSwitcher = typeSwitcher;
     [typeSwitcher addBlock:^{
