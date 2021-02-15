@@ -94,7 +94,7 @@
     UILabel *logInHeader = [self makeTitleLabel];
     logInHeader.text = @"Log In";
     UILabel *logInText = [self makeBodyLabel];
-    logInText.text = @"Log in using Facebook to back up and synchronize your tag lists.";
+    logInText.text = @"Log in to back up and synchronize your tag lists.";
     logInText.numberOfLines = 0;
     UILabel *favoritesHeader = [self makeTitleLabel];
     favoritesHeader.text = @"Favorites";
