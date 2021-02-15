@@ -54,7 +54,7 @@
     } forClass:[[NSDate date] class]];
     
     // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor whiteColor];
+    self.window.backgroundColor = [UIColor systemBackgroundColor];
     [self.window makeKeyAndVisible];
     
     UINavigationController *navController = [[UINavigationController alloc] init];
@@ -184,7 +184,7 @@
 }
 
 + (void)setUpBackground:(UIView *)view {
-    view.backgroundColor = [UIColor whiteColor];
+    view.backgroundColor = [UIColor systemBackgroundColor];
     UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
     backgroundImage.userInteractionEnabled = NO;
     backgroundImage.contentMode = UIViewContentModeScaleAspectFit;

@@ -111,6 +111,7 @@
 
 - (void)setTagId:(int)tId {
     _tagId = tId;
+    [self.busyIndicator clearBusyCount];
     [self loadTag:NO];
 }
 
@@ -140,8 +141,8 @@
                         [tableView reloadRowsAtIndexPaths:@[indexPath]
                                          withRowAnimation:UITableViewRowAnimationAutomatic];
                     }
+                    [self.busyIndicator decrementBusyCount];
                 }
-                [self.busyIndicator decrementBusyCount];
             });
         }
         @catch (NSException *exception) {

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "41AB140807C3F67E2661E5DC2A6B53CE"
-               BuildableName = "FirebasePerformance"
+               BuildableName = "FirebasePerformance.framework"
                BlueprintName = "FirebasePerformance"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

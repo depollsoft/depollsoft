@@ -61,7 +61,7 @@
     bannerView.adUnitID = @"a14fd7eba4542f0";
     
     bannerView.rootViewController = self;
-    self.view.backgroundColor = [UIColor whiteColor];
+    self.view.backgroundColor = [UIColor systemBackgroundColor];
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
     background.translatesAutoresizingMaskIntoConstraints = NO;

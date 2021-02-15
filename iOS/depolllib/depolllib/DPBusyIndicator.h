@@ -16,5 +16,6 @@
 
 - (void)incrementBusyCount;
 - (void)decrementBusyCount;
+- (void)clearBusyCount;
 
 @end
