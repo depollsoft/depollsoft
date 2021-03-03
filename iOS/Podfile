@@ -16,7 +16,7 @@ target 'tagmaster' do
     pod 'FirebaseFirestore', inhibit_warnings: true
     pod 'Firebase/Performance'
     pod 'Firebase/Functions'
-    pod 'Firebase/Crashlytics', :binary => false
+    pod 'Firebase/Crashlytics'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
@@ -36,7 +36,7 @@ target 'pitchperfect' do
     pod 'FirebaseFirestore', inhibit_warnings: true
     pod 'Firebase/Performance'
     pod 'Firebase/Functions'
-    pod 'Firebase/Crashlytics', :binary => false
+    pod 'Firebase/Crashlytics'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
@@ -53,5 +53,8 @@ post_install do |installer|
                 config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
             end
         end
+    end
+    installer.pods_project.build_configurations.each do |config|
+        config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
     end
 end
