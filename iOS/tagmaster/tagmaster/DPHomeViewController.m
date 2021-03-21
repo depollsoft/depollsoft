@@ -60,7 +60,8 @@
                                   [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5]
                                   ];
     UIButton *copyrightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [copyrightButton setTitle:@"DepollSoft © 2019" forState:UIControlStateNormal];
+    NSString *copyright = [NSString stringWithFormat:@"Depollsoft © %@", [@__DATE__ substringFromIndex:11-4]];
+    [copyrightButton setTitle:copyright forState:UIControlStateNormal];
     copyrightButton.url = [NSURL URLWithString:@"http://apps.depoll.com"];
     copyrightButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
     UIButton *bbsTagsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];

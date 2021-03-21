@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AppTrackingTransparency
 import Firebase
 import Parse
 import AVKit
@@ -101,6 +102,22 @@ public extension DPAppDelegate {
                 }
             } else {
                 DPAppDelegate.userDoc = nil
+            }
+        }
+        SmartlookConsentSDK.check {
+            if SmartlookConsentSDK.consentState(for: .analytics) == .provided {
+                if #available(iOS 14, *) {
+                    ATTrackingManager.requestTrackingAuthorization { (status) in
+                        if status == .authorized {
+                            Analytics.setConsent([.analyticsStorage: .granted])
+                        }
+                    }
+                } else {
+                    Analytics.setConsent([.analyticsStorage: .granted])
+                }
+            }
+            if SmartlookConsentSDK.consentState(for: .privacy) == .provided {
+                FirebaseApp.app()?.isDataCollectionDefaultEnabled = true
             }
         }
     }

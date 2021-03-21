@@ -11,11 +11,13 @@
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
+		1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
 		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
 		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
+		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -104,12 +106,14 @@
 		1E4373A82363633E00C8447F /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		1E4373AC236388A600C8447F /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SafariServices.framework; sourceTree = DEVELOPER_DIR; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppTrackingTransparency.framework; path = System/Library/Frameworks/AppTrackingTransparency.framework; sourceTree = SDKROOT; };
 		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		26190D42A5B177DE5A1E34C8 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
@@ -231,6 +235,7 @@
 				639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */,
 				638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */,
 				638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */,
+				1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */,
 				63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */,
 				63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */,
 				63712EF015130B21007997CC /* UIKit.framework in Frameworks */,
@@ -266,6 +271,7 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */,
 				63225BF91A35523100857B44 /* LaunchScreen.xib */,
 				639F2958180125EC00517583 /* wickhop-handwriting.ttf */,
 				639F292E17FA70AC00517583 /* ic_check_no@2x.png */,
@@ -299,6 +305,7 @@
 		63712EEE15130B21007997CC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */,
 				1E4373AC236388A600C8447F /* SafariServices.framework */,
 				1E4373A82363633E00C8447F /* CoreServices.framework */,
 				1E989A2622F3EB4800EA9F2E /* AVKit.framework */,
@@ -559,6 +566,7 @@
 				638E739A17F7E00D000FFE53 /* LaunchImage-568h@2x.png in Resources */,
 				638E737517F78726000FFE53 /* History@2x.png in Resources */,
 				639F29411800EEE000517583 /* Tracks@2x.png in Resources */,
+				1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */,
 				638E738317F7878F000FFE53 /* PlusMostViewed.png in Resources */,
 				638E737317F78726000FFE53 /* Downloads@2x.png in Resources */,
 				638E737C17F78770000FFE53 /* Bookmarks.png in Resources */,
@@ -778,6 +786,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1ECAAF8125F05AB300A2A3F1 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
 		63712EFA15130B21007997CC /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -800,6 +816,7 @@
 		63712F1C15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -852,6 +869,7 @@
 		63712F1D15130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;

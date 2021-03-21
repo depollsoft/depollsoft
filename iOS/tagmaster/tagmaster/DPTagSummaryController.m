@@ -250,7 +250,7 @@
                 [self.busyIndicator decrementBusyCount];
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
-                [self.navigationController pushViewController:previewer animated:YES];
+                [self presentViewController:previewer animated:YES completion:NULL];
             });
         } @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{

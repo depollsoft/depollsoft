@@ -1,0 +1,14 @@
+/* 
+  Localizable.strings
+  tagmaster
+
+  Created by David Poll on 3/3/21.
+  Copyright © 2021 DepollSoft. All rights reserved.
+*/
+
+"smartlook-consent-sdk-title" = "Tag Master";
+"smartlook-consent-sdk-text" = "Please read and agree to the following to continue";
+"smartlook-consent-sdk-button" = "Continue";
+"smartlook-consent-sdk-privacy-consent" = "Privacy policy";
+"smartlook-consent-sdk-privacy-consent-url" = "https://apps.depoll.com/privacy/";
+"smartlook-consent-sdk-analytics-consent" = "Tag Master may collect basic analytics around app usage ands crashes.";
