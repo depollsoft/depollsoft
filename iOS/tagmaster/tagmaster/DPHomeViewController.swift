@@ -16,13 +16,6 @@ public extension DPHomeViewController {
                                                selector: #selector(onUserDataChanged),
                                                name: .userDataChanged,
                                                object: nil)
-        SmartlookConsentSDK.check {
-            if SmartlookConsentSDK.consentState(for: .analytics) == .provided {
-            }
-            if SmartlookConsentSDK.consentState(for: .privacy) == .provided {
-                FirebaseApp.app()?.isDataCollectionDefaultEnabled = true
-            }
-        }
     }
     
     @objc func onUserDataChanged() {
