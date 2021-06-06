@@ -13,17 +13,17 @@ import FirebaseUI
 extension DPSettingsController: FUIAuthDelegate {
     @objc func logInClick() {
         if Auth.auth().currentUser == nil {
-            let authUI = FUIAuth.defaultAuthUI()
+            let authUI = FUIAuth.defaultAuthUI()!
             let providers: [FUIAuthProvider] = [
                 FUIEmailAuth(),
-                FUIGoogleAuth(),
-                FUIFacebookAuth(),
+                FUIGoogleAuth(authUI: authUI),
+                FUIFacebookAuth(authUI: authUI),
                 FUIOAuth.appleAuthProvider()
             ]
-            authUI?.providers = providers
-            authUI?.delegate = self
+            authUI.providers = providers
+            authUI.delegate = self
             
-            self.present(authUI!.authViewController(), animated: true)
+            self.present(authUI.authViewController(), animated: true)
         } else {
             try! Auth.auth().signOut()
             self.refreshLoginButton()

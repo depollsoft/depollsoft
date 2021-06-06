@@ -38,6 +38,8 @@
         configuration.server = @"https://tagmaster-api.depollsoft.xyz";
     }]];
     [FIRApp configure];
+    [[FBSDKApplicationDelegate sharedInstance] application:application
+                             didFinishLaunchingWithOptions:launchOptions];
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {

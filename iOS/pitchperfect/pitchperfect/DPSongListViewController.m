@@ -246,7 +246,7 @@
 }
 
 - (void)sort {
-    [[DPSongsModel sharedInstance].songs sortUsingComparator:^NSComparisonResult(DPPitchedSong *song1, DPPitchedSong *song2) {
+    [[DPSongsModel sharedInstance].songLists[@"default"].songs sortUsingComparator:^NSComparisonResult(DPPitchedSong *song1, DPPitchedSong *song2) {
         static NSStringCompareOptions comparisonOptions = NSCaseInsensitiveSearch | NSNumericSearch | NSWidthInsensitiveSearch | NSForcedOrderingSearch;
         NSRange string1Range = NSMakeRange(0, song1.name.length);
         
