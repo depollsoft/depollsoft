@@ -6,44 +6,33 @@ use_frameworks!
 project 'depolllib/depolllib.xcodeproj'
 project 'pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj'
 
-target 'tagmaster' do
-    project 'tagmaster/tagmaster.xcodeproj'
+def shared_pods
     pod 'Parse'
     pod 'Bolts/Tasks', inhibit_warnings: true
-    pod 'Firebase/Analytics'
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore', inhibit_warnings: true
     pod 'FirebaseFirestore', inhibit_warnings: true
-    pod 'Firebase/Performance'
     pod 'Firebase/Functions'
-    pod 'Firebase/Crashlytics'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
     pod 'FirebaseUI/Google'
     pod 'FirebaseUI/Facebook'
     pod 'Protobuf', inhibit_warnings: true
-    pod 'SmartlookConsentSDK'
+    pod 'GTMAppAuth', inhibit_warnings: true
+    pod 'gRPC-Core', inhibit_warnings: true
+    pod 'gRPC-C++', inhibit_warnings: true
+    pod 'GTMSessionFetcher', inhibit_warnings: true
+end
+
+target 'tagmaster' do
+    project 'tagmaster/tagmaster.xcodeproj'
+    shared_pods
 end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
-    pod 'Parse'
-    pod 'Bolts/Tasks', inhibit_warnings: true
-    pod 'Firebase/Analytics'
-    pod 'Firebase/Auth'
-    pod 'Firebase/Firestore', inhibit_warnings: true
-    pod 'FirebaseFirestore', inhibit_warnings: true
-    pod 'Firebase/Performance'
-    pod 'Firebase/Functions'
-    pod 'Firebase/Crashlytics'
-    pod 'FirebaseUI/Auth'
-    pod 'FirebaseUI/OAuth'
-    pod 'FirebaseUI/Email'
-    pod 'FirebaseUI/Google'
-    pod 'FirebaseUI/Facebook'
     pod 'Google-Mobile-Ads-SDK'
-    pod 'Protobuf', inhibit_warnings: true
 end
 
 post_install do |installer|

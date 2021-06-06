@@ -141,7 +141,9 @@
                         [tableView reloadRowsAtIndexPaths:@[indexPath]
                                          withRowAnimation:UITableViewRowAnimationAutomatic];
                     }
-                    [self.busyIndicator decrementBusyCount];
+                    if (self.busyIndicator.busyCount > 0) {
+                        [self.busyIndicator decrementBusyCount];
+                    }
                 }
             });
         }

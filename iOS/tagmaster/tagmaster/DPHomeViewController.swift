@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import SmartlookConsentSDK
 import Firebase
 
 public extension DPHomeViewController {

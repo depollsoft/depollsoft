@@ -33,13 +33,13 @@ public extension Notification.Name {
             for change in snapshot!.documentChanges {
                 switch change.type {
                 case .added:
-                    songLists[change.document.documentID] = DPSongList(change.document.documentID, change.document.get("name"))
-                    listenForSongs(change.document.reference)
+                    self.songLists[change.document.documentID] = DPSongList(id: change.document.documentID, name: change.document.get("name") as! String)
+                    self.listenForSongs(songListRef: change.document.reference)
                 case .modified:
-                    songLists[change.document.documentID]?.name = change.document.get("name")
+                    self.songLists[change.document.documentID]?.name = change.document.get("name") as! String
                 case .removed:
-                    songLists.removeValue(forKey: change.document.documentID)
-                    let l = songListeners.removeValue(forKey: change.document.documentID)
+                    self.songLists.removeValue(forKey: change.document.documentID)
+                    let l = self.songListeners.removeValue(forKey: change.document.documentID)
                     l?.remove()
                 @unknown default:
                     fatalError()
@@ -49,13 +49,13 @@ public extension Notification.Name {
     }
     
     private func listenForSongs(songListRef: DocumentReference) {
-        let songList = songLists[songListRef.documentID]
+        _ = songLists[songListRef.documentID]
         let listener = songListRef.collection("songs").addSnapshotListener { (snapshot, error) in
             for change in snapshot!.documentChanges {
                 switch change.type {
-                case .added:
-                case .removed:
-                case .modified:
+                case .added: break
+                case .removed: break
+                case .modified: break
                 @unknown default:
                     fatalError()
                 }
@@ -93,9 +93,13 @@ public extension Notification.Name {
             NotificationCenter.default.post(name: .songsChanged, object: self)
         }
     }
-    public var songs: [DPPitchedSong] = [] {
+    @objc public var songs: [DPPitchedSong] = [] {
         didSet {
             NotificationCenter.default.post(name: .songsChanged, object: self)
         }
+    }
+    
+    @objc public func storeValue() {
+        
     }
 }
