@@ -47,7 +47,7 @@ jobs:
           password: "${{ secrets.GCP_SA_KEY }}"
           registry: gcr.io
           image_name: api
-          dockerfile: api/Dockerfile
+          context: api
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@main
