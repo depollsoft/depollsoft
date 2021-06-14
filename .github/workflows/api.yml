@@ -15,6 +15,7 @@ defaults:
 
 jobs:
   update-geoip:
+    working-directory: .
     name: Update geoip data
     runs-on: ubuntu-latest
     steps:
