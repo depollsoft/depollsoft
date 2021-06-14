@@ -29,9 +29,9 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Configure Docker
-        run: |
-          gcloud auth configure-docker
+      # - name: Configure Docker
+      #   run: |
+      #     gcloud auth configure-docker
       
       # - name: Build
       #   run: |
@@ -47,6 +47,7 @@ jobs:
           password: "${{ secrets.GCP_SA_KEY }}"
           registry: gcr.io
           image_name: api
+          dockerfile: api/Dockerfile
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@main
