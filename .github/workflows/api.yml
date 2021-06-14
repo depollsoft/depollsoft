@@ -27,14 +27,16 @@ jobs:
         with:
           name: geo-data
           path: node_modules/geoip-lite/data
+        continue-on-error: true
       - name: Update
         run: cd node_modules/geoip-lite && npm run-script updatedb license_key=${{ secrets.MAXMIND_LICENSE_KEY }}
-        if: always()
       - name: Upload data
         uses: actions/upload-artifact@v2
         with:
           name: geo-data
           path: node_modules/geoip-lite/data
+        retention-days: 400
+
 
   deploy:
     name: Cloud Run Deployment
