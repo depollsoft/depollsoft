@@ -46,3 +46,4 @@ jobs:
         with:
           service: api
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/api
+          credentials: ${{ secrets.GCP_SA_KEY }}
