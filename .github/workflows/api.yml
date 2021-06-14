@@ -39,7 +39,7 @@ jobs:
       - name: Update
         run: cd node_modules/geoip-lite && npm run-script updatedb license_key=${{ secrets.MAXMIND_LICENSE_KEY }}
       - name: Upload using gsutil
-        run: gsutil cp node_modules/geoip-lite/data gs://depollsoft-build/data/node_modules/geoip-lite/data
+        run: gsutil cp node_modules/geoip-lite/data gs://depollsoft-build-data/data/node_modules/geoip-lite/data
 
 
   deploy:
