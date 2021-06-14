@@ -15,8 +15,10 @@ defaults:
 
 jobs:
   update-geoip:
-    working-directory: .
     name: Update geoip data
+    defaults:
+      run:
+        working-directory: .
     runs-on: ubuntu-latest
     steps:
       - name: Setup node
