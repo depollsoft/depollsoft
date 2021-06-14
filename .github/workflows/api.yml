@@ -35,7 +35,7 @@ jobs:
         with:
           name: geo-data
           path: node_modules/geoip-lite/data
-        retention-days: 400
+          retention-days: 400
 
 
   deploy:

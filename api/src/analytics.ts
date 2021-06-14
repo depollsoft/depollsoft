@@ -2,6 +2,7 @@ import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { PubSub } from '@google-cloud/pubsub';
 import { BigQuery } from '@google-cloud/bigquery';
+import { lookup } from 'geoip-lite';
 
 const authClient = new OAuth2Client();
 const pubSub = new PubSub();
@@ -63,7 +64,6 @@ const router = express.Router()
             {
                 ...messageData,
                 publish_timestamp: req.body.message.publishTime,
-                location: 'Somewhere'
             }
         ]);
 
