@@ -1,9 +1,12 @@
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { PubSub } from '@google-cloud/pubsub';
+import { BigQuery } from '@google-cloud/bigquery';
 
 const authClient = new OAuth2Client();
 const pubSub = new PubSub();
+const bigQuery = new BigQuery();
+const analyticsTable = bigQuery.dataset('app_analytics').table('events');
 const { PUBSUB_VERIFICATION_TOKEN } = process.env;
 
 const router = express.Router()
@@ -53,6 +56,16 @@ const router = express.Router()
         const message = Buffer.from(req.body.message.data, 'base64').toString(
             'utf-8'
         );
+
+        const messageData = JSON.parse(message);
+
+        await analyticsTable.insert([
+            {
+                ...messageData,
+                publish_timestamp: req.body.message.publishTime,
+                location: 'Somewhere'
+            }
+        ]);
 
         res.status(200).send();
     });
