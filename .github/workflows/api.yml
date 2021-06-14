@@ -33,13 +33,20 @@ jobs:
         run: |
           gcloud auth configure-docker
       
-      - name: Build
-        run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/api:latest .
+      # - name: Build
+      #   run: |
+      #     docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/api:latest .
 
-      - name: Push
-        run: |
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/api:latest
+      # - name: Push
+      #   run: |
+      #     docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/api:latest
+
+      - uses: whoan/docker-build-with-cache-action@v5
+        with:
+          username: _json_key
+          password: "${{ secrets.GCP_SA_KEY }}"
+          registry: gcr.io
+          image_name: api
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@main
