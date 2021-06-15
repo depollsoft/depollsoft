@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "buildtest": "tsc",
-    "docker-build": "docker build --build-arg MAXMIND_LICENSE_KEY=$(cat maxmind-license) --tag depollsoft-api .",
+    "docker-build": "docker build --tag depollsoft-api .",
     "docker-run": "docker run -it --init --env PORT=$PORT --env-file .env -p $PORT:$PORT depollsoft-api",
     "clean": "rm -rf bin",
     "test": "echo \"Error: no test specified\" && exit 1",
