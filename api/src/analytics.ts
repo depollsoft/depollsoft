@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { PubSub } from '@google-cloud/pubsub';
 import { BigQuery } from '@google-cloud/bigquery';
 import { lookup } from 'geoip-lite';
+import { PartialFailureError } from '@google-cloud/common/build/src/util';
 
 const authClient = new OAuth2Client();
 const pubSub = new PubSub();
@@ -66,12 +67,20 @@ const router = express.Router()
 
         const messageData = JSON.parse(message);
 
-        await analyticsTable.insert([
-            {
-                ...messageData,
-                publish_timestamp: req.body.message.publishTime,
+        try {
+            await analyticsTable.insert([
+                {
+                    ...messageData,
+                    publish_timestamp: req.body.message.publishTime,
+                }
+            ]);
+        } catch (e) {
+            if (e instanceof PartialFailureError) {
+                console.error(e);
+            } else {
+                throw e;
             }
-        ]);
+        }
 
         res.status(200).send();
     });
