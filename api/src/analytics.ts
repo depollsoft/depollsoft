@@ -17,7 +17,7 @@ const router = express.Router()
             ...req.body,
             location: lookup(req.ip),
         });
-        res.status(201);
+        res.status(201).send();
     })
     .post('/pubsub', async (req, res) => {
         // Verify that the request originates from the application.
