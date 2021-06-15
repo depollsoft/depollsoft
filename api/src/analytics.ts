@@ -13,9 +13,10 @@ const { PUBSUB_VERIFICATION_TOKEN } = process.env;
 const router = express.Router()
     .use(express.json())
     .post('/', async (req, res) => {
+        const ip = req.headers['x-forwarded-for'] as string ?? req.socket.remoteAddress ?? '127.0.0.1';
         await pubSub.topic('analytics').publishJSON({
             ...req.body,
-            location: lookup(req.headers['x-forwarded-for'] as string ?? req.socket.remoteAddress ?? '127.0.0.1'),
+            location: JSON.stringify(lookup(ip)),
         });
         res.status(201).send();
     })
