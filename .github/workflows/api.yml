@@ -34,7 +34,7 @@ jobs:
       - name: NPM install
         run: npm install geoip-lite
       - name: Download using gsutil
-        run: gsutil -m cp -r gs://depollsoft-build-data/node_modules/geoip-lite/data node_modules/geoip-lite/data/
+        run: gsutil -m cp -r gs://depollsoft-build-data/node_modules/geoip-lite/data node_modules/geoip-lite/
         continue-on-error: true
       - name: Update
         run: cd node_modules/geoip-lite && npm run-script updatedb license_key=${{ secrets.MAXMIND_LICENSE_KEY }}
@@ -66,7 +66,7 @@ jobs:
         run: mkdir -p node_modules/geoip-lite/data
 
       - name: Download geoip data using gsutil
-        run: gsutil -m cp -r gs://depollsoft-build-data/node_modules/geoip-lite/data node_modules/geoip-lite/data/
+        run: gsutil -m cp -r gs://depollsoft-build-data/node_modules/geoip-lite/data node_modules/geoip-lite/
 
       - uses: whoan/docker-build-with-cache-action@v5
         with:
