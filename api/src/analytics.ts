@@ -15,7 +15,7 @@ const router = express.Router()
     .post('/', async (req, res) => {
         await pubSub.topic('analytics').publishJSON({
             ...req.body,
-            location: lookup(req['x-forwarded-for'] as string || req.socket.remoteAddress),
+            location: lookup(req.headers['x-forwarded-for'] as string ?? req.socket.remoteAddress ?? '127.0.0.1'),
         });
         res.status(201).send();
     })
