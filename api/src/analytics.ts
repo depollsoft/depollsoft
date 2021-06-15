@@ -14,6 +14,7 @@ const router = express.Router()
     .use(express.json())
     .post('/', async (req, res) => {
         console.log(JSON.stringify(req, null, '  '));
+        console.log(JSON.stringify(lookup(req.ip)), null, '  ');
         await pubSub.topic('analytics').publishJSON({
             ...req.body,
             location: lookup(req.ip),
