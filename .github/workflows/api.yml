@@ -17,7 +17,6 @@ jobs:
   deploy:
     name: Cloud Run Deployment
     runs-on: ubuntu-latest
-    needs: update-geoip
     steps:
       - name: Setup node
         uses: actions/setup-node@v2
