@@ -94,10 +94,10 @@ const router = express.Router()
                 ignoreUnknownValues: true,
             });
         } catch (e) {
-            if (e instanceof PartialFailureError) {
-                console.error(JSON.stringify(e));
-            } else {
-                throw e;
+            console.error(JSON.stringify(e));
+            if (!(e instanceof PartialFailureError)) {
+                res.status(500).send();
+                return;
             }
         }
 
