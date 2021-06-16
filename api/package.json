@@ -1,0 +1,29 @@
+{
+  "name": "depollsoft-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "buildtest": "tsc",
+    "docker-build": "docker build --tag depollsoft-api .",
+    "docker-run": "docker run -it --init --env PORT=$PORT --env-file .env -p $PORT:$PORT depollsoft-api",
+    "clean": "rm -rf bin",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "PORT=8080 npm run docker-run"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.12",
+    "@types/geoip-lite": "^1.4.1",
+    "typescript": "^4.3.2"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^5.6.0",
+    "@google-cloud/pubsub": "^2.13.0",
+    "express": "^4.17.1",
+    "geoip-lite": "^1.4.2",
+    "google-auth-library": "^7.1.2"
+  }
+}
