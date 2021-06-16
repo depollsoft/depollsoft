@@ -134,8 +134,8 @@
 		1E4BC7C1267A5E1D0021F107 /* analytics */ = {
 			isa = PBXGroup;
 			children = (
-				1E4BC7C3267A5E410021F107 /* Analytics.swift */,
 				1E4BC7C2267A5E410021F107 /* depolllib-Bridging-Header.h */,
+				1E4BC7C3267A5E410021F107 /* Analytics.swift */,
 			);
 			path = analytics;
 			sourceTree = "<group>";
@@ -194,10 +194,10 @@
 			children = (
 				1E4BC7C1267A5E1D0021F107 /* analytics */,
 				63E1497815C2611C00E72AC9 /* filecache */,
+				63DC3761151E93AF007C46DB /* json */,
+				63DC3739151E9263007C46DB /* Supporting Files */,
 				63A99D6015882D6900C78CC0 /* ui */,
 				63FF00811554F8BE00C28218 /* utils */,
-				63DC3739151E9263007C46DB /* Supporting Files */,
-				63DC3761151E93AF007C46DB /* json */,
 			);
 			path = depolllib;
 			sourceTree = "<group>";
