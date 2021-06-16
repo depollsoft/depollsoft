@@ -95,7 +95,7 @@ const router = express.Router()
             });
         } catch (e) {
             if (e instanceof PartialFailureError) {
-                console.error(e);
+                console.error(JSON.stringify(e));
             } else {
                 throw e;
             }
