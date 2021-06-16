@@ -37,7 +37,7 @@ public class Analytics {
     
     private func startOfHour(_ date: Date) -> Date {
         let timestamp = date.timeIntervalSince1970
-        let startOfHour = timestamp.truncatingRemainder(dividingBy: 3600)
+        let startOfHour = timestamp - timestamp.truncatingRemainder(dividingBy: 3600)
         return Date(timeIntervalSince1970: startOfHour)
     }
     
