@@ -11,5 +11,8 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install --production
-COPY --from=0 /build .
+COPY ./node_modules/geoip-lite/data ./node_modules/geoip-lite/data
+COPY --from=0 /build/bin ./bin
+RUN ls
+
 CMD ["node", "bin/index.js"]
