@@ -61,8 +61,21 @@ public class Analytics {
     }
     
     private func formatDate(_ date: Date) -> String{
-        let formatter = ISO8601DateFormatter()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "YYYY-MM-dd HH:mm:ss.SSSSSS"
         return formatter.string(from: date)
+    }
+    
+    private func transformDictionary<T>(_ dict: [String: T], keyKey: String, valueKey: String) -> [[String: Any]] {
+        var result: [[String: Any]] = []
+        for (key, value) in dict {
+            result.append([
+                            keyKey: key,
+                            valueKey:value
+            ])
+        }
+        return result
     }
     
     public func logEvent(_ eventName: String,
@@ -79,8 +92,8 @@ public class Analytics {
             "event_timestamp": formatDate(Date()),
             "event_timezone": TimeZone.current.identifier,
             "event_name": eventName,
-            "fields": fields,
-            "metrics": metrics,
+            "fields": transformDictionary(fields, keyKey: "key", valueKey: "value"),
+            "metrics": transformDictionary(metrics, keyKey: "name", valueKey: "value"),
             "device_model": modelName,
             "platform": "iOS",
             "platform_version": getOSInfo()
