@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E4BC7C4267A5E410021F107 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4BC7C3267A5E410021F107 /* Analytics.swift */; };
 		1E5B19571FE74BE600241069 /* DPToolbarViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E5B19551FE74BE600241069 /* DPToolbarViewController.h */; };
 		1E5B19581FE74BE600241069 /* DPToolbarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E5B19561FE74BE600241069 /* DPToolbarViewController.m */; };
 		631C911E15942383004733F1 /* DPUtils+UIColor.h in Headers */ = {isa = PBXBuildFile; fileRef = 631C911C15942383004733F1 /* DPUtils+UIColor.h */; };
@@ -60,6 +61,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1E4BC7C2267A5E410021F107 /* depolllib-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "depolllib-Bridging-Header.h"; sourceTree = "<group>"; };
+		1E4BC7C3267A5E410021F107 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		1E5B19551FE74BE600241069 /* DPToolbarViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPToolbarViewController.h; sourceTree = "<group>"; };
 		1E5B19561FE74BE600241069 /* DPToolbarViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPToolbarViewController.m; sourceTree = "<group>"; };
 		631C911C15942383004733F1 /* DPUtils+UIColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DPUtils+UIColor.h"; sourceTree = "<group>"; };
@@ -128,6 +131,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1E4BC7C1267A5E1D0021F107 /* analytics */ = {
+			isa = PBXGroup;
+			children = (
+				1E4BC7C3267A5E410021F107 /* Analytics.swift */,
+				1E4BC7C2267A5E410021F107 /* depolllib-Bridging-Header.h */,
+			);
+			path = analytics;
+			sourceTree = "<group>";
+		};
 		63A99D6015882D6900C78CC0 /* ui */ = {
 			isa = PBXGroup;
 			children = (
@@ -180,6 +192,7 @@
 		63DC3738151E9263007C46DB /* depolllib */ = {
 			isa = PBXGroup;
 			children = (
+				1E4BC7C1267A5E1D0021F107 /* analytics */,
 				63E1497815C2611C00E72AC9 /* filecache */,
 				63A99D6015882D6900C78CC0 /* ui */,
 				63FF00811554F8BE00C28218 /* utils */,
@@ -332,6 +345,11 @@
 				LastTestingUpgradeCheck = 0610;
 				LastUpgradeCheck = 1220;
 				ORGANIZATIONNAME = DepollSoft;
+				TargetAttributes = {
+					63DC3732151E9263007C46DB = {
+						LastSwiftMigration = 1250;
+					};
+				};
 			};
 			buildConfigurationList = 63DC372D151E9263007C46DB /* Build configuration list for PBXProject "depolllib" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -400,6 +418,7 @@
 				63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */,
 				638E736317F76F61000FFE53 /* UIButton+Hyperlink.m in Sources */,
 				63E1497D15C2614400E72AC9 /* DPFileCache.m in Sources */,
+				1E4BC7C4267A5E410021F107 /* Analytics.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,14 +554,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "depolllib/analytics/depolllib-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -550,13 +574,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "depolllib/analytics/depolllib-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

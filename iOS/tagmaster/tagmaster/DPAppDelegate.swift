@@ -11,6 +11,7 @@ import AppTrackingTransparency
 import Firebase
 import Parse
 import AVKit
+import depolllib
 
 public extension Notification.Name {
     static let userDataChanged = Notification.Name("tagmaster.userDataChanged")
@@ -102,6 +103,7 @@ public extension DPAppDelegate {
                 DPAppDelegate.userDoc = nil
             }
         }
+        Analytics.sharedInstance.logEvent("app_open")
     }
     
     func convertParseUser() {
