@@ -15,9 +15,26 @@ const router = express.Router()
     .use(express.json())
     .post('/', async (req, res) => {
         const ip = req.headers['x-forwarded-for'] as string ?? req.socket.remoteAddress ?? '127.0.0.1';
+        const location = lookup(ip);
         await pubSub.topic('analytics').publishJSON({
             ...req.body,
-            location: JSON.stringify(lookup(ip)),
+            location: location ? {
+                range: {
+                    low: location.range[0],
+                    high: location.range[1]
+                },
+                country: location.country,
+                region: location.region,
+                eu: location.eu == '1',
+                timezone: location.timezone,
+                city: location.city,
+                coordinates: {
+                    latitude: location.ll[0],
+                    longitude: location.ll[1],
+                    radius: location.area
+                },
+                metro: location.metro
+            } : null,
         });
         res.status(201).send();
     })
@@ -73,7 +90,9 @@ const router = express.Router()
                     ...messageData,
                     publish_timestamp: req.body.message.publishTime,
                 }
-            ]);
+            ], {
+                ignoreUnknownValues: true,
+            });
         } catch (e) {
             if (e instanceof PartialFailureError) {
                 console.error(e);
