@@ -82,23 +82,27 @@ public class Analytics {
                          tags: Set<String> = [],
                          fields: [String: String] = [:],
                          metrics: [String: Double] = [:]) {
-        var request = URLRequest(url: Analytics.endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try! JSONSerialization.data(withJSONObject: [
-            "tags": Array(updateTags(tags, forEvent: eventName)),
-            "app_id": Bundle.main.bundleIdentifier!,
-            "app_version": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")!,
-            "event_timestamp": formatDate(Date()),
-            "event_timezone": TimeZone.current.identifier,
-            "event_name": eventName,
-            "fields": transformDictionary(fields, keyKey: "key", valueKey: "value"),
-            "metrics": transformDictionary(metrics, keyKey: "name", valueKey: "value"),
-            "device_model": modelName,
-            "platform": "iOS",
-            "platform_version": getOSInfo()
-        ])
-        URLSession.shared.dataTask(with: request).resume()
+        do{
+            var request = URLRequest(url: Analytics.endpoint)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "tags": Array(updateTags(tags, forEvent: eventName)),
+                "app_id": Bundle.main.bundleIdentifier!,
+                "app_version": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion")!,
+                "event_timestamp": formatDate(Date()),
+                "event_timezone": TimeZone.current.identifier,
+                "event_name": eventName,
+                "fields": transformDictionary(fields, keyKey: "key", valueKey: "value"),
+                "metrics": transformDictionary(metrics, keyKey: "name", valueKey: "value"),
+                "device_model": modelName,
+                "platform": "iOS",
+                "platform_version": getOSInfo()
+            ])
+            URLSession.shared.dataTask(with: request).resume()
+        } catch {
+            print("Caught while logging: \(error)")
+        }
     }
     
     public private(set) static var sharedInstance: Analytics = Analytics(prefix: "depolllib.analytics")
