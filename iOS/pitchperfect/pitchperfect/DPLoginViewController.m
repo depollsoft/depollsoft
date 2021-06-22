@@ -18,6 +18,7 @@
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
+#import "pitchperfect-Swift.h"
 
 @interface DPLoginViewController ()
 
@@ -125,6 +126,12 @@
     
     [rootLayout addSubview:explanation row:2 column:0];
     
+    UIButton *loginButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [loginButton setTitle:@"Sign up or log in" forState:UIControlStateNormal];
+    [loginButton layoutSubviews];
+    [loginButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
+    [rootLayout addSubview:loginButton row:4 column:0];
+    
     /*
     FBSDKLoginButton *fbLoginButton = [[FBSDKLoginButton alloc] init];
     fbLoginButton.readPermissions = @[@"public_profile"];
@@ -171,17 +178,13 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
     });
 }*/
 
-- (void)loginButtonDidLogOut:(FBSDKLoginButton *)loginButton {
-    
-}
-
 - (void)completeLogIn:(BOOL)isNew {
     if (!isNew) {
         [[DPSettingsModel sharedInstance] attachToFirestore];
-        [[DPSongsModel sharedInstance] attachToFirestore];
+        [[DPSongsModel sharedInstance] attachToFirestoreWithStore:NO];
     } else {
-        [[DPSettingsModel sharedInstance] detachFromFirestore];
-        [[DPSongsModel sharedInstance] storeAll];
+        [[DPSettingsModel sharedInstance] attachToFirestore];
+        [[DPSongsModel sharedInstance] attachToFirestoreWithStore:YES];
     }
     [loginTaskCompletionSource trySetResult:nil];
 }

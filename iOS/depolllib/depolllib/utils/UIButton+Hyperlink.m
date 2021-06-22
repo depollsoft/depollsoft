@@ -25,7 +25,7 @@ static int URL_KEY;
 
 - (void)openHyperlink {
     if (self.url) {
-        [[UIApplication sharedApplication] openURL:self.url];
+        [[UIApplication sharedApplication] openURL:self.url options:@{} completionHandler:nil];
     }
 }
 

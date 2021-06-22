@@ -15,4 +15,6 @@
 @property (nonatomic, readonly) BFTask *loginTask;
 @property (nonatomic, readwrite) BOOL isHoomiLogout;
 
+- (void)completeLogIn:(BOOL)isNew NS_SWIFT_NAME(completeLogIn(_:));
+
 @end
