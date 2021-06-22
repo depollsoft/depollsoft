@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E13131F268247B000F33385 /* DPSvgImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E13131E268247B000F33385 /* DPSvgImageView.swift */; };
 		1E4BC7C4267A5E410021F107 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4BC7C3267A5E410021F107 /* Analytics.swift */; };
 		1E5B19571FE74BE600241069 /* DPToolbarViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E5B19551FE74BE600241069 /* DPToolbarViewController.h */; };
 		1E5B19581FE74BE600241069 /* DPToolbarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E5B19561FE74BE600241069 /* DPToolbarViewController.m */; };
@@ -61,6 +62,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1E13131E268247B000F33385 /* DPSvgImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSvgImageView.swift; sourceTree = "<group>"; };
 		1E4BC7C2267A5E410021F107 /* depolllib-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "depolllib-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E4BC7C3267A5E410021F107 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		1E5B19551FE74BE600241069 /* DPToolbarViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPToolbarViewController.h; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 				639F293318000C4D00517583 /* DPBusyIndicator.m */,
 				1E5B19551FE74BE600241069 /* DPToolbarViewController.h */,
 				1E5B19561FE74BE600241069 /* DPToolbarViewController.m */,
+				1E13131E268247B000F33385 /* DPSvgImageView.swift */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -414,6 +417,7 @@
 				63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */,
 				1E5B19581FE74BE600241069 /* DPToolbarViewController.m in Sources */,
 				63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */,
+				1E13131F268247B000F33385 /* DPSvgImageView.swift in Sources */,
 				631C911F15942383004733F1 /* DPUtils+UIColor.m in Sources */,
 				63336A5417F677BE00BC1EE2 /* UIView+DPUtils.m in Sources */,
 				638E736317F76F61000FFE53 /* UIButton+Hyperlink.m in Sources */,

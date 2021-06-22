@@ -7,43 +7,30 @@
 //
 
 import Foundation
-import Parse
 import Firebase
+import Parse
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
 
     @objc func extraInit() {
+        //GADMobileAds.sharedInstance.start(completionHandler: nil)
         convertParseUser()
         
         var registration: ListenerRegistration? = nil
         Auth.auth().addStateDidChangeListener { (auth, user) in
             if registration != nil {
                 registration?.remove()
+                DPSongsModel.sharedInstance.detachFromFirestore()
             }
             if user != nil {
+                DPSongsModel.sharedInstance.attachToFirestore()
                 DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user!.uid)")
                 registration = DPAppDelegate.userDoc!.addSnapshotListener { (snapshot, error) in
                     if error != nil {
                         print(error!)
                         return
                     }
-                    /*let oldTeachable = DPAppDelegate.teachable()
-                    let oldFavorites = DPAppDelegate.favorites()
-                    if !snapshot!.exists {
-                        // There was no existing user, so initialize the user
-                        DPAppDelegate.userDoc?.setData([
-                            "teachableIds": oldTeachable,
-                            "favoriteIds": oldFavorites
-                            ], merge:true)
-                        return
-                    }
-                    let teachableIds = (snapshot?.get("teachableIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
-                    let favoriteIds = (snapshot?.get("favoriteIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
-                    
-                    // Don't try to write these back to the server -- they're already there.
-                    DPAppDelegate.setTeachable(teachableIds, doSave: false)
-                    DPAppDelegate.setFavorites(favoriteIds, doSave: false)*/
                 }
             } else {
                 DPAppDelegate.userDoc = nil

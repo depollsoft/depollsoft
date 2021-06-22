@@ -177,11 +177,11 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
 
 - (void)completeLogIn:(BOOL)isNew {
     if (!isNew) {
-        [[DPSettingsModel sharedInstance] restoreUser];
-        [[DPSongsModel sharedInstance] refreshFromParse];
+        [[DPSettingsModel sharedInstance] attachToFirestore];
+        [[DPSongsModel sharedInstance] attachToFirestore];
     } else {
-        [[DPSettingsModel sharedInstance] refreshUser];
-        [[DPSongsModel sharedInstance] saveAllToParse:YES];
+        [[DPSettingsModel sharedInstance] detachFromFirestore];
+        [[DPSongsModel sharedInstance] storeAll];
     }
     [loginTaskCompletionSource trySetResult:nil];
 }

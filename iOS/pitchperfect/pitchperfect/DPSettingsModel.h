@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import "pitchperfect-Swift.h"
+/*
 @interface DPSettingsModel : NSObject
 
 + (DPSettingsModel *)sharedInstance;
@@ -19,3 +20,4 @@
 @property (nonatomic) BOOL wakeLock;
 
 @end
+*/

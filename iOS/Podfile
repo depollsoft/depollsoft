@@ -32,6 +32,7 @@ end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
+    shared_pods
     pod 'Google-Mobile-Ads-SDK'
 end
 

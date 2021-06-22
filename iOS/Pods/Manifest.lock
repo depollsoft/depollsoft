@@ -250,6 +250,11 @@ PODS:
     - GoogleUtilities/AppDelegateSwizzler (~> 7.4)
     - GoogleUtilities/Environment (~> 7.4)
     - GTMSessionFetcher/Core (~> 1.5)
+  - FirebaseAuthUI (11.0.0):
+    - Firebase/Auth (~> 8.0)
+    - FirebaseAuth
+    - FirebaseCore
+    - GoogleUtilities/UserDefaults
   - FirebaseCore (8.1.0):
     - FirebaseCoreDiagnostics (~> 8.0)
     - GoogleUtilities/Environment (~> 7.4)
@@ -259,6 +264,18 @@ PODS:
     - GoogleUtilities/Environment (~> 7.4)
     - GoogleUtilities/Logger (~> 7.4)
     - nanopb (~> 2.30908.0)
+  - FirebaseEmailAuthUI (11.0.0):
+    - FirebaseAuth (~> 8.0)
+    - FirebaseAuthUI
+    - FirebaseCore
+    - GoogleUtilities/UserDefaults
+  - FirebaseFacebookAuthUI (11.0.0):
+    - FBSDKCoreKit
+    - FBSDKLoginKit (~> 9.0)
+    - FirebaseAuth (~> 8.0)
+    - FirebaseAuthUI
+    - FirebaseCore
+    - GoogleUtilities/UserDefaults
   - FirebaseFirestore (8.1.0):
     - abseil/algorithm (= 0.20200225.0)
     - abseil/base (= 0.20200225.0)
@@ -274,19 +291,27 @@ PODS:
   - FirebaseFunctions (8.1.0):
     - FirebaseCore (~> 8.0)
     - GTMSessionFetcher/Core (~> 1.5)
-  - FirebaseUI/Auth (10.0.2):
-    - Firebase/Auth (>= 7.2.0)
-    - GoogleUtilities/UserDefaults
-  - FirebaseUI/Email (10.0.2):
-    - FirebaseUI/Auth
-  - FirebaseUI/Facebook (10.0.2):
-    - FBSDKLoginKit (~> 9.0)
-    - FirebaseUI/Auth
-  - FirebaseUI/Google (10.0.2):
-    - FirebaseUI/Auth
+  - FirebaseGoogleAuthUI (11.0.0):
+    - FirebaseAuth (~> 8.0)
+    - FirebaseAuthUI
+    - FirebaseCore
     - GoogleSignIn (~> 5.0)
-  - FirebaseUI/OAuth (10.0.2):
-    - FirebaseUI/Auth
+    - GoogleUtilities/UserDefaults
+  - FirebaseOAuthUI (11.0.0):
+    - FirebaseAuth (~> 8.0)
+    - FirebaseAuthUI
+    - FirebaseCore
+    - GoogleUtilities/UserDefaults
+  - FirebaseUI/Auth (11.0.2):
+    - FirebaseAuthUI (~> 11.0)
+  - FirebaseUI/Email (11.0.2):
+    - FirebaseEmailAuthUI (~> 11.0)
+  - FirebaseUI/Facebook (11.0.2):
+    - FirebaseFacebookAuthUI (~> 11.0)
+  - FirebaseUI/Google (11.0.2):
+    - FirebaseGoogleAuthUI (~> 11.0)
+  - FirebaseUI/OAuth (11.0.2):
+    - FirebaseOAuthUI (~> 11.0)
   - Google-Mobile-Ads-SDK (8.6.0):
     - GoogleAppMeasurement (< 9.0, >= 7.0)
     - GoogleUserMessagingPlatform (>= 1.1)
@@ -405,10 +430,15 @@ SPEC REPOS:
     - FBSDKLoginKit
     - Firebase
     - FirebaseAuth
+    - FirebaseAuthUI
     - FirebaseCore
     - FirebaseCoreDiagnostics
+    - FirebaseEmailAuthUI
+    - FirebaseFacebookAuthUI
     - FirebaseFirestore
     - FirebaseFunctions
+    - FirebaseGoogleAuthUI
+    - FirebaseOAuthUI
     - FirebaseUI
     - Google-Mobile-Ads-SDK
     - GoogleAppMeasurement
@@ -435,11 +465,16 @@ SPEC CHECKSUMS:
   FBSDKLoginKit: aea68df6121c5e165ccae2fabfdc83c4644ee40f
   Firebase: 4bb49ae87756034cef870fa3c4006235eb46f475
   FirebaseAuth: e069ff5736fe9d5dcf61f36244bb1b1ce1897d17
+  FirebaseAuthUI: a44ed5d5da7337fd1dfbd9ac4a32ac3217ea8f2c
   FirebaseCore: 389c4ce9a7cce4a7e25eb22326b4bee0050557b2
   FirebaseCoreDiagnostics: 3e249cee3de5c5f9cfd6cc2a19997231286fec11
+  FirebaseEmailAuthUI: 6548e3456fd339e73a8e9b5e7825b29863d8ba00
+  FirebaseFacebookAuthUI: 757715ef67ee9511fc2da6f7120feeca82949be1
   FirebaseFirestore: c4be8314e9fa156f44b54025f7a98ecbff6971a6
   FirebaseFunctions: 2cdcb06c0edbceac807eaf52014b8676c8a66d13
-  FirebaseUI: 59db3d833773f985550897d54ceb811ba37fb9a5
+  FirebaseGoogleAuthUI: eea5adfab55c5a9f1789510e342306b7351d7c2f
+  FirebaseOAuthUI: 1d34e7784438663b08c68e9c1cea131abe1e34b0
+  FirebaseUI: 856f01abf223b93c89f19f608cc393434109ee0b
   Google-Mobile-Ads-SDK: 0d6e2e065c4efe9836bca3fbd6ff9ef0bca073c2
   GoogleAppMeasurement: 31c7d7655818784b7dd34bdf6884f75b465d5f6c
   GoogleDataTransport: 04c3e9a480bbcaa2ec3f5d27f1cdeb6a92f20c8d
@@ -456,6 +491,6 @@ SPEC CHECKSUMS:
   PromisesObjC: 3113f7f76903778cf4a0586bd1ab89329a0b7b97
   Protobuf: 7327d4444215b5f18e560a97f879ff5503c4581c
 
-PODFILE CHECKSUM: b2d827fa7765a3d21547782f4229b574e25fca90
+PODFILE CHECKSUM: 4b6bf37d70671e1b751dc44d748f031c0f7c0b50
 
 COCOAPODS: 1.10.1
