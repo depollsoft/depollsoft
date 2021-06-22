@@ -8,7 +8,11 @@
 
 import Foundation
 import Firebase
-import FirebaseUI
+import FirebaseAuthUI
+import FirebaseGoogleAuthUI
+import FirebaseFacebookAuthUI
+import FirebaseOAuthUI
+import FirebaseEmailAuthUI
 
 extension DPSettingsController: FUIAuthDelegate {
     @objc func logInClick() {

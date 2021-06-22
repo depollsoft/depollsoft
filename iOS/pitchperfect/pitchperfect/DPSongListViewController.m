@@ -198,7 +198,10 @@
     
     [toolbar sizeToFit];
     
-    [DPSongsModel sharedInstance].delegate = self;
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(songsChanged)
+                                               name:[DPSongsModel songsChangedNotificationName]
+                                             object:[DPSongsModel sharedInstance].defaultSongList];
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
@@ -246,20 +249,15 @@
 }
 
 - (void)sort {
-    [[DPSongsModel sharedInstance].songLists[@"default"].songs sortUsingComparator:^NSComparisonResult(DPPitchedSong *song1, DPPitchedSong *song2) {
-        static NSStringCompareOptions comparisonOptions = NSCaseInsensitiveSearch | NSNumericSearch | NSWidthInsensitiveSearch | NSForcedOrderingSearch;
-        NSRange string1Range = NSMakeRange(0, song1.name.length);
-        
-        return [song1.name compare:song2.name options:comparisonOptions range:string1Range locale:[NSLocale currentLocale]];
-    }];
-    [[DPSongsModel sharedInstance] storeValue];
+    [[DPSongsModel sharedInstance].defaultSongList sortSongs];
+    [[DPSongsModel sharedInstance].defaultSongList storeValue];
     [tableView reloadData];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
-    for (int x = 0; x < [DPSongsModel sharedInstance].songs.count; x++) {
+    for (int x = 0; x < [DPSongsModel sharedInstance].defaultSongList.songs.count; x++) {
         [[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:x inSection:0]] setHighlighted:NO animated:NO];
-        DPPitchedSong *song = [[DPSongsModel sharedInstance].songs objectAtIndex:x];
+        DPPitchedSong *song = [[DPSongsModel sharedInstance].defaultSongList.songs objectAtIndex:x];
         [song.key.note stop];
     }
     [super viewDidDisappear:animated];
@@ -274,7 +272,7 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPPitchedSong *song = [[[DPSongsModel sharedInstance] songs] objectAtIndex:indexPath.row];
+    DPPitchedSong *song = [[[DPSongsModel sharedInstance].defaultSongList songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
     cell.backgroundColor = [UIColor clearColor];
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
@@ -288,7 +286,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [[DPSongsModel sharedInstance] songs].count;
+    return [[DPSongsModel sharedInstance].defaultSongList songs].count;
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -300,17 +298,14 @@
 }
 
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
-    NSMutableArray *arr = [DPSongsModel sharedInstance].songs;
-    id obj = [arr objectAtIndex:sourceIndexPath.row];
-    [arr removeObjectAtIndex:sourceIndexPath.row];
-    [arr insertObject:obj atIndex:destinationIndexPath.row];
-    [DPSongsModel sharedInstance].songs = arr;
+    DPPitchedSong * song = [DPSongsModel sharedInstance].defaultSongList.songs[sourceIndexPath.row];
+    [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:sourceIndexPath.row];
+    [[DPSongsModel sharedInstance].defaultSongList addSong:song atIndex:destinationIndexPath.row];
 }
 
 - (void)tableView:(UITableView *)view commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        [[DPSongsModel sharedInstance].songs removeObjectAtIndex:indexPath.row];
-        [DPSongsModel sharedInstance].songs = [DPSongsModel sharedInstance].songs;
+        [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:indexPath.row];
         [tableView reloadData];
     }
 }
@@ -357,7 +352,7 @@
         [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [self->tableView reloadData];
-            [[DPSongsModel sharedInstance] storeValue];
+            [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
@@ -383,13 +378,13 @@
     editor.completionCallback = ^(BOOL cancelled) {
         [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
-            [[DPSongsModel sharedInstance].songs addObject:newSong];
-            [[DPSongsModel sharedInstance] storeValue];
+            [[DPSongsModel sharedInstance].defaultSongList addSong:newSong];
+            [[DPSongsModel sharedInstance].defaultSongList storeValue];
             [self->tableView reloadData];
-            [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+            [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].defaultSongList.songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
         } else {
-            [[DPSongsModel sharedInstance].songs removeObject:newSong];
-            [[DPSongsModel sharedInstance] storeValue];
+            [[DPSongsModel sharedInstance].defaultSongList removeSong:newSong];
+            [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {

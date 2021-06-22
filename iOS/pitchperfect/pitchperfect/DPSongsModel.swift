@@ -14,11 +14,11 @@ public extension Notification.Name {
 }
 
 @objc public class DPSongsModel: NSObject {
+    @objc public static let songsChangedNotificationName = Notification.Name.songsChanged
     @objc public static let sharedInstance = DPSongsModel()
     
     private var userDoc: DocumentReference?
     private var allListeners: [ListenerRegistration] = []
-    private var songListeners: [String: ListenerRegistration] = [:]
     
     @objc public func attachToFirestore() {
         userDoc = Firestore.firestore().document("/users/\(Auth.auth().currentUser!.uid)")
@@ -33,36 +33,14 @@ public extension Notification.Name {
             for change in snapshot!.documentChanges {
                 switch change.type {
                 case .added:
-                    self.songLists[change.document.documentID] = DPSongList(id: change.document.documentID, name: change.document.get("name") as! String)
-                    self.listenForSongs(songListRef: change.document.reference)
+                    self.songLists[change.document.documentID] = DPSongList(snapshot: change.document)
                 case .modified:
-                    self.songLists[change.document.documentID]?.name = change.document.get("name") as! String
+                    self.songLists[change.document.documentID]?.restore(snapshot: change.document)
                 case .removed:
                     self.songLists.removeValue(forKey: change.document.documentID)
-                    let l = self.songListeners.removeValue(forKey: change.document.documentID)
-                    l?.remove()
-                @unknown default:
-                    fatalError()
                 }
             }
         }))
-    }
-    
-    private func listenForSongs(songListRef: DocumentReference) {
-        _ = songLists[songListRef.documentID]
-        let listener = songListRef.collection("songs").addSnapshotListener { (snapshot, error) in
-            for change in snapshot!.documentChanges {
-                switch change.type {
-                case .added: break
-                case .removed: break
-                case .modified: break
-                @unknown default:
-                    fatalError()
-                }
-            }
-        }
-        allListeners.append(listener)
-        songListeners[songListRef.documentID] = listener
     }
     
     @objc public func detachFromFirestore() {
@@ -71,7 +49,6 @@ public extension Notification.Name {
             listener.remove()
         }
         allListeners = []
-        songListeners = [:]
     }
     
     @objc public var songLists: [String: DPSongList] = [:] {
@@ -79,12 +56,29 @@ public extension Notification.Name {
             NotificationCenter.default.post(name: .songsChanged, object: self)
         }
     }
+    
+    @objc public var defaultSongList: DPSongList {
+        get {
+            return self.songLists["default"]!
+        }
+    }
+    
+    @objc public func storeAll() {
+        for songList in self.songLists {
+            songList.value.storeValue()
+        }
+    }
 }
 
 @objc public class DPSongList: NSObject {
-    public init(id: String, name: String) {
-        self.name = name
-        self.id = id
+    private let reference: DocumentReference;
+    
+    init(snapshot: DocumentSnapshot) {
+        self.id = snapshot.documentID
+        self.reference = snapshot.reference
+        self.name = ""
+        super.init()
+        restore(snapshot: snapshot)
     }
     
     public let id: String
@@ -99,7 +93,45 @@ public extension Notification.Name {
         }
     }
     
-    @objc public func storeValue() {
+    func restore(snapshot: DocumentSnapshot) {
+        self.name = snapshot.get("name") as! String
+        self.songs = DPJsonSerializer.deserializeDictionary((snapshot.get("songs") as! [AnyHashable: Any])) as! [DPPitchedSong]
         
+    }
+    
+    @objc public func addSong(_ song: DPPitchedSong) {
+        songs.append(song)
+        NotificationCenter.default.post(name: .songsChanged, object: self)
+    }
+    
+    @objc public func removeSong(_ song: DPPitchedSong) {
+        if let index = songs.firstIndex(of: song) {
+            songs.remove(at: index)
+            NotificationCenter.default.post(name: .songsChanged, object: self)
+        }
+    }
+    
+    @objc public func removeSong(atIndex: Int) {
+        songs.remove(at: atIndex)
+        NotificationCenter.default.post(name: .songsChanged, object: self)
+    }
+    
+    @objc public func addSong(_ song: DPPitchedSong, atIndex: Int) {
+        songs.insert(song, at: atIndex)
+        NotificationCenter.default.post(name: .songsChanged, object: self)
+    }
+    
+    @objc public func sortSongs() {
+        self.songs.sort { left, right in
+            return left.name.lowercased() < right.name.lowercased()
+        }
+        NotificationCenter.default.post(name: .songsChanged, object: self)
+    }
+    
+    @objc public func storeValue() {
+        self.reference.setData([
+            "name": self.name,
+            "songs": DPJsonSerializer.serialize(self.songs) ?? []
+        ], merge: true)
     }
 }

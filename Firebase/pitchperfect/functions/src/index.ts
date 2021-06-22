@@ -55,20 +55,16 @@ exports.parseImport = functions.runWith({
     timeoutSeconds: 180
 }).pubsub.schedule('every 5 minutes').onRun(async context => {
     const promises = [];
-    promises.push(doParseImport('_User', 'lastUserUpdate', 500, async (users, isFirstTime) => {
+    promises.push(doParseImport('_User', 'lastUserUpdate', 100, async (users, isFirstTime) => {
         if (isFirstTime) {
             // clear auth users
             while (true) {
-                const results = await admin.auth().listUsers();
-                const deletionPromises = [];
+                const results = await admin.auth().listUsers(1000);
                 if (results.users.length === 0) {
                     break;
                 }
-                for (const user of results.users) {
-                    deletionPromises.push(admin.auth().deleteUser(user.uid));
-                }
                 try {
-                    await Promise.all(deletionPromises);
+                    await admin.auth().deleteUsers(results.users.map(user => user.uid));
                 } catch (e) {
                     console.error(e);
                     console.error("Waiting 1 second");
@@ -80,6 +76,8 @@ exports.parseImport = functions.runWith({
 
         const imports: admin.auth.UserImportRecord[] = [];
         const userPreferenceBatch = admin.firestore().batch();
+        const existingUsers = (await admin.auth().getUsers(users.map(u => u._id))).users
+            .reduce((prev, cur) => { prev[cur.uid] = cur; return cur; }, {});
 
         for (const user of users) {
             const toggleNotes = user.ToggleNote || false;
@@ -117,21 +115,11 @@ exports.parseImport = functions.runWith({
     promises.push(doParseImport('SongList', 'lastSongUpdate', 500, async (songLists, isFirstTime) => {
         const songPromises = [];
         for (const songList of songLists) {
-            const batch = admin.firestore().batch();
             const owner = songList._p_owner.split('$')[1];
-            batch.set(admin.firestore().doc(`users/${owner}/songLists/default`), {
-                name: "Default"
-            }, { merge: true });
-
-            let order = 0;
-            for (const song of songList.songs['*items']) {
-                batch.set(admin.firestore().doc(`users/${owner}/songLists/default/songs/${song.Id}`), {
-                    name: song.Name || "",
-                    key: song.Key,
-                    order: order++
-                }, { merge: true })
-            }
-            songPromises.push(batch.commit());
+            songPromises.push(admin.firestore().doc(`users/${owner}/songLists/default`).set({
+                name: "Default",
+                songs: songList.songs['*items']
+            }, { merge: true }));
         }
         await Promise.all(songPromises);
     }));

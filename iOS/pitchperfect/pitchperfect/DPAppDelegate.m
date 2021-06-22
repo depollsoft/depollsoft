@@ -9,8 +9,6 @@
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>
-#import <Fabric/Fabric.h>
-#import <Crashlytics/Crashlytics.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import "DPJsonSerializer.h"
@@ -36,7 +34,6 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [FIRApp configure];
-    [Fabric with:@[[Crashlytics class]]];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
@@ -81,21 +78,6 @@
     return YES;
 }
 
-+ (void)startupRefreshFromParse {
-    if ([PFUser currentUser]) {
-        @try {
-            [[PFUser currentUser] fetchInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-                if (!error) {
-                    [[DPSettingsModel sharedInstance] restoreUser];
-                    [[DPSongsModel sharedInstance] refreshFromParse];
-                }
-            }];
-        }
-        @catch (NSException *exception) {
-        }
-    }
-}
-
 + (BOOL)testAds {
 #ifdef TEST_ADS
     return YES;
@@ -124,7 +106,6 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-    [DPAppDelegate startupRefreshFromParse];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

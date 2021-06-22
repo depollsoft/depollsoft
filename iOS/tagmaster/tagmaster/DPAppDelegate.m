@@ -8,7 +8,7 @@
 
 #import "DPAppDelegate.h"
 
-@import FirebaseUI;
+@import FirebaseAuthUI;
 
 #import <Parse/Parse.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
