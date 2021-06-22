@@ -20,8 +20,11 @@ public extension Notification.Name {
     private var userDoc: DocumentReference?
     private var allListeners: [ListenerRegistration] = []
     
-    @objc public func attachToFirestore() {
+    @objc public func attachToFirestore(store: Bool = false) {
         userDoc = Firestore.firestore().document("/users/\(Auth.auth().currentUser!.uid)")
+        if store {
+            self.storeAll()
+        }
         listenForSongLists()
     }
     
