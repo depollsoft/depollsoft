@@ -234,16 +234,13 @@
         UITableViewCell *cell = (UITableViewCell *)recognizer.view;
         UIActivityIndicatorView *activity = (UIActivityIndicatorView*)cell.accessoryView;
         [activity startAnimating];
-        DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
-        [self presentViewController:loginViewController
-                           animated:YES
-                         completion:^{
-                             
-                         }];
+        __block DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+        [loginViewController logIn:self];
         [loginViewController.loginTask continueWithExecutor:[BFExecutor mainThreadExecutor]
                                                   withBlock:^id(BFTask *task) {
                                                       [activity stopAnimating];
                                                       [self->tableView reloadData];
+                                                      loginViewController = nil;
                                                       return nil;
                                                   }];
     }
