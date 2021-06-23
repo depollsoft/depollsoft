@@ -301,11 +301,13 @@
     DPPitchedSong * song = [DPSongsModel sharedInstance].defaultSongList.songs[sourceIndexPath.row];
     [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:sourceIndexPath.row];
     [[DPSongsModel sharedInstance].defaultSongList addSong:song atIndex:destinationIndexPath.row];
+    [[DPSongsModel sharedInstance].defaultSongList storeValue];
 }
 
 - (void)tableView:(UITableView *)view commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:indexPath.row];
+        [[DPSongsModel sharedInstance].defaultSongList storeValue];
         [tableView reloadData];
     }
 }

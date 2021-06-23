@@ -20,7 +20,7 @@ let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
         let user = Auth.auth().currentUser
         userRef = Firestore.firestore().document("users/\(user!.uid)")
         listenerRegistration = userRef?.addSnapshotListener { snapshot, error in
-            if error == nil {
+            if error != nil {
                 return
             }
             self.wakeLock = snapshot?.get("wakeLock") as? Bool ?? self.wakeLock
@@ -43,7 +43,7 @@ let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
         set {
             UserDefaults.standard.set(newValue, forKey: WAKE_LOCK_KEY)
             if userRef != nil {
-                userRef?.setValue(newValue, forKey: "wakeLock")
+                userRef?.setData(["wakeLock": newValue], merge: true)
             }
         }
     }
@@ -55,7 +55,7 @@ let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
         set {
             UserDefaults.standard.set(newValue, forKey: TOGGLE_NOTE_KEY)
             if userRef != nil {
-                userRef?.setValue(newValue, forKey: "toggleNotes")
+                userRef?.setData(["toggleNotes": newValue], merge: true)
             }
         }
     }
