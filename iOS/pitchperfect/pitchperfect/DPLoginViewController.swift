@@ -19,7 +19,12 @@ extension DPLoginViewController: FUIAuthDelegate {
         if Auth.auth().currentUser == nil {
             let authUI = FUIAuth.defaultAuthUI()!
             let providers: [FUIAuthProvider] = [
-                FUIEmailAuth(),
+                FUIEmailAuth(authAuthUI: authUI,
+                             signInMethod: EmailPasswordAuthSignInMethod,
+                             forceSameDevice: false,
+                             allowNewEmailAccounts: true,
+                             requireDisplayName: false,
+                             actionCodeSetting: ActionCodeSettings()),
                 FUIGoogleAuth(authUI: authUI),
                 FUIFacebookAuth(authUI: authUI),
                 FUIOAuth.appleAuthProvider()

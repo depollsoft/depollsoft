@@ -17,11 +17,11 @@
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import "DPAppDelegate.h"
-#import <Parse/Parse.h>
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
 #import "UIToolbar+DPUtils.h"
+@import Firebase;
 
 @interface DPSettingsViewController ()
 
@@ -204,7 +204,7 @@
         case 1:
         {
             cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
-            if ([PFUser currentUser]) {
+            if ([FIRAuth auth].currentUser) {
                 cell.textLabel.text = @"Log out";
             } else {
                 cell.textLabel.text = @"Log in";
@@ -227,9 +227,8 @@
 }
 
 - (void)loginButtonPress:(UIGestureRecognizer *)recognizer {
-    if ([PFUser currentUser]) {
-        [PFUser logOut];
-        //[[[FBSDKLoginManager alloc] init] logOut];
+    if ([FIRAuth auth].currentUser) {
+        [[FIRAuth auth] signOut:nil];
         [tableView reloadData];
     } else {
         UITableViewCell *cell = (UITableViewCell *)recognizer.view;

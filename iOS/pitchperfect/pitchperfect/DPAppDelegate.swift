@@ -22,9 +22,11 @@ public extension DPAppDelegate {
             if registration != nil {
                 registration?.remove()
                 DPSongsModel.sharedInstance.detachFromFirestore()
+                DPSettingsModel.sharedInstance.detachFromFirestore()
             }
             if user != nil {
                 DPSongsModel.sharedInstance.attachToFirestore()
+                DPSettingsModel.sharedInstance.attachToFirestore()
                 DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user!.uid)")
                 registration = DPAppDelegate.userDoc!.addSnapshotListener { (snapshot, error) in
                     if error != nil {
