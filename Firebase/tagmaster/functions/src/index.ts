@@ -91,7 +91,12 @@ exports.parseImport = functions.runWith({
             }
             userPreferenceBatch.set(
                 admin.firestore().doc(`users/${user._id}`),
-                { favoriteIds, teachableIds },
+                {
+                    lists: {
+                        favorite: favoriteIds,
+                        teachable: teachableIds
+                    }
+                },
                 { merge: true });
 
             let existingUser = null;

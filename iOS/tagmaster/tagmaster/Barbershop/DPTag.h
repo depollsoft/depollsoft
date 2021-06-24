@@ -75,6 +75,8 @@
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache;
 + (DPTagQueryResult *)query:(NSString *)query numberOfResults:(int)numberOfResults start:(int)start parts:(NSNumber *)parts learningTracks:(NSNumber *)learningTracks sheetMusic:(NSNumber *)sheetMusic collection:(enum DPTagCollection)tagCollection sortBy:(enum DPTagSortOptions)sortBy minimumRating:(NSNumber *)minimumRating minimumDownloads:(NSNumber *)minimumDownloads cache:(BOOL)cache fieldList:(NSString *)fieldList;
 + (DPTag *)queryById:(int)tagId;
++ (NSArray<DPTag *> *)queryByIds:(nonnull NSArray<NSNumber *> *)tagIds;
++ (NSArray<DPTag *> *)queryByIds:(nonnull NSArray<NSNumber *> *)tagIds cache:(BOOL)cache;
 
 - (NSURL *)tagUri;
 - (void)cache;

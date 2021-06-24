@@ -8,6 +8,8 @@
 
 #import "DPTagCell.h"
 #import "DPBusyIndicator.h"
+#import "DPAppDelegate.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagCell ()
 
@@ -116,6 +118,12 @@
 }
 
 - (void)loadTag:(BOOL)refresh {
+    static dispatch_queue_t serialQueue;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        serialQueue = dispatch_queue_create("depollsoft.loadTagQueue", DISPATCH_QUEUE_CONCURRENT);
+    });
+    
     int tagId = self.tagId;
     if (!refresh) {
         DPTag *t = [DPTag loadFromCache:tagId];
@@ -126,8 +134,12 @@
     }
     self.tagInstance = nil;
     [self.busyIndicator incrementBusyCount];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(serialQueue, ^{
         @try {
+            BFTask<NSNull *> *tagLoading = DPAppDelegate.tagLoading;
+            if (tagLoading) {
+                [tagLoading waitUntilFinished];
+            }
             DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (t.tagId == self.tagId) {
