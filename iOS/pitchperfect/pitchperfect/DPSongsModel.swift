@@ -27,7 +27,7 @@ public extension Notification.Name {
         if let serializedSongs = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONGS_KEY_OLD) {
             let songs = DPJsonSerializer.deserializeDictionary(serializedSongs) as! [DPPitchedSong]
             self.songLists["default"] = DPSongList(id: "default")
-            self.defaultSongList.name = "default"
+            self.defaultSongList.name = "Default"
             self.defaultSongList.songs = songs
             self.storeAll()
             UserDefaults.standard.removeObject(forKey: DPSongsModel.SONGS_KEY_OLD)
@@ -35,25 +35,25 @@ public extension Notification.Name {
             for (id, serializedList) in serializedLists {
                 let castList = serializedList as! [String: Any]
                 let name = castList["name"] as? String ?? id
-                let serializedSongs = castList["songs"]
-                let songs = DPJsonSerializer.deserializeDictionary((serializedSongs as! [AnyHashable : Any]))
+                let serializedSongs = castList["songs"] as! [[AnyHashable: Any]]
+                let songs = serializedSongs.map { DPJsonSerializer.deserializeDictionary($0) as! DPPitchedSong }
                 let songList = DPSongList(id: id)
                 songList.name = name
-                songList.songs = songs as! [DPPitchedSong]
+                songList.songs = songs
                 self.songLists[id] = songList
             }
         } else {
             self.songLists["default"] = DPSongList(id: "default")
-            self.defaultSongList.name = "default"
+            self.defaultSongList.name = "Default"
         }
     }
     
     @objc public func attachToFirestore(store: Bool = false) {
         userDoc = Firestore.firestore().document("/users/\(Auth.auth().currentUser!.uid)")
+        for (_, list) in self.songLists {
+            list.setParent(userRef: userDoc!)
+        }
         if store {
-            for (_, list) in self.songLists {
-                list.setParent(userRef: userDoc!)
-            }
             self.storeAll()
         }
         listenForSongLists()
@@ -148,7 +148,9 @@ public extension Notification.Name {
     
     func restore(snapshot: DocumentSnapshot) {
         self.name = snapshot.get("name") as! String
-        self.songs = DPJsonSerializer.deserializeDictionary((snapshot.get("songs") as! [AnyHashable: Any])) as! [DPPitchedSong]
+        self.songs = (snapshot.get("songs") as! [Any]).map {
+            DPJsonSerializer.deserializeDictionary(($0 as! [AnyHashable: Any])) as! DPPitchedSong
+        }
     }
     
     @objc public func addSong(_ song: DPPitchedSong) {
@@ -186,12 +188,12 @@ public extension Notification.Name {
     
     @objc public func storeValue() {
         var dict: [String: Any] = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) ?? [:]
-        let serializedSongs = DPJsonSerializer.serialize(NSArray(array: self.songs))
-        dict[self.id] = ["name": self.name, "songs": serializedSongs ?? [] as Any]
+        let serializedSongs = self.songs.map { DPJsonSerializer.serialize($0) }
+        dict[self.id] = ["name": self.name, "songs": serializedSongs]
         UserDefaults.standard.setValue(dict, forKey: DPSongsModel.SONG_LISTS_KEY)
         self.reference?.setData([
             "name": self.name,
-            "songs": serializedSongs ?? []
+            "songs": serializedSongs
         ], merge: true)
     }
 }
