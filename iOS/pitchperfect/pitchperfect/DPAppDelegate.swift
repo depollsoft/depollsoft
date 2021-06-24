@@ -9,6 +9,7 @@
 import Foundation
 import Firebase
 import Parse
+import depolllib
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
@@ -38,6 +39,11 @@ public extension DPAppDelegate {
                 DPAppDelegate.userDoc = nil
             }
         }
+        var tags: [String] = []
+        if Auth.auth().currentUser != nil {
+            tags.append("logged_in")
+        }
+        Analytics.sharedInstance.logEvent(Analytics.appOpenEvent, tags: Set(tags))
     }
     
     func convertParseUser() {
