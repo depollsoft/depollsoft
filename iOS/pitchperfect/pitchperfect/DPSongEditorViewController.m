@@ -68,7 +68,7 @@
     
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
-    //[self.view setBackgroundColor:[UIColor blackColor]];
+    [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"

@@ -119,7 +119,6 @@
     partsLabel = [self makeBodyLabel];
     typeLabel = [self makeBodyLabel];
     keyButton = [[DPPitchPipeButton alloc] init];
-    [keyButton.button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     keyButton.button.titleLabel.font = [UIFont systemFontOfSize:12];
     keyButton.button.contentEdgeInsets = UIEdgeInsetsMake(4, 0, 4, 0);
     classicTagNumberLabel = [self makeBodyLabel];

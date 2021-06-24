@@ -15,7 +15,7 @@ public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
 
     @objc func extraInit() {
-        //GADMobileAds.sharedInstance.start(completionHandler: nil)
+        GADMobileAds.sharedInstance().disableSDKCrashReporting()
         convertParseUser()
         
         var registration: ListenerRegistration? = nil

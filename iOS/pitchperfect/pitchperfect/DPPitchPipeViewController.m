@@ -60,7 +60,7 @@
     
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
-    //[self.view setBackgroundColor:[UIColor blackColor]];
+    [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
@@ -202,8 +202,6 @@
 - (void)refreshButtons {
     for (int x = 0; x < noteButtons.count; x++) {
         DPPitchPipeButton *button = [noteButtons objectAtIndex:x];
-        [button.button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        [button.button setTitleColor:[UIColor blackColor] forState:UIControlStateHighlighted];
         button.alpha = 0.75;
         button.toggle = [DPSettingsModel sharedInstance].toggleNotes;
         button.note = [model.notes objectAtIndex:x];
@@ -225,18 +223,20 @@
                 sharpLabel.font = [UIFont fontWithName:@"NoteHedz" size:40];
                 sharpLabel.backgroundColor = [UIColor clearColor];
                 sharpLabel.userInteractionEnabled = NO;
+                sharpLabel.textColor = button.button.currentTitleColor;
                 [sharpLabel sizeToFit];
                 UILabel *slashLabel = [[UILabel alloc] initWithFrame:button.frame];
                 slashLabel.text = @"/";
-                slashLabel.textColor = [UIColor blackColor];
                 slashLabel.backgroundColor = [UIColor clearColor];
                 slashLabel.userInteractionEnabled = NO;
+                slashLabel.textColor = button.button.currentTitleColor;
                 [slashLabel sizeToFit];
                 UILabel *flatLabel = [[UILabel alloc] init];
                 flatLabel.text = FLAT_STRING;
                 flatLabel.font = [UIFont fontWithName:@"NoteHedz" size:40];
                 flatLabel.backgroundColor = [UIColor clearColor];
                 flatLabel.userInteractionEnabled = NO;
+                flatLabel.textColor = button.button.currentTitleColor;
                 [flatLabel sizeToFit];
                 HLayoutView *layout = [[HLayoutView alloc] initWithFrame:button.frame spacing:4];
                 layout.userInteractionEnabled = NO;
