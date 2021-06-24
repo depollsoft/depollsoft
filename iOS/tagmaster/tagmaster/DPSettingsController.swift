@@ -24,7 +24,7 @@ extension DPSettingsController: FUIAuthDelegate {
                              forceSameDevice: false,
                              allowNewEmailAccounts: true,
                              requireDisplayName: false,
-                             actionCodeSetting: ActionCodeSettings())
+                             actionCodeSetting: ActionCodeSettings()),
                 FUIGoogleAuth(authUI: authUI),
                 FUIFacebookAuth(authUI: authUI),
                 FUIOAuth.appleAuthProvider()

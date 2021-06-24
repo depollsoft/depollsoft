@@ -213,16 +213,8 @@
 }
 
 - (NSArray *)parseWithUrl:(NSURL *)url {
-    NSXMLParser *parser = [[NSXMLParser alloc] initWithContentsOfURL:url];
-    parser.delegate = self;
-    result = [NSMutableArray arrayWithCapacity:3];
-    if (![parser parse]) {
-        result = nil;
-        return nil;
-    }
-    NSArray *toReturn = result;
-    result = nil;
-    return toReturn;
+    NSData *data = [NSData dataWithContentsOfURL:url];
+    return [self parseWithData:data];
 }
 
 @end

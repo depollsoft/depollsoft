@@ -96,6 +96,29 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     return queryResult.tags.count > 0 ? queryResult.tags[0] : nil;
 }
 
++ (NSArray<DPTag *> *)queryByIds:(NSArray<NSNumber *> *)tagIds {
+    return [self queryByIds:tagIds cache:NO];
+}
+
+
++ (NSArray<DPTag *> *)queryByIds:(NSArray<NSNumber *> *)tagIds cache:(BOOL)cache {
+    NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
+    NSString *tagIdsCombined = [tagIds componentsJoinedByString:@"|"];
+    [builtString appendFormat:@"id=%@&n=%lu", [tagIdsCombined stringByURLEncoding], (unsigned long)tagIds.count];
+    NSURL *url = [NSURL URLWithString:builtString];
+    DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
+    NSArray *parseResult = [parser parseWithUrl:url];
+    DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+    
+    if (cache) {
+        for (DPTag *tag in queryResult.tags) {
+            [tag cache];
+        }
+    }
+    
+    return queryResult.tags;
+}
+
 - (NSString *)description {
     return [NSString stringWithFormat:@"{Tag id: %d Title: %@}", self.tagId, self.title];
 }

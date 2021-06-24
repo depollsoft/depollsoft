@@ -19,6 +19,7 @@ public extension Notification.Name {
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
+    private static let LISTS_KEY = "depollsoft.pitchperfect.lists"
     
     @objc static func setTeachable(_ teachables: [Int]) {
         setTeachable(teachables, doSave: true)
@@ -26,21 +27,28 @@ public extension DPAppDelegate {
     
     @objc static func setTeachable(_ teachables: [Int], doSave: Bool) {
         let oldTeachables = DPAppDelegate.teachable()
-        UserDefaults.standard.set(teachables, forKey: "teachable")
+        var lists = UserDefaults.standard.dictionary(forKey: LISTS_KEY) ?? [:]
+        lists["teachable"] = teachables
+        UserDefaults.standard.set(lists, forKey: LISTS_KEY)
         if !oldTeachables.elementsEqual(teachables) {
             if doSave && userDoc != nil {
-                userDoc?.setData(["teachableIds": teachables], merge: true)
+                userDoc?.setData(["lists": ["teachable": favorites]], mergeFields: ["lists.teachable"])
             }
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
         }
     }
     
     @objc static func teachable() -> [Int] {
+        let dict = UserDefaults.standard.dictionary(forKey: LISTS_KEY)
+        return dict?["teachable"] as? [Int] ?? []
+    }
+    
+    static func oldTeachable() -> [Int]? {
         let array = UserDefaults.standard.array(forKey: "teachable")
         if array != nil {
             return array!.map({ v -> Int in (v as! NSNumber).intValue})
         }
-        return []
+        return nil
     }
     
     @objc static func setFavorites(_ favorites: [Int]) {
@@ -49,24 +57,45 @@ public extension DPAppDelegate {
     
     @objc static func setFavorites(_ favorites: [Int], doSave: Bool) {
         let oldFavorites = DPAppDelegate.favorites()
-        UserDefaults.standard.set(favorites, forKey: "favorites")
+        var lists = UserDefaults.standard.dictionary(forKey: LISTS_KEY) ?? [:]
+        lists["favorite"] = favorites
+        UserDefaults.standard.set(lists, forKey: LISTS_KEY)
         if !oldFavorites.elementsEqual(favorites) {
             if doSave && userDoc != nil {
-                userDoc?.setData(["favoriteIds": favorites], merge: true)
+                userDoc?.setData(["lists": ["favorite": favorites]], mergeFields: ["lists.favorite"])
             }
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
         }
     }
     
     @objc static func favorites() -> [Int] {
+        let dict = UserDefaults.standard.dictionary(forKey: LISTS_KEY)
+        return dict?["favorite"] as? [Int] ?? []
+    }
+    
+    static func oldFavorites() -> [Int]? {
         let array = UserDefaults.standard.array(forKey: "favorites")
         if array != nil {
             return array!.map({ v -> Int in (v as! NSNumber).intValue})
         }
-        return []
+        return nil
     }
     
+    private static func migrateOldLists() {
+        if let oldTeachable = oldTeachable() {
+            setTeachable(oldTeachable)
+            UserDefaults.standard.removeObject(forKey: "teachable")
+        }
+        if let oldFavorites = oldFavorites() {
+            setFavorites(oldFavorites)
+            UserDefaults.standard.removeObject(forKey: "favorites")
+        }
+    }
+    
+    @objc static var tagLoading: BFTask<NSNull>? = nil
+    
     @objc func extraInit() {
+        DPAppDelegate.migrateOldLists()
         convertParseUser()
         try! AVAudioSession.sharedInstance().setCategory(.playback)
         
@@ -87,17 +116,28 @@ public extension DPAppDelegate {
                     if !snapshot!.exists {
                         // There was no existing user, so initialize the user
                         DPAppDelegate.userDoc?.setData([
-                            "teachableIds": oldTeachable,
-                            "favoriteIds": oldFavorites
-                            ], merge:true)
+                            "lists": ["favorite": oldFavorites, "teachable": oldTeachable]
+                        ], merge:true)
                         return
                     }
-                    let teachableIds = (snapshot?.get("teachableIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
-                    let favoriteIds = (snapshot?.get("favoriteIds") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
+                    
+                    let teachableIds = (snapshot?.get("lists.teachable") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
+                    let favoriteIds = (snapshot?.get("lists.favorite") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
+                    
+                    let tcs = BFTaskCompletionSource<NSNull>()
+                    DPAppDelegate.tagLoading = tcs.task
                     
                     // Don't try to write these back to the server -- they're already there.
                     DPAppDelegate.setTeachable(teachableIds, doSave: false)
                     DPAppDelegate.setFavorites(favoriteIds, doSave: false)
+                    
+                    // Kick off precaching tags
+                    DispatchQueue.global().async {
+                        DPTag.query(byIds: (teachableIds + favoriteIds).map({ NSNumber(value:$0) }),
+                                    cache: true)
+                        tcs.set(result: NSNull())
+                        DPAppDelegate.tagLoading = nil
+                    }
                 }
             } else {
                 DPAppDelegate.userDoc = nil
