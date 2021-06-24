@@ -28,16 +28,26 @@
     if (self) {
         self.button = [UIButton buttonWithType:UIButtonTypeCustom];
         self.button.layer.masksToBounds = YES;
-        [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:0.9 alpha:1]]
-                               forState:UIControlStateNormal];
-        [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor colorWithWhite:1 alpha:1]]
-                               forState:UIControlStateHighlighted];
-        [button.layer setBorderColor:[[UIColor colorWithWhite:0.5 alpha:1] CGColor]];
-        [button.layer setBorderWidth:2];
-        [button.layer setCornerRadius:4];
+        [self updateConstraints];
         self.autoresizesSubviews = YES;
     }
     return self;
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [self updateConstraints];
+}
+
+- (void)updateConstraints {
+    self.button.layer.masksToBounds = YES;
+    [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor systemGray2Color]]
+                           forState:UIControlStateNormal];
+    [self.button setBackgroundImage:[DPPitchPipeButton imageWithColor:[UIColor systemGray5Color]]
+                           forState:UIControlStateHighlighted];
+    [button.layer setBorderColor:[[UIColor colorWithWhite:0.5 alpha:1] CGColor]];
+    [button.layer setBorderWidth:2];
+    [button.layer setCornerRadius:4];
+    [super updateConstraints];
 }
 
 + (UIImage *)imageWithColor:(UIColor *)color {
