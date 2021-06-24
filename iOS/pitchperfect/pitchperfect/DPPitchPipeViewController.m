@@ -151,6 +151,11 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(leftLayoutGuide, rightLayoutGuide, rootLayout)]];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(refreshButtons)
+                                                 name:DPSettingsModel.settingsChangedNotificationName
+                                               object:[DPSettingsModel sharedInstance]];
 }
 
 - (void)resetBannerViewSize {

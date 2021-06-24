@@ -12,9 +12,15 @@ import Firebase
 let WAKE_LOCK_KEY = "depollsoft.pitchperfect.WakeLock"
 let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
 
+public extension Notification.Name {
+    static let settingsChanged = Notification.Name("pitchPerfect.settingsChanged")
+}
+
 @objc public class DPSettingsModel: NSObject {
     private var listenerRegistration: ListenerRegistration?
     private var userRef: DocumentReference?
+    
+    @objc public static let settingsChangedNotificationName = Notification.Name.settingsChanged
     
     @objc public func attachToFirestore() {
         let user = Auth.auth().currentUser
@@ -45,6 +51,7 @@ let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
             if userRef != nil {
                 userRef?.setData(["wakeLock": newValue], merge: true)
             }
+            NotificationCenter.default.post(name: .settingsChanged, object: self)
         }
     }
     
@@ -57,6 +64,7 @@ let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
             if userRef != nil {
                 userRef?.setData(["toggleNotes": newValue], merge: true)
             }
+            NotificationCenter.default.post(name: .settingsChanged, object: self)
         }
     }
     

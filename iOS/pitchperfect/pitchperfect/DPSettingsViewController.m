@@ -121,6 +121,15 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleSettingsUpdate)
+                                                 name:DPSettingsModel.settingsChangedNotificationName
+                                               object:DPSettingsModel.sharedInstance];
+}
+
+- (void)handleSettingsUpdate {
+    [tableView reloadData];
 }
 
 - (void)resetBannerViewSize {
