@@ -147,7 +147,7 @@ public extension DPAppDelegate {
         if Auth.auth().currentUser != nil {
             tags.append("logged_in")
         }
-        Analytics.sharedInstance.logEvent("app_open", tags: Set(tags))
+        Analytics.sharedInstance.logEvent(Analytics.appOpenEvent, tags: Set(tags))
     }
     
     func convertParseUser() {

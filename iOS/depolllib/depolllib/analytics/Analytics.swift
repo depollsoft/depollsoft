@@ -9,6 +9,7 @@
 import Foundation
 
 public class Analytics {
+    public static let appOpenEvent = "app_open"
     private static let endpoint = URL(string: "https://api.depollsoft.xyz/analytics")!
     private var prefix: String
     public init(prefix: String) {
