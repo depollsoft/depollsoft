@@ -75,13 +75,6 @@
     if ([[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication]) {
         return YES;
     }
-    if([[FBSDKApplicationDelegate sharedInstance] application:application
-                                                                  openURL:url
-                                                        sourceApplication:sourceApplication
-                                                               annotation:annotation
-        ]) {
-        return YES;
-    }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
         NSString *tagNumberString = url.pathComponents[2];
         @try {

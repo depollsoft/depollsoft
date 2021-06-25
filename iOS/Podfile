@@ -6,6 +6,8 @@ use_frameworks!
 project 'depolllib/depolllib.xcodeproj'
 project 'pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj'
 
+inhibit_all_warnings!
+
 def google_utilites
     pod 'GoogleUtilities/AppDelegateSwizzler'
     pod 'GoogleUtilities/Environment'
@@ -19,23 +21,23 @@ def google_utilites
   end
 
 def shared_pods
-    pod 'Parse', inhibit_warnings: true
-    pod 'Bolts/Tasks', inhibit_warnings: true
+    pod 'Parse'
+    pod 'Bolts/Tasks'
     pod 'GoogleUtilities'
     pod 'Firebase/Auth'
-    pod 'Firebase/Firestore', inhibit_warnings: true
-    pod 'FirebaseFirestore', inhibit_warnings: true
+    pod 'Firebase/Firestore'
+    pod 'FirebaseFirestore'
     pod 'Firebase/Functions'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
     pod 'FirebaseUI/Google'
     pod 'FirebaseUI/Facebook'
-    pod 'Protobuf', inhibit_warnings: true
-    pod 'GTMAppAuth', inhibit_warnings: true
-    pod 'gRPC-Core', inhibit_warnings: true
-    pod 'gRPC-C++', inhibit_warnings: true
-    pod 'GTMSessionFetcher', inhibit_warnings: true
+    pod 'Protobuf'
+    pod 'GTMAppAuth'
+    pod 'gRPC-Core'
+    pod 'gRPC-C++'
+    pod 'GTMSessionFetcher'
 end
 
 target 'tagmaster' do

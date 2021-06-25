@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
+#import <GoogleSignIn/GoogleSignIn.h>
 
 @class DPNote;
 

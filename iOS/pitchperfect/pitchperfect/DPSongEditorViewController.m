@@ -43,7 +43,7 @@
     
     UIToolbar *toolbar = self.toolbar;
     
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
     
@@ -56,8 +56,9 @@
                                  ];
     
 	// Do any additional setup after loading the view, typically from a nib.
-    bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
+    bannerView = [[GADBannerView alloc] init];
     bannerView.adUnitID = @"a14fd7eba4542f0";
+    [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
     
@@ -96,7 +97,7 @@
     nameField.delegate = self;
     [nameField sizeToFit];
     
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
         [bannerView loadRequest:DPAppDelegate.adRequest];
@@ -137,17 +138,14 @@
 }
 
 - (void)resetBannerViewSize {
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-        return;
-    }
-    switch ([UIApplication sharedApplication].statusBarOrientation) {
+    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = kGADAdSizeSmartBannerLandscape;
+            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
             break;
         case UIInterfaceOrientationPortrait:
         case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = kGADAdSizeSmartBannerPortrait;
+            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
             break;
         default:
             break;
