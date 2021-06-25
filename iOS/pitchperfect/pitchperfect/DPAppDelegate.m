@@ -34,8 +34,6 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [FIRApp configure];
-    [GIDSignIn sharedInstance].clientID = [FIRApp defaultApp].options.clientID;
-    [GIDSignIn sharedInstance].delegate = self;
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
@@ -56,9 +54,6 @@
     [DPJsonSerializer registerAlias:@"Integer" forObjCType:[NSString stringWithUTF8String:@encode(int)]];
     [DPJsonSerializer registerAlias:@"Boolean" forObjCType:[NSString stringWithUTF8String:@encode(BOOL)]];
     [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
-    
-    // Initialize settings
-    [DPSettingsModel sharedInstance];
     
     dispatch_async(dispatch_get_main_queue(), ^{
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {

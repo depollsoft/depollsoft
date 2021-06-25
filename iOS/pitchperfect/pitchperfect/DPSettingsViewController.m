@@ -33,7 +33,7 @@
 
 @implementation DPSettingsViewController
 
-@synthesize bannerView, tableView, popoverController;
+@synthesize bannerView, tableView;
 
 + (DPSettingsViewController *)sharedInstance {
     static DPSettingsViewController *settings;
@@ -293,10 +293,7 @@
 }
 
 - (void)complete {
-    [self dismissViewControllerAnimated:YES completion:^{
-        
-    }];
-    [popoverController dismissPopoverAnimated:YES];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

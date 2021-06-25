@@ -18,6 +18,7 @@
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "UIToolbar+DPUtils.h"
+#import "pitchperfect-Swift.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -126,14 +127,13 @@
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) NSArray *notes;
 @property (nonatomic, strong) UITableView *tableView;
-@property (nonatomic, strong) UIPopoverController *popover;
 @property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
 @end
 
 @implementation DPNotesViewController
 
-@synthesize bannerView, notes, tableView, popover, settingsButton;
+@synthesize bannerView, notes, tableView, settingsButton;
 
 - (void)viewDidLoad
 {
@@ -188,7 +188,7 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
+    settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, settingsButton, nil];
     [toolbar sizeToFit];
     
@@ -231,7 +231,7 @@
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+    [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
         [self resetBannerViewSize];
     }];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -260,22 +260,7 @@
 }
 
 - (void)openSettings {
-    DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        if (self.popover.isPopoverVisible) {
-            [popover dismissPopoverAnimated:YES];
-            return;
-        }
-        settings.preferredContentSize = CGSizeMake(320, 480);
-        popover = [[UIPopoverController alloc] initWithContentViewController:settings];
-        settings.popoverController = popover;
-        [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-        
-    } else {
-        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-        [self presentViewController:settings animated:YES completion:^{
-        }];
-    }
+    [DPCommon openSettings:self barButtonItem:settingsButton];
 }
 
 @end

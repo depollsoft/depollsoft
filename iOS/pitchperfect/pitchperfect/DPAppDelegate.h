@@ -14,7 +14,6 @@
 
 @interface DPAppDelegate : UIResponder <UIApplicationDelegate>
 
-+ (void)startupRefreshFromParse;
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell;
 + (void)noteTouchEnded:(DPNote *)note forCell:(UITableViewCell *)cell;
 + (BOOL)testAds;

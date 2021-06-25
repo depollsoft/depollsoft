@@ -22,6 +22,7 @@
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "UIToolbar+DPUtils.h"
+#import "pitchperfect-Swift.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -81,7 +82,7 @@
     
     flowRight.frame = CGRectInset(self.frame, 10, 0);
     flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     flowRight.userInteractionEnabled = NO;
     
     self.textLabel.text = song.name;
@@ -122,7 +123,6 @@
 @property (nonatomic, strong) UIBarButtonItem *addItem;
 @property (nonatomic, strong) NSArray *editingButtons;
 @property (nonatomic, strong) NSArray *normalButtons;
-@property (nonatomic, strong) UIPopoverController *popover;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
 @property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
@@ -130,7 +130,7 @@
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, editingButtons, normalButtons, popover, addButton, settingsButton;
+@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, editingButtons, normalButtons, addButton, settingsButton;
 
 - (void)viewDidLoad
 {
@@ -182,8 +182,8 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    settingsButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(openSettings)];
-    
+    settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
+
     addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
     
     editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
@@ -243,7 +243,7 @@
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+    [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
         [self resetBannerViewSize];
     }];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -328,58 +328,33 @@
 }
 
 - (void)openSettings {
-    DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        if (self.popover.isPopoverVisible) {
-            [popover dismissPopoverAnimated:YES];
-            return;
-        }
-        settings.preferredContentSize = CGSizeMake(320, 480);
-        popover = [[UIPopoverController alloc] initWithContentViewController:settings];
-        settings.popoverController = popover;
-        [popover presentPopoverFromBarButtonItem:settingsButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-        
-    } else {
-        settings.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-        [self presentViewController:settings animated:YES completion:^{
-        }];
-    }
+    [DPCommon openSettings:self barButtonItem:settingsButton];
 }
 
 - (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
     editor.preferredContentSize = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
+    editor.modalPresentationStyle = UIModalPresentationAutomatic;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
-        [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [self->tableView reloadData];
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        if (popover.isPopoverVisible) {
-            [popover dismissPopoverAnimated:YES];
-        }
-        popover = [[UIPopoverController alloc] initWithContentViewController:editor];
-        [popover presentPopoverFromRect:CGRectMake(0, 0, view.frame.size.width, view.frame.size.height) inView:view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-    } else {
-        [self presentViewController:editor animated:YES completion:^{
-            
-        }];
-    }
+    [self presentViewController:editor animated:YES completion:nil];
 }
 
 - (void)addSong {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
     editor.preferredContentSize = CGSizeMake(320, 480);
     editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    editor.modalPresentationStyle = UIModalPresentationAutomatic;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
     editor.completionCallback = ^(BOOL cancelled) {
-        [self->popover dismissPopoverAnimated:YES];
         if (!cancelled) {
             [[DPSongsModel sharedInstance].defaultSongList addSong:newSong];
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
@@ -390,18 +365,7 @@
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        if (popover.isPopoverVisible) {
-            [popover dismissPopoverAnimated:YES];
-            return;
-        }
-        popover = [[UIPopoverController alloc] initWithContentViewController:editor];
-        [popover presentPopoverFromBarButtonItem:addButton permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-    } else {
-        [self presentViewController:editor animated:YES completion:^{
-            
-        }];
-    }
+    [self presentViewController:editor animated:YES completion:nil];
 }
 
 - (void)songsChanged {

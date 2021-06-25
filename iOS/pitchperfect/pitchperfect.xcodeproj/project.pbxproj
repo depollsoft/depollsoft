@@ -13,6 +13,7 @@
 		1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */; };
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
+		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
 		1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */; };
 		1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3422F533F900EA9F2E /* DPSongsModel.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
@@ -118,6 +119,7 @@
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
 		1E8EA647267E5BC400255826 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1E95FFA02686560500B5299C /* DPCommon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPCommon.swift; sourceTree = "<group>"; };
 		1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfect-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
@@ -400,6 +402,7 @@
 				63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */,
 				1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */,
 				1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */,
+				1E95FFA02686560500B5299C /* DPCommon.swift */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -739,6 +742,7 @@
 				631C912315945219004733F1 /* DPKeysViewController.m in Sources */,
 				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
 				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
+				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,

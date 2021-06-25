@@ -90,7 +90,7 @@
     nameField.leftView = nameLabel;
     nameField.leftViewMode = UITextFieldViewModeAlways;
     nameField.text = song.name;
-    nameField.contentMode = UIControlContentVerticalAlignmentCenter;
+    nameField.contentMode = UIViewContentModeCenter;
     nameField.borderStyle = UITextBorderStyleRoundedRect;
     nameField.returnKeyType = UIReturnKeyNext;
     nameField.autocapitalizationType = UITextAutocapitalizationTypeWords;
@@ -108,7 +108,6 @@
     keyPicker = [[UIPickerView alloc] init];
     keyPicker.dataSource = self;
     keyPicker.delegate = self;
-    keyPicker.showsSelectionIndicator = YES;
     [keyPicker sizeToFit];
     [keyPicker selectRow:[allKeys indexOfObject:song.key] inComponent:0 animated:YES];
     
@@ -158,7 +157,7 @@
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [coordinator notifyWhenInteractionEndsUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+    [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
         [self resetBannerViewSize];
     }];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
