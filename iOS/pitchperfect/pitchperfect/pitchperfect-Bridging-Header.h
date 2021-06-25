@@ -6,3 +6,4 @@
 #import "DPPitchedSong.h"
 #import "DPJsonSerializer.h"
 #import "DPLoginViewController.h"
+#import "DPSettingsViewController.h"

@@ -13,6 +13,4 @@
 
 + (DPSettingsViewController *)sharedInstance;
 
-@property (nonatomic, weak) UIPopoverController *popoverController;
-
 @end
