@@ -166,8 +166,9 @@
     
     keys = [DPKey majorKeys];
 	// Do any additional setup after loading the view, typically from a nib.
-    bannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
+    bannerView = [[GADBannerView alloc] init];
     bannerView.adUnitID = @"a14fd7eba4542f0";
+    [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
     
@@ -244,14 +245,14 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].statusBarOrientation) {
+    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = kGADAdSizeSmartBannerLandscape;
+            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
             break;
         case UIInterfaceOrientationPortrait:
         case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = kGADAdSizeSmartBannerPortrait;
+            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
             break;
         default:
             break;
@@ -301,7 +302,7 @@
 
 - (void)openSettings {
     DPSettingsViewController *settings = [DPSettingsViewController sharedInstance];
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         if (self.popover.isPopoverVisible) {
             [popover dismissPopoverAnimated:YES];
             return;
