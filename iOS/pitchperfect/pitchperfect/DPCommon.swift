@@ -17,8 +17,7 @@ import Foundation
     }
     
     @objc public static func getSettingsButton(target: Any, selector: Selector) -> UIBarButtonItem {
-        let settingsButton = UIBarButtonItem(title: "\u{2699}\u{0000FE0E}", style: .plain, target: target, action: selector)
-        settingsButton.setTitleTextAttributes([.font: UIFont(name: "Helvetica", size: 36)!], for: .normal)
+        let settingsButton = UIBarButtonItem(image: UIImage(systemName: "gearshape"), style: .plain, target: target, action: selector)
         return settingsButton
     }
 }

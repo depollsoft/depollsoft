@@ -250,32 +250,33 @@
 }
 
 - (void)clearFavorites {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Favorite Tags"
-                                                    message:@"Are you sure you want to clear your favorites?"
-                                                   delegate:self
-                                          cancelButtonTitle:@"No"
-                                          otherButtonTitles:@"Yes", nil];
-    [alert show];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Favorite Tags"
+                                                                             message:@"Are you sure you want to clear your favorites?"
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+                                                        style:UIAlertActionStyleDestructive
+                                                      handler:^(UIAlertAction * _Nonnull action) {
+        [DPAppDelegate setFavorites:@[]];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+                                                        style:UIAlertActionStyleCancel
+                                                      handler:nil]];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)clearTeachable {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Teachable Tags"
-                                                    message:@"Are you sure you want to clear your teachable tags list?"
-                                                   delegate:self
-                                          cancelButtonTitle:@"No"
-                                          otherButtonTitles:@"Yes", nil];
-    [alert show];
-}
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == alertView.cancelButtonIndex) {
-        return;
-    }
-    if ([alertView.title isEqualToString:@"Favorite Tags"]) {
-        [DPAppDelegate setFavorites:@[]];
-    } else {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Teachable Tags"
+                                                                             message:@"Are you sure you want to clear your teachable tags list?"
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+                                                        style:UIAlertActionStyleDestructive
+                                                      handler:^(UIAlertAction * _Nonnull action) {
         [DPAppDelegate setTeachable:@[]];
-    }
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+                                                        style:UIAlertActionStyleCancel
+                                                      handler:nil]];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)didReceiveMemoryWarning

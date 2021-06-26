@@ -24,12 +24,6 @@
 @property (nonatomic, strong) DPTagTracksController *tagTracksController;
 @property (nonatomic, strong) DPTagVideoController *tagVideoController;
 
-@property (nonatomic, strong) UIActionSheet *actions;
-@property (nonatomic) NSInteger favoriteButtonIndex;
-@property (nonatomic) NSInteger teachableButtonIndex;
-@property (nonatomic) NSInteger emailButtonIndex;
-@property (nonatomic) NSInteger smsButtonIndex;
-
 @property (nonatomic, strong) UIBarButtonItem *actionBarButton;
 
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
@@ -130,9 +124,12 @@
     self.viewControllers = controllers;
     
     self.navigationItem.rightBarButtonItems = @[
-                          self.actionBarButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(showActions)],
-                          [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshTag)]
-                          ];
+        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
+                                                      target:self
+                                                      action:@selector(sendTag)],
+        self.actionBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"tag"] style:UIBarButtonItemStylePlain target:self action:@selector(showActions)],
+        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshTag)]
+    ];
     
     [self setTag:self.tag];
 }
@@ -157,36 +154,50 @@
 }
 
 - (void)showActions {
-    UIActionSheet *actions = [[UIActionSheet alloc] initWithTitle:nil
-                                                         delegate:self
-                                                cancelButtonTitle:nil
-                                           destructiveButtonTitle:nil
-                                                otherButtonTitles:nil];
+    UIAlertController *actions = [UIAlertController alertControllerWithTitle:nil
+                                                                     message:nil
+                                                              preferredStyle:UIAlertControllerStyleActionSheet];
+    actions.popoverPresentationController.barButtonItem = self.actionBarButton;
     
     if (![DPAppDelegate containsFavorite:self.tagId]) {
-        self.favoriteButtonIndex = [actions addButtonWithTitle:@"Add Favorite"];
+        [actions addAction:[UIAlertAction actionWithTitle:@"Add Favorite"
+                                                    style:UIAlertActionStyleDefault
+                                                  handler:^(UIAlertAction * _Nonnull action) {
+            [DPAppDelegate addFavorite:self.tagId];
+        }]];
     } else {
-        self.favoriteButtonIndex = [actions addButtonWithTitle:@"Remove Favorite"];
+        [actions addAction:[UIAlertAction actionWithTitle:@"Remove Favorite"
+                                                    style:UIAlertActionStyleDefault
+                                                  handler:^(UIAlertAction * _Nonnull action) {
+            [DPAppDelegate removeFavorite:self.tagId];
+        }]];
     }
     if (![DPAppDelegate containsTeachable:self.tagId]) {
-        self.teachableButtonIndex = [actions addButtonWithTitle:@"Mark as Teachable"];
+        [actions addAction:[UIAlertAction actionWithTitle:@"Mark as Teachable"
+                                                    style:UIAlertActionStyleDefault
+                                                  handler:^(UIAlertAction * _Nonnull action) {
+            [DPAppDelegate addTeachable:self.tagId];
+        }]];
     } else {
-        self.teachableButtonIndex = [actions addButtonWithTitle:@"Unmark as Teachable"];
+        [actions addAction:[UIAlertAction actionWithTitle:@"Unmark as Teachable"
+                                                    style:UIAlertActionStyleDefault
+                                                  handler:^(UIAlertAction * _Nonnull action) {
+            [DPAppDelegate removeTeachable:self.tagId];
+        }]];
     }
     
-    if ([MFMessageComposeViewController canSendText]) {
-        self.smsButtonIndex = [actions addButtonWithTitle:@"Send as SMS"];
-    } else {
-        self.smsButtonIndex = -1;
-    }
-    if ([MFMailComposeViewController canSendMail]) {
-        self.emailButtonIndex = [actions addButtonWithTitle:@"Send as Email"];
-    } else {
-        self.emailButtonIndex = -1;
-    }
+    [actions addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                                style:UIAlertActionStyleCancel
+                                              handler:nil]];
     
-    actions.cancelButtonIndex = [actions addButtonWithTitle:@"Cancel"];
-    [actions showFromBarButtonItem:self.actionBarButton animated:YES];
+    [self presentViewController:actions animated:YES completion:nil];
+}
+
+- (void)sendTag {
+    NSString *string = [NSString stringWithFormat:@"%@ - Tag Master for iOS", self.tag.title];
+    NSURL *url = self.tag.tagUri;
+    UIActivityViewController *activityController = [[UIActivityViewController alloc] initWithActivityItems:@[string, url] applicationActivities:nil];
+    [self presentViewController:activityController animated:YES completion:nil];
 }
 
 - (void)refreshTag {
@@ -197,33 +208,6 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
-}
-
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == self.smsButtonIndex) {
-        MFMessageComposeViewController *smsController = [[MFMessageComposeViewController alloc] init];
-        smsController.messageComposeDelegate = self;
-        smsController.body = [NSString stringWithFormat:@"%@ %@ - Sent from Tag Master for iOS", self.tag.title, self.tag.tagUri];
-        [self presentViewController:smsController animated:YES completion:nil];
-    } else if (buttonIndex == self.emailButtonIndex) {
-        MFMailComposeViewController *mailController = [[MFMailComposeViewController alloc] init];
-        [mailController setSubject:[NSString stringWithFormat:@"Tag: %@", self.tag.title]];
-        [mailController setMessageBody:[NSString stringWithFormat:@"%@\n%@\n\nSent from Tag Master for iOS\nhttp://apps.depoll.com/barbershop/tag-master", self.tag.title, self.tag.tagUri] isHTML:NO];
-        mailController.mailComposeDelegate = self;
-        [self presentViewController:mailController animated:YES completion:nil];
-    } else if (buttonIndex == self.favoriteButtonIndex) {
-        if ([DPAppDelegate containsFavorite:self.tagId]) {
-            [DPAppDelegate removeFavorite:self.tagId];
-        } else {
-            [DPAppDelegate addFavorite:self.tagId];
-        }
-    } else if (buttonIndex == self.teachableButtonIndex) {
-        if ([DPAppDelegate containsTeachable:self.tagId]) {
-            [DPAppDelegate removeTeachable:self.tagId];
-        } else {
-            [DPAppDelegate addTeachable:self.tagId];
-        }
-    }
 }
 
 - (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result {

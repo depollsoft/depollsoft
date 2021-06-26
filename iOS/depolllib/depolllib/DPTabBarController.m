@@ -40,14 +40,13 @@
     [self.view addSubview:self.rootView];
     
     NSMutableDictionary *bindings = [NSMutableDictionary dictionaryWithDictionary:NSDictionaryOfVariableBindings(tabBar, rootView)];
-    bindings[@"topLayoutGuide"] = self.topLayoutGuide;
-    bindings[@"bottomLayoutGuide"] = self.bottomLayoutGuide;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][rootView][tabBar]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[rootView][tabBar]"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:bindings]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide]->=0-[tabBar]|"
+    [rootView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|->=0-[tabBar]|"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:bindings]];

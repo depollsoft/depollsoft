@@ -21,13 +21,8 @@
     _toolbar.delegate = self;
     _toolbar.translatesAutoresizingMaskIntoConstraints = NO;
     
-    id topLayoutGuide = self.topLayoutGuide;
-
     [self.view addSubview:_toolbar];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][_toolbar]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_toolbar, topLayoutGuide)]];
+    [_toolbar.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_toolbar]|"
                                                                       options:0
                                                                       metrics:nil

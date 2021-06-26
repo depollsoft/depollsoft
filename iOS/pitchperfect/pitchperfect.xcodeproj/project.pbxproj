@@ -37,7 +37,6 @@
 		63237B8C1979DCC300EA08CC /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63237B8B1979DCC300EA08CC /* Accounts.framework */; };
 		63336A2817F50A0300BC1EE2 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A2717F50A0300BC1EE2 /* CoreData.framework */; };
 		63336A2D17F50B0100BC1EE2 /* libpitchperfectlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63CB96DD1595C01100116907 /* libpitchperfectlib.a */; };
-		63336A3317F51CF800BC1EE2 /* UIViewController+Helpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3217F51CF800BC1EE2 /* UIViewController+Helpers.m */; };
 		6338EFC01979DEB2000187E2 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFBF1979DEB2000187E2 /* CoreLocation.framework */; };
 		6338EFC21979DEBD000187E2 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFC11979DEBD000187E2 /* CoreTelephony.framework */; };
 		6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6338EFC31979DFFA000187E2 /* Images.xcassets */; };
@@ -150,8 +149,6 @@
 		63237B891979DCB800EA08CC /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
 		63237B8B1979DCC300EA08CC /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		63336A2717F50A0300BC1EE2 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		63336A3117F51CF800BC1EE2 /* UIViewController+Helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIViewController+Helpers.h"; sourceTree = "<group>"; };
-		63336A3217F51CF800BC1EE2 /* UIViewController+Helpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIViewController+Helpers.m"; sourceTree = "<group>"; };
 		6338EFBF1979DEB2000187E2 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		6338EFC11979DEBD000187E2 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		6338EFC31979DFFA000187E2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -395,8 +392,6 @@
 				1E989A3422F533F900EA9F2E /* DPSongsModel.swift */,
 				63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */,
 				63DC36A8151E9000007C46DB /* Supporting Files */,
-				63336A3117F51CF800BC1EE2 /* UIViewController+Helpers.h */,
-				63336A3217F51CF800BC1EE2 /* UIViewController+Helpers.m */,
 				6338EFC31979DFFA000187E2 /* Images.xcassets */,
 				63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */,
 				63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */,
@@ -732,7 +727,6 @@
 				63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */,
 				63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */,
 				63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */,
-				63336A3317F51CF800BC1EE2 /* UIViewController+Helpers.m in Sources */,
 				63A99D7A1588359700C78CC0 /* DPPitchPipeModel.m in Sources */,
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
 				634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */,
