@@ -71,7 +71,6 @@
 
 - (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller {
     view = [view padHorizontal:8 vertical:0];
-    id topLayoutGuide = self.topLayoutGuide;
     view.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
     NSDictionary *bindings = NSDictionaryOfVariableBindings(view);
@@ -101,10 +100,11 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(scroller, leftGuide, rightGuide)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][scroller]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[scroller]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(scroller, topLayoutGuide)]];
+                                                                        views:NSDictionaryOfVariableBindings(scroller)]];
+    [scroller.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
 }
 
 @end

@@ -204,7 +204,7 @@
         youTubeCode = video.youTubeCode;
     }
     NSURL *youTubeURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.youtube.com/watch?v=%@", youTubeCode]];
-    [[UIApplication sharedApplication] openURL:youTubeURL];
+    [[UIApplication sharedApplication] openURL:youTubeURL options:@{} completionHandler:nil];
 }
 
 + (UIImage *)onImage {

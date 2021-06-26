@@ -135,22 +135,16 @@
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    id bottomLayoutGuide = self.bottomLayoutGuide;
-    
+        
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout][bottomLayoutGuide]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout, bottomLayoutGuide)]];
-    
-    id leftLayoutGuide = self.view.leftSafeAreaLayoutGuide;
-    id rightLayoutGuide = self.view.rightSafeAreaLayoutGuide;
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[leftLayoutGuide][rootLayout][rightLayoutGuide]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(leftLayoutGuide, rightLayoutGuide, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+    [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
+    [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
+    [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(refreshButtons)

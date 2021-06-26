@@ -207,19 +207,34 @@
 }
 
 - (void)rate {
-    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
-                                                             delegate:self
-                                                    cancelButtonTitle:@"Cancel"
-                                               destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"★★★★★", @"★★★★", @"★★★", @"★★", @"★", nil];
-    [actionSheet showFromRect:ratingButton.frame inView:ratingButton animated:YES];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Rating"
+                                                                             message:@"Rate the tag on a scale of 1-5 stars"
+                                                                      preferredStyle:UIAlertControllerStyleActionSheet];
+    alertController.popoverPresentationController.sourceView = ratingButton;
+    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★★★" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self rateTag:5];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★★☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self rateTag:4];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self rateTag:3];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"★★☆☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self rateTag:2];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"★☆☆☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self rateTag:1];
+    }]];
+    
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                                        style:UIAlertActionStyleCancel
+                                                      handler:nil]];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    NSInteger rating = 5 - buttonIndex;
-    if (rating == 0) {
-        return;
-    }
+- (void)rateTag:(NSInteger)rating {
     [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
@@ -249,6 +264,11 @@
                 [self.busyIndicator decrementBusyCount];
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
+                UIButton *toucher = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+                [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote.friendlyName] forState:UIControlStateNormal];
+                [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
+                [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+                previewer.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:toucher];
                 [self presentViewController:previewer animated:YES completion:NULL];
             });
         } @catch (NSException *exception) {
@@ -256,6 +276,22 @@
                 [self.busyIndicator decrementBusyCount];
             });
         }
+    });
+}
+
+- (void)pitchTouchDown {
+    [self.tag.keyNote play];
+}
+
+- (void)pitchTouchUp {
+    [self.tag.keyNote stop];
+}
+
+- (void)playKeyNote {
+    [self.tag.keyNote play];
+    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
+    dispatch_after(delayTime, dispatch_get_main_queue(), ^{
+        [self.tag.keyNote stop];
     });
 }
 

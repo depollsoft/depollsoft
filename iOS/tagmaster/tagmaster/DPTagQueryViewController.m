@@ -79,7 +79,7 @@
     self.tagTable.backgroundColor = [UIColor clearColor];
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
-    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
     self.activity.hidesWhenStopped = YES;
     
     self.statusLabel = [[UITextView alloc] init];
@@ -93,14 +93,13 @@
     [self.view addSubview:self.tagTable];
     
     NSMutableDictionary *bindings = [NSMutableDictionary dictionaryWithDictionary:NSDictionaryOfVariableBindings(tagTable)];
-    bindings[@"topLayoutGuide"] = self.topLayoutGuide;
-    bindings[@"bottomLayoutGuide"] = self.bottomLayoutGuide;
     
     if (![self.parentViewController isKindOfClass:[DPTabBarController class]]) {
-        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide][tagTable]|"
+        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[tagTable]|"
                                                                           options:0
                                                                           metrics:nil
                                                                             views:bindings]];
+        [tagTable.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     } else {
         [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tagTable]|"
                                                                           options:0
