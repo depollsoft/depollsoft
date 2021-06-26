@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Used for collecting basic app usage analytics and crash reporting.</string>
-	<key>FirebaseDataCollectionDefaultEnabled</key>
-	<string>NO</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -25,18 +21,18 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.4.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.572337670650-1g9cr8frnk55s35aso5ic642492jvdf3</string>
 			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeRole</key>
@@ -60,11 +56,13 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1.4.0</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>FacebookAppID</key>
 	<string>311400242255131</string>
 	<key>FacebookDisplayName</key>
 	<string>Tag Master</string>
+	<key>FirebaseDataCollectionDefaultEnabled</key>
+	<string>NO</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fbapi</string>
@@ -91,6 +89,8 @@
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>{human-readable reason for photo access}</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Used for collecting basic app usage analytics and crash reporting.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>wickhop-handwriting.ttf</string>
