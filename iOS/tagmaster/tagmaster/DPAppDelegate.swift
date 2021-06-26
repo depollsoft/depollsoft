@@ -32,7 +32,7 @@ public extension DPAppDelegate {
         UserDefaults.standard.set(lists, forKey: LISTS_KEY)
         if !oldTeachables.elementsEqual(teachables) {
             if doSave && userDoc != nil {
-                userDoc?.setData(["lists": ["teachable": favorites]], mergeFields: ["lists.teachable"])
+                userDoc?.setData(["lists": ["teachable": teachables]], mergeFields: ["lists.teachable"])
             }
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
         }
