@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Tag Master does not use your location</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Tag Master does not use your location</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Tag Master does not use your location</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -93,6 +87,12 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>${PRODUCT_NAME} does not use your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>${PRODUCT_NAME} does not use your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>${PRODUCT_NAME} does not use your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>{human-readable reason for photo access}</string>
 	<key>NSUserTrackingUsageDescription</key>
