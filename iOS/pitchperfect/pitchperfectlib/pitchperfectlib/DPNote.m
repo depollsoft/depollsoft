@@ -9,6 +9,7 @@
 #import "DPNote.h"
 #import "DPAccidental.h"
 #import "DPAudioSynthesizer.h"
+#import <AVKit/AVKit.h>
 
 static DPNote *C4 = nil;
 static NSArray *commonNotes = nil;
