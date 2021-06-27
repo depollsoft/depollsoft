@@ -265,7 +265,7 @@
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
                 UIButton *toucher = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-                [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote.friendlyName] forState:UIControlStateNormal];
+                [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
                 [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
                 [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
                 previewer.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:toucher];
