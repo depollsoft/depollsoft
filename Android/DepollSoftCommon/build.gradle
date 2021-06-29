@@ -1,16 +1,16 @@
 apply plugin: 'com.android.library'
 
 dependencies {
-    compile fileTree(include: '*.jar', dir: 'libs')
-    compile project(':Bindroid:Bindroid')
-    compile 'com.android.support:support-v4:24.0.0'
-    compile 'com.parse.bolts:bolts-tasks:1.4.0'
+    api fileTree(include: '*.jar', dir: 'libs')
+    api project(':Bindroid:Bindroid')
+    api 'com.android.support:support-v4:24.2.1'
+    api 'com.parse.bolts:bolts-tasks:1.4.0'
 }
 
 android {
     compileSdkVersion 24
 
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '26.0.3'
 
     sourceSets {
         main {
