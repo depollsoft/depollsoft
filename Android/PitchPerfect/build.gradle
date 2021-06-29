@@ -25,7 +25,6 @@ dependencies {
     //wearApp project(':PitchPerfectWear')
     implementation 'com.parse:parse-android:1.13.1'
     implementation 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
-    implementation 'com.google.firebase:firebase-core:19.0.0'
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation 'com.google.android.material:material:1.3.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
