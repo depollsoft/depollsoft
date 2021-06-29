@@ -1,11 +1,8 @@
 package depollsoft.lib.ui;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import android.content.Context;
 import android.database.DataSetObserver;
-import android.support.v4.util.LongSparseArray;
+import android.util.LongSparseArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Adapter;

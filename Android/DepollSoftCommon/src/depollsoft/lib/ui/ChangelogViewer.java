@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Html;
+
 import depollsoft.lib.util.Versioning;
 
 public class ChangelogViewer extends AlertDialog {

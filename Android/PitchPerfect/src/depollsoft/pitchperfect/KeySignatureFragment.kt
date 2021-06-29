@@ -2,8 +2,8 @@ package depollsoft.pitchperfect
 
 import android.media.AudioManager
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener

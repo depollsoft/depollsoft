@@ -13,11 +13,6 @@
         android:normalScreens="true"
         android:smallScreens="true"/>
 
-    <uses-sdk
-        android:minSdkVersion="15"
-        android:targetSdkVersion="27">
-    </uses-sdk>
-
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE">
     </uses-permission>
 

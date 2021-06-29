@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -9,6 +8,8 @@ import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;

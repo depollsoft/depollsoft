@@ -1,11 +1,9 @@
 package depollsoft.tagmaster;
 
 import android.content.Context;
-import android.support.multidex.MultiDex;
-import android.util.Log;
+import androidx.multidex.MultiDex;
 
 import com.bindroid.trackable.TrackableCollection;
-import com.crashlytics.android.Crashlytics;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.parse.Parse;
@@ -13,8 +11,6 @@ import com.parse.ParseFacebookUtils;
 
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.json.JsonSerializer;
-import depollsoft.lib.util.DebugTools;
-import io.fabric.sdk.android.Fabric;
 
 public class TagMasterApplication extends RichApplication {
 
@@ -25,7 +21,6 @@ public class TagMasterApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    Fabric.with(this, new Crashlytics());
     JsonSerializer.registerAlias(TrackableCollection.class,
             "depollsoft.lib.binding.ObservableCollection");
 

@@ -1,18 +1,18 @@
 package depollsoft.pitchperfect;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.bindroid.BindingMode;
 import com.bindroid.converters.BoolConverter;
@@ -22,7 +22,6 @@ import com.bindroid.ui.UiBinder;
 import com.facebook.login.LoginManager;
 import com.parse.ParseUser;
 
-import depollsoft.lib.compat.ui.ActionBars;
 import depollsoft.lib.ui.ChangelogViewer;
 
 public class SettingsActivity extends AppCompatActivity {

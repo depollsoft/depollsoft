@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect;
 
-import android.app.ActionBar;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -8,17 +7,16 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.content.FileProvider;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +26,6 @@ import java.util.Map;
 
 import depollsoft.lib.util.Versioning;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
-import depollsoft.pitchperfect.lib.Accidental;
 import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeAppWidget extends AppWidgetProvider {

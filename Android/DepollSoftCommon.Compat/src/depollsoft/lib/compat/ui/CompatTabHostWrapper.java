@@ -5,12 +5,13 @@ import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.ActionBar.TabListener;
 import android.app.Activity;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TabHost;
+
+import androidx.fragment.app.FragmentTransaction;
 
 import com.bindroid.utils.Function;
 
@@ -141,16 +142,18 @@ public class CompatTabHostWrapper {
             public void run() {
               setCurrentTabListener = new TabListener() {
                 @Override
-                public void onTabReselected(Tab tab, FragmentTransaction ft) {
-                }
-
-                @Override
-                public void onTabSelected(Tab tab, FragmentTransaction ft) {
+                public void onTabSelected(Tab tab, android.app.FragmentTransaction fragmentTransaction) {
                   host.setCurrentTabByTag(TabSpec.this.tag);
                 }
 
                 @Override
-                public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+                public void onTabUnselected(Tab tab, android.app.FragmentTransaction fragmentTransaction) {
+
+                }
+
+                @Override
+                public void onTabReselected(Tab tab, android.app.FragmentTransaction fragmentTransaction) {
+
                 }
               };
             }

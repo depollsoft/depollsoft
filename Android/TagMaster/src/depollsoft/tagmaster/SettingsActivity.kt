@@ -1,12 +1,12 @@
 package depollsoft.tagmaster
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MenuItem
@@ -47,7 +47,7 @@ class SettingsActivity : AppCompatActivity() {
             return ParseUser.getCurrentUser() != null
         }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         ParseFacebookUtils.onActivityResult(requestCode, resultCode, data)
     }
