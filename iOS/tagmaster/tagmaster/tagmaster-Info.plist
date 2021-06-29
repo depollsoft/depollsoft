@@ -95,8 +95,6 @@
 	<string>${PRODUCT_NAME} does not use your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>{human-readable reason for photo access}</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Used for collecting basic app usage analytics and crash reporting.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>wickhop-handwriting.ttf</string>
