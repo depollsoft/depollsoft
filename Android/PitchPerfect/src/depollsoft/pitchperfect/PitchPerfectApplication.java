@@ -4,6 +4,7 @@ import android.content.Context;
 import androidx.multidex.MultiDex;
 
 import com.bindroid.trackable.TrackableCollection;
+import com.google.android.gms.ads.MobileAds;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
@@ -46,6 +47,8 @@ public class PitchPerfectApplication extends RichApplication {
         PitchPipeAppWidget.updateWidgets();
       }
     });
+
+    MobileAds.initialize(this);
 
     JsonSerializer.registerAlias(Integer.class, "Integer");
     JsonSerializer.registerAlias(Integer.TYPE, "int");

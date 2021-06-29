@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.os.PowerManager
@@ -22,11 +23,13 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.RequestConfiguration
 import com.parse.ParseFacebookUtils
 import com.parse.ParseUser
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
+import java.util.*
 
 class PitchPerfectActivity : AppCompatActivity() {
 
@@ -128,7 +131,6 @@ class PitchPerfectActivity : AppCompatActivity() {
         val adView = findViewById<AdView>(R.id.adView)
 
         val adRequest = AdRequest.Builder()
-                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
                 .build()
         adView.loadAd(adRequest)
 
