@@ -9,8 +9,8 @@ import android.view.View
 import com.bindroid.converters.AdapterConverter
 import com.bindroid.trackable.TrackableCollection
 import com.bindroid.ui.UiBinder
+import com.parse.GetCallback
 import com.parse.ParseUser
-import com.parse.RefreshCallback
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.ui.ChangelogViewer
 
@@ -30,9 +30,9 @@ class MeActivity : AppCompatActivity() {
 
         if (ParseUser.getCurrentUser() != null) {
             try {
-                ParseUser.getCurrentUser().refreshInBackground(RefreshCallback { _, err ->
+                ParseUser.getCurrentUser().fetchInBackground(GetCallback { _, err ->
                     if (err != null) {
-                        return@RefreshCallback
+                        return@GetCallback
                     }
                     FavoritesModel.restoreFromUser()
                     TeachableTagsModel.restoreFromUser()

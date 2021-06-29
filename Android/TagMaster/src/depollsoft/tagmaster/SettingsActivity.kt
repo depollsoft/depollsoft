@@ -22,8 +22,8 @@ import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
 import com.bindroid.ui.UiBinder
-import com.parse.ParseFacebookUtils
 import com.parse.ParseUser
+import com.parse.facebook.ParseFacebookUtils
 import depollsoft.lib.compat.ui.ActionBars
 import depollsoft.lib.ui.ChangelogViewer
 import java.util.*
@@ -167,7 +167,7 @@ class SettingsActivity : AppCompatActivity() {
             progress.show()
             ParseFacebookUtils.logInWithReadPermissionsInBackground(
                     this@SettingsActivity, Arrays.asList("public_profile")).continueWith(
-                    Continuation<ParseUser, Void> { task ->
+                     { task ->
                         this@SettingsActivity.loggingIn = false
                         progress.dismiss()
                         v.isEnabled = true
@@ -175,12 +175,12 @@ class SettingsActivity : AppCompatActivity() {
                             Toast.makeText(this@SettingsActivity, "Facebook login failed.", Toast.LENGTH_SHORT)
                                     .show()
                             Log.d("Tag Master", "Failed to log in.", task.error)
-                            return@Continuation null
+                            return@continueWith
                         }
 
                         if (task.result == null) {
                             Log.d("Tag Master", "User cancelled login.")
-                            return@Continuation null
+                            return@continueWith
                         }
                         this@SettingsActivity.loginTrackable.updateTrackers()
                         if (task.result.isNew) {
@@ -191,7 +191,6 @@ class SettingsActivity : AppCompatActivity() {
                             FavoritesModel.restoreFromUser()
                             TeachableTagsModel.restoreFromUser()
                         }
-                        null
                     }, Task.UI_THREAD_EXECUTOR)
         })
 

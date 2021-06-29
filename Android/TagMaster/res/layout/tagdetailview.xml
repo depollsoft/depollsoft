@@ -21,12 +21,12 @@
             app:srcCompat="@drawable/ic_barberpole">
         </ImageView>
 
-        <androidx.viewpager.widget.ViewPager
+        <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-        </androidx.viewpager.widget.ViewPager>
+        </androidx.viewpager2.widget.ViewPager2>
     </FrameLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

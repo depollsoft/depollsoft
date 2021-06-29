@@ -2,7 +2,7 @@
 <resources>
 
     <string name="hello">Hello World, TagMaster!</string>
-    <string name="facebook_app_id">311400242255131</string>
+    <string name="facebook_application_id">311400242255131</string>
     <string name="fb_login_protocol_scheme">fb311400242255131</string>
     <string name="app_name">Tag Master</string>
     <string name="Version">Version: </string>
