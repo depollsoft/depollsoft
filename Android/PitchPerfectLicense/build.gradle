@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile fileTree(include: '*.jar', dir: 'libs')
+    implementation fileTree(include: '*.jar', dir: 'libs')
 }
 
 android {
     compileSdkVersion 4
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '26.0.3'
 
     sourceSets {
         main {
