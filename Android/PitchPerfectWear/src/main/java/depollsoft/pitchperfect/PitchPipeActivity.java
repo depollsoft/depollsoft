@@ -1,14 +1,14 @@
 package depollsoft.pitchperfect;
 
-import android.app.Activity;
 import android.media.AudioManager;
 import android.os.Bundle;
-import android.support.wearable.view.BoxInsetLayout;
 import android.support.wearable.view.WatchViewStub;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.RadioButton;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
@@ -20,9 +20,8 @@ import bolts.Continuation;
 import bolts.Task;
 import depollsoft.pitchperfect.converters.PitchPipeNoteTextConverter;
 import depollsoft.pitchperfect.lib.Note;
-import depollsoft.pitchperfect.lib.ui.PitchPipeButton;
 
-public class PitchPipeActivity extends Activity {
+public class PitchPipeActivity extends AppCompatActivity {
 
   private TrackableField<PitchPipeModel> model = new TrackableField<PitchPipeModel>();
 

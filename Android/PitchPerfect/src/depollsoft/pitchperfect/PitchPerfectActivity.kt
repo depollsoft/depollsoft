@@ -7,12 +7,12 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.os.PowerManager
-import android.support.design.widget.BottomNavigationView
-import android.support.design.widget.TabLayout
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.tabs.TabLayout
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
+import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
@@ -64,14 +64,14 @@ class PitchPerfectActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
 
         viewPager.adapter = object : FragmentPagerAdapter(this.supportFragmentManager) {
-            override fun getItem(position: Int): Fragment? {
+            override fun getItem(position: Int): Fragment {
                 when (position) {
                     0 -> return PitchPipeFragment()
                     1 -> return NoteListFragment()
                     2 -> return KeySignatureFragment()
                     3 -> return SongListFragment()
                 }
-                return null
+                return PitchPipeFragment()
             }
 
             override fun getCount(): Int {
@@ -128,7 +128,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         val adView = findViewById<AdView>(R.id.adView)
 
         val adRequest = AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                //.addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
                 .build()
         adView.loadAd(adRequest)
 

@@ -6,8 +6,7 @@
         android:id="@+id/sortMenuItem"
         android:icon="@drawable/ic_sort_button"
         android:title="@string/SortAll"
-        app:showAsAction="ifRoom"
-        android:showAsAction="ifRoom">
+        app:showAsAction="ifRoom">
     </item>
 
 </menu>

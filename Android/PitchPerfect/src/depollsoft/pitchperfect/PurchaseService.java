@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,7 +10,8 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.vending.billing.IInAppBillingService;
 
@@ -152,7 +152,7 @@ public class PurchaseService {
     return getSubscriptions(context).contains(REMOVE_ADS_SKU);
   }
 
-  public static void beginRemoveAds(Activity activity, int requestCode) {
+  public static void beginRemoveAds(AppCompatActivity activity, int requestCode) {
     IInAppBillingService billingService = getBillingService(activity);
     if (billingService == null) {
       throw new RuntimeException("Billing is not enabled");
