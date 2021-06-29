@@ -4,19 +4,18 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.ViewPager
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.kotlin.ui.attachToViewPager
@@ -112,15 +111,15 @@ class TagDetailActivity : AppCompatActivity() {
 
         this.progress = ProgressDialog(this)
 
-        val viewPager = findViewById<ViewPager>(R.id.viewPager)
+        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
-        viewPager.adapter = object : FragmentPagerAdapter(this.supportFragmentManager) {
-            override fun getCount(): Int {
+        viewPager.adapter = object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
+            override fun getItemCount(): Int {
                 return 4
             }
 
-            override fun getItem(position: Int): Fragment {
+            override fun createFragment(position: Int): Fragment {
                 return when (position) {
                     0 -> TagSummaryFragment()
                     1 -> TagMiscFragment()
