@@ -37,7 +37,7 @@ android {
         multiDexEnabled true
         applicationId "depollsoft.tagmaster"
         vectorDrawables.useSupportLibrary = true
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 30
     }
 
