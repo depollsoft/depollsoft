@@ -18,7 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
 class TagMasterApplication : RichApplication() {
-    public var tagLoading: Task<Unit>? = null
+    public var tagLoading: Task<*>? = null
 
     override fun onCreate() {
         super.onCreate()

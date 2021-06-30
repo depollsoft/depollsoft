@@ -22,7 +22,7 @@ dependencies {
     implementation project(':DepollSoftCommon')
     implementation project(':PitchPerfectLib')
     implementation project(':DepollSoftCommon.Compat')
-    implementation project(':Bindroid:Bindroid')
+    implementation project(':depollsoft.lib.kotlin')
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation "com.github.parse-community.Parse-SDK-Android:parse:$parseVersion"
@@ -39,7 +39,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
-    implementation project(':depollsoft.lib.kotlin')
+    implementation 'com.bindroid:bindroid'
+    implementation 'com.bindroid:bindroid-kotlin'
 }
 
 android {

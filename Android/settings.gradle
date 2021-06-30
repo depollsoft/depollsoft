@@ -1,10 +1,11 @@
+rootProject.name = "depollsoft"
+
+includeBuild 'bindroid'
 include ':PitchPerfect', ':depollsoft.lib.kotlin'
 //include ':PitchPerfectWear'
 include ':PitchPerfectLicense'
 include ':TagMaster'
-include ':Bindroid:BindroidTest'
+//include ':bindroid:bindroid', ':bindroid:bindroid-kotlin'
 include ':DepollSoftCommon.Compat'
-include ':Bindroid:BindroidSample'
 include ':PitchPerfectLib'
 include ':DepollSoftCommon'
-include ':Bindroid:Bindroid'

@@ -12,6 +12,7 @@ public class RichApplication extends Application {
 
   @Override
   public void onCreate() {
+    super.onCreate();
     RichApplication.context = this.getApplicationContext();
   }
 }
