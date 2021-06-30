@@ -68,10 +68,10 @@ public class QueryModel {
     if (!this.getHasMoreResults())
       return;
     this.setIsLoading(true);
-    Tag.query(this.getQuery(), this.getResultSetSize(),
+    Tag.query(this.getQuery(), this.getResultSetSize().intValue(),
             this.mostRecentResult.getStart() + this.mostRecentResult.getCount(), this.getParts(),
             this.getHasLearningTracks(), this.getHasSheetMusic(), this.getCollection(),
-            this.getSortBy(), this.getMinimumRating(), this.getMinimumDownloads())
+            this.getSortBy(), this.getMinimumRating(), this.getMinimumDownloads(), false, null)
             .continueWith(new Continuation<TagQueryResult, Void>() {
               @Override
               public Void then(final Task<TagQueryResult> task) throws Exception {
