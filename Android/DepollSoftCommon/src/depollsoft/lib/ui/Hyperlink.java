@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.bindroid.trackable.TrackableField;
 
-public class Hyperlink extends TextView {
+public class Hyperlink extends androidx.appcompat.widget.AppCompatTextView {
 
   private TrackableField<String> hyperlinkUri = new TrackableField<String>();
 

@@ -92,8 +92,8 @@ class TagSummaryFragment : Fragment() {
         val link = rootView.findViewById(R.id.sheetMusicLink) as Hyperlink
         link.setOnClickListener {
             val tag = parent.tag
-            val sheetMusicType = tag!!.sheetMusicUri.type
-            val sheetMusicUri = tag.sheetMusicUri.uri
+            val sheetMusicType = tag!!.sheetMusicUri!!.type
+            val sheetMusicUri = tag.sheetMusicUri!!.uri
             val progress = ProgressDialog(parent)
             progress.isIndeterminate = true
             progress.setMessage("Loading...")
