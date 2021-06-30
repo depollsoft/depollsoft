@@ -2,13 +2,24 @@ package depollsoft.tagmaster
 
 import android.content.Context
 import androidx.multidex.MultiDex
+import bolts.Task
 import com.bindroid.trackable.TrackableCollection
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.parse.Parse
 import com.parse.facebook.ParseFacebookUtils
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.tagmaster.barbershop.Tag
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 class TagMasterApplication : RichApplication() {
+    public var tagLoading: Task<Unit>? = null
+
     override fun onCreate() {
         super.onCreate()
         JsonSerializer.registerAlias(TrackableCollection::class.java,
@@ -19,6 +30,47 @@ class TagMasterApplication : RichApplication() {
                 .clientKey("7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4")
                 .build())
         ParseFacebookUtils.initialize(this)
+
+        var registration: ListenerRegistration? = null
+
+        Firebase.auth.addAuthStateListener {
+            registration?.remove()
+            val user = it.currentUser
+            if (user != null) {
+                val userDoc = Firebase.firestore.document("users/${user.uid}")
+                registration = userDoc.addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        print(error)
+                        return@addSnapshotListener
+                    }
+                    val oldTeachable = TeachableTagsModel.getTeachableTagIds()
+                    val oldFavorites = FavoritesModel.getFavoriteIds()
+                    if (snapshot!!.exists()) {
+                        // There was no existing user, so initialize the user
+                        userDoc.set(mapOf(
+                                "lists" to mapOf(
+                                        "favorite" to oldFavorites,
+                                        "teachable" to oldTeachable
+                                )
+                        ), SetOptions.merge())
+                    }
+
+                    val teachableIds = (snapshot.get("lists.teachable") as? ArrayList<Int>) ?: oldTeachable
+                    val favoriteIds = (snapshot.get("lists.favorite") as? ArrayList<Int>) ?: oldFavorites
+
+                    // Don't try to write these back to the server -- they're already there
+                    TeachableTagsModel.setTeachableTagIds(TrackableCollection(teachableIds))
+                    FavoritesModel.setFavoriteIds(TrackableCollection(favoriteIds))
+
+                    // Kick off precaching tags
+                    GlobalScope.async {
+                        tagLoading = Tag.queryByIds(teachableIds + favoriteIds, true)
+                        tagLoading!!.await()
+                        tagLoading = null
+                    }
+                }
+            }
+        }
     }
 
     protected override fun attachBaseContext(base: Context) {

@@ -99,15 +99,12 @@ class KeySignatureFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         stopPlaying()
+        fab?.hide()
     }
 
-    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
-        super.setUserVisibleHint(isVisibleToUser)
+    override fun onResume() {
+        super.onResume()
         stopPlaying()
-        if (isVisibleToUser) {
-            fab?.show()
-        } else {
-            fab?.hide()
-        }
+        fab?.show()
     }
 }
