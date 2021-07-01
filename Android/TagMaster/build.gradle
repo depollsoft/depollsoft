@@ -39,8 +39,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
-    implementation 'com.bindroid:bindroid'
-    implementation 'com.bindroid:bindroid-kotlin'
+    implementation project(':bindroid')
+    implementation project(':bindroid-kotlin')
 }
 
 android {

@@ -1,11 +1,21 @@
 rootProject.name = "depollsoft"
 
-includeBuild 'bindroid'
 include ':PitchPerfect', ':depollsoft.lib.kotlin'
 //include ':PitchPerfectWear'
 include ':PitchPerfectLicense'
 include ':TagMaster'
-//include ':bindroid:bindroid', ':bindroid:bindroid-kotlin'
 include ':DepollSoftCommon.Compat'
 include ':PitchPerfectLib'
 include ':DepollSoftCommon'
+
+include ':bindroid', ':bindroid-kotlin'
+project(':bindroid').projectDir = new File('./bindroid/bindroid')
+project(':bindroid-kotlin').projectDir = new File('./bindroid/bindroid-kotlin')
+
+/*includeBuild('bindroid') {
+    dependencySubstitution {
+        substitute module('com.bindroid:bindroid') with project(':bindroid')
+        substitute module('com.bindroid:bindroid-kotlin') with project(':bindroid-kotlin')
+    }
+}
+*/
