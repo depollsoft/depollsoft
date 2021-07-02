@@ -10,15 +10,16 @@ import android.widget.ListView
 import com.bindroid.converters.AdapterConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.ui.ThreadSwitchContext
 
 class TagQueryFragment : Fragment() {
 
-    var model: QueryModel? by TrackableField()
+    var model: QueryModel? by trackable()
 
-    var handleSearchButton: Boolean by TrackableField(true)
+    var handleSearchButton: Boolean by trackable(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.Spinner
 import com.bindroid.BindingMode
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.EditTextTextProperty
 import com.bindroid.ui.UiBinder
 import depollsoft.lib.compat.ui.ActionBars
@@ -24,7 +25,7 @@ import depollsoft.tagmaster.barbershop.TagSortOptions
 
 class TagSearchActivity : AppCompatActivity() {
 
-    val model: QueryModel by TrackableField(QueryModel())
+    val model: QueryModel by trackable(QueryModel())
 
     init {
         this.model.maxResults = Integer.MAX_VALUE

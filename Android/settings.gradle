@@ -8,14 +8,7 @@ include ':DepollSoftCommon.Compat'
 include ':PitchPerfectLib'
 include ':DepollSoftCommon'
 
-include ':bindroid', ':bindroid-kotlin'
+include ':bindroid', ':bindroid-kotlin', ':bindroid-test'
 project(':bindroid').projectDir = new File('./bindroid/bindroid')
 project(':bindroid-kotlin').projectDir = new File('./bindroid/bindroid-kotlin')
-
-/*includeBuild('bindroid') {
-    dependencySubstitution {
-        substitute module('com.bindroid:bindroid') with project(':bindroid')
-        substitute module('com.bindroid:bindroid-kotlin') with project(':bindroid-kotlin')
-    }
-}
-*/
+project(':bindroid-test').projectDir = new File('./bindroid/bindroid-test')
