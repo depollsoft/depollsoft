@@ -13,6 +13,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -26,7 +27,7 @@ import depollsoft.tagmaster.barbershop.Tag
 import java.util.*
 
 class TagDetailActivity : AppCompatActivity() {
-    var tag: Tag? by TrackableField<Tag?>()
+    var tag: Tag? by trackable()
     private var progress: ProgressDialog? = null
 
     private val emailIntent: Intent
