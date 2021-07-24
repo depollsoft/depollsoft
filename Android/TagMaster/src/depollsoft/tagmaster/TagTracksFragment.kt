@@ -17,7 +17,7 @@ class TagTracksFragment : Fragment() {
     val parent: TagDetailActivity
         get() = this.activity as TagDetailActivity
 
-    var selectedTrack: RemoteLocation by trackable()
+    var selectedTrack: RemoteLocation? by trackable()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.tagtracksview, container, false)

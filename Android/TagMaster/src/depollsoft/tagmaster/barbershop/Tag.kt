@@ -21,14 +21,14 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Tag {
-    var appVersion: Int by trackable()
+    var appVersion: Int by trackable(0)
     var id: Int by trackable(0)
     var title: String? by trackable()
-    var lastRefreshed: Date by trackable()
+    var lastRefreshed: Date by trackable(Date(0))
     var alternativeTitle: String? by trackable()
     var version: String? by trackable()
     var writtenKey: String? by trackable()
-    var parts: Int by trackable()
+    var parts: Int by trackable(0)
     var tagType: String? by trackable()
     var recordingMethod: String? by trackable()
     var teachingVideo: String? by trackable()
@@ -48,7 +48,7 @@ class Tag {
     var posted: Date? by trackable()
     var classicTagNumber: Int? by trackable()
     var rating: Double? by trackable()
-    var downloadCount: Int by trackable()
+    var downloadCount: Int by trackable(0)
     var sheetMusicUri: RemoteLocation? by trackable()
     var notationUri: RemoteLocation? by trackable()
     var allPartsTrackUri: RemoteLocation? by trackable()
