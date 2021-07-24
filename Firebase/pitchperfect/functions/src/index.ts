@@ -11,9 +11,7 @@ async function doParseImport(
     lastUpdateField: string,
     batchSize: number,
     processBatch: (batch: any[], isFirstTime: boolean) => Promise<void>) {
-    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl, {
-        useNewUrlParser: true
-    });
+    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl);
     const db = mongoClient.db('pitchperfect-azure-2');
     const collection = db.collection(collectionName);
 
