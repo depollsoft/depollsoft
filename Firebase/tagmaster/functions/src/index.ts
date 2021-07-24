@@ -48,6 +48,7 @@ async function doParseImport(
         }, { merge: true });
         console.log(`Imported ${count} ${collectionName} changes`);
     } while (count > 0);
+    await mongoClient.close();
 }
 
 exports.parseImport = functions.runWith({
