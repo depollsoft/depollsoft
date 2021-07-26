@@ -15,6 +15,7 @@ import com.bindroid.trackable.trackable
 import com.bindroid.ui.BoundUi
 import com.bindroid.ui.UiBinder
 import depollsoft.tagmaster.barbershop.Tag
+import kotlinx.coroutines.*
 
 abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
     constructor(context: Context) : super(context) {
@@ -51,14 +52,13 @@ abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
             return
         tagId = dataSource
         this.tag = null
-        Tag.loadTagById(dataSource!!).continueWith { task ->
-            if (task.isFaulted) {
-                Log.e("depollsoft.tagmaster", "Failed to load tag", task.error)
-                this.failedToLoad = true
-            } else {
-                this.tag = task.result
+        CoroutineScope(Dispatchers.Main + Job()).launch {
+            try {
+                tag = Tag.loadTagById(dataSource!!).await()
+            } catch (e: Exception) {
+                Log.e("depollsoft.tagmaster", "Failed to load tag", e)
+                failedToLoad = true
             }
-            null
         }
     }
 

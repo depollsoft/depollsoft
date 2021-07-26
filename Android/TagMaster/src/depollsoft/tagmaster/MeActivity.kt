@@ -17,7 +17,7 @@ import depollsoft.lib.ui.ChangelogViewer
 class MeActivity : AppCompatActivity() {
 
     val favoriteIds: TrackableCollection<Int>
-        get() = FavoritesModel.getFavoriteIds()
+        get() = FavoritesModel.favoriteIds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

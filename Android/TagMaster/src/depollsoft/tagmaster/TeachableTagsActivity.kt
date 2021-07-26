@@ -17,7 +17,7 @@ import depollsoft.lib.compat.ui.ActionBars
 class TeachableTagsActivity : AppCompatActivity() {
 
     val teachableTags: TrackableCollection<Int>
-        get() = TeachableTagsModel.getTeachableTagIds()
+        get() = TeachableTagsModel.teachableTagIds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
