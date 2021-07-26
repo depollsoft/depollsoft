@@ -1,6 +1,7 @@
 package depollsoft.tagmaster.barbershop
 
 import android.net.Uri
+import android.util.Log
 import com.bindroid.trackable.*
 import kotlin.jvm.JvmOverloads
 import depollsoft.lib.activity.RichApplication
@@ -10,9 +11,14 @@ import com.bindroid.trackable.TrackableCollection
 import depollsoft.lib.xml.XmlElement
 import android.util.SparseArray
 import bolts.Task
+import bolts.TaskCompletionSource
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.xml.XmlDocument
 import depollsoft.pitchperfect.lib.Note
+import depollsoft.tagmaster.await
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.*
 import java.lang.Exception
 import java.lang.ref.SoftReference
@@ -21,7 +27,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Tag {
-    var appVersion: Int by trackable(0)
+    var appVersion: Int by trackable(CURRENT_APP_VERSION)
     var id: Int by trackable(0)
     var title: String? by trackable()
     var lastRefreshed: Date by trackable(Date(0))
@@ -80,29 +86,26 @@ class Tag {
     @JvmOverloads
     fun cache(overwrite: Boolean = true) {
         if (overwrite) TagCache.put(id, SoftReference(this))
-        val t: Thread = object : Thread() {
-            override fun run() {
-                synchronized(CacheWriteLock) {
-                    try {
-                        val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
-                        directory.mkdir()
-                        val cacheFile = File(directory, "" + id)
-                        if (cacheFile.exists()) {
-                            if (!overwrite) return
-                            cacheFile.delete()
-                        }
-                        val fos = FileOutputStream(cacheFile)
-                        val serialized = JsonSerializer.serialize(this@Tag)
-                        val pw = PrintWriter(fos)
-                        pw.println(serialized)
-                        pw.close()
-                    } catch (e: FileNotFoundException) {
-                        e.printStackTrace()
+        CoroutineScope(Dispatchers.IO + Job()).launch {
+            synchronized(CacheWriteLock) {
+                try {
+                    val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
+                    directory.mkdir()
+                    val cacheFile = File(directory, "" + id)
+                    if (cacheFile.exists()) {
+                        if (!overwrite) return@launch
+                        cacheFile.delete()
                     }
+                    val fos = FileOutputStream(cacheFile)
+                    val serialized = JsonSerializer.serialize(this@Tag)
+                    val pw = PrintWriter(fos)
+                    pw.println(serialized)
+                    pw.close()
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
                 }
             }
         }
-        t.start()
     }
 
     override fun equals(obj: Any?): Boolean {
@@ -281,7 +284,7 @@ class Tag {
                     val cachedTag = String(buffer!!)
                     buffer = null
                     val jsonObj = JSONObject(cachedTag)
-                    val tag = JsonSerializer.deserialize(jsonObj) as Tag
+                    val tag = JsonSerializer.deserialize(jsonObj) as Tag?
                     if (tag == null || tag.appVersion != CURRENT_APP_VERSION) throw Exception()
                     TagCache.put(id, SoftReference(tag))
                     Task.forResult(tag)
@@ -425,23 +428,51 @@ class Tag {
             }
         }
 
+        private val pendingQueries: MutableList<Pair<List<Int>, TaskCompletionSource<List<Tag>>>>
+                = mutableListOf()
+        private val requestSynchronizer = Mutex()
+        private val pendingQueriesSynchronizer = Mutex()
         fun queryByIds(ids: List<Int>, cache: Boolean = false): Task<List<Tag>> {
-            return Task.callInBackground {
-                val url = URL(API_URI_STRING + "id=" + Uri.encode(ids.joinToString("|")))
-                val `is` = url.openStream()
-                val doc = XmlDocument.parse(`is`)
-                val tags = doc.elements("tags")[0]
-                val resultTags = ArrayList<Tag>()
-                for (tagXml in tags.elements) {
-                    val t = Tag()
-                    t.parseFromXml(tags.elements("tag")[0])
-                    if (cache) {
-                        t.cache()
-                    }
-                    resultTags.add(t)
+            val tcs = TaskCompletionSource<List<Tag>>()
+            CoroutineScope(Dispatchers.IO + Job()).launch {
+                pendingQueriesSynchronizer.withLock {
+                    pendingQueries.add(ids to tcs)
                 }
-                resultTags
+                delay(50)
+                var idsToQuery: List<Pair<List<Int>, TaskCompletionSource<List<Tag>>>>
+                pendingQueriesSynchronizer.withLock {
+                    if (pendingQueries.isEmpty()) {
+                        return@launch
+                    }
+                    idsToQuery = pendingQueries.toMutableList()
+                    pendingQueries.clear()
+                }
+                requestSynchronizer.withLock {
+                    try {
+                        val allIds = idsToQuery.flatMap { it.first }
+                        val url =
+                            URL("${API_URI_STRING}id=${Uri.encode(allIds.joinToString("|"))}&n=${allIds.size}")
+                        val inputStream = url.openStream()
+                        val doc = XmlDocument.parse(inputStream)
+                        val tags = doc.elements("tags")[0]
+                        val resultTags = mutableMapOf<Int, Tag>()
+                        for (tagXml in tags.elements("tag")) {
+                            val t = Tag()
+                            t.parseFromXml(tagXml)
+                            resultTags[t.id] = t
+                        }
+
+                        idsToQuery.forEach {
+                            val result = it.first.map { resultTags[it]!! }
+                            it.second.trySetResult(result)
+                        }
+                    } catch (e: Exception) {
+                        idsToQuery.forEach { it.second.trySetError(e) }
+                    }
+                    if (cache) tcs.task.await().forEach { it.cache() }
+                }
             }
+            return tcs.task
         }
 
         fun queryById(id: Int): Task<Tag> = queryByIds(Arrays.asList(id)).onSuccess { it.result.first() }
