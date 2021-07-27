@@ -10,49 +10,28 @@ import org.json.JSONArray
 import org.json.JSONException
 
 object TeachableTagsModel {
-    private const val TeachableTagsPreference = "tagmaster.TeachableTags"
+    private val model = ListModel("teachable")
 
     @JvmStatic
     var teachableTagIds: TrackableCollection<Int>
-            by trackable(Preferences.get(TeachableTagsPreference) ?: TrackableCollection())
+        get() = model.ids
+        set(value) { model.ids = value }
 
-    fun addTeachableTag(id: Int) {
-        if (!teachableTagIds.contains(id)) teachableTagIds.add(id)
-    }
+    fun addTeachableTag(id: Int) = model.add(id)
 
-    fun canMoveDown(id: Int): Boolean {
-        val index: Int = teachableTagIds.indexOf(id)
-        return index < teachableTagIds.size - 1
-    }
+    fun canMoveDown(id: Int): Boolean = model.canMoveDown(id)
 
-    fun canMoveUp(id: Int): Boolean {
-        val index: Int = teachableTagIds.indexOf(id)
-        return index > 0
-    }
+    fun canMoveUp(id: Int): Boolean = model.canMoveUp(id)
 
-    fun getIsTeachableTag(id: Int): Boolean {
-        return teachableTagIds.contains(id)
-    }
+    fun getIsTeachableTag(id: Int): Boolean = model.contains(id)
 
-    fun moveDown(id: Int) {
-        val index: Int = teachableTagIds.indexOf(id)
-        teachableTagIds.removeAt(index)
-        teachableTagIds.add(index + 1, id)
-    }
+    fun moveDown(id: Int) = model.moveDown(id)
 
-    fun moveUp(id: Int) {
-        val index: Int = teachableTagIds.indexOf(id)
-        teachableTagIds.removeAt(index)
-        teachableTagIds.add(index - 1, id)
-    }
+    fun moveUp(id: Int) = model.moveUp(id)
 
-    fun removeTeachableTag(id: Int) {
-        teachableTagIds.remove(Integer.valueOf(id))
-    }
+    fun removeTeachableTag(id: Int) = model.remove(id)
 
-    fun resetTeachableTags() {
-        teachableTagIds.clear()
-    }
+    fun resetTeachableTags() = model.reset()
 
     fun restoreFromUser() {
         if (ParseUser.getCurrentUser() != null) {
@@ -76,27 +55,5 @@ object TeachableTagsModel {
             } catch (e: Exception) {
             }
         }
-    }
-
-    private fun storeValue() {
-        Preferences.set(
-            TeachableTagsPreference,
-            teachableTagIds
-        )
-        return
-        if (ParseUser.getCurrentUser() != null) {
-            storeToUser()
-            ParseUser.getCurrentUser().saveEventually()
-        }
-    }
-
-    init {
-        Trackable.track(object : Tracker {
-            override fun update() {
-                storeValue()
-                Trackable.track(this, { teachableTagIds.track() })
-            }
-        }, { teachableTagIds.track() })
-        ListModel("teachable")
     }
 }
