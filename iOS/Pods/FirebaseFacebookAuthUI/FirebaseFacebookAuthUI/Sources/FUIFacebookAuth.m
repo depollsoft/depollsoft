@@ -205,9 +205,9 @@ static NSString *const kFacebookDisplayName = @"FacebookDisplayName";
       [self completeSignInFlowWithAccessToken:nil error:newError];
     } else {
       // Retrieve email.
-      [[[FBSDKGraphRequest alloc] initWithGraphPath:@"me" parameters:@{ @"fields" : @"email" }]
-          startWithCompletionHandler:^(FBSDKGraphRequestConnection *connection, id result,
-                                       NSError *error) {
+      [[[FBSDKGraphRequest alloc] initWithGraphPath:@"me" parameters:@{ @"fields" : @"email" }] startWithCompletion:^(id<FBSDKGraphRequestConnecting> connection,
+                                id result,
+                                NSError *error) {
         self->_email = result[@"email"];
       }];
       [self completeSignInFlowWithAccessToken:result.token.tokenString
@@ -281,7 +281,9 @@ static NSString *const kFacebookDisplayName = @"FacebookDisplayName";
     [self callbackWithCredential:nil error:error result:nil];
     return;
   }
-  FIRAuthCredential *credential = [FIRFacebookAuthProvider credentialWithAccessToken:accessToken];
+  // Assume accessToken cannot be nil if there's no error.
+  NSString *_Nonnull token = (id _Nonnull)accessToken;
+  FIRAuthCredential *credential = [FIRFacebookAuthProvider credentialWithAccessToken:token];
   UIActivityIndicatorView *activityView =
       [FUIAuthBaseViewController addActivityIndicator:_presentingViewController.view];
   [activityView startAnimating];
