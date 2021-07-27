@@ -4,6 +4,7 @@
     <string name="hello">Hello World, TagMaster!</string>
     <string name="facebook_application_id">311400242255131</string>
     <string name="fb_login_protocol_scheme">fb311400242255131</string>
+    <string name="facebook_client_token">296ccf0c53143b18ba166245011235cc</string>
     <string name="app_name">Tag Master</string>
     <string name="Version">Version: </string>
     <string name="aka">a.k.a. </string>

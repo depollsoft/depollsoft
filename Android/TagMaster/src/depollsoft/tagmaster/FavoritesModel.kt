@@ -12,47 +12,26 @@ import org.json.JSONArray
 import org.json.JSONException
 
 object FavoritesModel {
-    private const val FavoritesPreference = "tagmaster.Favorites"
+    private val model = ListModel("favorite")
     var favoriteIds: TrackableCollection<Int>
-            by trackable(Preferences.get(FavoritesPreference) ?: TrackableCollection())
+        get() = model.ids
+        set(value) { model.ids = value }
 
-    fun addFavorite(id: Int) {
-        if (!favoriteIds.contains(id)) favoriteIds.add(id)
-    }
+    fun addFavorite(id: Int) = model.add(id)
 
-    fun canMoveDown(id: Int): Boolean {
-        val index: Int = favoriteIds.indexOf(id)
-        return index < favoriteIds.size - 1
-    }
+    fun canMoveDown(id: Int): Boolean = model.canMoveDown(id)
 
-    fun canMoveUp(id: Int): Boolean {
-        val index: Int = favoriteIds.indexOf(id)
-        return index > 0
-    }
+    fun canMoveUp(id: Int): Boolean = model.canMoveUp(id)
 
-    fun getIsFavorite(id: Int): Boolean {
-        return favoriteIds.contains(id)
-    }
+    fun getIsFavorite(id: Int): Boolean = model.contains(id)
 
-    fun moveDown(id: Int) {
-        val index: Int = favoriteIds.indexOf(id)
-        favoriteIds.removeAt(index)
-        favoriteIds.add(index + 1, id)
-    }
+    fun moveDown(id: Int) = model.moveDown(id)
 
-    fun moveUp(id: Int) {
-        val index: Int = favoriteIds.indexOf(id)
-        favoriteIds.removeAt(index)
-        favoriteIds.add(index - 1, id)
-    }
+    fun moveUp(id: Int) = model.moveUp(id)
 
-    fun removeFavorite(id: Int) {
-        favoriteIds.remove(Integer.valueOf(id))
-    }
+    fun removeFavorite(id: Int) = model.remove(id)
 
-    fun resetFavorites() {
-        favoriteIds.clear()
-    }
+    fun resetFavorites() = model.reset()
 
     fun restoreFromUser() {
         if (ParseUser.getCurrentUser() != null) {
@@ -80,23 +59,5 @@ object FavoritesModel {
             } catch (e: Exception) {
             }
         }
-    }
-
-    private fun storeValue() {
-        Preferences.set(FavoritesPreference, favoriteIds)
-        return
-        if (ParseUser.getCurrentUser() != null) {
-            storeToUser()
-            ParseUser.getCurrentUser().saveEventually()
-        }
-    }
-
-    init {
-        Trackable.track(object : Tracker {
-            override fun update() {
-                storeValue()
-                Trackable.track(this, { favoriteIds.track() })
-            }
-        }, { favoriteIds.track() })
     }
 }
