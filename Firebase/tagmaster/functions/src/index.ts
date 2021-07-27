@@ -10,9 +10,7 @@ async function doParseImport(
     lastUpdateField: string,
     batchSize: number,
     processBatch: (batch: any[], isFirstTime: boolean) => Promise<void>) {
-    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl, {
-        useNewUrlParser: true
-    });
+    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl);
     const db = mongoClient.db('tagmaster-azure-2');
     const collection = db.collection(collectionName);
 
@@ -48,6 +46,7 @@ async function doParseImport(
         }, { merge: true });
         console.log(`Imported ${count} ${collectionName} changes`);
     } while (count > 0);
+    await mongoClient.close();
 }
 
 exports.parseImport = functions.runWith({

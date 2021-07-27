@@ -118,12 +118,6 @@
 }
 
 - (void)loadTag:(BOOL)refresh {
-    static dispatch_queue_t serialQueue;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        serialQueue = dispatch_queue_create("depollsoft.loadTagQueue", DISPATCH_QUEUE_CONCURRENT);
-    });
-    
     int tagId = self.tagId;
     if (!refresh) {
         DPTag *t = [DPTag loadFromCache:tagId];
@@ -134,12 +128,8 @@
     }
     self.tagInstance = nil;
     [self.busyIndicator incrementBusyCount];
-    dispatch_async(serialQueue, ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
-            BFTask<NSNull *> *tagLoading = DPAppDelegate.tagLoading;
-            if (tagLoading) {
-                [tagLoading waitUntilFinished];
-            }
             DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (t.tagId == self.tagId) {
@@ -160,7 +150,9 @@
             });
         }
         @catch (NSException *exception) {
-            [self.busyIndicator decrementBusyCount];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+            });
         }
     });
 }
