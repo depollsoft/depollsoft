@@ -11,9 +11,7 @@ async function doParseImport(
     lastUpdateField: string,
     batchSize: number,
     processBatch: (batch: any[], isFirstTime: boolean) => Promise<void>) {
-    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl, {
-        useNewUrlParser: true
-    });
+    const mongoClient = await MongoClient.connect(functions.config().parse.databaseurl);
     const db = mongoClient.db('pitchperfect-azure-2');
     const collection = db.collection(collectionName);
 
@@ -49,6 +47,7 @@ async function doParseImport(
         }, { merge: true });
         console.log(`Imported ${count} ${collectionName} changes`);
     } while (count > 0);
+    await mongoClient.close();
 }
 
 exports.parseImport = functions.runWith({
@@ -76,8 +75,6 @@ exports.parseImport = functions.runWith({
 
         const imports: admin.auth.UserImportRecord[] = [];
         const userPreferenceBatch = admin.firestore().batch();
-        const existingUsers = (await admin.auth().getUsers(users.map(u => u._id))).users
-            .reduce((prev, cur) => { prev[cur.uid] = cur; return cur; }, {});
 
         for (const user of users) {
             const toggleNotes = user.ToggleNote || false;
