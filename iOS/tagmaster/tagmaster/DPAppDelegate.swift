@@ -91,9 +91,7 @@ public extension DPAppDelegate {
             UserDefaults.standard.removeObject(forKey: "favorites")
         }
     }
-    
-    @objc static var tagLoading: BFTask<NSNull>? = nil
-    
+        
     @objc func extraInit() {
         DPAppDelegate.migrateOldLists()
         convertParseUser()
@@ -123,20 +121,14 @@ public extension DPAppDelegate {
                     
                     let teachableIds = (snapshot?.get("lists.teachable") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
                     let favoriteIds = (snapshot?.get("lists.favorite") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
-                    
-                    let tcs = BFTaskCompletionSource<NSNull>()
-                    DPAppDelegate.tagLoading = tcs.task
-                    
+                                        
                     // Don't try to write these back to the server -- they're already there.
                     DPAppDelegate.setTeachable(teachableIds, doSave: false)
                     DPAppDelegate.setFavorites(favoriteIds, doSave: false)
                     
-                    // Kick off precaching tags
+                    // Prefetch tags
                     DispatchQueue.global().async {
-                        DPTag.query(byIds: (teachableIds + favoriteIds).map({ NSNumber(value:$0) }),
-                                    cache: true)
-                        tcs.set(result: NSNull())
-                        DPAppDelegate.tagLoading = nil
+                        DPTag.query(byIds: (teachableIds + favoriteIds).map { NSNumber(value: $0) }, cache: true)
                     }
                 }
             } else {

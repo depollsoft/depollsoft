@@ -79,21 +79,15 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 
 + (NSMutableDictionary *)tagCache {
     static NSMutableDictionary *tagCache = nil;
-    if (!tagCache) {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         tagCache = [NSMutableDictionary dictionary];
-    }
+    });
     return tagCache;
 }
 
 + (DPTag *)queryById:(int)tagId {
-    NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
-    [builtString appendFormat:@"id=%d", tagId];
-    NSURL *url = [NSURL URLWithString:builtString];
-    DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
-    NSArray *parseResult = [parser parseWithUrl:url];
-    DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
-    
-    return queryResult.tags.count > 0 ? queryResult.tags[0] : nil;
+    return [self queryByIds:@[@(tagId)]][0];
 }
 
 + (NSArray<DPTag *> *)queryByIds:(NSArray<NSNumber *> *)tagIds {
@@ -102,21 +96,70 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 
 
 + (NSArray<DPTag *> *)queryByIds:(NSArray<NSNumber *> *)tagIds cache:(BOOL)cache {
-    NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
-    NSString *tagIdsCombined = [tagIds componentsJoinedByString:@"|"];
-    [builtString appendFormat:@"id=%@&n=%lu", [tagIdsCombined stringByURLEncoding], (unsigned long)tagIds.count];
-    NSURL *url = [NSURL URLWithString:builtString];
-    DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
-    NSArray *parseResult = [parser parseWithUrl:url];
-    DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+    static NSMutableArray<NSArray<NSNumber *> *> *ongoing;
+    static NSMutableDictionary<NSValue *, NSArray<DPTag *> *> *results;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        ongoing = [NSMutableArray array];
+        results = [NSMutableDictionary dictionary];
+    });
+    tagIds = [NSArray arrayWithArray:tagIds];
+    NSValue *tagIdsPointer = [NSValue valueWithPointer:(__bridge const void * _Nullable)(tagIds)];
+    @synchronized (ongoing) {
+        [ongoing addObject:tagIds];
+    }
+    [NSThread sleepForTimeInterval:0.1];
+    NSMutableArray<NSArray<NSNumber *> *> *allQueries;
+    @synchronized (ongoing) {
+        allQueries = [NSMutableArray arrayWithArray:ongoing];
+        [ongoing removeAllObjects];
+    }
+    if (allQueries.count > 0) {
+        NSMutableArray<NSNumber *> *allTagIds = [NSMutableArray array];
+        for (NSArray<NSNumber *> *queryIds in allQueries) {
+            [allTagIds addObjectsFromArray:queryIds];
+        }
+        NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
+        NSString *tagIdsCombined = [allTagIds componentsJoinedByString:@"|"];
+        [builtString appendFormat:@"id=%@&n=%lu", [tagIdsCombined stringByURLEncoding], (unsigned long)allTagIds.count];
+        NSURL *url = [NSURL URLWithString:builtString];
+        DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
+        NSArray *parseResult = [parser parseWithUrl:url];
+        DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+        
+        @synchronized (results) {
+            for (NSArray<NSNumber *> *queryIds in allQueries) {
+                NSMutableArray<DPTag *> *tags = [NSMutableArray array];
+                for (DPTag *tag in queryResult.tags) {
+                    if ([queryIds containsObject:[NSNumber numberWithInt:tag.tagId]]) {
+                        [tags addObject:tag];
+                    }
+                }
+                results[[NSValue valueWithPointer:(__bridge const void * _Nullable)(queryIds)]] = tags;
+            }
+        }
+    }
     
+    NSArray<DPTag *> *tags = nil;
+    while (!tags) {
+        @synchronized (results) {
+            tags = results[tagIdsPointer];
+            if (tags) {
+                [results removeObjectForKey:tagIdsPointer];
+            }
+        }
+        if (!tags) {
+            [NSThread sleepForTimeInterval:0.01];
+        }
+    }
+        
     if (cache) {
-        for (DPTag *tag in queryResult.tags) {
+        for (DPTag *tag in tags) {
             [tag cache];
         }
     }
     
-    return queryResult.tags;
+    return tags;
 }
 
 - (NSString *)description {
