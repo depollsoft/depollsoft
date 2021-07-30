@@ -115,9 +115,10 @@ class TagSummaryFragment : Fragment() {
                                 "/" + tag.id + "." + sheetMusicType)
                         val path = Uri.parse(contentPath)
                         val intent = Intent(Intent.ACTION_VIEW)
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         if (sheetMusicType.toLowerCase(Locale.US) == "pdf") {
                             intent.setDataAndType(path, "application/pdf")
-                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         } else {
                             val map = MimeTypeMap.getSingleton()
                             val mimeType = map.getMimeTypeFromExtension(sheetMusicType

@@ -123,6 +123,9 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:button="@drawable/ic_yesnocheck"
+                android:buttonTint="@android:color/transparent"
+                android:buttonTintMode="add"
+                android:textColor="?android:attr/textColorPrimary"
                 android:clickable="false"
                 android:text="@string/Multitrack"
                 android:textSize="12sp" >

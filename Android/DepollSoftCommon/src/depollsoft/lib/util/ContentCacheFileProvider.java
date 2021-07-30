@@ -79,7 +79,7 @@ public class ContentCacheFileProvider extends ContentProvider {
 
   @Override
   public boolean onCreate() {
-    return false;
+    return true;
   }
 
   private String getFileName(Uri uri) {

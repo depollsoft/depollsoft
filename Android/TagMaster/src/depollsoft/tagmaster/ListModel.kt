@@ -8,7 +8,6 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import depollsoft.lib.util.Preferences
-import depollsoft.tagmaster.barbershop.Track
 import java.lang.ref.WeakReference
 
 class ListModel private constructor(val listName: String) {
@@ -152,11 +151,11 @@ class ListModel private constructor(val listName: String) {
                         return
                     }
                     val cur = ListModel.invoke(it)
-                    cur.ids.replaceBackingStore(
-                        (data[it] as? List<*>)?.mapNotNull { (it as? Long)?.toInt() }
-                            ?.toMutableList()
-                            ?: mutableListOf()
-                    )
+                    var newValue = (data[it] as? List<*>)?.mapNotNull { (it as? Long)?.toInt() }
+                        ?.toMutableList() ?: mutableListOf();
+                    if (!newValue.equals(cur.ids)) {
+                        cur.ids.replaceBackingStore(newValue)
+                    }
                 }
 
             } finally {
