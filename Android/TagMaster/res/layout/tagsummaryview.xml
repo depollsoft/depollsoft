@@ -174,7 +174,7 @@
                         android:layout_marginEnd="5dip"
                         android:layout_marginRight="5dip"
                         android:textSize="12sp"
-                        android:tint="?attr/colorPrimary"
+                        android:tint="?attr/colorOnBackground"
                         app:srcCompat="@drawable/ic_rate">
                     </ImageButton>
                 </LinearLayout>
