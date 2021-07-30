@@ -1,10 +1,14 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.Tracker
-import com.bindroid.trackable.trackable
+import com.bindroid.trackable.*
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import depollsoft.lib.util.Preferences
+import depollsoft.tagmaster.barbershop.Track
 import java.lang.ref.WeakReference
 
 class ListModel private constructor(val listName: String) {
@@ -31,15 +35,19 @@ class ListModel private constructor(val listName: String) {
     }
 
     fun moveDown(id: Int) {
-        val index: Int = ids.indexOf(id)
-        ids.removeAt(index)
-        ids.add(index + 1, id)
+        ids.transaction {
+            val index: Int = indexOf(id)
+            removeAt(index)
+            add(index + 1, id)
+        }
     }
 
     fun moveUp(id: Int) {
-        val index: Int = ids.indexOf(id)
-        ids.removeAt(index)
-        ids.add(index - 1, id)
+        ids.transaction {
+            val index: Int = ids.indexOf(id)
+            ids.removeAt(index)
+            ids.add(index - 1, id)
+        }
     }
 
     fun remove(id: Int) {
@@ -56,8 +64,21 @@ class ListModel private constructor(val listName: String) {
         } else {
             preferences[listName] = ids
         }
-        Companion.storeValue()
-        // TODO: Write to Firestore
+        if (!shouldStore) {
+            return
+        }
+        Companion.storeValue(false)
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            val userDoc = Firebase.firestore.document("users/${user.uid}")
+            userDoc.set(
+                mapOf(
+                    "lists" to mapOf(
+                        listName to if (ids.isEmpty()) FieldValue.delete() else ids
+                    )
+                ), SetOptions.mergeFields("lists.${listName}")
+            )
+        }
     }
 
     init {
@@ -76,8 +97,11 @@ class ListModel private constructor(val listName: String) {
             Preferences.get(LISTS_KEY) ?: mutableMapOf()
         }
 
-        private fun storeValue() {
+        private fun storeValue(toFirestore: Boolean) {
             Preferences.set(LISTS_KEY, preferences)
+            if (toFirestore) {
+                toFirestore()
+            }
         }
 
         private val modelInstances: MutableMap<String, WeakReference<ListModel>> = mutableMapOf()
@@ -107,6 +131,73 @@ class ListModel private constructor(val listName: String) {
                 val teachableModel = ListModel.invoke("teachable")
                 teachableModel.ids = teachables
                 Preferences.set(teachablesKey, null)
+            }
+        }
+
+        private var shouldStore = true
+        private fun fromFirestore(data: Map<*, *>) {
+            shouldStore = false
+            try {
+                // Remove lists that aren't in the data
+                preferences.keys.subtract(data.keys).forEach {
+                    if (it !is String) {
+                        return
+                    }
+                    val cur = ListModel.invoke(it)
+                    cur.ids.clear()
+                }
+                // Update existing lists
+                data.keys.forEach {
+                    if (it !is String) {
+                        return
+                    }
+                    val cur = ListModel.invoke(it)
+                    cur.ids.replaceBackingStore(
+                        (data[it] as? List<*>)?.mapNotNull { (it as? Long)?.toInt() }
+                            ?.toMutableList()
+                            ?: mutableListOf()
+                    )
+                }
+
+            } finally {
+                shouldStore = true
+            }
+            storeValue(false)
+        }
+
+        private fun toFirestore() {
+            val user = Firebase.auth.currentUser
+            if (user != null) {
+                val userDoc = Firebase.firestore.document("users/${user.uid}")
+                userDoc.set(
+                    mapOf(
+                        "lists" to preferences
+                    ), SetOptions.merge()
+                )
+            }
+        }
+
+        var registration: ListenerRegistration? = null
+        fun connectToFirestore() {
+            registration?.remove()
+            val user = Firebase.auth.currentUser
+            if (user != null) {
+                val userDoc = Firebase.firestore.document("users/${user.uid}")
+                registration = userDoc.addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        print(error)
+                        return@addSnapshotListener
+                    }
+
+                    if (!snapshot!!.exists()) {
+                        // There was no existing user, so initialize the user
+                        toFirestore()
+                    }
+
+                    fromFirestore(
+                        snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>()
+                    )
+                }
             }
         }
 

@@ -2,13 +2,10 @@ package depollsoft.tagmaster
 
 import android.content.Context
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDex
-import bolts.Task
 import com.bindroid.trackable.TrackableCollection
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.parse.Parse
@@ -16,7 +13,7 @@ import com.parse.ParseUser
 import com.parse.facebook.ParseFacebookUtils
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
-import depollsoft.tagmaster.barbershop.Tag
+import depollsoft.lib.util.Preferences
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 
@@ -36,45 +33,12 @@ class TagMasterApplication : RichApplication() {
         )
         ParseFacebookUtils.initialize(this)
 
-        var registration: ListenerRegistration? = null
-
         Firebase.auth.addAuthStateListener {
-            registration?.remove()
-            val user = it.currentUser
-            if (user != null) {
-                val userDoc = Firebase.firestore.document("users/${user.uid}")
-                registration = userDoc.addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        print(error)
-                        return@addSnapshotListener
-                    }
-                    val oldTeachable = TeachableTagsModel.teachableTagIds
-                    val oldFavorites = FavoritesModel.favoriteIds
-                    if (!snapshot!!.exists()) {
-                        // There was no existing user, so initialize the user
-                        userDoc.set(
-                            mapOf(
-                                "lists" to mapOf(
-                                    "favorite" to oldFavorites,
-                                    "teachable" to oldTeachable
-                                )
-                            ), SetOptions.merge()
-                        )
-                    }
-
-                    val teachableIds =
-                        (snapshot.get("lists.teachable") as? List<*>)?.map { (it as Long).toInt() } ?: oldTeachable
-                    val favoriteIds =
-                        (snapshot.get("lists.favorite") as? List<*>)?.map { (it as Long).toInt() } ?: oldFavorites
-
-                    // Don't try to write these back to the server -- they're already there
-                    TeachableTagsModel.teachableTagIds =
-                        TrackableCollection(ArrayList(teachableIds))
-                    FavoritesModel.favoriteIds = TrackableCollection(ArrayList(favoriteIds))
-                }
-            }
+            ListModel.connectToFirestore()
         }
         convertParseUser()
+
+        AppCompatDelegate.setDefaultNightMode(themeMode)
     }
 
     fun convertParseUser() {
@@ -106,5 +70,11 @@ class TagMasterApplication : RichApplication() {
         private const val FACEBOOK_DEBUG = "403828359632347"
         private const val FACEBOOK_PRODUCTION = "311400242255131"
         const val LOG_TAG = "depollsoft.tagmaster"
+        public var themeMode: Int
+            get() = Preferences.get("tagmaster.theme") ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            set(value) {
+                AppCompatDelegate.setDefaultNightMode(value)
+                Preferences.set("tagmaster.theme", value)
+            }
     }
 }

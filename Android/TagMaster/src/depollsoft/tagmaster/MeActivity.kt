@@ -24,7 +24,7 @@ class MeActivity : AppCompatActivity() {
         this.setContentView(R.layout.meview)
 
         UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds", AdapterConverter(
-                FavoriteTagItemView::class.java, false, true))
+                FavoriteTagItemView::class.java, true, true))
 
         this.supportActionBar?.title = "Tag Master".makeTitleString(this)
 

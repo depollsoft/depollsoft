@@ -2,11 +2,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="colorPrimary">@color/dark</item>
+        <item name="colorSurface">@color/dark</item>
+        <item name="colorPrimaryVariant">@color/darker</item>
+        <item name="colorPrimaryDark">@color/darker</item>
+        <item name="colorOnPrimary">@android:color/primary_text_dark</item>
+        <item name="colorSecondary">@color/darker</item>
+        <item name="colorAccent">@android:color/holo_green_light</item>
+        <item name="colorOnSecondary">@android:color/secondary_text_dark</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/darker</item>
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
-        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/cardview_light_background</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/darker</item>
-        <item name="colorAccent">@color/dark</item>
     </style>
 </resources>
