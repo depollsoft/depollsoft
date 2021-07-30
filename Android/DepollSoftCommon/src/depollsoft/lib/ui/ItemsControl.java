@@ -66,13 +66,11 @@ public class ItemsControl extends LinearLayout {
       try {
         if (view == null)
           view = this.getAdapter().getView(x, null, this);
-        else {
-          int index = this.indexOfChild(view);
-          if (index == x)
-            continue;
-          else
-            this.removeViewAt(index);
-        }
+        int index = this.indexOfChild(view);
+        if (index == x)
+          continue;
+        else if (index > 0)
+          this.removeViewAt(index);
       } finally {
         newViews.put(itemId, view);
       }

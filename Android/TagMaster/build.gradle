@@ -40,6 +40,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-functions-ktx'
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.5.1'
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
@@ -56,6 +57,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 16
         targetSdkVersion 30
+        resConfigs "en"
     }
 
     sourceSets {

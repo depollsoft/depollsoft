@@ -4,6 +4,7 @@
     <string name="hello">Hello World, TagMaster!</string>
     <string name="facebook_application_id">311400242255131</string>
     <string name="fb_login_protocol_scheme">fb311400242255131</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb311400242255131</string>
     <string name="facebook_client_token">296ccf0c53143b18ba166245011235cc</string>
     <string name="app_name">Tag Master</string>
     <string name="Version">Version: </string>
@@ -110,7 +111,7 @@
     <string name="Balance">Balance</string>
     <string name="RandomTag">Random Tag</string>
     <string name="Favorites">Favorites</string>
-    <string name="Copyright">© 2018</string>
+    <string name="Copyright">© 2021</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="ContentProvider">Content provided by</string>
     <string name="BrowseTags">Browse</string>
@@ -144,9 +145,9 @@
     <string name="TermsOfUse">Terms of Use</string>
     <string name="Stop">Stop</string>
     <string name="Pause">Pause</string>
-    <string name="LogIn">Log in with Facebook</string>
+    <string name="LogIn">Log in</string>
     <string name="LogOut">Log out</string>
-    <string name="LogInInfo">Log in using Facebook to back up and synchronize your tag lists.</string>
+    <string name="LogInInfo">Log in to back up and synchronize your tag lists.</string>
     <string name="LogInTitle">Log in</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="summary">Summary</string>
@@ -158,5 +159,9 @@
     <string name="classic">Classic</string>
     <string name="IdColon">ID:</string>
     <string name="failed_to_load_tag">Failed to load tag</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">Default</string>
+    <string name="themeTitle">Theme</string>
 
 </resources>
