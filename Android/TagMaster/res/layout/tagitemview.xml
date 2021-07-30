@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:layout_marginEnd="16dp"
-              android:layout_marginLeft="16dp"
-              android:layout_marginRight="16dp"
-              android:layout_marginStart="16dp"
-              android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_marginStart="16dp"
+    android:layout_marginLeft="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginRight="16dp"
+    android:orientation="vertical"
+    android:paddingTop="2dp"
+    android:paddingBottom="4dp">
 
     <LinearLayout
         android:id="@+id/linearLayout4"
@@ -22,8 +25,8 @@
             android:focusable="false"
             android:linksClickable="false"
             android:longClickable="false"
-            android:text="Who&apos;ll Take My Place When I&apos;m Gone?">
-        </TextView>
+            android:text="Who&apos;ll Take My Place When I&apos;m Gone?"
+            tools:ignore="HardcodedText" />
     </LinearLayout>
 
     <LinearLayout
@@ -41,8 +44,7 @@
             android:focusable="false"
             android:linksClickable="false"
             android:longClickable="false"
-            android:textSize="12sp">
-        </TextView>
+            android:textSize="12sp" />
 
         <LinearLayout
             android:id="@+id/linearLayout2"
@@ -64,8 +66,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="@string/IdColon"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/idTextView"
@@ -76,8 +77,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="123"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -94,8 +94,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="@string/RatingColon"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/ratingTextView"
@@ -106,8 +105,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="3.26"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <TextView
@@ -119,8 +117,7 @@
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/PostedColon"
-                android:textSize="12sp">
-            </TextView>
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/postedTextView"
@@ -131,8 +128,7 @@
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="12/7/2008"
-                android:textSize="12sp">
-            </TextView>
+                android:textSize="12sp" />
 
             <LinearLayout
                 android:id="@+id/downloadsContainer"
@@ -149,8 +145,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="@string/DLs"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/downloadsTextView"
@@ -161,8 +156,7 @@
                     android:linksClickable="false"
                     android:longClickable="false"
                     android:text="4633"
-                    android:textSize="12sp">
-                </TextView>
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -174,27 +168,34 @@
             <CheckBox
                 android:id="@+id/sheetMusicCheckBox"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 android:button="@drawable/ic_yesnocheck"
+                android:buttonTint="@android:color/transparent"
+                android:buttonTintMode="add"
                 android:clickable="false"
                 android:focusable="false"
                 android:text="@string/SheetMusicCheck"
-                android:textSize="12sp">
-            </CheckBox>
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="12sp"
+                tools:targetApi="lollipop" />
+
             <CheckBox
                 android:id="@+id/learningTracksCheckBox"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 android:button="@drawable/ic_yesnocheck"
+                android:buttonTint="@android:color/transparent"
+                android:buttonTintMode="add"
                 android:clickable="false"
                 android:focusable="false"
                 android:text="@string/LearningTracks"
-                android:textSize="12sp">
-            </CheckBox>
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="12sp"
+                tools:targetApi="lollipop" />
         </LinearLayout>
     </LinearLayout>
 
