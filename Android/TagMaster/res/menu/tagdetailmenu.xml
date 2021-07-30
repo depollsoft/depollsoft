@@ -38,16 +38,9 @@
     </item>
 
     <item
-        android:id="@+id/emailMenuItem"
-        android:icon="@drawable/ic_email"
-        android:title="@string/EmailTag"
-        app:showAsAction="ifRoom">
-    </item>
-
-    <item
-        android:id="@+id/smsMenuItem"
-        android:icon="@drawable/ic_sms"
-        android:title="@string/SmsTag"
+        android:id="@+id/shareMenuItem"
+        android:icon="@drawable/ic_share"
+        android:title="@string/share"
         app:showAsAction="ifRoom">
     </item>
 

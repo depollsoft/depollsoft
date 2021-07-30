@@ -2,17 +2,16 @@ package depollsoft.tagmaster
 
 import android.app.ProgressDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
-import com.bindroid.trackable.TrackableField
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
@@ -21,7 +20,6 @@ import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.kotlin.ui.attachToViewPager
 import depollsoft.lib.util.ContentCache
-import depollsoft.lib.util.IntentUtilities
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
 import java.util.*
@@ -30,26 +28,22 @@ class TagDetailActivity : AppCompatActivity() {
     var tag: Tag? by trackable()
     private var progress: ProgressDialog? = null
 
-    private val emailIntent: Intent
+    private val shareIntent: Intent
         get() {
-            val i = Intent(Intent.ACTION_SEND)
-            i.putExtra(Intent.EXTRA_SUBJECT, this.tag!!.title + " - Tag Master for Android")
-            i.putExtra(
-                    Intent.EXTRA_TEXT,
-                    String
-                            .format(
-                                    "Tag Title: %s\n%s\n\n\nSent from Tag Master for Android\nhttp://www.davidpoll.com/applications/tag-master",
-                                    this.tag!!.title, this.tag!!.tagUri))
-            i.type = "text/plain"
-            return i
-        }
-
-    private val smsIntent: Intent
-        get() {
-            val i = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"))
-            i.putExtra("sms_body", String.format("%s %s - Sent from Tag Master", this.tag!!.title,
-                    this.tag!!.tagUri))
-            return i
+            return ShareCompat.IntentBuilder(this)
+                .setChooserTitle("Share a Tag")
+                .setType("text/plain")
+                .setSubject("${this.tag!!.title} - Tag Master")
+                .setText(
+                    """
+                        Tag Title: ${tag!!.title}
+                        ${tag!!.tagUri}
+                        
+                        Sent from Tag Master
+                        http://www.davidpoll.com/applications/tag-master
+                    """.trimIndent()
+                )
+                .createChooserIntent()
         }
 
     val tagId: Int
@@ -133,8 +127,10 @@ class TagDetailActivity : AppCompatActivity() {
 
         bottomNavigation.attachToViewPager(viewPager)
 
-        UiBinder.bind(ReflectedProperty(this, "Title"), ReflectedProperty(this, "Tag.Title"),
-                BindingMode.ONE_WAY)
+        UiBinder.bind(
+            ReflectedProperty(this, "Title"), ReflectedProperty(this, "Tag.Title"),
+            BindingMode.ONE_WAY
+        )
 
         UiBinder.bind(this, R.id.bottomNavigation, "Visibility", "Tag", BoolConverter.get())
 
@@ -145,13 +141,18 @@ class TagDetailActivity : AppCompatActivity() {
         if (this.tag == null)
             return false
         this.menuInflater.inflate(R.menu.tagdetailmenu, menu)
-        MenuItems.setShowAsAction(menu.findItem(R.id.addFavoriteMenuItem),
-                MenuItems.SHOW_AS_ACTION_IF_ROOM)
-        MenuItems.setShowAsAction(menu.findItem(R.id.removeFavoriteMenuItem),
-                MenuItems.SHOW_AS_ACTION_IF_ROOM)
-        MenuItems.setShowAsAction(menu.findItem(R.id.smsMenuItem), MenuItems.SHOW_AS_ACTION_IF_ROOM)
-        menu.findItem(R.id.smsMenuItem).isVisible = IntentUtilities.isIntentAvailable(this, this.smsIntent)
-        menu.findItem(R.id.emailMenuItem).isVisible = IntentUtilities.isIntentAvailable(this, this.emailIntent)
+        MenuItems.setShowAsAction(
+            menu.findItem(R.id.addFavoriteMenuItem),
+            MenuItems.SHOW_AS_ACTION_IF_ROOM
+        )
+        MenuItems.setShowAsAction(
+            menu.findItem(R.id.removeFavoriteMenuItem),
+            MenuItems.SHOW_AS_ACTION_IF_ROOM
+        )
+        MenuItems.setShowAsAction(
+            menu.findItem(R.id.shareMenuItem),
+            MenuItems.SHOW_AS_ACTION_IF_ROOM
+        )
         return true
     }
 
@@ -164,12 +165,8 @@ class TagDetailActivity : AppCompatActivity() {
                     R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(tag.id)
                     R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(tag.id)
                     R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(tag.id)
-                    R.id.emailMenuItem -> {
-                        val i = this.emailIntent
-                        this.startActivity(i)
-                    }
-                    R.id.smsMenuItem -> {
-                        val i = this.smsIntent
+                    R.id.shareMenuItem -> {
+                        val i = this.shareIntent
                         this.startActivity(i)
                     }
                     R.id.refreshMenuItem -> {
@@ -187,10 +184,14 @@ class TagDetailActivity : AppCompatActivity() {
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val tag = this.tag
         if (tag != null) {
-            menu.findItem(R.id.addFavoriteMenuItem).isVisible = !FavoritesModel.getIsFavorite(tag.id)
-            menu.findItem(R.id.removeFavoriteMenuItem).isVisible = FavoritesModel.getIsFavorite(tag.id)
-            menu.findItem(R.id.addTeachableTagMenuItem).isVisible = !TeachableTagsModel.getIsTeachableTag(tag.id)
-            menu.findItem(R.id.removeTeachableTagMenuItem).isVisible = TeachableTagsModel.getIsTeachableTag(tag.id)
+            menu.findItem(R.id.addFavoriteMenuItem).isVisible =
+                !FavoritesModel.getIsFavorite(tag.id)
+            menu.findItem(R.id.removeFavoriteMenuItem).isVisible =
+                FavoritesModel.getIsFavorite(tag.id)
+            menu.findItem(R.id.addTeachableTagMenuItem).isVisible =
+                !TeachableTagsModel.getIsTeachableTag(tag.id)
+            menu.findItem(R.id.removeTeachableTagMenuItem).isVisible =
+                TeachableTagsModel.getIsTeachableTag(tag.id)
         }
         return super.onPrepareOptionsMenu(menu)
     }

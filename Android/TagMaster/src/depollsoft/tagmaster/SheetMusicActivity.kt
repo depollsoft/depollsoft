@@ -4,18 +4,19 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.Drawable.createFromStream
 import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.view.Menu
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
-import com.bindroid.Binding
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.trackable
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.*
+import com.bindroid.utils.WeakReflectedProperty
+import com.bindroid.utils.bind
+import com.bindroid.utils.compiledProp
+import com.bindroid.utils.uibind
 import com.github.chrisbanes.photoview.PhotoView
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import depollsoft.tagmaster.barbershop.Tag
@@ -98,11 +99,11 @@ class SheetMusicActivity : AppCompatActivity() {
 
     private fun loadImage() {
         CoroutineScope(Dispatchers.IO + Job()).launch {
+            var bitmap: Bitmap? = null
             if (intent.type == "application/pdf") {
                 val fd = contentResolver.openFileDescriptor(intent.data!!, "r")
                 val renderer = PdfRenderer(fd!!)
-                var bitmap: Bitmap? = null
-                val dpi = Math.min(resources.displayMetrics.densityDpi, 180)
+                val dpi = Math.min(resources.displayMetrics.densityDpi, 200)
                 for (page in 0 until renderer.pageCount) {
                     val page = renderer.openPage(0)
                     val width = dpi * page.width / 72
@@ -110,7 +111,12 @@ class SheetMusicActivity : AppCompatActivity() {
                     var pageBitmap =
                         Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                     pageBitmap.eraseColor(Color.WHITE)
-                    page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    page.render(
+                        pageBitmap,
+                        null,
+                        null,
+                        PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY
+                    )
                     page.close()
                     pageBitmap = rotateBitmap(pageBitmap, rotation)
                     if (bitmap == null) {
@@ -120,12 +126,27 @@ class SheetMusicActivity : AppCompatActivity() {
                     }
                 }
                 renderer.close()
-                drawable = bitmap!!.toDrawable(resources)
             } else {
                 val stream = contentResolver.openInputStream(intent.data!!)
-                drawable = rotateBitmap(BitmapFactory.decodeStream(stream), rotation)
-                    .toDrawable(resources)
+                bitmap = rotateBitmap(BitmapFactory.decodeStream(stream), rotation)
                 stream?.close()
+            }
+            if (bitmap!!.byteCount > MAX_BITMAP_SIZE) {
+                launch(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@SheetMusicActivity,
+                        "Sheet music is too large to open in Tag Master -- opening in external app",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                // The image is too big!  Bail out to an app that might have better luck
+                val toLaunch = Intent(intent)
+                toLaunch.component = null
+                toLaunch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(toLaunch)
+                finish()
+            } else {
+                drawable = bitmap.toDrawable(resources)
             }
         }
     }
@@ -143,5 +164,9 @@ class SheetMusicActivity : AppCompatActivity() {
             true
         }
         return super.onCreateOptionsMenu(menu)
+    }
+
+    companion object {
+        const val MAX_BITMAP_SIZE = 1024 * 1024 * 100 // 100MiB
     }
 }
