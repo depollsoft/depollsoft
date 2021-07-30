@@ -46,8 +46,6 @@
     <string name="SortBy">Sort by</string>
     <string name="SearchOptions">Search Options</string>
     <string name="AddFavorite">Add Favorite</string>
-    <string name="EmailTag">Email</string>
-    <string name="SmsTag">Sms</string>
     <string name="RefreshTag">Refresh</string>
 
     <string-array name="SheetMusicChoices">
@@ -165,5 +163,6 @@
     <string name="themeTitle">Theme</string>
     <string name="rotate">Rotate 90°</string>
     <string name="open_in_external_app">Open in external app</string>
+    <string name="share">Share</string>
 
 </resources>
