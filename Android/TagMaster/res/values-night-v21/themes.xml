@@ -7,10 +7,12 @@
         <item name="colorPrimaryVariant">@color/dark</item>
         <item name="colorPrimaryDark">@color/dark</item>
         <item name="colorOnPrimary">@android:color/primary_text_dark</item>
+        <item name="android:colorForeground">@android:color/secondary_text_dark</item>
         <item name="colorSecondary">@color/dark</item>
-        <item name="colorAccent">@android:color/holo_green_light</item>
-        <item name="colorOnSecondary">@android:color/secondary_text_dark</item>
+        <item name="colorOnSecondary">@android:color/primary_text_dark</item>
         <item name="android:navigationBarColor">@color/dark</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="itemIconTint">@android:color/primary_text_dark</item>
+        <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.Colored</item>
     </style>
 </resources>

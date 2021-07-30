@@ -11,9 +11,13 @@ import android.widget.AdapterView.OnItemSelectedListener
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.bindroid.ValueConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
+import com.bindroid.trackable.track
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.compiledProp
+import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -201,6 +205,21 @@ class SettingsActivity : AppCompatActivity() {
             viewer.show()
         })
 
+        uibind(
+            R.id.radio_system,
+            "IsChecked",
+            compiledProp { TagMasterApplication.Companion::themeMode },
+            converter = object : ValueConverter() {
+                override fun convertToSource(targetValue: Any?, sourceType: Class<*>?): Any {
+                    return super.convertToSource(targetValue, sourceType)
+                }
+
+                override fun convertToTarget(sourceValue: Any?, targetType: Class<*>?): Any {
+                    return super.convertToTarget(sourceValue, targetType)
+                }
+            }
+        )
+
         this.findViewById<RadioButton>(R.id.radio_system).setOnClickListener {
             TagMasterApplication.themeMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
@@ -210,13 +229,18 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<RadioButton>(R.id.radio_light).setOnClickListener {
             TagMasterApplication.themeMode = AppCompatDelegate.MODE_NIGHT_NO
         }
-        when (TagMasterApplication.themeMode) {
-            AppCompatDelegate.MODE_NIGHT_YES ->
-                this.findViewById<RadioButton>(R.id.radio_dark).isChecked = true
-            AppCompatDelegate.MODE_NIGHT_NO ->
-                this.findViewById<RadioButton>(R.id.radio_light).isChecked = true
-            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM ->
-                this.findViewById<RadioButton>(R.id.radio_system).isChecked = true
+        track({TagMasterApplication.themeMode}) {
+            when (it()) {
+                AppCompatDelegate.MODE_NIGHT_YES ->
+                    findViewById<RadioButton>(R.id.radio_dark).isChecked = true
+                AppCompatDelegate.MODE_NIGHT_NO ->
+                    findViewById<RadioButton>(R.id.radio_light).isChecked = true
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM ->
+                    findViewById<RadioButton>(R.id.radio_system).isChecked = true
+            }
+            if (!this@SettingsActivity.isDestroyed) {
+                keepTracking
+            }
         }
 
         supportActionBar?.title = "Tag Master".makeTitleString(this)
