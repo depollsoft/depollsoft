@@ -115,7 +115,10 @@ class TagSummaryFragment : Fragment() {
                                 "/" + tag.id + "." + sheetMusicType)
                         val path = Uri.parse(contentPath)
                         val intent = Intent(Intent.ACTION_VIEW)
+                        intent.putExtra("tagId", tag!!.id)
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        intent.setClass(requireContext(), SheetMusicActivity::class.java)
+
                         if (sheetMusicType.toLowerCase(Locale.US) == "pdf") {
                             intent.setDataAndType(path, "application/pdf")
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

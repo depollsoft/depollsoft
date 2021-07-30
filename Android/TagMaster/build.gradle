@@ -44,8 +44,10 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.5.1'
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
+    implementation 'com.github.chrisbanes:PhotoView:2.0.0'
     implementation project(':bindroid')
     implementation project(':bindroid-kotlin')
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 }
 
 android {
@@ -55,7 +57,7 @@ android {
         multiDexEnabled true
         applicationId "depollsoft.tagmaster"
         vectorDrawables.useSupportLibrary = true
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 30
         resConfigs "en"
     }

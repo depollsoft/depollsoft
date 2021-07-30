@@ -163,5 +163,7 @@
     <string name="theme_light">Light</string>
     <string name="theme_system">Default</string>
     <string name="themeTitle">Theme</string>
+    <string name="rotate">Rotate 90°</string>
+    <string name="open_in_external_app">Open in external app</string>
 
 </resources>

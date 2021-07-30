@@ -1,70 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="depollsoft.tagmaster"
-          android:versionCode="51"
-          android:versionName="@string/VersionNumber">
+    package="depollsoft.tagmaster"
+    android:versionCode="51"
+    android:versionName="@string/VersionNumber">
 
-    <uses-permission android:name="android.permission.INTERNET">
-    </uses-permission>
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
 
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
         android:normalScreens="true"
-        android:smallScreens="true"/>
+        android:smallScreens="true" />
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE">
-    </uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
 
     <application
-        android:name="TagMasterApplication"
+        android:name=".TagMasterApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".SheetMusicActivity"
+            android:configChanges="keyboardHidden|orientation" />
 
-        <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
 
         <activity
             android:name=".TagDetailActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity
             android:name=".TagQueryActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity
             android:name=".TagSearchActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+            android:windowSoftInputMode="adjustResize"></activity>
         <activity
             android:name=".TagBrowserActivity"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
+            android:configChanges="keyboardHidden|orientation"></activity>
         <activity
             android:name=".TagSearchResultsActivity"
             android:configChanges="keyboardHidden|orientation"
             android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity
             android:name=".TagMasterBrowserActivity"
             android:configChanges="keyboardHidden|orientation"
             android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
 
         <provider
             android:name="depollsoft.lib.util.ContentCacheFileProvider"
             android:authorities="depollsoft.tagmaster"
             android:enabled="true"
             android:exported="true"
-            android:grantUriPermissions="true">
-        </provider>
+            android:grantUriPermissions="true"></provider>
 
         <activity
             android:name=".MeActivity"
@@ -72,9 +68,9 @@
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
@@ -86,35 +82,29 @@
             <intent-filter
                 android:icon="@mipmap/ic_launcher"
                 android:label="@string/app_name">
-                <action android:name="android.intent.action.VIEW">
-                </action>
+                <action android:name="android.intent.action.VIEW"></action>
 
-                <category android:name="android.intent.category.DEFAULT">
-                </category>
-                <category android:name="android.intent.category.BROWSABLE">
-                </category>
+                <category android:name="android.intent.category.DEFAULT"></category>
+                <category android:name="android.intent.category.BROWSABLE"></category>
 
                 <data
                     android:host="www.barbershoptags.com"
                     android:pathPrefix="/dbpage.php"
-                    android:scheme="http">
-                </data>
+                    android:scheme="http"></data>
                 <data
                     android:host="barbershoptags.com"
                     android:pathPrefix="/dbpage.php"
-                    android:scheme="http">
-                </data>
+                    android:scheme="http"></data>
             </intent-filter>
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="@string/app_name">
-        </activity>
+            android:label="@string/app_name"></activity>
         <activity
             android:name=".TeachableTagsActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="@string/TeachableTags"/>
+            android:label="@string/TeachableTags" />
     </application>
 
 </manifest>
