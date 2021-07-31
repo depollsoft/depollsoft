@@ -11,8 +11,7 @@ import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.BoundUi
 import com.bindroid.ui.UiBinder
-import com.bindroid.utils.compiledProp
-import com.bindroid.utils.uibind
+import com.bindroid.utils.bindTo
 import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.barbershop.Tag
 
@@ -52,55 +51,41 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        uibind(R.id.titleTextView, "Text", compiledProp { tag!!::title })
-        uibind(
+        bindTo(R.id.titleTextView, "Text", { tag?.title })
+        bindTo(
             R.id.akaTextView,
             "Text",
-            { tag!!::alternativeTitle },
-            converter = ToStringConverter(
-                "a.k.a. %s"
-            )
+            { tag?.alternativeTitle },
+            ToStringConverter("a.k.a. %s")
         )
-        uibind(
+        bindTo(
             R.id.akaTextView,
             "Visibility",
-            { tag!!::alternativeTitle },
-            converter = BoolConverter.get()
+            { tag?.alternativeTitle },
+            BoolConverter.get()
         )
-        uibind(R.id.idTextView, "Text", { tag!!::id }, converter = ToStringConverter())
-        uibind(
+        bindTo(R.id.idTextView, "Text", { tag?.id }, ToStringConverter())
+        bindTo(
             R.id.ratingTextView,
             "Text",
-            { tag!!::rating },
-            converter = ToStringConverter("%3.2f")
+            { tag?.rating },
+            ToStringConverter("%3.2f")
         )
-        uibind(
+        bindTo(
             R.id.ratingContainer,
             "Visibility",
-            { tag!!::rating },
-            converter = BoolConverter.get()
-        )
-        UiBinder.bind(this, R.id.postedTextView, "Text", "Tag.Posted", ToStringConverter(" %tD"))
-        UiBinder.bind(
-            this, R.id.downloadsTextView, "Text", "Tag.DownloadCount", ToStringConverter(
-                " %d"
-            )
-        )
-        UiBinder.bind(
-            this, R.id.downloadsContainer, "Visibility", "Tag.DownloadCount",
+            { tag?.rating },
             BoolConverter.get()
         )
-        UiBinder.bind(
-            this, R.id.sheetMusicCheckBox, "Checked", "Tag.SheetMusicUri",
-            BoolConverter.get()
-        )
-        UiBinder.bind(
-            this, R.id.learningTracksCheckBox, "Checked", "Tag.Tracks",
+        bindTo(R.id.postedTextView, "Text", { tag?.posted }, ToStringConverter(" %tD"))
+        bindTo(R.id.downloadsTextView, "Text", { tag?.downloadCount }, ToStringConverter("%d"))
+        bindTo(R.id.downloadsContainer, "Visibility", { tag?.downloadCount }, BoolConverter.get())
+        bindTo(R.id.sheetMusicCheckBox, "Checked", { tag?.sheetMusicUri }, BoolConverter.get())
+        bindTo(
+            R.id.learningTracksCheckBox,
+            "Checked",
+            { tag?.tracks },
             BoolConverter.get(false, true)
         )
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
     }
 }

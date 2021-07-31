@@ -13,11 +13,9 @@ import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
-import com.bindroid.ui.UiBinder
 import com.bindroid.utils.*
 import depollsoft.lib.ui.Hyperlink
 import depollsoft.lib.util.ContentCache
@@ -38,138 +36,123 @@ class TagSummaryFragment : Fragment() {
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
 
-        rootView.uibind(R.id.titleTextView, "Text", { parent.tag!!::title })
-        rootView.uibind(
+        rootView.bindTo(R.id.titleTextView, "Text", { parent.tag?.title })
+        rootView.bindTo(
             R.id.titleTextView,
             "Visibility",
-            { parent.tag!!::title },
-            converter = BoolConverter.get()
+            { parent.tag?.title },
+            BoolConverter.get()
         )
 
-        rootView.uibind(R.id.akaTextView, "Text", { parent.tag!!::alternativeTitle })
-        rootView.uibind(
+        rootView.bindTo(R.id.akaTextView, "Text", { parent.tag?.alternativeTitle })
+        rootView.bindTo(
             R.id.akaLayout,
             "Visibility",
-            { parent.tag!!::alternativeTitle },
-            converter = BoolConverter.get()
+            { parent.tag?.alternativeTitle },
+            BoolConverter.get()
         )
 
-        rootView.uibind(R.id.versionTextView, "Text", { parent.tag!!::version })
-        rootView.uibind(
+        rootView.bindTo(R.id.versionTextView, "Text", { parent.tag?.version })
+        rootView.bindTo(
             R.id.versionLayout,
             "Visibility",
-            { parent.tag!!::version },
-            converter = BoolConverter.get()
+            { parent.tag?.version },
+            BoolConverter.get()
         )
 
-        rootView.uibind(
+        rootView.bindTo(
             R.id.ratingTextView,
             "Text",
-            { parent.tag!!::rating },
-            converter = ToStringConverter("%3.2f")
+            { parent.tag?.rating },
+            ToStringConverter("%3.2f")
         )
-        rootView.uibind(
+        rootView.bindTo(
             R.id.ratingTextView,
             "Visibility",
-            { parent.tag!!::rating },
-            converter = BoolConverter.get()
+            { parent.tag?.rating },
+            BoolConverter.get()
         )
 
-        rootView.uibind(
+        rootView.bindTo(
             R.id.ratingProgressBar,
             "Progress",
-            { parent.tag!!::rating },
-            converter = RatingConverter()
+            { parent.tag?.rating },
+            RatingConverter()
         )
-        rootView.uibind(
+        rootView.bindTo(
             R.id.rateButton,
             "Enabled",
-            { this::canRate },
-            converter = BoolConverter.get()
+            { canRate },
+            BoolConverter.get()
         )
 
-        rootView.uibind(
+        rootView.bindTo(
             R.id.partsTextView,
             "Text",
-            { parent.tag!!::parts },
-            converter = ToStringConverter()
+            { parent.tag?.parts },
+            ToStringConverter()
         )
-        rootView.uibind(
+        rootView.bindTo(
             R.id.partsRow,
             "Visibility",
-            { parent.tag!!::parts },
-            converter = BoolConverter.get()
+            { parent.tag?.parts },
+            BoolConverter.get()
         )
 
-        rootView.uibind(
+        rootView.bindTo(
             R.id.tagTypeTextView,
             "Text",
-            { parent.tag!!::tagType },
-            converter = ToStringConverter()
+            { parent.tag?.tagType },
+            ToStringConverter()
         )
 
-        rootView.uibind(R.id.playKeyNoteButton, "Note", { parent.tag!!::keyNote })
-        rootView.uibind(R.id.playKeyNoteButton, "Text", { parent.tag!!::writtenKey })
-        rootView.uibind(
+        rootView.bindTo(R.id.playKeyNoteButton, "Note", { parent.tag?.keyNote })
+        rootView.bindTo(R.id.playKeyNoteButton, "Text", { parent.tag?.writtenKey })
+        rootView.bindTo(
             R.id.keyRow,
             "Visibility",
-            { parent.tag!!::writtenKey },
-            converter = BoolConverter.get()
+            { parent.tag?.writtenKey },
+            BoolConverter.get()
         )
 
-        rootView.uibind(
+        rootView.bindTo(
             R.id.classicTagTextView,
             "Text",
-            { parent.tag!!::classicTagNumber },
-            converter = ToStringConverter()
+            { parent.tag?.classicTagNumber },
+            ToStringConverter()
         )
-        rootView.uibind(
+        rootView.bindTo(
             R.id.classicTagRow,
             "Visibility",
-            { parent.tag!!::classicTagNumber },
-            converter = BoolConverter.get()
+            { parent.tag?.classicTagNumber },
+            BoolConverter.get()
         )
 
         rootView.bindTo(R.id.notesTextView, "Text", { parent.tag?.notes })
         rootView.bindTo(R.id.notesRow, "Visibility", { parent.tag?.notes }, BoolConverter.get())
 
-        UiBinder.bind(rootView, R.id.lyricsTextView, "Text", this, "Parent.Tag.Lyrics")
-        UiBinder.bind(
-            rootView,
-            R.id.lyricsRow,
-            "Visibility",
-            this,
-            "Parent.Tag.Lyrics",
-            BoolConverter.get()
-        )
+        rootView.bindTo(R.id.lyricsTextView, "Text", { parent.tag?.lyrics })
+        rootView.bindTo(R.id.lyricsRow, "Visibility", { parent.tag?.lyrics }, BoolConverter.get())
 
-        UiBinder.bind(
-            rootView,
+        rootView.bindTo(R.id.sheetMusicLink, "HyperlinkUri", { parent.tag?.sheetMusicUri?.uri })
+        rootView.bindTo(
             R.id.sheetMusicLink,
-            "HyperlinkUri",
-            this,
-            "Parent.Tag.SheetMusicUri.Uri"
-        )
-        UiBinder.bind(
-            rootView, R.id.sheetMusicLink, "Visibility", this, "Parent.Tag.SheetMusicUri",
+            "Visibility",
+            { parent.tag?.sheetMusicUri },
             BoolConverter.get()
         )
 
-        UiBinder.bind(
-            ReflectedProperty(
-                rootView.findViewById(R.id.favoriteMarkerTextView),
-                "Visibility"
-            ), Property(Function {
-                FavoritesModel.getIsFavorite(parent.tag!!.id)
-            }, null, Boolean::class.java), BindingMode.ONE_WAY, BoolConverter.get()
+        rootView.bindTo(
+            R.id.favoriteMarkerTextView,
+            "Visibility",
+            { FavoritesModel.getIsFavorite(parent.tag!!.id) },
+            BoolConverter.get()
         )
-        UiBinder.bind(
-            ReflectedProperty(
-                rootView.findViewById(R.id.teachableMarkerTextView),
-                "Visibility"
-            ), Property(Function {
-                TeachableTagsModel.getIsTeachableTag(parent.tag!!.id)
-            }, null, Boolean::class.java), BindingMode.ONE_WAY, BoolConverter.get()
+        rootView.bindTo(
+            R.id.teachableMarkerTextView,
+            "Visibility",
+            { TeachableTagsModel.getIsTeachableTag(parent.tag!!.id) },
+            BoolConverter.get()
         )
 
         val link = rootView.findViewById(R.id.sheetMusicLink) as Hyperlink
