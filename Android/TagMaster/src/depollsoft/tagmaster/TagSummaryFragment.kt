@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
+import com.bindroid.ui.UiBinder
 import com.bindroid.utils.*
 import depollsoft.lib.ui.Hyperlink
 import depollsoft.lib.util.ContentCache
@@ -36,7 +37,7 @@ class TagSummaryFragment : Fragment() {
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
 
-        rootView.bindTo(R.id.titleTextView, "Text", { parent.tag?.title })
+        rootView.bindTo(R.id.titleTextView, "Text", { "${parent.tag?.title}" })
         rootView.bindTo(
             R.id.titleTextView,
             "Visibility",
@@ -59,6 +60,8 @@ class TagSummaryFragment : Fragment() {
             { parent.tag?.version },
             BoolConverter.get()
         )
+
+        rootView.bindTo(R.id.tagIdTextView, "Text", { parent.tag?.id }, ToStringConverter())
 
         rootView.bindTo(
             R.id.ratingTextView,

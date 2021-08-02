@@ -3,8 +3,10 @@ package depollsoft.tagmaster
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
@@ -22,6 +24,10 @@ import depollsoft.lib.kotlin.ui.attachToViewPager
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.*
 
 class TagDetailActivity : AppCompatActivity() {
@@ -95,6 +101,18 @@ class TagDetailActivity : AppCompatActivity() {
                 Activities.invalidateOptionsMenu(this@TagDetailActivity)
             } else {
                 this.tag = null
+                CoroutineScope(Dispatchers.Main + Job()).launch {
+                    try {
+                        Toast.makeText(
+                            this@TagDetailActivity.applicationContext,
+                            "Unable to load tag or tag not found",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        finish()
+                    } catch (e: java.lang.Exception) {
+                        Log.e("depollsoft.tagmaster", "Showing toast failed", e)
+                    }
+                }
             }
             null
         }

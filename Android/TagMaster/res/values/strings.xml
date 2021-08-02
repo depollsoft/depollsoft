@@ -164,5 +164,6 @@
     <string name="rotate">Rotate 90°</string>
     <string name="open_in_external_app">Open in external app</string>
     <string name="share">Share</string>
+    <string name="open_tag">Open Tag</string>
 
 </resources>

@@ -3,7 +3,6 @@
 
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <item name="colorPrimary">@color/dark</item>
-        <item name="colorSurface">@color/dark</item>
         <item name="colorPrimaryVariant">@color/darker</item>
         <item name="colorPrimaryDark">@color/darker</item>
         <item name="colorOnPrimary">@android:color/primary_text_dark</item>
