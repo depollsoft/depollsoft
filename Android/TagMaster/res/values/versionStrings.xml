@@ -6,81 +6,84 @@
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
             <p>
                     <h5>Version 5.0.0</h5>
-                    -TODO<br />
+                    - Moves to a real-time backend for keeping your data up to date<br />
+                    - Adds support for more kinds of login<br />
+                    - Adds support for light/dark display modes<br />
+                    - Fixes a number of issues on modern versions of Android<br />
             </p>
             <p>
                     <h5>Version 4.0.1</h5>
-                    -Minor bug fixes<br />
+                    - Minor bug fixes<br />
             </p>
             <p>
                     <h5>Version 4.0.0</h5>
-                    -Material redesign<br />
+                    - Material redesign<br />
             </p>
             <p>
                     <h5>Version 3.3.0</h5>
-                    -Adds an adaptive icon<br />
+                    - Adds an adaptive icon<br />
             </p>
             <p>
                     <h5>Version 3.2.3</h5>
-                    -Minor bug fixes<br />
+                    - Minor bug fixes<br />
             </p>
             <p>
                     <h5>Version 3.2.2</h5>
-                    -Minor bug fixes<br />
+                    - Minor bug fixes<br />
             </p>
             <p>
                     <h5>Version 3.2.1</h5>
-                    -Minor bug fixes<br />
+                    - Minor bug fixes<br />
             </p>
             <p>
                     <h5>Version 3.2.0</h5>
-                    -You can now use the return key to start a search!<br />
-                    -Fixes a number of issues with opening PDFs on newer devices<br />
-                    -Improves performance when opening sheet music<br />
-                    -Now uses a secure connection to BarbershopTags.com<br />
-                    -Other minor bug fixes<br />
+                    - You can now use the return key to start a search!<br />
+                    - Fixes a number of issues with opening PDFs on newer devices<br />
+                    - Improves performance when opening sheet music<br />
+                    - Now uses a secure connection to BarbershopTags.com<br />
+                    - Other minor bug fixes<br />
             </p>
             <p>
                     <h5>Version 3.1.0</h5>
-                    -New material icon!
+                    - New material icon!
             </p>
             <p>
                     <h5>Version 3.0.7</h5>
-                    -Fixes an occasional crash.
+                    - Fixes an occasional crash.
             </p>
             <p>
                     <h5>Version 3.0.6</h5>
-                    -Uses cross-platform friendly URLs so you can share with Tag Master users on iOS and Windows Phone
+                    - Uses cross-platform friendly URLs so you can share with Tag Master users on iOS and Windows Phone
             </p>
             <p>
                     <h5>Version 3.0.5</h5>
-                    -Minor bug fixes
+                    - Minor bug fixes
             </p>
             <p>
                     <h5>Version 3.0.4</h5>
-                    -Integrates native Facebook login (see the options menu to log in!)<br />
-                    -Enables hardware acceleration for UI<br />
-                    -Minor bug fixes
+                    - Integrates native Facebook login (see the options menu to log in!)<br />
+                    - Enables hardware acceleration for UI<br />
+                    - Minor bug fixes
             </p>
             <p>
                     <h5>Version 3.0.3</h5>
-                    -Minor bug fixes
+                    - Minor bug fixes
             </p>
             <p>
                     <h5>Version 3.0.2</h5>
-                    -Changes to allow inclusion in the Amazon Appstore.<br />
-                    -Minor bug fixes
+                    - Changes to allow inclusion in the Amazon Appstore.<br />
+                    - Minor bug fixes
             </p>
             <p>
                     <h5>Version 3.0.1</h5>
-                    -Minor bug fixes
+                    - Minor bug fixes
             </p>
             <p>
                     <h5>Version 3.0</h5>
-                    -Allows latest native UI to be used (including Honeycomb and Ice Cream Sandwich UI features such as the action bar)<br />
-                    -Now you can log in with Facebook to back up and synchronize your teachable and favorite tags in the cloud!<br />
-                    -Added a changelog<br />
-                    -Minor bug fixes
+                    - Allows latest native UI to be used (including Honeycomb and Ice Cream Sandwich UI features such as the action bar)<br />
+                    - Now you can log in with Facebook to back up and synchronize your teachable and favorite tags in the cloud!<br />
+                    - Added a changelog<br />
+                    - Minor bug fixes
             </p>]]>
     </string>
 
