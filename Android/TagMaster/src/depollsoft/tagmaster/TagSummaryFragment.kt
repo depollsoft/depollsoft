@@ -187,7 +187,7 @@ class TagSummaryFragment : Fragment() {
                                 "/" + tag.id + "." + sheetMusicType)
                         val path = Uri.parse(contentPath)
                         val intent = Intent(Intent.ACTION_VIEW)
-                        intent.putExtra("tagId", tag!!.id)
+                        intent.putExtra("tagId", tag.id)
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         intent.setClass(requireContext(), SheetMusicActivity::class.java)
 
