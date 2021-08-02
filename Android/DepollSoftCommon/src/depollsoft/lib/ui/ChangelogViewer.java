@@ -1,16 +1,17 @@
 package depollsoft.lib.ui;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Html;
 
+import androidx.appcompat.app.AlertDialog;
+
 import depollsoft.lib.util.Versioning;
 
 public class ChangelogViewer extends AlertDialog {
   private static boolean hasBeenShown;
-  private String changelogText;
+  private final String changelogText;
 
   public ChangelogViewer(Context context, boolean cancelable, OnCancelListener cancelListener,
       String changelogText) {
@@ -30,7 +31,7 @@ public class ChangelogViewer extends AlertDialog {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-    setButton("OK", new OnClickListener() {
+    setButton(BUTTON_POSITIVE, "OK", new OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         dismiss();

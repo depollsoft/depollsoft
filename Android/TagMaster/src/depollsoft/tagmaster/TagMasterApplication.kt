@@ -12,6 +12,7 @@ import com.parse.Parse
 import com.parse.ParseUser
 import com.parse.facebook.ParseFacebookUtils
 import depollsoft.lib.activity.RichApplication
+import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
 import kotlinx.coroutines.*
@@ -39,6 +40,11 @@ class TagMasterApplication : RichApplication() {
         convertParseUser()
 
         AppCompatDelegate.setDefaultNightMode(themeMode)
+
+        Analytics.default.logEvent(
+            Analytics.APP_OPEN,
+            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null)
+        )
     }
 
     fun convertParseUser() {
