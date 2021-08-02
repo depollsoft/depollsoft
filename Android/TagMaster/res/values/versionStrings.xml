@@ -10,6 +10,10 @@
                     - Adds support for more kinds of login<br />
                     - Adds support for light/dark display modes<br />
                     - Fixes a number of issues on modern versions of Android<br />
+                    - Adds an internal sheet music viewer so that external apps are no longer
+                    required.  You can also press a button on this viewer to hear the key of the tag
+                    without leaving the music!<br />
+                    - Replaces email/sms sharing with the standard Android share sheet.<br />
             </p>
             <p>
                     <h5>Version 4.0.1</h5>
