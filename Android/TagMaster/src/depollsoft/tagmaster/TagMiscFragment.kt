@@ -18,8 +18,6 @@ class TagMiscFragment : Fragment() {
 
         UiBinder.bind(rootView, R.id.titleTextView, "Text", this, "Parent.Tag.Title")
 
-        UiBinder.bind(rootView, R.id.tagIdTextView, "Text", this, "Parent.Tag.Id", ToStringConverter())
-
         UiBinder.bind(rootView, R.id.lastRefreshedTextView, "Text", this, "Parent.Tag.LastRefreshed",
                 ToStringConverter("%1\$tD %1\$tr"))
 

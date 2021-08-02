@@ -1,22 +1,26 @@
 package depollsoft.tagmaster;
 
-import java.util.Random;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.text.InputType;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.bindroid.BindingMode;
 import com.bindroid.converters.BoolConverter;
 import com.bindroid.ui.UiBinder;
-import com.bindroid.utils.Action;
 import com.bindroid.utils.Function;
 import com.bindroid.utils.Property;
 import com.bindroid.utils.ReflectedProperty;
+
+import java.util.Random;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -132,7 +136,49 @@ public class MeHeaderView extends LinearLayout {
         }
 
       });
+
+      View openTagByIdButton = this.findViewById(R.id.openByIdButton);
+      openTagByIdButton.setOnClickListener(new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+          EditText editText = new EditText(v.getContext());
+          editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+          editText.setImeActionLabel("Open", KeyEvent.KEYCODE_ENTER);
+          AlertDialog dlg = new AlertDialog.Builder(getContext())
+                  .setCancelable(true)
+                  .setNegativeButton("Cancel", null)
+                  .setTitle("Enter Tag ID")
+                  .setPositiveButton("Open", (dialog, which) -> {
+                    if (editText.getText().toString().isEmpty()) {
+                      return;
+                    }
+                    openTag(Integer.parseInt(editText.getText().toString()));
+                  })
+                  .setView(editText)
+                  .create();
+          editText.setOnEditorActionListener((v1, actionId, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_UP) {
+              if (editText.getText().toString().isEmpty()) {
+                return false;
+              }
+              openTag(Integer.parseInt(editText.getText().toString()));
+              dlg.dismiss();
+            }
+            return true;
+          });
+          dlg.show();
+          editText.requestFocus();
+        }
+      });
     }
+  }
+
+  private void openTag(int id) {
+    Intent i = new Intent(MeHeaderView.this.getContext(),
+            TagDetailActivity.class);
+    i.putExtra(TagDetailActivity.TAG_ID_EXTRA,
+            id);
+    this.getContext().startActivity(i);
   }
 
   @Override

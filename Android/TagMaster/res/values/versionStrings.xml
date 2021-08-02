@@ -13,7 +13,8 @@
                     - Adds an internal sheet music viewer so that external apps are no longer
                     required.  You can also press a button on this viewer to hear the key of the tag
                     without leaving the music!<br />
-                    - Replaces email/sms sharing with the standard Android share sheet.<br />
+                    - Replaces email/sms sharing with the standard Android share sheet<br />
+                    - Adds direct opening of tags by ID<br />
             </p>
             <p>
                     <h5>Version 4.0.1</h5>

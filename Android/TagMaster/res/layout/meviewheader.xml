@@ -28,9 +28,19 @@
         android:id="@+id/randomTagButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="15dp"
         android:layout_marginLeft="20dp"
         android:text="@string/RandomTag"
+        android:textSize="24sp"
+        android:textStyle="bold">
+    </TextView>
+
+    <TextView
+        android:id="@+id/openByIdButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="20dp"
+        android:text="@string/open_tag"
         android:textSize="24sp"
         android:textStyle="bold">
     </TextView>
