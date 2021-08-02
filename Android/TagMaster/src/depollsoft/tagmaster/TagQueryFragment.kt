@@ -2,16 +2,15 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.*
 import android.widget.AbsListView
 import android.widget.AbsListView.OnScrollListener
 import android.widget.ListView
-import com.bindroid.converters.AdapterConverter
+import androidx.fragment.app.Fragment
 import com.bindroid.converters.BoolConverter
-import com.bindroid.trackable.TrackableField
 import com.bindroid.trackable.trackable
-import com.bindroid.ui.UiBinder
+import com.bindroid.utils.AdapterConverter
+import com.bindroid.utils.bindTo
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.ui.ThreadSwitchContext
 
@@ -30,37 +29,61 @@ class TagQueryFragment : Fragment() {
     }
 
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val rootView = inflater.inflate(R.layout.tagqueryview, container, false)
 
         try {
             (rootView.findViewById(R.id.queryResultListView) as ListView)
-                    .setOnScrollListener(object : OnScrollListener {
+                .setOnScrollListener(object : OnScrollListener {
 
-                        override fun onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int,
-                                              totalItemCount: Int) {
-                            if (this@TagQueryFragment.model != null && Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2) {
-                                this@TagQueryFragment.model!!.fetchResults(
-                                        ThreadSwitchContext(this@TagQueryFragment.activity))
-                            }
+                    override fun onScroll(
+                        view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int,
+                        totalItemCount: Int
+                    ) {
+                        if (this@TagQueryFragment.model != null && Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2) {
+                            this@TagQueryFragment.model!!.fetchResults(
+                                ThreadSwitchContext(this@TagQueryFragment.activity)
+                            )
                         }
+                    }
 
-                        override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {}
-                    })
+                    override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {}
+                })
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-        UiBinder.bind(rootView, R.id.queryResultListView, "Adapter", this, "Model.Tags", AdapterConverter(
-                TagItemView::class.java))
+        rootView.bindTo(
+            R.id.queryResultListView,
+            "Adapter",
+            { model?.tags },
+            AdapterConverter<TagItemView>()
+        )
 
-        UiBinder.bind(rootView, R.id.loadingProgressBar, "Visibility", this, "Model.IsLoading",
-                BoolConverter.get())
-        UiBinder.bind(rootView, R.id.loadingProgressBar, "Indeterminate", this, "Model.IsLoading",
-                BoolConverter.get())
+        rootView.bindTo(
+            R.id.loadingProgressBar,
+            "Visibility",
+            { model?.isLoading },
+            BoolConverter.get()
+        )
+        rootView.bindTo(
+            R.id.loadingProgressBar,
+            "Indeterminate",
+            { model?.isLoading },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.statusTextView, "Text", this, "Model.StatusText")
-        UiBinder.bind(rootView, R.id.statusTextView, "Visibility", this, "Model.StatusText", BoolConverter.get())
+        rootView.bindTo(R.id.statusTextView, "Text", { model?.statusText })
+        rootView.bindTo(
+            R.id.statusTextView,
+            "Visibility",
+            { model?.statusText },
+            BoolConverter.get()
+        )
 
         return rootView
     }
