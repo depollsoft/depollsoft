@@ -148,8 +148,8 @@ class MeHeaderView : LinearLayout {
                     }
                     .setView(editText)
                     .create()
-                editText.setOnEditorActionListener { v1: TextView?, actionId: Int, event: KeyEvent ->
-                    if (event.action == KeyEvent.ACTION_UP) {
+                editText.setOnEditorActionListener { v1: TextView?, actionId: Int, event: KeyEvent? ->
+                    if (event == null || event?.action == KeyEvent.ACTION_UP) {
                         if (editText.text.toString().isEmpty()) {
                             return@setOnEditorActionListener false
                         }

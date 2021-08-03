@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDex
 import com.bindroid.trackable.TrackableCollection
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.parse.Parse
@@ -17,6 +18,7 @@ import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 
 class TagMasterApplication : RichApplication() {
     override fun onCreate() {
@@ -51,21 +53,32 @@ class TagMasterApplication : RichApplication() {
         val curUser = ParseUser.getCurrentUser()
         if (curUser != null && Firebase.auth.currentUser != null) {
             ParseUser.logOut()
-
             return
         }
         CoroutineScope(Dispatchers.Default + Job()).launch {
             if (curUser != null) {
-                val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
-                    .call(mapOf("token" to curUser.sessionToken)).await()
-                val dataDict = result.data as? Map<*, *> ?: return@launch
-                val firebaseToken = dataDict["token"] as String
-                Firebase.auth.signInWithCustomToken(firebaseToken).await()
-                ParseUser.logOut()
-                Log.d(
-                    LOG_TAG,
-                    "Logged out Parse: ${curUser.objectId} and logged in Firebase: ${Firebase.auth.currentUser?.uid}"
-                )
+                try {
+                    val sessionToken = curUser.sessionToken ?: ParseUser.getCurrentSessionTokenAsync().await()
+                    val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
+                        .call(mapOf("token" to sessionToken)).await()
+                    val dataDict = result.data as? Map<*, *> ?: return@launch
+                    val firebaseToken = dataDict["token"] as String
+                    Firebase.auth.signInWithCustomToken(firebaseToken).await()
+                    ParseUser.logOut()
+                    Log.d(
+                        LOG_TAG,
+                        "Logged out Parse: ${curUser.objectId} and logged in Firebase: ${Firebase.auth.currentUser?.uid}"
+                    )
+                } catch(e: FirebaseFunctionsException) {
+                    if (e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED) {
+                        Log.e("depollsoft.tagmaster", "Failed to exchange token and logging out", e)
+                        ParseUser.logOut()
+                    } else {
+                        Log.e("depollsoft.tagmaster", "Failed to exchange token", e)
+                    }
+                } catch(e: Exception) {
+                    Log.e("depollsoft.tagmaster", "Failed to exchange token", e)
+                }
             }
         }
     }
