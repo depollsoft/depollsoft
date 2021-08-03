@@ -49,6 +49,11 @@ class TagMasterApplication : RichApplication() {
 
     fun convertParseUser() {
         val curUser = ParseUser.getCurrentUser()
+        if (curUser != null && Firebase.auth.currentUser != null) {
+            ParseUser.logOut()
+
+            return
+        }
         CoroutineScope(Dispatchers.Default + Job()).launch {
             if (curUser != null) {
                 val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")

@@ -117,6 +117,12 @@ class ListModel private constructor(val listName: String) {
             val favoritesKey = "tagmaster.Favorites"
             val teachablesKey = "tagmaster.TeachableTags"
 
+            if (Preferences.get<Any?>(LISTS_KEY) != null) {
+                Preferences.set(favoritesKey, null)
+                Preferences.set(teachablesKey, null)
+                return
+            }
+
             val favorites: TrackableCollection<Int>? = Preferences.get(favoritesKey)
             val teachables: TrackableCollection<Int>? = Preferences.get(teachablesKey)
 
