@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="depollsoft.tagmaster"
-    android:versionCode="54"
+    android:versionCode="55"
     android:versionName="@string/VersionNumber">
 
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
@@ -16,7 +16,7 @@
 
     <application
         android:name=".TagMasterApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
