@@ -7,3 +7,4 @@
 #import "DPTeachableTagsController.h"
 #import "DPSettingsController.h"
 #import "DPTagTracksController.h"
+#import "DPTagViewController.h"
