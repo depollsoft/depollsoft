@@ -452,9 +452,11 @@ class Tag {
                         val allIds = idsToQuery.flatMap { it.first }
                         val url =
                             URL("${API_URI_STRING}id=${Uri.encode(allIds.joinToString("|"))}&n=${allIds.size}")
-                        val inputStream = url.openStream()
-                        val doc = XmlDocument.parse(inputStream)
-                        val tags = doc.elements("tags")[0]
+                        var doc: XmlDocument? = null
+                        url.openStream().use {
+                            doc = XmlDocument.parse(it)
+                        }
+                        val tags = doc!!.elements("tags")[0]
                         val resultTags = mutableMapOf<Int, Tag>()
                         for (tagXml in tags.elements("tag")) {
                             val t = Tag()
@@ -463,7 +465,7 @@ class Tag {
                         }
 
                         idsToQuery.forEach {
-                            val result = it.first.map { resultTags[it]!! }
+                            val result = it.first.mapNotNull { resultTags[it] }
                             it.second.trySetResult(result)
                         }
                     } catch (e: Exception) {
