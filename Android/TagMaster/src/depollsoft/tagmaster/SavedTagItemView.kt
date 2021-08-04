@@ -55,6 +55,9 @@ abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
         CoroutineScope(Dispatchers.Main + Job()).launch {
             try {
                 tag = Tag.loadTagById(dataSource!!).await()
+                if (tag == null) {
+                    throw Exception("Failed to load")
+                }
             } catch (e: Exception) {
                 Log.e("depollsoft.tagmaster", "Failed to load tag", e)
                 failedToLoad = true
