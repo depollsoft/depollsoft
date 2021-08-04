@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.tagmaster.barbershop.Tag.Companion.query
 import depollsoft.tagmaster.barbershop.TagQueryResult
 import com.bindroid.trackable.TrackableField
 import depollsoft.tagmaster.barbershop.TagCollection
@@ -32,8 +31,8 @@ class QueryModel {
     var hasSheetMusic: Boolean? by trackable()
     var sortBy: TagSortOptions? by trackable()
     var tags: TrackableCollection<Tag> by trackable(TrackableCollection<Tag>())
-    var minimumRating: Double by trackable(0.0)
-    var minimumDownloads: Int by trackable(0)
+    var minimumRating: Double? by trackable()
+    var minimumDownloads: Int? by trackable()
     fun refresh(context: ThreadSwitchContext) {
         mostRecentResult = TagQueryResult()
         mostRecentResult.start = 0
@@ -46,7 +45,7 @@ class QueryModel {
         if (isLoading) return
         if (!hasMoreResults) return
         isLoading = true
-        query(
+        Tag.query(
             query, resultSetSize.toInt(),
             mostRecentResult.start + mostRecentResult.count, parts,
             hasLearningTracks, hasSheetMusic, collection,
