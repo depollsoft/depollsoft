@@ -180,7 +180,10 @@ class SettingsActivity : AppCompatActivity() {
                 AuthUI.getInstance().createSignInIntentBuilder()
                     .setAvailableProviders(
                         listOf(
-                            AuthUI.IdpConfig.EmailBuilder().build(),
+                            AuthUI.IdpConfig.EmailBuilder()
+                                .setRequireName(false)
+                                .setAllowNewAccounts(true)
+                                .build(),
                             AuthUI.IdpConfig.GoogleBuilder().build(),
                             AuthUI.IdpConfig.FacebookBuilder().build(),
                         )

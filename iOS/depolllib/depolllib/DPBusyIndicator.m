@@ -100,7 +100,7 @@
 
 - (void)decrementBusyCount {
     if (_busyCount == 0) {
-        [NSException raise:@"DPBusyIndicator" format:@"Cannot decrement busy count"];
+        return;
     }
     _busyCount--;
     [self updateVisibility];

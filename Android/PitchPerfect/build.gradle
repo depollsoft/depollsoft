@@ -16,6 +16,8 @@ dependencies {
     implementation project(':PitchPerfectLib')
     implementation project(':DepollSoftCommon')
     implementation project(':DepollSoftCommon.Compat')
+    implementation project(':bindroid')
+    implementation project(':bindroid-kotlin')
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'com.facebook.android:facebook-android-sdk:4.15.0'

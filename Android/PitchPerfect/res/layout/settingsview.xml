@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
-             android:layout_width="fill_parent"
-             android:layout_height="fill_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
 
     <depollsoft.pitchperfect.CropFillImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_panobackground"/>
+        app:srcCompat="@drawable/ic_panobackground" />
 
     <LinearLayout
         android:id="@+id/topLinearLayout"
@@ -27,8 +27,8 @@
                 android:id="@+id/linearLayout3"
                 android:layout_width="fill_parent"
                 android:layout_height="0dip"
-                android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:orientation="vertical">
 
                 <CheckBox
@@ -36,29 +36,27 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/NotesToggle">
-                </CheckBox>
+                    android:text="@string/NotesToggle"></CheckBox>
 
                 <CheckBox
                     android:id="@+id/wakeLockCheckBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/WakeLock"/>
+                    android:text="@string/WakeLock" />
 
                 <Button
                     android:id="@+id/clearSongListButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/ClearSongList">
-                </Button>
+                    android:text="@string/ClearSongList"></Button>
 
                 <TextView
                     android:id="@+id/textView2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/LogInInfo"/>
+                    android:text="@string/LogInInfo" />
 
                 <LinearLayout
                     android:id="@+id/loginButtonLayout"
@@ -71,23 +69,56 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight=".5"
-                        android:text="@string/LogIn"/>
+                        android:text="@string/LogIn" />
 
                     <Button
                         android:id="@+id/logoutButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight=".5"
-                        android:text="@string/LogOut"/>
+                        android:text="@string/LogOut" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/themeTitleTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="@string/themeTitle"
+                    android:textSize="20sp"
+                    android:textStyle="bold"></TextView>
+
+                <RadioGroup
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radio_system"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_system" />
+
+                    <RadioButton
+                        android:id="@+id/radio_light"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_light" />
+
+                    <RadioButton
+                        android:id="@+id/radio_dark"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_dark" />
+                </RadioGroup>
 
                 <Button
                     android:id="@+id/changelogButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/ViewChangelog"/>
+                    android:text="@string/ViewChangelog" />
 
-                <include layout="@layout/aboutfooter"/>
+                <include layout="@layout/aboutfooter" />
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
