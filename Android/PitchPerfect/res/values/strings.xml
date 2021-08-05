@@ -69,5 +69,8 @@
     <string name="songs">Songs</string>
     <string name="minor">Minor</string>
     <string name="major">Major</string>
-
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">Default</string>
+    <string name="themeTitle">Theme</string>
 </resources>
