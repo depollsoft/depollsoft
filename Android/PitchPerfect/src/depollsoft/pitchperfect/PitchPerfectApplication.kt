@@ -73,7 +73,7 @@ class PitchPerfectApplication : RichApplication() {
                 SettingsModel.restoreUser()
                 try {
                     ParseUser.getCurrentUser().refreshInBackground(object : RefreshCallback {
-                        override fun done(obj: ParseObject, e: ParseException) {
+                        override fun done(obj: ParseObject?, e: ParseException?) {
                             if (obj != null && e == null) {
                                 SettingsModel.restoreUser()
                                 SongsModel.get().refreshFromParse()

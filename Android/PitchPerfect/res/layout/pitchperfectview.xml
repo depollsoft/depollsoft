@@ -26,13 +26,10 @@
             android:layout_height="fill_parent"
             android:orientation="vertical">
 
-            <com.google.android.gms.ads.AdView
-                android:id="@+id/adView"
+            <FrameLayout
+                android:id="@+id/adContainer"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                ads:adSize="SMART_BANNER"
-                ads:adUnitId="ca-app-pub-2903856737482177/7395059449"
-                android:background="@color/dark"/>
+                android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/removeAds"
                 android:layout_width="wrap_content"

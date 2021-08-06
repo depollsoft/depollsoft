@@ -2,26 +2,27 @@ package depollsoft.pitchperfect
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.os.PowerManager
+import android.util.DisplayMetrics
+import android.view.*
+import android.widget.FrameLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.tabs.TabLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.View
-import android.view.WindowManager
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.RequestConfiguration
 import com.parse.ParseFacebookUtils
@@ -54,7 +55,7 @@ class PitchPerfectActivity : AppCompatActivity() {
 
         this.setContentView(R.layout.pitchperfectview)
 
-        UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow", BoolConverter.get())
+        UiBinder.bind(this, R.id.adContainer, "Visibility", "AdsShouldShow", BoolConverter.get())
         UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get())
 
         findViewById<View>(R.id.removeAds).setOnClickListener {
@@ -81,8 +82,6 @@ class PitchPerfectActivity : AppCompatActivity() {
                 return 4
             }
         }
-
-        this.onConfigurationChanged(Resources.getSystem().configuration)
 
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) {
@@ -128,13 +127,14 @@ class PitchPerfectActivity : AppCompatActivity() {
             viewer.showIfAppropriate()
         }
 
-        val adView = findViewById<AdView>(R.id.adView)
-
-        val adRequest = AdRequest.Builder()
-                .build()
-        adView.loadAd(adRequest)
-
         PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity)) }
+
+        this.onConfigurationChanged(Resources.getSystem().configuration)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        loadBanner()
     }
 
     override fun onRestoreInstanceState(state: Bundle) {
@@ -202,6 +202,40 @@ class PitchPerfectActivity : AppCompatActivity() {
             LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
             handlingResult = true
         }
+    }
+
+    private fun loadBanner() {
+        val adContainer = findViewById<FrameLayout>(R.id.adContainer)
+        adContainer.removeAllViews()
+        val adView = AdView(this)
+        adContainer.addView(adView)
+        // Create an ad request. Check your logcat output for the hashed device ID
+        // to get test ads on a physical device, e.g.,
+        // "Use AdRequest.Builder.addTestDevice("ABCDE0123") to get test ads on this
+        // device."
+        val adRequest: AdRequest = AdRequest.Builder()
+            .build()
+        val adSize = getAdSize()
+        // Step 4 - Set the adaptive ad size on the ad view.
+        adView.adSize = adSize
+        adView.adUnitId = resources.getString(R.string.ad_unit_id)
+
+
+        // Step 5 - Start loading the ad in the background.
+        adView.loadAd(adRequest)
+    }
+
+    private fun getAdSize(): AdSize? {
+        // Step 2 - Determine the screen width (less decorations) to use for the ad width.
+        val display: Display = windowManager.defaultDisplay
+        val outMetrics = DisplayMetrics()
+        display.getMetrics(outMetrics)
+        val widthPixels: Float = outMetrics.widthPixels.toFloat()
+        val density: Float = outMetrics.density
+        val adWidth = (widthPixels / density).toInt()
+
+        // Step 3 - Get adaptive ad size and return for setting on the ad view.
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
     }
 
     companion object {

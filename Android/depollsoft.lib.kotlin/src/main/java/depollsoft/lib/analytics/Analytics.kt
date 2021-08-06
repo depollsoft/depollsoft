@@ -103,6 +103,8 @@ class Analytics(appContext: Context, val sharedPrefs: String) {
                         "Sending analytics failed: ${connection.responseCode} ${connection.responseMessage}"
                     )
                 }
+            } catch(e: Exception) {
+                // Definitely don't fail during analytics collection
             } finally {
                 connection.disconnect()
             }
