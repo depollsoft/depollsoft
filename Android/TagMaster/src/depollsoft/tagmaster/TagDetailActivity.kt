@@ -21,6 +21,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.kotlin.ui.attachToViewPager
+import depollsoft.lib.kotlin.ui.safeDismiss
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
@@ -89,9 +90,7 @@ class TagDetailActivity : AppCompatActivity() {
 
         Tag.loadTagById(tagId, refresh).continueWith { task ->
             try {
-                if (this@TagDetailActivity.progress!!.isShowing) {
-                    this@TagDetailActivity.progress!!.dismiss()
-                }
+                progress!!.safeDismiss()
             } catch (e: Exception) {
                 // Sometimes this throws.
             }

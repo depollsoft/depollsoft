@@ -18,6 +18,7 @@ import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.*
+import depollsoft.lib.kotlin.ui.safeDismiss
 import depollsoft.lib.ui.Hyperlink
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.lib.RatingConverter
@@ -28,7 +29,7 @@ class TagSummaryFragment : Fragment() {
         get() = this.activity as TagDetailActivity
     private val _canRate = TrackableBoolean(true)
     val canRate: Boolean
-        get() = _canRate.get() && !RatingsModel.isRated(this.parent.tag!!.id)
+        get() = _canRate.get() && this.parent.tag != null && !RatingsModel.isRated(this.parent.tag!!.id)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -178,7 +179,7 @@ class TagSummaryFragment : Fragment() {
                             Toast.LENGTH_SHORT
                         )
                             .show()
-                        progress.dismiss()
+                        progress.safeDismiss()
                     }
                 } else {
                     try {
@@ -219,7 +220,7 @@ class TagSummaryFragment : Fragment() {
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
-                        progress.dismiss()
+                        progress.safeDismiss()
                     }
                 }
                 null
@@ -247,12 +248,12 @@ class TagSummaryFragment : Fragment() {
                                 Toast.LENGTH_SHORT
                             )
                                 .show()
-                            pd.dismiss()
+                            pd.safeDismiss()
                         }
                     } else {
                         RatingsModel.addRating(tag.id)
                         _canRate.set(false)
-                        pd.dismiss()
+                        pd.safeDismiss()
                     }
                     null
                 }

@@ -45,7 +45,9 @@ public class BrowserActivity extends Activity {
       @Override
       public void onPageFinished(WebView view, String url) {
         view.setVisibility(View.VISIBLE);
-        progress.dismiss();
+        if (progress.isShowing()) {
+          progress.dismiss();
+        }
         super.onPageFinished(view, url);
       }
 

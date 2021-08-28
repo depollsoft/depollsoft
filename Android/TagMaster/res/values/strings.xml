@@ -165,5 +165,7 @@
     <string name="open_in_external_app">Open in external app</string>
     <string name="share">Share</string>
     <string name="open_tag">Open Tag</string>
+    <string name="keep_screen_on">Keep Screen On</string>
+    <string name="while_viewing_sheet_music">While Viewing Sheet Music</string>
 
 </resources>

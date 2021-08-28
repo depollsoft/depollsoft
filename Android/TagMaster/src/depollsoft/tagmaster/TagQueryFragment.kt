@@ -113,8 +113,12 @@ class TagQueryFragment : Fragment() {
 
     fun refresh() {
         if (this.model == null) {
-            val modelString = this.activity?.intent?.extras?.getString(QUERY_MODEL)
-            this.model = JsonSerializer.deserialize(modelString) as QueryModel
+            try {
+                val modelString = this.activity?.intent?.extras?.getString(QUERY_MODEL)
+                this.model = JsonSerializer.deserialize(modelString) as QueryModel
+            } catch (e: Exception) {
+                this.model = QueryModel()
+            }
         }
         this.model!!.refresh(ThreadSwitchContext(this.activity))
     }
