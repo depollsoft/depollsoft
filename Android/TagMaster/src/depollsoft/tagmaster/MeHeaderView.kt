@@ -22,6 +22,7 @@ import com.bindroid.utils.ReflectedProperty
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.utils.Property
+import depollsoft.lib.kotlin.ui.safeDismiss
 import java.util.*
 
 class MeHeaderView : LinearLayout {
@@ -47,18 +48,18 @@ class MeHeaderView : LinearLayout {
                     0,
                     0,
                     null,
-                    SettingsModel.getRandomLearningTracksFilter(),
-                    SettingsModel.getRandomSheetMusicFilter(),
+                    SettingsModel.randomLearningTracksFilter,
+                    SettingsModel.randomSheetMusicFilter,
                     null,
                     null,
-                    SettingsModel.getMinimumRandomTagRating(),
-                    SettingsModel.getMinimumRandomDownloads(),
+                    SettingsModel.minimumRandomTagRating,
+                    SettingsModel.minimumRandomDownloads,
                     false,
                     "id"
                 ).continueWith(Continuation<TagQueryResult, Void?> { task ->
                     if (task.isFaulted) {
                         post {
-                            progress.dismiss()
+                            progress.safeDismiss()
                             Toast.makeText(
                                 this@MeHeaderView.context, "Could not load a random tag.",
                                 Toast.LENGTH_SHORT
@@ -67,7 +68,7 @@ class MeHeaderView : LinearLayout {
                     } else {
                         if (task.result.available == 0) {
                             post {
-                                progress.dismiss()
+                                progress.safeDismiss()
                                 Toast
                                     .makeText(
                                         this@MeHeaderView.context,
@@ -84,18 +85,18 @@ class MeHeaderView : LinearLayout {
                             1,
                             chosenNumber,
                             null,
-                            SettingsModel.getRandomLearningTracksFilter(),
-                            SettingsModel.getRandomSheetMusicFilter(),
+                            SettingsModel.randomLearningTracksFilter,
+                            SettingsModel.randomSheetMusicFilter,
                             null,
                             null,
-                            SettingsModel.getMinimumRandomTagRating(),
-                            SettingsModel.getMinimumRandomDownloads(),
+                            SettingsModel.minimumRandomTagRating,
+                            SettingsModel.minimumRandomDownloads,
                             false,
                             "id"
                         ).continueWith<Void> { task ->
                             if (task.isFaulted) {
                                 post {
-                                    progress.dismiss()
+                                    progress.safeDismiss()
                                     Toast.makeText(
                                         this@MeHeaderView.context,
                                         "Could not load a random tag.", Toast.LENGTH_SHORT
@@ -112,7 +113,7 @@ class MeHeaderView : LinearLayout {
                                             .id
                                     )
                                     this@MeHeaderView.context.startActivity(i)
-                                    progress.dismiss()
+                                    progress.safeDismiss()
                                 }
                             }
                             null
@@ -154,7 +155,7 @@ class MeHeaderView : LinearLayout {
                             return@setOnEditorActionListener false
                         }
                         openTag(editText.text.toString().toInt())
-                        dlg.dismiss()
+                        dlg.safeDismiss()
                     }
                     true
                 }

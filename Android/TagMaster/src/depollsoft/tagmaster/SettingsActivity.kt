@@ -11,11 +11,14 @@ import android.widget.AdapterView.OnItemSelectedListener
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.bindroid.BindingMode
 import com.bindroid.ValueConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.track
+import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.bind
 import com.bindroid.utils.compiledProp
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
@@ -101,7 +104,7 @@ class SettingsActivity : AppCompatActivity() {
                 var amount = 0
                 if (selected != "Any")
                     amount = Integer.parseInt(selected)
-                SettingsModel.setMinimumRandomDownloads(amount)
+                SettingsModel.minimumRandomDownloads = amount
             }
 
             override fun onNothingSelected(arg0: AdapterView<*>?) {}
@@ -112,7 +115,7 @@ class SettingsActivity : AppCompatActivity() {
                 var amount = 0.0
                 if (selected != "Any")
                     amount = java.lang.Double.parseDouble(selected)
-                SettingsModel.setMinimumRandomTagRating(amount)
+                SettingsModel.minimumRandomTagRating = amount
             }
 
             override fun onNothingSelected(arg0: AdapterView<*>?) {}
@@ -126,7 +129,7 @@ class SettingsActivity : AppCompatActivity() {
                     result = true
                 else if (selected == "No")
                     result = false
-                SettingsModel.setRandomLearningTracksFilter(result)
+                SettingsModel.randomLearningTracksFilter = result
             }
 
             override fun onNothingSelected(arg0: AdapterView<*>?) {}
@@ -139,7 +142,7 @@ class SettingsActivity : AppCompatActivity() {
                     result = true
                 else if (selected == "No")
                     result = false
-                SettingsModel.setRandomSheetMusicFilter(result)
+                SettingsModel.randomSheetMusicFilter = result
             }
 
             override fun onNothingSelected(arg0: AdapterView<*>?) {}
@@ -232,7 +235,7 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<RadioButton>(R.id.radio_light).setOnClickListener {
             TagMasterApplication.themeMode = AppCompatDelegate.MODE_NIGHT_NO
         }
-        track({TagMasterApplication.themeMode}) {
+        track({ TagMasterApplication.themeMode }) {
             when (it()) {
                 AppCompatDelegate.MODE_NIGHT_YES ->
                     findViewById<RadioButton>(R.id.radio_dark).isChecked = true
@@ -245,6 +248,12 @@ class SettingsActivity : AppCompatActivity() {
                 keepTracking
             }
         }
+
+        bind(
+            CompoundButtonCheckedProperty(findViewById(R.id.sheetMusicWakeLockCheckBox)),
+            compiledProp { SettingsModel::wakeLockOnSheetMusic },
+            BindingMode.TWO_WAY
+        )
 
         supportActionBar?.title = "Tag Master".makeTitleString(this)
     }
@@ -274,15 +283,15 @@ class SettingsActivity : AppCompatActivity() {
     private fun refreshCacheSize() {
         (this.findViewById(R.id.cacheSizeDisplay) as TextView).text = String.format(
             "%1.2f MB",
-            SettingsModel.getCacheSizeInMegabytes()
+            SettingsModel.cacheSizeInMegabytes
         )
     }
 
     private fun refreshLearningTracksChoice() {
         val index: Int
-        if (SettingsModel.getRandomLearningTracksFilter() == null)
+        if (SettingsModel.randomLearningTracksFilter == null)
             index = 0
-        else if (SettingsModel.getRandomLearningTracksFilter() == true)
+        else if (SettingsModel.randomLearningTracksFilter == true)
             index = 1
         else
             index = 2
@@ -292,7 +301,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun refreshMinDownload() {
         val index = Math.max(
             0,
-            this.minDownloadChoices!!.indexOf("" + SettingsModel.getMinimumRandomDownloads())
+            this.minDownloadChoices!!.indexOf("" + SettingsModel.minimumRandomDownloads)
         )
         this.minDownloadSpinner!!.setSelection(index)
     }
@@ -300,16 +309,16 @@ class SettingsActivity : AppCompatActivity() {
     private fun refreshMinRating() {
         val index = Math.max(
             0,
-            this.minRatingChoices!!.indexOf("" + SettingsModel.getMinimumRandomTagRating().toInt())
+            this.minRatingChoices!!.indexOf("" + SettingsModel.minimumRandomTagRating.toInt())
         )
         this.minRatingSpinner!!.setSelection(index)
     }
 
     private fun refreshSheetMusicChoice() {
         val index: Int
-        if (SettingsModel.getRandomSheetMusicFilter() == null)
+        if (SettingsModel.randomSheetMusicFilter == null)
             index = 0
-        else if (SettingsModel.getRandomSheetMusicFilter() == true)
+        else if (SettingsModel.randomSheetMusicFilter == true)
             index = 1
         else
             index = 2

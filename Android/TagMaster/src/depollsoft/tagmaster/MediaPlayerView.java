@@ -178,7 +178,9 @@ public class MediaPlayerView extends LinearLayout {
                 MediaPlayerView.this.post(new Runnable() {
 
                   public void run() {
-                    dialog.dismiss();
+                    if (dialog.isShowing()) {
+                      dialog.dismiss();
+                    }
                     Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
                             Toast.LENGTH_SHORT).show();
                   }
@@ -202,7 +204,9 @@ public class MediaPlayerView extends LinearLayout {
                               Toast.LENGTH_SHORT).show();
                       MediaPlayerView.this.setIsPlaying(false);
                     } finally {
-                      dialog.dismiss();
+                      if (dialog.isShowing()) {
+                        dialog.dismiss();
+                      }
                     }
                   }
                 });

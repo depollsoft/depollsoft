@@ -17,6 +17,7 @@ import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.track
 import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.uibind
 import com.facebook.login.LoginManager
 import com.parse.ParseUser
 import depollsoft.lib.ui.ChangelogViewer

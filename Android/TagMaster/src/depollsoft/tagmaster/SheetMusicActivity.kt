@@ -34,8 +34,8 @@ class SheetMusicActivity : AppCompatActivity() {
     var rotation: Float by trackable(0f) {
         loadImage()
     }
-    var photoView: PhotoView? = null
-    var keyButton: ExtendedFloatingActionButton? = null
+    lateinit var photoView: PhotoView
+    lateinit var keyButton: ExtendedFloatingActionButton
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,9 +47,10 @@ class SheetMusicActivity : AppCompatActivity() {
         }
 
         photoView = findViewById(R.id.photoView)
+        photoView.keepScreenOn = SettingsModel.wakeLockOnSheetMusic
 
         keyButton = findViewById(R.id.keyButton)
-        keyButton!!.extend()
+        keyButton.extend()
         uibind(
             R.id.keyButton,
             "Visibility",
@@ -57,7 +58,7 @@ class SheetMusicActivity : AppCompatActivity() {
             converter = BoolConverter.get()
         )
         uibind(R.id.keyButton, "Text", { tag!!::writtenKey })
-        keyButton!!.setOnTouchListener { v, event ->
+        keyButton.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> tag!!.keyNote!!.play()
                 MotionEvent.ACTION_UP -> tag!!.keyNote!!.stop()

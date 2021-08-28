@@ -54,13 +54,17 @@ public class LoginPrompt {
               @Override
               public Void then(Task<ParseUser> task) throws Exception {
                 completeLogin(task.getResult().isNew());
-                dialog.get().dismiss();
+                if (dialog.get().isShowing()) {
+                  dialog.get().dismiss();
+                }
                 return null;
               }
             }).continueWith(new Continuation<Void, Void>() {
           @Override
           public Void then(Task<Void> task) throws Exception {
-            progressDialog.dismiss();
+            if (progressDialog.isShowing()) {
+              progressDialog.dismiss();
+            }
             return null;
           }
         });
