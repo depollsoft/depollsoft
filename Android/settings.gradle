@@ -1,7 +1,7 @@
 rootProject.name = "depollsoft"
 
 include ':PitchPerfect', ':depollsoft.lib.kotlin'
-//include ':PitchPerfectWear'
+include ':PitchPerfectWear'
 include ':PitchPerfectLicense'
 include ':TagMaster'
 include ':DepollSoftCommon.Compat'
