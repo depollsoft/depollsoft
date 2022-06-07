@@ -60,7 +60,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 21
         targetSdkVersion 30
-        resConfigs "en"
+        resConfigs 'en'
     }
 
     sourceSets {

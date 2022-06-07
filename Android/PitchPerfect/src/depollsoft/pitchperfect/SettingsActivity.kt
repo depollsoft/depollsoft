@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect
 
 import android.content.Intent
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.view.KeyEvent
@@ -50,6 +51,12 @@ class SettingsActivity : AppCompatActivity() {
             SettingsModel.setWakeLock(value)
         }
 
+    var areAdsRemoved: Boolean
+        get() = SettingsModel.getAreAdsRemoved()
+        set(value) {
+            SettingsModel.setAreAdsRemoved(value)
+        }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
@@ -79,6 +86,19 @@ class SettingsActivity : AppCompatActivity() {
         UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed", BoolConverter.get())
         UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true))
         UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get())
+        uibind(
+            R.id.manageSubscriptionButton,
+            "Visibility",
+            { (this::areAdsRemoved) },
+            converter = BoolConverter.get()
+        )
+        findViewById<View>(R.id.manageSubscriptionButton).setOnClickListener {
+            val manageIntent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/account/subscriptions?sku=${PurchaseService.REMOVE_ADS_SKU}&package=${applicationContext.packageName}")
+            )
+            startActivity(manageIntent)
+        }
         findViewById<View>(R.id.loginButton).setOnClickListener {
             val dlg = LoginPrompt.buildDialog(this@SettingsActivity, false)
             dlg.setOnDismissListener { loginTrackable.updateTrackers() }
@@ -131,7 +151,7 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<RadioButton>(R.id.radio_light).setOnClickListener {
             PitchPerfectApplication.themeMode = AppCompatDelegate.MODE_NIGHT_NO
         }
-        track({PitchPerfectApplication.themeMode}) {
+        track({ PitchPerfectApplication.themeMode }) {
             when (it()) {
                 AppCompatDelegate.MODE_NIGHT_YES ->
                     findViewById<RadioButton>(R.id.radio_dark).isChecked = true

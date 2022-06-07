@@ -59,9 +59,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get())
 
         findViewById<View>(R.id.removeAds).setOnClickListener {
-            if (PurchaseService.isSubscriptionBillingAvailable(this@PitchPerfectActivity)) {
-                PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
-            }
+            PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
         }
 
         bottomNavigation = findViewById(R.id.bottomNavigation)
@@ -127,7 +125,7 @@ class PitchPerfectActivity : AppCompatActivity() {
             viewer.showIfAppropriate()
         }
 
-        PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity)) }
+        PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved) }
 
         this.onConfigurationChanged(Resources.getSystem().configuration)
     }
@@ -169,7 +167,6 @@ class PitchPerfectActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        PurchaseService.unbind(this)
         super.onDestroy()
     }
 
@@ -195,7 +192,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 666) {
             Task.callInBackground {
-                SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity))
+                SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved)
                 null
             }
         } else {
@@ -217,7 +214,7 @@ class PitchPerfectActivity : AppCompatActivity() {
             .build()
         val adSize = getAdSize()
         // Step 4 - Set the adaptive ad size on the ad view.
-        adView.adSize = adSize
+        adView.setAdSize(adSize)
         adView.adUnitId = resources.getString(R.string.ad_unit_id)
 
 
@@ -225,7 +222,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         adView.loadAd(adRequest)
     }
 
-    private fun getAdSize(): AdSize? {
+    private fun getAdSize(): AdSize {
         // Step 2 - Determine the screen width (less decorations) to use for the ad width.
         val display: Display = windowManager.defaultDisplay
         val outMetrics = DisplayMetrics()
