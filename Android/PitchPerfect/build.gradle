@@ -27,7 +27,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.gms:play-services-ads:21.0.0'
     implementation 'com.google.android.gms:play-services-wearable:17.1.0'
-    //wearApp project(':PitchPerfectWear')
+    wearApp project(':PitchPerfectWear')
     implementation 'com.parse:parse-android:1.13.1'
     implementation 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
     implementation 'androidx.appcompat:appcompat:1.4.2'
