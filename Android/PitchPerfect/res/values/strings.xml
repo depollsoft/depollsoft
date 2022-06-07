@@ -73,4 +73,5 @@
     <string name="theme_light">Light</string>
     <string name="theme_system">Default</string>
     <string name="themeTitle">Theme</string>
+    <string name="manage_subscription">Manage Subscription</string>
 </resources>

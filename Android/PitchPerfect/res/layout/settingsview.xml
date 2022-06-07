@@ -113,6 +113,13 @@
                 </RadioGroup>
 
                 <Button
+                    android:id="@+id/manageSubscriptionButton"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/manage_subscription"></Button>
+
+                <Button
                     android:id="@+id/changelogButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
