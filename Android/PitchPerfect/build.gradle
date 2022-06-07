@@ -30,10 +30,10 @@ dependencies {
     //wearApp project(':PitchPerfectWear')
     implementation 'com.parse:parse-android:1.13.1'
     implementation 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.6.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'com.google.android.material:material:1.6.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "androidx.core:core-ktx:1.7.0"
+    implementation "androidx.core:core-ktx:1.8.0"
 }
 
 android {
