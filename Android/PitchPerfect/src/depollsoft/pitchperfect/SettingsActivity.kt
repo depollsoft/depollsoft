@@ -109,7 +109,7 @@ class SettingsActivity : AppCompatActivity() {
                 object : AsyncTask<Void?, Void?, Void?>() {
                     protected override fun doInBackground(vararg params: Void?): Void? {
                         ParseUser.logOut()
-                        SongsModel.get().handleLogOut()
+                        SongsModel.get()?.handleLogOut()
                         LoginManager.getInstance().logOut()
                         return null
                     }
@@ -126,7 +126,7 @@ class SettingsActivity : AppCompatActivity() {
             val builder = AlertDialog.Builder(this@SettingsActivity)
             builder.setMessage("Are you sure you want to clear your song list?")
                 .setPositiveButton("Yes") { dialog, which ->
-                    SongsModel.get().resetSongs()
+                    SongsModel.get()?.resetSongs()
                     Toast.makeText(this@SettingsActivity, "Song list cleared.", Toast.LENGTH_SHORT)
                         .show()
                 }

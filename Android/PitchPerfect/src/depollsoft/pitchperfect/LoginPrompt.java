@@ -16,12 +16,11 @@ import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
+import com.parse.boltsinternal.Continuation;
+import com.parse.facebook.ParseFacebookUtils;
 
 import bolts.Capture;
-import bolts.Continuation;
-import bolts.Task;
 
 public class LoginPrompt {
   public static final CallbackManager FACEBOOK_CALLBACK_MANAGER = CallbackManager.Factory.create();
@@ -50,24 +49,18 @@ public class LoginPrompt {
         progressDialog.setMessage("Please wait...");
         progressDialog.show();
         ParseFacebookUtils.logInInBackground(loginResult.getAccessToken())
-            .onSuccess(new Continuation<ParseUser, Void>() {
-              @Override
-              public Void then(Task<ParseUser> task) throws Exception {
-                completeLogin(task.getResult().isNew());
-                if (dialog.get().isShowing()) {
-                  dialog.get().dismiss();
-                }
-                return null;
+            .onSuccess((Continuation<ParseUser, Void>) task -> {
+              completeLogin(task.getResult().isNew());
+              if (dialog.get().isShowing()) {
+                dialog.get().dismiss();
               }
-            }).continueWith(new Continuation<Void, Void>() {
-          @Override
-          public Void then(Task<Void> task) throws Exception {
-            if (progressDialog.isShowing()) {
-              progressDialog.dismiss();
-            }
-            return null;
-          }
-        });
+              return null;
+            }).continueWith((Continuation<Void, Void>) task -> {
+              if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+              }
+              return null;
+            });
       }
 
       @Override

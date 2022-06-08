@@ -1,8 +1,9 @@
 package depollsoft.lib
 
-import kotlinx.serialization.*
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import kotlinx.serialization.serializer
+import org.json.JSONArray
+import org.json.JSONObject
 
 fun Any?.toJsonElement(): JsonElement = when (this) {
     null -> JsonNull
@@ -18,3 +19,21 @@ fun Any?.toJsonElement(): JsonElement = when (this) {
 }
 
 fun Any?.toJsonString(): String = Json.encodeToString(this.toJsonElement())
+
+fun JSONObject.toMap(): Map<String, Any?> =
+    this.keys().asSequence().associate { k ->
+        when (val v = this.opt(k)) {
+            is JSONObject -> Pair(k, v.toMap())
+            is JSONArray -> Pair(k, v.toList())
+            else -> Pair(k, v)
+        }
+    }
+
+fun JSONArray.toList(): List<Any?> =
+    (0..this.length()).map {
+        when (val v = this.opt(it)) {
+            is JSONObject -> v.toMap()
+            is JSONArray -> v.toList()
+            else -> v
+        }
+    }

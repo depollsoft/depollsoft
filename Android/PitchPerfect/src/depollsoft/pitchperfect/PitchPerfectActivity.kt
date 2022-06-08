@@ -25,7 +25,6 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.RequestConfiguration
-import com.parse.ParseFacebookUtils
 import com.parse.ParseUser
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
@@ -111,13 +110,8 @@ class PitchPerfectActivity : AppCompatActivity() {
             true
         }
 
-        val isHoomiLogin = ParseUser.getCurrentUser() != null && !ParseFacebookUtils.isLinked(ParseUser.getCurrentUser())
-        if (isHoomiLogin) {
-            ParseUser.logOutInBackground()
-        }
-
-        if (isHoomiLogin || RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
-            LoginPrompt.buildDialog(this, isHoomiLogin).show()
+        if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
+            LoginPrompt.buildDialog(this, false).show()
         } else {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
             viewer.setTitle("Pitch Perfect Changelog")
@@ -178,7 +172,6 @@ class PitchPerfectActivity : AppCompatActivity() {
                 handlingResult = false
                 return@Runnable
             }
-            PitchPerfectApplication.startupRefreshFromParse()
         })
 
         if (SettingsModel.getWakeLock()) {

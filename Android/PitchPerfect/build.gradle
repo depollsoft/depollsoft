@@ -10,8 +10,12 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    parseVersion = "1.26.0"
+}
 
 dependencies {
+    implementation platform('com.google.firebase:firebase-bom:28.2.0')
     def billing_version = "5.0.0"
     implementation "com.android.billingclient:billing:$billing_version"
     implementation "com.android.billingclient:billing-ktx:$billing_version"
@@ -19,21 +23,34 @@ dependencies {
     implementation project(':PitchPerfectLib')
     implementation project(':DepollSoftCommon')
     implementation project(':DepollSoftCommon.Compat')
+    implementation project(':depollsoft.lib.kotlin')
     implementation project(':bindroid')
     implementation project(':bindroid-kotlin')
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'
-    implementation 'com.facebook.android:facebook-android-sdk:4.15.0'
+    implementation 'com.facebook.android:facebook-android-sdk:13.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.gms:play-services-ads:21.0.0'
     implementation 'com.google.android.gms:play-services-wearable:17.1.0'
     wearApp project(':PitchPerfectWear')
-    implementation 'com.parse:parse-android:1.13.1'
-    implementation 'com.parse:parsefacebookutils-v4-android:1.10.4@aar'
+    implementation "com.github.parse-community.Parse-SDK-Android:parse:$parseVersion"
+    implementation "com.github.parse-community.Parse-SDK-Android:facebook:$parseVersion"
+    implementation "com.github.parse-community.Parse-SDK-Android:ktx:$parseVersion"
+    implementation "com.github.parse-community.Parse-SDK-Android:coroutines:$parseVersion"
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.core:core-ktx:1.8.0"
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-functions'
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-functions-ktx'
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.5.1'
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
 }
 
 android {
