@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Pitch Perfect</string>
-    <string name="facebook_app_id">263872380333771</string>
+    <string name="facebook_application_id">263872380333771</string>
     <string name="fb_login_protocol_scheme">fb263872380333771</string>
     <string name="facebook_client_token">eb375cce82f2fbb23c5e4f4044986c14</string>
     <string name="CtoC">From C to B</string>
