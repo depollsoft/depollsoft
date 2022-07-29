@@ -1,8 +1,8 @@
 package depollsoft.pitchperfect
 
+import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -19,15 +19,17 @@ import com.bindroid.trackable.track
 import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
-import com.facebook.login.LoginManager
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.parse.ParseUser
 import depollsoft.lib.ui.ChangelogViewer
 
 class SettingsActivity : AppCompatActivity() {
     private val loggingIn = false
     private val loginTrackable: Trackable = Trackable()
+    private lateinit var logInDialog: Dialog
     val licensed: Boolean
-        get() = SettingsModel.getLicensed()
+        get() = SettingsModel.licensed
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         return if (keyCode == KeyEvent.KEYCODE_BACK && loggingIn) {
@@ -41,29 +43,26 @@ class SettingsActivity : AppCompatActivity() {
             return ParseUser.getCurrentUser() != null
         }
     var toggleNotes: Boolean
-        get() = SettingsModel.getToggleNotes()
+        get() = SettingsModel.toggleNotes
         set(value) {
-            SettingsModel.setToggleNotes(value)
+            SettingsModel.toggleNotes = value
         }
     var wakeLock: Boolean
-        get() = SettingsModel.getWakeLock()
+        get() = SettingsModel.wakeLock
         set(value) {
-            SettingsModel.setWakeLock(value)
+            SettingsModel.wakeLock = value
         }
 
     var areAdsRemoved: Boolean
-        get() = SettingsModel.getAreAdsRemoved()
+        get() = SettingsModel.areAdsRemoved
         set(value) {
-            SettingsModel.setAreAdsRemoved(value)
+            SettingsModel.areAdsRemoved = value
         }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        logInDialog = LoginPrompt.buildDialog(this, false)
+        logInDialog.setOnDismissListener { loginTrackable.updateTrackers() }
         this.title = "Pitch Perfect Settings"
         this.setContentView(R.layout.settingsview)
         UiBinder.bind(
@@ -100,33 +99,17 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(manageIntent)
         }
         findViewById<View>(R.id.loginButton).setOnClickListener {
-            val dlg = LoginPrompt.buildDialog(this@SettingsActivity, false)
-            dlg.setOnDismissListener { loginTrackable.updateTrackers() }
-            dlg.show()
+            logInDialog.show()
         }
         findViewById<View>(R.id.logoutButton).setOnClickListener {
-            val logOutTask: AsyncTask<Void?, Void?, Void?> =
-                object : AsyncTask<Void?, Void?, Void?>() {
-                    protected override fun doInBackground(vararg params: Void?): Void? {
-                        ParseUser.logOut()
-                        SongsModel.get()?.handleLogOut()
-                        LoginManager.getInstance().logOut()
-                        return null
-                    }
-
-                    override fun onPostExecute(result: Void?) {
-                        super.onPostExecute(result)
-                        loginTrackable.updateTrackers()
-                    }
-                }
-            logOutTask.execute()
+            AuthUI.getInstance().signOut(it.context)
         }
         val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
         clearSongListButton.setOnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
             builder.setMessage("Are you sure you want to clear your song list?")
                 .setPositiveButton("Yes") { dialog, which ->
-                    SongsModel.get()?.resetSongs()
+                    SongsModel.get().defaultSongList.resetSongs()
                     Toast.makeText(this@SettingsActivity, "Song list cleared.", Toast.LENGTH_SHORT)
                         .show()
                 }
@@ -168,11 +151,6 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        SettingsModel.refreshUser()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

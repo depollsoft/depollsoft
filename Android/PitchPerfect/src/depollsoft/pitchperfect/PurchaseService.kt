@@ -75,7 +75,7 @@ object PurchaseService {
     }
 
     var areAdsRemoved: Boolean by trackable(false) {
-        SettingsModel.setAreAdsRemoved(it)
+        SettingsModel.areAdsRemoved = it
     }
 
     fun beginRemoveAds(activity: AppCompatActivity, requestCode: Int) {

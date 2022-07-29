@@ -12,24 +12,27 @@ import depollsoft.lib.toMap
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.json.JSONObject
 
-class SongList {
+class SongList constructor() {
     private var reference: DocumentReference? = null
-    val id: String
+    lateinit var id: String
     var name: String by trackable("")
     var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection())
 
     init {
-        track({ songs.track() }) {
+        track({
+            songs.track()
+            name
+        }) {
             storeValue()
             keepTracking
         }
     }
 
-    constructor(id: String) {
+    constructor(id: String) : this() {
         this.id = id
     }
 
-    constructor(snapshot: DocumentSnapshot) {
+    constructor(snapshot: DocumentSnapshot) : this() {
         this.reference = snapshot.reference
         this.id = snapshot.id
         restore(snapshot)
@@ -94,6 +97,9 @@ class SongList {
     }
 
     fun storeValue() {
+        if (!SongsModel.isInitialized) {
+            return
+        }
         SongsModel.get().songLists = SongsModel.get().songLists + (id to this)
         val dict = mapOf(
             "name" to name,

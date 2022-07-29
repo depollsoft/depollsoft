@@ -3,18 +3,15 @@ package depollsoft.pitchperfect
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import androidx.fragment.app.Fragment
 import android.view.*
 import android.view.View.OnClickListener
-import android.widget.Button
-import android.widget.ListView
-import com.bindroid.converters.AdapterConverter
+import androidx.fragment.app.Fragment
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
-import com.bindroid.ui.UiBinder
-import com.parse.ParseUser
-import depollsoft.lib.compat.ui.MenuItems
+import com.bindroid.utils.AdapterConverter
+import com.bindroid.utils.bindTo
+import com.bindroid.utils.uibind
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class SongListFragment : Fragment() {
 
@@ -30,18 +27,30 @@ class SongListFragment : Fragment() {
         this.activity?.volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val rootView = inflater.inflate(R.layout.songlistview, container, false)
 
         setHasOptionsMenu(true)
 
         fab = rootView.findViewById(R.id.addSongButton)
 
-        UiBinder.bind(rootView, R.id.songListView, "Adapter", this, "Model.Songs", AdapterConverter(
-                SongListItemView::class.java))
+        rootView.uibind(
+            R.id.songListView,
+            "Adapter",
+            { (model.defaultSongList::songs) },
+            converter = AdapterConverter<SongListItemView>()
+        )
 
-        UiBinder.bind(rootView, R.id.sorryText, "Visibility", this, "Model.Songs[0]",
-                BoolConverter.get(true, true))
+        rootView.bindTo(
+            R.id.sorryText,
+            "Visibility",
+            { model.defaultSongList.songs[0] },
+            BoolConverter.get(true, true)
+        )
 
         fab = rootView.findViewById(R.id.addSongButton)
         fab?.setOnClickListener(OnClickListener {
@@ -65,7 +74,7 @@ class SongListFragment : Fragment() {
             mi.inflate(R.menu.songsmenu, menu)
 
             menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener {
-                SongsModel.get().sortSongs()
+                SongsModel.get().defaultSongList.sortSongs()
                 true
             }
 
@@ -81,11 +90,8 @@ class SongListFragment : Fragment() {
     }
 
     private fun stopPlaying() {
-        for (song in this.model.songs)
+        for (song in this.model.defaultSongList.songs)
             song.stop()
-        if (ParseUser.getCurrentUser() != null) {
-            SongsModel.get().saveAllToParse()
-        }
     }
 
     override fun onPause() {

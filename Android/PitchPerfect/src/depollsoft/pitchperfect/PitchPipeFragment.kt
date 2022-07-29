@@ -16,7 +16,7 @@ class PitchPipeFragment : Fragment() {
     val model: PitchPipeModel by TrackableField(PitchPipeModel())
 
     val toggle: Boolean
-        get() = SettingsModel.getToggleNotes()
+        get() = SettingsModel.toggleNotes
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
