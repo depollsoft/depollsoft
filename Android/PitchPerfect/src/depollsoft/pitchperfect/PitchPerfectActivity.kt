@@ -1,47 +1,44 @@
 package depollsoft.pitchperfect
 
-import android.content.Context
+import android.app.Dialog
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.os.PowerManager
 import android.util.DisplayMetrics
 import android.view.*
 import android.widget.FrameLayout
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.tabs.TabLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import androidx.appcompat.app.AppCompatActivity
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.wearable.Wearable
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.parse.ParseUser
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
-import java.util.*
 
 class PitchPerfectActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var logInDialog: Dialog
     private var preparingMenu: Boolean = false
 
     val adsShouldShow: Boolean
         get() {
-            if (SettingsModel.getAreAdsRemoved()) {
+            if (SettingsModel.areAdsRemoved) {
                 return false
             }
-            return !SettingsModel.getLicensed()
+            return !SettingsModel.licensed
         }
 
     /**
@@ -49,6 +46,8 @@ class PitchPerfectActivity : AppCompatActivity() {
      */
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        logInDialog = LoginPrompt.buildDialog(this, false)
 
         this.volumeControlStream = AudioManager.STREAM_MUSIC
 
@@ -95,23 +94,29 @@ class PitchPerfectActivity : AppCompatActivity() {
             override fun onPageScrollStateChanged(state: Int) {
             }
 
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
             }
         })
 
         bottomNavigation.setOnNavigationItemSelectedListener {
-            viewPager.setCurrentItem(when (it.itemId) {
-                R.id.pitchpipe_item -> 0
-                R.id.notes_item -> 1
-                R.id.keys_item -> 2
-                R.id.songs_item -> 3
-                else -> 0
-            }, true)
+            viewPager.setCurrentItem(
+                when (it.itemId) {
+                    R.id.pitchpipe_item -> 0
+                    R.id.notes_item -> 1
+                    R.id.keys_item -> 2
+                    R.id.songs_item -> 3
+                    else -> 0
+                }, true
+            )
             true
         }
 
         if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
-            LoginPrompt.buildDialog(this, false).show()
+            logInDialog.show()
         } else {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
             viewer.setTitle("Pitch Perfect Changelog")
@@ -119,7 +124,7 @@ class PitchPerfectActivity : AppCompatActivity() {
             viewer.showIfAppropriate()
         }
 
-        PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved) }
+        PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
 
         this.onConfigurationChanged(Resources.getSystem().configuration)
     }
@@ -174,23 +179,10 @@ class PitchPerfectActivity : AppCompatActivity() {
             }
         })
 
-        if (SettingsModel.getWakeLock()) {
+        if (SettingsModel.wakeLock) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 666) {
-            Task.callInBackground {
-                SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved)
-                null
-            }
-        } else {
-            LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
-            handlingResult = true
         }
     }
 
@@ -223,7 +215,6 @@ class PitchPerfectActivity : AppCompatActivity() {
         val widthPixels: Float = outMetrics.widthPixels.toFloat()
         val density: Float = outMetrics.density
         val adWidth = (widthPixels / density).toInt()
-
         // Step 3 - Get adaptive ad size and return for setting on the ad view.
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
     }

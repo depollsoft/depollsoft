@@ -9,10 +9,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
+import depollsoft.lib.util.writeThroughPreference
 import depollsoft.pitchperfect.lib.PitchedSong
 
 class SongsModel private constructor() {
-    var songLists: Map<String, SongList> by preference(
+    var songLists: Map<String, SongList> by writeThroughPreference(
         SONG_LISTS_KEY,
         mapOf()
     )
@@ -81,7 +82,11 @@ class SongsModel private constructor() {
     companion object {
         private const val OLD_SONGS_KEY = "depollsoft.pitchperfect.SongsModel"
         private const val SONG_LISTS_KEY = "depollsoft.pitchperfect.SongLists"
-        private val instance: SongsModel by lazy { SongsModel() }
+        private val instanceLazy = lazy { SongsModel() }
+        private val instance: SongsModel by instanceLazy
+
+        val isInitialized: Boolean
+            get() = instanceLazy.isInitialized()
 
         @JvmStatic
         fun get(): SongsModel = instance
