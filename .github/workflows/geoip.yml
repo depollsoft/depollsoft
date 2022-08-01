@@ -10,6 +10,7 @@ jobs:
     name: Update geoip data
     runs-on: ubuntu-latest
     steps:
+      - uses: 'actions/checkout@v3'
       - name: Setup node
         uses: actions/setup-node@v2
         with:
@@ -18,10 +19,9 @@ jobs:
         uses: 'google-github-actions/auth@v0'
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
       - name: NPM install
         run: npm install geoip-lite
       - name: Download using gsutil
