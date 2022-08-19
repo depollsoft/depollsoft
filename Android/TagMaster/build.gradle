@@ -59,7 +59,7 @@ android {
         applicationId "depollsoft.tagmaster"
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 33
         resConfigs 'en'
     }
 
