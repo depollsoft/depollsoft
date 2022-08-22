@@ -10,6 +10,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.parse.*
@@ -19,6 +20,12 @@ import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 
 class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
@@ -61,6 +68,7 @@ class PitchPerfectApplication : RichApplication() {
         ParseFacebookUtils.initialize(this)
 
         AppCompatDelegate.setDefaultNightMode(themeMode)
+        extraInit()
     }
 
     private var userDoc: DocumentReference? = null
@@ -82,7 +90,7 @@ class PitchPerfectApplication : RichApplication() {
                 userDoc = Firebase.firestore.document("users/${user.uid}")
                 registration = userDoc!!.addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        Log.e("depollsoft.tagmaster", "Failed to listen to user document", error)
+                        Log.e("depollsoft.pitchperfect", "Failed to listen to user document", error)
                     }
                 }
             } else {
@@ -98,28 +106,33 @@ class PitchPerfectApplication : RichApplication() {
 
     fun convertParseUser() {
         val curUser = ParseUser.getCurrentUser()
-        if (curUser != null) {
-            Firebase.functions.getHttpsCallable("exchangeAuthToken").call().continueWith { t ->
-                if (!t.isSuccessful) {
-                    Log.e("depollsoft.tagmaster", "Token exchange error", t.exception)
-                    return@continueWith
-                }
-                val dataDict = t.result.data as Map<String, Any?>
-                val firebaseToken = dataDict["token"] as String
-                Firebase.auth.signInWithCustomToken(firebaseToken).continueWith { t ->
-                    if (!t.isSuccessful) {
-                        Log.e(
-                            "depollsoft.tagmaster",
-                            "Failed to sign in with custom token",
-                            t.exception
-                        )
-                        return@continueWith
-                    }
+        if (curUser != null && Firebase.auth.currentUser != null) {
+            ParseUser.logOut()
+            return
+        }
+        CoroutineScope(Dispatchers.Default + Job()).launch {
+            if (curUser != null) {
+                try {
+                    val sessionToken = curUser.sessionToken ?: ParseUser.getCurrentSessionTokenAsync().await()
+                    val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
+                        .call(mapOf("token" to sessionToken)).await()
+                    val dataDict = result.data as? Map<*, *> ?: return@launch
+                    val firebaseToken = dataDict["token"] as String
+                    Firebase.auth.signInWithCustomToken(firebaseToken).await()
                     ParseUser.logOut()
                     Log.d(
-                        "depollsoft.tagmaster",
-                        "Logged out Parse ${curUser.objectId} and logged in Firebase ${t.result!!.user!!.uid}"
+                        "depollsoft.pitchperfect",
+                        "Logged out Parse: ${curUser.objectId} and logged in Firebase: ${Firebase.auth.currentUser?.uid}"
                     )
+                } catch(e: FirebaseFunctionsException) {
+                    if (e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED) {
+                        Log.e("depollsoft.pitchperfect", "Failed to exchange token and logging out", e)
+                        ParseUser.logOut()
+                    } else {
+                        Log.e("depollsoft.pitchperfect", "Failed to exchange token", e)
+                    }
+                } catch(e: Exception) {
+                    Log.e("depollsoft.pitchperfect", "Failed to exchange token", e)
                 }
             }
         }

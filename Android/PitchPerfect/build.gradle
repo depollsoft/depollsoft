@@ -15,7 +15,7 @@ ext {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:28.2.0')
+    implementation platform('com.google.firebase:firebase-bom:30.3.2')
     def billing_version = "5.0.0"
     implementation "com.android.billingclient:billing:$billing_version"
     implementation "com.android.billingclient:billing-ktx:$billing_version"
@@ -30,14 +30,14 @@ dependencies {
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'com.facebook.android:facebook-android-sdk:13.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.gms:play-services-ads:21.0.0'
+    implementation 'com.google.android.gms:play-services-ads:21.1.0'
     implementation 'com.google.android.gms:play-services-wearable:17.1.0'
     wearApp project(':PitchPerfectWear')
     implementation "com.github.parse-community.Parse-SDK-Android:parse:$parseVersion"
     implementation "com.github.parse-community.Parse-SDK-Android:facebook:$parseVersion"
     implementation "com.github.parse-community.Parse-SDK-Android:ktx:$parseVersion"
     implementation "com.github.parse-community.Parse-SDK-Android:coroutines:$parseVersion"
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.core:core-ktx:1.8.0"
@@ -47,11 +47,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-functions-ktx'
-    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.5.1'
-    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
-    implementation 'androidx.lifecycle:lifecycle-common-java8:2.4.1'
+    implementation 'com.google.android.gms:play-services-auth:20.2.0'
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.1'
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.1'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.5.1'
 }
 
 android {
@@ -67,7 +68,7 @@ android {
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 33
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
     }

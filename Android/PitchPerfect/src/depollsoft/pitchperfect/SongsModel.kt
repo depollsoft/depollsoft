@@ -55,7 +55,6 @@ class SongsModel private constructor() {
                         removeSongList(it.document.id)
                     }
                 }
-                storeAll()
             }
         }
         if (listener != null) {

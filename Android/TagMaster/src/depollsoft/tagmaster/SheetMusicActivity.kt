@@ -162,13 +162,13 @@ class SheetMusicActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.sheetmusicmenu, menu)
-        menu?.findItem(R.id.rotateButton)?.setOnMenuItemClickListener {
+        menu.findItem(R.id.rotateButton)?.setOnMenuItemClickListener {
             rotate()
             true
         }
-        menu?.findItem(R.id.launchButton)?.setOnMenuItemClickListener {
+        menu.findItem(R.id.launchButton)?.setOnMenuItemClickListener {
             val toLaunch = Intent(intent)
             toLaunch.component = null
             startActivity(toLaunch)
@@ -176,7 +176,6 @@ class SheetMusicActivity : AppCompatActivity() {
         }
         return super.onCreateOptionsMenu(menu)
     }
-
     companion object {
         const val MAX_BITMAP_SIZE = 1024 * 1024 * 100 // 100MiB
     }
