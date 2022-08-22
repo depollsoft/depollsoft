@@ -21,6 +21,8 @@ import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.parse.ParseUser
 import depollsoft.lib.ui.ChangelogViewer
 
@@ -40,7 +42,7 @@ class SettingsActivity : AppCompatActivity() {
     val loggedIn: Boolean
         get() {
             loginTrackable.track()
-            return ParseUser.getCurrentUser() != null
+            return Firebase.auth.currentUser != null
         }
     var toggleNotes: Boolean
         get() = SettingsModel.toggleNotes
@@ -103,6 +105,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.logoutButton).setOnClickListener {
             AuthUI.getInstance().signOut(it.context)
+            loginTrackable.updateTrackers()
         }
         val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
         clearSongListButton.setOnClickListener {

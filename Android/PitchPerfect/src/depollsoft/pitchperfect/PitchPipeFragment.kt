@@ -107,6 +107,7 @@ class PitchPipeFragment : Fragment() {
         stopPlaying()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         stopPlaying()

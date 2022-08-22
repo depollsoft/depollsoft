@@ -84,6 +84,7 @@ class SongListFragment : Fragment() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         PitchPerfectActivity.handlingResult = true
@@ -99,6 +100,7 @@ class SongListFragment : Fragment() {
         stopPlaying()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         stopPlaying()

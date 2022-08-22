@@ -15,15 +15,26 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 
 object LoginPrompt {
     fun buildDialog(activity: ComponentActivity, isHoomiLogout: Boolean): Dialog {
-        val launcher = activity.registerForActivityResult(
-            FirebaseAuthUIActivityResultContract(),
-            ::handleLoginResult
-        )
-        val view = LayoutInflater.from(activity).inflate(R.layout.loginpromptview, null)
         val dialog = Capture<AlertDialog?>(null)
+        val launcher = activity.registerForActivityResult(
+            FirebaseAuthUIActivityResultContract()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                dialog.get()?.dismiss()
+                if (!result.idpResponse!!.isNewUser) {
+                    SettingsModel.attachToFirestore()
+                    SongsModel.get().attachToFirestore(false)
+                } else {
+                    SettingsModel.attachToFirestore()
+                    SongsModel.get().attachToFirestore(true)
+                }
+            }
+        }
+        val view = LayoutInflater.from(activity).inflate(R.layout.loginpromptview, null)
         val loginButton = view.findViewById<View>(R.id.login_button)
         loginButton.setOnClickListener {
             val logInIntent = AuthUI.getInstance().createSignInIntentBuilder()
+                .setIsSmartLockEnabled(false)
                 .setAvailableProviders(
                     listOf(
                         AuthUI.IdpConfig.EmailBuilder()
@@ -52,17 +63,5 @@ object LoginPrompt {
             .setTitle(R.string.LoginTitle)
             .create())
         return dialog.get()!!
-    }
-
-    fun handleLoginResult(result: FirebaseAuthUIAuthenticationResult) {
-        if (result.resultCode == RESULT_OK) {
-            if (!result.idpResponse!!.isNewUser) {
-                SettingsModel.attachToFirestore()
-                SongsModel.get().attachToFirestore(false)
-            } else {
-                SettingsModel.attachToFirestore()
-                SongsModel.get().attachToFirestore(true)
-            }
-        }
     }
 }

@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="depollsoft.tagmaster"
-    android:versionCode="66"
+    android:versionCode="68"
     android:versionName="@string/VersionNumber">
 
     <uses-permission android:name="android.permission.INTERNET" />

@@ -25,12 +25,13 @@ fun JSONObject.toMap(): Map<String, Any?> =
         when (val v = this.opt(k)) {
             is JSONObject -> Pair(k, v.toMap())
             is JSONArray -> Pair(k, v.toList())
+            JSONObject.NULL -> Pair(k, null)
             else -> Pair(k, v)
         }
     }
 
 fun JSONArray.toList(): List<Any?> =
-    (0..this.length()).map {
+    (0 until this.length()).map {
         when (val v = this.opt(it)) {
             is JSONObject -> v.toMap()
             is JSONArray -> v.toList()

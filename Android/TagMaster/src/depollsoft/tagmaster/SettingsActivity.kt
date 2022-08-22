@@ -49,6 +49,7 @@ class SettingsActivity : AppCompatActivity() {
             return Firebase.auth.currentUser != null
         }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         ParseFacebookUtils.onActivityResult(requestCode, resultCode, data)
@@ -181,6 +182,7 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<View>(R.id.loginButton).setOnClickListener {
             startActivityForResult(
                 AuthUI.getInstance().createSignInIntentBuilder()
+                    .setIsSmartLockEnabled(false)
                     .setAvailableProviders(
                         listOf(
                             AuthUI.IdpConfig.EmailBuilder()

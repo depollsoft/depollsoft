@@ -1,8 +1,6 @@
 package depollsoft.pitchperfect
 
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.track
-import com.bindroid.trackable.trackable
+import com.bindroid.trackable.*
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
@@ -16,14 +14,21 @@ class SongList constructor() {
     private var reference: DocumentReference? = null
     lateinit var id: String
     var name: String by trackable("")
-    var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection())
+    var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection<PitchedSong>())
+    val isRestoring = object : ThreadLocal<Boolean>() {
+        override fun initialValue(): Boolean {
+            return false
+        }
+    }
 
     init {
         track({
             songs.track()
             name
         }) {
-            storeValue()
+            if (!isRestoring.get()!!) {
+                storeValue()
+            }
             keepTracking
         }
     }
@@ -39,17 +44,33 @@ class SongList constructor() {
     }
 
     fun setParent(userRef: DocumentReference) {
-        userRef.collection("songLists").document(id)
+        this.reference = userRef.collection("songLists").document(id)
     }
 
     fun restore(snapshot: DocumentSnapshot) {
         name = snapshot.getString("name")!!
         @Suppress("UNCHECKED_CAST")
-        songs = JsonSerializer.deserialize(
-            JSONObject(
-                snapshot.getField<Map<String, Any?>>("songs")!!
-            )
-        ) as TrackableCollection<PitchedSong>
+        val rawSongs = snapshot.getField<Any>("songs")!! as List<Any>
+        try {
+            isRestoring.set(true)
+            val newSongs = rawSongs.map {
+                @Suppress("UNCHECKED_CAST")
+                JsonSerializer.deserialize(JSONObject(it as Map<String, Any?>)) as PitchedSong
+            }
+            if (songs.size == newSongs.size && songs.zip(newSongs).all {
+                    it.first.id == it.second.id &&
+                            it.first.name == it.second.name &&
+                            it.first.key == it.second.key
+                }) {
+                // No change -- ignore
+                return
+            }
+            songs.become(newSongs) { left, right ->
+                left.id == right.id && left.name == right.name && left.key == right.key
+            }
+        } finally {
+            isRestoring.set(false)
+        }
     }
 
     fun sortSongs() {
@@ -72,16 +93,20 @@ class SongList constructor() {
 
     fun moveDown(s: PitchedSong) {
         if (!canMoveDown(s)) return
-        val index = songs.indexOf(s)
-        songs.removeAt(index)
-        songs.add(index + 1, s)
+        songs.transaction {
+            val index = indexOf(s)
+            removeAt(index)
+            add(index + 1, s)
+        }
     }
 
     fun moveUp(s: PitchedSong) {
         if (!canMoveUp(s)) return
-        val index = songs.indexOf(s)
-        songs.removeAt(index)
-        songs.add(index - 1, s)
+        songs.transaction {
+            val index = indexOf(s)
+            removeAt(index)
+            add(index - 1, s)
+        }
     }
 
     fun removeSong(song: PitchedSong) {
@@ -103,7 +128,7 @@ class SongList constructor() {
         SongsModel.get().songLists = SongsModel.get().songLists + (id to this)
         val dict = mapOf(
             "name" to name,
-            "songs" to JsonSerializer.serialize(songs).toMap()
+            "songs" to songs.map { JsonSerializer.serialize(it).toMap() }
         )
         reference?.set(dict, SetOptions.merge())
     }
