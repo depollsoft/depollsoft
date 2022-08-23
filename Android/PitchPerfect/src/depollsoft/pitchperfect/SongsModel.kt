@@ -98,7 +98,7 @@ class SongsModel private constructor() {
             list.name = "Default"
             list.songs = serializedSongs
             songLists = songLists + ("default" to list)
-            Preferences.set(SONG_LISTS_KEY, null)
+            Preferences.set(OLD_SONGS_KEY, null)
         }
         if (songLists.isEmpty()) {
             val list = SongList("default")
