@@ -181,6 +181,7 @@ public class SongListItemView extends LinearLayout implements
 
   public void setSong(PitchedSong value) {
     this.song.set(value);
+    this.song.updateTrackers();
   }
 
 }
