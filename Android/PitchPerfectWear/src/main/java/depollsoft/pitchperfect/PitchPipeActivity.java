@@ -57,9 +57,9 @@ public class PitchPipeActivity extends AppCompatActivity {
       @Override
       public Void then(Task<List<Node>> listTask) throws Exception {
         if (listTask.getResult().isEmpty()) {
-          Toast.makeText(PitchPipeActivity.this,
+          /*Toast.makeText(PitchPipeActivity.this,
               "Your watch must be connected to your phone to use Pitch Perfect.",
-              Toast.LENGTH_LONG).show();
+              Toast.LENGTH_LONG).show();*/
         }
         return null;
       }

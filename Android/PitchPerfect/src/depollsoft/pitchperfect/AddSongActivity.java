@@ -101,33 +101,25 @@ public class AddSongActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> arg0) {
             }
         });
+    }
 
-        View okButton = this.findViewById(R.id.okButton);
-        okButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (AddSongActivity.this.editing) {
-                    AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
-                    AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
-                    SongsModel.get().getDefaultSongList().notifyOfChange();
-                } else {
-                    SongsModel.get().getDefaultSongList().addSong(AddSongActivity.this.getSong());
-                }
-                AddSongActivity.this.setResult(1);
-                PitchPerfectActivity.handlingResult = true;
-                AddSongActivity.this.finish();
-            }
-        });
+    private void okClicked() {
+        if (AddSongActivity.this.editing) {
+            AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
+            AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
+            SongsModel.get().getDefaultSongList().notifyOfChange();
+        } else {
+            SongsModel.get().getDefaultSongList().addSong(AddSongActivity.this.getSong());
+        }
+        AddSongActivity.this.setResult(1);
+        PitchPerfectActivity.handlingResult = true;
+        AddSongActivity.this.finish();
+    }
 
-        View cancelButton = this.findViewById(R.id.cancelButton);
-        cancelButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AddSongActivity.this.setResult(Activity.RESULT_CANCELED);
-                PitchPerfectActivity.handlingResult = true;
-                AddSongActivity.this.finish();
-            }
-        });
+    private void cancelClicked() {
+        AddSongActivity.this.setResult(Activity.RESULT_CANCELED);
+        PitchPerfectActivity.handlingResult = true;
+        AddSongActivity.this.finish();
     }
 
     @Override
@@ -142,22 +134,25 @@ public class AddSongActivity extends AppCompatActivity {
         MenuInflater mi = new MenuInflater(this);
         mi.inflate(R.menu.songeditmenu, menu);
 
-        MenuItems.setShowAsAction(menu.findItem(R.id.removeSongMenuItem),
-                MenuItems.SHOW_AS_ACTION_IF_ROOM);
         menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
-                new OnMenuItemClickListener() {
-
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        if (AddSongActivity.this.editing) {
-                            SongsModel.get().getDefaultSongList().removeSong(AddSongActivity.this.toEdit);
-                        }
-                        AddSongActivity.this.setResult(1);
-                        PitchPerfectActivity.handlingResult = true;
-                        AddSongActivity.this.finish();
-                        return true;
+                item -> {
+                    if (AddSongActivity.this.editing) {
+                        SongsModel.get().getDefaultSongList().removeSong(AddSongActivity.this.toEdit);
                     }
+                    AddSongActivity.this.setResult(1);
+                    PitchPerfectActivity.handlingResult = true;
+                    AddSongActivity.this.finish();
+                    return true;
                 });
+
+        menu.findItem(R.id.okMenuItem).setOnMenuItemClickListener(menuItem -> {
+            okClicked();
+            return true;
+        });
+        menu.findItem(R.id.cancelMenuItem).setOnMenuItemClickListener(menuItem -> {
+            cancelClicked();
+            return true;
+        });
 
         return true;
     }

@@ -1,3 +1,8 @@
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = '1.7.10'
@@ -20,6 +25,9 @@ buildscript {
     }
 }
 
+ext {
+}
+
 allprojects {
     repositories {
         mavenCentral()
@@ -30,6 +38,14 @@ allprojects {
         }
         maven { url "https://jitpack.io" }
     }
+}
+
+static def getVersionCode(Map args) {
+    return getDate() * 1000 + args.build * 10 + args.suffix
+}
+
+static def getDate() {
+    return Integer.parseInt(DateTimeFormatter.ofPattern("YYMMdd").format(LocalDateTime.now()))
 }
 
 configurations {

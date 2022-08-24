@@ -18,7 +18,7 @@ object PurchaseService {
     private val purchasesUpdatedListener =
         PurchasesUpdatedListener { billingResult, purchases ->
             CoroutineScope(Dispatchers.IO + Job()).launch {
-                areAdsRemoved = false
+                var newAdsValue = false
                 purchases?.forEach {
                     if (!it.isAcknowledged) {
                         billingClient.acknowledgePurchase(
@@ -28,9 +28,10 @@ object PurchaseService {
                         )
                     }
                     if (it.products.contains(REMOVE_ADS_SKU)) {
-                        areAdsRemoved = true
+                        newAdsValue = true
                     }
                 }
+                areAdsRemoved = newAdsValue
             }
         }
 

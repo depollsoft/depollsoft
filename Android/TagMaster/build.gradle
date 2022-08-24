@@ -62,6 +62,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         resConfigs 'en'
+        versionCode getVersionCode(build: 0, suffix: 1)
     }
 
     sourceSets {

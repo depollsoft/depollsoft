@@ -64,13 +64,14 @@ android {
             storePassword 'depollsoft'
         }
     }
-    compileSdkVersion 32
+    compileSdkVersion 33
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 21
         targetSdkVersion 33
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
+        versionCode getVersionCode(build: 0, suffix: 0)
     }
     sourceSets {
         main {

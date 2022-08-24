@@ -43,12 +43,9 @@ public class Preferences {
             Context.MODE_PRIVATE);
     Preferences.trackableMap = new HashMap<String, Trackable>();
     Preferences.preferences
-        .registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
-          public void onSharedPreferenceChanged(
-              SharedPreferences sharedPreferences, String key) {
-            if (Preferences.trackableMap.containsKey(key))
-              Preferences.trackableMap.remove(key).updateTrackers();
-          }
+        .registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
+          if (Preferences.trackableMap.containsKey(key))
+            Preferences.trackableMap.remove(key).updateTrackers();
         });
   }
 
