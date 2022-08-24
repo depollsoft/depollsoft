@@ -74,7 +74,9 @@ class SongList constructor() {
     }
 
     fun sortSongs() {
-        songs.sortBy { it.name.lowercase() }
+        songs.transaction {
+            songs.sortBy { it.name.lowercase() }
+        }
     }
 
     fun addSong(song: PitchedSong) {

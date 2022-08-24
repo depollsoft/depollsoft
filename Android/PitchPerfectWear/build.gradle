@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 20
-        targetSdkVersion 32
-        versionCode 43
-        versionName "2.4.1"
+        targetSdkVersion 33
+        versionCode getVersionCode(build: 0, suffix: 1)
+        versionName "3.0.0"
     }
     buildTypes {
         release {

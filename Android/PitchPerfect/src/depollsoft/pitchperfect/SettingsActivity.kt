@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.ViewModel
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
@@ -25,6 +26,10 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.parse.ParseUser
 import depollsoft.lib.ui.ChangelogViewer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SettingsActivity : AppCompatActivity() {
     private val loggingIn = false
@@ -104,8 +109,10 @@ class SettingsActivity : AppCompatActivity() {
             logInDialog.show()
         }
         findViewById<View>(R.id.logoutButton).setOnClickListener {
-            AuthUI.getInstance().signOut(it.context)
-            loginTrackable.updateTrackers()
+            GlobalScope.launch(Dispatchers.Main) {
+                AuthUI.getInstance().signOut(it.context).await()
+                loginTrackable.updateTrackers()
+            }
         }
         val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
         clearSongListButton.setOnClickListener {

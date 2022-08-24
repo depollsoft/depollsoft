@@ -36,7 +36,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/NotesToggle"></CheckBox>
+                    android:text="@string/NotesToggle" />
 
                 <CheckBox
                     android:id="@+id/wakeLockCheckBox"
@@ -49,7 +49,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/ClearSongList"></Button>
+                    android:text="@string/ClearSongList" />
 
                 <TextView
                     android:id="@+id/textView2"
@@ -86,7 +86,7 @@
                     android:layout_marginBottom="5dp"
                     android:text="@string/themeTitle"
                     android:textSize="20sp"
-                    android:textStyle="bold"></TextView>
+                    android:textStyle="bold" />
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -117,7 +117,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/manage_subscription"></Button>
+                    android:text="@string/manage_subscription" />
 
                 <Button
                     android:id="@+id/changelogButton"

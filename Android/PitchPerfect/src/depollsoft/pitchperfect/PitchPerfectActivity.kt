@@ -16,6 +16,7 @@ import androidx.viewpager.widget.ViewPager
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.uibind
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -34,12 +35,7 @@ class PitchPerfectActivity : AppCompatActivity() {
     private var preparingMenu: Boolean = false
 
     val adsShouldShow: Boolean
-        get() {
-            if (SettingsModel.areAdsRemoved) {
-                return false
-            }
-            return !SettingsModel.licensed
-        }
+        get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
 
     /**
      * Called when the activity is first created.
@@ -53,8 +49,18 @@ class PitchPerfectActivity : AppCompatActivity() {
 
         this.setContentView(R.layout.pitchperfectview)
 
-        UiBinder.bind(this, R.id.adContainer, "Visibility", "AdsShouldShow", BoolConverter.get())
-        UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get())
+        uibind(
+            R.id.adContainer,
+            "Visibility",
+            { (this::adsShouldShow) },
+            converter = BoolConverter.get()
+        )
+        uibind(
+            R.id.removeAds,
+            "Visibility",
+            { (this::adsShouldShow) },
+            converter = BoolConverter.get()
+        )
 
         findViewById<View>(R.id.removeAds).setOnClickListener {
             PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
