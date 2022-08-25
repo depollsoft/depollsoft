@@ -6,7 +6,7 @@
 
     <uses-feature android:name="android.hardware.type.watch"/>
 
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
     <application
         android:name=".PitchPerfectApplication"
