@@ -32,6 +32,10 @@
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
     <string name="LogIn">Log in</string>
     <string name="LogOut">Log out</string>
+    <string name="Yes">Yes</string>
+    <string name="No">No</string>
+    <string name="DeleteAccount">Delete account</string>
+    <string name="DeleteAccountConfirmation">Are you sure you want to delete your account and all associated data?  This cannot be undone.  Locally-saved songs and preferences will not be deleted.</string>
     <string name="LogInInfo">Log in to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
