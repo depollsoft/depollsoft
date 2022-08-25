@@ -11,6 +11,11 @@ import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference
 import depollsoft.pitchperfect.lib.PitchedSong
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SongsModel private constructor() {
     var songLists: Map<String, SongList> by writeThroughPreference(
@@ -63,9 +68,9 @@ class SongsModel private constructor() {
     }
 
     fun detachFromFirestore() {
-        userDoc = null
         allListeners.forEach { it.remove() }
         allListeners.clear()
+        userDoc = null
     }
 
     fun removeSongList(key: String) {

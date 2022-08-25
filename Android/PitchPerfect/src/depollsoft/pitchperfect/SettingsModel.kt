@@ -11,6 +11,7 @@ import depollsoft.lib.licensing.LicenseChecker
 import com.parse.ParseUser
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
+import kotlinx.coroutines.tasks.await
 
 object SettingsModel {
     private const val TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
@@ -19,16 +20,21 @@ object SettingsModel {
 
     private var userRef: DocumentReference? = null
     private var listenerRegistration: ListenerRegistration? = null
+    private var restoring = false
 
     val appStore: String
         get() = RichApplication.getAppContext().getString(R.string.app_store)
     var areAdsRemoved: Boolean by preference(ARE_ADS_REMOVED_KEY, false)
     @JvmStatic
     var toggleNotes: Boolean by preference(TOGGLE_NOTE_KEY, false) {
-        userRef?.set(mapOf("toggleNotes" to it), SetOptions.merge())
+        if (!restoring) {
+            userRef?.set(mapOf("toggleNotes" to it), SetOptions.merge())
+        }
     }
     var wakeLock: Boolean by preference(TOGGLE_NOTE_KEY, false) {
-        userRef?.set(mapOf("wakeLock" to it), SetOptions.merge())
+        if (!restoring) {
+            userRef?.set(mapOf("wakeLock" to it), SetOptions.merge())
+        }
     }
 
     val licensed: Boolean
@@ -41,8 +47,13 @@ object SettingsModel {
             if (error != null) {
                 return@addSnapshotListener
             }
-            wakeLock = snapshot!!.getBoolean("wakeLock") ?: wakeLock
-            toggleNotes = snapshot!!.getBoolean("toggleNotes") ?: toggleNotes
+            restoring = true
+            try {
+                wakeLock = snapshot!!.getBoolean("wakeLock") ?: wakeLock
+                toggleNotes = snapshot!!.getBoolean("toggleNotes") ?: toggleNotes
+            } finally {
+                restoring =false
+            }
         }
     }
 

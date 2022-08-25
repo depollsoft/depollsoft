@@ -9,7 +9,7 @@
                     <h5>Version 4.0.0</h5>
                     -Added privacy policy<br />
                     -Moves to a real-time backend for keeping your data up to date<br />
-                    -Adds support for more kinds of log in<br />
+                    -Adds support for more kinds of log in and account deletion<br />
                     -Adds support for light/dark display modes<br />
                     -Fixes a number of issues on modern versions of Android<br />
             </p>

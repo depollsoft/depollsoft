@@ -22,7 +22,11 @@ import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.functions.ktx.functions
 import com.google.firebase.ktx.Firebase
 import com.parse.ParseUser
 import depollsoft.lib.ui.ChangelogViewer
@@ -89,9 +93,30 @@ class SettingsActivity : AppCompatActivity() {
             "ShowBuyLink",
             BoolConverter.get()
         )
-        UiBinder.bind(this, R.id.aboutPurchased, "Visibility", "Licensed", BoolConverter.get())
-        UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true))
-        UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get())
+        uibind(
+            R.id.aboutPurchased,
+            "Visibility",
+            { (this::licensed) },
+            converter = BoolConverter.get()
+        )
+        uibind(
+            R.id.loginButton,
+            "Visibility",
+            { (this::loggedIn) },
+            converter = BoolConverter.get(true)
+        )
+        uibind(
+            R.id.logoutButton,
+            "Visibility",
+            { (this::loggedIn) },
+            converter = BoolConverter.get()
+        )
+        uibind(
+            R.id.deleteAccountButton,
+            "Visibility",
+            { (this::loggedIn) },
+            converter = BoolConverter.get()
+        )
         uibind(
             R.id.manageSubscriptionButton,
             "Visibility",
@@ -113,6 +138,21 @@ class SettingsActivity : AppCompatActivity() {
                 AuthUI.getInstance().signOut(it.context).await()
                 loginTrackable.updateTrackers()
             }
+        }
+        findViewById<View>(R.id.deleteAccountButton).setOnClickListener {
+            AlertDialog.Builder(this).setMessage(R.string.DeleteAccountConfirmation)
+                .setTitle("Delete account (${userString})")
+                .setPositiveButton(R.string.Yes) { dlg, which ->
+                    GlobalScope.launch(Dispatchers.IO) {
+                        SongsModel.get().detachFromFirestore()
+                        SettingsModel.detachFromFirestore()
+                        Firebase.functions.getHttpsCallable("deleteUser").call().await()
+                        AuthUI.getInstance().signOut(it.context).await()
+                        loginTrackable.updateTrackers()
+                    }
+                }.setNegativeButton(R.string.No) { dlg, which ->
+                    // Do nothing
+                }.create().show()
         }
         val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
         clearSongListButton.setOnClickListener {
@@ -158,6 +198,24 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
     }
+
+    val userString: String
+        get() {
+            val curUser = Firebase.auth.currentUser
+            if (curUser == null) {
+                return "Logged out"
+            }
+            if (curUser.providerData.size > 0) {
+                val providerData = curUser.providerData.first()
+                return when (providerData.providerId) {
+                    FacebookAuthProvider.PROVIDER_ID -> "Facebook: ${providerData.email}"
+                    GoogleAuthProvider.PROVIDER_ID -> "Google: ${providerData.email}"
+                    PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
+                    else -> providerData.email ?: "Current User (${curUser.uid})"
+                }
+            }
+            return "Current User (${curUser.uid})"
+        }
 
     override fun onDestroy() {
         super.onDestroy()
