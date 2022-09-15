@@ -22,6 +22,7 @@
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "UIToolbar+DPUtils.h"
+#import "pitchperfect-Swift.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -211,7 +212,8 @@
                 break;
             default:
             {
-                [button.button setTitle:@"" forState:UIControlStateNormal];
+                [button.button setAttributedTitle:self.sharpFlatString forState:UIControlStateNormal];
+                /*[button.button setTitle:@"" forState:UIControlStateNormal];
                 UILabel *sharpLabel = [[UILabel alloc] initWithFrame:CGRectInset(button.button.frame, 4, 4)];
                 sharpLabel.text = SHARP_STRING;
                 sharpLabel.font = [UIFont fontWithName:@"NoteHedz" size:40];
@@ -250,7 +252,7 @@
                 [button addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[layout]|"
                                                                                options:0
                                                                                metrics:nil
-                                                                                 views:NSDictionaryOfVariableBindings(layout)]];
+                                                                                 views:NSDictionaryOfVariableBindings(layout)]];*/
                 break;
             }
         }

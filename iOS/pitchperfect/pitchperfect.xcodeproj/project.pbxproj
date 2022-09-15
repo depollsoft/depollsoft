@@ -11,6 +11,7 @@
 		1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E131315267FD07600F33385 /* DPSettingsModel.swift */; };
 		1E13131D2682475900F33385 /* panobackground.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E13131A2682475900F33385 /* panobackground.svg */; };
 		1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */; };
+		1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */; };
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
 		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
@@ -115,6 +116,7 @@
 		1E13131A2682475900F33385 /* panobackground.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = panobackground.svg; sourceTree = "<group>"; };
 		1E5B195A1FE74DA300241069 /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPLoginViewController.swift; sourceTree = "<group>"; };
+		1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeViewController.swift; sourceTree = "<group>"; };
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
 		1E8EA647267E5BC400255826 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -378,6 +380,7 @@
 				63A99D791588359700C78CC0 /* DPPitchPipeModel.m */,
 				63DC36B9151E9000007C46DB /* DPPitchPipeViewController.h */,
 				63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */,
+				1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */,
 				631C912B15957D3C004733F1 /* DPSettingsModel.h */,
 				631C912C15957D3C004733F1 /* DPSettingsModel.m */,
 				1E131315267FD07600F33385 /* DPSettingsModel.swift */,
@@ -742,6 +745,7 @@
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
+				1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */,
 				63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */,
 				1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */,
 				1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */,
@@ -903,7 +907,7 @@
 				CODE_SIGN_ENTITLEMENTS = pitchperfect/pitchperfect.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2.0.2;
+				CURRENT_PROJECT_VERSION = 2.0.3;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",
@@ -950,7 +954,7 @@
 				CODE_SIGN_ENTITLEMENTS = pitchperfect/pitchperfect.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 2.0.2;
+				CURRENT_PROJECT_VERSION = 2.0.3;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",

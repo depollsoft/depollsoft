@@ -211,10 +211,10 @@ class SettingsActivity : AppCompatActivity() {
                     FacebookAuthProvider.PROVIDER_ID -> "Facebook: ${providerData.email}"
                     GoogleAuthProvider.PROVIDER_ID -> "Google: ${providerData.email}"
                     PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
-                    else -> providerData.email ?: "Current User (${curUser.uid})"
+                    else -> providerData.email ?: "Current User: (${curUser.uid})"
                 }
             }
-            return "Current User (${curUser.uid})"
+            return "Current User: (${curUser.uid})"
         }
 
     override fun onDestroy() {
