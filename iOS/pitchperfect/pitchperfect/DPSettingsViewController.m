@@ -23,6 +23,7 @@
 #import "UIToolbar+DPUtils.h"
 @import Firebase;
 @import UIKit;
+@import FirebaseAuthUI;
 
 @interface DPSettingsViewController ()
 
@@ -213,18 +214,38 @@
         }
         case 1:
         {
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
-            if ([FIRAuth auth].currentUser) {
-                cell.textLabel.text = @"Log out";
-            } else {
-                cell.textLabel.text = @"Log in";
+            switch(indexPath.row) {
+                case 0:
+                {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
+                    if ([FIRAuth auth].currentUser) {
+                        cell.textLabel.text = @"Log out";
+                    } else {
+                        cell.textLabel.text = @"Log in";
+                    }
+                    UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+                    activityIndicator.hidesWhenStopped = YES;
+                    if (@available(iOS 10.0, *)) {
+                        cell.accessoryView = activityIndicator;
+                    }
+                    [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(loginButtonPress:)]];
+                    break;
+                }
+                case 1:
+                {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Cell"];
+                    cell.textLabel.text = @"Delete Account";
+                    UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+                    activityIndicator.hidesWhenStopped = YES;
+                    if (@available(iOS 10.0, *)) {
+                        cell.accessoryView = activityIndicator;
+                    }
+                    [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(deleteAccountButtonPress:)]];
+                    break;
+                }
+                default:
+                    break;
             }
-            UIActivityIndicatorView *activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-            activityIndicator.hidesWhenStopped = YES;
-            if (@available(iOS 10.0, *)) {
-                cell.accessoryView = activityIndicator;
-            }
-            [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(loginButtonPress:)]];
             break;
         }
         default:
@@ -234,6 +255,39 @@
         cell = [[UITableViewCell alloc] init];
     }
     return cell;
+}
+
+- (void)deleteAccountButtonPress:(UIGestureRecognizer *)recognizer {
+    UITableViewCell *cell = (UITableViewCell *)recognizer.view;
+    UIActivityIndicatorView *activity = (UIActivityIndicatorView*)cell.accessoryView;
+    [activity startAnimating];
+    UIAlertController *alertController =
+        [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Delete Account %@", DPSettingsModel.sharedInstance.userString]
+                                            message:@"Are you sure you want to delete your account and all associated data?  This cannot be undone.  Locally-saved songs and preferences will not be deleted."
+                                     preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                                        style:UIAlertActionStyleCancel
+                                                      handler:^(UIAlertAction * _Nonnull action) {
+        [activity stopAnimating];
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+                                                        style:UIAlertActionStyleDestructive
+                                                      handler:^(UIAlertAction * _Nonnull action) {
+        [[DPSongsModel sharedInstance] detachFromFirestore];
+        [[DPSettingsModel sharedInstance] detachFromFirestore];
+        FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
+        [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
+            if (!error) {
+                [FUIAuth.defaultAuthUI signOutWithError:nil];
+                [self->tableView reloadData];
+                [activity stopAnimating];
+            }
+        }];
+    }]];
+    [self presentViewController:alertController
+                       animated:YES
+                     completion:^{
+    }];
 }
 
 - (void)loginButtonPress:(UIGestureRecognizer *)recognizer {
@@ -261,7 +315,7 @@
         case 0:
             return 2;
         case 1:
-            return 1;
+            return [FIRAuth auth].currentUser ? 2 : 1;
         default:
             break;
     }

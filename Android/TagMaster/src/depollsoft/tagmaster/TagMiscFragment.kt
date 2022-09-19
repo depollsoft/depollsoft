@@ -1,7 +1,7 @@
 package depollsoft.tagmaster
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,8 +17,6 @@ class TagMiscFragment : Fragment() {
         val rootView = inflater.inflate(R.layout.tagmiscview, container, false)
 
         UiBinder.bind(rootView, R.id.titleTextView, "Text", this, "Parent.Tag.Title")
-
-        UiBinder.bind(rootView, R.id.tagIdTextView, "Text", this, "Parent.Tag.Id", ToStringConverter())
 
         UiBinder.bind(rootView, R.id.lastRefreshedTextView, "Text", this, "Parent.Tag.LastRefreshed",
                 ToStringConverter("%1\$tD %1\$tr"))

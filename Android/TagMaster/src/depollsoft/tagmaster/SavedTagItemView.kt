@@ -11,9 +11,11 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.BoundUi
 import com.bindroid.ui.UiBinder
 import depollsoft.tagmaster.barbershop.Tag
+import kotlinx.coroutines.*
 
 abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
     constructor(context: Context) : super(context) {
@@ -24,35 +26,43 @@ abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
         this.init()
     }
 
-    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle) {
+    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(
+        context,
+        attrs,
+        defStyle
+    ) {
         this.init()
     }
 
-    var tagId: Int? by TrackableField()
-    private val tag = TrackableField<Tag>()
+    var tagId: Int? by trackable()
+    var tag: Tag? by trackable() {
+        this.regularView!!.bind(it)
+    }
+
     private var regularView: TagItemView? = null
+
     val isLoading: Boolean
         @JvmName("getIsLoading")
-        get () = this.tag.get() == null && !this.failedToLoad
-    var failedToLoad: Boolean by TrackableBoolean(false)
+        get() = this.tag == null && !this.failedToLoad
+
+    var failedToLoad: Boolean by trackable(false)
+
     override fun bind(dataSource: Int?) {
         if (dataSource == tagId)
             return
         tagId = dataSource
-        this.setTag(null)
-        Tag.loadTagById(dataSource!!).continueWith { task ->
-            if (task.isFaulted) {
-                Log.e("depollsoft.tagmaster", "Failed to load tag", task.error)
-                this.failedToLoad = true
-            } else {
-                setTag(task.result)
+        this.tag = null
+        CoroutineScope(Dispatchers.Main + Job()).launch {
+            try {
+                tag = Tag.loadTagById(dataSource!!).await()
+                if (tag == null) {
+                    throw Exception("Failed to load")
+                }
+            } catch (e: Exception) {
+                Log.e("depollsoft.tagmaster", "Failed to load tag", e)
+                failedToLoad = true
             }
-            null
         }
-    }
-
-    override fun getTag(): Tag {
-        return this.tag.get()
     }
 
     private fun init() {
@@ -78,10 +88,5 @@ abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
         UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag", BoolConverter.get())
         UiBinder.bind(this, R.id.failedToLoad, "Visibility", "FailedToLoad", BoolConverter.get())
         UiBinder.bind(this, R.id.tagId, "Text", "TagId", ToStringConverter())
-    }
-
-    fun setTag(value: Tag?) {
-        this.tag.set(value)
-        this.regularView!!.bind(value)
     }
 }

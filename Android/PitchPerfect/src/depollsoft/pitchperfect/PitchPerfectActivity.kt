@@ -1,28 +1,28 @@
 package depollsoft.pitchperfect
 
-import android.content.Context
+import android.app.Dialog
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.media.AudioManager
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.os.PowerManager
-import android.support.design.widget.BottomNavigationView
-import android.support.design.widget.TabLayout
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
-import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.View
-import android.view.WindowManager
+import android.util.DisplayMetrics
+import android.view.*
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.uibind
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.parse.ParseFacebookUtils
+import com.google.android.gms.wearable.Wearable
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.parse.ParseUser
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
@@ -31,15 +31,11 @@ import depollsoft.lib.util.RunUtils
 class PitchPerfectActivity : AppCompatActivity() {
 
     private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var logInDialog: Dialog
     private var preparingMenu: Boolean = false
 
     val adsShouldShow: Boolean
-        get() {
-            if (SettingsModel.getAreAdsRemoved()) {
-                return false
-            }
-            return !SettingsModel.getLicensed()
-        }
+        get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
 
     /**
      * Called when the activity is first created.
@@ -47,39 +43,47 @@ class PitchPerfectActivity : AppCompatActivity() {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        logInDialog = LoginPrompt.buildDialog(this, false)
+
         this.volumeControlStream = AudioManager.STREAM_MUSIC
 
         this.setContentView(R.layout.pitchperfectview)
 
-        UiBinder.bind(this, R.id.adView, "Visibility", "AdsShouldShow", BoolConverter.get())
-        UiBinder.bind(this, R.id.removeAds, "Visibility", "AdsShouldShow", BoolConverter.get())
+        uibind(
+            R.id.adContainer,
+            "Visibility",
+            { (this::adsShouldShow) },
+            converter = BoolConverter.get()
+        )
+        uibind(
+            R.id.removeAds,
+            "Visibility",
+            { (this::adsShouldShow) },
+            converter = BoolConverter.get()
+        )
 
         findViewById<View>(R.id.removeAds).setOnClickListener {
-            if (PurchaseService.isSubscriptionBillingAvailable(this@PitchPerfectActivity)) {
-                PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
-            }
+            PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
         }
 
         bottomNavigation = findViewById(R.id.bottomNavigation)
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
 
         viewPager.adapter = object : FragmentPagerAdapter(this.supportFragmentManager) {
-            override fun getItem(position: Int): Fragment? {
+            override fun getItem(position: Int): Fragment {
                 when (position) {
                     0 -> return PitchPipeFragment()
                     1 -> return NoteListFragment()
                     2 -> return KeySignatureFragment()
                     3 -> return SongListFragment()
                 }
-                return null
+                return PitchPipeFragment()
             }
 
             override fun getCount(): Int {
                 return 4
             }
         }
-
-        this.onConfigurationChanged(Resources.getSystem().configuration)
 
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) {
@@ -96,28 +100,29 @@ class PitchPerfectActivity : AppCompatActivity() {
             override fun onPageScrollStateChanged(state: Int) {
             }
 
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
             }
         })
 
         bottomNavigation.setOnNavigationItemSelectedListener {
-            viewPager.setCurrentItem(when (it.itemId) {
-                R.id.pitchpipe_item -> 0
-                R.id.notes_item -> 1
-                R.id.keys_item -> 2
-                R.id.songs_item -> 3
-                else -> 0
-            }, true)
+            viewPager.setCurrentItem(
+                when (it.itemId) {
+                    R.id.pitchpipe_item -> 0
+                    R.id.notes_item -> 1
+                    R.id.keys_item -> 2
+                    R.id.songs_item -> 3
+                    else -> 0
+                }, true
+            )
             true
         }
 
-        val isHoomiLogin = ParseUser.getCurrentUser() != null && !ParseFacebookUtils.isLinked(ParseUser.getCurrentUser())
-        if (isHoomiLogin) {
-            ParseUser.logOutInBackground()
-        }
-
-        if (isHoomiLogin || RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
-            LoginPrompt.buildDialog(this, isHoomiLogin).show()
+        if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
+            logInDialog.show()
         } else {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
             viewer.setTitle("Pitch Perfect Changelog")
@@ -125,14 +130,14 @@ class PitchPerfectActivity : AppCompatActivity() {
             viewer.showIfAppropriate()
         }
 
-        val adView = findViewById<AdView>(R.id.adView)
+        PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
 
-        val adRequest = AdRequest.Builder()
-                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
-                .build()
-        adView.loadAd(adRequest)
+        this.onConfigurationChanged(Resources.getSystem().configuration)
+    }
 
-        PurchaseService.bind(this) { SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity)) }
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        loadBanner()
     }
 
     override fun onRestoreInstanceState(state: Bundle) {
@@ -167,7 +172,6 @@ class PitchPerfectActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        PurchaseService.unbind(this)
         super.onDestroy()
     }
 
@@ -179,27 +183,46 @@ class PitchPerfectActivity : AppCompatActivity() {
                 handlingResult = false
                 return@Runnable
             }
-            PitchPerfectApplication.startupRefreshFromParse()
         })
 
-        if (SettingsModel.getWakeLock()) {
+        if (SettingsModel.wakeLock) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 666) {
-            Task.callInBackground {
-                SettingsModel.setAreAdsRemoved(PurchaseService.areAdsRemoved(this@PitchPerfectActivity))
-                null
-            }
-        } else {
-            LoginPrompt.FACEBOOK_CALLBACK_MANAGER.onActivityResult(requestCode, resultCode, data)
-            handlingResult = true
-        }
+    private fun loadBanner() {
+        val adContainer = findViewById<FrameLayout>(R.id.adContainer)
+        adContainer.removeAllViews()
+        val adView = AdView(this)
+        adContainer.addView(adView)
+        // Create an ad request. Check your logcat output for the hashed device ID
+        // to get test ads on a physical device, e.g.,
+        // "Use AdRequest.Builder.addTestDevice("ABCDE0123") to get test ads on this
+        // device."
+        val adRequest: AdRequest = AdRequest.Builder()
+            .build()
+        val adSize = getAdSize()
+        // Step 4 - Set the adaptive ad size on the ad view.
+        adView.setAdSize(adSize)
+        adView.adUnitId = resources.getString(R.string.ad_unit_id)
+
+
+        // Step 5 - Start loading the ad in the background.
+        adView.loadAd(adRequest)
+    }
+
+    private fun getAdSize(): AdSize {
+        // Step 2 - Determine the screen width (less decorations) to use for the ad width.
+        val display: Display = windowManager.defaultDisplay
+        val outMetrics = DisplayMetrics()
+        display.getMetrics(outMetrics)
+        val widthPixels: Float = outMetrics.widthPixels.toFloat()
+        val density: Float = outMetrics.density
+        val adWidth = (widthPixels / density).toInt()
+        // Step 3 - Get adaptive ad size and return for setting on the ad view.
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
     }
 
     companion object {

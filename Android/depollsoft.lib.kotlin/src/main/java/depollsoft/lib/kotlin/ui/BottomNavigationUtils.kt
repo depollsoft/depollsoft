@@ -1,16 +1,17 @@
 package depollsoft.lib.kotlin.ui
 
-import android.support.design.widget.BottomNavigationView
-import android.support.v4.view.ViewPager
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.viewpager2.widget.ViewPager2
 import android.view.Menu
 
-fun BottomNavigationView.attachToViewPager(viewPager: ViewPager, onChange: () -> Unit = {}) {
+fun BottomNavigationView.attachToViewPager(viewPager: ViewPager2, onChange: () -> Unit = {}) {
     this.setOnNavigationItemSelectedListener {
         viewPager.currentItem = getItemIndex(it.itemId, this.menu)
         onChange()
         true
     }
-    viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
+    viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             this@attachToViewPager.selectedIndex = position
             onChange()

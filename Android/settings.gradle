@@ -1,9 +1,14 @@
-include ':PitchPerfect', ':PitchPerfectWear', ':depollsoft.lib.kotlin'
+rootProject.name = "depollsoft"
+
+include ':PitchPerfect', ':depollsoft.lib.kotlin'
+include ':PitchPerfectWear'
 include ':PitchPerfectLicense'
 include ':TagMaster'
-include ':Bindroid:BindroidTest'
 include ':DepollSoftCommon.Compat'
-include ':Bindroid:BindroidSample'
 include ':PitchPerfectLib'
 include ':DepollSoftCommon'
-include ':Bindroid:Bindroid'
+
+include ':bindroid', ':bindroid-kotlin', ':bindroid-test'
+project(':bindroid').projectDir = new File('./bindroid/bindroid')
+project(':bindroid-kotlin').projectDir = new File('./bindroid/bindroid-kotlin')
+project(':bindroid-test').projectDir = new File('./bindroid/bindroid-test')

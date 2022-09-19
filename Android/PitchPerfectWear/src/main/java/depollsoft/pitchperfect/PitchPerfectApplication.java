@@ -23,7 +23,7 @@ public class PitchPerfectApplication extends RichApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    Note.setPlayer(new Note.NotePlayer() {
+    /*Note.setPlayer(new Note.NotePlayer() {
       @Override
       public void play(final Note n) {
         getApiClientAsync(PitchPerfectApplication.this)
@@ -47,7 +47,7 @@ public class PitchPerfectApplication extends RichApplication {
               }
             });
       }
-    });
+    });*/
   }
 
   private static Uri getUriForNote(Note n, boolean play) {

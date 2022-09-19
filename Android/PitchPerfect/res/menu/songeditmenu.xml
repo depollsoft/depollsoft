@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/removeSongMenuItem"
         android:title="@string/RemoveSong"
-        android:icon="@drawable/ic_delete">
+        android:icon="@drawable/ic_delete"
+        android:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/cancelMenuItem"
+        android:title="@string/Cancel"
+        android:icon="@drawable/ic_undo"
+        android:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/okMenuItem"
+        android:title="@string/Ok"
+        android:icon="@drawable/ic_check"
+        android:showAsAction="always">
     </item>
 
 </menu>

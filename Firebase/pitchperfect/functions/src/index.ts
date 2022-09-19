@@ -135,6 +135,15 @@ exports.exchangeAuthToken = functions.https.onCall(async (data, context) => {
     if (!result.ok) {
         throw new functions.https.HttpsError('permission-denied', result.statusText);
     }
-    const user = await result.json();
+    const user: any = await result.json();
     return { token: await admin.auth().createCustomToken(user.objectId) };
+});
+
+exports.deleteUser = functions.https.onCall(async (_, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('permission-denied', "No user logged in");
+    }
+    await admin.firestore().recursiveDelete(admin.firestore().doc(`/users/${context.auth.uid}`));
+    await admin.auth().deleteUser(context.auth.uid);
+    return {};
 });

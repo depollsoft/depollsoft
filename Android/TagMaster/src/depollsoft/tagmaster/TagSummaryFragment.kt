@@ -6,21 +6,19 @@ import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
 import android.widget.Toast
-import com.bindroid.BindingMode
+import androidx.fragment.app.Fragment
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
 import com.bindroid.ui.UiBinder
-import com.bindroid.utils.Function
-import com.bindroid.utils.Property
-import com.bindroid.utils.ReflectedProperty
+import com.bindroid.utils.*
+import depollsoft.lib.kotlin.ui.safeDismiss
 import depollsoft.lib.ui.Hyperlink
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.lib.RatingConverter
@@ -31,69 +29,141 @@ class TagSummaryFragment : Fragment() {
         get() = this.activity as TagDetailActivity
     private val _canRate = TrackableBoolean(true)
     val canRate: Boolean
-        get() = _canRate.get() && !RatingsModel.isRated(this.parent.tag!!.id)
+        get() = _canRate.get() && this.parent.tag != null && !RatingsModel.isRated(this.parent.tag!!.id)
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
 
-        UiBinder.bind(rootView, R.id.titleTextView, "Text", this, "Parent.Tag.Title")
-        UiBinder.bind(rootView, R.id.titleTextView, "Visibility", this, "Parent.Tag.Title", BoolConverter.get())
+        rootView.bindTo(R.id.titleTextView, "Text", { "${parent.tag?.title}" })
+        rootView.bindTo(
+            R.id.titleTextView,
+            "Visibility",
+            { parent.tag?.title },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.akaTextView, "Text", this, "Parent.Tag.AlternativeTitle")
-        UiBinder.bind(rootView, R.id.akaLayout, "Visibility", this, "Parent.Tag.AlternativeTitle",
-                BoolConverter.get())
+        rootView.bindTo(R.id.akaTextView, "Text", { parent.tag?.alternativeTitle })
+        rootView.bindTo(
+            R.id.akaLayout,
+            "Visibility",
+            { parent.tag?.alternativeTitle },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.versionTextView, "Text", this, "Parent.Tag.Version")
-        UiBinder
-                .bind(rootView, R.id.versionLayout, "Visibility", this, "Parent.Tag.Version", BoolConverter.get())
+        rootView.bindTo(R.id.versionTextView, "Text", { parent.tag?.version })
+        rootView.bindTo(
+            R.id.versionLayout,
+            "Visibility",
+            { parent.tag?.version },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.ratingTextView, "Text", this, "Parent.Tag.Rating", ToStringConverter(
-                "%3.2f"))
-        UiBinder
-                .bind(rootView, R.id.ratingTextView, "Visibility", this, "Parent.Tag.Rating", BoolConverter.get())
-        UiBinder.bind(rootView, R.id.ratingProgressBar, "Progress", this, "Parent.Tag.Rating",
-                RatingConverter())
-        UiBinder.bind(rootView, R.id.rateButton, "Enabled", this, "CanRate", BoolConverter.get())
+        rootView.bindTo(R.id.tagIdTextView, "Text", { parent.tag?.id }, ToStringConverter())
 
-        UiBinder.bind(rootView, R.id.partsTextView, "Text", this, "Parent.Tag.Parts", ToStringConverter())
-        UiBinder.bind(rootView, R.id.partsRow, "Visibility", this, "Parent.Tag.Parts", BoolConverter.get())
+        rootView.bindTo(
+            R.id.ratingTextView,
+            "Text",
+            { parent.tag?.rating },
+            ToStringConverter("%3.2f")
+        )
+        rootView.bindTo(
+            R.id.ratingTextView,
+            "Visibility",
+            { parent.tag?.rating },
+            BoolConverter.get()
+        )
 
-        UiBinder
-                .bind(rootView, R.id.tagTypeTextView, "Text", this, "Parent.Tag.TagType", ToStringConverter())
+        rootView.bindTo(
+            R.id.ratingProgressBar,
+            "Progress",
+            { parent.tag?.rating },
+            RatingConverter()
+        )
+        rootView.bindTo(
+            R.id.rateButton,
+            "Enabled",
+            { canRate },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.playKeyNoteButton, "Note", this, "Parent.Tag.KeyNote")
-        UiBinder.bind(rootView, R.id.playKeyNoteButton, "Text", this, "Parent.Tag.WrittenKey")
-        UiBinder.bind(rootView, R.id.keyRow, "Visibility", this, "Parent.Tag.WrittenKey", BoolConverter.get())
+        rootView.bindTo(
+            R.id.partsTextView,
+            "Text",
+            { parent.tag?.parts },
+            ToStringConverter()
+        )
+        rootView.bindTo(
+            R.id.partsRow,
+            "Visibility",
+            { parent.tag?.parts },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.classicTagTextView, "Text", this, "Parent.Tag.ClassicTagNumber",
-                ToStringConverter())
-        UiBinder.bind(rootView, R.id.classicTagRow, "Visibility", this, "Parent.Tag.ClassicTagNumber",
-                BoolConverter.get())
+        rootView.bindTo(
+            R.id.tagTypeTextView,
+            "Text",
+            { parent.tag?.tagType },
+            ToStringConverter()
+        )
 
-        UiBinder.bind(rootView, R.id.notesTextView, "Text", this, "Parent.Tag.Notes")
-        UiBinder.bind(rootView, R.id.notesRow, "Visibility", this, "Parent.Tag.Notes", BoolConverter.get())
+        rootView.bindTo(R.id.playKeyNoteButton, "Note", { parent.tag?.keyNote })
+        rootView.bindTo(R.id.playKeyNoteButton, "Text", { parent.tag?.writtenKey })
+        rootView.bindTo(
+            R.id.keyRow,
+            "Visibility",
+            { parent.tag?.writtenKey },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.lyricsTextView, "Text", this, "Parent.Tag.Lyrics")
-        UiBinder.bind(rootView, R.id.lyricsRow, "Visibility", this, "Parent.Tag.Lyrics", BoolConverter.get())
+        rootView.bindTo(
+            R.id.classicTagTextView,
+            "Text",
+            { parent.tag?.classicTagNumber },
+            ToStringConverter()
+        )
+        rootView.bindTo(
+            R.id.classicTagRow,
+            "Visibility",
+            { parent.tag?.classicTagNumber },
+            BoolConverter.get()
+        )
 
-        UiBinder.bind(rootView, R.id.sheetMusicLink, "HyperlinkUri", this, "Parent.Tag.SheetMusicUri.Uri")
-        UiBinder.bind(rootView, R.id.sheetMusicLink, "Visibility", this, "Parent.Tag.SheetMusicUri",
-                BoolConverter.get())
+        rootView.bindTo(R.id.notesTextView, "Text", { parent.tag?.notes })
+        rootView.bindTo(R.id.notesRow, "Visibility", { parent.tag?.notes }, BoolConverter.get())
 
-        UiBinder.bind(ReflectedProperty(rootView.findViewById(R.id.favoriteMarkerTextView),
-                "Visibility"), Property(Function {
-            FavoritesModel.getIsFavorite(parent.tag!!.id)
-        }, null, Boolean::class.java), BindingMode.ONE_WAY, BoolConverter.get())
-        UiBinder.bind(ReflectedProperty(rootView.findViewById(R.id.teachableMarkerTextView),
-                "Visibility"), Property(Function {
-            TeachableTagsModel.getIsTeachableTag(parent.tag!!.id)
-        }, null, Boolean::class.java), BindingMode.ONE_WAY, BoolConverter.get())
+        rootView.bindTo(R.id.lyricsTextView, "Text", { parent.tag?.lyrics })
+        rootView.bindTo(R.id.lyricsRow, "Visibility", { parent.tag?.lyrics }, BoolConverter.get())
+
+        rootView.bindTo(R.id.sheetMusicLink, "HyperlinkUri", { parent.tag?.sheetMusicUri?.uri })
+        rootView.bindTo(
+            R.id.sheetMusicLink,
+            "Visibility",
+            { parent.tag?.sheetMusicUri },
+            BoolConverter.get()
+        )
+
+        rootView.bindTo(
+            R.id.favoriteMarkerTextView,
+            "Visibility",
+            { FavoritesModel.getIsFavorite(parent.tag!!.id) },
+            BoolConverter.get()
+        )
+        rootView.bindTo(
+            R.id.teachableMarkerTextView,
+            "Visibility",
+            { TeachableTagsModel.getIsTeachableTag(parent.tag!!.id) },
+            BoolConverter.get()
+        )
 
         val link = rootView.findViewById(R.id.sheetMusicLink) as Hyperlink
         link.setOnClickListener {
             val tag = parent.tag
-            val sheetMusicType = tag!!.sheetMusicUri.type
-            val sheetMusicUri = tag.sheetMusicUri.uri
+            val sheetMusicType = tag!!.sheetMusicUri!!.type
+            val sheetMusicUri = tag.sheetMusicUri!!.uri
             val progress = ProgressDialog(parent)
             progress.isIndeterminate = true
             progress.setMessage("Loading...")
@@ -103,25 +173,36 @@ class TagSummaryFragment : Fragment() {
             cache.loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith { task ->
                 if (task.isFaulted) {
                     parent.runOnUiThread {
-                        Toast.makeText(parent,
-                                "Unable to load sheet music.  Please try again later.", Toast.LENGTH_SHORT)
-                                .show()
-                        progress.dismiss()
+                        Toast.makeText(
+                            parent,
+                            "Unable to load sheet music.  Please try again later.",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                        progress.safeDismiss()
                     }
                 } else {
                     try {
                         val contentPath = ("content://depollsoft.tagmaster/" + sheetMusicType + "/"
-                                + Base64.encodeToString(sheetMusicUri.toByteArray(), Base64.URL_SAFE) +
+                                + Base64.encodeToString(
+                            sheetMusicUri.toByteArray(),
+                            Base64.URL_SAFE
+                        ) +
                                 "/" + tag.id + "." + sheetMusicType)
                         val path = Uri.parse(contentPath)
                         val intent = Intent(Intent.ACTION_VIEW)
+                        intent.putExtra("tagId", tag.id)
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        intent.setClass(requireContext(), SheetMusicActivity::class.java)
+
                         if (sheetMusicType.toLowerCase(Locale.US) == "pdf") {
                             intent.setDataAndType(path, "application/pdf")
-                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                         } else {
                             val map = MimeTypeMap.getSingleton()
-                            val mimeType = map.getMimeTypeFromExtension(sheetMusicType
-                                    .toLowerCase(Locale.US))
+                            val mimeType = map.getMimeTypeFromExtension(
+                                sheetMusicType
+                                    .toLowerCase(Locale.US)
+                            )
                             intent.setDataAndType(path, mimeType)
                         }
                         try {
@@ -129,16 +210,17 @@ class TagSummaryFragment : Fragment() {
                         } catch (e: ActivityNotFoundException) {
                             parent.runOnUiThread {
                                 Toast.makeText(
-                                        parent,
-                                        "No application available to view this sheet music (" + sheetMusicType
-                                                + ").", Toast.LENGTH_SHORT).show()
+                                    parent,
+                                    "No application available to view this sheet music (" + sheetMusicType
+                                            + ").", Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
 
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
-                        progress.dismiss()
+                        progress.safeDismiss()
                     }
                 }
                 null
@@ -160,15 +242,18 @@ class TagSummaryFragment : Fragment() {
                 tag!!.rate(popup.rating!!).continueWith { task ->
                     if (task.isFaulted) {
                         parent.runOnUiThread {
-                            Toast.makeText(parent,
-                                    "Failed to submit rating.  Please try again later.", Toast.LENGTH_SHORT)
-                                    .show()
-                            pd.dismiss()
+                            Toast.makeText(
+                                parent,
+                                "Failed to submit rating.  Please try again later.",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                            pd.safeDismiss()
                         }
                     } else {
                         RatingsModel.addRating(tag.id)
                         _canRate.set(false)
-                        pd.dismiss()
+                        pd.safeDismiss()
                     }
                     null
                 }

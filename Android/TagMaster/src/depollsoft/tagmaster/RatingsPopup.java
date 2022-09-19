@@ -33,7 +33,9 @@ public class RatingsPopup extends Dialog {
       public boolean onTouch(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
           RatingsPopup.this.setRating((int) ((RatingBar) v).getRating());
-          RatingsPopup.this.dismiss();
+          if (isShowing()) {
+            RatingsPopup.this.dismiss();
+          }
           return true;
         }
         return true;
