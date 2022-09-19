@@ -13,7 +13,7 @@ import android.widget.ImageView;
 
 import com.bindroid.trackable.TrackableField;
 
-public class LoadingImageView extends ImageView {
+public class LoadingImageView extends androidx.appcompat.widget.AppCompatImageView {
 
   private TrackableField<String> source = new TrackableField<String>();
 

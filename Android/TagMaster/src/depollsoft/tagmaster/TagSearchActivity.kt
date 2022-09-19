@@ -2,7 +2,7 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.Spinner
 import com.bindroid.BindingMode
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.EditTextTextProperty
 import com.bindroid.ui.UiBinder
 import depollsoft.lib.compat.ui.ActionBars
@@ -24,7 +25,7 @@ import depollsoft.tagmaster.barbershop.TagSortOptions
 
 class TagSearchActivity : AppCompatActivity() {
 
-    val model: QueryModel by TrackableField(QueryModel())
+    val model: QueryModel by trackable(QueryModel())
 
     init {
         this.model.maxResults = Integer.MAX_VALUE
@@ -133,7 +134,7 @@ class TagSearchActivity : AppCompatActivity() {
         supportActionBar?.title = "Tag Master".makeTitleString(this)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item != null && item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
             val intent = Intent(this, MeActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

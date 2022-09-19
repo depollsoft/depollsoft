@@ -42,6 +42,29 @@ public extension Notification.Name {
         userRef = nil
     }
     
+    @objc public var userString: String {
+        get {
+            let curUser = Auth.auth().currentUser
+            if (curUser == nil) {
+                return "Logged out"
+            }
+            if (curUser!.providerData.count > 0) {
+                let providerData = curUser!.providerData.first!
+                switch(providerData.providerID) {
+                case FacebookAuthProviderID:
+                    return "Facebook \(providerData.email!)"
+                case GoogleAuthProviderID:
+                    return "Google: \(providerData.email!)"
+                case PhoneAuthProviderID:
+                    return providerData.phoneNumber!
+                default:
+                    return providerData.email ?? "Current User: \(curUser!.uid)"
+                }
+            }
+            return "Current User: \(curUser!.uid)";
+        }
+    }
+    
     @objc public var wakeLock: Bool {
         get {
             UserDefaults.standard.bool(forKey: WAKE_LOCK_KEY)

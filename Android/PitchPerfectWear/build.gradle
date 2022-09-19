@@ -2,15 +2,14 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 20
-        targetSdkVersion 24
-        versionCode 43
-        versionName "2.4.1"
+        targetSdkVersion 33
+        versionCode getVersionCode(build: 1, suffix: 1)
+        versionName "3.0.0"
     }
     buildTypes {
         release {
@@ -21,10 +20,10 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.google.android.support:wearable:2.0.3'
-    compile 'com.google.android.wearable:wearable:2.0.3'
-    compile 'com.google.android.gms:play-services-wearable:11.0.2'
-    compile project(':Bindroid:Bindroid')
-    compile project(':PitchPerfectLib')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.google.android.support:wearable:2.9.0'
+    implementation 'com.google.android.wearable:wearable:2.9.0'
+    implementation 'com.google.android.gms:play-services-wearable:17.1.0'
+    implementation project(':bindroid')
+    implementation project(':PitchPerfectLib')
 }

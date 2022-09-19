@@ -1,7 +1,7 @@
 package depollsoft.tagmaster
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +9,7 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
+import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import depollsoft.tagmaster.barbershop.RemoteLocation
 
@@ -16,7 +17,7 @@ class TagTracksFragment : Fragment() {
     val parent: TagDetailActivity
         get() = this.activity as TagDetailActivity
 
-    var selectedTrack: RemoteLocation by TrackableField()
+    var selectedTrack: RemoteLocation? by trackable()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.tagtracksview, container, false)

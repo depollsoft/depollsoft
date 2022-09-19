@@ -1,9 +1,13 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.7.10'
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             url 'https://maven.google.com/'
             name 'Google'
@@ -11,23 +15,45 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
+        classpath 'com.android.tools.build:gradle:7.2.2'
 
-        classpath 'com.google.gms:google-services:3.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.13'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
+ext {
+}
+
 allprojects {
     repositories {
-        jcenter()
+        mavenCentral()
         google()
         maven {
             url 'https://maven.google.com/'
             name 'Google'
+        }
+        maven { url "https://jitpack.io" }
+    }
+}
+
+static def getVersionCode(Map args) {
+    return getDate() * 1000 + args.build * 10 + args.suffix
+}
+
+static def getDate() {
+    return Integer.parseInt(DateTimeFormatter.ofPattern("YYMMdd").format(LocalDateTime.now()))
+}
+
+configurations {
+    all {
+        resolutionStrategy {
+            dependencySubstitution {
+                substitute project(':bindroid') with project(':bindroid:bindroid')
+            }
         }
     }
 }

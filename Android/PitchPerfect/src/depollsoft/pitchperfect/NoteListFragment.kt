@@ -2,7 +2,7 @@ package depollsoft.pitchperfect
 
 import android.media.AudioManager
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,6 +50,7 @@ class NoteListFragment : Fragment() {
         stopPlaying()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         stopPlaying()

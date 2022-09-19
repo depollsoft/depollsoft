@@ -6,16 +6,19 @@
 
     <uses-feature android:name="android.hardware.type.watch"/>
 
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+
     <application
         android:name=".PitchPerfectApplication"
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
         tools:replace="android:icon">
         <activity
             android:name=".PitchPipeActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

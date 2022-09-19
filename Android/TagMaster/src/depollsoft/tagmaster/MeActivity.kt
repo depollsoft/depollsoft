@@ -2,37 +2,37 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import com.bindroid.converters.AdapterConverter
 import com.bindroid.trackable.TrackableCollection
 import com.bindroid.ui.UiBinder
+import com.parse.GetCallback
 import com.parse.ParseUser
-import com.parse.RefreshCallback
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.ui.ChangelogViewer
 
 class MeActivity : AppCompatActivity() {
 
     val favoriteIds: TrackableCollection<Int>
-        get() = FavoritesModel.getFavoriteIds()
+        get() = FavoritesModel.favoriteIds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.meview)
 
         UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds", AdapterConverter(
-                FavoriteTagItemView::class.java, false, true))
+                FavoriteTagItemView::class.java, true, true))
 
         this.supportActionBar?.title = "Tag Master".makeTitleString(this)
 
         if (ParseUser.getCurrentUser() != null) {
             try {
-                ParseUser.getCurrentUser().refreshInBackground(RefreshCallback { _, err ->
+                ParseUser.getCurrentUser().fetchInBackground(GetCallback { _, err ->
                     if (err != null) {
-                        return@RefreshCallback
+                        return@GetCallback
                     }
                     FavoritesModel.restoreFromUser()
                     TeachableTagsModel.restoreFromUser()

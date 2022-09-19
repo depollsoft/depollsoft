@@ -30,31 +30,6 @@
             </TextView>
 
             <TableRow
-                android:id="@+id/tagIdRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/TagId"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
-
-                <TextView
-                    android:id="@+id/tagIdTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp">
-                </TextView>
-            </TableRow>
-
-            <TableRow
                 android:id="@+id/lastRefreshedRow"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content">

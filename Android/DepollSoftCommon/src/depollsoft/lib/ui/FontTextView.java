@@ -5,7 +5,7 @@ import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
-public class FontTextView extends TextView {
+public class FontTextView extends androidx.appcompat.widget.AppCompatTextView {
 
   public FontTextView(Context context) {
     super(context);

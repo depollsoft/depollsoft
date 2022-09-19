@@ -66,12 +66,19 @@
         @try {
             DPTag *t = [DPTag loadTagById:self->tagId refresh:refresh];
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (!t) {
+                    [self.navigationController popViewControllerAnimated:YES];
+                    return;
+                }
                 self.tag = t;
                 [self.busyIndicator decrementBusyCount];
             });
         }
         @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (!self.tag) {
+                    [self.navigationController popViewControllerAnimated:YES];
+                }
                 [self.busyIndicator decrementBusyCount];
             });
         }

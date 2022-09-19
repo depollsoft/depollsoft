@@ -199,11 +199,22 @@
                      }];
     
     [arr addObject:@{
+                     @"title": @"Open Tag",
+                     @"action": ^() {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Open Tag"
+                                                                       message:@"Enter Tag ID"
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [self openTag];
+    }
+                     }];
+    
+    [arr addObject:@{
                      @"title": @"Settings",
                      @"action": ^() {
         [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
     }
                      }];
+    
     return arr;
 }
 

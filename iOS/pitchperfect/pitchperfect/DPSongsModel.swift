@@ -77,8 +77,8 @@ public extension Notification.Name {
                 case .removed:
                     self.removeSongList(forKey: change.document.documentID)
                 }
-                self.storeAll()
             }
+            self.storeAll()
         }))
     }
     

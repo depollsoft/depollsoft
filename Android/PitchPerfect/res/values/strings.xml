@@ -2,7 +2,9 @@
 <resources>
 
     <string name="app_name">Pitch Perfect</string>
-    <string name="app_id">263872380333771</string>
+    <string name="facebook_application_id">263872380333771</string>
+    <string name="fb_login_protocol_scheme">fb263872380333771</string>
+    <string name="facebook_client_token">eb375cce82f2fbb23c5e4f4044986c14</string>
     <string name="CtoC">From C to B</string>
     <string name="FtoF">From F to E</string>
     <string name="AddSong">Add Song</string>
@@ -30,6 +32,10 @@
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>
     <string name="LogIn">Log in</string>
     <string name="LogOut">Log out</string>
+    <string name="Yes">Yes</string>
+    <string name="No">No</string>
+    <string name="DeleteAccount">Delete account</string>
+    <string name="DeleteAccountConfirmation">Are you sure you want to delete your account and all associated data?  This cannot be undone.  Locally-saved songs and preferences will not be deleted.</string>
     <string name="LogInInfo">Log in to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
@@ -67,5 +73,9 @@
     <string name="songs">Songs</string>
     <string name="minor">Minor</string>
     <string name="major">Major</string>
-
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">Default</string>
+    <string name="themeTitle">Theme</string>
+    <string name="manage_subscription">Manage Subscription</string>
 </resources>

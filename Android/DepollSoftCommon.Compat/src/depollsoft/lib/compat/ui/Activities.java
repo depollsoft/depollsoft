@@ -2,6 +2,7 @@ package depollsoft.lib.compat.ui;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+
 import depollsoft.lib.compat.Compatibility;
 import depollsoft.lib.compat.RunnableFactory;
 

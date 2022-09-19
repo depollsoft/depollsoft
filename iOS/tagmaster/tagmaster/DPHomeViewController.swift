@@ -9,7 +9,7 @@
 import Foundation
 import Firebase
 
-public extension DPHomeViewController {
+extension DPHomeViewController: UITextFieldDelegate {
     @objc func viewDidLoadExtension() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(onUserDataChanged),
@@ -19,5 +19,42 @@ public extension DPHomeViewController {
     
     @objc func onUserDataChanged() {
         self.tableView.reloadData()
+    }
+    
+    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        if string.rangeOfCharacter(from: NSCharacterSet.decimalDigits) != nil || string.count == 0 {
+            return true
+        }
+        return false
+    }
+    
+    @objc func openTag() {
+        let alert = UIAlertController(title: "Open Tag", message: "Enter Tag ID", preferredStyle: .alert)
+        alert.addTextField {
+            $0.keyboardType = .decimalPad
+            $0.delegate = self
+            $0.returnKeyType = .go
+            $0.enablesReturnKeyAutomatically = true
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Open", style: .default, handler: { action in
+            if let tagId = Int32(alert.textFields![0].text ?? "") {
+                self.openTag(tagId: tagId)
+            }
+        }))
+        self.present(alert, animated: true)
+    }
+    
+    private func openTag(tagId: Int32) {
+        let tvc = DPTagViewController()
+        tvc.tagId = tagId
+        navigationController?.pushViewController(tvc, animated: true)
+    }
+    
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if Int32(textField.text ?? "") != nil {
+            return true
+        }
+        return false
     }
 }

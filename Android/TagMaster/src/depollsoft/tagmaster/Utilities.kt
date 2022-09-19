@@ -13,3 +13,8 @@ fun CharSequence.makeTitleString(ctx: Context): CharSequence {
     SpannableUtilities.applyToAll(title, span)
     return title
 }
+
+fun <TElement> List<*>?.asList(): List<TElement>? {
+    @Suppress("UNCHECKED_CAST")
+    return this as? List<TElement>
+}

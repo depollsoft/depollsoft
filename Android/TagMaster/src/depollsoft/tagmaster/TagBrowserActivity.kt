@@ -2,12 +2,14 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager2.widget.ViewPager2
+import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import depollsoft.lib.kotlin.ui.attachToViewPager
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
@@ -35,14 +37,14 @@ class TagBrowserActivity : AppCompatActivity() {
         classicModel.maxResults = 400
 
         val bottomNavigation = this.findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        val viewPager = this.findViewById<ViewPager>(R.id.viewPager)
+        val viewPager = this.findViewById<ViewPager2>(R.id.viewPager)
 
-        viewPager.adapter = object : FragmentPagerAdapter(supportFragmentManager) {
-            override fun getCount(): Int {
+        viewPager.adapter = object: FragmentStateAdapter(supportFragmentManager, lifecycle) {
+            override fun getItemCount(): Int {
                 return 4
             }
 
-            override fun getItem(position: Int): Fragment {
+            override fun createFragment(position: Int): Fragment {
                 val fragment = TagQueryFragment()
                 fragment.model = when (position) {
                     0 -> latestModel
@@ -51,8 +53,7 @@ class TagBrowserActivity : AppCompatActivity() {
                     3 -> classicModel
                     else -> QueryModel()
                 }
-                return fragment
-            }
+                return fragment            }
         }
 
         bottomNavigation.attachToViewPager(viewPager)

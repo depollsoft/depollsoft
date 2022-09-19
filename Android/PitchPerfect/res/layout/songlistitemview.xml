@@ -13,8 +13,8 @@
         android:contentDescription="@string/EditSong"
         android:padding="16dp"
         android:scaleType="fitCenter"
-        android:tint="?attr/colorPrimary"
-        app:srcCompat="@drawable/ic_edit_button"/>
+        app:srcCompat="@drawable/ic_edit_button"
+        app:tint="?attr/editTextColor" />
 
     <TextView
         android:id="@+id/songTitleTextView"
