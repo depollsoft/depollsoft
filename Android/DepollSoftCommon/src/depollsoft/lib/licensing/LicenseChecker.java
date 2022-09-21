@@ -1,5 +1,6 @@
 package depollsoft.lib.licensing;
 
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.bindroid.trackable.Trackable;
@@ -17,7 +18,13 @@ public class LicenseChecker {
     LicenseChecker.licenseCheckNotifier.track();
     PackageManager pm = RichApplication.getAppContext().getPackageManager();
     String packageName = RichApplication.getAppContext().getPackageName();
-    return pm.checkSignatures(packageName, packageName + ".license") == PackageManager.SIGNATURE_MATCH;
+    PackageInfo inf = null;
+    try {
+      inf = pm.getPackageInfo(packageName + ".license", PackageManager.GET_SIGNATURES);
+    } catch (PackageManager.NameNotFoundException e) {
+      return false;
+    }
+    return inf != null;
   }
 
   static void notifyLicenseChange() {
