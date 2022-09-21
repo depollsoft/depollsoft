@@ -8,7 +8,7 @@ android {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 20
         targetSdkVersion 33
-        versionCode getVersionCode(build: 1, suffix: 1)
+        versionCode getVersionCode(build: 0, suffix: 1)
         versionName "3.0.0"
     }
     buildTypes {

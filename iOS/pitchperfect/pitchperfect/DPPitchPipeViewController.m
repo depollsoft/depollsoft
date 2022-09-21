@@ -208,7 +208,7 @@
         
         switch(button.note.accidental.get == Natural) {
             case Natural:
-                [button.button setTitle:button.note.friendlyName forState:UIControlStateNormal];
+                [button.button setAttributedTitle:[[NSAttributedString alloc] initWithString:button.note.friendlyName] forState:UIControlStateNormal];
                 break;
             default:
             {
