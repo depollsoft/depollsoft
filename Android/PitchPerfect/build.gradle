@@ -32,7 +32,6 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.gms:play-services-ads:21.1.0'
     implementation 'com.google.android.gms:play-services-wearable:17.1.0'
-    wearApp project(':PitchPerfectWear')
     implementation "com.github.parse-community.Parse-SDK-Android:parse:$parseVersion"
     implementation "com.github.parse-community.Parse-SDK-Android:facebook:$parseVersion"
     implementation "com.github.parse-community.Parse-SDK-Android:ktx:$parseVersion"
@@ -71,7 +70,7 @@ android {
         targetSdkVersion 33
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
-        versionCode getVersionCode(build: 0, suffix: 0)
+        versionCode getVersionCode(build: 2, suffix: 0)
     }
     sourceSets {
         main {

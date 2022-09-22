@@ -8,4 +8,8 @@
         android:label="@string/app_name" >
     </application>
 
+    <queries>
+        <package android:name="${applicationId}.license" />
+    </queries>
+
 </manifest>
