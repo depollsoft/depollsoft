@@ -18,13 +18,13 @@ public class LicenseChecker {
     LicenseChecker.licenseCheckNotifier.track();
     PackageManager pm = RichApplication.getAppContext().getPackageManager();
     String packageName = RichApplication.getAppContext().getPackageName();
-    PackageInfo inf = null;
+    PackageInfo pkg = null;
     try {
-      inf = pm.getPackageInfo(packageName + ".license", PackageManager.GET_SIGNATURES);
+      pkg = pm.getPackageInfo(packageName + ".license", 0);
     } catch (PackageManager.NameNotFoundException e) {
       return false;
     }
-    return inf != null;
+    return pkg != null;
   }
 
   static void notifyLicenseChange() {
