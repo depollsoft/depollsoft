@@ -70,7 +70,7 @@ android {
         targetSdkVersion 33
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
-        versionCode getVersionCode(build: 2, suffix: 0)
+        versionCode getVersionCode(build: 0, suffix: 0)
     }
     sourceSets {
         main {
