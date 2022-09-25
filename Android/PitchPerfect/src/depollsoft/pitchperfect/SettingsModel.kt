@@ -31,7 +31,7 @@ object SettingsModel {
             userRef?.set(mapOf("toggleNotes" to it), SetOptions.merge())
         }
     }
-    var wakeLock: Boolean by preference(TOGGLE_NOTE_KEY, false) {
+    var wakeLock: Boolean by preference(WAKE_LOCK_KEY, false) {
         if (!restoring) {
             userRef?.set(mapOf("wakeLock" to it), SetOptions.merge())
         }

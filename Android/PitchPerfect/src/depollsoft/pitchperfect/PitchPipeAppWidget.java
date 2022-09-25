@@ -119,10 +119,15 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
   }
 
   private static Map<Note, Uri> builtImages = new HashMap<>();
+  private static Map<CharSequence, Bitmap> builtBitmaps = new HashMap<>();
 
   public Bitmap buildUpdateBitmap(Context c, Note n) {
     CharSequence string = (CharSequence) new PitchPipeNoteTextConverter()
             .convertToTarget(n, CharSequence.class);
+    if (builtBitmaps.containsKey(string)) {
+      return builtBitmaps.get(string);
+    }
+
     TextView view = new TextView(PitchPerfectApplication.getAppContext());
     view.setText(string);
     view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
@@ -132,6 +137,7 @@ public class PitchPipeAppWidget extends AppWidgetProvider {
     view.buildDrawingCache(true);
     Bitmap bmp = view.getDrawingCache(true).copy(Bitmap.Config.ARGB_4444, false);
     view.destroyDrawingCache();
+    builtBitmaps.put(string, bmp);
     return bmp;
   }
 
