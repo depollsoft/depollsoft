@@ -100,6 +100,17 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+    buildFeatures {
+        renderScript true
+        aidl true
+    }
+
+    compileOptions {
+        sourceCompatibility = 17
+        targetCompatibility = 17
+    }
+
+    namespace "depollsoft.pitchperfect"
 }
 
 apply plugin: 'com.google.gms.google-services'

@@ -34,4 +34,9 @@ android {
     defaultConfig {
         minSdkVersion 14
     }
+    buildFeatures {
+        renderScript true
+        aidl true
+    }
+    namespace "depollsoft.lib.compat"
 }
