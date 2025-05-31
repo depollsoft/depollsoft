@@ -109,4 +109,10 @@ public class Key {
   public void setNumAccidentals(int value) {
     this.numAccidentals.set(value);
   }
+
+  // Test helper method to reset static collections
+  public static void resetKeys() {
+    majorKeys = null;
+    minorKeys = null;
+  }
 }
