@@ -40,4 +40,12 @@ public class CommonModel {
           "fonts/NoteHedz170.ttf");
     return CommonModel.noteHedz;
   }
+
+  // Test helper method to reset fonts for testing
+  public static void resetFonts() {
+    musiQwik = null;
+    musiQwikB = null;
+    musiSync = null;
+    noteHedz = null;
+  }
 }
