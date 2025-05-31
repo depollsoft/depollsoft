@@ -19,8 +19,20 @@ public class ExampleInstrumentedTest {
   @Test
   public void useAppContext() throws Exception {
     // Context of the app under test.
-    Context appContext = InstrumentationRegistry.getTargetContext();
+    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     assertEquals("depollsoft.lib.kotlin.test", appContext.getPackageName());
+  }
+
+  @Test
+  public void testContextNotNull() {
+    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    assertNotNull("App context should not be null", appContext);
+  }
+
+  @Test
+  public void testApplicationInfo() {
+    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    assertNotNull("Application info should not be null", appContext.getApplicationInfo());
   }
 }
