@@ -8,6 +8,9 @@
       location = "group:pitchperfect/pitchperfect.xcodeproj">
    </FileRef>
    <FileRef
+      location = "group:pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:tagmaster/tagmaster.xcodeproj">
    </FileRef>
    <FileRef

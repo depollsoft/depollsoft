@@ -51,15 +51,35 @@ jobs:
         run: |
           gem install cocoapods --no-document
           pod install --verbose
+          echo "Workspace contents after pod install:"
+          find . -name "*.xcworkspace" -exec ls -la {} \;
         continue-on-error: false
           
+      - name: List Available Schemes
+        run: |
+          echo "Available schemes in workspace:"
+          xcodebuild -workspace iOS.xcworkspace -list
+          echo ""
+          echo "Available simulators:"
+          xcrun simctl list devices available | grep iPhone
+        
+      - name: Select iOS Simulator
+        run: |
+          # Find the best available iOS simulator
+          DEVICE=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*iPhone \([^(]*\).*/iPhone \1/' | xargs)
+          if [ -z "$DEVICE" ]; then
+            DEVICE="iPhone 14"
+          fi
+          echo "SIMULATOR_DEVICE=$DEVICE" >> $GITHUB_ENV
+          echo "Selected device: $DEVICE"
+        
       - name: Build and Test depolllib
         run: |
           echo "Building depolllib..."
           xcodebuild \
-            -project depolllib/depolllib.xcodeproj \
+            -workspace iOS.xcworkspace \
             -scheme depolllib \
-            -destination 'platform=iOS Simulator,OS=latest' \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
             clean build \
             CODE_SIGNING_ALLOWED=NO
             
@@ -67,10 +87,10 @@ jobs:
         run: |
           echo "Building pitchperfectlib..."
           xcodebuild \
-            -project pitchperfect/pitchperfectlib/pitchperfectlib.xcodeproj \
+            -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
-            -destination 'platform=iOS Simulator,OS=latest' \
-            clean build test \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
+            clean build \
             CODE_SIGNING_ALLOWED=NO
             
       - name: Build and Test pitchperfect
@@ -79,7 +99,7 @@ jobs:
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination 'platform=iOS Simulator,OS=latest' \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
             clean build test \
             CODE_SIGNING_ALLOWED=NO
             
@@ -89,6 +109,6 @@ jobs:
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination 'platform=iOS Simulator,OS=latest' \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
             clean build test \
             CODE_SIGNING_ALLOWED=NO
