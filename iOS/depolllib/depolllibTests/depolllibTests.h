@@ -6,10 +6,10 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 #import "DPEnum.h"
 
-@interface depolllibTests : SenTestCase
+@interface depolllibTests : XCTestCase
 
 
 @end
