@@ -7,6 +7,7 @@
 //
 
 #import "tagmasterTests.h"
+#import "DPConstants.h"
 
 @implementation tagmasterTests
 
@@ -24,9 +25,29 @@
     [super tearDown];
 }
 
-- (void)testExample
+- (void)testDPTagCollectionEnumValues
 {
-    XCTFail(@"Unit tests are not implemented yet in tagmasterTests");
+    // Test that enum values are defined and different
+    XCTAssertNotEqual(DPTagCollectionNone, DPTagCollectionClassicTags, @"DPTagCollectionNone should not equal DPTagCollectionClassicTags");
+    XCTAssertNotEqual(DPTagCollectionClassicTags, DPTagCollectionEasyTags, @"DPTagCollectionClassicTags should not equal DPTagCollectionEasyTags");
+    XCTAssertNotEqual(DPTagCollectionNone, DPTagCollectionEasyTags, @"DPTagCollectionNone should not equal DPTagCollectionEasyTags");
+}
+
+- (void)testDPTagSortOptionsEnumValues
+{
+    // Test that enum values are defined and different
+    XCTAssertNotEqual(DPTagSortNone, DPTagSortTitle, @"DPTagSortNone should not equal DPTagSortTitle");
+    XCTAssertNotEqual(DPTagSortTitle, DPTagSortPosted, @"DPTagSortTitle should not equal DPTagSortPosted");
+    XCTAssertNotEqual(DPTagSortPosted, DPTagSortRating, @"DPTagSortPosted should not equal DPTagSortRating");
+    XCTAssertNotEqual(DPTagSortRating, DPTagSortDownloaded, @"DPTagSortRating should not equal DPTagSortDownloaded");
+    XCTAssertNotEqual(DPTagSortDownloaded, DPTagSortClassic, @"DPTagSortDownloaded should not equal DPTagSortClassic");
+}
+
+- (void)testEnumInitialValues
+{
+    // Test that the first enum values start at expected values (typically 0)
+    XCTAssertEqual(DPTagCollectionNone, 0, @"DPTagCollectionNone should equal 0");
+    XCTAssertEqual(DPTagSortNone, 0, @"DPTagSortNone should equal 0");
 }
 
 @end
