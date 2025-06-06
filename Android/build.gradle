@@ -8,6 +8,7 @@ buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
         mavenCentral()
+        gradlePluginPortal()
         maven {
             url 'https://maven.google.com/'
             name 'Google'
@@ -31,6 +32,7 @@ ext {
 allprojects {
     repositories {
         mavenCentral()
+        gradlePluginPortal()
         google()
         maven {
             url 'https://maven.google.com/'
