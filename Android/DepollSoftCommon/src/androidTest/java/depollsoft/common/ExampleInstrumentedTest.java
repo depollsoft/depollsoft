@@ -1,4 +1,4 @@
-package depollsoft.lib.kotlin;
+package depollsoft.common;
 
 import android.content.Context;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -10,17 +10,16 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 /**
- * Instrumented test, which will execute on an Android device.
+ * Instrumented test for DepollSoftCommon, which will execute on an Android device.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
-  @Test
-  public void useAppContext() throws Exception {
-    // Context of the app under test.
-    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-    assertEquals("depollsoft.lib.kotlin.test", appContext.getPackageName());
-  }
+    @Test
+    public void useAppContext() {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        assertEquals("depollsoft.common.test", appContext.getPackageName());
+    }
 }
