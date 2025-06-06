@@ -61,36 +61,38 @@ jobs:
           xcodebuild -workspace iOS.xcworkspace -list
           echo ""
           echo "Available simulators:"
-          xcrun simctl list devices available | grep iPhone
+          xcrun simctl list devices available | grep -E "(iPhone|iPad)"
+          echo ""
+          echo "Checking scheme configurations:"
+          for scheme in depolllib pitchperfectlib pitchperfect tagmaster; do
+            echo "--- Scheme: $scheme ---"
+            xcodebuild -workspace iOS.xcworkspace -scheme $scheme -showBuildSettings | grep -E "(PRODUCT_NAME|TEST_BUNDLE_IDENTIFIER)" || echo "No build settings found"
+          done
         
       - name: Select iOS Simulator
         run: |
-          # Find the best available iOS simulator
-          DEVICE=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*iPhone \([^(]*\).*/iPhone \1/' | xargs)
-          if [ -z "$DEVICE" ]; then
-            DEVICE="iPhone 14"
-          fi
-          echo "SIMULATOR_DEVICE=$DEVICE" >> $GITHUB_ENV
-          echo "Selected device: $DEVICE"
+          # Use generic iOS Simulator instead of specific device name
+          echo "SIMULATOR_DESTINATION=platform=iOS Simulator" >> $GITHUB_ENV
+          echo "Using generic iOS Simulator destination"
         
       - name: Build and Test depolllib
         run: |
-          echo "Building depolllib..."
+          echo "Building and testing depolllib..."
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme depolllib \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
-            clean build \
+            -destination "$SIMULATOR_DESTINATION" \
+            clean build test \
             CODE_SIGNING_ALLOWED=NO
             
       - name: Build and Test pitchperfectlib
         run: |
-          echo "Building pitchperfectlib..."
+          echo "Building and testing pitchperfectlib..."
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
-            clean build \
+            -destination "$SIMULATOR_DESTINATION" \
+            clean build test \
             CODE_SIGNING_ALLOWED=NO
             
       - name: Build and Test pitchperfect
@@ -99,7 +101,7 @@ jobs:
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
+            -destination "$SIMULATOR_DESTINATION" \
             clean build test \
             CODE_SIGNING_ALLOWED=NO
             
@@ -109,6 +111,6 @@ jobs:
           xcodebuild \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_DEVICE" \
+            -destination "$SIMULATOR_DESTINATION" \
             clean build test \
             CODE_SIGNING_ALLOWED=NO

@@ -96,46 +96,46 @@ IMPLEMENT_ENUM(SpecialEnum)
 - (void)testEnum {
     NSDictionary *enumDict = [SpecialEnum getEnumValues];
     NSDictionary *sourceDict = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:Zero], @"Zero", [NSNumber numberWithInt:One], @"One", [NSNumber numberWithInt:Two], @"Two", [NSNumber numberWithInt:Three], @"Three", [NSNumber numberWithInt:Five], @"Five", nil];
-    STAssertEqualObjects(enumDict, sourceDict, @"enumValues should be correct.");
+    XCTAssertEqualObjects(enumDict, sourceDict, @"enumValues should be correct.");
 }
 
 - (void)testBool {
     bool b = false;
     if (b) {
-        STFail(@"false should not hit the 'true' condition in the if statement");
+        XCTFail(@"false should not hit the 'true' condition in the if statement");
     }
     b = true;
     if (b) {
         
     } else {
-        STFail(@"true should not hit the 'false' condition in the if statement");
+        XCTFail(@"true should not hit the 'false' condition in the if statement");
     }
     b = NO;
     if (b) {
-        STFail(@"NO should not hit the 'true' condition in the if statement");
+        XCTFail(@"NO should not hit the 'true' condition in the if statement");
     }
     b = YES;
     if (b) {
         
     } else {
-        STFail(@"YES should not hit the 'false' condition in the if statement");
+        XCTFail(@"YES should not hit the 'false' condition in the if statement");
     }
 }
 
 - (void)testSimpleSerialization {
     TestClassA *a = [[TestClassA alloc] init];
     NSDictionary *serialized = [DPJsonSerializer serialize:a];
-    STAssertEquals([[[serialized objectForKey:@"IntProp"] objectForKey:@"Value"] intValue], 0, @"intProp should be zero");
-    STAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"intProp should be a primitive");
-    STAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(int)], @"intProp's primitive type should be int");
+    XCTAssertEquals([[[serialized objectForKey:@"IntProp"] objectForKey:@"Value"] intValue], 0, @"intProp should be zero");
+    XCTAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"intProp should be a primitive");
+    XCTAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(int)], @"intProp's primitive type should be int");
     
-    STAssertEquals([[[serialized objectForKey:@"DoubleProp"] objectForKey:@"Value"] doubleValue], 0.0, @"doubleProp should be zero");
-    STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
-    STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
+    XCTAssertEquals([[[serialized objectForKey:@"DoubleProp"] objectForKey:@"Value"] doubleValue], 0.0, @"doubleProp should be zero");
+    XCTAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
+    XCTAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
     
-    STAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
+    XCTAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
     
-    STAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
+    XCTAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
 }
 
 - (void)testSimpleSerializationWithData {
@@ -144,20 +144,20 @@ IMPLEMENT_ENUM(SpecialEnum)
     a.doubleProp = 1.234;
     a.arrayProp = [NSArray arrayWithObjects:[NSNumber numberWithInt:1], [NSNumber numberWithInt:2], [NSNumber numberWithInt:3], nil];
     NSDictionary *serialized = [DPJsonSerializer serialize:a];
-    STAssertEquals([[[serialized objectForKey:@"IntProp"] objectForKey:@"Value"] intValue], 5, @"intProp should be 5");
-    STAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"intProp should be a primitive");
-    STAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(int)], @"intProp's primitive type should be int");
+    XCTAssertEquals([[[serialized objectForKey:@"IntProp"] objectForKey:@"Value"] intValue], 5, @"intProp should be 5");
+    XCTAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"intProp should be a primitive");
+    XCTAssertEqualObjects([[serialized objectForKey:@"IntProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(int)], @"intProp's primitive type should be int");
     
-    STAssertEquals([[[serialized objectForKey:@"DoubleProp"] objectForKey:@"Value"] doubleValue], 1.234, @"doubleProp should have the right value");
-    STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
-    STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
+    XCTAssertEquals([[[serialized objectForKey:@"DoubleProp"] objectForKey:@"Value"] doubleValue], 1.234, @"doubleProp should have the right value");
+    XCTAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
+    XCTAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
     
-    STAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
+    XCTAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
     
-    STAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
+    XCTAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
     
-    STAssertTrue([[[serialized objectForKey:@"ArrayProp"] objectForKey:@"*items"] isKindOfClass:[NSArray class]], @"arrayProp's items should be an array.");
-    STAssertEquals([[[serialized objectForKey:@"ArrayProp"] objectForKey:@"*items"] count], 3u, @"arrayProp should have 3 elements");
+    XCTAssertTrue([[[serialized objectForKey:@"ArrayProp"] objectForKey:@"*items"] isKindOfClass:[NSArray class]], @"arrayProp's items should be an array.");
+    XCTAssertEquals([[[serialized objectForKey:@"ArrayProp"] objectForKey:@"*items"] count], 3u, @"arrayProp should have 3 elements");
 }
 
 - (void)testRoundTrip {
@@ -175,7 +175,7 @@ IMPLEMENT_ENUM(SpecialEnum)
     subA.subIntProp = 17;
     NSDictionary *serialized = [DPJsonSerializer serialize:a];
     TestClassA *aAgain = [DPJsonSerializer deserializeDictionary:serialized];
-    STAssertEqualObjects(aAgain, a, @"Round trip should succeed.");
+    XCTAssertEqualObjects(aAgain, a, @"Round trip should succeed.");
 }
 
 
