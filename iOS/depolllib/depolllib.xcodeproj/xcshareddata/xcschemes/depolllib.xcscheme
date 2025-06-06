@@ -33,7 +33,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "63DC3742151E9263007C46DB"
-               BuildableName = "depolllibTests.octest"
+               BuildableName = "depolllibTests.xctest"
                BlueprintName = "depolllibTests"
                ReferencedContainer = "container:depolllib.xcodeproj">
             </BuildableReference>

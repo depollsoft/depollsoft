@@ -33,7 +33,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "63DC36FE151E9079007C46DB"
-               BuildableName = "pitchperfectlibTests.octest"
+               BuildableName = "pitchperfectlibTests.xctest"
                BlueprintName = "pitchperfectlibTests"
                ReferencedContainer = "container:pitchperfectlib.xcodeproj">
             </BuildableReference>
