@@ -25,7 +25,10 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
-        
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
     - name: Cache Gradle packages
       uses: actions/cache@v3
       with:
@@ -41,14 +44,20 @@ jobs:
       
     - name: Run unit tests
       working-directory: Android
+      env:
+        CI: true
       run: ./gradlew testDebugUnitTest --no-daemon --stacktrace --continue
       
     - name: Run lint checks
       working-directory: Android
+      env:
+        CI: true
       run: ./gradlew lintDebug --no-daemon --stacktrace --continue
       
     - name: Build debug APK
       working-directory: Android
+      env:
+        CI: true
       run: ./gradlew assembleDebug --no-daemon --stacktrace --continue
       
     - name: Upload test results
