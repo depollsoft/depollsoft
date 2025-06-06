@@ -50,6 +50,11 @@ dependencies {
     implementation project(':bindroid')
     implementation project(':bindroid-kotlin')
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // Test dependencies
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
 android {
@@ -63,6 +68,7 @@ android {
         targetSdkVersion 33
         resConfigs 'en'
         versionCode getVersionCode(build: 0, suffix: 1)
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     sourceSets {

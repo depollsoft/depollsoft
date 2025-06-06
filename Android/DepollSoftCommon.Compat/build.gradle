@@ -3,6 +3,11 @@ apply plugin: 'com.android.library'
 dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
     api project(':DepollSoftCommon')
+    
+    // Test dependencies
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
 android {
@@ -33,5 +38,6 @@ android {
     }
     defaultConfig {
         minSdkVersion 14
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 }
