@@ -108,4 +108,6 @@ android {
     }
 }
 
-apply plugin: 'com.google.gms.google-services'
+if (!System.getenv("CI")) {
+    apply plugin: 'com.google.gms.google-services'
+}
