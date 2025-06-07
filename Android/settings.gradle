@@ -9,6 +9,6 @@ include ':PitchPerfectLib'
 include ':DepollSoftCommon'
 
 include ':bindroid', ':bindroid-kotlin', ':bindroid-test'
-project(':bindroid').projectDir = new File('./bindroid/bindroid')
-project(':bindroid-kotlin').projectDir = new File('./bindroid/bindroid-kotlin')
-project(':bindroid-test').projectDir = new File('./bindroid/bindroid-test')
+project(':bindroid').projectDir = new File('./Bindroid/Bindroid')
+project(':bindroid-kotlin').projectDir = new File('./Bindroid/bindroid-kotlin')
+project(':bindroid-test').projectDir = new File('./Bindroid/bindroid-test')
