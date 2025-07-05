@@ -53,6 +53,7 @@ dependencies {
 }
 
 android {
+    namespace 'depollsoft.tagmaster'
     compileSdkVersion 32
 
     defaultConfig {
@@ -61,7 +62,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 21
         targetSdkVersion 33
-        resConfigs 'en'
+        resourceConfigurations += ['en']
         versionCode getVersionCode(build: 0, suffix: 1)
     }
 
