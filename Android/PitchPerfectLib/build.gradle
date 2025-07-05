@@ -6,7 +6,8 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 30
+    namespace 'depollsoft.pitchperfect.lib'
+    compileSdkVersion 34
 
     sourceSets {
         main {

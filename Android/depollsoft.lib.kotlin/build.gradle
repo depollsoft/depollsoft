@@ -6,11 +6,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
+    namespace 'depollsoft.lib.kotlin'
+    compileSdkVersion 34
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 30
+        targetSdkVersion 34
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
