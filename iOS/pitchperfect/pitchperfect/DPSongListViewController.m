@@ -7,7 +7,7 @@
 //
 
 #import "DPSongListViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -169,7 +169,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     
     tableView = [[UITableView alloc] init];

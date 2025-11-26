@@ -7,7 +7,7 @@
 //
 
 #import "DPSettingsViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -89,7 +89,7 @@
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
-        [bannerView loadRequest:DPAppDelegate.adRequest];
+        [bannerView loadRequest:[DPAppDelegate adRequest]];
     }
     
     tableView = [[UITableView alloc] initWithFrame:CGRectInfinite style:UITableViewStyleGrouped];

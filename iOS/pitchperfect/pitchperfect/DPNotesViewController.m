@@ -7,7 +7,7 @@
 //
 
 #import "DPNotesViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "LayoutManagers.h"
 #import "DPNote.h"
 #import "DPUtils+UIColor.h"
@@ -172,7 +172,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
@@ -256,6 +256,11 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return notes.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    (void)tableView;
+    return 1;
 }
 
 - (void)openSettings {

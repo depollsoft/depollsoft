@@ -1,9 +1,11 @@
 package depollsoft.lib.xml;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -14,6 +16,8 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import android.util.Xml;
 
@@ -138,12 +142,30 @@ public class XmlDocument {
   }
 
   public static XmlDocument parse(InputStream input) {
+    try {
+      byte[] bytes = readAllBytes(input);
+      return parse(bytes);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public static XmlDocument parse(String input) {
+    try {
+      return XmlDocument.parse(input.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static XmlDocument parse(byte[] data) {
     XmlHandler handler = new XmlHandler();
     try {
-      Xml.parse(new InputStreamReader(input), handler);
-      XmlDocument result = new XmlDocument();
-      result.setElements(handler.elements);
-      return result;
+      Xml.parse(new InputStreamReader(new ByteArrayInputStream(data)), handler);
+      return fromElements(handler.elements);
+    } catch (UnsatisfiedLinkError e) {
+      return parseWithPullParser(data);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (SAXException e) {
@@ -152,8 +174,70 @@ public class XmlDocument {
     return null;
   }
 
-  public static XmlDocument parse(String input) {
-    return XmlDocument.parse(new ByteArrayInputStream(input.getBytes()));
+  private static XmlDocument parseWithPullParser(byte[] data) {
+    XmlPullParser parser = Xml.newPullParser();
+    try {
+      parser.setInput(new InputStreamReader(new ByteArrayInputStream(data)));
+      Stack<XmlElement> elementStack = new Stack<XmlElement>();
+      ArrayList<XmlElement> roots = new ArrayList<XmlElement>();
+      int eventType = parser.getEventType();
+      while (eventType != XmlPullParser.END_DOCUMENT) {
+        switch (eventType) {
+          case XmlPullParser.START_TAG:
+            XmlElement elem = new XmlElement();
+            elem.setName(parser.getName());
+            for (int i = 0; i < parser.getAttributeCount(); i++) {
+              XmlAttribute attr = new XmlAttribute();
+              attr.setName(parser.getAttributeName(i));
+              attr.setValue(parser.getAttributeValue(i));
+              elem.getAttributes().add(attr);
+            }
+            elementStack.push(elem);
+            break;
+          case XmlPullParser.TEXT:
+            if (!elementStack.isEmpty()) {
+              XmlElement current = elementStack.peek();
+              String existing = current.getValue();
+              current.setValue((existing == null ? "" : existing) + parser.getText());
+            }
+            break;
+          case XmlPullParser.END_TAG:
+            if (!elementStack.isEmpty()) {
+              XmlElement finished = elementStack.pop();
+              if (elementStack.isEmpty())
+                roots.add(finished);
+              else
+                elementStack.peek().getElements().add(finished);
+            }
+            break;
+          default:
+            break;
+        }
+        eventType = parser.next();
+      }
+      return fromElements(roots);
+    } catch (XmlPullParserException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  private static XmlDocument fromElements(List<XmlElement> elements) {
+    XmlDocument result = new XmlDocument();
+    result.setElements(elements);
+    return result;
+  }
+
+  private static byte[] readAllBytes(InputStream input) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] chunk = new byte[1024];
+    int read;
+    while ((read = input.read(chunk)) != -1) {
+      buffer.write(chunk, 0, read);
+    }
+    return buffer.toByteArray();
   }
 
   private TrackableField<List<XmlElement>> elements = new TrackableField<List<XmlElement>>();

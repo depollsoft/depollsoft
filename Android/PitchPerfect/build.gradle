@@ -84,6 +84,10 @@ android {
             assets.srcDirs = ['assets']
         }
 
+        test {
+            java.srcDirs = ['test/java']
+        }
+
         // Move the tests to tests/java, tests/res, etc...
         androidTest.setRoot('tests')
 

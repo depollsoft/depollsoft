@@ -6,19 +6,19 @@
         android:id="@+id/removeSongMenuItem"
         android:title="@string/RemoveSong"
         android:icon="@drawable/ic_delete"
-        android:showAsAction="always">
+        app:showAsAction="always">
     </item>
     <item
         android:id="@+id/cancelMenuItem"
         android:title="@string/Cancel"
         android:icon="@drawable/ic_undo"
-        android:showAsAction="always">
+        app:showAsAction="always">
     </item>
     <item
         android:id="@+id/okMenuItem"
         android:title="@string/Ok"
         android:icon="@drawable/ic_check"
-        android:showAsAction="always">
+        app:showAsAction="always">
     </item>
 
 </menu>

@@ -118,8 +118,9 @@ class Analytics(appContext: Context, val sharedPrefs: String) {
         private val endpoint = URL("https://api.depollsoft.xyz/analytics")
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US)
 
-        var appContext: Context = RichApplication.getAppContext()
+        lateinit var appContext: Context
+        private fun ctx(): Context = if (this::appContext.isInitialized) appContext else RichApplication.getAppContext()
 
-        val default = Analytics(appContext, "depollsoft.lib.analytics")
+        val default by lazy { Analytics(ctx(), "depollsoft.lib.analytics") }
     }
 }

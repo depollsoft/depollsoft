@@ -11,7 +11,12 @@
 @import FirebaseAuthUI;
 
 #import <Parse/Parse.h>
+#if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#define HAS_FBSDK 1
+#else
+#define HAS_FBSDK 0
+#endif
 
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
@@ -32,14 +37,23 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    if (NSClassFromString(@"XCTestCase") != nil) {
+        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        self.window.rootViewController = [UIViewController new];
+        self.window.hidden = YES;
+        return YES;
+    }
+
     [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
         configuration.applicationId = @"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj";
         configuration.clientKey = @"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4";
         configuration.server = @"https://tagmaster-api.depollsoft.xyz";
     }]];
     [FIRApp configure];
+#if HAS_FBSDK
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
+#endif
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
