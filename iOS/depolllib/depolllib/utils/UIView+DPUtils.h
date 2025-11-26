@@ -6,7 +6,13 @@
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#pragma once
+
+#import <TargetConditionals.h>
+
+// Only declare this category when UIKit is available.
+#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION || TARGET_OS_MACCATALYST
+#import <UIKit/UIView.h>
 
 @interface UIView (DPUtils)
 
@@ -30,3 +36,8 @@
 @property (nonatomic, readonly) UILayoutGuide *rightSafeAreaLayoutGuide;
 
 @end
+
+#else
+// Non-UIKit platforms: intentionally leave this header empty to avoid build errors
+// when included by shared sources. The implementations are only available on UIKit.
+#endif

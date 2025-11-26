@@ -18,3 +18,7 @@ local.properties
 
 Thumbs.db
 .DS_Store
+
+# iOS dependencies and build outputs
+iOS/Pods/
+iOS/build/

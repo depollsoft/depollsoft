@@ -1,6 +1,11 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
 workspace 'iOS'
 
-platform :ios, '13.0'
+# Avoid duplicate UUIDs in generated Pods project and speed up generation
+install! 'cocoapods', :deterministic_uuids => false
+
+platform :ios, '15.0'
 use_frameworks!
 
 project 'depolllib/depolllib.xcodeproj'
@@ -23,16 +28,13 @@ def google_utilites
 def shared_pods
     pod 'Parse'
     pod 'Bolts/Tasks'
-    pod 'GoogleUtilities'
+    # 'GoogleUtilities' pulled transitively by Firebase/Google pods; avoid pinning conflicting versions
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore'
     pod 'FirebaseFirestore'
     pod 'Firebase/Functions'
     pod 'FirebaseUI/Auth'
-    pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
-    pod 'FirebaseUI/Google'
-    pod 'FirebaseUI/Facebook'
     pod 'Protobuf'
     pod 'GTMAppAuth'
     pod 'gRPC-Core'
@@ -48,7 +50,8 @@ end
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     shared_pods
-    pod 'Google-Mobile-Ads-SDK'
+    # Ads SDK not needed for unit tests coverage run
+    # pod 'Google-Mobile-Ads-SDK'
 end
 
 post_install do |installer|
@@ -65,6 +68,7 @@ post_install do |installer|
         end
     end
     installer.pods_project.build_configurations.each do |config|
-        config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+        # Build simulator slices on Apple Silicon; exclude x86_64 to avoid toolchain issues
+        config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "x86_64"
     end
 end

@@ -7,6 +7,8 @@
 //
 
 #import "DPPitchPipeButton.h"
+#import <UIKit/UIKit.h>
+#import "DPNote.h"
 #import "DPUtils+UIControl.h"
 #import "UIView+DPUtils.h"
 

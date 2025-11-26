@@ -13,6 +13,8 @@
 int main(int argc, char *argv[])
 {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([DPAppDelegate class]));
+        BOOL runningTests = NSClassFromString(@"XCTestCase") != nil;
+        Class delegateClass = runningTests ? NSClassFromString(@"DPTestAppDelegate") : [DPAppDelegate class];
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass(delegateClass));
     }
 }

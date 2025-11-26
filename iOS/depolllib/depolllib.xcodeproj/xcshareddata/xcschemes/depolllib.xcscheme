@@ -26,14 +26,15 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      codeCoverageEnabled = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "63DC3742151E9263007C46DB"
-               BuildableName = "depolllibTests.octest"
+               BuildableName = "depolllibTests.xctest"
                BlueprintName = "depolllibTests"
                ReferencedContainer = "container:depolllib.xcodeproj">
             </BuildableReference>

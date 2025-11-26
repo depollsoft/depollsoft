@@ -19,7 +19,8 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "DPLoginViewController.h"
-#import <FBSDKCoreKit/FBSDKCoreKit.h>
+// Facebook SDK removed during SDK migration
+// #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import "pitchperfect-Swift.h"
 
 @import Firebase;
@@ -33,6 +34,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    if (NSClassFromString(@"XCTestCase") != nil) {
+        return YES;
+    }
+
     [FIRApp configure];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
@@ -66,8 +71,7 @@
         }
     });
     
-    [[FBSDKApplicationDelegate sharedInstance] application:application
-                             didFinishLaunchingWithOptions:launchOptions];
+    // Facebook SDK initialization removed
     
     [self extraInit];
     
@@ -75,13 +79,7 @@
     return YES;
 }
 
-+ (BOOL)testAds {
-#ifdef TEST_ADS
-    return YES;
-#else
-    return NO;
-#endif
-}
+// Ads removed; no test Ads toggle
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -137,10 +135,6 @@
     }
 }
 
-+ (GADRequest *)adRequest {
-    GADRequest *request = [GADRequest request];
-    request.keywords = [NSMutableArray arrayWithObjects:@"music", @"musician", @"singer", @"a cappella", @"notes", @"harmony", @"sheet music", @"songs", @"instrument", @"pitch pipe", @"barbershop", nil];
-    return request;
-}
+// Ads removed; no ad requests
 
 @end

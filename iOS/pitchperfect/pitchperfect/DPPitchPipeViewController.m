@@ -11,7 +11,7 @@
 #import "DPPitchPipeViewController.h"
 #import "DPNote.h"
 #import "DPAccidental.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"
@@ -73,7 +73,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     toolbar.barStyle = UIBarStyleDefault;
     

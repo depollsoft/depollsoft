@@ -20,6 +20,10 @@ android {
             assets.srcDirs = ['assets']
         }
 
+        test {
+            java.srcDirs = ['test/java']
+        }
+
         // Move the tests to tests/java, tests/res, etc...
         androidTest.setRoot('tests')
 
@@ -33,6 +37,6 @@ android {
         release.setRoot('build-types/release')
     }
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
     }
 }

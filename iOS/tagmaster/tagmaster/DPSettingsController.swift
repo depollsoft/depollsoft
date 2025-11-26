@@ -8,42 +8,53 @@
 
 import Foundation
 import Firebase
+#if canImport(FirebaseAuthUI)
 import FirebaseAuthUI
-import FirebaseGoogleAuthUI
-import FirebaseFacebookAuthUI
-import FirebaseOAuthUI
+#endif
+#if canImport(FirebaseEmailAuthUI)
 import FirebaseEmailAuthUI
+#endif
 
+#if canImport(FirebaseAuthUI)
 extension DPSettingsController: FUIAuthDelegate {
     @objc func logInClick() {
-        if Auth.auth().currentUser == nil {
-            let authUI = FUIAuth.defaultAuthUI()!
-            let providers: [FUIAuthProvider] = [
-                FUIEmailAuth(authAuthUI: authUI,
-                             signInMethod: EmailPasswordAuthSignInMethod,
-                             forceSameDevice: false,
-                             allowNewEmailAccounts: true,
-                             requireDisplayName: false,
-                             actionCodeSetting: ActionCodeSettings()),
-                FUIGoogleAuth(authUI: authUI),
-                FUIFacebookAuth(authUI: authUI),
-                FUIOAuth.appleAuthProvider()
-            ]
-            authUI.providers = providers
-            authUI.delegate = self
-            
-            self.present(authUI.authViewController(), animated: true)
-        } else {
-            try! Auth.auth().signOut()
+        guard Auth.auth().currentUser == nil else {
+            try? Auth.auth().signOut()
             self.refreshLoginButton()
+            return
         }
+
+        guard let authUI = FUIAuth.defaultAuthUI() else {
+            return
+        }
+
+        var providers: [FUIAuthProvider] = []
+
+        #if canImport(FirebaseEmailAuthUI)
+        let emailProvider = FUIEmailAuth(authAuthUI: authUI,
+                                         signInMethod: EmailPasswordAuthSignInMethod,
+                                         forceSameDevice: false,
+                                         allowNewEmailAccounts: true,
+                                         requireDisplayName: false,
+                                         actionCodeSetting: ActionCodeSettings())
+        providers.append(emailProvider)
+        #endif
+
+        guard !providers.isEmpty else {
+            return
+        }
+
+        authUI.providers = providers
+        authUI.delegate = self
+        present(authUI.authViewController(), animated: true)
     }
-    
+
     public func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-        self.refreshLoginButton()
+        refreshLoginButton()
     }
-    
+
     public func authUI(_ authUI: FUIAuth, didFinish operation: FUIAccountSettingsOperationType, error: Error?) {
-        self.refreshLoginButton()
+        refreshLoginButton()
     }
 }
+#endif

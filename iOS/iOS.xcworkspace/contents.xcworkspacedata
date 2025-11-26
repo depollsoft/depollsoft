@@ -2,10 +2,10 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:depolllib/depolllib.xcodeproj">
+      location = "group:pitchperfect/pitchperfect.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:pitchperfect/pitchperfect.xcodeproj">
+      location = "group:depolllib/depolllib.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:tagmaster/tagmaster.xcodeproj">

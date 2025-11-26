@@ -3,6 +3,8 @@ apply plugin: 'com.android.library'
 dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
     api project(':DepollSoftCommon')
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
 }
 
 android {
@@ -33,6 +35,11 @@ android {
         release.setRoot('build-types/release')
     }
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
+    }
+    sourceSets {
+        test {
+            java.srcDirs = ['test/java']
+        }
     }
 }

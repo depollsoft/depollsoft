@@ -50,6 +50,8 @@ dependencies {
     implementation project(':bindroid')
     implementation project(':bindroid-kotlin')
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
 }
 
 android {
@@ -88,6 +90,10 @@ android {
         // by a similar customization.
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
+        test {
+            java.srcDirs = ['test/java']
+            kotlin.srcDirs = ['test/kotlin']
+        }
     }
 }
 

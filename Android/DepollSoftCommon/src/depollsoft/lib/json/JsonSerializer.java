@@ -109,7 +109,9 @@ public class JsonSerializer {
     Collection<?> collection = (Collection<?>) c.newInstance();
     for (int x = 0; x < items.length(); x++) {
       Object item = items.get(x);
-      if (item instanceof JSONObject)
+      if (item == JSONObject.NULL)
+        item = null;
+      else if (item instanceof JSONObject)
         item = JsonSerializer.deserialize((JSONObject) item);
       ((Collection<Object>) collection).add(item);
     }

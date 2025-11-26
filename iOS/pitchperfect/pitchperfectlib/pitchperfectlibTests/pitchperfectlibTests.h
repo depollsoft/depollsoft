@@ -6,8 +6,9 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
+#import "STAssertCompat.h"
 
-@interface pitchperfectlibTests : SenTestCase
+@interface pitchperfectlibTests : XCTestCase
 
 @end
