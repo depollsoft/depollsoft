@@ -165,6 +165,8 @@ public class XmlDocument {
       Xml.parse(new InputStreamReader(new ByteArrayInputStream(data)), handler);
       return fromElements(handler.elements);
     } catch (UnsatisfiedLinkError e) {
+      // The SAX parser may fail to load in certain environments (like unit tests)
+      // where the native library is not available. Fallback to XmlPullParser.
       return parseWithPullParser(data);
     } catch (IOException e) {
       e.printStackTrace();
