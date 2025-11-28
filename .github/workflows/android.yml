@@ -38,6 +38,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # The 'coverage' task is a custom aggregate task defined in the root build.gradle.
+      # It runs 'jacocoTestCoverageVerification' and 'jacocoTestReport' for all modules,
+      # enforcing 85% coverage via Jacoco.
       - name: Run unit tests with coverage
         run: ./gradlew coverage --stacktrace
 

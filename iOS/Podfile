@@ -69,6 +69,10 @@ post_install do |installer|
     end
     installer.pods_project.build_configurations.each do |config|
         # Build simulator slices on Apple Silicon; exclude x86_64 to avoid toolchain issues
-        config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "x86_64"
+        # On Intel Macs, do NOT exclude x86_64, as it is required for simulator builds.
+        require 'rbconfig'
+        if RbConfig::CONFIG['host_cpu'] == 'arm64'
+            config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "x86_64"
+        end
     end
 end

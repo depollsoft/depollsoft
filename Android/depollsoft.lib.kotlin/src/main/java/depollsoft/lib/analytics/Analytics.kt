@@ -119,7 +119,17 @@ class Analytics(appContext: Context, val sharedPrefs: String) {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US)
 
         lateinit var appContext: Context
-        private fun ctx(): Context = if (this::appContext.isInitialized) appContext else RichApplication.getAppContext()
+        private fun ctx(): Context {
+            return if (this::appContext.isInitialized) {
+                appContext
+            } else {
+                val context = RichApplication.getAppContext()
+                if (context == null) {
+                    throw IllegalStateException("Analytics: appContext is not initialized and RichApplication.getAppContext() returned null. Ensure RichApplication is initialized before using Analytics.")
+                }
+                context
+            }
+        }
 
         val default by lazy { Analytics(ctx(), "depollsoft.lib.analytics") }
     }
