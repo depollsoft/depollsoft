@@ -50,8 +50,7 @@ end
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     shared_pods
-    # Ads SDK not needed for unit tests coverage run
-    # pod 'Google-Mobile-Ads-SDK'
+    pod 'Google-Mobile-Ads-SDK'
 end
 
 post_install do |installer|
@@ -68,11 +67,14 @@ post_install do |installer|
         end
     end
     installer.pods_project.build_configurations.each do |config|
-        # Build simulator slices on Apple Silicon; exclude x86_64 to avoid toolchain issues
-        # On Intel Macs, do NOT exclude x86_64, as it is required for simulator builds.
+        # Build simulator slices based on host architecture
         require 'rbconfig'
         if RbConfig::CONFIG['host_cpu'] == 'arm64'
+            # On Apple Silicon, exclude x86_64 to avoid toolchain issues
             config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "x86_64"
+        else
+            # On Intel Macs, exclude arm64 for simulator builds
+            config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
         end
     end
 end

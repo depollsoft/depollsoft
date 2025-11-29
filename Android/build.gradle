@@ -15,7 +15,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.11.0'
+        classpath 'com.android.tools.build:gradle:8.13.1'
 
         classpath 'com.google.gms:google-services:4.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25"
@@ -215,12 +215,9 @@ subprojects {
 
                     tasks.register('jacocoTestCoverageVerification', JacocoCoverageVerification) {
                         dependsOn unitTestTask
-                        // Lower threshold for modules with heavy inline function usage (bindroid-kotlin)
-                        // Inline functions can't be covered by JaCoCo as bytecode is copied to call sites
-                        // The 50% coverage threshold for 'bindroid-kotlin' is a permanent exception due to JaCoCo's
-                        // inability to instrument Kotlin inline functions. Unless JaCoCo or Kotlin changes to support
-                        // coverage of inline functions, this threshold will remain. See https://github.com/jacoco/jacoco/issues/582
-                        // for ongoing discussion. This threshold should be revisited only if tooling improves.
+                        // Lower threshold for modules with heavy inline function usage (bindroid-kotlin).
+                        // This threshold is set lower due to JaCoCo's inability to instrument Kotlin inline functions.
+                        // See https://github.com/jacoco/jacoco/issues/582. This threshold should be revisited if tooling improves.
                         def minCoverage = 0.85
                         if (project.name == 'bindroid-kotlin') {
                             minCoverage = 0.50
