@@ -1268,6 +1268,9 @@ PODS:
     - FirebaseAuthUI (~> 15.0)
   - FirebaseUI/Email (15.1.0):
     - FirebaseEmailAuthUI (~> 15.0)
+  - Google-Mobile-Ads-SDK (12.10.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.0.0)
   - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -1413,6 +1416,7 @@ DEPENDENCIES:
   - FirebaseFirestore
   - FirebaseUI/Auth
   - FirebaseUI/Email
+  - Google-Mobile-Ads-SDK
   - "gRPC-C++"
   - gRPC-Core
   - GTMAppAuth
@@ -1441,6 +1445,8 @@ SPEC REPOS:
     - FirebaseMessagingInterop
     - FirebaseSharedSwift
     - FirebaseUI
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
     - GoogleUtilities
     - "gRPC-C++"
     - gRPC-Core
@@ -1472,6 +1478,8 @@ SPEC CHECKSUMS:
   FirebaseMessagingInterop: 913e21aa8526740cd2ac17b30e89dd3e56ff112e
   FirebaseSharedSwift: 52d868d4c269fcb4e4e1310c548435a9c1f46e25
   FirebaseUI: 1dfcf45d4bb4073380091394c9c555d697ecca11
+  Google-Mobile-Ads-SDK: 08194bf203dc13f4422de827a4b254f27cd4a3a5
+  GoogleUserMessagingPlatform: f8d0cdad3ca835406755d0a69aa634f00e76d576
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   "gRPC-C++": cc207623316fb041a7a3e774c252cf68a058b9e8
   gRPC-Core: 860978b7db482de8b4f5e10677216309b5ff6330
@@ -1483,6 +1491,6 @@ SPEC CHECKSUMS:
   Protobuf: 327cd1bb45735fc0766d8c073151e966b89d2723
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
 
-PODFILE CHECKSUM: 8aca7749c785fec2a458d1f8a04324fbc2c2a1d7
+PODFILE CHECKSUM: 2a750ca990f53282796c27e2ace4c0bd89b22b31
 
 COCOAPODS: 1.16.2

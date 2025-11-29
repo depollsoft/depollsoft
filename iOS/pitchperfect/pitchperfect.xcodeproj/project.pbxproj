@@ -9,14 +9,12 @@
 /* Begin PBXBuildFile section */
 		1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E131315267FD07600F33385 /* DPSettingsModel.swift */; };
 		1E13131D2682475900F33385 /* panobackground.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E13131A2682475900F33385 /* panobackground.svg */; };
+		1E5B19891FE74ED000241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19841FE74ED000241069 /* libdepolllib.a */; };
 		1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */; };
 		1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */; };
-		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
 		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
-		A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */; };
-		A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */; };
 		1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */; };
 		1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3422F533F900EA9F2E /* DPSongsModel.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
@@ -82,48 +80,22 @@
 		63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36D8151E9000007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36D6151E9000007C46DB /* InfoPlist.strings */; };
 		63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36DA151E9000007C46DB /* pitchperfectTests.m */; };
+		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
+		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
+		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
+		A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */; };
+		A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */; };
+		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
 		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
 		C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */; };
 		C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */; };
 		C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */; };
-		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
-		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
-		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
 		D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */; };
-		1E5B19891FE74ED000241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19841FE74ED000241069 /* libdepolllib.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		63CB96DC1595C01100116907 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 63DC36EF151E9079007C46DB;
-			remoteInfo = pitchperfectlib;
-		};
-		63CB96DE1595C01100116907 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 63DC36FF151E9079007C46DB;
-			remoteInfo = pitchperfectlibTests;
-		};
-		A1F1C7132F8C18B200000006 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 63DC36EE151E9079007C46DB;
-			remoteInfo = pitchperfectlib;
-		};
-		63DC36D1151E9000007C46DB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63DC3694151E8FFF007C46DB /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 63DC369C151E8FFF007C46DB;
-			remoteInfo = pitchperfect;
-		};
 		1E5B19821FE74ED000241069 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1E5B19801FE74ED000241069 /* depolllib.xcodeproj */;
@@ -145,18 +117,43 @@
 			remoteGlobalIDString = 63DC3732151E9263007C46DB;
 			remoteInfo = depolllib;
 		};
+		63CB96DC1595C01100116907 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC36EF151E9079007C46DB;
+			remoteInfo = pitchperfectlib;
+		};
+		63CB96DE1595C01100116907 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC36FF151E9079007C46DB;
+			remoteInfo = pitchperfectlibTests;
+		};
+		63DC36D1151E9000007C46DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3694151E8FFF007C46DB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63DC369C151E8FFF007C46DB;
+			remoteInfo = pitchperfect;
+		};
+		A1F1C7132F8C18B200000006 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 63DC36EE151E9079007C46DB;
+			remoteInfo = pitchperfectlib;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1DD009A3F2930BAC01FE04AE /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
 		1E131315267FD07600F33385 /* DPSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModel.swift; sourceTree = "<group>"; };
 		1E13131A2682475900F33385 /* panobackground.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = panobackground.svg; sourceTree = "<group>"; };
+		1E5B19801FE74ED000241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
 		1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPLoginViewController.swift; sourceTree = "<group>"; };
 		1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeViewController.swift; sourceTree = "<group>"; };
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DPAppDelegate+Ads.m"; sourceTree = "<group>"; };
 		1E8EA647267E5BC400255826 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E95FFA02686560500B5299C /* DPCommon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPCommon.swift; sourceTree = "<group>"; };
@@ -164,6 +161,7 @@
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
 		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
@@ -244,22 +242,24 @@
 		63DC36D7151E9000007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63DC36D9151E9000007C46DB /* pitchperfectTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pitchperfectTests.h; sourceTree = "<group>"; };
 		63DC36DA151E9000007C46DB /* pitchperfectTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pitchperfectTests.m; sourceTree = "<group>"; };
+		63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pitchperfectlib.xcodeproj; path = pitchperfectlib/pitchperfectlib.xcodeproj; sourceTree = "<group>"; };
+		63E363911602FEF700EA031C /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
+		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
+		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
+		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
+		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
+		A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DPAppDelegate+Ads.m"; sourceTree = "<group>"; };
+		A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPTestAppDelegate.h; sourceTree = "<group>"; };
+		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A1 /* LayoutManagersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LayoutManagersTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+UUIDFallback.m"; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPViewControllerLifecycleTests.m; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPTestAppDelegate.h; sourceTree = "<group>"; };
-		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
-		63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pitchperfectlib.xcodeproj; path = pitchperfectlib/pitchperfectlib.xcodeproj; sourceTree = "<group>"; };
-		1E5B19801FE74ED000241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
-		63E363911602FEF700EA031C /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
-		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
-		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
-		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
-		ADBE04561CC9156D0DF281C1 /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
 		DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -310,11 +310,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1E5B19811FE74ED000241069 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E5B19841FE74ED000241069 /* libdepolllib.a */,
+				1E5B19851FE74ED000241069 /* depolllibTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		220C7B9B618E4D1B28CCEFD4 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				ADBE04561CC9156D0DF281C1 /* Pods-pitchperfect.debug.xcconfig */,
-				1DD009A3F2930BAC01FE04AE /* Pods-pitchperfect.release.xcconfig */,
+				4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */,
+				F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */,
 			);
 			name = Pods;
 			path = ../Pods;
@@ -343,15 +352,6 @@
 			children = (
 				63CB96DD1595C01100116907 /* libpitchperfectlib.a */,
 				63CB96DF1595C01100116907 /* pitchperfectlibTests.octest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		1E5B19811FE74ED000241069 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1E5B19841FE74ED000241069 /* libdepolllib.a */,
-				1E5B19851FE74ED000241069 /* depolllibTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -524,6 +524,7 @@
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
 				FE97A0BF868899C296DCED3F /* [CP] Embed Pods Frameworks */,
+				CFB7C5444246B2402E5F371F /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -609,20 +610,6 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		63CB96DD1595C01100116907 /* libpitchperfectlib.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libpitchperfectlib.a;
-			remoteRef = 63CB96DC1595C01100116907 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		63CB96DF1595C01100116907 /* pitchperfectlibTests.octest */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = pitchperfectlibTests.octest;
-			remoteRef = 63CB96DE1595C01100116907 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		1E5B19841FE74ED000241069 /* libdepolllib.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -635,6 +622,20 @@
 			fileType = wrapper.cfbundle;
 			path = depolllibTests.xctest;
 			remoteRef = 1E5B19831FE74ED000241069 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		63CB96DD1595C01100116907 /* libpitchperfectlib.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libpitchperfectlib.a;
+			remoteRef = 63CB96DC1595C01100116907 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		63CB96DF1595C01100116907 /* pitchperfectlibTests.octest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = pitchperfectlibTests.octest;
+			remoteRef = 63CB96DE1595C01100116907 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -701,6 +702,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		CFB7C5444246B2402E5F371F /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/Google-Mobile-Ads-SDK/GoogleMobileAdsResources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUserMessagingPlatform/UserMessagingPlatformResources.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleMobileAdsResources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/UserMessagingPlatformResources.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FE97A0BF868899C296DCED3F /* [CP] Embed Pods Frameworks */ = {
@@ -825,15 +846,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		63DC36D2151E9000007C46DB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 63DC369C151E8FFF007C46DB /* pitchperfect */;
-			targetProxy = 63DC36D1151E9000007C46DB /* PBXContainerItemProxy */;
-		};
 		1E5B19881FE74ED000241069 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = depolllib;
 			targetProxy = 1E5B19871FE74ED000241069 /* PBXContainerItemProxy */;
+		};
+		63DC36D2151E9000007C46DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63DC369C151E8FFF007C46DB /* pitchperfect */;
+			targetProxy = 63DC36D1151E9000007C46DB /* PBXContainerItemProxy */;
 		};
 		A1F1C7132F8C18B200000007 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -970,7 +991,7 @@
 		};
 		63DC36DF151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = ADBE04561CC9156D0DF281C1 /* Pods-pitchperfect.debug.xcconfig */;
+			baseConfigurationReference = 4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -1027,7 +1048,7 @@
 		};
 		63DC36E0151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1DD009A3F2930BAC01FE04AE /* Pods-pitchperfect.release.xcconfig */;
+			baseConfigurationReference = F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -1083,11 +1104,10 @@
 		};
 		63DC36E2151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = ADBE04561CC9156D0DF281C1 /* Pods-pitchperfect.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CLANG_ENABLE_MODULES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/pitchperfect.app/pitchperfect";
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -1102,10 +1122,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
+				SWIFT_OBJC_BRIDGING_HEADER = "pitchperfectTests/pitchperfectTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				SWIFT_OBJC_BRIDGING_HEADER = "pitchperfectTests/pitchperfectTests-Bridging-Header.h";
+				TEST_HOST = "$(BUNDLE_LOADER)";
 				USER_HEADER_SEARCH_PATHS = (
 					"../depolllib/**",
 					"./pitchperfectlib/**",
@@ -1115,11 +1135,10 @@
 		};
 		63DC36E3151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1DD009A3F2930BAC01FE04AE /* Pods-pitchperfect.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CLANG_ENABLE_MODULES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/pitchperfect.app/pitchperfect";
+				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -1134,9 +1153,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
-				SWIFT_VERSION = 5.0;
 				SWIFT_OBJC_BRIDGING_HEADER = "pitchperfectTests/pitchperfectTests-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUNDLE_LOADER)";
 				USER_HEADER_SEARCH_PATHS = (
 					"../depolllib/**",
 					"./pitchperfectlib/**",
