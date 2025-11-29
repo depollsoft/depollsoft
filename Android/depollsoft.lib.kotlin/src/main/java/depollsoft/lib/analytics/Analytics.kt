@@ -18,7 +18,7 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
-class Analytics(appContext: Context, val sharedPrefs: String) {
+class Analytics(private val appContext: Context, val sharedPrefs: String) {
     private val prefs = appContext.getSharedPreferences(sharedPrefs, Context.MODE_PRIVATE)
     private fun startOfHour(date: Date): Date {
         val timestamp = date.time
@@ -118,14 +118,14 @@ class Analytics(appContext: Context, val sharedPrefs: String) {
         private val endpoint = URL("https://api.depollsoft.xyz/analytics")
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US)
 
-        lateinit var appContext: Context
+        lateinit var staticAppContext: Context
         private fun ctx(): Context {
-            return if (this::appContext.isInitialized) {
-                appContext
+            return if (this::staticAppContext.isInitialized) {
+                staticAppContext
             } else {
                 val context = RichApplication.getAppContext()
                 if (context == null) {
-                    throw IllegalStateException("Analytics: appContext is not initialized and RichApplication.getAppContext() returned null. Ensure RichApplication is initialized before using Analytics.")
+                    throw IllegalStateException("Analytics: staticAppContext is not initialized and RichApplication.getAppContext() returned null. Ensure RichApplication is initialized before using Analytics.")
                 }
                 context
             }

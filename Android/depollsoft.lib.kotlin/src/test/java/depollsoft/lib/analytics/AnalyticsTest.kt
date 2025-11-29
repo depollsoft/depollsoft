@@ -24,7 +24,7 @@ class AnalyticsTest {
         val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
         prefs.edit().clear().commit()
 
-        Analytics.appContext = context
+        Analytics.staticAppContext = context
         val analytics = Analytics(context, prefsName)
 
         // First call should set daily/hourly timestamps
