@@ -54,7 +54,7 @@ jobs:
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
@@ -66,7 +66,7 @@ jobs:
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
