@@ -50,6 +50,7 @@ jobs:
 
       - name: Run pitchperfect tests with coverage
         run: |
+          set -o pipefail
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -57,10 +58,11 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color || true
+            | xcpretty --color
 
       - name: Run tagmaster tests with coverage
         run: |
+          set -o pipefail
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -68,7 +70,7 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color || true
+            | xcpretty --color
 
       - name: Generate coverage report for pitchperfect
         if: always()
