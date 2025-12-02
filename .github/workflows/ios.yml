@@ -35,7 +35,15 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Cache CocoaPods
+      - name: Cache CocoaPods Specs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cocoapods
+          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-specs-
+
+      - name: Cache CocoaPods Pods
         uses: actions/cache@v4
         with:
           path: iOS/Pods
@@ -117,7 +125,15 @@ jobs:
       - name: Select Xcode version
         run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
 
-      - name: Cache CocoaPods
+      - name: Cache CocoaPods Specs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cocoapods
+          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-specs-
+
+      - name: Cache CocoaPods Pods
         uses: actions/cache@v4
         with:
           path: iOS/Pods
