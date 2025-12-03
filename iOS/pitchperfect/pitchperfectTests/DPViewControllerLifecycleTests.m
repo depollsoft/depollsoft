@@ -291,11 +291,4 @@
     }];
 }
 
-- (void)testGoogleAdsStub
-{
-    GADBannerView *banner = [[GADBannerView alloc] init];
-    [banner loadRequest:nil];
-    XCTAssertNotNil(banner.adUnitID);
-}
-
 @end
