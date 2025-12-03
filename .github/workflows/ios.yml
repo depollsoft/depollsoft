@@ -51,6 +51,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-xcode16.3-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-xcode16.3-
+
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
 
@@ -140,6 +148,14 @@ jobs:
           key: ${{ runner.os }}-pods-${{ hashFiles('iOS/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-xcode16.1-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-xcode16.1-
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
