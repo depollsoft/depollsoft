@@ -45,12 +45,20 @@ end
 target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
     shared_pods
+
+    target 'tagmasterTests' do
+        inherit! :search_paths
+    end
 end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     shared_pods
     pod 'Google-Mobile-Ads-SDK'
+
+    target 'pitchperfectTests' do
+        inherit! :search_paths
+    end
 end
 
 post_install do |installer|
