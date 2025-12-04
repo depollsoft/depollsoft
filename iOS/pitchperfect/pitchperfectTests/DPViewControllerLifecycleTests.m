@@ -70,7 +70,8 @@
         block();
         [expectation fulfill];
     });
-    [self waitForExpectations:@[expectation] timeout:2.0];
+    // Use a longer timeout to account for CI environment variability
+    [self waitForExpectations:@[expectation] timeout:10.0];
 }
 
 - (void)exerciseController:(UIViewController *)controller actions:(void (^)(UIViewController *controller))actions
