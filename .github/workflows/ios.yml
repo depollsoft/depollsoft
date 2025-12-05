@@ -22,18 +22,55 @@ defaults:
 jobs:
   test:
     name: Unit Tests & Coverage
-    runs-on: macos-15
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Select Xcode version
-        # Use Xcode 16.3 which includes iOS 18.4 SDK and simulator support
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
 
       - name: Show Xcode version
-        run: xcodebuild -version
+        id: xcode
+        run: |
+          xcodebuild -version
+          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get iOS Simulator destination
+        id: simulator
+        run: |
+          DESTINATION=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          devices = data.get('devices', {})
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone 16' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
+          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+          echo "Using simulator: $DESTINATION"
 
       - name: Cache CocoaPods Specs
         uses: actions/cache@v4
@@ -55,9 +92,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-xcode16.3-${{ hashFiles('iOS/Podfile.lock') }}
+          key: ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-deriveddata-xcode16.3-
+            ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
@@ -71,7 +108,7 @@ jobs:
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+            -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
@@ -83,7 +120,7 @@ jobs:
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+            -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
@@ -123,7 +160,8 @@ jobs:
 
   build:
     name: Build Debug
-    runs-on: macos-15
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
     needs: test
 
     steps:
@@ -131,8 +169,46 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode version
-        # Use Xcode 16.3 to match the test job and include iOS 18.4 SDK
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
+
+      - name: Show Xcode version
+        id: xcode
+        run: |
+          xcodebuild -version
+          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get iOS Simulator destination
+        id: simulator
+        run: |
+          DESTINATION=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          devices = data.get('devices', {})
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone 16' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
+          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
 
       - name: Cache CocoaPods Specs
         uses: actions/cache@v4
@@ -154,9 +230,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-xcode16.3-${{ hashFiles('iOS/Podfile.lock') }}
+          key: ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-deriveddata-xcode16.3-
+            ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
@@ -166,7 +242,7 @@ jobs:
           xcodebuild build \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+            -destination '${{ steps.simulator.outputs.destination }}' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
@@ -176,7 +252,7 @@ jobs:
           xcodebuild build \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.4' \
+            -destination '${{ steps.simulator.outputs.destination }}' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
