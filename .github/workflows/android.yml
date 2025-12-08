@@ -57,16 +57,14 @@ jobs:
           echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
           echo "Architecture: $(uname -m)"
 
-      - name: Set up AAPT2 for ARM64 Linux
+      - name: Install QEMU for x86_64 emulation (ARM64 Linux only)
         if: steps.arch.outputs.arch == 'aarch64'
         run: |
-          # Download ARM64 Linux AAPT2 from Google's Maven repository
-          AAPT2_VERSION="8.5.0-11315950"
-          mkdir -p $HOME/.android/aapt2
-          curl -L "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/${AAPT2_VERSION}/aapt2-${AAPT2_VERSION}-linux-aarch64.jar" -o /tmp/aapt2.jar
-          unzip -o /tmp/aapt2.jar -d $HOME/.android/aapt2/
-          chmod +x $HOME/.android/aapt2/aapt2
-          echo "android.aapt2FromMavenOverride=$HOME/.android/aapt2/aapt2" >> Android/gradle.properties
+          # Install QEMU user-mode emulation for running x86_64 binaries on ARM64
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+          # Register x86_64 binary format
+          sudo update-binfmts --enable qemu-x86_64
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -126,16 +124,14 @@ jobs:
           echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
           echo "Architecture: $(uname -m)"
 
-      - name: Set up AAPT2 for ARM64 Linux
+      - name: Install QEMU for x86_64 emulation (ARM64 Linux only)
         if: steps.arch.outputs.arch == 'aarch64'
         run: |
-          # Download ARM64 Linux AAPT2 from Google's Maven repository
-          AAPT2_VERSION="8.5.0-11315950"
-          mkdir -p $HOME/.android/aapt2
-          curl -L "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/${AAPT2_VERSION}/aapt2-${AAPT2_VERSION}-linux-aarch64.jar" -o /tmp/aapt2.jar
-          unzip -o /tmp/aapt2.jar -d $HOME/.android/aapt2/
-          chmod +x $HOME/.android/aapt2/aapt2
-          echo "android.aapt2FromMavenOverride=$HOME/.android/aapt2/aapt2" >> Android/gradle.properties
+          # Install QEMU user-mode emulation for running x86_64 binaries on ARM64
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+          # Register x86_64 binary format
+          sudo update-binfmts --enable qemu-x86_64
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
