@@ -108,6 +108,9 @@ jobs:
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
 
+      - name: Install xcpretty
+        run: gem install xcpretty
+
       - name: List available simulators
         run: xcrun simctl list devices available
 
