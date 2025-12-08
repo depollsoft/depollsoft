@@ -24,6 +24,9 @@ jobs:
     name: Unit Tests & Coverage
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
+    env:
+      # Set Xcode path - will be refined in Select Xcode version step
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
 
     steps:
       - name: Checkout
@@ -31,10 +34,13 @@ jobs:
 
       - name: Select Xcode version
         run: |
+          # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.3.app/Contents/Developer" >> $GITHUB_ENV
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.app/Contents/Developer" >> $GITHUB_ENV
           elif [ -d "/Applications/Xcode.app" ]; then
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
           fi
 
       - name: Show Xcode version
@@ -163,6 +169,9 @@ jobs:
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
     needs: test
+    env:
+      # Set Xcode path - will be refined in Select Xcode version step
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
 
     steps:
       - name: Checkout
@@ -170,10 +179,13 @@ jobs:
 
       - name: Select Xcode version
         run: |
+          # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.3.app/Contents/Developer" >> $GITHUB_ENV
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            echo "DEVELOPER_DIR=/Applications/Xcode_16.app/Contents/Developer" >> $GITHUB_ENV
           elif [ -d "/Applications/Xcode.app" ]; then
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
           fi
 
       - name: Show Xcode version
