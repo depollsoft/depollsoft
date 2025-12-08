@@ -22,7 +22,7 @@ defaults:
 jobs:
   test:
     name: Unit Tests & Coverage
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 30
 
     steps:
@@ -40,8 +40,6 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: ''
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v4
@@ -50,21 +48,6 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('Android/**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-wrapper-
-
-      - name: Check runner architecture
-        id: arch
-        run: |
-          echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
-          echo "Architecture: $(uname -m)"
-
-      - name: Install QEMU for x86_64 emulation (ARM64 Linux only)
-        if: steps.arch.outputs.arch == 'aarch64'
-        run: |
-          # Install QEMU user-mode emulation for running x86_64 binaries on ARM64
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static binfmt-support
-          # Register x86_64 binary format
-          sudo update-binfmts --enable qemu-x86_64
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -89,7 +72,7 @@ jobs:
 
   build:
     name: Build Debug APK
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 20
 
     steps:
@@ -107,8 +90,6 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: ''
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v4
@@ -117,21 +98,6 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('Android/**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-wrapper-
-
-      - name: Check runner architecture
-        id: arch
-        run: |
-          echo "arch=$(uname -m)" >> $GITHUB_OUTPUT
-          echo "Architecture: $(uname -m)"
-
-      - name: Install QEMU for x86_64 emulation (ARM64 Linux only)
-        if: steps.arch.outputs.arch == 'aarch64'
-        run: |
-          # Install QEMU user-mode emulation for running x86_64 binaries on ARM64
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static binfmt-support
-          # Register x86_64 binary format
-          sudo update-binfmts --enable qemu-x86_64
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
