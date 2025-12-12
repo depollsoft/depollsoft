@@ -22,7 +22,7 @@ defaults:
 jobs:
   test:
     name: Unit Tests & Coverage
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux]
     timeout-minutes: 30
 
     steps:
@@ -30,6 +30,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Download ARM64 AAPT2 binary
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: build-aapt2-arm64.yml
+          name: aapt2-arm64-linux
+          path: ~/.android-aapt2-arm64
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Set up custom AAPT2 for ARM64
+        run: |
+          if [ -f ~/.android-aapt2-arm64/aapt2-arm64-linux ]; then
+            mkdir -p ~/.android-aapt2
+            cp ~/.android-aapt2-arm64/aapt2-arm64-linux ~/.android-aapt2/aapt2
+            chmod +x ~/.android-aapt2/aapt2
+            echo "ANDROID_AAPT2_PATH=$HOME/.android-aapt2/aapt2" >> $GITHUB_ENV
+            echo "Using custom ARM64 AAPT2 from: $HOME/.android-aapt2/aapt2"
+            file ~/.android-aapt2/aapt2
+          else
+            echo "No ARM64 AAPT2 found, will try to use default (may fail on ARM64)"
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -51,6 +73,14 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Configure AAPT2 path
+        run: |
+          if [ -n "$ANDROID_AAPT2_PATH" ]; then
+            echo "android.aapt2ExecutablePath=$ANDROID_AAPT2_PATH" >> gradle.properties
+            echo "Configured gradle.properties with custom AAPT2 path"
+            cat gradle.properties
+          fi
 
       - name: Run unit tests with coverage
         run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace
@@ -72,7 +102,7 @@ jobs:
 
   build:
     name: Build Debug APK
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux]
     timeout-minutes: 20
 
     steps:
@@ -80,6 +110,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Download ARM64 AAPT2 binary
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: build-aapt2-arm64.yml
+          name: aapt2-arm64-linux
+          path: ~/.android-aapt2-arm64
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Set up custom AAPT2 for ARM64
+        run: |
+          if [ -f ~/.android-aapt2-arm64/aapt2-arm64-linux ]; then
+            mkdir -p ~/.android-aapt2
+            cp ~/.android-aapt2-arm64/aapt2-arm64-linux ~/.android-aapt2/aapt2
+            chmod +x ~/.android-aapt2/aapt2
+            echo "ANDROID_AAPT2_PATH=$HOME/.android-aapt2/aapt2" >> $GITHUB_ENV
+            echo "Using custom ARM64 AAPT2 from: $HOME/.android-aapt2/aapt2"
+            file ~/.android-aapt2/aapt2
+          else
+            echo "No ARM64 AAPT2 found, will try to use default (may fail on ARM64)"
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -101,6 +153,13 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Configure AAPT2 path
+        run: |
+          if [ -n "$ANDROID_AAPT2_PATH" ]; then
+            echo "android.aapt2ExecutablePath=$ANDROID_AAPT2_PATH" >> gradle.properties
+            cat gradle.properties
+          fi
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
