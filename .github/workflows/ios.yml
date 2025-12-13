@@ -1,5 +1,10 @@
 name: iOS CI
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -124,7 +129,7 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color
+            | xcpretty --color --report junit --output pitchperfect-junit.xml
 
       - name: Run tagmaster tests with coverage
         run: |
@@ -136,7 +141,99 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color
+            | xcpretty --color --report junit --output tagmaster-junit.xml
+
+      - name: Summarize tests & coverage
+        if: always()
+        id: metrics
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import xml.etree.ElementTree as ET
+
+          def parse_junit(path: str):
+            try:
+              root = ET.parse(path).getroot()
+            except Exception:
+              return (0, 0, 0, 0)
+            if root.tag == 'testsuite':
+              suites = [root]
+            elif root.tag == 'testsuites':
+              suites = list(root.findall('testsuite'))
+            else:
+              suites = []
+            tests = failures = errors = skipped = 0
+            for s in suites:
+              tests += int(s.attrib.get('tests', 0))
+              failures += int(s.attrib.get('failures', 0))
+              errors += int(s.attrib.get('errors', 0))
+              skipped += int(s.attrib.get('skipped', 0))
+            return (tests, failures, errors, skipped)
+
+          def xccov_percent(xcresult: str) -> float:
+            try:
+              out = subprocess.check_output(
+                ['xcrun', 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.STDOUT,
+                text=True,
+              )
+              data = json.loads(out)
+              # For top-level report JSON, lineCoverage is typically in [0,1]
+              cov = data.get('lineCoverage')
+              if isinstance(cov, (int, float)):
+                return float(cov) * 100.0
+            except Exception:
+              pass
+            return 0.0
+
+          pitch_tests = parse_junit('pitchperfect-junit.xml')
+          tag_tests = parse_junit('tagmaster-junit.xml')
+
+          pitch_cov = xccov_percent('pitchperfect-results.xcresult') if os.path.isdir('pitchperfect-results.xcresult') else 0.0
+          tag_cov = xccov_percent('tagmaster-results.xcresult') if os.path.isdir('tagmaster-results.xcresult') else 0.0
+
+          total_tests = pitch_tests[0] + tag_tests[0]
+          total_failures = pitch_tests[1] + tag_tests[1]
+          total_errors = pitch_tests[2] + tag_tests[2]
+          total_skipped = pitch_tests[3] + tag_tests[3]
+
+          out_path = os.environ['GITHUB_OUTPUT']
+          with open(out_path, 'a') as f:
+            f.write(f"tests_total={total_tests}\n")
+            f.write(f"tests_failures={total_failures}\n")
+            f.write(f"tests_errors={total_errors}\n")
+            f.write(f"tests_skipped={total_skipped}\n")
+            f.write(f"pitchperfect_coverage_pct={pitch_cov:.2f}\n")
+            f.write(f"tagmaster_coverage_pct={tag_cov:.2f}\n")
+
+          summary = []
+          summary.append('## iOS — Unit tests & coverage')
+          summary.append('')
+          summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary.append(f"- pitchperfect line coverage: {pitch_cov:.2f}%")
+          summary.append(f"- tagmaster line coverage: {tag_cov:.2f}%")
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+
+          body = []
+          body.append('### iOS CI')
+          body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
+          body.append(f"- pitchperfect coverage (lines): **{pitch_cov:.2f}%**")
+          body.append(f"- tagmaster coverage (lines): **{tag_cov:.2f}%**")
+          body.append('')
+
+          body_path = os.path.join(os.getcwd(), 'ios-ci-comment.md')
+          with open(body_path, 'w') as b:
+            b.write('\n'.join(body) + '\n')
+
+          repo_root = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+          rel = os.path.relpath(body_path, repo_root)
+          with open(out_path, 'a') as f:
+            f.write(f"comment_path={rel}\n")
+          PY
 
       - name: Generate coverage report for pitchperfect
         if: always()
@@ -168,7 +265,35 @@ jobs:
           path: |
             iOS/*.xcresult
             iOS/*-coverage.txt
+            iOS/*-junit.xml
           retention-days: 14
+
+      - name: Publish unit test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: iOS Unit Tests
+          path: iOS/*-junit.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Find existing PR comment
+        if: github.event_name == 'pull_request'
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: "### iOS CI"
+
+      - name: Create or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          body-path: ${{ steps.metrics.outputs.comment_path }}
+          edit-mode: replace
 
   build:
     name: Build Debug
