@@ -1,5 +1,10 @@
 name: Android CI
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -58,12 +63,110 @@ jobs:
       - name: Run unit tests with coverage
         run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace
 
+      - name: Collect coverage + test metrics
+        if: always()
+        id: metrics
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          # We are running with defaults.run.working-directory: Android
+          jacoco_paths = sorted(glob.glob('**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml', recursive=True))
+          junit_paths = sorted(glob.glob('**/build/test-results/testDebugUnitTest/*.xml', recursive=True))
+
+          total_tests = total_failures = total_errors = total_skipped = 0
+          for p in junit_paths:
+            try:
+              root = ET.parse(p).getroot()
+            except Exception:
+              continue
+            # JUnit may be <testsuite> or <testsuites>
+            if root.tag == 'testsuite':
+              suites = [root]
+            elif root.tag == 'testsuites':
+              suites = list(root.findall('testsuite'))
+            else:
+              suites = []
+            for s in suites:
+              total_tests += int(s.attrib.get('tests', 0))
+              total_failures += int(s.attrib.get('failures', 0))
+              total_errors += int(s.attrib.get('errors', 0))
+              total_skipped += int(s.attrib.get('skipped', 0))
+
+          covered = missed = 0
+          for p in jacoco_paths:
+            try:
+              root = ET.parse(p).getroot()
+            except Exception:
+              continue
+            for c in root.findall('.//counter'):
+              if c.attrib.get('type') == 'LINE':
+                missed += int(c.attrib.get('missed', 0))
+                covered += int(c.attrib.get('covered', 0))
+          total_lines = covered + missed
+          coverage_pct = (covered / total_lines * 100.0) if total_lines else 0.0
+
+          # Codecov action runs from repo root; prefix paths with Android/
+          codecov_files = ','.join(['Android/' + p for p in jacoco_paths])
+
+          out_path = os.environ['GITHUB_OUTPUT']
+          with open(out_path, 'a') as f:
+            f.write(f"jacoco_count={len(jacoco_paths)}\n")
+            f.write(f"junit_count={len(junit_paths)}\n")
+            f.write(f"tests_total={total_tests}\n")
+            f.write(f"tests_failures={total_failures}\n")
+            f.write(f"tests_errors={total_errors}\n")
+            f.write(f"tests_skipped={total_skipped}\n")
+            f.write(f"line_coverage_pct={coverage_pct:.2f}\n")
+            f.write(f"codecov_files={codecov_files}\n")
+
+          summary_lines = []
+          summary_lines.append('## Android — Unit tests & coverage')
+          summary_lines.append('')
+          summary_lines.append(f"- JUnit files: {len(junit_paths)}")
+          summary_lines.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary_lines.append(f"- JaCoCo XML files: {len(jacoco_paths)}")
+          summary_lines.append(f"- Line coverage (sum of reports): {coverage_pct:.2f}%")
+          summary_lines.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary_lines) + '\n')
+
+          # Save a PR-comment body file (repo root path, not Android/)
+          body = []
+          body.append('### Android CI')
+          body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
+          body.append(f"- Coverage (lines): **{coverage_pct:.2f}%**")
+          body.append('')
+          body_path = os.path.join(os.getcwd(), 'android-ci-comment.md')
+          with open(body_path, 'w') as b:
+            b.write('\n'.join(body) + '\n')
+          # Expose the comment path to later steps (relative to repo root)
+          repo_root = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+          rel = os.path.relpath(body_path, repo_root)
+          with open(out_path, 'a') as f:
+            f.write(f"comment_path={rel}\n")
+          PY
+
       - name: Upload coverage to Codecov
+        if: steps.metrics.outputs.jacoco_count != '0'
         uses: codecov/codecov-action@v4
         with:
-          files: Android/**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+          files: ${{ steps.metrics.outputs.codecov_files }}
           flags: android
           name: android-coverage
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Publish unit test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Android Unit Tests
+          path: Android/**/build/test-results/testDebugUnitTest/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
       - name: Upload test results
         if: always()
@@ -72,6 +175,24 @@ jobs:
           name: android-test-results
           path: Android/**/build/test-results/
           retention-days: 7
+
+      - name: Comment summary on PR
+        if: github.event_name == 'pull_request'
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: "### Android CI"
+
+      - name: Create or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          body-path: ${{ steps.metrics.outputs.comment_path }}
+          edit-mode: replace
 
   build:
     name: Build Debug APK
