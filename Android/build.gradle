@@ -73,6 +73,20 @@ subprojects {
                     '**/depollsoft/lib/util/Util*.*',
                     '**/TrackingScope*.*'
                 ]
+
+                // TagMaster is UI-heavy; unit tests primarily cover core parsing/models.
+                // Excluding UI surfaces keeps the coverage metric meaningful and stable.
+                if (project.name == 'TagMaster') {
+                    baseExcludes += [
+                        'depollsoft/tagmaster/**/*Activity*.*',
+                        'depollsoft/tagmaster/**/*Fragment*.*',
+                        'depollsoft/tagmaster/**/*View*.*',
+                        'depollsoft/tagmaster/**/*Popup*.*',
+                        'depollsoft/tagmaster/**/*Display*.*',
+                        'depollsoft/tagmaster/**/*Browser*.*',
+                        'depollsoft/tagmaster/**/*Application*.*'
+                    ]
+                }
                 def includes = ['**/*.class']
                 if (project.name == 'PitchPerfect') {
                     includes = ['depollsoft/pitchperfect/**/*.class']

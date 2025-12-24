@@ -9,8 +9,8 @@ fun <TResult> bolts.Task<TResult>.asDeferred(): Deferred<TResult> {
     this.continueWith {
         when {
             it.isCancelled -> deferred.completeExceptionally(CancellationException())
-            it.isCompleted -> deferred.complete(it.result)
             it.isFaulted -> deferred.completeExceptionally(it.error)
+            it.isCompleted -> deferred.complete(it.result)
             else -> deferred.completeExceptionally(IllegalStateException("Tasks must be in one of these states"))
         }
     }
@@ -25,8 +25,8 @@ fun <TResult> com.parse.boltsinternal.Task<TResult>.asDeferred(): Deferred<TResu
     this.continueWith {
         when {
             it.isCancelled -> deferred.completeExceptionally(CancellationException())
-            it.isCompleted -> deferred.complete(it.result)
             it.isFaulted -> deferred.completeExceptionally(it.error)
+            it.isCompleted -> deferred.complete(it.result)
             else -> deferred.completeExceptionally(IllegalStateException("Tasks must be in one of these states"))
         }
     }
