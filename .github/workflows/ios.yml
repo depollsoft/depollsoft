@@ -110,11 +110,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods -v '~> 1.16' --no-document
+          pod --version
+
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
 
       - name: Install xcpretty
-        run: gem install xcpretty
+        run: gem install xcpretty --no-document
 
       - name: List available simulators
         run: xcrun simctl list devices available
@@ -379,6 +390,17 @@ jobs:
           key: ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods -v '~> 1.16' --no-document
+          pod --version
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update

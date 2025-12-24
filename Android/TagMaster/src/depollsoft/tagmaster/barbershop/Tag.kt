@@ -247,6 +247,89 @@ class Tag {
         private val CacheWriteLock = Any()
         private const val API_URI_STRING = "https://www.barbershoptags.com/api.php?client=TagMaster&"
         private const val RATING_URI_STRING = "https://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d"
+
+        internal fun buildQueryUrl(
+            query: String?,
+            numberOfResults: Int,
+            start: Int,
+            parts: Int?,
+            learning: Boolean?,
+            sheetMusic: Boolean?,
+            collection: TagCollection?,
+            sortBy: TagSortOptions?,
+            minimumRating: Double?,
+            minimumDownloads: Int?,
+            fieldList: String?
+        ): URL {
+            var effectiveCollection = collection
+            val sb = StringBuffer()
+            sb.append("n=$numberOfResults")
+            if (fieldList != null) sb.append("&fldlist=$fieldList")
+            sb.append("&start=" + (start + 1))
+            if (!(query == null || query.trim { it <= ' ' } == "")) sb.append("&q=" + Uri.encode(query))
+            if (parts != null) sb.append("&Parts=$parts")
+            if (learning != null) sb.append("&Learning=" + if (learning) "Yes" else "No")
+            if (sheetMusic != null) sb.append("&SheetMusic=" + if (sheetMusic) "Yes" else "No")
+            if (sortBy != null) {
+                sb.append("&Sortby=")
+                when (sortBy) {
+                    TagSortOptions.Classic -> {
+                        sb.append("Classic")
+                        effectiveCollection = TagCollection.ClassicTags
+                    }
+                    TagSortOptions.Downloaded -> sb.append("Downloaded")
+                    TagSortOptions.Posted -> sb.append("Posted")
+                    TagSortOptions.Rating -> sb.append("Rating")
+                    TagSortOptions.Title -> sb.append("Title")
+                }
+            }
+            if (effectiveCollection != null) {
+                sb.append("&Collection=")
+                when (effectiveCollection) {
+                    TagCollection.ClassicTags -> sb.append("classic")
+                    TagCollection.EasyTags -> sb.append("easy")
+                }
+            }
+            if (minimumRating != null) sb.append("&MinRating=$minimumRating")
+            if (minimumDownloads != null) sb.append("&MinDownloaded=$minimumDownloads")
+            return URL(API_URI_STRING + sb.toString())
+        }
+
+        internal fun parseTagQueryResult(inputStream: InputStream, start: Int, cache: Boolean): TagQueryResult {
+            val result = TagQueryResult()
+            val doc = XmlDocument.parse(inputStream)
+            val tags = doc.elements("tags")[0]
+            result.available = tags.attribute("available").value.toInt()
+            result.count = tags.attribute("count").value.toInt()
+            result.start = start
+
+            val resultTags = ArrayList<Tag>()
+            for (tagXml in tags.elements("tag")) {
+                val t = Tag()
+                t.parseFromXml(tagXml)
+                resultTags.add(t)
+            }
+            result.tags = resultTags
+            if (cache) for (t in resultTags) t.cache()
+            return result
+        }
+
+        internal fun buildQueryByIdsUrl(ids: List<Int>): URL {
+            return URL("${API_URI_STRING}id=${Uri.encode(ids.joinToString("|"))}&n=${ids.size}")
+        }
+
+        internal fun parseTagsByIdResponse(inputStream: InputStream): Map<Int, Tag> {
+            val doc = XmlDocument.parse(inputStream)
+            val tags = doc.elements("tags")[0]
+            val resultTags = mutableMapOf<Int, Tag>()
+            for (tagXml in tags.elements("tag")) {
+                val t = Tag()
+                t.parseFromXml(tagXml)
+                resultTags[t.id] = t
+            }
+            return resultTags
+        }
+
         fun clearCache() {
             val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
             for (f in directory.listFiles()) f.delete()
@@ -376,55 +459,23 @@ class Tag {
                   parts: Int?, learning: Boolean?, sheetMusic: Boolean?, collection: TagCollection?,
                   sortBy: TagSortOptions?, minimumRating: Double?, minimumDownloads: Int?, cache: Boolean,
                   fieldList: String?): Task<TagQueryResult> {
-            var collection = collection
-            val sb = StringBuffer()
-            sb.append("n=$numberOfResults")
-            if (fieldList != null) sb.append("&fldlist=$fieldList")
-            sb.append("&start=" + (start + 1))
-            if (!(query == null || query.trim { it <= ' ' } == "")) sb.append("&q=" + Uri.encode(query))
-            if (parts != null) sb.append("&Parts=$parts")
-            if (learning != null) sb.append("&Learning=" + if (learning) "Yes" else "No")
-            if (sheetMusic != null) sb.append("&SheetMusic=" + if (sheetMusic) "Yes" else "No")
-            if (sortBy != null) {
-                sb.append("&Sortby=")
-                when (sortBy) {
-                    TagSortOptions.Classic -> {
-                        sb.append("Classic")
-                        collection = TagCollection.ClassicTags
-                    }
-                    TagSortOptions.Downloaded -> sb.append("Downloaded")
-                    TagSortOptions.Posted -> sb.append("Posted")
-                    TagSortOptions.Rating -> sb.append("Rating")
-                    TagSortOptions.Title -> sb.append("Title")
-                }
-            }
-            if (collection != null) {
-                sb.append("&Collection=")
-                when (collection) {
-                    TagCollection.ClassicTags -> sb.append("classic")
-                    TagCollection.EasyTags -> sb.append("easy")
-                }
-            }
-            if (minimumRating != null) sb.append("&MinRating=$minimumRating")
-            if (minimumDownloads != null) sb.append("&MinDownloaded=$minimumDownloads")
             return Task.callInBackground {
-                val url = URL(API_URI_STRING + sb.toString())
-                val result = TagQueryResult()
-                val `is` = url.openStream()
-                val doc = XmlDocument.parse(`is`)
-                val tags = doc.elements("tags")[0]
-                result.available = tags.attribute("available").value.toInt()
-                result.count = tags.attribute("count").value.toInt()
-                result.start = start
-                val resultTags = ArrayList<Tag>()
-                for (tagXml in tags.elements) {
-                    val t = Tag()
-                    t.parseFromXml(tagXml)
-                    resultTags.add(t)
+                val url = buildQueryUrl(
+                    query,
+                    numberOfResults,
+                    start,
+                    parts,
+                    learning,
+                    sheetMusic,
+                    collection,
+                    sortBy,
+                    minimumRating,
+                    minimumDownloads,
+                    fieldList
+                )
+                url.openStream().use { inputStream ->
+                    parseTagQueryResult(inputStream, start, cache)
                 }
-                result.tags = resultTags
-                if (cache) for (t in resultTags) t.cache()
-                result
             }
         }
 
@@ -450,18 +501,9 @@ class Tag {
                 requestSynchronizer.withLock {
                     try {
                         val allIds = idsToQuery.flatMap { it.first }
-                        val url =
-                            URL("${API_URI_STRING}id=${Uri.encode(allIds.joinToString("|"))}&n=${allIds.size}")
-                        var doc: XmlDocument? = null
-                        url.openStream().use {
-                            doc = XmlDocument.parse(it)
-                        }
-                        val tags = doc!!.elements("tags")[0]
-                        val resultTags = mutableMapOf<Int, Tag>()
-                        for (tagXml in tags.elements("tag")) {
-                            val t = Tag()
-                            t.parseFromXml(tagXml)
-                            resultTags[t.id] = t
+                        val url = buildQueryByIdsUrl(allIds)
+                        val resultTags = url.openStream().use { inputStream ->
+                            parseTagsByIdResponse(inputStream)
                         }
 
                         idsToQuery.forEach {
