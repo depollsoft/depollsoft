@@ -107,23 +107,31 @@ jobs:
 
       - name: Setup Ruby and Install CocoaPods
         run: |
-          # Use Homebrew Ruby (system Ruby 2.6 is too old, ruby/setup-ruby has library issues)
+          # Initialize Homebrew environment (sets up all paths properly)
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          
+          # Add Homebrew Ruby to PATH (ahead of system Ruby)
           export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-          export GEM_HOME="$HOME/.gem"
-          export PATH="$GEM_HOME/bin:$PATH"
+          export PATH="$(gem environment gemdir)/bin:$PATH"
           
+          echo "=== Debug info ==="
+          echo "which ruby: $(which ruby)"
           echo "Ruby version: $(ruby --version)"
+          echo "Gem dir: $(gem environment gemdir)"
           
-          # Install gems to user directory
-          gem install --user-install cocoapods --no-document
-          gem install --user-install xcpretty --no-document
+          # Verify Ruby version is 3.x
+          ruby -e 'raise "Ruby 3.x required, found #{RUBY_VERSION}. Run: brew install ruby" unless RUBY_VERSION.start_with?("3.")'
+          
+          # Install gems
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
           
           # Set PATH for subsequent steps
           echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
-          echo "$GEM_HOME/bin" >> $GITHUB_PATH
-          echo "GEM_HOME=$GEM_HOME" >> $GITHUB_ENV
+          echo "$(gem environment gemdir)/bin" >> $GITHUB_PATH
           
           pod --version
+          xcpretty --version
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
@@ -389,23 +397,31 @@ jobs:
 
       - name: Setup Ruby and Install CocoaPods
         run: |
-          # Use Homebrew Ruby (system Ruby 2.6 is too old, ruby/setup-ruby has library issues)
+          # Initialize Homebrew environment (sets up all paths properly)
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          
+          # Add Homebrew Ruby to PATH (ahead of system Ruby)
           export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-          export GEM_HOME="$HOME/.gem"
-          export PATH="$GEM_HOME/bin:$PATH"
+          export PATH="$(gem environment gemdir)/bin:$PATH"
           
+          echo "=== Debug info ==="
+          echo "which ruby: $(which ruby)"
           echo "Ruby version: $(ruby --version)"
+          echo "Gem dir: $(gem environment gemdir)"
           
-          # Install gems to user directory
-          gem install --user-install cocoapods --no-document
-          gem install --user-install xcpretty --no-document
+          # Verify Ruby version is 3.x
+          ruby -e 'raise "Ruby 3.x required, found #{RUBY_VERSION}. Run: brew install ruby" unless RUBY_VERSION.start_with?("3.")'
+          
+          # Install gems
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
           
           # Set PATH for subsequent steps
           echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
-          echo "$GEM_HOME/bin" >> $GITHUB_PATH
-          echo "GEM_HOME=$GEM_HOME" >> $GITHUB_ENV
+          echo "$(gem environment gemdir)/bin" >> $GITHUB_PATH
           
           pod --version
+          xcpretty --version
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
