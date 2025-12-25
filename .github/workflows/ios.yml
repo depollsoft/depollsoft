@@ -86,13 +86,8 @@ jobs:
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
           echo "Using simulator: $DESTINATION"
 
-      - name: Cache CocoaPods Specs
-        uses: actions/cache@v4
-        with:
-          path: ~/.cocoapods
-          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cocoapods-specs-
+      # Note: CocoaPods Specs cache (~1.4GB) is skipped - too slow to extract
+      # and persists locally on self-hosted runner anyway
 
       - name: Cache CocoaPods Pods
         uses: actions/cache@v4
@@ -368,13 +363,8 @@ jobs:
           " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
 
-      - name: Cache CocoaPods Specs
-        uses: actions/cache@v4
-        with:
-          path: ~/.cocoapods
-          key: ${{ runner.os }}-cocoapods-specs-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cocoapods-specs-
+      # Note: CocoaPods Specs cache (~1.4GB) is skipped - too slow to extract
+      # and persists locally on self-hosted runner anyway
 
       - name: Cache CocoaPods Pods
         uses: actions/cache@v4
