@@ -105,14 +105,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          bundler-cache: false
+      - name: Setup Homebrew Ruby
+        run: |
+          # Use Homebrew Ruby (ruby/setup-ruby prebuilt binaries have library compatibility issues)
+          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/lib/ruby/gems/3.4.0/bin" >> $GITHUB_PATH
 
       - name: Install CocoaPods and xcpretty
         run: |
+          echo "Ruby version: $(ruby --version)"
           gem install cocoapods --no-document
           gem install xcpretty --no-document
           pod --version
@@ -379,14 +380,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          bundler-cache: false
+      - name: Setup Homebrew Ruby
+        run: |
+          # Use Homebrew Ruby (ruby/setup-ruby prebuilt binaries have library compatibility issues)
+          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+          echo "/opt/homebrew/lib/ruby/gems/3.4.0/bin" >> $GITHUB_PATH
 
       - name: Install CocoaPods
         run: |
+          echo "Ruby version: $(ruby --version)"
           gem install cocoapods --no-document
           gem install xcpretty --no-document
           pod --version
