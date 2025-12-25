@@ -105,20 +105,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
       - name: Install CocoaPods and xcpretty
         run: |
-          echo "Ruby version: $(ruby --version)"
-          # Install CocoaPods if not already available
-          if ! command -v pod &> /dev/null; then
-            echo "Installing CocoaPods..."
-            sudo gem install cocoapods --no-document
-          fi
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
           pod --version
-          # Install xcpretty if not already available  
-          if ! command -v xcpretty &> /dev/null; then
-            echo "Installing xcpretty..."
-            sudo gem install xcpretty --no-document
-          fi
 
       - name: Install CocoaPods dependencies
         run: pod install --repo-update
@@ -382,14 +379,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
       - name: Install CocoaPods
         run: |
-          echo "Ruby version: $(ruby --version)"
-          # Install CocoaPods if not already available
-          if ! command -v pod &> /dev/null; then
-            echo "Installing CocoaPods..."
-            sudo gem install cocoapods --no-document
-          fi
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
           pod --version
 
       - name: Install CocoaPods dependencies
