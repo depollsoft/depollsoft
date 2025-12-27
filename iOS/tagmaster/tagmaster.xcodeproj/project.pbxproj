@@ -10,6 +10,7 @@
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
+		1E5B19A91FE7533B00241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19A41FE7533B00241069 /* libdepolllib.a */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
@@ -32,15 +33,10 @@
 		63712EFC15130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712EFA15130B21007997CC /* InfoPlist.strings */; };
 		63712EFE15130B21007997CC /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712EFD15130B21007997CC /* main.m */; };
 		63712F0215130B21007997CC /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F0115130B21007997CC /* DPAppDelegate.m */; };
-		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
 		63712F0E15130B21007997CC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EEF15130B21007997CC /* UIKit.framework */; };
 		63712F0F15130B21007997CC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63712EF115130B21007997CC /* Foundation.framework */; };
 		63712F1815130B21007997CC /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63712F1615130B21007997CC /* InfoPlist.strings */; };
 		63712F1B15130B21007997CC /* tagmasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63712F1A15130B21007997CC /* tagmasterTests.m */; };
-		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
- 		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
- 		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
- 		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
 		638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E735A17F769E7000FFE53 /* DPTagDetailController.m */; };
 		638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */; };
 		638E736B17F786CF000FFE53 /* PlusMostViewed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 638E736917F786CF000FFE53 /* PlusMostViewed@2x.png */; };
@@ -91,18 +87,16 @@
 		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
 		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
 		63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */; };
+		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
+		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
+		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
+		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
+		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
 		C1BFD5A02AEB33DA33C58404 /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */; };
-		1E5B19A91FE7533B00241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19A41FE7533B00241069 /* libdepolllib.a */; };
+		F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55119B3912F586A001961332 /* Pods_tagmasterTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		63712F1115130B21007997CC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 63712EE215130B21007997CC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 63712EEA15130B21007997CC;
-			remoteInfo = tagmaster;
-		};
 		1E5B19A21FE7533B00241069 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */;
@@ -124,6 +118,13 @@
 			remoteGlobalIDString = 63DC3732151E9263007C46DB;
 			remoteInfo = depolllib;
 		};
+		63712F1115130B21007997CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63712EE215130B21007997CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63712EEA15130B21007997CC;
+			remoteInfo = tagmaster;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -133,6 +134,7 @@
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E4373A82363633E00C8447F /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		1E4373AC236388A600C8447F /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SafariServices.framework; sourceTree = DEVELOPER_DIR; };
+		1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppTrackingTransparency.framework; path = System/Library/Frameworks/AppTrackingTransparency.framework; sourceTree = SDKROOT; };
 		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -142,7 +144,7 @@
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
+		55119B3912F586A001961332 /* Pods_tagmasterTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmasterTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
@@ -167,17 +169,11 @@
 		63712EFF15130B21007997CC /* tagmaster-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Prefix.pch"; sourceTree = "<group>"; };
 		63712F0015130B21007997CC /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
 		63712F0115130B21007997CC /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
-		A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMTestAppDelegate.m; sourceTree = "<group>"; };
-		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
 		63712F0B15130B21007997CC /* tagmasterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63712F1515130B21007997CC /* tagmasterTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tagmasterTests-Info.plist"; sourceTree = "<group>"; };
 		63712F1715130B21007997CC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63712F1915130B21007997CC /* tagmasterTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tagmasterTests.h; sourceTree = "<group>"; };
 		63712F1A15130B21007997CC /* tagmasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = tagmasterTests.m; sourceTree = "<group>"; };
-		A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
- 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
- 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
- 		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
 		638E735917F769E7000FFE53 /* DPTagDetailController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagDetailController.h; sourceTree = "<group>"; };
 		638E735A17F769E7000FFE53 /* DPTagDetailController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagDetailController.m; sourceTree = "<group>"; };
 		638E735D17F76B13000FFE53 /* DPTagPageControllerBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagPageControllerBase.h; sourceTree = "<group>"; };
@@ -247,7 +243,15 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
+		A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMTestAppDelegate.m; sourceTree = "<group>"; };
+		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
+		A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.release.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.release.xcconfig"; sourceTree = "<group>"; };
 		BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
+		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
+		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
+		DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.debug.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -287,17 +291,29 @@
 			files = (
 				63712F0E15130B21007997CC /* UIKit.framework in Frameworks */,
 				63712F0F15130B21007997CC /* Foundation.framework in Frameworks */,
+				F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1E5B19A11FE7533B00241069 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E5B19A41FE7533B00241069 /* libdepolllib.a */,
+				1E5B19A51FE7533B00241069 /* depolllibTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		485CAF6179ED3C9B6361BC53 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
 				10A01FCBE50DA196795F4BE0 /* Pods-tagmaster.debug.xcconfig */,
 				F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */,
+				DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */,
+				A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */,
 			);
 			name = Pods;
 			path = ../Pods;
@@ -365,6 +381,7 @@
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
 				BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */,
+				55119B3912F586A001961332 /* Pods_tagmasterTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -496,15 +513,6 @@
 			name = Barbershop;
 			sourceTree = "<group>";
 		};
-		1E5B19A11FE7533B00241069 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1E5B19A41FE7533B00241069 /* libdepolllib.a */,
-				1E5B19A51FE7533B00241069 /* depolllibTests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -533,6 +541,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63712F2115130B21007997CC /* Build configuration list for PBXNativeTarget "tagmasterTests" */;
 			buildPhases = (
+				7315611F3660785D7ADEB846 /* [CP] Check Pods Manifest.lock */,
 				63712F0615130B21007997CC /* Sources */,
 				63712F0715130B21007997CC /* Frameworks */,
 				63712F0815130B21007997CC /* Resources */,
@@ -768,6 +777,28 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		7315611F3660785D7ADEB846 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-tagmasterTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -820,15 +851,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		63712F1215130B21007997CC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 63712EEA15130B21007997CC /* tagmaster */;
-			targetProxy = 63712F1115130B21007997CC /* PBXContainerItemProxy */;
-		};
 		1E5B19A81FE7533B00241069 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = depolllib;
 			targetProxy = 1E5B19A71FE7533B00241069 /* PBXContainerItemProxy */;
+		};
+		63712F1215130B21007997CC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63712EEA15130B21007997CC /* tagmaster */;
+			targetProxy = 63712F1115130B21007997CC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1065,6 +1096,7 @@
 		};
 		63712F2215130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
@@ -1088,6 +1120,7 @@
 		};
 		63712F2315130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
