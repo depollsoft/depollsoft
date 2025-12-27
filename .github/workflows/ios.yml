@@ -135,14 +135,15 @@ jobs:
 
       - name: Install CocoaPods dependencies
         run: |
-          # Clean up corrupted CocoaPods repos if they exist
+          # Remove old git-based CocoaPods repos - we now use CDN
+          # This prevents conflicts between old git repos and CDN
           if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
-            cd "$HOME/.cocoapods/repos/cocoapods"
-            if ! git rev-parse HEAD >/dev/null 2>&1; then
-              echo "CocoaPods repo is corrupted, removing..."
-              rm -rf "$HOME/.cocoapods/repos/cocoapods"
-            fi
-            cd - >/dev/null
+            echo "Removing old git-based CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/cocoapods"
+          fi
+          if [ -d "$HOME/.cocoapods/repos/master" ]; then
+            echo "Removing old master CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/master"
           fi
           
           pod install --repo-update
@@ -436,14 +437,15 @@ jobs:
 
       - name: Install CocoaPods dependencies
         run: |
-          # Clean up corrupted CocoaPods repos if they exist
+          # Remove old git-based CocoaPods repos - we now use CDN
+          # This prevents conflicts between old git repos and CDN
           if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
-            cd "$HOME/.cocoapods/repos/cocoapods"
-            if ! git rev-parse HEAD >/dev/null 2>&1; then
-              echo "CocoaPods repo is corrupted, removing..."
-              rm -rf "$HOME/.cocoapods/repos/cocoapods"
-            fi
-            cd - >/dev/null
+            echo "Removing old git-based CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/cocoapods"
+          fi
+          if [ -d "$HOME/.cocoapods/repos/master" ]; then
+            echo "Removing old master CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/master"
           fi
           
           pod install --repo-update
