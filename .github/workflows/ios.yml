@@ -134,7 +134,18 @@ jobs:
           xcpretty --version
 
       - name: Install CocoaPods dependencies
-        run: pod install --repo-update
+        run: |
+          # Clean up corrupted CocoaPods repos if they exist
+          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
+            cd "$HOME/.cocoapods/repos/cocoapods"
+            if ! git rev-parse HEAD >/dev/null 2>&1; then
+              echo "CocoaPods repo is corrupted, removing..."
+              rm -rf "$HOME/.cocoapods/repos/cocoapods"
+            fi
+            cd - >/dev/null
+          fi
+          
+          pod install --repo-update
 
       - name: List available simulators
         run: xcrun simctl list devices available
@@ -424,7 +435,18 @@ jobs:
           xcpretty --version
 
       - name: Install CocoaPods dependencies
-        run: pod install --repo-update
+        run: |
+          # Clean up corrupted CocoaPods repos if they exist
+          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
+            cd "$HOME/.cocoapods/repos/cocoapods"
+            if ! git rev-parse HEAD >/dev/null 2>&1; then
+              echo "CocoaPods repo is corrupted, removing..."
+              rm -rf "$HOME/.cocoapods/repos/cocoapods"
+            fi
+            cd - >/dev/null
+          fi
+          
+          pod install --repo-update
 
       - name: Build pitchperfect
         run: |
