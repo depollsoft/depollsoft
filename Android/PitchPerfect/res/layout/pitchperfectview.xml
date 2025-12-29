@@ -41,13 +41,11 @@
                 android:layout_marginEnd="4dp"/>
 
 
-            <androidx.viewpager.widget.ViewPager
+            <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/viewPager"
                 android:layout_width="match_parent"
                 android:layout_height="0dip"
-                android:layout_weight="1">
-
-            </androidx.viewpager.widget.ViewPager>
+                android:layout_weight="1" />
         </LinearLayout>
     </FrameLayout>
 

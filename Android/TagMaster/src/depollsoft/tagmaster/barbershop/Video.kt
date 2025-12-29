@@ -2,7 +2,25 @@ package depollsoft.tagmaster.barbershop
 
 import com.bindroid.trackable.*
 import depollsoft.lib.xml.XmlElement
+import java.text.SimpleDateFormat
 import java.util.*
+
+private fun parseDate(dateString: String?): Date {
+    if (dateString.isNullOrBlank()) return Date(0)
+    return try {
+        Date(dateString.toLong())
+    } catch (e: NumberFormatException) {
+        try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateString) ?: Date(0)
+        } catch (e2: Exception) {
+            try {
+                SimpleDateFormat("MMM d, yyyy", Locale.US).parse(dateString) ?: Date(0)
+            } catch (e3: Exception) {
+                Date(0)
+            }
+        }
+    }
+}
 
 class Video {
     var id by TrackableInt()
@@ -27,7 +45,7 @@ class Video {
                 "Code" -> youTubeCode = propValue
                 "SungBy" -> sungBy = propValue
                 "SungWebsite" -> sungWebsite = propValue
-                "Posted" -> posted = Date(propValue)
+                "Posted" -> posted = parseDate(propValue)
             }
         }
     }

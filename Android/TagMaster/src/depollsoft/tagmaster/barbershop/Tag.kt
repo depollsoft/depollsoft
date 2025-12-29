@@ -23,8 +23,28 @@ import java.io.*
 import java.lang.Exception
 import java.lang.ref.SoftReference
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+
+private fun parseDate(dateString: String?): Date {
+    if (dateString.isNullOrBlank()) return Date(0)
+    return try {
+        // Try parsing as milliseconds first (for date strings that are timestamps)
+        Date(dateString.toLong())
+    } catch (e: NumberFormatException) {
+        try {
+            // Try common date formats
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateString) ?: Date(0)
+        } catch (e2: Exception) {
+            try {
+                SimpleDateFormat("MMM d, yyyy", Locale.US).parse(dateString) ?: Date(0)
+            } catch (e3: Exception) {
+                Date(0)
+            }
+        }
+    }
+}
 
 class Tag {
     var appVersion: Int by trackable(CURRENT_APP_VERSION)
@@ -115,7 +135,7 @@ class Tag {
     val keyNote: Note?
         get() {
             if (writtenKey == null) return null
-            val noteName: String = writtenKey!!.toUpperCase(Locale.ENGLISH).replace("MAJOR", "")
+            val noteName: String = writtenKey!!.uppercase(Locale.ENGLISH).replace("MAJOR", "")
                     .replace("MINOR", "").replace(":", "").trim { it <= ' ' }
             var acc = Accidental.Natural
             if (noteName.length > 1) acc = if (noteName[1] == '#') Accidental.Sharp else Accidental.Flat
@@ -136,7 +156,7 @@ class Tag {
                 var propValue = property.value
                 if (propValue == null || propValue.trim { it <= ' ' }.length == 0) propValue = null
                 if (propValue != null) propValue = propValue.trim { it <= ' ' }
-                if (property.name == "id" && propValue != null) id = propValue.toInt() else if (property.name == "Title") title = propValue else if (property.name == "AltTitle") alternativeTitle = propValue else if (property.name == "Version") version = propValue else if (property.name == "WritKey") writtenKey = propValue else if (property.name == "Parts" && propValue != null) parts = propValue.toInt() else if (property.name == "Type") tagType = propValue else if (property.name == "Recording") recordingMethod = propValue else if (property.name == "TeachVid") teachingVideo = propValue else if (property.name == "Lyrics") lyrics = propValue else if (property.name == "Notes") notes = propValue else if (property.name == "Arranger") arranger = propValue else if (property.name == "ArrWebsite") arrangerWebsite = propValue else if (property.name == "Arranged" && propValue != null) yearArranged = propValue else if (property.name == "SungBy") sungBy = propValue else if (property.name == "SungWebsite") sungByWebsite = propValue else if (property.name == "SungYear" && propValue != null) sungYear = propValue else if (property.name == "Quartet") learningTrackQuartet = propValue else if (property.name == "QWebsite") learningTrackQuartetWebsite = propValue else if (property.name == "Teacher") teacher = propValue else if (property.name == "TWebsite") teacherWebsite = propValue else if (property.name == "Provider") provider = propValue else if (property.name == "ProvWebsite") providerWebsite = propValue else if (property.name == "Posted") posted = Date(propValue) else if (property.name == "Classic" && propValue != null) classicTagNumber = propValue.toInt() else if (property.name == "Rating" && propValue != null) rating = propValue.toDouble() else if (property.name == "Downloaded" && propValue != null) downloadCount = propValue.replace(",", "").toInt() else if (property.name == "SheetMusic") {
+                if (property.name == "id" && propValue != null) id = propValue.toInt() else if (property.name == "Title") title = propValue else if (property.name == "AltTitle") alternativeTitle = propValue else if (property.name == "Version") version = propValue else if (property.name == "WritKey") writtenKey = propValue else if (property.name == "Parts" && propValue != null) parts = propValue.toInt() else if (property.name == "Type") tagType = propValue else if (property.name == "Recording") recordingMethod = propValue else if (property.name == "TeachVid") teachingVideo = propValue else if (property.name == "Lyrics") lyrics = propValue else if (property.name == "Notes") notes = propValue else if (property.name == "Arranger") arranger = propValue else if (property.name == "ArrWebsite") arrangerWebsite = propValue else if (property.name == "Arranged" && propValue != null) yearArranged = propValue else if (property.name == "SungBy") sungBy = propValue else if (property.name == "SungWebsite") sungByWebsite = propValue else if (property.name == "SungYear" && propValue != null) sungYear = propValue else if (property.name == "Quartet") learningTrackQuartet = propValue else if (property.name == "QWebsite") learningTrackQuartetWebsite = propValue else if (property.name == "Teacher") teacher = propValue else if (property.name == "TWebsite") teacherWebsite = propValue else if (property.name == "Provider") provider = propValue else if (property.name == "ProvWebsite") providerWebsite = propValue else if (property.name == "Posted") posted = parseDate(propValue) else if (property.name == "Classic" && propValue != null) classicTagNumber = propValue.toInt() else if (property.name == "Rating" && propValue != null) rating = propValue.toDouble() else if (property.name == "Downloaded" && propValue != null) downloadCount = propValue.replace(",", "").toInt() else if (property.name == "SheetMusic") {
                     if (!(propValue == null || propValue.length == 0)) {
                         val rl = RemoteLocation()
                         rl.uri = propValue
@@ -233,7 +253,7 @@ class Tag {
             val `is` = url.openStream()
             val br = BufferedReader(InputStreamReader(`is`))
             val value = br.readLine()
-            value.trim { it <= ' ' }.toLowerCase() == "ok"
+            value.trim { it <= ' ' }.lowercase() == "ok"
         }
     }
 

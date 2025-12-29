@@ -69,8 +69,8 @@ post_install do |installer|
     end
     installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
-            if Gem::Version.new('13.0') > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+            if Gem::Version.new('15.0') > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
             end
         end
     end
