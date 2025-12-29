@@ -61,7 +61,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests with coverage
-        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace
+        env:
+          # Increase Gradle memory for containerized runners
+          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace --no-daemon
 
       - name: Collect coverage + test metrics
         if: always()
@@ -230,7 +233,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        env:
+          # Increase Gradle memory for containerized runners
+          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
