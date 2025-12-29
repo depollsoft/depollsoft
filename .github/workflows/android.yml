@@ -26,7 +26,7 @@ defaults:
 
 jobs:
   test:
-    name: Unit Tests & Coverage
+    name: Android Unit Tests & Coverage
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 30
 
@@ -198,7 +198,7 @@ jobs:
           edit-mode: replace
 
   build:
-    name: Build Debug APK
+    name: Android Build Debug APK
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 20
 

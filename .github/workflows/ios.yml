@@ -26,7 +26,7 @@ defaults:
 
 jobs:
   test:
-    name: Unit Tests & Coverage
+    name: iOS Unit Tests & Coverage
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
     env:
@@ -328,7 +328,7 @@ jobs:
           edit-mode: replace
 
   build:
-    name: Build Debug
+    name: iOS Build Debug
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
     needs: test
