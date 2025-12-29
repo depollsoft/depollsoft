@@ -2,6 +2,7 @@ package depollsoft.tagmaster.barbershop
 
 import com.bindroid.trackable.*
 import depollsoft.lib.xml.XmlElement
+import depollsoft.tagmaster.parseDate
 import java.util.*
 
 class Video {
@@ -27,7 +28,7 @@ class Video {
                 "Code" -> youTubeCode = propValue
                 "SungBy" -> sungBy = propValue
                 "SungWebsite" -> sungWebsite = propValue
-                "Posted" -> posted = Date(propValue)
+                "Posted" -> posted = parseDate(propValue)
             }
         }
     }

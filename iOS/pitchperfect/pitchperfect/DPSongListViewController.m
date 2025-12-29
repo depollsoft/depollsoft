@@ -8,6 +8,8 @@
 
 #import "DPSongListViewController.h"
 #import "GoogleMobileAdsStub.h"
+#import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -222,7 +224,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

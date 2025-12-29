@@ -16,6 +16,7 @@
 #import "DPUtils+UIColor.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "pitchperfect-Swift.h"
@@ -244,7 +245,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

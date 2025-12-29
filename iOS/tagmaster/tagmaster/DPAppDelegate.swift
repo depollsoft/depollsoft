@@ -97,7 +97,7 @@ public extension DPAppDelegate {
         try! AVAudioSession.sharedInstance().setCategory(.playback)
         
         var registration: ListenerRegistration? = nil
-        Auth.auth().addStateDidChangeListener { (auth, user) in
+        _ = Auth.auth().addStateDidChangeListener { (auth, user) in
             if registration != nil {
                 registration?.remove()
             }
