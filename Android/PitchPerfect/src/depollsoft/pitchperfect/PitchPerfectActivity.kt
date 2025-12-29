@@ -6,13 +6,12 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.media.AudioManager
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.*
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import bolts.Task
 import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
@@ -67,25 +66,25 @@ class PitchPerfectActivity : AppCompatActivity() {
         }
 
         bottomNavigation = findViewById(R.id.bottomNavigation)
-        val viewPager = findViewById<ViewPager>(R.id.viewPager)
+        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
-        viewPager.adapter = object : FragmentPagerAdapter(this.supportFragmentManager) {
-            override fun getItem(position: Int): Fragment {
-                when (position) {
-                    0 -> return PitchPipeFragment()
-                    1 -> return NoteListFragment()
-                    2 -> return KeySignatureFragment()
-                    3 -> return SongListFragment()
+        viewPager.adapter = object : FragmentStateAdapter(this) {
+            override fun createFragment(position: Int): Fragment {
+                return when (position) {
+                    0 -> PitchPipeFragment()
+                    1 -> NoteListFragment()
+                    2 -> KeySignatureFragment()
+                    3 -> SongListFragment()
+                    else -> PitchPipeFragment()
                 }
-                return PitchPipeFragment()
             }
 
-            override fun getCount(): Int {
+            override fun getItemCount(): Int {
                 return 4
             }
         }
 
-        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
                 bottomNavigation.selectedItemId = when (position) {
@@ -96,19 +95,9 @@ class PitchPerfectActivity : AppCompatActivity() {
                     else -> R.id.pitchpipe_item
                 }
             }
-
-            override fun onPageScrollStateChanged(state: Int) {
-            }
-
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ) {
-            }
         })
 
-        bottomNavigation.setOnNavigationItemSelectedListener {
+        bottomNavigation.setOnItemSelectedListener {
             viewPager.setCurrentItem(
                 when (it.itemId) {
                     R.id.pitchpipe_item -> 0
@@ -215,11 +204,13 @@ class PitchPerfectActivity : AppCompatActivity() {
 
     private fun getAdSize(): AdSize {
         // Step 2 - Determine the screen width (less decorations) to use for the ad width.
-        val display: Display = windowManager.defaultDisplay
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
-        val widthPixels: Float = outMetrics.widthPixels.toFloat()
-        val density: Float = outMetrics.density
+        val density: Float = resources.displayMetrics.density
+        val widthPixels: Float = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.bounds.width().toFloat()
+        } else {
+            @Suppress("DEPRECATION")
+            resources.displayMetrics.widthPixels.toFloat()
+        }
         val adWidth = (widthPixels / density).toInt()
         // Step 3 - Get adaptive ad size and return for setting on the ad view.
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)

@@ -195,13 +195,13 @@ class TagSummaryFragment : Fragment() {
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         intent.setClass(requireContext(), SheetMusicActivity::class.java)
 
-                        if (sheetMusicType.toLowerCase(Locale.US) == "pdf") {
+                        if (sheetMusicType.lowercase(Locale.US) == "pdf") {
                             intent.setDataAndType(path, "application/pdf")
                         } else {
                             val map = MimeTypeMap.getSingleton()
                             val mimeType = map.getMimeTypeFromExtension(
                                 sheetMusicType
-                                    .toLowerCase(Locale.US)
+                                    .lowercase(Locale.US)
                             )
                             intent.setDataAndType(path, mimeType)
                         }

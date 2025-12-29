@@ -16,6 +16,7 @@ import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.xml.XmlDocument
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.tagmaster.await
+import depollsoft.tagmaster.parseDate
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -115,7 +116,7 @@ class Tag {
     val keyNote: Note?
         get() {
             if (writtenKey == null) return null
-            val noteName: String = writtenKey!!.toUpperCase(Locale.ENGLISH).replace("MAJOR", "")
+            val noteName: String = writtenKey!!.uppercase(Locale.ENGLISH).replace("MAJOR", "")
                     .replace("MINOR", "").replace(":", "").trim { it <= ' ' }
             var acc = Accidental.Natural
             if (noteName.length > 1) acc = if (noteName[1] == '#') Accidental.Sharp else Accidental.Flat
@@ -136,94 +137,66 @@ class Tag {
                 var propValue = property.value
                 if (propValue == null || propValue.trim { it <= ' ' }.length == 0) propValue = null
                 if (propValue != null) propValue = propValue.trim { it <= ' ' }
-                if (property.name == "id" && propValue != null) id = propValue.toInt() else if (property.name == "Title") title = propValue else if (property.name == "AltTitle") alternativeTitle = propValue else if (property.name == "Version") version = propValue else if (property.name == "WritKey") writtenKey = propValue else if (property.name == "Parts" && propValue != null) parts = propValue.toInt() else if (property.name == "Type") tagType = propValue else if (property.name == "Recording") recordingMethod = propValue else if (property.name == "TeachVid") teachingVideo = propValue else if (property.name == "Lyrics") lyrics = propValue else if (property.name == "Notes") notes = propValue else if (property.name == "Arranger") arranger = propValue else if (property.name == "ArrWebsite") arrangerWebsite = propValue else if (property.name == "Arranged" && propValue != null) yearArranged = propValue else if (property.name == "SungBy") sungBy = propValue else if (property.name == "SungWebsite") sungByWebsite = propValue else if (property.name == "SungYear" && propValue != null) sungYear = propValue else if (property.name == "Quartet") learningTrackQuartet = propValue else if (property.name == "QWebsite") learningTrackQuartetWebsite = propValue else if (property.name == "Teacher") teacher = propValue else if (property.name == "TWebsite") teacherWebsite = propValue else if (property.name == "Provider") provider = propValue else if (property.name == "ProvWebsite") providerWebsite = propValue else if (property.name == "Posted") posted = Date(propValue) else if (property.name == "Classic" && propValue != null) classicTagNumber = propValue.toInt() else if (property.name == "Rating" && propValue != null) rating = propValue.toDouble() else if (property.name == "Downloaded" && propValue != null) downloadCount = propValue.replace(",", "").toInt() else if (property.name == "SheetMusic") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        sheetMusicUri = rl
-                    }
-                } else if (property.name == "Notation") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        notationUri = rl
-                    }
-                } else if (property.name == "AllParts") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        allPartsTrackUri = rl
-                    }
-                } else if (property.name == "Bass") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        bassTrackUri = rl
-                    }
-                } else if (property.name == "Bari") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        baritoneTrackUri = rl
-                    }
-                } else if (property.name == "Lead") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        leadTrackUri = rl
-                    }
-                } else if (property.name == "Tenor") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        tenorTrackUri = rl
-                    }
-                } else if (property.name == "Other1") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        other1TrackUri = rl
-                    }
-                } else if (property.name == "Other2") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        other2TrackUri = rl
-                    }
-                } else if (property.name == "Other3") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        other3TrackUri = rl
-                    }
-                } else if (property.name == "Other4") {
-                    if (!(propValue == null || propValue.length == 0)) {
-                        val rl = RemoteLocation()
-                        rl.uri = propValue
-                        rl.type = property.attribute("type").value
-                        other4TrackUri = rl
-                    }
-                } else if (property.name == "videos") {
-                    for (elem in property.elements) {
-                        if (elem.name != "video") continue
-                        val v = Video()
-                        v.parseFromXml(elem)
-                        videos!!.add(v)
+                
+                when (property.name) {
+                    "id" -> if (propValue != null) id = propValue.toInt()
+                    "Title" -> title = propValue
+                    "AltTitle" -> alternativeTitle = propValue
+                    "Version" -> version = propValue
+                    "WritKey" -> writtenKey = propValue
+                    "Parts" -> if (propValue != null) parts = propValue.toInt()
+                    "Type" -> tagType = propValue
+                    "Recording" -> recordingMethod = propValue
+                    "TeachVid" -> teachingVideo = propValue
+                    "Lyrics" -> lyrics = propValue
+                    "Notes" -> notes = propValue
+                    "Arranger" -> arranger = propValue
+                    "ArrWebsite" -> arrangerWebsite = propValue
+                    "Arranged" -> if (propValue != null) yearArranged = propValue
+                    "SungBy" -> sungBy = propValue
+                    "SungWebsite" -> sungByWebsite = propValue
+                    "SungYear" -> if (propValue != null) sungYear = propValue
+                    "Quartet" -> learningTrackQuartet = propValue
+                    "QWebsite" -> learningTrackQuartetWebsite = propValue
+                    "Teacher" -> teacher = propValue
+                    "TWebsite" -> teacherWebsite = propValue
+                    "Provider" -> provider = propValue
+                    "ProvWebsite" -> providerWebsite = propValue
+                    "Posted" -> posted = parseDate(propValue)
+                    "Classic" -> if (propValue != null) classicTagNumber = propValue.toInt()
+                    "Rating" -> if (propValue != null) rating = propValue.toDouble()
+                    "Downloaded" -> if (propValue != null) downloadCount = propValue.replace(",", "").toInt()
+                    "SheetMusic" -> parseRemoteLocation(propValue, property)?.let { sheetMusicUri = it }
+                    "Notation" -> parseRemoteLocation(propValue, property)?.let { notationUri = it }
+                    "AllParts" -> parseRemoteLocation(propValue, property)?.let { allPartsTrackUri = it }
+                    "Bass" -> parseRemoteLocation(propValue, property)?.let { bassTrackUri = it }
+                    "Bari" -> parseRemoteLocation(propValue, property)?.let { baritoneTrackUri = it }
+                    "Lead" -> parseRemoteLocation(propValue, property)?.let { leadTrackUri = it }
+                    "Tenor" -> parseRemoteLocation(propValue, property)?.let { tenorTrackUri = it }
+                    "Other1" -> parseRemoteLocation(propValue, property)?.let { other1TrackUri = it }
+                    "Other2" -> parseRemoteLocation(propValue, property)?.let { other2TrackUri = it }
+                    "Other3" -> parseRemoteLocation(propValue, property)?.let { other3TrackUri = it }
+                    "Other4" -> parseRemoteLocation(propValue, property)?.let { other4TrackUri = it }
+                    "videos" -> {
+                        for (elem in property.elements) {
+                            if (elem.name != "video") continue
+                            val v = Video()
+                            v.parseFromXml(elem)
+                            videos!!.add(v)
+                        }
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+    
+    private fun parseRemoteLocation(propValue: String?, property: XmlElement): RemoteLocation? {
+        if (propValue.isNullOrEmpty()) return null
+        return RemoteLocation().apply {
+            uri = propValue
+            type = property.attribute("type").value
         }
     }
 
@@ -233,7 +206,7 @@ class Tag {
             val `is` = url.openStream()
             val br = BufferedReader(InputStreamReader(`is`))
             val value = br.readLine()
-            value.trim { it <= ' ' }.toLowerCase() == "ok"
+            value.trim { it <= ' ' }.lowercase() == "ok"
         }
     }
 

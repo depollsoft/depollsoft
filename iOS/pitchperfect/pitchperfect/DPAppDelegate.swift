@@ -17,7 +17,7 @@ public extension DPAppDelegate {
         convertParseUser()
 
         var registration: ListenerRegistration? = nil
-        Auth.auth().addStateDidChangeListener { (_, user) in
+        _ = Auth.auth().addStateDidChangeListener { (_, user) in
             if let reg = registration {
                 reg.remove()
                 registration = nil

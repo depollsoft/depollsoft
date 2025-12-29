@@ -6,7 +6,7 @@ dependencies {
 }
 
 android {
-    namespace 'depollsoft.lib.compat'
+    namespace = 'depollsoft.lib.compat'
     compileSdkVersion 34
 
     sourceSets {

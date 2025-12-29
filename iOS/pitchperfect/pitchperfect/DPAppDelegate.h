@@ -7,7 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-@class GADRequest;
 
 @class DPNote;
 
@@ -15,7 +14,6 @@
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell;
 + (void)noteTouchEnded:(DPNote *)note forCell:(UITableViewCell *)cell;
-+ (GADRequest *)adRequest;
 
 @property (strong, nonatomic) UIWindow *window;
 

@@ -63,13 +63,13 @@ android {
             storePassword 'depollsoft'
         }
     }
-    namespace 'depollsoft.pitchperfect'
+    namespace = 'depollsoft.pitchperfect'
     compileSdkVersion 34
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 21
         targetSdkVersion 34
-        multiDexEnabled true
+        multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
         versionCode getVersionCode(build: 0, suffix: 0)
     }
@@ -102,7 +102,7 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
     }
 }

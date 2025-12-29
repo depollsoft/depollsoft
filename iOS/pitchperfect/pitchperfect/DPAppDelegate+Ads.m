@@ -1,4 +1,4 @@
-#import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "GoogleMobileAdsStub.h"
 
 @implementation DPAppDelegate (Ads)

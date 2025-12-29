@@ -32,7 +32,8 @@ class VideoParseFromXmlTest {
         root.elements.add(prop("Code", "XYZ"))
         root.elements.add(prop("SungBy", "Choir"))
         root.elements.add(prop("SungWebsite", "https://example.com"))
-        root.elements.add(prop("Posted", "Mon Jan 01 00:00:00 GMT 2018"))
+        // Use millisecond timestamp (Jan 1, 2018 midnight UTC = 1514764800000)
+        root.elements.add(prop("Posted", "1514764800000"))
 
         val video = Video()
         video.parseFromXml(root)
