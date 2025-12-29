@@ -1022,7 +1022,6 @@
 			baseConfigurationReference = 4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = pitchperfect/pitchperfect.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
