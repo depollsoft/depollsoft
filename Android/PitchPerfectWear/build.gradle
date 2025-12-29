@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 
 android {
-    namespace 'depollsoft.pitchperfect'
+    namespace = 'depollsoft.pitchperfect'
     compileSdkVersion 33
 
     defaultConfig {
