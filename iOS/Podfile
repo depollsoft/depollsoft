@@ -31,14 +31,14 @@ def shared_pods
     # 'GoogleUtilities' pulled transitively by Firebase/Google pods; avoid pinning conflicting versions
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore'
-    pod 'FirebaseFirestore'
+    # Use precompiled Firestore SDK for faster build times
+    # https://github.com/invertase/firestore-ios-sdk-frameworks
+    pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.2.0'
     pod 'Firebase/Functions'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/Email'
-    pod 'Protobuf'
+    # Protobuf, gRPC-Core, gRPC-C++ are bundled with precompiled FirebaseFirestore
     pod 'GTMAppAuth'
-    pod 'gRPC-Core'
-    pod 'gRPC-C++'
     pod 'GTMSessionFetcher'
 end
 
