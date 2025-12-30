@@ -267,7 +267,7 @@
 		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
 		6AE01B2A3073D56B65CDBC0B /* Pods-pitchperfectTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfectTests.release.xcconfig"; path = "Target Support Files/Pods-pitchperfectTests/Pods-pitchperfectTests.release.xcconfig"; sourceTree = "<group>"; };
-		7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */ = {isa = PBXFileReference; includeInIndex = 0; path = pitchperfectUITests; sourceTree = BUILT_PRODUCTS_DIR; };
+		7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DPAppDelegate+Ads.m"; sourceTree = "<group>"; };
@@ -601,6 +601,7 @@
 			name = pitchperfectUITests;
 			productName = pitchperfectUITests;
 			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		63DC369C151E8FFF007C46DB /* pitchperfect */ = {
 			isa = PBXNativeTarget;
@@ -1301,6 +1302,7 @@
 				INFOPLIST_FILE = pitchperfectUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.pitchperfectUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1317,6 +1319,7 @@
 				INFOPLIST_FILE = pitchperfectUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.pitchperfectUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
