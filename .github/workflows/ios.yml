@@ -580,3 +580,164 @@ jobs:
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
+
+  ui-tests:
+    name: iOS UI Tests
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 45
+    needs: build
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        id: select_xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.3.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.app"
+          elif [ -d "/Applications/Xcode.app" ]; then
+            XCODE_PATH="/Applications/Xcode.app"
+          else
+            echo "No Xcode installation found!"
+            exit 1
+          fi
+          DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "Selected Xcode: $XCODE_PATH"
+
+      - name: Get iOS Simulator destination
+        id: simulator
+        run: |
+          DESTINATION=$("${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          devices = data.get('devices', {})
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone 16' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
+          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+
+      - name: Cache CocoaPods Pods
+        uses: actions/cache@v4
+        with:
+          path: iOS/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Setup Ruby and Install CocoaPods
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+          export PATH="$(gem environment gemdir)/bin:$PATH"
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
+          echo "/opt/homebrew/opt/ruby/bin" >> $GITHUB_PATH
+          echo "$(gem environment gemdir)/bin" >> $GITHUB_PATH
+
+      - name: Install CocoaPods dependencies
+        run: |
+          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
+            rm -rf "$HOME/.cocoapods/repos/cocoapods"
+          fi
+          if [ -d "$HOME/.cocoapods/repos/master" ]; then
+            rm -rf "$HOME/.cocoapods/repos/master"
+          fi
+          pod install --repo-update
+
+      - name: Run pitchperfect UI tests
+        id: pitchperfect_uitest
+        continue-on-error: true
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectUITests \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -resultBundlePath pitchperfect-uitest-results.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output pitchperfect-uitest-junit.xml || true
+
+      - name: Run tagmaster UI tests
+        id: tagmaster_uitest
+        continue-on-error: true
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            -workspace iOS.xcworkspace \
+            -scheme tagmasterUITests \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -resultBundlePath tagmaster-uitest-results.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output tagmaster-uitest-junit.xml || true
+
+      - name: Summarize UI tests
+        if: always()
+        run: |
+          echo "## iOS UI Tests Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for junit in pitchperfect-uitest-junit.xml tagmaster-uitest-junit.xml; do
+            if [ -f "$junit" ]; then
+              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              SCHEME=$(basename "$junit" -uitest-junit.xml)
+              if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
+                echo "✅ **$SCHEME**: $TESTS tests passed" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "❌ **$SCHEME**: $TESTS tests, $FAILURES failures, $ERRORS errors" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              SCHEME=$(basename "$junit" -uitest-junit.xml)
+              echo "⚠️ **$SCHEME**: Tests did not run" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Upload UI test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-uitest-results
+          path: |
+            iOS/*-uitest-results.xcresult
+            iOS/*-uitest-junit.xml
+          retention-days: 7
+
+      - name: Publish UI test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: iOS UI Tests
+          path: iOS/*-uitest-junit.xml
+          reporter: java-junit
+          fail-on-error: false

@@ -244,3 +244,120 @@ jobs:
           name: debug-apk
           path: Android/**/build/outputs/apk/debug/*.apk
           retention-days: 7
+
+  instrumented-tests:
+    name: Android UI/Instrumented Tests
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 45
+    needs: build
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('Android/**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Enable KVM for hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: Nexus 6
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            cd Android
+            ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon || true
+
+      - name: Collect instrumented test results
+        if: always()
+        id: instr_metrics
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          os.chdir('Android')
+          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
+
+          total_tests = total_failures = total_errors = total_skipped = 0
+          for p in junit_paths:
+            try:
+              root = ET.parse(p).getroot()
+            except Exception:
+              continue
+            if root.tag == 'testsuite':
+              suites = [root]
+            elif root.tag == 'testsuites':
+              suites = list(root.findall('testsuite'))
+            else:
+              suites = []
+            for s in suites:
+              total_tests += int(s.attrib.get('tests', 0))
+              total_failures += int(s.attrib.get('failures', 0))
+              total_errors += int(s.attrib.get('errors', 0))
+              total_skipped += int(s.attrib.get('skipped', 0))
+
+          out_path = os.environ['GITHUB_OUTPUT']
+          with open(out_path, 'a') as f:
+            f.write(f"instr_tests_total={total_tests}\n")
+            f.write(f"instr_tests_failures={total_failures}\n")
+            f.write(f"instr_tests_errors={total_errors}\n")
+
+          summary = []
+          summary.append('## Android — UI/Instrumented Tests')
+          summary.append('')
+          summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY
+
+      - name: Publish instrumented test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Android UI Tests
+          path: Android/**/build/outputs/androidTest-results/connected/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload instrumented test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumented-test-results
+          path: Android/**/build/outputs/androidTest-results/
+          retention-days: 7

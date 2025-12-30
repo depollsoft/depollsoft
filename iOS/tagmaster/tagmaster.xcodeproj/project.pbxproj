@@ -19,6 +19,10 @@
 		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
 		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
 		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
+		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
+		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
+		594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2841862AFC447839A50EF4 /* SearchUITests.swift */; };
+		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -87,19 +91,19 @@
 		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
 		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
 		63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */; };
+		6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */; };
+		8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */; };
+		983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */; };
 		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
 		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
+		C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */; };
+		C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F63FCEA8F84786898B2EADF7 /* Foundation.framework */; };
 		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
 		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
 		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
-		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
-		983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */; };
-		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
-		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
-		6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */; };
-		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
-
 		C1BFD5A02AEB33DA33C58404 /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */; };
+		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
+		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
 		F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55119B3912F586A001961332 /* Pods_tagmasterTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -132,6 +136,13 @@
 			remoteGlobalIDString = 63712EEA15130B21007997CC;
 			remoteInfo = tagmaster;
 		};
+		DA37CCFAFF48F86BCCD54EB0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63712EE215130B21007997CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63712EEA15130B21007997CC;
+			remoteInfo = tagmaster;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -151,7 +162,9 @@
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
 		55119B3912F586A001961332 /* Pods_tagmasterTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmasterTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = tagmasterUITests.swift; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
@@ -250,23 +263,27 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagDetailUITests.swift; sourceTree = "<group>"; };
+		7C2841862AFC447839A50EF4 /* SearchUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchUITests.swift; sourceTree = "<group>"; };
+		7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewControllerTests.m; sourceTree = "<group>"; };
+		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
+		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
+		991D84FBF6F149678772B262 /* DPTrackModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTrackModelTests.m; sourceTree = "<group>"; };
 		A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
 		A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMTestAppDelegate.m; sourceTree = "<group>"; };
 		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
 		A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.release.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.release.xcconfig"; sourceTree = "<group>"; };
+		AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewControllerExtensionTests.swift; sourceTree = "<group>"; };
 		BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
-		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
-		7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewControllerTests.m; sourceTree = "<group>"; };
-		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
-		991D84FBF6F149678772B262 /* DPTrackModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTrackModelTests.m; sourceTree = "<group>"; };
-		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
-		AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewControllerExtensionTests.swift; sourceTree = "<group>"; };
-
+		C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoritesUITests.swift; sourceTree = "<group>"; };
 		DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.debug.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.debug.xcconfig"; sourceTree = "<group>"; };
+		F5BCD0DFDBC06C4180EBF6BC /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F63FCEA8F84786898B2EADF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
+		F87508481E0BDCF004F43CEA /* tagmasterUITests */ = {isa = PBXFileReference; includeInIndex = 0; path = tagmasterUITests; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -309,15 +326,44 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA4909B26F2EB02D874FBE9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		11447BBC18F18E9E2C6F9803 /* tagmasterUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */,
+				7C2841862AFC447839A50EF4 /* SearchUITests.swift */,
+				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
+				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
+				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
+			);
+			name = tagmasterUITests;
+			path = tagmasterUITests;
+			sourceTree = SOURCE_ROOT;
+		};
 		1E5B19A11FE7533B00241069 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				1E5B19A51FE7533B00241069 /* depolllibTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2EC3070B48EA9ECF3AEF3461 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F63FCEA8F84786898B2EADF7 /* Foundation.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 		485CAF6179ED3C9B6361BC53 /* Pods */ = {
@@ -356,6 +402,7 @@
 				1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */,
 				1E5B19A11FE7533B00241069 /* Products */,
 				485CAF6179ED3C9B6361BC53 /* Pods */,
+				11447BBC18F18E9E2C6F9803 /* tagmasterUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -364,6 +411,7 @@
 			children = (
 				63712EEB15130B21007997CC /* tagmaster.app */,
 				63712F0B15130B21007997CC /* tagmasterTests.xctest */,
+				F87508481E0BDCF004F43CEA /* tagmasterUITests */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -395,6 +443,7 @@
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
 				BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */,
 				55119B3912F586A001961332 /* Pods_tagmasterTests.framework */,
+				2EC3070B48EA9ECF3AEF3461 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -467,12 +516,11 @@
 				C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */,
 				C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */,
 				877D645B24654A1D98693468 /* DPTagNetworkTests.m */,
-								7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */,
-								2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */,
-								991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
-								85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
-								AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
-				
+				7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */,
+				2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */,
+				991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
+				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
+				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -576,6 +624,23 @@
 			productReference = 63712F0B15130B21007997CC /* tagmasterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		BCF38A4E6382FE15E8CEB195 /* tagmasterUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E57D9D93C8B553FB94F4D92A /* Build configuration list for PBXNativeTarget "tagmasterUITests" */;
+			buildPhases = (
+				89B3DC7E525B87881B556C96 /* Sources */,
+				AA4909B26F2EB02D874FBE9A /* Frameworks */,
+				3B9BE32B699C1933F0431797 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0DAFBFB23779ECF0CCB15ACC /* PBXTargetDependency */,
+			);
+			name = tagmasterUITests;
+			productName = tagmasterUITests;
+			productReference = F87508481E0BDCF004F43CEA /* tagmasterUITests */;
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -621,6 +686,7 @@
 			targets = (
 				63712EEA15130B21007997CC /* tagmaster */,
 				63712F0A15130B21007997CC /* tagmasterTests */,
+				BCF38A4E6382FE15E8CEB195 /* tagmasterUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -643,6 +709,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3B9BE32B699C1933F0431797 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		63712EE915130B21007997CC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -864,19 +937,35 @@
 				C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */,
 				C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */,
 				C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */,
-								983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */,
-								595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */,
-								C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
-								6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
-								4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
-				
+				983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */,
+				595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */,
+				C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
+				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
+				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		89B3DC7E525B87881B556C96 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */,
+				594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */,
+				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
+				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0DAFBFB23779ECF0CCB15ACC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = tagmaster;
+			target = 63712EEA15130B21007997CC /* tagmaster */;
+			targetProxy = DA37CCFAFF48F86BCCD54EB0 /* PBXContainerItemProxy */;
+		};
 		1E5B19A81FE7533B00241069 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = depolllib;
@@ -917,6 +1006,23 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		42882D499AB05EEEE9C495C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = tagmasterUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = tagmaster;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		63712F1C15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1025,7 +1131,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
@@ -1076,7 +1181,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
@@ -1139,8 +1243,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUNDLE_LOADER)";
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Debug;
@@ -1164,11 +1268,27 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUNDLE_LOADER)";
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUNDLE_LOADER)";
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Release;
+		};
+		8AF3C270EDB5D9EAE4E5E876 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = tagmasterUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = tagmaster;
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -1196,6 +1316,15 @@
 			buildConfigurations = (
 				63712F2215130B21007997CC /* Debug */,
 				63712F2315130B21007997CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E57D9D93C8B553FB94F4D92A /* Build configuration list for PBXNativeTarget "tagmasterUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				42882D499AB05EEEE9C495C5 /* Release */,
+				8AF3C270EDB5D9EAE4E5E876 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

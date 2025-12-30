@@ -11,6 +11,7 @@ OUTDIR="$(cd "$(dirname "$0")" && pwd)/../build/coverage"
 mkdir -p "$OUTDIR"
 
 SCHEMES=("pitchperfect" "tagmaster" "depolllib")
+UITEST_SCHEMES=("pitchperfectUITests" "tagmasterUITests")
 
 green() { printf "\033[32m%s\033[0m\n" "$*"; }
 red() { printf "\033[31m%s\033[0m\n" "$*"; }
@@ -95,5 +96,31 @@ done
 
 echo "\nSummary:"
 for r in "${RESULTS[@]}"; do echo " - $r"; done
+
+# Run UI tests separately (they don't contribute to line coverage but validate UI)
+echo "\nRunning UI Tests..."
+for scheme in "${UITEST_SCHEMES[@]}"; do
+  bundle="$OUTDIR/${scheme}.xcresult"
+  rm -rf "$bundle"
+  echo "Running UI tests for scheme: $scheme"
+  if command -v xcpretty >/dev/null 2>&1; then
+    xcodebuild \
+      -workspace "$WORKSPACE" \
+      -scheme "$scheme" \
+      -configuration Debug \
+      -destination "$DESTINATION" \
+      -resultBundlePath "$bundle" \
+      test | xcpretty || echo "UI tests for $scheme completed (some may have failed)"
+  else
+    echo "Building and testing $scheme (output redirected to ${scheme}.log)..."
+    xcodebuild \
+      -workspace "$WORKSPACE" \
+      -scheme "$scheme" \
+      -configuration Debug \
+      -destination "$DESTINATION" \
+      -resultBundlePath "$bundle" \
+      test > "${scheme}.log" 2>&1 || echo "UI tests for $scheme completed (some may have failed)"
+  fi
+done
 
 exit $fail
