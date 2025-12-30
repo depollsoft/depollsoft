@@ -169,6 +169,8 @@ jobs:
         run: ${{ steps.select_xcode.outputs.xcrun }} simctl list devices available
 
       - name: Run pitchperfect tests with coverage
+        id: pitchperfect_test
+        continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
@@ -183,6 +185,8 @@ jobs:
             | xcpretty --color --report junit --output pitchperfect-junit.xml
 
       - name: Run tagmaster tests with coverage
+        id: tagmaster_test
+        continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
@@ -197,6 +201,8 @@ jobs:
             | xcpretty --color --report junit --output tagmaster-junit.xml
 
       - name: Run pitchperfectlib tests with coverage
+        id: pitchperfectlib_test
+        continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
@@ -209,6 +215,34 @@ jobs:
             -resultBundlePath pitchperfectlib-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfectlib-junit.xml
+
+      - name: Verify test results
+        if: always()
+        run: |
+          # Check junit XML files for actual test failures
+          # xcodebuild may exit 65 due to simctl issues even when tests pass
+          FAILED=0
+          for junit in pitchperfect-junit.xml tagmaster-junit.xml pitchperfectlib-junit.xml; do
+            if [ -f "$junit" ]; then
+              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              if [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
+                echo "❌ $junit has $FAILURES failures and $ERRORS errors out of $TESTS tests"
+                FAILED=1
+              else
+                echo "✅ $junit passed ($TESTS tests)"
+              fi
+            else
+              echo "⚠️ $junit not found - tests may not have run"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::Some tests failed or did not run. Check the junit XML reports."
+            exit 1
+          fi
+          echo "All test suites passed!"
 
       - name: Summarize tests & coverage
         if: always()
