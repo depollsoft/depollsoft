@@ -166,7 +166,7 @@ jobs:
           pod install --repo-update
 
       - name: List available simulators
-        run: "${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available
+        run: ${{ steps.select_xcode.outputs.xcrun }} simctl list devices available
 
       - name: Run pitchperfect tests with coverage
         env:
