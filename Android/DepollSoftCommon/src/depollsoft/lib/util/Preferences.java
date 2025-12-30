@@ -37,8 +37,27 @@ public class Preferences {
   public static class MappingList extends ArrayList<Mapping> {}
   private static SharedPreferences preferences;
   private static Map<String, Trackable> trackableMap;
-  static {
-    Preferences.preferences = RichApplication.getAppContext()
+  private static boolean initialized = false;
+
+  // Test mode support
+  private static boolean testMode = false;
+  private static Map<String, Object> testValues = new HashMap<>();
+
+  /**
+   * Lazily initialize SharedPreferences. This is done lazily to allow test mode
+   * to be set before any SharedPreferences access is attempted.
+   */
+  private static void ensureInitialized() {
+    if (initialized || testMode) {
+      return;
+    }
+    Context context = RichApplication.getAppContext();
+    if (context == null) {
+      // In test mode without proper context, just mark as initialized
+      // and operations will fail gracefully or use test mode
+      return;
+    }
+    Preferences.preferences = context
         .getSharedPreferences("depollsoft.lib.Preferences",
             Context.MODE_PRIVATE);
     Preferences.trackableMap = new HashMap<String, Trackable>();
@@ -47,10 +66,44 @@ public class Preferences {
           if (Preferences.trackableMap.containsKey(key))
             Preferences.trackableMap.remove(key).updateTrackers();
         });
+    initialized = true;
+  }
+
+  /**
+   * Enable test mode to allow tests to run without requiring real SharedPreferences.
+   * When in test mode, get/set/initialize operations use an in-memory map.
+   */
+  public static void setTestMode(boolean enabled) {
+    testMode = enabled;
+    if (!enabled) {
+      testValues.clear();
+    }
+  }
+
+  /**
+   * Check if test mode is enabled.
+   */
+  public static boolean isTestMode() {
+    return testMode;
+  }
+
+  /**
+   * Clear all test values. Only effective in test mode.
+   */
+  public static void clearTestValues() {
+    testValues.clear();
   }
 
   @SuppressWarnings("unchecked")
   public static <T> T get(String key) {
+    if (testMode) {
+      return (T) testValues.get(key);
+    }
+
+    ensureInitialized();
+    if (Preferences.trackableMap == null) {
+      return null;
+    }
     if (!Preferences.trackableMap.containsKey(key))
       Preferences.trackableMap.put(key, new Trackable());
     Preferences.trackableMap.get(key).track();
@@ -70,6 +123,17 @@ public class Preferences {
   }
 
   public static void initialize(String key, Object value, Class<?> type) {
+    if (testMode) {
+      if (!testValues.containsKey(key)) {
+        testValues.put(key, value);
+      }
+      return;
+    }
+
+    ensureInitialized();
+    if (Preferences.preferences == null) {
+      return;
+    }
     if (Preferences.preferences.contains(key)) {
       try {
         Object initialValue = Preferences.get(key);
@@ -102,6 +166,15 @@ public class Preferences {
   }
 
   public static boolean set(String key, Object value) {
+    if (testMode) {
+      testValues.put(key, value);
+      return true;
+    }
+
+    ensureInitialized();
+    if (Preferences.preferences == null) {
+      return false;
+    }
     if (value instanceof Map) {
       value = fromMap((Map<?, ?>)value);
     }

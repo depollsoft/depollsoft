@@ -140,6 +140,16 @@ class ListModel private constructor(val listName: String) {
         }
 
         private var shouldStore = true
+        
+        /**
+         * For testing: disable Firebase storage to allow unit testing without Firebase initialization.
+         * Call this in @Before methods of tests that create ListModel instances.
+         */
+        @JvmStatic
+        fun setTestMode(enabled: Boolean) {
+            shouldStore = !enabled
+        }
+        
         private fun fromFirestore(data: Map<*, *>) {
             shouldStore = false
             try {

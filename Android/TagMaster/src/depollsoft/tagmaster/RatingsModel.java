@@ -31,7 +31,8 @@ public class RatingsModel {
   }
 
   public static void removeRating(int id) {
-    RatingsModel.ratedIds.remove(id);
+    // Use Integer.valueOf(id) to remove by value, not by index
+    RatingsModel.ratedIds.remove(Integer.valueOf(id));
     Preferences.set(RatingsModel.ratedIdsKey, RatingsModel.ratedIds);
   }
 }
