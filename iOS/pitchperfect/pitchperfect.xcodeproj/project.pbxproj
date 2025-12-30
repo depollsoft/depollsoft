@@ -93,6 +93,10 @@
 		C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */; };
 		C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */; };
 		C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */; };
+		C0NEWT0010000000000000F1 /* DPCommonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0010000000000000F1 /* DPCommonTests.swift */; };
+		C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */; };
+		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
+		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
 		D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */; };
 /* End PBXBuildFile section */
 
@@ -261,6 +265,10 @@
 		C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+UUIDFallback.m"; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPViewControllerLifecycleTests.m; sourceTree = "<group>"; };
+		C0NEWF0010000000000000F1 /* DPCommonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPCommonTests.swift; sourceTree = "<group>"; };
+		C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListEdgeCaseTests.swift; sourceTree = "<group>"; };
+		C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelEdgeCaseTests.swift; sourceTree = "<group>"; };
+		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfectTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
@@ -505,6 +513,10 @@
 				C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */,
 				C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */,
 				C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */,
+				C0NEWF0010000000000000F1 /* DPCommonTests.swift */,
+				C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */,
+				C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */,
+				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				63DC36D4151E9000007C46DB /* Supporting Files */,
 			);
 			path = pitchperfectTests;
@@ -868,6 +880,10 @@
 				C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */,
 				C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */,
 				C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */,
+				C0NEWT0010000000000000F1 /* DPCommonTests.swift in Sources */,
+				C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */,
+				C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */,
+				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
