@@ -148,7 +148,7 @@ final class TagDetailUITests: XCTestCase {
     
     func testRemoveFromFavorites() throws {
         // First add to favorites
-        testAddToFavorites()
+        try testAddToFavorites()
         
         // Then remove
         let favoriteButton = app.buttons["favorite"]

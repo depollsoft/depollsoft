@@ -283,7 +283,7 @@
 		F5BCD0DFDBC06C4180EBF6BC /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F63FCEA8F84786898B2EADF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
-		F87508481E0BDCF004F43CEA /* tagmasterUITests */ = {isa = PBXFileReference; includeInIndex = 0; path = tagmasterUITests; sourceTree = BUILT_PRODUCTS_DIR; };
+		F87508481E0BDCF004F43CEA /* tagmasterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -640,6 +640,7 @@
 			name = tagmasterUITests;
 			productName = tagmasterUITests;
 			productReference = F87508481E0BDCF004F43CEA /* tagmasterUITests */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -1015,6 +1016,7 @@
 				INFOPLIST_FILE = tagmasterUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1283,6 +1285,7 @@
 				INFOPLIST_FILE = tagmasterUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
