@@ -63,8 +63,8 @@ jobs:
           # Expose tool paths as outputs so later steps can call the intended toolchain
           # even if the runner's global developer directory points at CommandLineTools.
           echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
-          echo "xcrun=$DEVELOPER_DIR/usr/bin/xcrun" >> $GITHUB_OUTPUT
-          echo "xcodebuild=$DEVELOPER_DIR/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
 
           echo "Selected Xcode: $XCODE_PATH"
 
@@ -173,8 +173,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -188,8 +187,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -203,8 +201,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -320,7 +317,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           if [ -d "pitchperfect-results.xcresult" ]; then
-            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report pitchperfect-results.xcresult > pitchperfect-coverage.txt || true
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report pitchperfect-results.xcresult > pitchperfect-coverage.txt || true
             echo "## Pitch Perfect Coverage Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             head -50 pitchperfect-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
@@ -333,7 +330,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           if [ -d "tagmaster-results.xcresult" ]; then
-            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report tagmaster-results.xcresult > tagmaster-coverage.txt || true
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report tagmaster-results.xcresult > tagmaster-coverage.txt || true
             echo "## Tag Master Coverage Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             head -50 tagmaster-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
@@ -346,7 +343,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           if [ -d "pitchperfectlib-results.xcresult" ]; then
-            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report pitchperfectlib-results.xcresult > pitchperfectlib-coverage.txt || true
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report pitchperfectlib-results.xcresult > pitchperfectlib-coverage.txt || true
             echo "## PitchPerfectLib Coverage Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             head -50 pitchperfectlib-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
@@ -425,8 +422,8 @@ jobs:
           DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
           echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
-          echo "xcrun=$DEVELOPER_DIR/usr/bin/xcrun" >> $GITHUB_OUTPUT
-          echo "xcodebuild=$DEVELOPER_DIR/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
 
           echo "Selected Xcode: $XCODE_PATH"
 
@@ -530,8 +527,7 @@ jobs:
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          "${DEVELOPER_DIR}/usr/bin/xcodebuild" build \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -543,8 +539,7 @@ jobs:
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          "${DEVELOPER_DIR}/usr/bin/xcodebuild" build \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
