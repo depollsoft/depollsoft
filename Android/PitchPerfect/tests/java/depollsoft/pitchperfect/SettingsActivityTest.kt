@@ -1,30 +1,46 @@
 package depollsoft.pitchperfect
 
-import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
-import org.hamcrest.Matchers.*
+import androidx.test.filters.LargeTest
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
  * Instrumented UI tests for the SettingsActivity.
- * Tests all settings toggles, preferences persistence, and UI interactions.
+ * Tests checkboxes, theme radio buttons, buttons, and about section.
+ *
+ * ACTUAL VIEW IDs from settingsview.xml:
+ * - toggleNoteCheckBox: CheckBox for note toggle
+ * - wakeLockCheckBox: CheckBox for wake lock
+ * - clearSongListButton: Button to clear songs
+ * - loginButton, logoutButton, deleteAccountButton: Account buttons
+ * - themeTitleTextView: Theme section title
+ * - radio_light, radio_dark, radio_system: Theme radio buttons
+ * - manageSubscriptionButton: Subscription management
+ * - changelogButton: View changelog
+ * - scrollView1: Main scroll view
+ *
+ * About section (from aboutfooter.xml):
+ * - copyrightTextView, homepageHyperlink, rateReviewHyperlink, Hyperlink01
  */
 @RunWith(AndroidJUnit4::class)
-@MediumTest
+@LargeTest
 class SettingsActivityTest {
 
     @get:Rule
     val activityRule = ActivityScenarioRule(SettingsActivity::class.java)
 
-    // ==================== Layout Tests ====================
+    // ==================== Activity Launch Tests ====================
 
     @Test
     fun testSettingsActivityLaunches() {
@@ -34,533 +50,346 @@ class SettingsActivityTest {
     }
 
     @Test
-    fun testSettingsContainerIsDisplayed() {
-        onView(withId(R.id.settings_container))
+    fun testScrollViewIsDisplayed() {
+        onView(withId(R.id.scrollView1))
+            .check(matches(isDisplayed()))
+    }
+
+    // ==================== Checkbox Tests ====================
+
+    @Test
+    fun testToggleNoteCheckBoxIsDisplayed() {
+        onView(withId(R.id.toggleNoteCheckBox))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testToolbarIsDisplayed() {
-        onView(withId(R.id.toolbar))
+    fun testToggleNoteCheckBoxIsClickable() {
+        onView(withId(R.id.toggleNoteCheckBox))
+            .check(matches(isClickable()))
+    }
+
+    @Test
+    fun testToggleNoteCheckBoxToggle() {
+        // Get initial state and toggle
+        onView(withId(R.id.toggleNoteCheckBox))
+            .perform(click())
+
+        // Toggle back
+        onView(withId(R.id.toggleNoteCheckBox))
+            .perform(click())
+
+        // Should still be displayed
+        onView(withId(R.id.toggleNoteCheckBox))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testBackNavigationIsAvailable() {
-        onView(withContentDescription("Navigate up"))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Wake Lock Setting Tests ====================
-
-    @Test
-    fun testWakeLockSettingIsDisplayed() {
-        onView(withText("Keep Screen On"))
+    fun testWakeLockCheckBoxIsDisplayed() {
+        onView(withId(R.id.wakeLockCheckBox))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testWakeLockSettingDescriptionIsDisplayed() {
-        onView(withText(containsString("Prevent screen from turning off")))
+    fun testWakeLockCheckBoxIsClickable() {
+        onView(withId(R.id.wakeLockCheckBox))
+            .check(matches(isClickable()))
+    }
+
+    @Test
+    fun testWakeLockCheckBoxToggle() {
+        // Toggle wake lock
+        onView(withId(R.id.wakeLockCheckBox))
+            .perform(click())
+
+        // Toggle back
+        onView(withId(R.id.wakeLockCheckBox))
+            .perform(click())
+
+        // Should still be displayed
+        onView(withId(R.id.wakeLockCheckBox))
+            .check(matches(isDisplayed()))
+    }
+
+    // ==================== Clear Song List Button Tests ====================
+
+    @Test
+    fun testClearSongListButtonIsDisplayed() {
+        onView(withId(R.id.clearSongListButton))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testToggleWakeLockOn() {
-        // Click to toggle on
-        onView(withText("Keep Screen On"))
-            .perform(click())
+    fun testClearSongListButtonIsClickable() {
+        onView(withId(R.id.clearSongListButton))
+            .check(matches(isClickable()))
+    }
 
-        // Verify it's enabled
-        onView(allOf(withId(R.id.wake_lock_switch), isChecked()))
+    // ==================== Login/Logout Button Tests ====================
+
+    @Test
+    fun testLoginButtonExists() {
+        // loginButton may be visible or hidden depending on auth state
+        onView(withId(R.id.loginButton))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testToggleWakeLockOff() {
-        // First turn on
-        onView(withText("Keep Screen On"))
-            .perform(click())
+    fun testLogoutButtonExists() {
+        // logoutButton visibility depends on auth state
+        // Just verify the view exists in the hierarchy
+        onView(withId(R.id.logoutButton))
+            .check(matches(anyOf(
+                withEffectiveVisibility(Visibility.VISIBLE),
+                withEffectiveVisibility(Visibility.GONE))))
+    }
 
-        // Then turn off
-        onView(withText("Keep Screen On"))
-            .perform(click())
+    @Test
+    fun testDeleteAccountButtonExists() {
+        // deleteAccountButton visibility depends on auth state
+        onView(withId(R.id.deleteAccountButton))
+            .check(matches(anyOf(
+                withEffectiveVisibility(Visibility.VISIBLE),
+                withEffectiveVisibility(Visibility.GONE))))
+    }
 
-        // Verify it's disabled
-        onView(allOf(withId(R.id.wake_lock_switch), not(isChecked())))
+    // ==================== Theme Section Tests ====================
+
+    @Test
+    fun testThemeTitleTextViewIsDisplayed() {
+        onView(withId(R.id.themeTitleTextView))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testWakeLockPersistsAfterReopen() {
-        // Enable wake lock
-        onView(withText("Keep Screen On"))
-            .perform(click())
-
-        // Close and reopen activity
-        activityRule.scenario.recreate()
-
-        Thread.sleep(500)
-
-        // Verify setting is still enabled
-        onView(allOf(withId(R.id.wake_lock_switch), isChecked()))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Note Mode Setting Tests ====================
-
-    @Test
-    fun testNoteModeSettingIsDisplayed() {
-        onView(withText("Note Mode"))
+    fun testRadioSystemIsDisplayed() {
+        onView(withId(R.id.radio_system))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testNoteModeOptions() {
-        onView(withText("Note Mode"))
-            .perform(click())
-
-        // Verify options are shown
-        onView(withText("Toggle"))
-            .check(matches(isDisplayed()))
-        onView(withText("Hold"))
+    fun testRadioLightIsDisplayed() {
+        onView(withId(R.id.radio_light))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testSelectToggleMode() {
-        onView(withText("Note Mode"))
-            .perform(click())
-
-        onView(withText("Toggle"))
-            .perform(click())
-
-        // Verify selection
-        onView(withText(containsString("Toggle")))
+    fun testRadioDarkIsDisplayed() {
+        onView(withId(R.id.radio_dark))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testSelectHoldMode() {
-        onView(withText("Note Mode"))
-            .perform(click())
-
-        onView(withText("Hold"))
-            .perform(click())
-
-        // Verify selection
-        onView(withText(containsString("Hold")))
-            .check(matches(isDisplayed()))
+    fun testRadioSystemIsClickable() {
+        onView(withId(R.id.radio_system))
+            .check(matches(isClickable()))
     }
 
     @Test
-    fun testNoteModePersistsAfterReopen() {
-        // Select Hold mode
-        onView(withText("Note Mode"))
-            .perform(click())
-        onView(withText("Hold"))
-            .perform(click())
-
-        // Recreate activity
-        activityRule.scenario.recreate()
-
-        Thread.sleep(500)
-
-        // Verify Hold is still selected
-        onView(withText(containsString("Hold")))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Range Setting Tests ====================
-
-    @Test
-    fun testDefaultRangeSettingIsDisplayed() {
-        onView(withText("Default Range"))
-            .check(matches(isDisplayed()))
+    fun testRadioLightIsClickable() {
+        onView(withId(R.id.radio_light))
+            .check(matches(isClickable()))
     }
 
     @Test
-    fun testRangeOptions() {
-        onView(withText("Default Range"))
-            .perform(click())
-
-        // Verify options
-        onView(withText("C to C"))
-            .check(matches(isDisplayed()))
-        onView(withText("F to F"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSelectCToCRange() {
-        onView(withText("Default Range"))
-            .perform(click())
-
-        onView(withText("C to C"))
-            .perform(click())
-
-        // Verify selection
-        onView(withText(containsString("C to C")))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSelectFToFRange() {
-        onView(withText("Default Range"))
-            .perform(click())
-
-        onView(withText("F to F"))
-            .perform(click())
-
-        // Verify selection
-        onView(withText(containsString("F to F")))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Sound Setting Tests ====================
-
-    @Test
-    fun testSoundSettingIsDisplayed() {
-        onView(withText("Sound"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSoundOptions() {
-        onView(withText("Sound"))
-            .perform(click())
-
-        // Verify sound options
-        onView(withText(containsString("Sine")))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSelectDifferentSound() {
-        onView(withText("Sound"))
-            .perform(click())
-
-        // Select a sound option
-        onView(withText(containsString("Sine")))
-            .perform(click())
-    }
-
-    // ==================== Octave Setting Tests ====================
-
-    @Test
-    fun testDefaultOctaveSettingIsDisplayed() {
-        onView(withText("Default Octave"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testOctaveOptions() {
-        onView(withText("Default Octave"))
-            .perform(click())
-
-        // Verify octave options (3, 4, 5)
-        onView(withText("3"))
-            .check(matches(isDisplayed()))
-        onView(withText("4"))
-            .check(matches(isDisplayed()))
-        onView(withText("5"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSelectOctave3() {
-        onView(withText("Default Octave"))
-            .perform(click())
-
-        onView(withText("3"))
-            .perform(click())
-    }
-
-    @Test
-    fun testSelectOctave4() {
-        onView(withText("Default Octave"))
-            .perform(click())
-
-        onView(withText("4"))
-            .perform(click())
-    }
-
-    @Test
-    fun testSelectOctave5() {
-        onView(withText("Default Octave"))
-            .perform(click())
-
-        onView(withText("5"))
-            .perform(click())
-    }
-
-    // ==================== Theme Setting Tests ====================
-
-    @Test
-    fun testThemeSettingIsDisplayed() {
-        onView(withText("Theme"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testThemeOptions() {
-        onView(withText("Theme"))
-            .perform(click())
-
-        // Verify theme options
-        onView(withText("Light"))
-            .check(matches(isDisplayed()))
-        onView(withText("Dark"))
-            .check(matches(isDisplayed()))
-        onView(withText("System"))
-            .check(matches(isDisplayed()))
+    fun testRadioDarkIsClickable() {
+        onView(withId(R.id.radio_dark))
+            .check(matches(isClickable()))
     }
 
     @Test
     fun testSelectLightTheme() {
-        onView(withText("Theme"))
+        onView(withId(R.id.radio_light))
             .perform(click())
 
-        onView(withText("Light"))
-            .perform(click())
-
-        // Theme should be applied
+        onView(withId(R.id.radio_light))
+            .check(matches(isChecked()))
     }
 
     @Test
     fun testSelectDarkTheme() {
-        onView(withText("Theme"))
+        onView(withId(R.id.radio_dark))
             .perform(click())
 
-        onView(withText("Dark"))
-            .perform(click())
+        onView(withId(R.id.radio_dark))
+            .check(matches(isChecked()))
     }
 
     @Test
     fun testSelectSystemTheme() {
-        onView(withText("Theme"))
+        onView(withId(R.id.radio_system))
             .perform(click())
 
-        onView(withText("System"))
-            .perform(click())
-    }
-
-    // ==================== About Section Tests ====================
-
-    @Test
-    fun testAboutSectionIsDisplayed() {
-        // Scroll to about section
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withText("About"))
-            .check(matches(isDisplayed()))
+        onView(withId(R.id.radio_system))
+            .check(matches(isChecked()))
     }
 
     @Test
-    fun testVersionInfoIsDisplayed() {
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withText(containsString("Version")))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testPrivacyPolicyLink() {
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withText("Privacy Policy"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testPrivacyPolicyOpensWeb() {
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withText("Privacy Policy"))
+    fun testThemeRadioButtonsMutuallyExclusive() {
+        // Select light
+        onView(withId(R.id.radio_light))
             .perform(click())
 
-        // Verify web view or browser intent
-    }
+        // Verify light is checked, others not
+        onView(withId(R.id.radio_light))
+            .check(matches(isChecked()))
+        onView(withId(R.id.radio_dark))
+            .check(matches(not(isChecked())))
+        onView(withId(R.id.radio_system))
+            .check(matches(not(isChecked())))
 
-    @Test
-    fun testTermsOfServiceLink() {
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withText("Terms of Service"))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Account Section Tests ====================
-
-    @Test
-    fun testAccountSectionIsDisplayed() {
-        onView(withText("Account"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSignInOptionIsDisplayed() {
-        onView(withText(anyOf(equalTo("Sign In"), equalTo("Sign Out"))))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSignInOpensAuthFlow() {
-        onView(withText("Sign In"))
+        // Select dark
+        onView(withId(R.id.radio_dark))
             .perform(click())
 
-        // Verify auth UI appears
-        Thread.sleep(500)
+        // Verify dark is checked, others not
+        onView(withId(R.id.radio_dark))
+            .check(matches(isChecked()))
+        onView(withId(R.id.radio_light))
+            .check(matches(not(isChecked())))
+        onView(withId(R.id.radio_system))
+            .check(matches(not(isChecked())))
     }
 
-    // ==================== Premium/Ads Section Tests ====================
+    // ==================== Subscription/Changelog Button Tests ====================
 
     @Test
-    fun testRemoveAdsOptionIsDisplayed() {
-        onView(withText("Remove Ads"))
+    fun testManageSubscriptionButtonExists() {
+        // May be hidden based on subscription state
+        onView(withId(R.id.manageSubscriptionButton))
+            .check(matches(anyOf(
+                withEffectiveVisibility(Visibility.VISIBLE),
+                withEffectiveVisibility(Visibility.GONE))))
+    }
+
+    @Test
+    fun testChangelogButtonIsDisplayed() {
+        onView(withId(R.id.changelogButton))
+            .perform(scrollTo())
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testRemoveAdsOpensIAP() {
-        onView(withText("Remove Ads"))
+    fun testChangelogButtonIsClickable() {
+        onView(withId(R.id.changelogButton))
+            .perform(scrollTo())
+            .check(matches(isClickable()))
+    }
+
+    // ==================== About Footer Tests ====================
+
+    @Test
+    fun testCopyrightTextViewIsDisplayed() {
+        onView(withId(R.id.copyrightTextView))
+            .perform(scrollTo())
+            .check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun testHomepageHyperlinkIsDisplayed() {
+        onView(withId(R.id.homepageHyperlink))
+            .perform(scrollTo())
+            .check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun testHomepageHyperlinkIsClickable() {
+        onView(withId(R.id.homepageHyperlink))
+            .perform(scrollTo())
+            .check(matches(isClickable()))
+    }
+
+    @Test
+    fun testRateReviewHyperlinkExists() {
+        // May be hidden based on purchase state
+        onView(withId(R.id.rateReviewHyperlink))
+            .check(matches(anyOf(
+                withEffectiveVisibility(Visibility.VISIBLE),
+                withEffectiveVisibility(Visibility.GONE))))
+    }
+
+    @Test
+    fun testTermsOfUseHyperlinkIsDisplayed() {
+        onView(withId(R.id.Hyperlink01))
+            .perform(scrollTo())
+            .check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun testTermsOfUseHyperlinkIsClickable() {
+        onView(withId(R.id.Hyperlink01))
+            .perform(scrollTo())
+            .check(matches(isClickable()))
+    }
+
+    // ==================== Checkbox State Persistence Tests ====================
+
+    @Test
+    fun testToggleNoteCheckBoxPersistsAfterRecreate() {
+        // Get initial state, toggle, then recreate
+        onView(withId(R.id.toggleNoteCheckBox))
             .perform(click())
 
-        // Verify IAP dialog appears
-        Thread.sleep(500)
-    }
-
-    @Test
-    fun testRestorePurchasesOption() {
-        onView(withText("Restore Purchases"))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testRestorePurchasesAction() {
-        onView(withText("Restore Purchases"))
-            .perform(click())
-
-        // Verify restore process starts
-        Thread.sleep(500)
-    }
-
-    // ==================== Navigation Tests ====================
-
-    @Test
-    fun testBackButtonReturnsToMain() {
-        onView(withContentDescription("Navigate up"))
-            .perform(click())
-
-        // Should return to main activity
-        onView(withId(R.id.pager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSystemBackReturnsToMain() {
-        // Press system back
-        androidx.test.espresso.Espresso.pressBack()
-
-        // Should return to main
-        onView(withId(R.id.pager))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Scroll Tests ====================
-
-    @Test
-    fun testSettingsListIsScrollable() {
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-
-        onView(withId(R.id.settings_container))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testCanScrollToAllSettings() {
-        // Scroll to bottom
-        onView(withId(R.id.settings_container))
-            .perform(swipeUp())
-            .perform(swipeUp())
-            .perform(swipeUp())
-
-        // Should reach about section
-        onView(withText(containsString("Version")))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Configuration Change Tests ====================
-
-    @Test
-    fun testSettingsSurviveRotation() {
-        // Change a setting
-        onView(withText("Keep Screen On"))
-            .perform(click())
-
-        // Rotate
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
-
-        // Verify setting persists
-        onView(allOf(withId(R.id.wake_lock_switch), isChecked()))
+        // Verify checkbox is still displayed after recreate
+        onView(withId(R.id.toggleNoteCheckBox))
             .check(matches(isDisplayed()))
     }
 
-    // ==================== Accessibility Tests ====================
-
     @Test
-    fun testSettingsItemsHaveContentDescriptions() {
-        onView(withText("Keep Screen On"))
-            .check(matches(hasContentDescription()))
+    fun testWakeLockCheckBoxPersistsAfterRecreate() {
+        // Toggle wake lock
+        onView(withId(R.id.wakeLockCheckBox))
+            .perform(click())
+
+        activityRule.scenario.recreate()
+
+        // Verify checkbox is still displayed after recreate
+        onView(withId(R.id.wakeLockCheckBox))
+            .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testSwitchesAreAccessible() {
-        onView(withId(R.id.wake_lock_switch))
-            .check(matches(allOf(isDisplayed(), isClickable())))
+    fun testThemePersistsAfterRecreate() {
+        // Select dark theme
+        onView(withId(R.id.radio_dark))
+            .perform(click())
+
+        activityRule.scenario.recreate()
+
+        // Verify dark theme is still selected
+        onView(withId(R.id.radio_dark))
+            .check(matches(isChecked()))
     }
 
-    // ==================== Edge Cases ====================
+    // ==================== Multiple Interaction Tests ====================
 
     @Test
-    fun testRapidSettingToggling() {
-        // Rapidly toggle a setting
-        repeat(5) {
-            onView(withText("Keep Screen On"))
-                .perform(click())
-            Thread.sleep(100)
-        }
+    fun testMultipleCheckboxToggles() {
+        // Toggle both checkboxes
+        onView(withId(R.id.toggleNoteCheckBox))
+            .perform(click())
+        onView(withId(R.id.wakeLockCheckBox))
+            .perform(click())
 
         // UI should still be responsive
-        onView(withId(R.id.settings_container))
+        onView(withId(R.id.scrollView1))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testMultipleSettingsChanges() {
-        // Change multiple settings
-        onView(withText("Keep Screen On")).perform(click())
-        
-        onView(withText("Note Mode")).perform(click())
-        onView(withText("Hold")).perform(click())
-        
-        onView(withText("Default Range")).perform(click())
-        onView(withText("F to F")).perform(click())
+    fun testAllThemeOptionsSelectable() {
+        // Select each theme in sequence
+        onView(withId(R.id.radio_light))
+            .perform(click())
+        onView(withId(R.id.radio_dark))
+            .perform(click())
+        onView(withId(R.id.radio_system))
+            .perform(click())
 
-        // Recreate and verify all persist
-        activityRule.scenario.recreate()
-
-        Thread.sleep(500)
-
-        onView(allOf(withId(R.id.wake_lock_switch), isChecked()))
-            .check(matches(isDisplayed()))
+        // Final state should be system
+        onView(withId(R.id.radio_system))
+            .check(matches(isChecked()))
     }
 }

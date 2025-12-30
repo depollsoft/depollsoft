@@ -68,14 +68,14 @@ dependencies {
 
 android {
     namespace = 'depollsoft.tagmaster'
-    compileSdkVersion 32
+    compileSdkVersion 34
 
     defaultConfig {
         multiDexEnabled = true
         applicationId "depollsoft.tagmaster"
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
         resourceConfigurations += ['en']
         versionCode getVersionCode(build: 0, suffix: 1)
     }
