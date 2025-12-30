@@ -35,6 +35,15 @@
 		C0PPT0010000000000000009 /* DPNoteTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF0010000000000000009 /* DPNoteTests.m */; };
 		C0PPT002000000000000000A /* DPKeyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF002000000000000000A /* DPKeyTests.m */; };
 		C0PPT003000000000000000B /* DPPitchedSongTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF003000000000000000B /* DPPitchedSongTests.m */; };
+		C0PPT004000000000000000C /* DPAudioSynthesizerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */; };
+		C0PPT005000000000000000D /* DPPitchPipeButtonTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */; };
+		C0PPFWK0010000000000000E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0PPFWR0010000000000000F /* UIKit.framework */; };
+		C0PPFWK0020000000000000G /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0PPFWR0020000000000000H /* CoreGraphics.framework */; };
+		C0PPT00800000000000000E3 /* DPNoteEdgeCaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */; };
+		C0PPT00900000000000000E4 /* DPKeyEdgeCaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00900000000000000E4 /* DPKeyEdgeCaseTests.m */; };
+		C0PPT00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m */; };
+		C0PPT00C00000000000000E7 /* DPPitchPipeComponentsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00C00000000000000E7 /* DPPitchPipeComponentsTests.m */; };
+		C0PPT00D00000000000000E8 /* AudioUnitStubs.m in Sources */ = {isa = PBXBuildFile; fileRef = C0PTF00D00000000000000E8 /* AudioUnitStubs.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +100,16 @@
 		C0PTF0010000000000000009 /* DPNoteTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPNoteTests.m; sourceTree = "<group>"; };
 		C0PTF002000000000000000A /* DPKeyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPKeyTests.m; sourceTree = "<group>"; };
 		C0PTF003000000000000000B /* DPPitchedSongTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchedSongTests.m; sourceTree = "<group>"; };
+		C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAudioSynthesizerTests.m; sourceTree = "<group>"; };
+		C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeButtonTests.m; sourceTree = "<group>"; };
+		C0PPFWR0010000000000000F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		C0PPFWR0020000000000000H /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPNoteEdgeCaseTests.m; sourceTree = "<group>"; };
+		C0PTF00900000000000000E4 /* DPKeyEdgeCaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPKeyEdgeCaseTests.m; sourceTree = "<group>"; };
+		C0PTF00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchedSongEdgeCaseTests.m; sourceTree = "<group>"; };
+		C0PTF00C00000000000000E7 /* DPPitchPipeComponentsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeComponentsTests.m; sourceTree = "<group>"; };
+		C0PTF00D00000000000000E8 /* AudioUnitStubs.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AudioUnitStubs.m; sourceTree = "<group>"; };
+		C0PTF00E00000000000000E9 /* STAssertCompat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STAssertCompat.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +133,8 @@
 				C0PPFT00100000000000000C /* libdepolllib.a in Frameworks */,
 				C0PPFT00200000000000000D /* CoreAudio.framework in Frameworks */,
 				A1F1C7142F8C24E500000002 /* AudioToolbox.framework in Frameworks */,
+				C0PPFWK0010000000000000E /* UIKit.framework in Frameworks */,
+				C0PPFWK0020000000000000G /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,6 +212,14 @@
 				C0PTF0010000000000000009 /* DPNoteTests.m */,
 				C0PTF002000000000000000A /* DPKeyTests.m */,
 				C0PTF003000000000000000B /* DPPitchedSongTests.m */,
+				C0PTF004000000000000000C /* DPAudioSynthesizerTests.m */,
+				C0PTF005000000000000000D /* DPPitchPipeButtonTests.m */,
+				C0PTF00800000000000000E3 /* DPNoteEdgeCaseTests.m */,
+				C0PTF00900000000000000E4 /* DPKeyEdgeCaseTests.m */,
+				C0PTF00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m */,
+				C0PTF00C00000000000000E7 /* DPPitchPipeComponentsTests.m */,
+				C0PTF00D00000000000000E8 /* AudioUnitStubs.m */,
+				C0PTF00E00000000000000E9 /* STAssertCompat.h */,
 			);
 			path = pitchperfectlibTests;
 			sourceTree = "<group>";
@@ -347,6 +376,13 @@
 				C0PPT0010000000000000009 /* DPNoteTests.m in Sources */,
 				C0PPT002000000000000000A /* DPKeyTests.m in Sources */,
 				C0PPT003000000000000000B /* DPPitchedSongTests.m in Sources */,
+				C0PPT004000000000000000C /* DPAudioSynthesizerTests.m in Sources */,
+				C0PPT005000000000000000D /* DPPitchPipeButtonTests.m in Sources */,
+				C0PPT00800000000000000E3 /* DPNoteEdgeCaseTests.m in Sources */,
+				C0PPT00900000000000000E4 /* DPKeyEdgeCaseTests.m in Sources */,
+				C0PPT00A00000000000000E5 /* DPPitchedSongEdgeCaseTests.m in Sources */,
+				C0PPT00C00000000000000E7 /* DPPitchPipeComponentsTests.m in Sources */,
+				C0PPT00D00000000000000E8 /* AudioUnitStubs.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

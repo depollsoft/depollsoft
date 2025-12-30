@@ -92,6 +92,13 @@
 		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
 		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
 		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
+		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
+		983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */; };
+		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
+		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
+		6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */; };
+		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
+
 		C1BFD5A02AEB33DA33C58404 /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */; };
 		F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55119B3912F586A001961332 /* Pods_tagmasterTests.framework */; };
 /* End PBXBuildFile section */
@@ -251,6 +258,13 @@
 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
+		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
+		7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewControllerTests.m; sourceTree = "<group>"; };
+		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
+		991D84FBF6F149678772B262 /* DPTrackModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTrackModelTests.m; sourceTree = "<group>"; };
+		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
+		AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewControllerExtensionTests.swift; sourceTree = "<group>"; };
+
 		DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.debug.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -452,6 +466,13 @@
 				C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */,
 				C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */,
 				C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */,
+				877D645B24654A1D98693468 /* DPTagNetworkTests.m */,
+								7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */,
+								2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */,
+								991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
+								85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
+								AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
+				
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -842,6 +863,13 @@
 				C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */,
 				C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */,
 				C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */,
+				C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */,
+								983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */,
+								595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */,
+								C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
+								6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
+								4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
+				
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1112,6 +1140,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
+				SWIFT_VERSION = 5.0;
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Debug;
@@ -1136,6 +1165,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
+				SWIFT_VERSION = 5.0;
 				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Release;
