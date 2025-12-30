@@ -41,6 +41,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode version
+        id: select_xcode
         run: |
           # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
@@ -54,27 +55,30 @@ jobs:
             exit 1
           fi
           
-          # Set DEVELOPER_DIR for this and subsequent steps
-          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
-          echo "$XCODE_PATH/Contents/Developer/usr/bin" >> $GITHUB_PATH
-          
-          # Use xcode-select to set the system-wide active developer directory
-          # This ensures xcrun can find simctl even in subprocesses
-          sudo xcode-select -s "$XCODE_PATH"
-          
+          # Pin the developer directory for subsequent steps (no global xcode-select).
+          DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+
+          # Expose tool paths as outputs so later steps can call the intended toolchain
+          # even if the runner's global developer directory points at CommandLineTools.
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcrun=$DEVELOPER_DIR/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=$DEVELOPER_DIR/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+
           echo "Selected Xcode: $XCODE_PATH"
 
       - name: Show Xcode version
         id: xcode
         run: |
-          xcodebuild -version
-          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -version
+          XCODE_VERSION=$("${{ steps.select_xcode.outputs.xcodebuild }}" -version | head -1 | sed 's/Xcode //')
           echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
 
       - name: Get iOS Simulator destination
         id: simulator
         run: |
-          DESTINATION=$(xcrun simctl list devices available -j | python3 -c "
+          DESTINATION=$("${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           devices = data.get('devices', {})
@@ -162,15 +166,15 @@ jobs:
           pod install --repo-update
 
       - name: List available simulators
-        run: xcrun simctl list devices available
+        run: "${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available
 
       - name: Run pitchperfect tests with coverage
         env:
-          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
           export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          xcodebuild test \
+          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -181,11 +185,11 @@ jobs:
 
       - name: Run tagmaster tests with coverage
         env:
-          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
           export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          xcodebuild test \
+          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -196,11 +200,11 @@ jobs:
 
       - name: Run pitchperfectlib tests with coverage
         env:
-          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
           export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
-          xcodebuild test \
+          "${DEVELOPER_DIR}/usr/bin/xcodebuild" test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -212,6 +216,9 @@ jobs:
       - name: Summarize tests & coverage
         if: always()
         id: metrics
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
         run: |
           python3 - <<'PY'
           import json
@@ -239,9 +246,10 @@ jobs:
             return (tests, failures, errors, skipped)
 
           def xccov_percent(xcresult: str) -> float:
+            xcrun = os.environ.get('XCRUN', 'xcrun')
             try:
               out = subprocess.check_output(
-                ['xcrun', 'xccov', 'view', '--report', '--json', xcresult],
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
                 stderr=subprocess.STDOUT,
                 text=True,
               )
@@ -308,9 +316,11 @@ jobs:
 
       - name: Generate coverage report for pitchperfect
         if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           if [ -d "pitchperfect-results.xcresult" ]; then
-            xcrun xccov view --report pitchperfect-results.xcresult > pitchperfect-coverage.txt || true
+            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report pitchperfect-results.xcresult > pitchperfect-coverage.txt || true
             echo "## Pitch Perfect Coverage Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             head -50 pitchperfect-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
@@ -319,12 +329,27 @@ jobs:
 
       - name: Generate coverage report for tagmaster
         if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           if [ -d "tagmaster-results.xcresult" ]; then
-            xcrun xccov view --report tagmaster-results.xcresult > tagmaster-coverage.txt || true
+            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report tagmaster-results.xcresult > tagmaster-coverage.txt || true
             echo "## Tag Master Coverage Report" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             head -50 tagmaster-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Generate coverage report for pitchperfectlib
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          if [ -d "pitchperfectlib-results.xcresult" ]; then
+            "${DEVELOPER_DIR}/usr/bin/xcrun" xccov view --report pitchperfectlib-results.xcresult > pitchperfectlib-coverage.txt || true
+            echo "## PitchPerfectLib Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 pitchperfectlib-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -383,6 +408,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode version
+        id: select_xcode
         run: |
           # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
@@ -395,28 +421,26 @@ jobs:
             echo "No Xcode installation found!"
             exit 1
           fi
-          
-          # Set DEVELOPER_DIR for this and subsequent steps
-          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
-          echo "$XCODE_PATH/Contents/Developer/usr/bin" >> $GITHUB_PATH
-          
-          # Use xcode-select to set the system-wide active developer directory
-          # This ensures xcrun can find simctl even in subprocesses
-          sudo xcode-select -s "$XCODE_PATH"
-          
+
+          DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcrun=$DEVELOPER_DIR/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=$DEVELOPER_DIR/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+
           echo "Selected Xcode: $XCODE_PATH"
 
       - name: Show Xcode version
         id: xcode
         run: |
-          xcodebuild -version
-          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -version
+          XCODE_VERSION=$("${{ steps.select_xcode.outputs.xcodebuild }}" -version | head -1 | sed 's/Xcode //')
           echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
 
       - name: Get iOS Simulator destination
         id: simulator
         run: |
-          DESTINATION=$(xcrun simctl list devices available -j | python3 -c "
+          DESTINATION=$("${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available -j | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           devices = data.get('devices', {})
@@ -503,8 +527,11 @@ jobs:
           pod install --repo-update
 
       - name: Build pitchperfect
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          xcodebuild build \
+          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
+          "${DEVELOPER_DIR}/usr/bin/xcodebuild" build \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
@@ -513,8 +540,11 @@ jobs:
             | xcpretty --color
 
       - name: Build tagmaster
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          xcodebuild build \
+          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
+          "${DEVELOPER_DIR}/usr/bin/xcodebuild" build \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
