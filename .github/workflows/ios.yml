@@ -45,10 +45,13 @@ jobs:
           # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode_16.3.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode_16.3.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           elif [ -d "/Applications/Xcode_16.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode_16.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode_16.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           elif [ -d "/Applications/Xcode.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           fi
 
       - name: Show Xcode version
@@ -348,10 +351,13 @@ jobs:
           # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
           if [ -d "/Applications/Xcode_16.3.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode_16.3.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode_16.3.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           elif [ -d "/Applications/Xcode_16.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode_16.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode_16.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           elif [ -d "/Applications/Xcode.app" ]; then
             echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> $GITHUB_ENV
+            echo "/Applications/Xcode.app/Contents/Developer/usr/bin" >> $GITHUB_PATH
           fi
 
       - name: Show Xcode version
