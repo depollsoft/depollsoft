@@ -178,6 +178,18 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output tagmaster-junit.xml
 
+      - name: Run pitchperfectlib tests with coverage
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectlib \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath pitchperfectlib-results.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output pitchperfectlib-junit.xml
+
       - name: Summarize tests & coverage
         if: always()
         id: metrics
@@ -225,14 +237,16 @@ jobs:
 
           pitch_tests = parse_junit('pitchperfect-junit.xml')
           tag_tests = parse_junit('tagmaster-junit.xml')
+          lib_tests = parse_junit('pitchperfectlib-junit.xml')
 
           pitch_cov = xccov_percent('pitchperfect-results.xcresult') if os.path.isdir('pitchperfect-results.xcresult') else 0.0
           tag_cov = xccov_percent('tagmaster-results.xcresult') if os.path.isdir('tagmaster-results.xcresult') else 0.0
+          lib_cov = xccov_percent('pitchperfectlib-results.xcresult') if os.path.isdir('pitchperfectlib-results.xcresult') else 0.0
 
-          total_tests = pitch_tests[0] + tag_tests[0]
-          total_failures = pitch_tests[1] + tag_tests[1]
-          total_errors = pitch_tests[2] + tag_tests[2]
-          total_skipped = pitch_tests[3] + tag_tests[3]
+          total_tests = pitch_tests[0] + tag_tests[0] + lib_tests[0]
+          total_failures = pitch_tests[1] + tag_tests[1] + lib_tests[1]
+          total_errors = pitch_tests[2] + tag_tests[2] + lib_tests[2]
+          total_skipped = pitch_tests[3] + tag_tests[3] + lib_tests[3]
 
           out_path = os.environ['GITHUB_OUTPUT']
           with open(out_path, 'a') as f:
@@ -242,6 +256,7 @@ jobs:
             f.write(f"tests_skipped={total_skipped}\n")
             f.write(f"pitchperfect_coverage_pct={pitch_cov:.2f}\n")
             f.write(f"tagmaster_coverage_pct={tag_cov:.2f}\n")
+            f.write(f"pitchperfectlib_coverage_pct={lib_cov:.2f}\n")
 
           summary = []
           summary.append('## iOS — Unit tests & coverage')
@@ -249,6 +264,7 @@ jobs:
           summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
           summary.append(f"- pitchperfect line coverage: {pitch_cov:.2f}%")
           summary.append(f"- tagmaster line coverage: {tag_cov:.2f}%")
+          summary.append(f"- pitchperfectlib line coverage: {lib_cov:.2f}%")
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary) + '\n')
@@ -258,6 +274,7 @@ jobs:
           body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
           body.append(f"- pitchperfect coverage (lines): **{pitch_cov:.2f}%**")
           body.append(f"- tagmaster coverage (lines): **{tag_cov:.2f}%**")
+          body.append(f"- pitchperfectlib coverage (lines): **{lib_cov:.2f}%**")
           body.append('')
 
           body_path = os.path.join(os.getcwd(), 'ios-ci-comment.md')
