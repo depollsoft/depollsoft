@@ -155,8 +155,11 @@ jobs:
         run: xcrun simctl list devices available
 
       - name: Run pitchperfect tests with coverage
+        env:
+          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
         run: |
           set -o pipefail
+          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -167,8 +170,11 @@ jobs:
             | xcpretty --color --report junit --output pitchperfect-junit.xml
 
       - name: Run tagmaster tests with coverage
+        env:
+          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
         run: |
           set -o pipefail
+          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -179,8 +185,11 @@ jobs:
             | xcpretty --color --report junit --output tagmaster-junit.xml
 
       - name: Run pitchperfectlib tests with coverage
+        env:
+          DEVELOPER_DIR: ${{ env.DEVELOPER_DIR }}
         run: |
           set -o pipefail
+          export PATH="$DEVELOPER_DIR/usr/bin:$PATH"
           xcodebuild test \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
