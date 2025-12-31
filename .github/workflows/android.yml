@@ -27,7 +27,7 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -41,12 +41,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Clean corrupted SDK components
-        run: |
-          # Remove potentially corrupted SDK platform to force fresh install
-          rm -rf ~/.android/sdk/platforms/android-34 || true
-          rm -rf ~/.android/sdk/.downloadIntermediates || true
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -195,7 +189,7 @@ jobs:
 
   instrumented-tests:
     name: Android UI/Instrumented Tests
-    runs-on: [self-hosted, macOS]
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
@@ -205,17 +199,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Enable KVM for emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Clean corrupted SDK components
-        run: |
-          # Remove potentially corrupted SDK platform to force fresh install
-          rm -rf ~/.android/sdk/platforms/android-34 || true
-          rm -rf ~/.android/sdk/.downloadIntermediates || true
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
