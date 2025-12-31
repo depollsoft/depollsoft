@@ -27,7 +27,7 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 30
 
     steps:
@@ -189,7 +189,7 @@ jobs:
 
   instrumented-tests:
     name: Android UI/Instrumented Tests
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 45
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
@@ -212,12 +212,6 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-
-      - name: Enable KVM for hardware acceleration
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm || true
 
       - name: Run instrumented tests with Gradle Managed Devices (ATD)
         env:
