@@ -287,18 +287,14 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm || true
 
-      - name: Run instrumented tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          target: default
-          arch: x86_64
-          profile: Nexus 6
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            cd Android
-            ./gradlew connectedDebugAndroidTest --stacktrace --no-daemon || true
+      - name: Run instrumented tests with Gradle Managed Devices (ATD)
+        env:
+          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+        run: |
+          # Use swiftshader for software rendering in CI (no GPU)
+          ./gradlew ciDevicesGroupDebugAndroidTest \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            --stacktrace --no-daemon || true
 
       - name: Collect instrumented test results
         if: always()
@@ -310,7 +306,10 @@ jobs:
           import xml.etree.ElementTree as ET
 
           os.chdir('Android')
-          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
+          # Gradle Managed Devices output test results to a different location
+          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/managedDevice/**/*.xml', recursive=True))
+          # Also check connected test results as fallback
+          junit_paths += sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
 
           total_tests = total_failures = total_errors = total_skipped = 0
           for p in junit_paths:
@@ -337,7 +336,7 @@ jobs:
             f.write(f"instr_tests_errors={total_errors}\n")
 
           summary = []
-          summary.append('## Android — UI/Instrumented Tests')
+          summary.append('## Android — UI/Instrumented Tests (ATD)')
           summary.append('')
           summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
           summary.append('')
@@ -350,7 +349,7 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Android UI Tests
-          path: Android/**/build/outputs/androidTest-results/connected/**/*.xml
+          path: Android/**/build/outputs/androidTest-results/**/*.xml
           reporter: java-junit
           fail-on-error: false
 

@@ -78,6 +78,7 @@ android {
         targetSdkVersion 34
         resourceConfigurations += ['en']
         versionCode getVersionCode(build: 0, suffix: 1)
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     sourceSets {
@@ -105,6 +106,31 @@ android {
         test {
             java.srcDirs = ['test/java']
             kotlin.srcDirs = ['test/kotlin']
+        }
+    }
+
+    testOptions {
+        managedDevices {
+            localDevices {
+                // ATD (Automated Test Device) - optimized for testing, no bloatware
+                pixel2api30atd {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                // Standard AOSP device for fallback
+                pixel2api30 {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+            groups {
+                // Default group for CI - uses ATD for faster execution
+                ciDevices {
+                    targetDevices.add(devices.pixel2api30atd)
+                }
+            }
         }
     }
 }

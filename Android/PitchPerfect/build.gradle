@@ -54,9 +54,15 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.5.1'
 
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.9.2'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
     testImplementation 'org.mockito:mockito-core:5.4.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+    testImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'androidx.test:rules:1.5.0'
+    testImplementation 'androidx.test:runner:1.5.2'
+    testImplementation 'androidx.fragment:fragment-testing:1.6.0'
 
     // Espresso UI Testing Dependencies
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -87,6 +93,7 @@ android {
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
         versionCode getVersionCode(build: 0, suffix: 0)
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
         main {
@@ -118,6 +125,31 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.debug
+        }
+    }
+
+    testOptions {
+        managedDevices {
+            localDevices {
+                // ATD (Automated Test Device) - optimized for testing, no bloatware
+                pixel2api30atd {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                // Standard AOSP device for fallback
+                pixel2api30 {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+            groups {
+                // Default group for CI - uses ATD for faster execution
+                ciDevices {
+                    targetDevices.add(devices.pixel2api30atd)
+                }
+            }
         }
     }
 }

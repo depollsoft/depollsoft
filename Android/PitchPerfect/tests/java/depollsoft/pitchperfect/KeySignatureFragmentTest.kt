@@ -5,6 +5,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeUp
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -38,12 +39,49 @@ class KeySignatureFragmentTest {
 
     @Before
     fun navigateToKeysTab() {
+        // Dismiss any dialogs that may appear on startup (login dialog, changelog dialog)
+        dismissDialogsIfPresent()
+        
         // Navigate to the keys tab via bottom navigation
         onView(withId(R.id.keys_item))
             .perform(click())
         
-        // Allow time for fragment transition
-        Thread.sleep(500)
+        // Allow time for fragment transition and data loading
+        // The ListView starts with visibility="invisible" and becomes visible after data loads
+        Thread.sleep(1500)
+    }
+
+    private fun dismissDialogsIfPresent() {
+        // Try to dismiss dialogs multiple times as there may be multiple dialogs
+        for (i in 1..3) {
+            try {
+                Thread.sleep(500)
+                // Try different button texts that might dismiss dialogs
+                try {
+                    onView(withText("Skip"))
+                        .inRoot(isDialog())
+                        .perform(click())
+                } catch (e: Exception) {
+                    try {
+                        onView(withText("OK"))
+                            .inRoot(isDialog())
+                            .perform(click())
+                    } catch (e2: Exception) {
+                        try {
+                            onView(withText("Close"))
+                                .inRoot(isDialog())
+                                .perform(click())
+                        } catch (e3: Exception) {
+                            // No dialog found
+                            break
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                break
+            }
+        }
+        Thread.sleep(300)
     }
 
     // ==================== Layout Tests ====================
@@ -75,6 +113,9 @@ class KeySignatureFragmentTest {
 
     @Test
     fun testMajorKeyListHasItems() {
+        // Wait for ListView to be fully populated
+        Thread.sleep(500)
+        
         // Verify the major key list has items by clicking the first one
         onData(anything())
             .inAdapterView(withId(R.id.majorKeySignatureListView))
@@ -192,7 +233,8 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        // Wait for toggle animation and list to become visible
+        Thread.sleep(1000)
 
         onData(anything())
             .inAdapterView(withId(R.id.minorKeySignatureListView))
@@ -208,7 +250,8 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        // Wait for toggle animation and list to become visible
+        Thread.sleep(1000)
 
         onData(anything())
             .inAdapterView(withId(R.id.minorKeySignatureListView))
