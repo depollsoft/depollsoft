@@ -48,8 +48,15 @@ final class KeySignatureUITests: XCTestCase {
         navigateToKeys()
         
         let table = app.tables.firstMatch
-        guard table.waitForExistence(timeout: 3) else {
+        guard table.waitForExistence(timeout: 5) else {
             XCTFail("Key table not found")
+            return
+        }
+        
+        // Wait for cells to be populated - UI needs time to load data
+        let firstCell = table.cells.element(boundBy: 0)
+        guard firstCell.waitForExistence(timeout: 5) else {
+            XCTFail("Key table cells not loaded")
             return
         }
         

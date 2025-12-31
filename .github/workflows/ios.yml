@@ -383,7 +383,7 @@ jobs:
           name: iOS Unit Tests
           path: iOS/*-junit.xml
           reporter: java-junit
-          fail-on-error: false
+          fail-on-error: true
 
       - name: Find existing PR comment
         if: github.event_name == 'pull_request'
@@ -553,4 +553,4 @@ jobs:
           name: iOS UI Tests
           path: iOS/*-uitest-junit.xml
           reporter: java-junit
-          fail-on-error: false
+          fail-on-error: true
