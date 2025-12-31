@@ -42,6 +42,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Clean corrupted SDK components
+        run: |
+          # Remove potentially corrupted SDK platform to force fresh install
+          rm -rf ~/.android/sdk/platforms/android-34 || true
+          rm -rf ~/.android/sdk/.downloadIntermediates || true
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -204,6 +210,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Clean corrupted SDK components
+        run: |
+          # Remove potentially corrupted SDK platform to force fresh install
+          rm -rf ~/.android/sdk/platforms/android-34 || true
+          rm -rf ~/.android/sdk/.downloadIntermediates || true
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
