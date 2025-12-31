@@ -103,25 +103,6 @@ jobs:
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
           echo "Using simulator: $DESTINATION"
 
-      # Note: CocoaPods Specs cache (~1.4GB) is skipped - too slow to extract
-      # and persists locally on self-hosted runner anyway
-
-      - name: Cache CocoaPods Pods
-        uses: actions/cache@v4
-        with:
-          path: iOS/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
-
       - name: Setup Ruby and Install CocoaPods
         run: |
           # Initialize Homebrew environment (sets up all paths properly)
@@ -426,7 +407,7 @@ jobs:
     name: iOS Build Debug
     runs-on: [self-hosted, macOS]
     timeout-minutes: 30
-    needs: test
+    # Note: Runs in parallel with test job (no dependency needed)
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
@@ -494,25 +475,6 @@ jobs:
           print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
           " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-
-      # Note: CocoaPods Specs cache (~1.4GB) is skipped - too slow to extract
-      # and persists locally on self-hosted runner anyway
-
-      - name: Cache CocoaPods Pods
-        uses: actions/cache@v4
-        with:
-          path: iOS/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-xcode${{ steps.xcode.outputs.version }}-
 
       - name: Setup Ruby and Install CocoaPods
         run: |
@@ -642,14 +604,6 @@ jobs:
           print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
           " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-
-      - name: Cache CocoaPods Pods
-        uses: actions/cache@v4
-        with:
-          path: iOS/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('iOS/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
 
       - name: Setup Ruby and Install CocoaPods
         run: |
