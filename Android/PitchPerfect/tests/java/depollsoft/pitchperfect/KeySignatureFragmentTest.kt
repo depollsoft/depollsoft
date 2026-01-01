@@ -5,15 +5,12 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeUp
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import org.hamcrest.Matchers.anything
-import org.hamcrest.Matchers.containsString
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,48 +37,15 @@ class KeySignatureFragmentTest {
     @Before
     fun navigateToKeysTab() {
         // Dismiss any dialogs that may appear on startup (login dialog, changelog dialog)
-        dismissDialogsIfPresent()
+        EspressoTestUtils.dismissStartupDialogs(buttonTexts = listOf("Skip", "OK", "Close"))
         
         // Navigate to the keys tab via bottom navigation
         onView(withId(R.id.keys_item))
             .perform(click())
         
-        // Allow time for fragment transition and data loading
-        // The ListView starts with visibility="invisible" and becomes visible after data loads
-        Thread.sleep(1500)
-    }
-
-    private fun dismissDialogsIfPresent() {
-        // Try to dismiss dialogs multiple times as there may be multiple dialogs
-        for (i in 1..3) {
-            try {
-                Thread.sleep(500)
-                // Try different button texts that might dismiss dialogs
-                try {
-                    onView(withText("Skip"))
-                        .inRoot(isDialog())
-                        .perform(click())
-                } catch (e: Exception) {
-                    try {
-                        onView(withText("OK"))
-                            .inRoot(isDialog())
-                            .perform(click())
-                    } catch (e2: Exception) {
-                        try {
-                            onView(withText("Close"))
-                                .inRoot(isDialog())
-                                .perform(click())
-                        } catch (e3: Exception) {
-                            // No dialog found
-                            break
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                break
-            }
-        }
-        Thread.sleep(300)
+        // Wait for ListView to be ready using Espresso's synchronization
+        // Use a slightly longer wait for the initial data load
+        EspressoTestUtils.shortWait(300)
     }
 
     // ==================== Layout Tests ====================
@@ -113,9 +77,6 @@ class KeySignatureFragmentTest {
 
     @Test
     fun testMajorKeyListHasItems() {
-        // Wait for ListView to be fully populated
-        Thread.sleep(500)
-        
         // Verify the major key list has items by clicking the first one
         onData(anything())
             .inAdapterView(withId(R.id.majorKeySignatureListView))
@@ -166,7 +127,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Verify minor key list is now displayed
         onView(withId(R.id.minorKeySignatureListView))
@@ -179,13 +140,13 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Toggle back to major
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Verify major key list is displayed again
         onView(withId(R.id.majorKeySignatureListView))
@@ -198,7 +159,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Verify the minor key list has items
         onData(anything())
@@ -215,7 +176,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Select first minor key
         onData(anything())
@@ -234,7 +195,7 @@ class KeySignatureFragmentTest {
             .perform(click())
 
         // Wait for toggle animation and list to become visible
-        Thread.sleep(1000)
+        EspressoTestUtils.shortWait(200)
 
         onData(anything())
             .inAdapterView(withId(R.id.minorKeySignatureListView))
@@ -251,7 +212,7 @@ class KeySignatureFragmentTest {
             .perform(click())
 
         // Wait for toggle animation and list to become visible
-        Thread.sleep(1000)
+        EspressoTestUtils.shortWait(200)
 
         onData(anything())
             .inAdapterView(withId(R.id.minorKeySignatureListView))
@@ -270,7 +231,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         onView(withId(R.id.minorKeySignatureListView))
             .perform(swipeUp())
@@ -288,7 +249,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // FAB should still be visible
         onView(withId(R.id.majorMinorFab))
@@ -297,11 +258,10 @@ class KeySignatureFragmentTest {
 
     @Test
     fun testMultipleToggles() {
-        // Toggle multiple times
+        // Toggle multiple times - no need for sleeps between since Espresso syncs
         repeat(4) {
             onView(withId(R.id.majorMinorFab))
                 .perform(click())
-            Thread.sleep(200)
         }
 
         // FAB and a list should still be visible
@@ -337,7 +297,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Check that minor key items have keyNameTextView
         onData(anything())
@@ -353,7 +313,7 @@ class KeySignatureFragmentTest {
         onView(withId(R.id.majorMinorFab))
             .perform(click())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait()
 
         // Check that minor key items have keySignatureTextView
         onData(anything())

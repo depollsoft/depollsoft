@@ -110,6 +110,9 @@ android {
     }
 
     testOptions {
+        // Disable animations for faster/more reliable UI tests in CI
+        animationsDisabled = true
+        
         managedDevices {
             localDevices {
                 // ATD (Automated Test Device) - optimized for testing, no bloatware

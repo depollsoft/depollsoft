@@ -31,6 +31,25 @@ android {
                 languageVersion = JavaLanguageVersion.of(17)
             }
         }
+        // Disable animations for faster/more reliable UI tests in CI
+        animationsDisabled = true
+        
+        managedDevices {
+            localDevices {
+                // ATD (Automated Test Device) - optimized for testing, no bloatware
+                pixel2api30atd {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+            }
+            groups {
+                // Default group for CI - uses ATD for faster execution
+                ciDevices {
+                    targetDevices.add(devices.pixel2api30atd)
+                }
+            }
+        }
     }
 
 }
