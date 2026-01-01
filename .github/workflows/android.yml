@@ -125,28 +125,13 @@ jobs:
           summary_lines.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary_lines) + '\n')
-
-          # Save a PR-comment body file (repo root path, not Android/)
-          body = []
-          body.append('### Android CI')
-          body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
-          body.append(f"- Coverage (lines): **{coverage_pct:.2f}%**")
-          body.append('')
-          body_path = os.path.join(os.getcwd(), 'android-ci-comment.md')
-          with open(body_path, 'w') as b:
-            b.write('\n'.join(body) + '\n')
-          # Expose the comment path to later steps (relative to repo root)
-          repo_root = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-          rel = os.path.relpath(body_path, repo_root)
-          with open(out_path, 'a') as f:
-            f.write(f"comment_path={rel}\n")
           PY
 
       - name: Upload coverage to Codecov
         if: steps.metrics.outputs.jacoco_count != '0'
         uses: codecov/codecov-action@v4
         with:
-          files: ${{ steps.metrics.outputs.codecov_files }}
+          files: \${{ steps.metrics.outputs.codecov_files }}
           flags: android
           name: android-coverage
           fail_ci_if_error: false
@@ -169,23 +154,13 @@ jobs:
           path: Android/**/build/test-results/
           retention-days: 7
 
-      - name: Comment summary on PR
-        if: github.event_name == 'pull_request'
-        id: find_comment
-        uses: peter-evans/find-comment@v3
+      - name: Upload unit test coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: github-actions[bot]
-          body-includes: "### Android CI"
-
-      - name: Create or update PR comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-id: ${{ steps.find_comment.outputs.comment-id }}
-          body-path: ${{ steps.metrics.outputs.comment_path }}
-          edit-mode: replace
+          name: android-unit-coverage
+          path: Android/**/build/reports/jacoco/
+          retention-days: 7
 
   instrumented-tests:
     name: Android UI/Instrumented Tests
@@ -224,9 +199,14 @@ jobs:
           GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
         run: |
           # Use swiftshader for software rendering in CI (no GPU)
+          # Enable coverage with -Pandroid.testInstrumentationRunnerArguments.coverage=true
           ./gradlew ciDevicesGroupDebugAndroidTest \
             -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            -Pandroid.testInstrumentationRunnerArguments.coverage=true \
             --stacktrace --no-daemon || true
+          
+          # Generate coverage report from instrumented tests
+          ./gradlew createDebugAndroidTestCoverageReport --stacktrace --no-daemon || true
 
       - name: Collect instrumented test results
         if: always()
@@ -261,16 +241,35 @@ jobs:
               total_errors += int(s.attrib.get('errors', 0))
               total_skipped += int(s.attrib.get('skipped', 0))
 
+          # Collect instrumented test coverage from JaCoCo reports
+          # Coverage reports are generated in build/reports/coverage/androidTest/debug/
+          coverage_paths = sorted(glob.glob('**/build/reports/coverage/androidTest/debug/report.xml', recursive=True))
+          covered = missed = 0
+          for p in coverage_paths:
+            try:
+              root = ET.parse(p).getroot()
+            except Exception:
+              continue
+            for c in root.findall('.//counter'):
+              if c.attrib.get('type') == 'LINE':
+                missed += int(c.attrib.get('missed', 0))
+                covered += int(c.attrib.get('covered', 0))
+          total_lines = covered + missed
+          coverage_pct = (covered / total_lines * 100.0) if total_lines else 0.0
+
           out_path = os.environ['GITHUB_OUTPUT']
           with open(out_path, 'a') as f:
             f.write(f"instr_tests_total={total_tests}\n")
             f.write(f"instr_tests_failures={total_failures}\n")
             f.write(f"instr_tests_errors={total_errors}\n")
+            f.write(f"instr_coverage_pct={coverage_pct:.2f}\n")
 
           summary = []
           summary.append('## Android — UI/Instrumented Tests (ATD)')
           summary.append('')
           summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          if total_lines > 0:
+            summary.append(f"- Line coverage: {coverage_pct:.2f}%")
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary) + '\n')
@@ -292,3 +291,84 @@ jobs:
           name: android-instrumented-test-results
           path: Android/**/build/outputs/androidTest-results/
           retention-days: 7
+
+      - name: Upload instrumented test coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumented-coverage
+          path: Android/**/build/reports/coverage/
+          retention-days: 7
+
+  # Combined coverage summary job - runs after both test types complete
+  coverage-summary:
+    name: Android Combined Coverage
+    runs-on: ubuntu-latest
+    needs: [test, instrumented-tests]
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: android-unit-coverage
+          path: unit-coverage
+
+      - name: Download instrumented test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: android-instrumented-coverage
+          path: instrumented-coverage
+
+      - name: Generate combined coverage summary
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+
+          # Find all JaCoCo coverage reports
+          unit_coverage_paths = sorted(glob.glob('unit-coverage/**/jacocoTestReport.xml', recursive=True))
+          instr_coverage_paths = sorted(glob.glob('instrumented-coverage/**/report.xml', recursive=True))
+
+          def parse_jacoco_coverage(paths):
+            covered = missed = 0
+            for p in paths:
+              try:
+                root = ET.parse(p).getroot()
+              except Exception:
+                continue
+              for c in root.findall('.//counter'):
+                if c.attrib.get('type') == 'LINE':
+                  missed += int(c.attrib.get('missed', 0))
+                  covered += int(c.attrib.get('covered', 0))
+            total = covered + missed
+            pct = (covered / total * 100.0) if total else 0.0
+            return covered, missed, total, pct
+
+          unit_covered, unit_missed, unit_total, unit_pct = parse_jacoco_coverage(unit_coverage_paths)
+          instr_covered, instr_missed, instr_total, instr_pct = parse_jacoco_coverage(instr_coverage_paths)
+
+          # Best coverage (since they test the same codebase)
+          combined_pct = max(unit_pct, instr_pct) if (unit_total or instr_total) else 0.0
+
+          summary = []
+          summary.append('## Android — Combined Coverage Summary')
+          summary.append('')
+          summary.append('| Test Type | Lines Covered | Total Lines | Coverage |')
+          summary.append('|-----------|---------------|-------------|----------|')
+          if unit_total:
+            summary.append(f'| Unit Tests | {unit_covered} | {unit_total} | {unit_pct:.2f}% |')
+          if instr_total:
+            summary.append(f'| Instrumented Tests | {instr_covered} | {instr_total} | {instr_pct:.2f}% |')
+          summary.append(f'| **Combined (best)** | - | - | **{combined_pct:.2f}%** |')
+          summary.append('')
+          summary.append('> Note: Combined shows the better coverage of the two test types.')
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY

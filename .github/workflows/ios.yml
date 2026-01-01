@@ -495,6 +495,7 @@ jobs:
             -workspace iOS.xcworkspace \
             -scheme pitchperfectUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-uitest-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfect-uitest-junit.xml || true
@@ -510,6 +511,7 @@ jobs:
             -workspace iOS.xcworkspace \
             -scheme tagmasterUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
             -resultBundlePath tagmaster-uitest-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output tagmaster-uitest-junit.xml || true
@@ -517,24 +519,67 @@ jobs:
       - name: Summarize UI tests
         if: always()
         run: |
-          echo "## iOS UI Tests Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          for junit in pitchperfect-uitest-junit.xml tagmaster-uitest-junit.xml; do
-            if [ -f "$junit" ]; then
-              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              SCHEME=$(basename "$junit" -uitest-junit.xml)
-              if [ "$FAILURES" = "0" ] && [ "$ERRORS" = "0" ]; then
-                echo "✅ **$SCHEME**: $TESTS tests passed" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "❌ **$SCHEME**: $TESTS tests, $FAILURES failures, $ERRORS errors" >> $GITHUB_STEP_SUMMARY
-              fi
-            else
-              SCHEME=$(basename "$junit" -uitest-junit.xml)
-              echo "⚠️ **$SCHEME**: Tests did not run" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
+          cd iOS
+          python3 - <<'PY'
+          import glob
+          import os
+          import json
+          import subprocess
+          import xml.etree.ElementTree as ET
+
+          xcrun = '/usr/bin/xcrun'
+
+          def xccov_percent(xcresult: str) -> float:
+            if not os.path.isdir(xcresult):
+              return 0.0
+            try:
+              out = subprocess.check_output(
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.DEVNULL, text=True
+              )
+              data = json.loads(out)
+              # lineCoverage is typically in [0,1]
+              cov = data.get('lineCoverage')
+              if cov is not None:
+                return cov * 100.0
+            except Exception:
+              pass
+            return 0.0
+
+          def junit_stats(junit_file: str) -> tuple:
+            if not os.path.isfile(junit_file):
+              return (0, 0, 0)
+            try:
+              root = ET.parse(junit_file).getroot()
+              tests = int(root.attrib.get('tests', 0))
+              failures = int(root.attrib.get('failures', 0))
+              errors = int(root.attrib.get('errors', 0))
+              return (tests, failures, errors)
+            except Exception:
+              return (0, 0, 0)
+
+          summary = []
+          summary.append('## iOS — UI Tests')
+          summary.append('')
+
+          schemes = ['pitchperfect', 'tagmaster']
+          for scheme in schemes:
+            junit = f'{scheme}-uitest-junit.xml'
+            xcresult = f'{scheme}-uitest-results.xcresult'
+            tests, failures, errors = junit_stats(junit)
+            cov = xccov_percent(xcresult)
+            
+            if tests == 0:
+              summary.append(f"⚠️ **{scheme}**: Tests did not run")
+            elif failures == 0 and errors == 0:
+              summary.append(f"✅ **{scheme}**: {tests} tests passed (line coverage: {cov:.2f}%)")
+            else:
+              summary.append(f"❌ **{scheme}**: {tests} tests, {failures} failures, {errors} errors (line coverage: {cov:.2f}%)")
+          
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY
 
       - name: Upload UI test results
         uses: actions/upload-artifact@v4
@@ -554,3 +599,125 @@ jobs:
           path: iOS/*-uitest-junit.xml
           reporter: java-junit
           fail-on-error: true
+
+  # Combined coverage summary job - runs after both test types complete
+  coverage-summary:
+    name: iOS Combined Coverage
+    runs-on: [self-hosted, macOS]
+    needs: [test, ui-tests]
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 10
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+    steps:
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-test-results
+          path: iOS/unit-test-results
+
+      - name: Download UI test results
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-uitest-results
+          path: iOS/ui-test-results
+
+      - name: Select Xcode version
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.3.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.app"
+          else
+            XCODE_PATH="/Applications/Xcode.app"
+          fi
+          echo "DEVELOPER_DIR=${XCODE_PATH}/Contents/Developer" >> $GITHUB_ENV
+
+      - name: Generate combined coverage summary
+        working-directory: iOS
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import json
+          import subprocess
+
+          xcrun = '/usr/bin/xcrun'
+
+          def xccov_stats(xcresult: str) -> tuple:
+            """Returns (covered_lines, total_lines, percentage)"""
+            if not os.path.isdir(xcresult):
+              return (0, 0, 0.0)
+            try:
+              out = subprocess.check_output(
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.DEVNULL, text=True
+              )
+              data = json.loads(out)
+              cov = data.get('lineCoverage', 0)
+              # Try to get line counts from targets
+              covered = 0
+              total = 0
+              for target in data.get('targets', []):
+                for file in target.get('files', []):
+                  covered += file.get('coveredLines', 0)
+                  total += file.get('executableLines', 0)
+              if total == 0:
+                # Fallback: estimate from percentage
+                return (0, 0, cov * 100.0)
+              return (covered, total, cov * 100.0)
+            except Exception as e:
+              print(f"Error processing {xcresult}: {e}")
+              return (0, 0, 0.0)
+
+          # Find all xcresult bundles
+          unit_results = sorted(glob.glob('unit-test-results/**/*-results.xcresult', recursive=True))
+          ui_results = sorted(glob.glob('ui-test-results/**/*-uitest-results.xcresult', recursive=True))
+
+          summary = []
+          summary.append('## iOS — Combined Coverage Summary')
+          summary.append('')
+          summary.append('| Test Type | Scheme | Lines Covered | Total Lines | Coverage |')
+          summary.append('|-----------|--------|---------------|-------------|----------|')
+
+          unit_total_covered = unit_total_lines = 0
+          ui_total_covered = ui_total_lines = 0
+          unit_coverages = []
+          ui_coverages = []
+
+          for xcresult in unit_results:
+            scheme = os.path.basename(xcresult).replace('-results.xcresult', '')
+            covered, total, pct = xccov_stats(xcresult)
+            unit_total_covered += covered
+            unit_total_lines += total
+            unit_coverages.append(pct)
+            summary.append(f'| Unit | {scheme} | {covered} | {total} | {pct:.2f}% |')
+
+          for xcresult in ui_results:
+            scheme = os.path.basename(xcresult).replace('-uitest-results.xcresult', '')
+            covered, total, pct = xccov_stats(xcresult)
+            ui_total_covered += covered
+            ui_total_lines += total
+            ui_coverages.append(pct)
+            summary.append(f'| UI | {scheme} | {covered} | {total} | {pct:.2f}% |')
+
+          # Calculate overall coverage
+          all_coverages = unit_coverages + ui_coverages
+          if all_coverages:
+            avg_coverage = sum(all_coverages) / len(all_coverages)
+            best_coverage = max(all_coverages)
+          else:
+            avg_coverage = best_coverage = 0.0
+
+          summary.append('')
+          summary.append(f'**Average coverage across all test suites: {avg_coverage:.2f}%**')
+          summary.append(f'**Best coverage (any test suite): {best_coverage:.2f}%**')
+          summary.append('')
+          summary.append('> Note: Each scheme may test different code paths. For true merged coverage,')
+          summary.append('> consider using a dedicated coverage aggregation tool.')
+          summary.append('')
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY
