@@ -519,7 +519,6 @@ jobs:
       - name: Summarize UI tests
         if: always()
         run: |
-          cd iOS
           python3 - <<'PY'
           import glob
           import os
@@ -607,18 +606,23 @@ jobs:
     needs: [test, ui-tests]
     if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
 
     steps:
       - name: Download unit test results
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ios-test-results
           path: iOS/unit-test-results
 
       - name: Download UI test results
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ios-uitest-results
           path: iOS/ui-test-results
@@ -635,7 +639,6 @@ jobs:
           echo "DEVELOPER_DIR=${XCODE_PATH}/Contents/Developer" >> $GITHUB_ENV
 
       - name: Generate combined coverage summary
-        working-directory: iOS
         run: |
           python3 - <<'PY'
           import glob
@@ -671,9 +674,9 @@ jobs:
               print(f"Error processing {xcresult}: {e}")
               return (0, 0, 0.0)
 
-          # Find all xcresult bundles
-          unit_results = sorted(glob.glob('unit-test-results/**/*-results.xcresult', recursive=True))
-          ui_results = sorted(glob.glob('ui-test-results/**/*-uitest-results.xcresult', recursive=True))
+          # Find all xcresult bundles (artifacts downloaded to iOS/ prefix)
+          unit_results = sorted(glob.glob('iOS/unit-test-results/**/*-results.xcresult', recursive=True))
+          ui_results = sorted(glob.glob('iOS/ui-test-results/**/*-uitest-results.xcresult', recursive=True))
 
           summary = []
           summary.append('## iOS — Combined Coverage Summary')
