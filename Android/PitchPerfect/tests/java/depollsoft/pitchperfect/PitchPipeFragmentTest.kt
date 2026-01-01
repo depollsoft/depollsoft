@@ -3,12 +3,10 @@ package depollsoft.pitchperfect
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isClickable
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -36,28 +34,8 @@ class PitchPipeFragmentTest {
 
     @Before
     fun dismissDialogs() {
-        // Dismiss any dialogs that may appear on startup
-        for (i in 1..3) {
-            try {
-                Thread.sleep(500)
-                try {
-                    onView(withText("Skip"))
-                        .inRoot(isDialog())
-                        .perform(click())
-                } catch (e: Exception) {
-                    try {
-                        onView(withText("OK"))
-                            .inRoot(isDialog())
-                            .perform(click())
-                    } catch (e2: Exception) {
-                        break
-                    }
-                }
-            } catch (e: Exception) {
-                break
-            }
-        }
-        Thread.sleep(300)
+        // Use efficient dialog dismissal instead of Thread.sleep()
+        EspressoTestUtils.dismissStartupDialogs()
     }
 
     // ==================== Layout Tests ====================

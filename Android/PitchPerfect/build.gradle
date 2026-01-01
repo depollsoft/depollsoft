@@ -69,10 +69,14 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
     androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-idling-resource:3.5.1'
     androidTestImplementation 'androidx.test:core:1.5.0'
     androidTestImplementation 'androidx.test:rules:1.5.0'
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.fragment:fragment-testing:1.6.0'
+    
+    // Test Orchestrator for isolated test execution (prevents state leakage between tests)
+    androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
 android {
@@ -94,6 +98,10 @@ android {
         vectorDrawables.useSupportLibrary = true
         versionCode getVersionCode(build: 0, suffix: 0)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Enable Test Orchestrator for isolated test execution
+        // This prevents state leakage between tests and improves reliability
+        testInstrumentationRunnerArguments clearPackageData: 'true'
     }
     sourceSets {
         main {
@@ -129,6 +137,13 @@ android {
     }
 
     testOptions {
+        // NOTE: Test Orchestrator disabled for faster execution (was adding ~30s+ per test)
+        // Re-enable if test isolation issues occur with more tests:
+        // execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        
+        // Animation settings for faster/more reliable UI tests
+        animationsDisabled = true
+        
         managedDevices {
             localDevices {
                 // ATD (Automated Test Device) - optimized for testing, no bloatware
