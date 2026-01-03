@@ -239,14 +239,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: Android
-          script: |
-            ./gradlew connectedDebugAndroidTest \
-              -Pandroid.testInstrumentationRunnerArguments.coverage=true \
-              --build-cache \
-              --stacktrace || true
-            
-            # Generate coverage report from instrumented tests
-            ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
+          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace || true; ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
 
       - name: Collect instrumented test results
         if: always()
