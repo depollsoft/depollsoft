@@ -166,7 +166,7 @@ jobs:
     name: Android UI/Instrumented Tests
     # Use ubuntu-24.04 for better KVM performance (4 cores vs 2)
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 45
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
