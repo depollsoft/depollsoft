@@ -190,7 +190,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-34 build-tools;35.0.0 emulator system-images;android-30;aosp_atd;x86_64'
+          packages: 'platforms;android-34 build-tools;35.0.0'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -206,32 +206,47 @@ jobs:
           restore-keys: |
             gradle-instrumented-${{ runner.os }}-
 
-      # Cache Gradle Managed Devices (system images and AVD snapshots)
-      # These paths are where GMD stores the emulator data
-      - name: Cache Gradle Managed Devices
+      # Cache AVD for faster emulator startup
+      - name: AVD cache
         uses: actions/cache@v4
+        id: avd-cache
         with:
           path: |
-            ~/.android/gradle/avd
-            ~/.android/avd
-          key: gmd-${{ runner.os }}-api30-atd-v1
-          restore-keys: |
-            gmd-${{ runner.os }}-api30-atd-
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-30-x86_64-${{ runner.os }}
 
-      - name: Run instrumented tests with Gradle Managed Devices (ATD)
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "Generated AVD snapshot for caching."
+          working-directory: Android
+
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
         env:
-          # Increase memory for emulator + Gradle
           GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
-        run: |
-          # Use swiftshader for software rendering in CI (no GPU)
-          ./gradlew ciDevicesGroupDebugAndroidTest \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            -Pandroid.testInstrumentationRunnerArguments.coverage=true \
-            --build-cache \
-            --stacktrace || true
-          
-          # Generate coverage report from instrumented tests
-          ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
+        with:
+          api-level: 30
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: Android
+          script: |
+            ./gradlew connectedDebugAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.coverage=true \
+              --build-cache \
+              --stacktrace || true
+            
+            # Generate coverage report from instrumented tests
+            ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
 
       - name: Collect instrumented test results
         if: always()
@@ -243,10 +258,8 @@ jobs:
           import xml.etree.ElementTree as ET
 
           # Already in Android directory due to defaults.run.working-directory
-          # Gradle Managed Devices output test results to a different location
-          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/managedDevice/**/*.xml', recursive=True))
-          # Also check connected test results as fallback
-          junit_paths += sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
+          # Connected device test results location
+          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
 
           total_tests = total_failures = total_errors = total_skipped = 0
           for p in junit_paths:
@@ -290,7 +303,7 @@ jobs:
             f.write(f"instr_coverage_pct={coverage_pct:.2f}\n")
 
           summary = []
-          summary.append('## Android — UI/Instrumented Tests (ATD)')
+          summary.append('## Android — UI/Instrumented Tests')
           summary.append('')
           summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
           if total_lines > 0:
