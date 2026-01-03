@@ -432,6 +432,7 @@ jobs:
           fi
           DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
           echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
           echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
           echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
