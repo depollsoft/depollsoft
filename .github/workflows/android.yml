@@ -27,7 +27,7 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 30
 
     steps:
@@ -165,7 +165,7 @@ jobs:
   instrumented-tests:
     name: Android UI/Instrumented Tests
     # Use ubuntu-24.04 for better KVM performance (4 cores vs 2)
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 60
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
@@ -334,7 +334,7 @@ jobs:
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
     name: Android Combined Coverage
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
     needs: [test, instrumented-tests]
     if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 10
