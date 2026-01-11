@@ -255,7 +255,8 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-30-${{ runner.arch }}-${{ runner.os }}
+          # v2: fixed snapshot saving for proper AVD caching
+          key: avd-30-${{ runner.arch }}-${{ runner.os }}-v2
 
       - name: Clean stale AVD (self-hosted)
         if: steps.avd-cache.outputs.cache-hit != 'true'
