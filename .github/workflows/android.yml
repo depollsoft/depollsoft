@@ -321,6 +321,9 @@ jobs:
             set -euo pipefail
 
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" wait-for-device
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell wm dismiss-keyguard || true
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global stay_on_while_plugged_in 3 || true
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell svc power stayon true || true
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global window_animation_scale 0 || true
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
