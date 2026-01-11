@@ -257,6 +257,17 @@ jobs:
             ~/.android/adb*
           key: avd-30-${{ runner.arch }}-${{ runner.os }}
 
+      - name: Clean stale AVD (self-hosted)
+        shell: bash
+        run: |
+          set -euo pipefail
+          AVD_NAME="ci-api30-googleapis-${{ runner.arch }}"
+          AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
+          echo "AVD_HOME=${AVD_HOME}"
+          echo "Cleaning AVD name: ${AVD_NAME}"
+          rm -rf "${AVD_HOME}/${AVD_NAME}.avd" || true
+          rm -f "${AVD_HOME}/${AVD_NAME}.ini" || true
+
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
@@ -264,7 +275,8 @@ jobs:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
           target: google_apis
-          force-avd-creation: false
+          force-avd-creation: true
+          avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1200
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
@@ -279,7 +291,8 @@ jobs:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
           target: google_apis
-          force-avd-creation: false
+          force-avd-creation: true
+          avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1200
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
