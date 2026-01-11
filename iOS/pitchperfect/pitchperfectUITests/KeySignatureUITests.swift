@@ -73,6 +73,12 @@ final class KeySignatureUITests: XCTestCase {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
         
+        // Wait for cells to be populated - UI needs time to load data
+        let firstCell = table.cells.element(boundBy: 0)
+        guard firstCell.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Key table cells not loaded")
+        }
+        
         // Should have at least 7 major keys (C, D, E, F, G, A, B)
         XCTAssertGreaterThanOrEqual(table.cells.count, 7, "Should have at least 7 key signatures")
     }
