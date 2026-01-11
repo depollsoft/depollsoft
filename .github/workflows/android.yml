@@ -281,12 +281,37 @@ jobs:
 
           # Self-hosted runners can end up with a stuck adb server which breaks
           # emulator boot detection ("Unable to connect to adb daemon on port: 5037").
-          "${SDK_ROOT}/platform-tools/adb" kill-server || true
-          pkill -9 -f "adb" || true
-          if lsof -ti tcp:5037 >/dev/null; then
-            lsof -ti tcp:5037 | xargs kill -9 || true
+          echo "Stopping any existing ADB server..."
+          "${SDK_ROOT}/platform-tools/adb" kill-server 2>/dev/null || true
+          
+          # Aggressively kill any lingering adb processes
+          echo "Killing lingering adb processes..."
+          pkill -9 -f "adb" 2>/dev/null || true
+          
+          # Wait for processes to die and port to be released
+          sleep 2
+          
+          # Kill anything still holding port 5037
+          for _ in 1 2 3; do
+            if lsof -ti tcp:5037 >/dev/null 2>&1; then
+              echo "Port 5037 still in use, killing processes..."
+              lsof -ti tcp:5037 | xargs kill -9 2>/dev/null || true
+              sleep 1
+            else
+              break
+            fi
+          done
+          
+          # Clean up adb state files
+          rm -f "$HOME/.android/adb"* 2>/dev/null || true
+          
+          # Final check - if port is still busy, wait longer
+          if lsof -ti tcp:5037 >/dev/null 2>&1; then
+            echo "Port 5037 still busy after cleanup, waiting..."
+            sleep 5
           fi
-          rm -f "$HOME/.android/adb*" || true
+          
+          echo "Starting fresh ADB server..."
           "${SDK_ROOT}/platform-tools/adb" start-server
           "${SDK_ROOT}/platform-tools/adb" devices
 
