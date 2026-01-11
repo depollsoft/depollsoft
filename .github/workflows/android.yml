@@ -258,6 +258,7 @@ jobs:
           key: avd-30-${{ runner.arch }}-${{ runner.os }}
 
       - name: Clean stale AVD (self-hosted)
+        if: steps.avd-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -291,10 +292,10 @@ jobs:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
           target: google_apis
-          force-avd-creation: true
+          force-avd-creation: false
           avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1200
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: Android
           script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace || true; ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
