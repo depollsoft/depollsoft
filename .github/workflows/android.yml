@@ -269,6 +269,23 @@ jobs:
           rm -rf "${AVD_HOME}/${AVD_NAME}.avd" || true
           rm -f "${AVD_HOME}/${AVD_NAME}.ini" || true
 
+      - name: Ensure ADB is healthy (self-hosted)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [[ -z "${SDK_ROOT}" ]]; then
+            echo "ANDROID_SDK_ROOT/ANDROID_HOME not set" >&2
+            exit 1
+          fi
+
+          # Self-hosted runners can end up with a stuck adb server which breaks
+          # emulator boot detection ("Unable to connect to adb daemon on port: 5037").
+          "${SDK_ROOT}/platform-tools/adb" kill-server || true
+          rm -f "$HOME/.android/adb*" || true
+          "${SDK_ROOT}/platform-tools/adb" start-server
+          "${SDK_ROOT}/platform-tools/adb" devices
+
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
@@ -278,8 +295,10 @@ jobs:
           target: google_apis
           force-avd-creation: true
           avd-name: ci-api30-googleapis-${{ runner.arch }}
-          emulator-boot-timeout: 1200
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-boot-timeout: 1800
+          # On macOS runners, Vulkan/SwiftShader can wedge the device/adb.
+          # Disable Vulkan and use software GPU to keep it stable.
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
           disable-animations: true
           script: echo "Generated AVD snapshot for caching."
           working-directory: Android
@@ -294,11 +313,21 @@ jobs:
           target: google_apis
           force-avd-creation: false
           avd-name: ci-api30-googleapis-${{ runner.arch }}
-          emulator-boot-timeout: 1200
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-boot-timeout: 1800
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
           disable-animations: true
           working-directory: Android
-          script: ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace || true; ./gradlew createDebugAndroidTestCoverageReport --stacktrace || true
+          script: |
+            set -euo pipefail
+
+            SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+            "${SDK_ROOT}/platform-tools/adb" wait-for-device
+            "${SDK_ROOT}/platform-tools/adb" shell settings put global window_animation_scale 0 || true
+            "${SDK_ROOT}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
+            "${SDK_ROOT}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
+
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace
+            ./gradlew createDebugAndroidTestCoverageReport --stacktrace
 
       - name: Collect instrumented test results
         if: always()
