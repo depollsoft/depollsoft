@@ -327,7 +327,8 @@ jobs:
           emulator-boot-timeout: 1800
           # On macOS runners, Vulkan/SwiftShader can wedge the device/adb.
           # Disable Vulkan and use software GPU to keep it stable.
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
+          # Allow snapshot save here so the AVD cache is populated for future runs.
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -feature -Vulkan
           disable-animations: true
           script: echo "Generated AVD snapshot for caching."
           working-directory: Android
@@ -343,6 +344,7 @@ jobs:
           force-avd-creation: false
           avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1800
+          # Load from snapshot but don't save changes after tests (faster shutdown)
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
           disable-animations: true
           working-directory: Android
