@@ -112,10 +112,15 @@ jobs:
           ruby --version
           gem --version
 
+          GEM_HOME="$PWD/vendor/bundle"
+          GEM_PATH="$GEM_HOME"
+          export GEM_HOME GEM_PATH
+          export PATH="$GEM_HOME/bin:$PATH"
+
           gem install bundler --no-document
 
           # Install gems (no user/system-wide side effects beyond this checkout)
-          bundle config set --local path vendor/bundle
+          bundle config set --local path "$GEM_HOME"
           bundle install
 
           bundle exec pod --version
