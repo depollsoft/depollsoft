@@ -320,11 +320,10 @@ jobs:
           script: |
             set -euo pipefail
 
-            SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
-            "${SDK_ROOT}/platform-tools/adb" wait-for-device
-            "${SDK_ROOT}/platform-tools/adb" shell settings put global window_animation_scale 0 || true
-            "${SDK_ROOT}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
-            "${SDK_ROOT}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" wait-for-device
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global window_animation_scale 0 || true
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
+            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
 
             ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace
             ./gradlew createDebugAndroidTestCoverageReport --stacktrace
