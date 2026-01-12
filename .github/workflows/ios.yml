@@ -178,7 +178,22 @@ jobs:
             rm -rf "$HOME/.cocoapods/repos/master"
           fi
 
-          bundle exec pod install --repo-update
+          # Retry pod install up to 3 times to handle transient network failures
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: Running pod install..."
+            if bundle exec pod install --repo-update; then
+              echo "pod install succeeded on attempt $attempt"
+              exit 0
+            else
+              echo "pod install failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              fi
+            fi
+          done
+          echo "pod install failed after 3 attempts"
+          exit 1
 
       - name: List available simulators
         run: ${{ steps.select_xcode.outputs.xcrun }} simctl list devices available
@@ -584,7 +599,23 @@ jobs:
           if [ -d "$HOME/.cocoapods/repos/master" ]; then
             rm -rf "$HOME/.cocoapods/repos/master"
           fi
-          pod install --repo-update
+          
+          # Retry pod install up to 3 times to handle transient network failures
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: Running pod install..."
+            if pod install --repo-update; then
+              echo "pod install succeeded on attempt $attempt"
+              exit 0
+            else
+              echo "pod install failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              fi
+            fi
+          done
+          echo "pod install failed after 3 attempts"
+          exit 1
 
       - name: Run pitchperfect UI tests
         id: pitchperfect_uitest
