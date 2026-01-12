@@ -12,8 +12,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * End-to-end UI tests for the Favorites flow.
- * Tests complete user journey using ViewPager2 and BottomNavigationView.
+ * End-to-end UI tests for the Favorites flow in MeActivity.
+ * Tests the favorites list using the actual MeActivity layout (meview.xml).
  * Uses actual resource IDs from TagMaster app.
  */
 @RunWith(AndroidJUnit4::class)
@@ -32,17 +32,17 @@ class FavoritesFlowTest {
     }
 
     @Test
-    fun testViewPagerIsDisplayed() {
+    fun testScrollViewIsDisplayed() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
 
     @Test
-    fun testBottomNavigationIsDisplayed() {
+    fun testSearchButtonIsDisplayed() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.bottomNavigation))
+            onView(withId(R.id.searchButton))
                 .check(matches(isDisplayed()))
         }
     }
@@ -56,98 +56,88 @@ class FavoritesFlowTest {
                 onView(withId(R.id.favoritesItemsControl))
                     .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
             } catch (e: Exception) {
-                // Favorites control may not be visible on current page
+                // Favorites control may not be visible if empty
             }
         }
     }
 
     @Test
-    fun testTeachableTagsItemsControlExists() {
+    fun testFavoritesItemsControlIsDisplayed() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            // Navigate to teachable tags via ViewPager
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-
-            Thread.sleep(300)
-
-            try {
-                onView(withId(R.id.teachableTagsItemsControl))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Teachable tags may not be visible
-            }
+            onView(withId(R.id.favoritesItemsControl))
+                .check(matches(isDisplayed()))
         }
     }
 
-    // ==================== ViewPager Navigation Tests ====================
+    // ==================== ScrollView Navigation Tests ====================
 
     @Test
-    fun testSwipeToNextPage() {
+    fun testScrollViewCanScrollUp() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
+            onView(withId(R.id.scrollView1))
+                .perform(swipeUp())
 
             Thread.sleep(300)
 
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
 
     @Test
-    fun testSwipeBackToPreviousPage() {
+    fun testScrollViewCanScrollDown() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            // Swipe to next page
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
+            // Swipe up first
+            onView(withId(R.id.scrollView1))
+                .perform(swipeUp())
 
             Thread.sleep(300)
 
-            // Swipe back
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
+            // Swipe down
+            onView(withId(R.id.scrollView1))
+                .perform(swipeDown())
 
             Thread.sleep(300)
 
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
 
     @Test
-    fun testSwipeThroughAllPages() {
+    fun testScrollThroughContent() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             repeat(3) {
-                onView(withId(R.id.viewPager))
-                    .perform(swipeLeft())
+                onView(withId(R.id.scrollView1))
+                    .perform(swipeUp())
                 Thread.sleep(200)
             }
 
             repeat(3) {
-                onView(withId(R.id.viewPager))
-                    .perform(swipeRight())
+                onView(withId(R.id.scrollView1))
+                    .perform(swipeDown())
                 Thread.sleep(200)
             }
 
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
 
-    // ==================== Bottom Navigation Tests ====================
+    // ==================== Search Button Tests ====================
 
     @Test
-    fun testBottomNavigationClickable() {
+    fun testSearchButtonClickable() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.bottomNavigation))
+            onView(withId(R.id.searchButton))
                 .check(matches(isClickable()))
         }
     }
 
     @Test
-    fun testBottomNavigationEnabled() {
+    fun testSearchButtonEnabled() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.bottomNavigation))
+            onView(withId(R.id.searchButton))
                 .check(matches(isEnabled()))
         }
     }
@@ -161,7 +151,7 @@ class FavoritesFlowTest {
                 onView(withId(R.id.titleTextView))
                     .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
             } catch (e: Exception) {
-                // Title may not be visible
+                // Title may not be visible if no favorites
             }
         }
     }
@@ -205,54 +195,6 @@ class FavoritesFlowTest {
     // ==================== Menu Item Tests ====================
 
     @Test
-    fun testAddFavoriteMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.addFavoriteMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
-    @Test
-    fun testRemoveFavoriteMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.removeFavoriteMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
-    @Test
-    fun testAddTeachableTagMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.addTeachableTagMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
-    @Test
-    fun testRemoveTeachableTagMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.removeTeachableTagMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
-    @Test
     fun testSettingsMenuItemExists() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             try {
@@ -264,38 +206,14 @@ class FavoritesFlowTest {
         }
     }
 
-    @Test
-    fun testShareMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.shareMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
-    @Test
-    fun testRefreshMenuItemExists() {
-        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            try {
-                onView(withId(R.id.refreshMenuItem))
-                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-            } catch (e: Exception) {
-                // Menu item may not be visible
-            }
-        }
-    }
-
     // ==================== Configuration Change Tests ====================
 
     @Test
-    fun testViewPagerSurvivesRotation() {
+    fun testScrollViewSurvivesRotation() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            // Swipe to a different page
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
+            // Scroll down
+            onView(withId(R.id.scrollView1))
+                .perform(swipeUp())
 
             Thread.sleep(300)
 
@@ -304,20 +222,20 @@ class FavoritesFlowTest {
 
             Thread.sleep(500)
 
-            // ViewPager should still be displayed
-            onView(withId(R.id.viewPager))
+            // ScrollView should still be displayed
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
 
     @Test
-    fun testBottomNavigationSurvivesRotation() {
+    fun testSearchButtonSurvivesRotation() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             scenario.recreate()
 
             Thread.sleep(500)
 
-            onView(withId(R.id.bottomNavigation))
+            onView(withId(R.id.searchButton))
                 .check(matches(isDisplayed()))
         }
     }
@@ -325,21 +243,21 @@ class FavoritesFlowTest {
     // ==================== Edge Cases ====================
 
     @Test
-    fun testRapidViewPagerSwipes() {
+    fun testRapidScrolling() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             repeat(5) {
-                onView(withId(R.id.viewPager))
-                    .perform(swipeLeft())
+                onView(withId(R.id.scrollView1))
+                    .perform(swipeUp())
                 Thread.sleep(100)
             }
 
             repeat(5) {
-                onView(withId(R.id.viewPager))
-                    .perform(swipeRight())
+                onView(withId(R.id.scrollView1))
+                    .perform(swipeDown())
                 Thread.sleep(100)
             }
 
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
         }
     }
@@ -348,7 +266,7 @@ class FavoritesFlowTest {
     fun testMultipleActivityLaunches() {
         repeat(3) {
             ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-                onView(withId(R.id.viewPager))
+                onView(withId(R.id.scrollView1))
                     .check(matches(isDisplayed()))
             }
         }
@@ -357,18 +275,40 @@ class FavoritesFlowTest {
     // ==================== Accessibility Tests ====================
 
     @Test
-    fun testViewPagerIsEnabled() {
+    fun testScrollViewIsEnabled() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.viewPager))
+            onView(withId(R.id.scrollView1))
                 .check(matches(isEnabled()))
         }
     }
 
     @Test
-    fun testBottomNavigationIsEnabled() {
+    fun testFavoritesItemsControlIsEnabled() {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
-            onView(withId(R.id.bottomNavigation))
+            onView(withId(R.id.favoritesItemsControl))
                 .check(matches(isEnabled()))
+        }
+    }
+
+    // ==================== Header View Tests ====================
+
+    @Test
+    fun testMeHeaderViewExists() {
+        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
+            try {
+                onView(withId(R.id.meHeaderView1))
+                    .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
+            } catch (e: Exception) {
+                // Header may not be visible
+            }
+        }
+    }
+
+    @Test
+    fun testMeHeaderViewIsDisplayed() {
+        ActivityScenario.launch(MeActivity::class.java).use { scenario ->
+            onView(withId(R.id.meHeaderView1))
+                .check(matches(isDisplayed()))
         }
     }
 }

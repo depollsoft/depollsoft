@@ -371,7 +371,7 @@ jobs:
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
 
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --parallel --stacktrace
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace
             ./gradlew createDebugAndroidTestCoverageReport --build-cache --stacktrace
 
       - name: Collect instrumented test results
