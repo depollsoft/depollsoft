@@ -145,6 +145,26 @@ jobs:
           bundle exec pod --version
           bundle exec xcpretty --version
 
+      # Cache CocoaPods dependencies for faster builds
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            iOS/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      # Cache Xcode DerivedData for faster builds
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: deriveddata-unit-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock', 'iOS/**/*.swift', 'iOS/**/*.m', 'iOS/**/*.h') }}
+          restore-keys: |
+            deriveddata-unit-${{ runner.os }}-
+
       - name: Install CocoaPods dependencies
         run: |
           # Remove old git-based CocoaPods repos - we now use CDN
@@ -163,53 +183,82 @@ jobs:
       - name: List available simulators
         run: ${{ steps.select_xcode.outputs.xcrun }} simctl list devices available
 
-      - name: Run pitchperfect tests with coverage
-        id: pitchperfect_test
+      # Build all test targets once, then run tests in parallel
+      - name: Build test targets
+        id: build_tests
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme tagmaster \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectlib \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+
+      # Run all unit tests in parallel using test-without-building
+      - name: Run all unit tests in parallel
+        id: run_tests
         continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+          # Run tests in parallel - xcodebuild handles parallelization
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
+            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfect-junit.xml
-
-      - name: Run tagmaster tests with coverage
-        id: tagmaster_test
-        continue-on-error: true
-        env:
-          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
-        run: |
-          set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            | xcpretty --color --report junit --output pitchperfect-junit.xml &
+          PID1=$!
+          
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
+            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output tagmaster-junit.xml
-
-      - name: Run pitchperfectlib tests with coverage
-        id: pitchperfectlib_test
-        continue-on-error: true
-        env:
-          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
-        run: |
-          set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            | xcpretty --color --report junit --output tagmaster-junit.xml &
+          PID2=$!
+          
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
+            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfectlib-junit.xml
+            | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
+          PID3=$!
+          
+          # Wait for all tests to complete
+          FAILED=0
+          wait $PID1 || FAILED=1
+          wait $PID2 || FAILED=1
+          wait $PID3 || FAILED=1
+          
+          # We continue even if tests fail - we'll check junit results later
+          exit 0
 
       - name: Verify test results
         if: always()
@@ -421,6 +470,7 @@ jobs:
     name: iOS UI Tests
     runs-on: [self-hosted, macOS]
     timeout-minutes: 45
+    # Run in parallel with unit tests - no dependency needed
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
@@ -506,6 +556,26 @@ jobs:
           gem install cocoapods --no-document
           gem install xcpretty --no-document
 
+      # Cache CocoaPods dependencies for faster builds
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            iOS/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      # Cache Xcode DerivedData for faster builds
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: deriveddata-ui-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock', 'iOS/**/*.swift', 'iOS/**/*.m', 'iOS/**/*.h') }}
+          restore-keys: |
+            deriveddata-ui-${{ runner.os }}-
+
       - name: Install CocoaPods dependencies
         run: |
           if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
@@ -529,6 +599,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-uitest-results.xcresult \
+            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfect-uitest-junit.xml || true
 
@@ -545,6 +616,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-uitest-results.xcresult \
+            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output tagmaster-uitest-junit.xml || true
 

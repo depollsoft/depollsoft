@@ -71,11 +71,22 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # Cache Gradle dependencies and wrapper for faster builds
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-unit-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-unit-${{ runner.os }}-
+
       - name: Run unit tests with coverage
         env:
           # Increase Gradle memory for containerized runners
           GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
-        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace --no-daemon
+        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace --build-cache --parallel
 
       - name: Collect coverage + test metrics
         if: always()
@@ -156,7 +167,6 @@ jobs:
           flags: android
           name: android-coverage
           fail_ci_if_error: false
-          verbose: true
 
       - name: Publish unit test results (PR check)
         if: always()
@@ -188,6 +198,7 @@ jobs:
     # Use ubuntu-24.04 for better KVM performance (4 cores vs 2)
     runs-on: [self-hosted, macOS]
     timeout-minutes: 90
+    # Run in parallel with unit tests - no dependency needed
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -360,8 +371,8 @@ jobs:
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
             "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
 
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace
-            ./gradlew createDebugAndroidTestCoverageReport --stacktrace
+            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --parallel --stacktrace
+            ./gradlew createDebugAndroidTestCoverageReport --build-cache --stacktrace
 
       - name: Collect instrumented test results
         if: always()
