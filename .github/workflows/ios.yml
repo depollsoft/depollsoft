@@ -162,15 +162,6 @@ jobs:
           restore-keys: |
             pods-${{ runner.os }}-
 
-      # Cache Xcode DerivedData for faster builds
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: deriveddata-unit-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock', 'iOS/**/*.swift', 'iOS/**/*.m', 'iOS/**/*.h') }}
-          restore-keys: |
-            deriveddata-unit-${{ runner.os }}-
-
       - name: Install CocoaPods dependencies
         run: |
           # Remove old git-based CocoaPods repos - we now use CDN
@@ -587,15 +578,6 @@ jobs:
           key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
           restore-keys: |
             pods-${{ runner.os }}-
-
-      # Cache Xcode DerivedData for faster builds
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: deriveddata-ui-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock', 'iOS/**/*.swift', 'iOS/**/*.m', 'iOS/**/*.h') }}
-          restore-keys: |
-            deriveddata-ui-${{ runner.os }}-
 
       - name: Install CocoaPods dependencies
         run: |
