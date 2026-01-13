@@ -168,8 +168,10 @@ jobs:
       - name: Upload coverage to Codecov
         if: steps.metrics.outputs.jacoco_count != '0'
         uses: codecov/codecov-action@v4
+        continue-on-error: true
+        timeout-minutes: 5
         with:
-          files: \${{ steps.metrics.outputs.codecov_files }}
+          files: ${{ steps.metrics.outputs.codecov_files }}
           flags: android
           name: android-coverage
           fail_ci_if_error: false
