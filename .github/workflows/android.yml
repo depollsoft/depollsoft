@@ -20,6 +20,12 @@ on:
       - '.github/workflows/android.yml'
   workflow_dispatch:
 
+# Prevent multiple runs from piling up on self-hosted runners.
+# Group by workflow + branch; cancel stale PR runs but let main complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 defaults:
   run:
     working-directory: Android
