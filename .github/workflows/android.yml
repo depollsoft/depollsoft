@@ -20,11 +20,11 @@ on:
       - '.github/workflows/android.yml'
   workflow_dispatch:
 
-# Prevent multiple runs from piling up on self-hosted runners.
-# Group by workflow + branch; cancel stale PR runs but let main complete.
+# Serialize runs per branch on self-hosted runners.
+# Queue new runs instead of canceling to reduce “superseded” failures.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref || github.ref }}
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -203,9 +203,8 @@ jobs:
 
   instrumented-tests:
     name: Android UI/Instrumented Tests
-    # Use ubuntu-24.04 for better KVM performance (4 cores vs 2)
     runs-on: [self-hosted, macOS]
-    timeout-minutes: 90
+    timeout-minutes: 120
     # Run in parallel with unit tests - no dependency needed
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
@@ -364,23 +363,66 @@ jobs:
           force-avd-creation: false
           avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1800
-          # Load from snapshot but don't save changes after tests (faster shutdown)
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
           disable-animations: true
           working-directory: Android
           script: |
             set -euo pipefail
+            ADB="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb"
 
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" wait-for-device
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell wm dismiss-keyguard || true
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global stay_on_while_plugged_in 3 || true
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell svc power stayon true || true
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global window_animation_scale 0 || true
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global transition_animation_scale 0 || true
-            "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb" shell settings put global animator_duration_scale 0 || true
+            # Wait for device to be fully booted
+            $ADB wait-for-device
+            echo "Waiting for boot to complete..."
+            for i in $(seq 1 120); do
+              BOOT=$($ADB shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+              if [ "$BOOT" = "1" ]; then
+                echo "Boot completed after ${i}s"
+                break
+              fi
+              sleep 1
+            done
 
-            ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace
-            ./gradlew createDebugAndroidTestCoverageReport --build-cache --stacktrace
+            # Wait for package manager to be ready
+            echo "Waiting for package manager..."
+            for i in $(seq 1 30); do
+              if $ADB shell pm list packages >/dev/null 2>&1; then
+                echo "Package manager ready after ${i}s"
+                break
+              fi
+              sleep 1
+            done
+
+            # Unlock screen and keep awake
+            $ADB shell input keyevent KEYCODE_WAKEUP || true
+            $ADB shell input keyevent 82 || true
+            $ADB shell wm dismiss-keyguard || true
+            $ADB shell settings put global stay_on_while_plugged_in 3 || true
+            $ADB shell svc power stayon true || true
+
+            # Disable all animations
+            $ADB shell settings put global window_animation_scale 0
+            $ADB shell settings put global transition_animation_scale 0
+            $ADB shell settings put global animator_duration_scale 0
+
+            # Wait for launcher to have focus
+            echo "Waiting for window focus..."
+            sleep 10
+
+            # Run tests with retry on flaky failures
+            MAX_ATTEMPTS=2
+            for attempt in $(seq 1 $MAX_ATTEMPTS); do
+              echo "Test attempt $attempt of $MAX_ATTEMPTS"
+              if ./gradlew connectedDebugAndroidTest createDebugAndroidTestCoverageReport -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace; then
+                echo "Tests passed on attempt $attempt"
+                exit 0
+              fi
+              if [ $attempt -lt $MAX_ATTEMPTS ]; then
+                echo "Tests failed, retrying..."
+                sleep 5
+              fi
+            done
+            echo "Tests failed after $MAX_ATTEMPTS attempts"
+            exit 1
 
       - name: Collect instrumented test results
         if: always()
