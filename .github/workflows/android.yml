@@ -19,6 +19,8 @@ on:
       - 'Android/**'
       - '.github/workflows/android.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
 
 # Serialize runs per branch on self-hosted runners.
 # Queue new runs instead of canceling to reduce “superseded” failures.
@@ -88,11 +90,25 @@ jobs:
           restore-keys: |
             gradle-unit-${{ runner.os }}-
 
-      - name: Run unit tests with coverage
+      - name: Run unit tests (coverage on schedule/manual)
         env:
           # Increase Gradle memory for containerized runners
           GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
-        run: ./gradlew testDebugUnitTest jacocoTestReport --stacktrace --build-cache --parallel
+        run: |
+          set -euo pipefail
+          COMMON_FLAGS=(--stacktrace --build-cache --parallel --profile --console=plain)
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ./gradlew testDebugUnitTest jacocoTestReport "${COMMON_FLAGS[@]}"
+          else
+            ./gradlew testDebugUnitTest "${COMMON_FLAGS[@]}"
+          fi
+      - name: Upload Gradle profile reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-gradle-profiles
+          path: Android/**/build/reports/profile/
+          retention-days: 7
 
       - name: Collect coverage + test metrics
         if: always()
@@ -204,9 +220,9 @@ jobs:
   instrumented-tests:
     name: Android UI/Instrumented Tests
     runs-on: [self-hosted, macOS]
-    timeout-minutes: 120
-    # Run in parallel with unit tests - no dependency needed
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    # UI tests are heavier; skip on PRs to keep CI under 30 mins.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     steps:
       - name: Checkout
@@ -371,10 +387,10 @@ jobs:
             ADB="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb"
 
             # Wait for device to be fully booted
-            $ADB wait-for-device
+            "$ADB" wait-for-device
             echo "Waiting for boot to complete..."
             for i in $(seq 1 120); do
-              BOOT=$($ADB shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+              BOOT=$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
               if [ "$BOOT" = "1" ]; then
                 echo "Boot completed after ${i}s"
                 break
@@ -385,7 +401,7 @@ jobs:
             # Wait for package manager to be ready
             echo "Waiting for package manager..."
             for i in $(seq 1 30); do
-              if $ADB shell pm list packages >/dev/null 2>&1; then
+              if "$ADB" shell pm list packages >/dev/null 2>&1; then
                 echo "Package manager ready after ${i}s"
                 break
               fi
@@ -393,16 +409,16 @@ jobs:
             done
 
             # Unlock screen and keep awake
-            $ADB shell input keyevent KEYCODE_WAKEUP || true
-            $ADB shell input keyevent 82 || true
-            $ADB shell wm dismiss-keyguard || true
-            $ADB shell settings put global stay_on_while_plugged_in 3 || true
-            $ADB shell svc power stayon true || true
+            "$ADB" shell input keyevent KEYCODE_WAKEUP || true
+            "$ADB" shell input keyevent 82 || true
+            "$ADB" shell wm dismiss-keyguard || true
+            "$ADB" shell settings put global stay_on_while_plugged_in 3 || true
+            "$ADB" shell svc power stayon true || true
 
             # Disable all animations
-            $ADB shell settings put global window_animation_scale 0
-            $ADB shell settings put global transition_animation_scale 0
-            $ADB shell settings put global animator_duration_scale 0
+            "$ADB" shell settings put global window_animation_scale 0
+            "$ADB" shell settings put global transition_animation_scale 0
+            "$ADB" shell settings put global animator_duration_scale 0
 
             # Wait for launcher to have focus
             echo "Waiting for window focus..."
@@ -519,7 +535,7 @@ jobs:
     name: Android Combined Coverage
     runs-on: [self-hosted, macOS]
     needs: [test, instrumented-tests]
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     timeout-minutes: 10
     defaults:
       run:
