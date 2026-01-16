@@ -19,6 +19,8 @@ on:
       - 'iOS/**'
       - '.github/workflows/ios.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
 
 # Serialize runs per branch on self-hosted runners.
 # Queue new runs instead of canceling to reduce “superseded” failures.
@@ -237,6 +239,8 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
+            -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfect-junit.xml &
           PID1=$!
@@ -248,6 +252,7 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output tagmaster-junit.xml &
           PID2=$!
@@ -259,6 +264,7 @@ jobs:
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
             -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
           PID3=$!
@@ -299,6 +305,7 @@ jobs:
             exit 1
           fi
           echo "All test suites passed!"
+
 
       - name: Summarize tests & coverage
         if: always()
@@ -349,13 +356,15 @@ jobs:
               pass
             return 0.0
 
+          include_lib = os.environ.get('INCLUDE_PITCHPERFECTLIB', '0') == '1'
+
           pitch_tests = parse_junit('pitchperfect-junit.xml')
           tag_tests = parse_junit('tagmaster-junit.xml')
-          lib_tests = parse_junit('pitchperfectlib-junit.xml')
+          lib_tests = parse_junit('pitchperfectlib-junit.xml') if include_lib else (0, 0, 0, 0)
 
           pitch_cov = xccov_percent('pitchperfect-results.xcresult') if os.path.isdir('pitchperfect-results.xcresult') else 0.0
           tag_cov = xccov_percent('tagmaster-results.xcresult') if os.path.isdir('tagmaster-results.xcresult') else 0.0
-          lib_cov = xccov_percent('pitchperfectlib-results.xcresult') if os.path.isdir('pitchperfectlib-results.xcresult') else 0.0
+          lib_cov = xccov_percent('pitchperfectlib-results.xcresult') if (include_lib and os.path.isdir('pitchperfectlib-results.xcresult')) else 0.0
 
           total_tests = pitch_tests[0] + tag_tests[0] + lib_tests[0]
           total_failures = pitch_tests[1] + tag_tests[1] + lib_tests[1]
@@ -370,7 +379,8 @@ jobs:
             f.write(f"tests_skipped={total_skipped}\n")
             f.write(f"pitchperfect_coverage_pct={pitch_cov:.2f}\n")
             f.write(f"tagmaster_coverage_pct={tag_cov:.2f}\n")
-            f.write(f"pitchperfectlib_coverage_pct={lib_cov:.2f}\n")
+            if include_lib:
+              f.write(f"pitchperfectlib_coverage_pct={lib_cov:.2f}\n")
 
           summary = []
           summary.append('## iOS — Unit tests & coverage')
@@ -378,7 +388,8 @@ jobs:
           summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
           summary.append(f"- pitchperfect line coverage: {pitch_cov:.2f}%")
           summary.append(f"- tagmaster line coverage: {tag_cov:.2f}%")
-          summary.append(f"- pitchperfectlib line coverage: {lib_cov:.2f}%")
+          if include_lib:
+            summary.append(f"- pitchperfectlib line coverage: {lib_cov:.2f}%")
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary) + '\n')
@@ -388,7 +399,8 @@ jobs:
           body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
           body.append(f"- pitchperfect coverage (lines): **{pitch_cov:.2f}%**")
           body.append(f"- tagmaster coverage (lines): **{tag_cov:.2f}%**")
-          body.append(f"- pitchperfectlib coverage (lines): **{lib_cov:.2f}%**")
+          if include_lib:
+            body.append(f"- pitchperfectlib coverage (lines): **{lib_cov:.2f}%**")
           body.append('')
 
           body_path = os.path.join(os.getcwd(), 'ios-ci-comment.md')
@@ -400,6 +412,7 @@ jobs:
           with open(out_path, 'a') as f:
             f.write(f"comment_path={rel}\n")
           PY
+
 
       - name: Generate coverage report for pitchperfect
         if: always()
@@ -482,8 +495,8 @@ jobs:
     name: iOS UI Tests
     runs-on: [self-hosted, macOS]
     timeout-minutes: 45
-    # Run in parallel with unit tests - no dependency needed
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    # UI tests are heavier; skip on PRs to keep CI under 30 mins.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       LANG: en_US.UTF-8
@@ -727,7 +740,7 @@ jobs:
     name: iOS Combined Coverage
     runs-on: [self-hosted, macOS]
     needs: [test, ui-tests]
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     timeout-minutes: 10
     defaults:
       run:
