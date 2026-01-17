@@ -96,7 +96,7 @@ jobs:
           GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
         run: |
           set -euo pipefail
-          COMMON_FLAGS=(--stacktrace --build-cache --parallel --profile --console=plain)
+          COMMON_FLAGS=(--stacktrace --build-cache --console=plain --no-daemon --no-parallel)
           if [[ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             ./gradlew testDebugUnitTest jacocoTestReport "${COMMON_FLAGS[@]}"
           else
