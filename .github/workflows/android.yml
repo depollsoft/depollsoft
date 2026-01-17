@@ -401,61 +401,8 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
           disable-animations: true
           working-directory: Android
-          script: |
-            set -euo pipefail
-            # Wait for device to be fully booted
-            adb wait-for-device
-            echo "Waiting for boot to complete..."
-            for i in $(seq 1 120); do
-              BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
-              if [ "$BOOT" = "1" ]; then
-                echo "Boot completed after ${i}s"
-                break
-              fi
-              sleep 1
-            done
-
-            # Wait for package manager to be ready
-            echo "Waiting for package manager..."
-            for i in $(seq 1 30); do
-              if adb shell pm list packages >/dev/null 2>&1; then
-                echo "Package manager ready after ${i}s"
-                break
-              fi
-              sleep 1
-            done
-
-            # Unlock screen and keep awake
-            adb shell input keyevent KEYCODE_WAKEUP || true
-            adb shell input keyevent 82 || true
-            adb shell wm dismiss-keyguard || true
-            adb shell settings put global stay_on_while_plugged_in 3 || true
-            adb shell svc power stayon true || true
-
-            # Disable all animations
-            adb shell settings put global window_animation_scale 0
-            adb shell settings put global transition_animation_scale 0
-            adb shell settings put global animator_duration_scale 0
-
-            # Wait for launcher to have focus
-            echo "Waiting for window focus..."
-            sleep 10
-
-            # Run tests with retry on flaky failures
-            MAX_ATTEMPTS=2
-            for attempt in $(seq 1 $MAX_ATTEMPTS); do
-              echo "Test attempt $attempt of $MAX_ATTEMPTS"
-              if ./gradlew connectedDebugAndroidTest createDebugAndroidTestCoverageReport -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace; then
-                echo "Tests passed on attempt $attempt"
-                exit 0
-              fi
-              if [ $attempt -lt $MAX_ATTEMPTS ]; then
-                echo "Tests failed, retrying..."
-                sleep 5
-              fi
-            done
-            echo "Tests failed after $MAX_ATTEMPTS attempts"
-            exit 1
+          script: >
+            bash -lc 'set -euo pipefail; adb wait-for-device; echo "Waiting for boot to complete..."; for i in $(seq 1 120); do BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then echo "Boot completed after ${i}s"; break; fi; sleep 1; done; echo "Waiting for package manager..."; for i in $(seq 1 30); do if adb shell pm list packages >/dev/null 2>&1; then echo "Package manager ready after ${i}s"; break; fi; sleep 1; done; adb shell input keyevent KEYCODE_WAKEUP || true; adb shell input keyevent 82 || true; adb shell wm dismiss-keyguard || true; adb shell settings put global stay_on_while_plugged_in 3 || true; adb shell svc power stayon true || true; adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0; echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2; for attempt in $(seq 1 $MAX_ATTEMPTS); do echo "Test attempt $attempt of $MAX_ATTEMPTS"; if ./gradlew connectedDebugAndroidTest createDebugAndroidTestCoverageReport -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace; then echo "Tests passed on attempt $attempt"; exit 0; fi; if [ $attempt -lt $MAX_ATTEMPTS ]; then echo "Tests failed, retrying..."; sleep 5; fi; done; echo "Tests failed after $MAX_ATTEMPTS attempts"; exit 1;'
 
       - name: Collect instrumented test results
         if: always()
