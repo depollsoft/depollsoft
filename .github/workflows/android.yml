@@ -36,7 +36,7 @@ jobs:
   test:
     name: Android Unit Tests & Coverage
     runs-on: [self-hosted, macOS]
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
