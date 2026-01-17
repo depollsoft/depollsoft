@@ -53,7 +53,7 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         try {
             onView(withId(R.id.tagQueryFragment))
@@ -69,7 +69,7 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         try {
             onView(withId(R.id.tagCollectionSpinner))
@@ -84,7 +84,7 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         try {
             onView(withId(R.id.tagCollectionSpinner))
@@ -99,13 +99,13 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         try {
             onView(withId(R.id.tagCollectionSpinner))
                 .perform(click())
 
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
 
             // Spinner dropdown should open
         } catch (e: Exception) {
@@ -193,7 +193,7 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -205,12 +205,12 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .perform(swipeRight())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -221,13 +221,13 @@ class TagSearchActivityTest {
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeRight())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         onView(withId(R.id.viewPager))
@@ -256,12 +256,12 @@ class TagSearchActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         // Rotate
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         // ViewPager should still be displayed
         onView(withId(R.id.viewPager))
@@ -272,7 +272,7 @@ class TagSearchActivityTest {
     fun testBottomNavigationPreservedAfterRotation() {
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         onView(withId(R.id.bottomNavigation))
             .check(matches(isDisplayed()))
@@ -299,13 +299,13 @@ class TagSearchActivityTest {
         repeat(5) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(100)
+            EspressoTestUtils.shortWait(100)
         }
 
         repeat(5) {
             onView(withId(R.id.viewPager))
                 .perform(swipeRight())
-            Thread.sleep(100)
+            EspressoTestUtils.shortWait(100)
         }
 
         onView(withId(R.id.viewPager))

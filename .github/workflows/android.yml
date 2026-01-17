@@ -267,6 +267,22 @@ jobs:
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
           sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" >/dev/null
 
+      - name: Export Android SDK env for emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [[ -z "${SDK_ROOT}" ]]; then
+            echo "ANDROID_SDK_ROOT/ANDROID_HOME not set" >&2
+            exit 1
+          fi
+
+          {
+            echo "ANDROID_SDK_ROOT=${SDK_ROOT}"
+            echo "ANDROID_HOME=${SDK_ROOT}"
+            echo "ADB=${SDK_ROOT}/platform-tools/adb"
+          } >> "$GITHUB_ENV"
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -353,6 +369,8 @@ jobs:
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
         with:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
@@ -371,6 +389,7 @@ jobs:
       - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         env:
+          ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
           GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
         with:
           api-level: 30
@@ -384,13 +403,11 @@ jobs:
           working-directory: Android
           script: |
             set -euo pipefail
-            ADB="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}/platform-tools/adb"
-
             # Wait for device to be fully booted
-            "$ADB" wait-for-device
+            adb wait-for-device
             echo "Waiting for boot to complete..."
             for i in $(seq 1 120); do
-              BOOT=$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+              BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
               if [ "$BOOT" = "1" ]; then
                 echo "Boot completed after ${i}s"
                 break
@@ -401,7 +418,7 @@ jobs:
             # Wait for package manager to be ready
             echo "Waiting for package manager..."
             for i in $(seq 1 30); do
-              if "$ADB" shell pm list packages >/dev/null 2>&1; then
+              if adb shell pm list packages >/dev/null 2>&1; then
                 echo "Package manager ready after ${i}s"
                 break
               fi
@@ -409,16 +426,16 @@ jobs:
             done
 
             # Unlock screen and keep awake
-            "$ADB" shell input keyevent KEYCODE_WAKEUP || true
-            "$ADB" shell input keyevent 82 || true
-            "$ADB" shell wm dismiss-keyguard || true
-            "$ADB" shell settings put global stay_on_while_plugged_in 3 || true
-            "$ADB" shell svc power stayon true || true
+            adb shell input keyevent KEYCODE_WAKEUP || true
+            adb shell input keyevent 82 || true
+            adb shell wm dismiss-keyguard || true
+            adb shell settings put global stay_on_while_plugged_in 3 || true
+            adb shell svc power stayon true || true
 
             # Disable all animations
-            "$ADB" shell settings put global window_animation_scale 0
-            "$ADB" shell settings put global transition_animation_scale 0
-            "$ADB" shell settings put global animator_duration_scale 0
+            adb shell settings put global window_animation_scale 0
+            adb shell settings put global transition_animation_scale 0
+            adb shell settings put global animator_duration_scale 0
 
             # Wait for launcher to have focus
             echo "Waiting for window focus..."

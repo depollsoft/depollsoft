@@ -57,7 +57,7 @@ class MeActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -68,12 +68,12 @@ class MeActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .perform(swipeRight())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -98,7 +98,7 @@ class MeActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         try {
             onView(withId(R.id.teachableTagsItemsControl))
@@ -226,7 +226,7 @@ class MeActivityTest {
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
     }
 
@@ -238,14 +238,14 @@ class MeActivityTest {
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         // Swipe back to start
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeRight())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         onView(withId(R.id.viewPager))
@@ -258,7 +258,7 @@ class MeActivityTest {
     fun testActivitySurvivesRotation() {
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -268,7 +268,7 @@ class MeActivityTest {
     fun testBottomNavigationPreservedAfterRotation() {
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         onView(withId(R.id.bottomNavigation))
             .check(matches(isDisplayed()))

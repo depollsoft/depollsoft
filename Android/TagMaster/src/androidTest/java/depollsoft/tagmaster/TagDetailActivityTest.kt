@@ -261,7 +261,7 @@ class TagDetailActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -272,12 +272,12 @@ class TagDetailActivityTest {
         onView(withId(R.id.viewPager))
             .perform(swipeLeft())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .perform(swipeRight())
 
-        Thread.sleep(300)
+        EspressoTestUtils.shortWait(300)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -288,13 +288,13 @@ class TagDetailActivityTest {
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         repeat(3) {
             onView(withId(R.id.viewPager))
                 .perform(swipeRight())
-            Thread.sleep(200)
+            EspressoTestUtils.shortWait(200)
         }
 
         onView(withId(R.id.viewPager))
@@ -307,7 +307,7 @@ class TagDetailActivityTest {
     fun testActivitySurvivesRotation() {
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         onView(withId(R.id.viewPager))
             .check(matches(isDisplayed()))
@@ -317,7 +317,7 @@ class TagDetailActivityTest {
     fun testBottomNavigationPreservedAfterRotation() {
         activityRule.scenario.recreate()
 
-        Thread.sleep(500)
+        EspressoTestUtils.shortWait(500)
 
         onView(withId(R.id.bottomNavigation))
             .check(matches(isDisplayed()))
@@ -344,13 +344,13 @@ class TagDetailActivityTest {
         repeat(5) {
             onView(withId(R.id.viewPager))
                 .perform(swipeLeft())
-            Thread.sleep(100)
+            EspressoTestUtils.shortWait(100)
         }
 
         repeat(5) {
             onView(withId(R.id.viewPager))
                 .perform(swipeRight())
-            Thread.sleep(100)
+            EspressoTestUtils.shortWait(100)
         }
 
         onView(withId(R.id.viewPager))

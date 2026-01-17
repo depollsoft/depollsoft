@@ -77,7 +77,7 @@ class FavoritesFlowTest {
             onView(withId(R.id.scrollView1))
                 .perform(swipeUp())
 
-            Thread.sleep(300)
+            EspressoTestUtils.shortWait(300)
 
             onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
@@ -91,13 +91,13 @@ class FavoritesFlowTest {
             onView(withId(R.id.scrollView1))
                 .perform(swipeUp())
 
-            Thread.sleep(300)
+            EspressoTestUtils.shortWait(300)
 
             // Swipe down
             onView(withId(R.id.scrollView1))
                 .perform(swipeDown())
 
-            Thread.sleep(300)
+            EspressoTestUtils.shortWait(300)
 
             onView(withId(R.id.scrollView1))
                 .check(matches(isDisplayed()))
@@ -110,13 +110,13 @@ class FavoritesFlowTest {
             repeat(3) {
                 onView(withId(R.id.scrollView1))
                     .perform(swipeUp())
-                Thread.sleep(200)
+                EspressoTestUtils.shortWait(200)
             }
 
             repeat(3) {
                 onView(withId(R.id.scrollView1))
                     .perform(swipeDown())
-                Thread.sleep(200)
+                EspressoTestUtils.shortWait(200)
             }
 
             onView(withId(R.id.scrollView1))
@@ -215,12 +215,12 @@ class FavoritesFlowTest {
             onView(withId(R.id.scrollView1))
                 .perform(swipeUp())
 
-            Thread.sleep(300)
+            EspressoTestUtils.shortWait(300)
 
             // Rotate
             scenario.recreate()
 
-            Thread.sleep(500)
+            EspressoTestUtils.shortWait(500)
 
             // ScrollView should still be displayed
             onView(withId(R.id.scrollView1))
@@ -233,7 +233,7 @@ class FavoritesFlowTest {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             scenario.recreate()
 
-            Thread.sleep(500)
+            EspressoTestUtils.shortWait(500)
 
             onView(withId(R.id.searchButton))
                 .check(matches(isDisplayed()))
@@ -248,13 +248,13 @@ class FavoritesFlowTest {
             repeat(5) {
                 onView(withId(R.id.scrollView1))
                     .perform(swipeUp())
-                Thread.sleep(100)
+                EspressoTestUtils.shortWait(100)
             }
 
             repeat(5) {
                 onView(withId(R.id.scrollView1))
                     .perform(swipeDown())
-                Thread.sleep(100)
+                EspressoTestUtils.shortWait(100)
             }
 
             onView(withId(R.id.scrollView1))
