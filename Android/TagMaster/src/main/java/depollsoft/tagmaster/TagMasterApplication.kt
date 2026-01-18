@@ -61,7 +61,7 @@ class TagMasterApplication : RichApplication() {
                     val sessionToken = curUser.sessionToken ?: ParseUser.getCurrentSessionTokenAsync().await()
                     val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
                         .call(mapOf("token" to sessionToken)).await()
-                    val dataDict = result.data as? Map<*, *> ?: return@launch
+                    val dataDict = result.getData() as? Map<*, *> ?: return@launch
                     val firebaseToken = dataDict["token"] as String
                     Firebase.auth.signInWithCustomToken(firebaseToken).await()
                     ParseUser.logOut()

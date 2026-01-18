@@ -182,7 +182,6 @@ class SettingsActivity : AppCompatActivity() {
         this.findViewById<View>(R.id.loginButton).setOnClickListener {
             startActivityForResult(
                 AuthUI.getInstance().createSignInIntentBuilder()
-                    .setIsSmartLockEnabled(false)
                     .setAvailableProviders(
                         listOf(
                             AuthUI.IdpConfig.EmailBuilder()
