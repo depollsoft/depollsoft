@@ -53,7 +53,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0'
+          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0'
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -65,30 +65,12 @@ jobs:
             exit 1
           fi
 
-          # Some self-hosted runners end up with a partially installed build-tools;35.0.0
-          # which can break AGP even if we request 34.0.0. Clean it up first.
-          if [[ -d "${SDK_ROOT}/build-tools/35.0.0" ]]; then
-            echo "Removing possibly corrupted build-tools;35.0.0 at ${SDK_ROOT}/build-tools/35.0.0"
-            rm -rf "${SDK_ROOT}/build-tools/35.0.0"
-          fi
-          (yes | sdkmanager --uninstall "build-tools;35.0.0") >/dev/null 2>&1 || true
-
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
           
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" "build-tools;35.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
           
-          # Verify build-tools were installed correctly
-          if [[ ! -d "${SDK_ROOT}/build-tools/35.0.0" ]]; then
-            echo "ERROR: build-tools;35.0.0 failed to install!" >&2
-            exit 1
-          fi
-          if [[ ! -f "${SDK_ROOT}/build-tools/35.0.0/source.properties" ]]; then
-            echo "ERROR: build-tools;35.0.0 is incomplete (missing source.properties)!" >&2
-            ls -la "${SDK_ROOT}/build-tools/35.0.0/" || true
-            exit 1
-          fi
           echo "SDK components installed successfully."
 
       - name: Grant execute permission for gradlew
@@ -261,7 +243,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-34 build-tools;34.0.0 build-tools;35.0.0 emulator system-images;android-30;google_apis;arm64-v8a system-images;android-30;google_apis;x86_64'
+          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0 emulator system-images;android-30;google_apis;arm64-v8a system-images;android-30;google_apis;x86_64'
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -273,28 +255,12 @@ jobs:
             exit 1
           fi
 
-          if [[ -d "${SDK_ROOT}/build-tools/35.0.0" ]]; then
-            echo "Removing possibly corrupted build-tools;35.0.0 at ${SDK_ROOT}/build-tools/35.0.0"
-            rm -rf "${SDK_ROOT}/build-tools/35.0.0"
-          fi
-          (yes | sdkmanager --uninstall "build-tools;35.0.0") >/dev/null 2>&1 || true
-
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
           
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" "build-tools;35.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
           
-          # Verify build-tools were installed correctly
-          if [[ ! -d "${SDK_ROOT}/build-tools/35.0.0" ]]; then
-            echo "ERROR: build-tools;35.0.0 failed to install!" >&2
-            exit 1
-          fi
-          if [[ ! -f "${SDK_ROOT}/build-tools/35.0.0/source.properties" ]]; then
-            echo "ERROR: build-tools;35.0.0 is incomplete (missing source.properties)!" >&2
-            ls -la "${SDK_ROOT}/build-tools/35.0.0/" || true
-            exit 1
-          fi
           echo "SDK components installed successfully."
 
       - name: Export Android SDK env for emulator
