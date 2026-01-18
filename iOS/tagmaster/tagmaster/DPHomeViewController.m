@@ -201,9 +201,6 @@
     [arr addObject:@{
                      @"title": @"Open Tag",
                      @"action": ^() {
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Open Tag"
-                                                                       message:@"Enter Tag ID"
-                                                                preferredStyle:UIAlertControllerStyleAlert];
         [self openTag];
     }
                      }];

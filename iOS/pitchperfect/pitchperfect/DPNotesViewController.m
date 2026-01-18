@@ -7,7 +7,7 @@
 //
 
 #import "DPNotesViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "LayoutManagers.h"
 #import "DPNote.h"
 #import "DPUtils+UIColor.h"
@@ -15,6 +15,7 @@
 #import "DPAccidental.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "UIToolbar+DPUtils.h"
@@ -172,7 +173,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
@@ -210,7 +211,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
@@ -256,6 +257,11 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return notes.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    (void)tableView;
+    return 1;
 }
 
 - (void)openSettings {

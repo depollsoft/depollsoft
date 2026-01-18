@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'cocoapods', '~> 1.16'
+gem 'xcpretty', '~> 0.4'
+
+# Required for Ruby 4.0+ (kconv was moved from stdlib to nkf gem)
+gem 'nkf'

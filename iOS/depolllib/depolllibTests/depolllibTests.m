@@ -8,6 +8,7 @@
 
 #import "depolllibTests.h"
 #import "DPJsonSerializer.h"
+#define ENUM_IMPLEMENTATION
 #import "DPEnum.h"
 
 DEFINE_ENUM(SpecialEnum, Zero = 0, One, Two, Three, Five = 5)
@@ -133,7 +134,7 @@ IMPLEMENT_ENUM(SpecialEnum)
     STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
     STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
     
-    STAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
+    STAssertNil([serialized objectForKey:@"StringProp"], @"stringProp should be omitted when nil");
     
     STAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
 }
@@ -152,7 +153,7 @@ IMPLEMENT_ENUM(SpecialEnum)
     STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"*type"], @"DPJsonPrimitive", @"doubleProp should be a primitive");
     STAssertEqualObjects([[serialized objectForKey:@"DoubleProp"] objectForKey:@"Type"], [NSString stringWithUTF8String:@encode(double)], @"doubleProp's primitive type should be int");
     
-    STAssertEqualObjects([serialized objectForKey:@"StringProp"], [NSNull null], @"stringProp should be null");
+    STAssertNil([serialized objectForKey:@"StringProp"], @"stringProp should be omitted when nil");
     
     STAssertNil([serialized objectForKey:@"ReadOnlyInt"], @"readOnlyInt should not have been serialized.");
     

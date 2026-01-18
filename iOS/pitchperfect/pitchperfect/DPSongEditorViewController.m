@@ -10,13 +10,14 @@
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"
 #import "LayoutManagers.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 
@@ -100,7 +101,7 @@
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
-        [bannerView loadRequest:DPAppDelegate.adRequest];
+        [bannerView loadRequest:[DPAppDelegate adRequest]];
     }
     [rootLayout addSubview:[nameField pad:5] row:2 column:0];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
@@ -137,7 +138,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

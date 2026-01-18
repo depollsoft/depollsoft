@@ -1,0 +1,861 @@
+name: iOS CI
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'iOS/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'iOS/**'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+
+# Serialize runs per branch on self-hosted runners.
+# Queue new runs instead of canceling to reduce “superseded” failures.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref || github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: iOS
+
+jobs:
+  test:
+    name: iOS Unit Tests & Coverage
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+    env:
+      # Set Xcode path - will be refined in Select Xcode version step
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      # UTF-8 encoding for CocoaPods
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        id: select_xcode
+        run: |
+          # Find available Xcode installation (prefer versioned, fall back to Xcode.app)
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.3.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.app"
+          elif [ -d "/Applications/Xcode.app" ]; then
+            XCODE_PATH="/Applications/Xcode.app"
+          else
+            echo "No Xcode installation found!"
+            exit 1
+          fi
+          
+          # Pin the developer directory for subsequent steps (no global xcode-select).
+          DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+
+          # Expose tool paths as outputs so later steps can call the intended toolchain
+          # even if the runner's global developer directory points at CommandLineTools.
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+
+          echo "Selected Xcode: $XCODE_PATH"
+
+      - name: Show Xcode version
+        id: xcode
+        run: |
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -version
+          XCODE_VERSION=$("${{ steps.select_xcode.outputs.xcodebuild }}" -version | head -1 | sed 's/Xcode //')
+          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get iOS Simulator destination
+        id: simulator
+        run: |
+          DESTINATION=$("${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          devices = data.get('devices', {})
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone 16' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
+          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+          echo "Using simulator: $DESTINATION"
+
+      - name: Setup Ruby and Install CocoaPods
+        # Works on both GitHub-hosted and self-hosted macOS runners.
+        # Prefers Homebrew Ruby (3.x) over macOS system Ruby (2.6) which is too old for modern gems.
+        run: |
+          set -euo pipefail
+
+          # Prefer Homebrew Ruby over system Ruby (macOS system Ruby 2.6 is too old)
+          if [ -x "/opt/homebrew/opt/ruby/bin/ruby" ]; then
+            export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+            export PATH="$(/opt/homebrew/opt/ruby/bin/gem environment gemdir)/bin:$PATH"
+            echo "/opt/homebrew/opt/ruby/bin" >> "$GITHUB_PATH"
+            echo "$(/opt/homebrew/opt/ruby/bin/gem environment gemdir)/bin" >> "$GITHUB_PATH"
+          elif [ -x "/usr/local/opt/ruby/bin/ruby" ]; then
+            # Intel Mac Homebrew location
+            export PATH="/usr/local/opt/ruby/bin:$PATH"
+            export PATH="$(/usr/local/opt/ruby/bin/gem environment gemdir)/bin:$PATH"
+            echo "/usr/local/opt/ruby/bin" >> "$GITHUB_PATH"
+            echo "$(/usr/local/opt/ruby/bin/gem environment gemdir)/bin" >> "$GITHUB_PATH"
+          fi
+
+          ruby --version
+          gem --version
+
+          # Check if bundler is already available
+          if ! command -v bundle &>/dev/null; then
+            echo "Bundler not found, installing to user directory..."
+            gem install bundler --user-install --no-document
+            # Add user gem bin to PATH
+            USER_GEM_BIN="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin"
+            export PATH="$USER_GEM_BIN:$PATH"
+            echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
+          else
+            echo "Bundler already available: $(bundle --version)"
+          fi
+
+          # Install gems to local vendor/bundle (no system-wide side effects)
+          bundle config set --local path vendor/bundle
+          bundle install
+
+          bundle exec pod --version
+          bundle exec xcpretty --version
+
+      # Cache CocoaPods dependencies for faster builds
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            iOS/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install CocoaPods dependencies
+        run: |
+          # Remove old git-based CocoaPods repos - we now use CDN
+          # This prevents conflicts between old git repos and CDN
+          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
+            echo "Removing old git-based CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/cocoapods"
+          fi
+          if [ -d "$HOME/.cocoapods/repos/master" ]; then
+            echo "Removing old master CocoaPods repo (now using CDN)..."
+            rm -rf "$HOME/.cocoapods/repos/master"
+          fi
+
+          # Retry pod install up to 3 times to handle transient network failures
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: Running pod install..."
+            if bundle exec pod install --repo-update; then
+              echo "pod install succeeded on attempt $attempt"
+              exit 0
+            else
+              echo "pod install failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              fi
+            fi
+          done
+          echo "pod install failed after 3 attempts"
+          exit 1
+
+      - name: List available simulators
+        run: ${{ steps.select_xcode.outputs.xcrun }} simctl list devices available
+
+      # Build all test targets once, then run tests in parallel
+      - name: Build test targets
+        id: build_tests
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme tagmaster \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectlib \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+
+      # Run all unit tests in parallel using test-without-building
+      - name: Run all unit tests in parallel
+        id: run_tests
+        continue-on-error: true
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          # Run tests in parallel - xcodebuild handles parallelization
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath pitchperfect-results.xcresult \
+            -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output pitchperfect-junit.xml &
+          PID1=$!
+          
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+            -workspace iOS.xcworkspace \
+            -scheme tagmaster \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath tagmaster-results.xcresult \
+            -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output tagmaster-junit.xml &
+          PID2=$!
+          
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectlib \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath pitchperfectlib-results.xcresult \
+            -parallel-testing-enabled YES \
+            -test-timeouts-enabled YES \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
+          PID3=$!
+          
+          # Wait for all tests to complete
+          FAILED=0
+          wait $PID1 || FAILED=1
+          wait $PID2 || FAILED=1
+          wait $PID3 || FAILED=1
+          
+          # We continue even if tests fail - we'll check junit results later
+          exit 0
+
+      - name: Verify test results
+        if: always()
+        run: |
+          # Check junit XML files for actual test failures
+          # xcodebuild may exit 65 due to simctl issues even when tests pass
+          FAILED=0
+          for junit in pitchperfect-junit.xml tagmaster-junit.xml pitchperfectlib-junit.xml; do
+            if [ -f "$junit" ]; then
+              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
+              if [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
+                echo "❌ $junit has $FAILURES failures and $ERRORS errors out of $TESTS tests"
+                FAILED=1
+              else
+                echo "✅ $junit passed ($TESTS tests)"
+              fi
+            else
+              echo "⚠️ $junit not found - tests may not have run"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::Some tests failed or did not run. Check the junit XML reports."
+            exit 1
+          fi
+          echo "All test suites passed!"
+
+
+      - name: Summarize tests & coverage
+        if: always()
+        id: metrics
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import xml.etree.ElementTree as ET
+
+          def parse_junit(path: str):
+            try:
+              root = ET.parse(path).getroot()
+            except Exception:
+              return (0, 0, 0, 0)
+            if root.tag == 'testsuite':
+              suites = [root]
+            elif root.tag == 'testsuites':
+              suites = list(root.findall('testsuite'))
+            else:
+              suites = []
+            tests = failures = errors = skipped = 0
+            for s in suites:
+              tests += int(s.attrib.get('tests', 0))
+              failures += int(s.attrib.get('failures', 0))
+              errors += int(s.attrib.get('errors', 0))
+              skipped += int(s.attrib.get('skipped', 0))
+            return (tests, failures, errors, skipped)
+
+          def xccov_percent(xcresult: str) -> float:
+            xcrun = os.environ.get('XCRUN', 'xcrun')
+            try:
+              out = subprocess.check_output(
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.STDOUT,
+                text=True,
+              )
+              data = json.loads(out)
+              # For top-level report JSON, lineCoverage is typically in [0,1]
+              cov = data.get('lineCoverage')
+              if isinstance(cov, (int, float)):
+                return float(cov) * 100.0
+            except Exception:
+              pass
+            return 0.0
+
+          include_lib = os.environ.get('INCLUDE_PITCHPERFECTLIB', '0') == '1'
+
+          pitch_tests = parse_junit('pitchperfect-junit.xml')
+          tag_tests = parse_junit('tagmaster-junit.xml')
+          lib_tests = parse_junit('pitchperfectlib-junit.xml') if include_lib else (0, 0, 0, 0)
+
+          pitch_cov = xccov_percent('pitchperfect-results.xcresult') if os.path.isdir('pitchperfect-results.xcresult') else 0.0
+          tag_cov = xccov_percent('tagmaster-results.xcresult') if os.path.isdir('tagmaster-results.xcresult') else 0.0
+          lib_cov = xccov_percent('pitchperfectlib-results.xcresult') if (include_lib and os.path.isdir('pitchperfectlib-results.xcresult')) else 0.0
+
+          total_tests = pitch_tests[0] + tag_tests[0] + lib_tests[0]
+          total_failures = pitch_tests[1] + tag_tests[1] + lib_tests[1]
+          total_errors = pitch_tests[2] + tag_tests[2] + lib_tests[2]
+          total_skipped = pitch_tests[3] + tag_tests[3] + lib_tests[3]
+
+          out_path = os.environ['GITHUB_OUTPUT']
+          with open(out_path, 'a') as f:
+            f.write(f"tests_total={total_tests}\n")
+            f.write(f"tests_failures={total_failures}\n")
+            f.write(f"tests_errors={total_errors}\n")
+            f.write(f"tests_skipped={total_skipped}\n")
+            f.write(f"pitchperfect_coverage_pct={pitch_cov:.2f}\n")
+            f.write(f"tagmaster_coverage_pct={tag_cov:.2f}\n")
+            if include_lib:
+              f.write(f"pitchperfectlib_coverage_pct={lib_cov:.2f}\n")
+
+          summary = []
+          summary.append('## iOS — Unit tests & coverage')
+          summary.append('')
+          summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary.append(f"- pitchperfect line coverage: {pitch_cov:.2f}%")
+          summary.append(f"- tagmaster line coverage: {tag_cov:.2f}%")
+          if include_lib:
+            summary.append(f"- pitchperfectlib line coverage: {lib_cov:.2f}%")
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+
+          body = []
+          body.append('### iOS CI')
+          body.append(f"- Tests: **{total_tests}** (failures: **{total_failures}**, errors: **{total_errors}**, skipped: **{total_skipped}**)")
+          body.append(f"- pitchperfect coverage (lines): **{pitch_cov:.2f}%**")
+          body.append(f"- tagmaster coverage (lines): **{tag_cov:.2f}%**")
+          if include_lib:
+            body.append(f"- pitchperfectlib coverage (lines): **{lib_cov:.2f}%**")
+          body.append('')
+
+          body_path = os.path.join(os.getcwd(), 'ios-ci-comment.md')
+          with open(body_path, 'w') as b:
+            b.write('\n'.join(body) + '\n')
+
+          repo_root = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+          rel = os.path.relpath(body_path, repo_root)
+          with open(out_path, 'a') as f:
+            f.write(f"comment_path={rel}\n")
+          PY
+
+
+      - name: Generate coverage report for pitchperfect
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          if [ -d "pitchperfect-results.xcresult" ]; then
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report pitchperfect-results.xcresult > pitchperfect-coverage.txt || true
+            echo "## Pitch Perfect Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 pitchperfect-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Generate coverage report for tagmaster
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          if [ -d "tagmaster-results.xcresult" ]; then
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report tagmaster-results.xcresult > tagmaster-coverage.txt || true
+            echo "## Tag Master Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 tagmaster-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Generate coverage report for pitchperfectlib
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          if [ -d "pitchperfectlib-results.xcresult" ]; then
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report pitchperfectlib-results.xcresult > pitchperfectlib-coverage.txt || true
+            echo "## PitchPerfectLib Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 pitchperfectlib-coverage.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-test-results
+          path: |
+            iOS/*.xcresult
+            iOS/*-coverage.txt
+            iOS/*-junit.xml
+          retention-days: 14
+
+      - name: Publish unit test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: iOS Unit Tests
+          path: iOS/*-junit.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Find existing PR comment
+        if: github.event_name == 'pull_request'
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: "### iOS CI"
+
+      - name: Create or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          body-path: ${{ steps.metrics.outputs.comment_path }}
+          edit-mode: replace
+
+  ui-tests:
+    name: iOS UI Tests
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 45
+    # UI tests are heavier; skip on PRs to keep CI under 30 mins.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        id: select_xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.3.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.app"
+          elif [ -d "/Applications/Xcode.app" ]; then
+            XCODE_PATH="/Applications/Xcode.app"
+          else
+            echo "No Xcode installation found!"
+            exit 1
+          fi
+          DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "Selected Xcode: $XCODE_PATH"
+
+      - name: Get iOS Simulator destination
+        id: simulator
+        run: |
+          DESTINATION=$("${{ steps.select_xcode.outputs.xcrun }}" simctl list devices available -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          devices = data.get('devices', {})
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone 16' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for device in devices[runtime]:
+                if 'iPhone' in device['name'] and device['isAvailable']:
+                  parts = runtime.split('iOS-')[-1].split('-')
+                  ios_version = '.'.join(parts)
+                  print(f\"platform=iOS Simulator,name={device['name']},OS={ios_version}\")
+                  sys.exit(0)
+          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
+          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+
+      - name: Setup Ruby and Install CocoaPods
+        # Prefer Homebrew Ruby over system Ruby (macOS system Ruby 2.6 is too old)
+        run: |
+          set -euo pipefail
+
+          if [ -x "/opt/homebrew/opt/ruby/bin/ruby" ]; then
+            # Apple Silicon Mac
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+            export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+            export PATH="$(/opt/homebrew/opt/ruby/bin/gem environment gemdir)/bin:$PATH"
+            echo "/opt/homebrew/opt/ruby/bin" >> "$GITHUB_PATH"
+            echo "$(/opt/homebrew/opt/ruby/bin/gem environment gemdir)/bin" >> "$GITHUB_PATH"
+          elif [ -x "/usr/local/opt/ruby/bin/ruby" ]; then
+            # Intel Mac
+            eval "$(/usr/local/bin/brew shellenv)"
+            export PATH="/usr/local/opt/ruby/bin:$PATH"
+            export PATH="$(/usr/local/opt/ruby/bin/gem environment gemdir)/bin:$PATH"
+            echo "/usr/local/opt/ruby/bin" >> "$GITHUB_PATH"
+            echo "$(/usr/local/opt/ruby/bin/gem environment gemdir)/bin" >> "$GITHUB_PATH"
+          fi
+
+          ruby --version
+          gem --version
+
+          gem install cocoapods --no-document
+          gem install xcpretty --no-document
+
+      # Cache CocoaPods dependencies for faster builds
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            iOS/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install CocoaPods dependencies
+        run: |
+          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
+            rm -rf "$HOME/.cocoapods/repos/cocoapods"
+          fi
+          if [ -d "$HOME/.cocoapods/repos/master" ]; then
+            rm -rf "$HOME/.cocoapods/repos/master"
+          fi
+          
+          # Retry pod install up to 3 times to handle transient network failures
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: Running pod install..."
+            if pod install --repo-update; then
+              echo "pod install succeeded on attempt $attempt"
+              exit 0
+            else
+              echo "pod install failed on attempt $attempt"
+              if [ $attempt -lt 3 ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              fi
+            fi
+          done
+          echo "pod install failed after 3 attempts"
+          exit 1
+
+      - name: Run pitchperfect UI tests
+        id: pitchperfect_uitest
+        continue-on-error: true
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfectUITests \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath pitchperfect-uitest-results.xcresult \
+            -parallel-testing-enabled YES \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output pitchperfect-uitest-junit.xml || true
+
+      - name: Run tagmaster UI tests
+        id: tagmaster_uitest
+        continue-on-error: true
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          set -o pipefail
+          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+            -workspace iOS.xcworkspace \
+            -scheme tagmasterUITests \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath tagmaster-uitest-results.xcresult \
+            -parallel-testing-enabled YES \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output tagmaster-uitest-junit.xml || true
+
+      - name: Summarize UI tests
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import json
+          import subprocess
+          import xml.etree.ElementTree as ET
+
+          xcrun = '/usr/bin/xcrun'
+
+          def xccov_percent(xcresult: str) -> float:
+            if not os.path.isdir(xcresult):
+              return 0.0
+            try:
+              out = subprocess.check_output(
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.DEVNULL, text=True
+              )
+              data = json.loads(out)
+              # lineCoverage is typically in [0,1]
+              cov = data.get('lineCoverage')
+              if cov is not None:
+                return cov * 100.0
+            except Exception:
+              pass
+            return 0.0
+
+          def junit_stats(junit_file: str) -> tuple:
+            if not os.path.isfile(junit_file):
+              return (0, 0, 0)
+            try:
+              root = ET.parse(junit_file).getroot()
+              tests = int(root.attrib.get('tests', 0))
+              failures = int(root.attrib.get('failures', 0))
+              errors = int(root.attrib.get('errors', 0))
+              return (tests, failures, errors)
+            except Exception:
+              return (0, 0, 0)
+
+          summary = []
+          summary.append('## iOS — UI Tests')
+          summary.append('')
+
+          schemes = ['pitchperfect', 'tagmaster']
+          for scheme in schemes:
+            junit = f'{scheme}-uitest-junit.xml'
+            xcresult = f'{scheme}-uitest-results.xcresult'
+            tests, failures, errors = junit_stats(junit)
+            cov = xccov_percent(xcresult)
+            
+            if tests == 0:
+              summary.append(f"⚠️ **{scheme}**: Tests did not run")
+            elif failures == 0 and errors == 0:
+              summary.append(f"✅ **{scheme}**: {tests} tests passed (line coverage: {cov:.2f}%)")
+            else:
+              summary.append(f"❌ **{scheme}**: {tests} tests, {failures} failures, {errors} errors (line coverage: {cov:.2f}%)")
+          
+          summary.append('')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY
+
+      - name: Upload UI test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-uitest-results
+          path: |
+            iOS/*-uitest-results.xcresult
+            iOS/*-uitest-junit.xml
+          retention-days: 7
+
+      - name: Publish UI test results (PR check)
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: iOS UI Tests
+          path: iOS/*-uitest-junit.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Combined coverage summary job - runs after both test types complete
+  coverage-summary:
+    name: iOS Combined Coverage
+    runs-on: [self-hosted, macOS]
+    needs: [test, ui-tests]
+    if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+    steps:
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: ios-test-results
+          path: iOS/unit-test-results
+
+      - name: Download UI test results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: ios-uitest-results
+          path: iOS/ui-test-results
+
+      - name: Select Xcode version
+        run: |
+          if [ -d "/Applications/Xcode_16.3.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.3.app"
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            XCODE_PATH="/Applications/Xcode_16.app"
+          else
+            XCODE_PATH="/Applications/Xcode.app"
+          fi
+          echo "DEVELOPER_DIR=${XCODE_PATH}/Contents/Developer" >> $GITHUB_ENV
+
+      - name: Generate combined coverage summary
+        run: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import json
+          import subprocess
+
+          xcrun = '/usr/bin/xcrun'
+
+          def xccov_stats(xcresult: str) -> tuple:
+            """Returns (covered_lines, total_lines, percentage)"""
+            if not os.path.isdir(xcresult):
+              return (0, 0, 0.0)
+            try:
+              out = subprocess.check_output(
+                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
+                stderr=subprocess.DEVNULL, text=True
+              )
+              data = json.loads(out)
+              cov = data.get('lineCoverage', 0)
+              # Try to get line counts from targets
+              covered = 0
+              total = 0
+              for target in data.get('targets', []):
+                for file in target.get('files', []):
+                  covered += file.get('coveredLines', 0)
+                  total += file.get('executableLines', 0)
+              if total == 0:
+                # Fallback: estimate from percentage
+                return (0, 0, cov * 100.0)
+              return (covered, total, cov * 100.0)
+            except Exception as e:
+              print(f"Error processing {xcresult}: {e}")
+              return (0, 0, 0.0)
+
+          # Find all xcresult bundles (artifacts downloaded to iOS/ prefix)
+          unit_results = sorted(glob.glob('iOS/unit-test-results/**/*-results.xcresult', recursive=True))
+          ui_results = sorted(glob.glob('iOS/ui-test-results/**/*-uitest-results.xcresult', recursive=True))
+
+          summary = []
+          summary.append('## iOS — Combined Coverage Summary')
+          summary.append('')
+          summary.append('| Test Type | Scheme | Lines Covered | Total Lines | Coverage |')
+          summary.append('|-----------|--------|---------------|-------------|----------|')
+
+          unit_total_covered = unit_total_lines = 0
+          ui_total_covered = ui_total_lines = 0
+          unit_coverages = []
+          ui_coverages = []
+
+          for xcresult in unit_results:
+            scheme = os.path.basename(xcresult).replace('-results.xcresult', '')
+            covered, total, pct = xccov_stats(xcresult)
+            unit_total_covered += covered
+            unit_total_lines += total
+            unit_coverages.append(pct)
+            summary.append(f'| Unit | {scheme} | {covered} | {total} | {pct:.2f}% |')
+
+          for xcresult in ui_results:
+            scheme = os.path.basename(xcresult).replace('-uitest-results.xcresult', '')
+            covered, total, pct = xccov_stats(xcresult)
+            ui_total_covered += covered
+            ui_total_lines += total
+            ui_coverages.append(pct)
+            summary.append(f'| UI | {scheme} | {covered} | {total} | {pct:.2f}% |')
+
+          # Calculate overall coverage
+          all_coverages = unit_coverages + ui_coverages
+          if all_coverages:
+            avg_coverage = sum(all_coverages) / len(all_coverages)
+            best_coverage = max(all_coverages)
+          else:
+            avg_coverage = best_coverage = 0.0
+
+          summary.append('')
+          summary.append(f'**Average coverage across all test suites: {avg_coverage:.2f}%**')
+          summary.append(f'**Best coverage (any test suite): {best_coverage:.2f}%**')
+          summary.append('')
+          summary.append('> Note: Each scheme may test different code paths. For true merged coverage,')
+          summary.append('> consider using a dedicated coverage aggregation tool.')
+          summary.append('')
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+            s.write('\n'.join(summary) + '\n')
+          PY

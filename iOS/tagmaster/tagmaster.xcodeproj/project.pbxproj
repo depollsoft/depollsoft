@@ -10,6 +10,7 @@
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
+		1E5B19A91FE7533B00241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19A41FE7533B00241069 /* libdepolllib.a */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
@@ -18,7 +19,10 @@
 		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
 		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
 		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
-		4800886B9CBE78AD0C428D40 /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC5C2D531ED431E16AFB2CD5 /* Pods_tagmaster.framework */; };
+		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
+		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
+		594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2841862AFC447839A50EF4 /* SearchUITests.swift */; };
+		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
@@ -87,10 +91,52 @@
 		63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E8667315DCB86300E0FC17 /* DPTagCell.m */; };
 		63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */; };
 		63E8668215DCCCB300E0FC17 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */; };
+		6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */; };
+		8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */; };
+		983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */; };
+		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
+		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
+		C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */; };
+		C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F63FCEA8F84786898B2EADF7 /* Foundation.framework */; };
+		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
+		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
+		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
+		C1BFD5A02AEB33DA33C58404 /* Pods_tagmaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */; };
+		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
+		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
+		F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 55119B3912F586A001961332 /* Pods_tagmasterTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1E5B19A21FE7533B00241069 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC3733151E9263007C46DB;
+			remoteInfo = depolllib;
+		};
+		1E5B19A31FE7533B00241069 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63DC3743151E9263007C46DB;
+			remoteInfo = depolllibTests;
+		};
+		1E5B19A71FE7533B00241069 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 63DC3732151E9263007C46DB;
+			remoteInfo = depolllib;
+		};
 		63712F1115130B21007997CC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63712EE215130B21007997CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63712EEA15130B21007997CC;
+			remoteInfo = tagmaster;
+		};
+		DA37CCFAFF48F86BCCD54EB0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 63712EE215130B21007997CC /* Project object */;
 			proxyType = 1;
@@ -100,11 +146,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		10A01FCBE50DA196795F4BE0 /* Pods-tagmaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.debug.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.debug.xcconfig"; sourceTree = "<group>"; };
 		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E4373A82363633E00C8447F /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		1E4373AC236388A600C8447F /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SafariServices.framework; sourceTree = DEVELOPER_DIR; };
+		1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
 		1E8483E51DD86F5C00AF4EAB /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppTrackingTransparency.framework; path = System/Library/Frameworks/AppTrackingTransparency.framework; sourceTree = SDKROOT; };
 		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -114,7 +162,9 @@
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
+		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
+		55119B3912F586A001961332 /* Pods_tagmasterTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmasterTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = tagmasterUITests.swift; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
@@ -122,7 +172,6 @@
 		63336A4417F6342400BC1EE2 /* DPTagViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagViewController.m; sourceTree = "<group>"; };
 		63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagSummaryController.h; sourceTree = "<group>"; };
 		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
-		63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdepolllib.a; path = "../depolllib/build/Debug-iphoneos/libdepolllib.a"; sourceTree = "<group>"; };
 		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "screenbackground@2x.png"; sourceTree = "<group>"; };
 		6364556F15156B3A002AD091 /* DPTagXMLParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DPTagXMLParser.h; path = Barbershop/DPTagXMLParser.h; sourceTree = "<group>"; };
@@ -214,8 +263,27 @@
 		63E8667A15DCCBC600E0FC17 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
-		7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-tagmaster/Pods-tagmaster.debug.xcconfig"; sourceTree = "<group>"; };
-		DC5C2D531ED431E16AFB2CD5 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagDetailUITests.swift; sourceTree = "<group>"; };
+		7C2841862AFC447839A50EF4 /* SearchUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchUITests.swift; sourceTree = "<group>"; };
+		7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewControllerTests.m; sourceTree = "<group>"; };
+		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
+		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
+		991D84FBF6F149678772B262 /* DPTrackModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTrackModelTests.m; sourceTree = "<group>"; };
+		A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterAppLogicTests.m; sourceTree = "<group>"; };
+		A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMTestAppDelegate.m; sourceTree = "<group>"; };
+		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
+		A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.release.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.release.xcconfig"; sourceTree = "<group>"; };
+		AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewControllerExtensionTests.swift; sourceTree = "<group>"; };
+		BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
+		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
+		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
+		C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoritesUITests.swift; sourceTree = "<group>"; };
+		DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.debug.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.debug.xcconfig"; sourceTree = "<group>"; };
+		F5BCD0DFDBC06C4180EBF6BC /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F63FCEA8F84786898B2EADF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmaster.release.xcconfig"; path = "Target Support Files/Pods-tagmaster/Pods-tagmaster.release.xcconfig"; sourceTree = "<group>"; };
+		F87508481E0BDCF004F43CEA /* tagmasterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -233,6 +301,7 @@
 				639F294818010A0D00517583 /* CoreLocation.framework in Frameworks */,
 				639F294618010A0500517583 /* CFNetwork.framework in Frameworks */,
 				639F293918001DD000517583 /* libpitchperfectlib.a in Frameworks */,
+				1E5B19A91FE7533B00241069 /* libdepolllib.a in Frameworks */,
 				638E739317F7CAB3000FFE53 /* MessageUI.framework in Frameworks */,
 				638E739117F7C097000FFE53 /* MediaPlayer.framework in Frameworks */,
 				1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */,
@@ -243,7 +312,7 @@
 				63E8667B15DCCBC600E0FC17 /* CoreAudio.framework in Frameworks */,
 				63712EF415130B21007997CC /* CoreGraphics.framework in Frameworks */,
 				1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */,
-				4800886B9CBE78AD0C428D40 /* Pods_tagmaster.framework in Frameworks */,
+				C1BFD5A02AEB33DA33C58404 /* Pods_tagmaster.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,19 +322,60 @@
 			files = (
 				63712F0E15130B21007997CC /* UIKit.framework in Frameworks */,
 				63712F0F15130B21007997CC /* Foundation.framework in Frameworks */,
+				F23AB3C7F00726F1093B321C /* Pods_tagmasterTests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA4909B26F2EB02D874FBE9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		45190FF4DDFDC07A4A3F2AD9 /* Pods */ = {
+		11447BBC18F18E9E2C6F9803 /* tagmasterUITests */ = {
 			isa = PBXGroup;
 			children = (
-				7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */,
-				5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */,
+				C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */,
+				7C2841862AFC447839A50EF4 /* SearchUITests.swift */,
+				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
+				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
+				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
+			);
+			name = tagmasterUITests;
+			path = tagmasterUITests;
+			sourceTree = SOURCE_ROOT;
+		};
+		1E5B19A11FE7533B00241069 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E5B19A51FE7533B00241069 /* depolllibTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2EC3070B48EA9ECF3AEF3461 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F63FCEA8F84786898B2EADF7 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		485CAF6179ED3C9B6361BC53 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				10A01FCBE50DA196795F4BE0 /* Pods-tagmaster.debug.xcconfig */,
+				F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */,
+				DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */,
+				A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */,
 			);
 			name = Pods;
+			path = ../Pods;
 			sourceTree = "<group>";
 		};
 		63712EE015130B21007997CC = {
@@ -289,7 +399,10 @@
 				63712F1315130B21007997CC /* tagmasterTests */,
 				63712EEE15130B21007997CC /* Frameworks */,
 				63712EEC15130B21007997CC /* Products */,
-				45190FF4DDFDC07A4A3F2AD9 /* Pods */,
+				1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */,
+				1E5B19A11FE7533B00241069 /* Products */,
+				485CAF6179ED3C9B6361BC53 /* Pods */,
+				11447BBC18F18E9E2C6F9803 /* tagmasterUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -298,6 +411,7 @@
 			children = (
 				63712EEB15130B21007997CC /* tagmaster.app */,
 				63712F0B15130B21007997CC /* tagmasterTests.xctest */,
+				F87508481E0BDCF004F43CEA /* tagmasterUITests */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -320,14 +434,16 @@
 				639F294518010A0400517583 /* CFNetwork.framework */,
 				639F293818001DD000517583 /* libpitchperfectlib.a */,
 				639F293618001D8100517583 /* libpitchperfectlib.a */,
+				1E5B19A41FE7533B00241069 /* libdepolllib.a */,
 				638E739217F7CAB3000FFE53 /* MessageUI.framework */,
 				638E739017F7C097000FFE53 /* MediaPlayer.framework */,
 				63336A5917F6BC2300BC1EE2 /* QuickLook.framework */,
-				63336A4F17F65F1A00BC1EE2 /* libdepolllib.a */,
 				63712EEF15130B21007997CC /* UIKit.framework */,
 				63712EF115130B21007997CC /* Foundation.framework */,
 				63712EF315130B21007997CC /* CoreGraphics.framework */,
-				DC5C2D531ED431E16AFB2CD5 /* Pods_tagmaster.framework */,
+				BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */,
+				55119B3912F586A001961332 /* Pods_tagmasterTests.framework */,
+				2EC3070B48EA9ECF3AEF3461 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -338,6 +454,8 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
+				A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */,
+				A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */,
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
@@ -394,6 +512,16 @@
 			children = (
 				63712F1915130B21007997CC /* tagmasterTests.h */,
 				63712F1A15130B21007997CC /* tagmasterTests.m */,
+				C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */,
+				C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */,
+				C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */,
+				877D645B24654A1D98693468 /* DPTagNetworkTests.m */,
+				7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */,
+				2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */,
+				991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
+				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
+				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
+				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
 			path = tagmasterTests;
@@ -460,17 +588,17 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63712F1E15130B21007997CC /* Build configuration list for PBXNativeTarget "tagmaster" */;
 			buildPhases = (
-				181574B940F9F565193F04B8 /* [CP] Check Pods Manifest.lock */,
+				23BB82B3AD54EACA68C5724B /* [CP] Check Pods Manifest.lock */,
 				63712EE715130B21007997CC /* Sources */,
 				63712EE815130B21007997CC /* Frameworks */,
 				63712EE915130B21007997CC /* Resources */,
-				1E6943E01F1EDA3100B7B425 /* ShellScript */,
-				AF69A8532BF165286ABA4A06 /* [CP] Copy Pods Resources */,
-				CD3190FF8F794C8528A447B1 /* [CP] Embed Pods Frameworks */,
+				427D63E92DCA1409D47994D4 /* [CP] Embed Pods Frameworks */,
+				4DA733BDE602744945928845 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1E5B19A81FE7533B00241069 /* PBXTargetDependency */,
 			);
 			name = tagmaster;
 			productName = tagmaster;
@@ -481,10 +609,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63712F2115130B21007997CC /* Build configuration list for PBXNativeTarget "tagmasterTests" */;
 			buildPhases = (
+				7315611F3660785D7ADEB846 /* [CP] Check Pods Manifest.lock */,
 				63712F0615130B21007997CC /* Sources */,
 				63712F0715130B21007997CC /* Frameworks */,
 				63712F0815130B21007997CC /* Resources */,
-				63712F0915130B21007997CC /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -495,6 +623,24 @@
 			productName = tagmasterTests;
 			productReference = 63712F0B15130B21007997CC /* tagmasterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BCF38A4E6382FE15E8CEB195 /* tagmasterUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E57D9D93C8B553FB94F4D92A /* Build configuration list for PBXNativeTarget "tagmasterUITests" */;
+			buildPhases = (
+				89B3DC7E525B87881B556C96 /* Sources */,
+				AA4909B26F2EB02D874FBE9A /* Frameworks */,
+				3B9BE32B699C1933F0431797 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0DAFBFB23779ECF0CCB15ACC /* PBXTargetDependency */,
+			);
+			name = tagmasterUITests;
+			productName = tagmasterUITests;
+			productReference = F87508481E0BDCF004F43CEA /* tagmasterUITests */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -531,15 +677,46 @@
 			mainGroup = 63712EE015130B21007997CC;
 			productRefGroup = 63712EEC15130B21007997CC /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 1E5B19A11FE7533B00241069 /* Products */;
+					ProjectRef = 1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				63712EEA15130B21007997CC /* tagmaster */,
 				63712F0A15130B21007997CC /* tagmasterTests */,
+				BCF38A4E6382FE15E8CEB195 /* tagmasterUITests */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		1E5B19A41FE7533B00241069 /* libdepolllib.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libdepolllib.a;
+			remoteRef = 1E5B19A21FE7533B00241069 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1E5B19A51FE7533B00241069 /* depolllibTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = depolllibTests.xctest;
+			remoteRef = 1E5B19A31FE7533B00241069 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXResourcesBuildPhase section */
+		3B9BE32B699C1933F0431797 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		63712EE915130B21007997CC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -587,16 +764,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		181574B940F9F565193F04B8 /* [CP] Check Pods Manifest.lock */ = {
+		23BB82B3AD54EACA68C5724B /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			inputFileListPaths = (
 			);
 			inputPaths = (
 				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
 				"${PODS_ROOT}/Manifest.lock",
 			);
 			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-tagmaster-checkManifestLockResult.txt",
 			);
@@ -605,54 +786,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		1E6943E01F1EDA3100B7B425 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
-				"$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "
-";
-		};
-		63712F0915130B21007997CC /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
-		};
-		AF69A8532BF165286ABA4A06 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseGoogleAuthUI/FirebaseGoogleAuthUI.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseGoogleAuthUI.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		CD3190FF8F794C8528A447B1 /* [CP] Embed Pods Frameworks */ = {
+		427D63E92DCA1409D47994D4 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -661,30 +795,22 @@
 				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/AppAuth/AppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/Bolts/Bolts.framework",
-				"${BUILT_PRODUCTS_DIR}/BoringSSL-GRPC/openssl_grpc.framework",
-				"${BUILT_PRODUCTS_DIR}/FBSDKCoreKit/FBSDKCoreKit.framework",
-				"${BUILT_PRODUCTS_DIR}/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.framework",
-				"${BUILT_PRODUCTS_DIR}/FBSDKLoginKit/FBSDKLoginKit.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseAppCheckInterop/FirebaseAppCheckInterop.framework",
 				"${BUILT_PRODUCTS_DIR}/FirebaseAuth/FirebaseAuth.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseAuthInterop/FirebaseAuthInterop.framework",
 				"${BUILT_PRODUCTS_DIR}/FirebaseAuthUI/FirebaseAuthUI.framework",
 				"${BUILT_PRODUCTS_DIR}/FirebaseCore/FirebaseCore.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseCoreDiagnostics/FirebaseCoreDiagnostics.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseCoreExtension/FirebaseCoreExtension.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseCoreInternal/FirebaseCoreInternal.framework",
 				"${BUILT_PRODUCTS_DIR}/FirebaseEmailAuthUI/FirebaseEmailAuthUI.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseFacebookAuthUI/FirebaseFacebookAuthUI.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseFirestore/FirebaseFirestore.framework",
 				"${BUILT_PRODUCTS_DIR}/FirebaseFunctions/FirebaseFunctions.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseOAuthUI/FirebaseOAuthUI.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseMessagingInterop/FirebaseMessagingInterop.framework",
+				"${BUILT_PRODUCTS_DIR}/FirebaseSharedSwift/FirebaseSharedSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleDataTransport/GoogleDataTransport.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleSignIn/GoogleSignIn.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
 				"${BUILT_PRODUCTS_DIR}/Parse/Parse.framework",
-				"${BUILT_PRODUCTS_DIR}/PromisesObjC/FBLPromises.framework",
-				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
-				"${BUILT_PRODUCTS_DIR}/abseil/absl.framework",
-				"${BUILT_PRODUCTS_DIR}/gRPC-C++/grpcpp.framework",
-				"${BUILT_PRODUCTS_DIR}/gRPC-Core/grpc.framework",
+				"${BUILT_PRODUCTS_DIR}/RecaptchaInterop/RecaptchaInterop.framework",
 				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
 				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
 			);
@@ -692,36 +818,78 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AppAuth.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Bolts.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/openssl_grpc.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit_Basics.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKLoginKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAppCheckInterop.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuth.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuthInterop.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuthUI.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCore.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreDiagnostics.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreExtension.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreInternal.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseEmailAuthUI.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseFacebookAuthUI.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseFirestore.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseFunctions.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseOAuthUI.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseMessagingInterop.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseSharedSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleDataTransport.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleSignIn.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Parse.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBLPromises.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/absl.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpcpp.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpc.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RecaptchaInterop.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4DA733BDE602744945928845 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreAbseilBinary/FirebaseFirestoreAbseilBinary_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreBinary/FirebaseFirestore_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCBoringSSLBinary/FirebaseFirestoreGRPCBoringSSLBinary_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCCPPBinary/FirebaseFirestoreGRPCCPPBinary_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCCoreBinary/FirebaseFirestoreGRPCCoreBinary_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreInternalBinary/FirebaseFirestoreInternalBinary_Privacy.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreAbseilBinary_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestore_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCBoringSSLBinary_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCCPPBinary_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCCoreBinary_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreInternalBinary_Privacy.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-tagmaster/Pods-tagmaster-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7315611F3660785D7ADEB846 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-tagmasterTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -737,6 +905,7 @@
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
+				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */,
 				639F292917FA643700517583 /* DPSettingsController.m in Sources */,
@@ -765,12 +934,44 @@
 			buildActionMask = 2147483647;
 			files = (
 				63712F1B15130B21007997CC /* tagmasterTests.m in Sources */,
+				C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */,
+				C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */,
+				C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */,
+				C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */,
+				983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */,
+				595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */,
+				C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
+				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
+				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
+				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		89B3DC7E525B87881B556C96 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */,
+				594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */,
+				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
+				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0DAFBFB23779ECF0CCB15ACC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = tagmaster;
+			target = 63712EEA15130B21007997CC /* tagmaster */;
+			targetProxy = DA37CCFAFF48F86BCCD54EB0 /* PBXContainerItemProxy */;
+		};
+		1E5B19A81FE7533B00241069 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = depolllib;
+			targetProxy = 1E5B19A71FE7533B00241069 /* PBXContainerItemProxy */;
+		};
 		63712F1215130B21007997CC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 63712EEA15130B21007997CC /* tagmaster */;
@@ -806,6 +1007,24 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		42882D499AB05EEEE9C495C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = tagmasterUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = tagmaster;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		63712F1C15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -835,6 +1054,7 @@
 				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -852,7 +1072,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -887,6 +1107,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -897,7 +1118,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -908,17 +1129,16 @@
 		};
 		63712F1F15130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7F604058A3842AEC554DD921 /* Pods-tagmaster.debug.xcconfig */;
+			baseConfigurationReference = 10A01FCBE50DA196795F4BE0 /* Pods-tagmaster.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
 				DEVELOPMENT_TEAM = 43AWMS3YJX;
 				EXCLUDED_ARCHS = "";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -937,11 +1157,14 @@
 					"$PODS_CONFIGURATION_BUILD_DIR/Firebase/**",
 				);
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MARKETING_VERSION = 2.0.2;
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTS_MACCATALYST = YES;
@@ -956,17 +1179,16 @@
 		};
 		63712F2015130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5AEFAE131808105FBD9DE380 /* Pods-tagmaster.release.xcconfig */;
+			baseConfigurationReference = F79EA6FC68776981CB987B53 /* Pods-tagmaster.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
 				DEVELOPMENT_TEAM = 43AWMS3YJX;
 				EXCLUDED_ARCHS = "";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -985,11 +1207,14 @@
 					"$PODS_CONFIGURATION_BUILD_DIR/Firebase/**",
 				);
 				INFOPLIST_FILE = "tagmaster/tagmaster-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MARKETING_VERSION = 2.0.2;
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTS_MACCATALYST = YES;
@@ -1003,6 +1228,7 @@
 		};
 		63712F2215130B21007997CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = DD5371D92DCAF6755AF0D6A0 /* Pods-tagmasterTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
@@ -1013,14 +1239,21 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Debug;
 		};
 		63712F2315130B21007997CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/tagmaster.app/tagmaster";
@@ -1031,11 +1264,34 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
+				USER_HEADER_SEARCH_PATHS = "../depolllib/** ../pitchperfect/pitchperfectlib/**";
 			};
 			name = Release;
+		};
+		8AF3C270EDB5D9EAE4E5E876 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = tagmasterUITests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.tagmasterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = tagmaster;
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -1063,6 +1319,15 @@
 			buildConfigurations = (
 				63712F2215130B21007997CC /* Debug */,
 				63712F2315130B21007997CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E57D9D93C8B553FB94F4D92A /* Build configuration list for PBXNativeTarget "tagmasterUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				42882D499AB05EEEE9C495C5 /* Release */,
+				8AF3C270EDB5D9EAE4E5E876 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

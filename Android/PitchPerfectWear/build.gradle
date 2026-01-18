@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 
 android {
-    namespace 'depollsoft.pitchperfect'
+    namespace = 'depollsoft.pitchperfect'
     compileSdkVersion 33
 
     defaultConfig {
@@ -18,13 +18,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets {
+        test {
+            java.srcDirs = ['src/test/java']
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.support:wearable:2.9.0'
-    implementation 'com.google.android.wearable:wearable:2.9.0'
+    compileOnly 'com.google.android.wearable:wearable:2.9.0'
     implementation 'com.google.android.gms:play-services-wearable:17.1.0'
     implementation project(':bindroid')
     implementation project(':PitchPerfectLib')
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
 }

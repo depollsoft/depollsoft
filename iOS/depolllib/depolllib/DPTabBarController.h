@@ -1,11 +1,4 @@
-//
-//  DPTabBarController.h
-//  depolllib
-//
-//  Created by David Poll on 9/27/13.
-//  Copyright (c) 2013 DepollSoft. All rights reserved.
-//
-
+#if __has_include(<UIKit/UIKit.h>)
 #import <UIKit/UIKit.h>
 
 @interface DPTabBarController : UIViewController
@@ -14,3 +7,12 @@
 @property (nonatomic, copy) NSArray *viewControllers;
 
 @end
+
+#else
+// UIKit not available on this platform; provide a minimal placeholder to satisfy references.
+#import <Foundation/Foundation.h>
+
+@interface DPTabBarController : NSObject
+@end
+
+#endif

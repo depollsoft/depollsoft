@@ -8,10 +8,11 @@
 
 #import <CoreText/CoreText.h>
 #import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPPitchPipeViewController.h"
 #import "DPNote.h"
 #import "DPAccidental.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPUtils+UIControl.h"
 #import "DPPitchPipeModel.h"
 #import "DPPitchPipeButton.h"
@@ -73,7 +74,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     toolbar.barStyle = UIBarStyleDefault;
     
@@ -154,7 +155,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

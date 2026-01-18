@@ -1,3 +1,4 @@
+#if os(iOS) || os(tvOS) || os(visionOS)
 //
 //  DPSvgImage.swift
 //  depolllib
@@ -9,8 +10,6 @@
 import Foundation
 import UIKit
 import WebKit
-
-import UIKit
 
 @objc public class DPSvgImageView: UIView {
     private let webView = WKWebView()
@@ -53,3 +52,20 @@ extension DPSvgImageView: WKNavigationDelegate {
         webView.scrollView.zoomScale = scaleFactor
     }
 }
+
+#else
+
+import Foundation
+
+@objc public class DPSvgImageView: NSObject {
+    @objc public override init() {
+        super.init()
+    }
+
+    @objc public func load(fullUrl: String) {
+        // No-op: UIKit/WebKit not available on this platform
+    }
+}
+
+#endif
+

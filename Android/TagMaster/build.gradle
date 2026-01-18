@@ -8,7 +8,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 repositories {
-    maven { url 'https://maven.fabric.io/public' }
+    maven { url = 'https://maven.fabric.io/public' }
     google()
     mavenCentral()
 }
@@ -50,44 +50,63 @@ dependencies {
     implementation project(':bindroid')
     implementation project(':bindroid-kotlin')
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
+    testImplementation 'org.mockito:mockito-core:5.4.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+
+    // Espresso UI Testing Dependencies
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.fragment:fragment-testing:1.6.0'
 }
 
 android {
-    namespace 'depollsoft.tagmaster'
-    compileSdkVersion 32
+    namespace = 'depollsoft.tagmaster'
+    compileSdkVersion 34
 
     defaultConfig {
-        multiDexEnabled true
+        multiDexEnabled = true
         applicationId "depollsoft.tagmaster"
         vectorDrawables.useSupportLibrary = true
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
         resourceConfigurations += ['en']
         versionCode getVersionCode(build: 0, suffix: 1)
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['src']
-            aidl.srcDirs = ['src']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
+    testOptions {
+        // Disable animations for faster/more reliable UI tests in CI
+        animationsDisabled = true
+        
+        managedDevices {
+            localDevices {
+                // ATD (Automated Test Device) - optimized for testing, no bloatware
+                pixel2api30atd {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                // Standard AOSP device for fallback
+                pixel2api30 {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+            groups {
+                // Default group for CI - uses ATD for faster execution
+                ciDevices {
+                    targetDevices.add(devices.pixel2api30atd)
+                }
+            }
         }
-
-        // Move the tests to tests/java, tests/res, etc...
-        androidTest.setRoot('tests')
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
     }
 }
 

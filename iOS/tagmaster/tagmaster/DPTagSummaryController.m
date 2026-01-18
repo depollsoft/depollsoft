@@ -120,7 +120,9 @@
     typeLabel = [self makeBodyLabel];
     keyButton = [[DPPitchPipeButton alloc] init];
     keyButton.button.titleLabel.font = [UIFont systemFontOfSize:12];
-    keyButton.button.contentEdgeInsets = UIEdgeInsetsMake(4, 0, 4, 0);
+    UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
+    config.contentInsets = NSDirectionalEdgeInsetsMake(4, 0, 4, 0);
+    keyButton.button.configuration = config;
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
