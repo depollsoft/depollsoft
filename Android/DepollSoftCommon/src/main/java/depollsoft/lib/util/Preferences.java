@@ -47,7 +47,7 @@ public class Preferences {
    * Lazily initialize SharedPreferences. This is done lazily to allow test mode
    * to be set before any SharedPreferences access is attempted.
    */
-  private static void ensureInitialized() {
+  private static synchronized void ensureInitialized() {
     if (initialized || testMode) {
       return;
     }
@@ -63,8 +63,10 @@ public class Preferences {
     Preferences.trackableMap = new HashMap<String, Trackable>();
     Preferences.preferences
         .registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
-          if (Preferences.trackableMap.containsKey(key))
-            Preferences.trackableMap.remove(key).updateTrackers();
+          Trackable trackable = Preferences.trackableMap.remove(key);
+          if (trackable != null) {
+            trackable.updateTrackers();
+          }
         });
     initialized = true;
   }

@@ -54,12 +54,7 @@ object LoginPrompt {
         val explanationText = view.findViewById<View>(R.id.explanationTextView) as TextView
         val explanation =
             activity.resources.getString(if (isHoomiLogout) R.string.HoomiLoginExplanation else R.string.LoginExplanation)
-        explanationText.text = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            Html.fromHtml(explanation, Html.FROM_HTML_MODE_LEGACY)
-        } else {
-            @Suppress("DEPRECATION")
-            Html.fromHtml(explanation)
-        }
+        explanationText.text = Html.fromHtml(explanation, Html.FROM_HTML_MODE_LEGACY)
         dialog.set(AlertDialog.Builder(activity)
             .setView(view)
             .setNeutralButton(

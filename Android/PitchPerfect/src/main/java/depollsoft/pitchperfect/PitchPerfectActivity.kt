@@ -205,12 +205,8 @@ class PitchPerfectActivity : AppCompatActivity() {
     private fun getAdSize(): AdSize {
         // Step 2 - Determine the screen width (less decorations) to use for the ad width.
         val density: Float = resources.displayMetrics.density
-        val widthPixels: Float = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            windowManager.currentWindowMetrics.bounds.width().toFloat()
-        } else {
-            @Suppress("DEPRECATION")
-            resources.displayMetrics.widthPixels.toFloat()
-        }
+        @Suppress("DEPRECATION")
+        val widthPixels: Float = resources.displayMetrics.widthPixels.toFloat()
         val adWidth = (widthPixels / density).toInt()
         // Step 3 - Get adaptive ad size and return for setting on the ad view.
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)

@@ -240,7 +240,6 @@ jobs:
             -resultBundlePath pitchperfect-results.xcresult \
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
-            -resultBundlePath pitchperfect-results.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfect-junit.xml &
           PID1=$!
