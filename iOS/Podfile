@@ -1,6 +1,11 @@
+source 'https://cdn.cocoapods.org/'
+
 workspace 'iOS'
 
-platform :ios, '13.0'
+# Avoid duplicate UUIDs in generated Pods project and speed up generation
+install! 'cocoapods', :deterministic_uuids => false
+
+platform :ios, '15.0'
 use_frameworks!
 
 project 'depolllib/depolllib.xcodeproj'
@@ -23,32 +28,37 @@ def google_utilites
 def shared_pods
     pod 'Parse'
     pod 'Bolts/Tasks'
-    pod 'GoogleUtilities'
+    # 'GoogleUtilities' pulled transitively by Firebase/Google pods; avoid pinning conflicting versions
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore'
-    pod 'FirebaseFirestore'
+    # Use precompiled Firestore SDK for faster build times
+    # https://github.com/invertase/firestore-ios-sdk-frameworks
+    pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.2.0'
     pod 'Firebase/Functions'
     pod 'FirebaseUI/Auth'
-    pod 'FirebaseUI/OAuth'
     pod 'FirebaseUI/Email'
-    pod 'FirebaseUI/Google'
-    pod 'FirebaseUI/Facebook'
-    pod 'Protobuf'
+    # Protobuf, gRPC-Core, gRPC-C++ are bundled with precompiled FirebaseFirestore
     pod 'GTMAppAuth'
-    pod 'gRPC-Core'
-    pod 'gRPC-C++'
     pod 'GTMSessionFetcher'
 end
 
 target 'tagmaster' do
     project 'tagmaster/tagmaster.xcodeproj'
     shared_pods
+
+    target 'tagmasterTests' do
+        inherit! :search_paths
+    end
 end
 
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     shared_pods
     pod 'Google-Mobile-Ads-SDK'
+
+    target 'pitchperfectTests' do
+        inherit! :search_paths
+    end
 end
 
 post_install do |installer|
@@ -59,12 +69,20 @@ post_install do |installer|
     end
     installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
-            if Gem::Version.new('13.0') > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])
-                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+            if Gem::Version.new('15.0') > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])
+                config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
             end
         end
     end
     installer.pods_project.build_configurations.each do |config|
-        config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+        # Build simulator slices based on host architecture
+        require 'rbconfig'
+        if RbConfig::CONFIG['host_cpu'] == 'arm64'
+            # On Apple Silicon, exclude x86_64 to avoid toolchain issues
+            config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "x86_64"
+        else
+            # On Intel Macs, exclude arm64 for simulator builds
+            config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+        end
     end
 end

@@ -30,7 +30,6 @@
 		63A99D6415882DA000C78CC0 /* DPUtils+UIControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 63A99D6215882DA000C78CC0 /* DPUtils+UIControl.h */; };
 		63A99D6515882DA000C78CC0 /* DPUtils+UIControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 63A99D6315882DA000C78CC0 /* DPUtils+UIControl.m */; };
 		63DC3737151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
-		63DC3745151E9263007C46DB /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3744151E9263007C46DB /* SenTestingKit.framework */; };
 		63DC3747151E9263007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3746151E9263007C46DB /* UIKit.framework */; };
 		63DC3748151E9263007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3736151E9263007C46DB /* Foundation.framework */; };
 		63DC374B151E9263007C46DB /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC3733151E9263007C46DB /* libdepolllib.a */; };
@@ -49,6 +48,19 @@
 		63F17817154E112000C2AB59 /* DPEnum.m in Sources */ = {isa = PBXBuildFile; fileRef = 63F17815154E112000C2AB59 /* DPEnum.m */; };
 		63FF00851554F90000C28218 /* DPUtils+NSString.h in Headers */ = {isa = PBXBuildFile; fileRef = 63FF00831554F90000C28218 /* DPUtils+NSString.h */; };
 		63FF00861554F90000C28218 /* DPUtils+NSString.m in Sources */ = {isa = PBXBuildFile; fileRef = 63FF00841554F90000C28218 /* DPUtils+NSString.m */; };
+		C0D3B0010000000000000001 /* DPGridLayoutTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0010000000000000001 /* DPGridLayoutTests.m */; };
+		C0D3B0020000000000000002 /* UIViewDPUtilsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0020000000000000002 /* UIViewDPUtilsTests.m */; };
+		C0D3B0030000000000000003 /* DPBusyIndicatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0030000000000000003 /* DPBusyIndicatorTests.m */; };
+		C0D3B0040000000000000004 /* DPUIColorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0040000000000000004 /* DPUIColorTests.m */; };
+		C0D3B0050000000000000005 /* DPEnumTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0050000000000000005 /* DPEnumTests.m */; };
+		C0D3B0060000000000000006 /* DPLabelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0060000000000000006 /* DPLabelTests.m */; };
+		C0D3B0070000000000000007 /* DPTextViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0070000000000000007 /* DPTextViewTests.m */; };
+		C0D3B0080000000000000008 /* DPToolbarViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0080000000000000008 /* DPToolbarViewControllerTests.m */; };
+		C0D3B0090000000000000009 /* SwiftShim.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A0090000000000000009 /* SwiftShim.swift */; };
+		C0D3B00A000000000000000A /* DPJsonSerializerExtrasTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A00A000000000000000A /* DPJsonSerializerExtrasTests.m */; };
+		C0D3B00B000000000000000B /* DPFileCacheTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A00B000000000000000B /* DPFileCacheTests.m */; };
+		C0D3B00C000000000000000C /* UIButtonHyperlinkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D3A00C000000000000000C /* UIButtonHyperlinkTests.m */; };
+		C0D3F0020000000000000002 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D3F0010000000000000001 /* XCTest.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,8 +100,7 @@
 		63DC3733151E9263007C46DB /* libdepolllib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libdepolllib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC3736151E9263007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		63DC373A151E9263007C46DB /* depolllib-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "depolllib-Prefix.pch"; sourceTree = "<group>"; };
-		63DC3743151E9263007C46DB /* depolllibTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = depolllibTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
-		63DC3744151E9263007C46DB /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		63DC3743151E9263007C46DB /* depolllibTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = depolllibTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC3746151E9263007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		63DC374E151E9263007C46DB /* depolllibTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "depolllibTests-Info.plist"; sourceTree = "<group>"; };
 		63DC3750151E9263007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -108,6 +119,19 @@
 		63F17815154E112000C2AB59 /* DPEnum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPEnum.m; sourceTree = "<group>"; };
 		63FF00831554F90000C28218 /* DPUtils+NSString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DPUtils+NSString.h"; path = "utils/DPUtils+NSString.h"; sourceTree = "<group>"; };
 		63FF00841554F90000C28218 /* DPUtils+NSString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "DPUtils+NSString.m"; path = "utils/DPUtils+NSString.m"; sourceTree = "<group>"; };
+		C0D3A0010000000000000001 /* DPGridLayoutTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPGridLayoutTests.m; path = DPGridLayoutTests.m; sourceTree = "<group>"; };
+		C0D3A0020000000000000002 /* UIViewDPUtilsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = UIViewDPUtilsTests.m; path = UIViewDPUtilsTests.m; sourceTree = "<group>"; };
+		C0D3A0030000000000000003 /* DPBusyIndicatorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPBusyIndicatorTests.m; path = DPBusyIndicatorTests.m; sourceTree = "<group>"; };
+		C0D3A0040000000000000004 /* DPUIColorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPUIColorTests.m; path = DPUIColorTests.m; sourceTree = "<group>"; };
+		C0D3A0050000000000000005 /* DPEnumTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPEnumTests.m; path = DPEnumTests.m; sourceTree = "<group>"; };
+		C0D3A0060000000000000006 /* DPLabelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPLabelTests.m; path = DPLabelTests.m; sourceTree = "<group>"; };
+		C0D3A0070000000000000007 /* DPTextViewTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPTextViewTests.m; path = DPTextViewTests.m; sourceTree = "<group>"; };
+		C0D3A0080000000000000008 /* DPToolbarViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPToolbarViewControllerTests.m; path = DPToolbarViewControllerTests.m; sourceTree = "<group>"; };
+		C0D3A0090000000000000009 /* SwiftShim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SwiftShim.swift; path = SwiftShim.swift; sourceTree = "<group>"; };
+		C0D3A00A000000000000000A /* DPJsonSerializerExtrasTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPJsonSerializerExtrasTests.m; path = DPJsonSerializerExtrasTests.m; sourceTree = "<group>"; };
+		C0D3A00B000000000000000B /* DPFileCacheTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DPFileCacheTests.m; path = DPFileCacheTests.m; sourceTree = "<group>"; };
+		C0D3A00C000000000000000C /* UIButtonHyperlinkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = UIButtonHyperlinkTests.m; path = UIButtonHyperlinkTests.m; sourceTree = "<group>"; };
+		C0D3F0010000000000000001 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,7 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63DC3745151E9263007C46DB /* SenTestingKit.framework in Frameworks */,
+				C0D3F0020000000000000002 /* XCTest.framework in Frameworks */,
 				63DC3747151E9263007C46DB /* UIKit.framework in Frameworks */,
 				63DC3748151E9263007C46DB /* Foundation.framework in Frameworks */,
 				63DC374B151E9263007C46DB /* libdepolllib.a in Frameworks */,
@@ -177,7 +201,7 @@
 			isa = PBXGroup;
 			children = (
 				63DC3733151E9263007C46DB /* libdepolllib.a */,
-				63DC3743151E9263007C46DB /* depolllibTests.octest */,
+				63DC3743151E9263007C46DB /* depolllibTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -186,7 +210,7 @@
 			isa = PBXGroup;
 			children = (
 				63DC3736151E9263007C46DB /* Foundation.framework */,
-				63DC3744151E9263007C46DB /* SenTestingKit.framework */,
+				C0D3F0010000000000000001 /* XCTest.framework */,
 				63DC3746151E9263007C46DB /* UIKit.framework */,
 			);
 			name = Frameworks;
@@ -218,6 +242,18 @@
 			children = (
 				63DC3752151E9263007C46DB /* depolllibTests.h */,
 				63DC374D151E9263007C46DB /* Supporting Files */,
+				C0D3A0010000000000000001 /* DPGridLayoutTests.m */,
+				C0D3A0020000000000000002 /* UIViewDPUtilsTests.m */,
+				C0D3A0030000000000000003 /* DPBusyIndicatorTests.m */,
+				C0D3A0040000000000000004 /* DPUIColorTests.m */,
+				C0D3A0050000000000000005 /* DPEnumTests.m */,
+				C0D3A0060000000000000006 /* DPLabelTests.m */,
+				C0D3A0070000000000000007 /* DPTextViewTests.m */,
+				C0D3A0080000000000000008 /* DPToolbarViewControllerTests.m */,
+				C0D3A0090000000000000009 /* SwiftShim.swift */,
+				C0D3A00A000000000000000A /* DPJsonSerializerExtrasTests.m */,
+				C0D3A00B000000000000000B /* DPFileCacheTests.m */,
+				C0D3A00C000000000000000C /* UIButtonHyperlinkTests.m */,
 			);
 			path = depolllibTests;
 			sourceTree = "<group>";
@@ -327,7 +363,6 @@
 				63DC373E151E9263007C46DB /* Sources */,
 				63DC373F151E9263007C46DB /* Frameworks */,
 				63DC3740151E9263007C46DB /* Resources */,
-				63DC3741151E9263007C46DB /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -336,8 +371,8 @@
 			);
 			name = depolllibTests;
 			productName = depolllibTests;
-			productReference = 63DC3743151E9263007C46DB /* depolllibTests.octest */;
-			productType = "com.apple.product-type.bundle.ocunit-test";
+			productReference = 63DC3743151E9263007C46DB /* depolllibTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -384,22 +419,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		63DC3741151E9263007C46DB /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		63DC372F151E9263007C46DB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -431,6 +450,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				63DC3754151E9263007C46DB /* depolllibTests.m in Sources */,
+				C0D3B0010000000000000001 /* DPGridLayoutTests.m in Sources */,
+				C0D3B0020000000000000002 /* UIViewDPUtilsTests.m in Sources */,
+				C0D3B0030000000000000003 /* DPBusyIndicatorTests.m in Sources */,
+				C0D3B0040000000000000004 /* DPUIColorTests.m in Sources */,
+				C0D3B0050000000000000005 /* DPEnumTests.m in Sources */,
+				C0D3B0060000000000000006 /* DPLabelTests.m in Sources */,
+				C0D3B0070000000000000007 /* DPTextViewTests.m in Sources */,
+				C0D3B0080000000000000008 /* DPToolbarViewControllerTests.m in Sources */,
+				C0D3B0090000000000000009 /* SwiftShim.swift in Sources */,
+				C0D3B00A000000000000000A /* DPJsonSerializerExtrasTests.m in Sources */,
+				C0D3B00B000000000000000B /* DPFileCacheTests.m in Sources */,
+				C0D3B00C000000000000000C /* UIButtonHyperlinkTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -484,7 +515,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				EXCLUDED_ARCHS = "";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -501,7 +532,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos macosx";
@@ -536,7 +567,7 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				EXCLUDED_ARCHS = "";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -546,7 +577,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos macosx";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -562,7 +593,7 @@
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -582,7 +613,7 @@
 				DSTROOT = /tmp/depolllib.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -595,6 +626,7 @@
 		63DC375B151E9263007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
@@ -602,15 +634,18 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
 				INFOPLIST_FILE = "depolllibTests/depolllibTests-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = octest;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
 		};
 		63DC375C151E9263007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
@@ -618,9 +653,11 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "depolllib/depolllib-Prefix.pch";
 				INFOPLIST_FILE = "depolllibTests/depolllibTests-Info.plist";
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "depollsoft.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WRAPPER_EXTENSION = octest;
+				SWIFT_VERSION = 5.0;
+				WRAPPER_EXTENSION = xctest;
 			};
 			name = Release;
 		};

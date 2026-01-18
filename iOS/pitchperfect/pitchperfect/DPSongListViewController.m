@@ -7,7 +7,9 @@
 //
 
 #import "DPSongListViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
+#import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -169,7 +171,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     
     tableView = [[UITableView alloc] init];
@@ -222,7 +224,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

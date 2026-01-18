@@ -7,7 +7,7 @@
 //
 
 #import "DPKeysViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+#import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
 #import "DPKey.h"
 #import "DPAccidental.h"
@@ -16,6 +16,7 @@
 #import "DPUtils+UIColor.h"
 #import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
+#import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "pitchperfect-Swift.h"
@@ -188,7 +189,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(toolbar, background)]];
     
-    [bannerView loadRequest:DPAppDelegate.adRequest];
+    [bannerView loadRequest:[DPAppDelegate adRequest]];
     
     UISegmentedControl *majorMinorChooser = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Major", @"Minor", nil]];
     majorMinorChooser.selectedSegmentIndex = 0;
@@ -244,7 +245,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
+    switch (self.view.window.windowScene.interfaceOrientation) {
         case UIInterfaceOrientationLandscapeLeft:
         case UIInterfaceOrientationLandscapeRight:
             self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);

@@ -7,7 +7,7 @@
 //
 
 #import "DPLoginViewController.h"
-#import <GoogleMobileAds/GoogleMobileAds.h>
+// Ads removed during SDK migration
 #import "DPAppDelegate.h"
 #import "DPGridLayout.h"
 #import "UIToolbar+DPUtils.h"
@@ -17,19 +17,18 @@
 #import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
-#import <FBSDKLoginKit/FBSDKLoginKit.h>
+// Facebook Login removed during SDK migration
 #import "pitchperfect-Swift.h"
 
 @interface DPLoginViewController ()
 
-@property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
 
 @end
 
 @implementation DPLoginViewController
 
-@synthesize bannerView, loginTaskCompletionSource;
+@synthesize loginTaskCompletionSource;
 
 - (instancetype)init {
     if (self = [super init]) {
@@ -58,11 +57,6 @@
     UIToolbar *toolbar = self.toolbar;
     
     // Do any additional setup after loading the view, typically from a nib.
-    bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
-    [self resetBannerViewSize];
-    
-    bannerView.rootViewController = self;
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
@@ -99,11 +93,7 @@
                                     [DPGridDimension dimensionWithStars:1]
                                     ];
     
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-        [rootLayout addSubview:bannerView row:1 column:0];
-        
-        [bannerView loadRequest:DPAppDelegate.adRequest];
-    }
+    // Ads removed
     
     NSString *explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
     "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
@@ -134,13 +124,7 @@
     [loginButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
     [rootLayout addSubview:loginButton row:4 column:0];
     
-    /*
-    FBSDKLoginButton *fbLoginButton = [[FBSDKLoginButton alloc] init];
-    fbLoginButton.readPermissions = @[@"public_profile"];
-    UIView *fbLoginContainer = [fbLoginButton pad:4];
-    [rootLayout addSubview:fbLoginContainer row:4 column:0];
-    fbLoginButton.delegate = self;
-     */
+    // Facebook login removed
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
@@ -174,30 +158,8 @@
     [loginTaskCompletionSource trySetResult:nil];
 }
 
-- (void)resetBannerViewSize {
-    switch ([UIApplication sharedApplication].windows.firstObject.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
-}
+// Ads removed
 
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
-        [self resetBannerViewSize];
-    }];
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-}
-- (void)viewDidAppear:(BOOL)animated {
-    [self resetBannerViewSize];
-    [super viewDidAppear:animated];
-}
+// Ads removed
 
 @end

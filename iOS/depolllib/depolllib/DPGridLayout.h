@@ -6,7 +6,12 @@
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#pragma once
+
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION || TARGET_OS_MACCATALYST
+#import <UIKit/UIView.h>
 
 @interface DPGridDimension : NSObject
 
@@ -34,3 +39,7 @@
 - (void)invalidateLayout;
 
 @end
+
+#else
+// Non-UIKit platforms: intentionally left empty to avoid build errors when included by shared code.
+#endif

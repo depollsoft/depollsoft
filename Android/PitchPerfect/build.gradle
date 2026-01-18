@@ -16,7 +16,7 @@ ext {
 
 dependencies {
     implementation platform('com.google.firebase:firebase-bom:30.3.2')
-    def billing_version = "5.0.0"
+    def billing_version = "6.0.1"
     implementation "com.android.billingclient:billing:$billing_version"
     implementation "com.android.billingclient:billing-ktx:$billing_version"
     implementation fileTree(include: '*.jar', dir: 'libs')
@@ -52,6 +52,31 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.1'
     implementation 'com.firebaseui:firebase-ui-auth:8.0.1'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.5.1'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'org.mockito:mockito-core:5.4.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'androidx.test.ext:junit:1.1.5'
+    testImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'androidx.test:rules:1.5.0'
+    testImplementation 'androidx.test:runner:1.5.2'
+    testImplementation 'androidx.fragment:fragment-testing:1.6.0'
+
+    // Espresso UI Testing Dependencies
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-idling-resource:3.5.1'
+    androidTestImplementation 'androidx.test:core:1.5.0'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.fragment:fragment-testing:1.6.0'
+    
+    // Test Orchestrator for isolated test execution (prevents state leakage between tests)
+    androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
 android {
@@ -63,42 +88,63 @@ android {
             storePassword 'depollsoft'
         }
     }
-    namespace 'depollsoft.pitchperfect'
+    namespace = 'depollsoft.pitchperfect'
     compileSdkVersion 34
+
+    sourceSets {
+        // Build type specific resources (e.g., ad unit IDs)
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+    }
+
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdkVersion 21
         targetSdkVersion 34
-        multiDexEnabled true
+        multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
         versionCode getVersionCode(build: 0, suffix: 0)
-    }
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['src']
-            aidl.srcDirs = ['src', 'aidl']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
-        }
-
-        // Move the tests to tests/java, tests/res, etc...
-        androidTest.setRoot('tests')
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Enable Test Orchestrator for isolated test execution
+        // This prevents state leakage between tests and improves reliability
+        testInstrumentationRunnerArguments clearPackageData: 'true'
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
+        }
+    }
+
+    testOptions {
+        // NOTE: Test Orchestrator disabled for faster execution (was adding ~30s+ per test)
+        // Re-enable if test isolation issues occur with more tests:
+        // execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        
+        // Animation settings for faster/more reliable UI tests
+        animationsDisabled = true
+        
+        managedDevices {
+            localDevices {
+                // ATD (Automated Test Device) - optimized for testing, no bloatware
+                pixel2api30atd {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                // Standard AOSP device for fallback
+                pixel2api30 {
+                    device = "Pixel 2"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+            groups {
+                // Default group for CI - uses ATD for faster execution
+                ciDevices {
+                    targetDevices.add(devices.pixel2api30atd)
+                }
+            }
         }
     }
 }

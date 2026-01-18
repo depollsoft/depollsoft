@@ -9,41 +9,34 @@
 import Foundation
 import Firebase
 import Parse
-import depolllib
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
 
     @objc func extraInit() {
-        GADMobileAds.sharedInstance().disableSDKCrashReporting()
         convertParseUser()
-        
+
         var registration: ListenerRegistration? = nil
-        Auth.auth().addStateDidChangeListener { (auth, user) in
-            if registration != nil {
-                registration?.remove()
+        _ = Auth.auth().addStateDidChangeListener { (_, user) in
+            if let reg = registration {
+                reg.remove()
+                registration = nil
                 DPSongsModel.sharedInstance.detachFromFirestore()
                 DPSettingsModel.sharedInstance.detachFromFirestore()
             }
-            if user != nil {
+            if let user = user {
                 DPSongsModel.sharedInstance.attachToFirestore()
                 DPSettingsModel.sharedInstance.attachToFirestore()
-                DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user!.uid)")
-                registration = DPAppDelegate.userDoc!.addSnapshotListener { (snapshot, error) in
-                    if error != nil {
-                        print(error!)
-                        return
+                DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user.uid)")
+                registration = DPAppDelegate.userDoc?.addSnapshotListener { (_, error) in
+                    if let error = error {
+                        print(error)
                     }
                 }
             } else {
                 DPAppDelegate.userDoc = nil
             }
         }
-        var tags: [String] = []
-        if Auth.auth().currentUser != nil {
-            tags.append("logged_in")
-        }
-        Analytics.sharedInstance.logEvent(Analytics.appOpenEvent, tags: Set(tags))
     }
     
     func convertParseUser() {

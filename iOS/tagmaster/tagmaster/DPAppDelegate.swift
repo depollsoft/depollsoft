@@ -11,7 +11,6 @@ import AppTrackingTransparency
 import Firebase
 import Parse
 import AVKit
-import depolllib
 
 public extension Notification.Name {
     static let userDataChanged = Notification.Name("tagmaster.userDataChanged")
@@ -98,7 +97,7 @@ public extension DPAppDelegate {
         try! AVAudioSession.sharedInstance().setCategory(.playback)
         
         var registration: ListenerRegistration? = nil
-        Auth.auth().addStateDidChangeListener { (auth, user) in
+        _ = Auth.auth().addStateDidChangeListener { (auth, user) in
             if registration != nil {
                 registration?.remove()
             }
@@ -135,11 +134,6 @@ public extension DPAppDelegate {
                 DPAppDelegate.userDoc = nil
             }
         }
-        var tags: [String] = []
-        if Auth.auth().currentUser != nil {
-            tags.append("logged_in")
-        }
-        Analytics.sharedInstance.logEvent(Analytics.appOpenEvent, tags: Set(tags))
     }
     
     func convertParseUser() {

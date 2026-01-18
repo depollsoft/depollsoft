@@ -40,7 +40,8 @@
                                  [DPGridDimension dimensionWithStars:1]
                                  ];
     overlay.backgroundColor = [UIColor colorWithWhite:0.2 alpha:0.8];
-    UIActivityIndicatorView *progressView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    UIActivityIndicatorView *progressView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];
+    progressView.color = [UIColor whiteColor];
     [progressView startAnimating];
     progressView.translatesAutoresizingMaskIntoConstraints = NO;
     UILabel *label = [[UILabel alloc] init];
