@@ -239,7 +239,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           # Check xcresult bundles for actual test results
-          # This is more reliable than junit XML which may be empty due to xcpretty issues
+          # Using xcresulttool get test-results summary for reliable test counts
           FAILED=0
           TOTAL_TESTS=0
           TOTAL_FAILURES=0
@@ -247,13 +247,12 @@ jobs:
           for xcresult in pitchperfect-results.xcresult tagmaster-results.xcresult pitchperfectlib-results.xcresult; do
             if [ -d "$xcresult" ]; then
               # Extract test summary from xcresult using xcresulttool
-              SUMMARY=$("${{ steps.select_xcode.outputs.xcrun }}" xcresulttool get --path "$xcresult" --format json 2>/dev/null | python3 -c "
+              SUMMARY=$("${{ steps.select_xcode.outputs.xcrun }}" xcresulttool get test-results summary --path "$xcresult" 2>/dev/null | python3 -c "
           import json, sys
           try:
               data = json.load(sys.stdin)
-              metrics = data.get('metrics', {})
-              tests = metrics.get('testsCount', {}).get('_value', '0')
-              failures = metrics.get('testsFailedCount', {}).get('_value', '0')
+              tests = data.get('totalTestCount', 0)
+              failures = data.get('failedTests', 0)
               print(f'{tests} {failures}')
           except:
               print('0 0')
