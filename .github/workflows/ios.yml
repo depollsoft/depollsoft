@@ -185,6 +185,8 @@ jobs:
         run: |
           set -o pipefail
           # Run tests in parallel - xcodebuild handles parallelization
+          # Note: junit XML is generated from xcresult bundles in the next step
+          # because xcpretty's junit output is unreliable with parallel background processes
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -195,7 +197,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfect-junit.xml &
+            | xcpretty --color &
           PID1=$!
           
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
@@ -208,7 +210,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output tagmaster-junit.xml &
+            | xcpretty --color &
           PID2=$!
           
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
@@ -221,7 +223,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
+            | xcpretty --color &
           PID3=$!
           
           # Wait for all tests to complete
@@ -233,13 +235,14 @@ jobs:
           # We continue even if tests fail - we'll check junit results later
           exit 0
 
-      - name: Verify test results
+      - name: Verify test results and generate junit XML
         if: always()
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          # Check xcresult bundles for actual test results
-          # Using xcresulttool get test-results summary for reliable test counts
+          # Check xcresult bundles for actual test results and generate junit XML
+          # xcpretty's junit output is unreliable when running in parallel background processes
+          # so we generate junit XML from xcresult bundles using xcresulttool
           FAILED=0
           TOTAL_TESTS=0
           TOTAL_FAILURES=0
@@ -263,6 +266,91 @@ jobs:
               
               TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
               TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
+              
+              # Generate junit XML from xcresult for test-reporter
+              SCHEME_NAME="${xcresult%-results.xcresult}"
+              "${{ steps.select_xcode.outputs.xcrun }}" xcresulttool get test-results tests --path "$xcresult" 2>/dev/null | python3 -c "
+          import json, sys, html
+          from datetime import datetime
+
+          try:
+              data = json.load(sys.stdin)
+          except:
+              data = []
+
+          # Group tests by test class
+          suites = {}
+          for test in data:
+              # test structure: nodeIdentifier, name, status, duration, etc.
+              node_id = test.get('nodeIdentifier', '')
+              name = test.get('name', 'UnknownTest')
+              status = test.get('status', 'unknown')
+              duration = test.get('duration', 0)
+              
+              # Parse class name from nodeIdentifier (format: TargetName/ClassName/testMethodName)
+              parts = node_id.split('/')
+              if len(parts) >= 2:
+                  class_name = parts[-2] if len(parts) >= 2 else 'UnknownClass'
+              else:
+                  class_name = 'UnknownClass'
+              
+              if class_name not in suites:
+                  suites[class_name] = {'tests': [], 'failures': 0, 'errors': 0, 'time': 0}
+              
+              test_info = {
+                  'name': name,
+                  'classname': class_name,
+                  'time': duration,
+                  'status': status,
+                  'failure_message': test.get('failureMessage', '')
+              }
+              suites[class_name]['tests'].append(test_info)
+              suites[class_name]['time'] += duration
+              if status == 'Failure':
+                  suites[class_name]['failures'] += 1
+              elif status == 'Error':
+                  suites[class_name]['errors'] += 1
+
+          # Generate JUnit XML
+          total_tests = sum(len(s['tests']) for s in suites.values())
+          total_failures = sum(s['failures'] for s in suites.values())
+          total_errors = sum(s['errors'] for s in suites.values())
+          total_time = sum(s['time'] for s in suites.values())
+
+          print('<?xml version=\"1.0\" encoding=\"UTF-8\"?>')
+          print(f'<testsuites tests=\"{total_tests}\" failures=\"{total_failures}\" errors=\"{total_errors}\" time=\"{total_time:.3f}\">')
+
+          for class_name, suite in suites.items():
+              suite_tests = len(suite['tests'])
+              suite_failures = suite['failures']
+              suite_errors = suite['errors']
+              suite_time = suite['time']
+              print(f'  <testsuite name=\"{html.escape(class_name)}\" tests=\"{suite_tests}\" failures=\"{suite_failures}\" errors=\"{suite_errors}\" time=\"{suite_time:.3f}\">')
+              
+              for test in suite['tests']:
+                  test_name = html.escape(test['name'])
+                  test_class = html.escape(test['classname'])
+                  test_time = test['time']
+                  status = test['status']
+                  
+                  if status == 'Success' or status == 'Expected Failure':
+                      print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\"/>')
+                  elif status == 'Failure':
+                      msg = html.escape(test.get('failure_message', 'Test failed'))
+                      print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\">')
+                      print(f'      <failure message=\"{msg}\"/>')
+                      print('    </testcase>')
+                  elif status == 'Skipped':
+                      print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\">')
+                      print('      <skipped/>')
+                      print('    </testcase>')
+                  else:
+                      print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\"/>')
+              
+              print('  </testsuite>')
+
+          print('</testsuites>')
+          " > "${SCHEME_NAME}-junit.xml" 2>/dev/null || true
               
               if [ "$FAILURES" != "0" ]; then
                 echo "❌ $xcresult: $TESTS tests, $FAILURES failures"
