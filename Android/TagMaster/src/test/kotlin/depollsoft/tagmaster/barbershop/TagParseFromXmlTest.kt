@@ -246,6 +246,17 @@ class TagParseFromXmlTest {
         assertEquals("2020", tag.yearArranged)
         assertEquals("2021", tag.sungYear)
     }
+
+    @Test
+    fun tag_equals_compares_by_id() {
+        val tag1 = Tag()
+        tag1.id = 777
+
+        val tag2 = Tag()
+        tag2.id = 777
+
+        assertTrue(tag1 == tag2)
+    }
 }
 
 // Extension to expose protected parseFromXml for testing

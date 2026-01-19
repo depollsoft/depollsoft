@@ -148,7 +148,7 @@ class JsonHelpersEdgeCaseTest {
 
     @Test
     fun toJsonElement_with_mixed_type_array() {
-        val mixedArray = arrayOf(1, "two", true, 4.0, null)
+        val mixedArray: Array<Any?> = arrayOf(1, "two", true, 4.0, null)
         val result = mixedArray.toJsonElement()
         assertTrue(result is JsonArray)
         val arr = result as JsonArray
