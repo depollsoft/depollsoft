@@ -7,55 +7,79 @@
 //
 
 import Foundation
-import Firebase
-#if canImport(FirebaseAuthUI)
-import FirebaseAuthUI
+import FirebaseAuth
+import SwiftUI
+
+#if canImport(FirebaseAuthSwiftUI)
+import FirebaseAuthSwiftUI
 #endif
-#if canImport(FirebaseEmailAuthUI)
-import FirebaseEmailAuthUI
-#endif
 
-#if canImport(FirebaseAuthUI)
-extension DPLoginViewController: FUIAuthDelegate {
-    @objc public func logIn(_ viewController:UIViewController) {
-        guard let authUI = FUIAuth.defaultAuthUI() else {
-            return
-        }
+// MARK: - SwiftUI Auth View for UIKit Integration
 
-        var providers: [FUIAuthProvider] = []
-
-        #if canImport(FirebaseEmailAuthUI)
-        let emailProvider = FUIEmailAuth(authAuthUI: authUI,
-                                         signInMethod: EmailPasswordAuthSignInMethod,
-                                         forceSameDevice: false,
-                                         allowNewEmailAccounts: true,
-                                         requireDisplayName: false,
-                                         actionCodeSetting: ActionCodeSettings())
-        providers.append(emailProvider)
-        #endif
-
-        guard !providers.isEmpty else {
-            return
-        }
-
-        authUI.providers = providers
-        authUI.delegate = self
-        viewController.present(authUI.authViewController(), animated: true)
+#if canImport(FirebaseAuthSwiftUI)
+/// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
+struct FirebaseAuthView: View {
+    let authService: AuthService
+    let onSignIn: (Bool) -> Void
+    let onDismiss: () -> Void
+    
+    init(onSignIn: @escaping (Bool) -> Void, onDismiss: @escaping () -> Void) {
+        let configuration = AuthConfiguration(
+            shouldHideCancelButton: false,
+            interactiveDismissEnabled: true
+        )
+        
+        self.authService = AuthService(configuration: configuration)
+            .withEmailSignIn()
+        self.onSignIn = onSignIn
+        self.onDismiss = onDismiss
     }
-
-    @objc func logInClick() {
-        logIn(self)
-    }
-
-    public func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-        if error == nil {
-            self.completeLogIn(authDataResult?.additionalUserInfo?.isNewUser ?? false)
+    
+    var body: some View {
+        AuthPickerView {
+            // This is shown when authenticated - we immediately dismiss
+            Color.clear
+                .onAppear {
+                    let isNewUser = authService.currentUser?.metadata.creationDate == authService.currentUser?.metadata.lastSignInDate
+                    onSignIn(isNewUser)
+                    onDismiss()
+                }
         }
-        self.dismiss(animated: true)
-    }
-
-    public func authUI(_ authUI: FUIAuth, didFinish operation: FUIAccountSettingsOperationType, error: Error?) {
-        self.dismiss(animated: true)
+        .environment(authService)
+        .onAppear {
+            authService.isPresented = true
+        }
     }
 }
 #endif
+
+// MARK: - UIKit Extension for Login
+
+extension DPLoginViewController {
+    
+    /// Presents the Firebase authentication UI
+    /// - Parameter viewController: The view controller to present from
+    @objc public func logIn(_ viewController: UIViewController) {
+        #if canImport(FirebaseAuthSwiftUI)
+        let authView = FirebaseAuthView(
+            onSignIn: { [weak self] isNewUser in
+                self?.completeLogIn(isNewUser)
+            },
+            onDismiss: { [weak viewController] in
+                viewController?.dismiss(animated: true)
+            }
+        )
+        
+        let hostingController = UIHostingController(rootView: authView)
+        hostingController.modalPresentationStyle = .pageSheet
+        viewController.present(hostingController, animated: true)
+        #else
+        // Fallback: Direct Firebase Auth if FirebaseAuthSwiftUI not available
+        print("FirebaseAuthSwiftUI not available - implement fallback auth")
+        #endif
+    }
+    
+    @objc func logInClick() {
+        logIn(self)
+    }
+}

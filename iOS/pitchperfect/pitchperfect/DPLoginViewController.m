@@ -13,8 +13,8 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <Parse/Parse.h>
-#import <Bolts/Bolts.h>
+@import ParseCore;
+@import Bolts;
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 // Facebook Login removed during SDK migration

@@ -8,8 +8,8 @@
 
 #import "DPSettingsController.h"
 
-@import Firebase;
-@import FirebaseAuthUI;
+@import FirebaseAuth;
+@import FirebaseFunctions;
 #import "DPAppDelegate.h"
 #import "tagmaster-Swift.h"
 

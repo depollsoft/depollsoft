@@ -7,7 +7,7 @@
 //
 /*
 #import "DPSettingsModel.h"
-#import <Parse/Parse.h>
+@import ParseCore;
 
 #define WAKE_LOCK_KEY @"depollsoft.pitchperfect.WakeLock"
 #define TOGGLE_NOTE_KEY @"depollsoft.pitchperfect.ToggleNote"
