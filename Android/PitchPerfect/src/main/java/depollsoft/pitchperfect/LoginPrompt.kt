@@ -34,7 +34,6 @@ object LoginPrompt {
         val loginButton = view.findViewById<View>(R.id.login_button)
         loginButton.setOnClickListener {
             val logInIntent = AuthUI.getInstance().createSignInIntentBuilder()
-                .setIsSmartLockEnabled(false)
                 .setAvailableProviders(
                     listOf(
                         AuthUI.IdpConfig.EmailBuilder()
