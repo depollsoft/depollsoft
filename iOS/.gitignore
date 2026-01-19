@@ -24,3 +24,12 @@ DerivedData/
 
 ## Gcc Patch
 /*.gcno
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods (removed - now using SPM)
+# Pods/
+# Podfile.lock

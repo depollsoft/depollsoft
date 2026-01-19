@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 let WAKE_LOCK_KEY = "depollsoft.pitchperfect.WakeLock"
 let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"

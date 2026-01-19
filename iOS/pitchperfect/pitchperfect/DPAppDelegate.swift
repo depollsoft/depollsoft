@@ -7,8 +7,10 @@
 //
 
 import Foundation
-import Firebase
-import Parse
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseFunctions
+import ParseCore
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil

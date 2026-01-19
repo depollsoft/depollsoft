@@ -22,9 +22,9 @@
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
 #import "UIToolbar+DPUtils.h"
-@import Firebase;
+@import FirebaseAuth;
+@import FirebaseFunctions;
 @import UIKit;
-@import FirebaseAuthUI;
 
 @interface DPSettingsViewController ()
 
@@ -279,7 +279,7 @@
         FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
         [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
             if (!error) {
-                [FUIAuth.defaultAuthUI signOutWithError:nil];
+                [[FIRAuth auth] signOut:nil];
                 [self->tableView reloadData];
                 [activity stopAnimating];
             }

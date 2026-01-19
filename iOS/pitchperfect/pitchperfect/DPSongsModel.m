@@ -8,7 +8,7 @@
 /*
 #import "DPSongsModel.h"
 #import "DPJsonSerializer.h"
-#import <Parse/Parse.h>
+@import ParseCore;
 
 #define SONGS_KEY @"depollsoft.pitchperfect.Songs"
 #define SONGS_CHANGED_KEY @"depollsoft.pitchperfect.SongsChanged"

@@ -8,8 +8,10 @@
 
 import Foundation
 import AppTrackingTransparency
-import Firebase
-import Parse
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseFunctions
+import ParseCore
 import AVKit
 
 public extension Notification.Name {

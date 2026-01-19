@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <Bolts/Bolts.h>
+@import Bolts;
 #import "DPToolbarViewController.h"
 
 @interface DPLoginViewController : DPToolbarViewController

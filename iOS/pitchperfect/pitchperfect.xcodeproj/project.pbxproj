@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B758D8DC81080A995730A82 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BCFFA90687A1925752F69F2E /* FirebaseFirestore */; };
 		1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E131315267FD07600F33385 /* DPSettingsModel.swift */; };
 		1E13131D2682475900F33385 /* panobackground.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E13131A2682475900F33385 /* panobackground.svg */; };
 		1E5B19891FE74ED000241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19841FE74ED000241069 /* libdepolllib.a */; };
@@ -19,9 +20,9 @@
 		1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3422F533F900EA9F2E /* DPSongsModel.swift */; };
 		1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCE32A18234926C3795761C /* KeySignatureUITests.swift */; };
 		299FC208CD04C88A41A821FB /* pitchperfectUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */; };
+		2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */; };
 		47172D6AC4A2EE44B24A9BD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C312820713220954FBDB7D29 /* Foundation.framework */; };
 		4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB387F /* SettingsUITests.swift */; };
-		51CA84C6B857B426B4DEEE29 /* Pods_pitchperfectTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
 		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
@@ -92,6 +93,8 @@
 		A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */; };
 		A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */; };
 		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
+		B28B690C21E834450FD6F02A /* ParseObjC in Frameworks */ = {isa = PBXBuildFile; productRef = 5953DA4A5C171A0CD1DD1595 /* ParseObjC */; };
+		B6419FE131931C3EE072A617 /* FirebaseAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */; };
 		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
@@ -102,7 +105,8 @@
 		C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */; };
 		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
-		D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */; };
+		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
+		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -165,7 +169,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0A3F7FC214FBE062E9009FA5 /* Pods-pitchperfectTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfectTests.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfectTests/Pods-pitchperfectTests.debug.xcconfig"; sourceTree = "<group>"; };
 		0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SongManagementUITests.swift; sourceTree = "<group>"; };
 		1E131315267FD07600F33385 /* DPSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModel.swift; sourceTree = "<group>"; };
 		1E13131A2682475900F33385 /* panobackground.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = panobackground.svg; sourceTree = "<group>"; };
@@ -180,7 +183,6 @@
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
 		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
@@ -266,7 +268,6 @@
 		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
-		6AE01B2A3073D56B65CDBC0B /* Pods-pitchperfectTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfectTests.release.xcconfig"; path = "Target Support Files/Pods-pitchperfectTests/Pods-pitchperfectTests.release.xcconfig"; sourceTree = "<group>"; };
 		7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
@@ -288,9 +289,6 @@
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
-		D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfectTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -325,7 +323,12 @@
 				63A99D53158826F800C78CC0 /* MessageUI.framework in Frameworks */,
 				63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */,
 				63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */,
-				D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */,
+				E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */,
+				0B758D8DC81080A995730A82 /* FirebaseFirestore in Frameworks */,
+				F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */,
+				B6419FE131931C3EE072A617 /* FirebaseAuthSwiftUI in Frameworks */,
+				B28B690C21E834450FD6F02A /* ParseObjC in Frameworks */,
+				2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,7 +338,6 @@
 			files = (
 				63DC36CF151E9000007C46DB /* UIKit.framework in Frameworks */,
 				63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */,
-				51CA84C6B857B426B4DEEE29 /* Pods_pitchperfectTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,18 +358,6 @@
 				1E5B19851FE74ED000241069 /* depolllibTests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		220C7B9B618E4D1B28CCEFD4 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */,
-				F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */,
-				0A3F7FC214FBE062E9009FA5 /* Pods-pitchperfectTests.debug.xcconfig */,
-				6AE01B2A3073D56B65CDBC0B /* Pods-pitchperfectTests.release.xcconfig */,
-			);
-			name = Pods;
-			path = ../Pods;
 			sourceTree = "<group>";
 		};
 		2F83E4AA7C036637AFBB484D /* pitchperfectUITests */ = {
@@ -444,7 +434,6 @@
 				63DC36A7151E9000007C46DB /* pitchperfect */,
 				63DC36D3151E9000007C46DB /* pitchperfectTests */,
 				63DC369E151E9000007C46DB /* Products */,
-				220C7B9B618E4D1B28CCEFD4 /* Pods */,
 				2F83E4AA7C036637AFBB484D /* pitchperfectUITests */,
 			);
 			sourceTree = "<group>";
@@ -454,7 +443,7 @@
 			children = (
 				63DC369D151E9000007C46DB /* pitchperfect.app */,
 				63DC36CC151E9000007C46DB /* pitchperfectTests.xctest */,
-				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */,
+				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -490,8 +479,6 @@
 				63DC36A1151E9000007C46DB /* UIKit.framework */,
 				63DC36A3151E9000007C46DB /* Foundation.framework */,
 				63DC36A5151E9000007C46DB /* CoreGraphics.framework */,
-				DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */,
-				D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */,
 				4AC009C874E26B40B1ACA9FA /* iOS */,
 			);
 			name = Frameworks;
@@ -600,19 +587,16 @@
 			);
 			name = pitchperfectUITests;
 			productName = pitchperfectUITests;
-			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */;
+			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		63DC369C151E8FFF007C46DB /* pitchperfect */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63DC36DE151E9000007C46DB /* Build configuration list for PBXNativeTarget "pitchperfect" */;
 			buildPhases = (
-				6ADB54B069A07273E8436568 /* [CP] Check Pods Manifest.lock */,
 				63DC3699151E8FFF007C46DB /* Sources */,
 				63DC369A151E8FFF007C46DB /* Frameworks */,
 				63DC369B151E8FFF007C46DB /* Resources */,
-				FE97A0BF868899C296DCED3F /* [CP] Embed Pods Frameworks */,
-				CFB7C5444246B2402E5F371F /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -621,6 +605,14 @@
 				A1F1C7132F8C18B200000007 /* PBXTargetDependency */,
 			);
 			name = pitchperfect;
+			packageProductDependencies = (
+				5FD845E01B6D632658559754 /* FirebaseAuth */,
+				BCFFA90687A1925752F69F2E /* FirebaseFirestore */,
+				5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */,
+				30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */,
+				5953DA4A5C171A0CD1DD1595 /* ParseObjC */,
+				62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */,
+			);
 			productName = pitchperfect;
 			productReference = 63DC369D151E9000007C46DB /* pitchperfect.app */;
 			productType = "com.apple.product-type.application";
@@ -629,7 +621,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63DC36E1151E9000007C46DB /* Build configuration list for PBXNativeTarget "pitchperfectTests" */;
 			buildPhases = (
-				B5F0F9CD68438EE9AC2CECC3 /* [CP] Check Pods Manifest.lock */,
 				63DC36C7151E9000007C46DB /* Sources */,
 				63DC36C8151E9000007C46DB /* Frameworks */,
 				63DC36C9151E9000007C46DB /* Resources */,
@@ -678,6 +669,12 @@
 				Base,
 			);
 			mainGroup = 63DC3692151E8FFF007C46DB;
+			packageReferences = (
+				51BF912D5F0ACDE484CB1104 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */,
+				5F3B9ABCB9B6A638984A384E /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */,
+				546517103611D3FF1F552708 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = 63DC369E151E9000007C46DB /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -777,141 +774,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		6ADB54B069A07273E8436568 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-pitchperfect-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		B5F0F9CD68438EE9AC2CECC3 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-pitchperfectTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		CFB7C5444246B2402E5F371F /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreAbseilBinary/FirebaseFirestoreAbseilBinary_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreBinary/FirebaseFirestore_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCBoringSSLBinary/FirebaseFirestoreGRPCBoringSSLBinary_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCCPPBinary/FirebaseFirestoreGRPCCPPBinary_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreGRPCCoreBinary/FirebaseFirestoreGRPCCoreBinary_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/FirebaseFirestoreInternalBinary/FirebaseFirestoreInternalBinary_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/Google-Mobile-Ads-SDK/GoogleMobileAdsResources.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUserMessagingPlatform/UserMessagingPlatformResources.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreAbseilBinary_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestore_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCBoringSSLBinary_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCCPPBinary_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreGRPCCoreBinary_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FirebaseFirestoreInternalBinary_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleMobileAdsResources.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/UserMessagingPlatformResources.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		FE97A0BF868899C296DCED3F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AppAuth/AppAuth.framework",
-				"${BUILT_PRODUCTS_DIR}/Bolts/Bolts.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseAppCheckInterop/FirebaseAppCheckInterop.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseAuth/FirebaseAuth.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseAuthInterop/FirebaseAuthInterop.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseAuthUI/FirebaseAuthUI.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseCore/FirebaseCore.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseCoreExtension/FirebaseCoreExtension.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseCoreInternal/FirebaseCoreInternal.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseEmailAuthUI/FirebaseEmailAuthUI.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseFunctions/FirebaseFunctions.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseMessagingInterop/FirebaseMessagingInterop.framework",
-				"${BUILT_PRODUCTS_DIR}/FirebaseSharedSwift/FirebaseSharedSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/GTMAppAuth/GTMAppAuth.framework",
-				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework",
-				"${BUILT_PRODUCTS_DIR}/Parse/Parse.framework",
-				"${BUILT_PRODUCTS_DIR}/RecaptchaInterop/RecaptchaInterop.framework",
-				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
-				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AppAuth.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Bolts.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAppCheckInterop.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuth.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuthInterop.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseAuthUI.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCore.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreExtension.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseCoreInternal.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseEmailAuthUI.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseFunctions.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseMessagingInterop.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseSharedSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMAppAuth.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Parse.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RecaptchaInterop.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-pitchperfect/Pods-pitchperfect-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		63DC3699151E8FFF007C46DB /* Sources */ = {
@@ -1074,7 +936,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1118,7 +980,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -1129,7 +991,6 @@
 		};
 		63DC36DF151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -1152,7 +1013,7 @@
 					"$(OBJROOT)/../Index.noindex/Build/Intermediates.noindex/pitchperfect.build/$(CONFIGURATION)-$(PLATFORM_NAME)/pitchperfect.build/DerivedSources",
 				);
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1181,7 +1042,6 @@
 		};
 		63DC36E0151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -1204,7 +1064,7 @@
 					"$(OBJROOT)/../Index.noindex/Build/Intermediates.noindex/pitchperfect.build/$(CONFIGURATION)-$(PLATFORM_NAME)/pitchperfect.build/DerivedSources",
 				);
 				INFOPLIST_FILE = "pitchperfect/pitchperfect-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1232,7 +1092,6 @@
 		};
 		63DC36E2151E9000007C46DB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A3F7FC214FBE062E9009FA5 /* Pods-pitchperfectTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/pitchperfect.app/pitchperfect";
@@ -1264,7 +1123,6 @@
 		};
 		63DC36E3151E9000007C46DB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6AE01B2A3073D56B65CDBC0B /* Pods-pitchperfectTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/pitchperfect.app/pitchperfect";
@@ -1300,7 +1158,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = pitchperfectUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.pitchperfectUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1317,7 +1175,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = pitchperfectUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.depollsoft.pitchperfectUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -1368,6 +1226,74 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/FirebaseUI-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.0.0;
+			};
+		};
+		51BF912D5F0ACDE484CB1104 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+		546517103611D3FF1F552708 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.14.0;
+			};
+		};
+		5F3B9ABCB9B6A638984A384E /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/parse-community/Parse-SDK-iOS-OSX";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebaseAuthSwiftUI;
+		};
+		5953DA4A5C171A0CD1DD1595 /* ParseObjC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5F3B9ABCB9B6A638984A384E /* XCRemoteSwiftPackageReference "Parse-SDK-iOS-OSX" */;
+			productName = ParseObjC;
+		};
+		5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51BF912D5F0ACDE484CB1104 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		5FD845E01B6D632658559754 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51BF912D5F0ACDE484CB1104 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 546517103611D3FF1F552708 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		BCFFA90687A1925752F69F2E /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51BF912D5F0ACDE484CB1104 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 63DC3694151E8FFF007C46DB /* Project object */;
 }

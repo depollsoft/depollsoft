@@ -7,7 +7,8 @@
 //
 
 import Foundation
-import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 
 public extension Notification.Name {
     static let songsChanged = Notification.Name("pitchPerfect.songsChanged")
