@@ -270,46 +270,59 @@ jobs:
               # Generate junit XML from xcresult for test-reporter
               SCHEME_NAME="${xcresult%-results.xcresult}"
               "${{ steps.select_xcode.outputs.xcrun }}" xcresulttool get test-results tests --path "$xcresult" 2>/dev/null | python3 -c "
-          import json, sys, html
-          from datetime import datetime
+          import json, sys, html, re
 
           try:
               data = json.load(sys.stdin)
           except:
-              data = []
+              data = {}
 
-          # Group tests by test class
+          # Recursively extract test cases from the nested testNodes structure
+          def extract_tests(node, class_name=''):
+              tests = []
+              node_type = node.get('nodeType', '')
+              name = node.get('name', '')
+              
+              # Update class name when we encounter a Test Suite
+              if node_type == 'Test Suite':
+                  class_name = name
+              
+              # If this is a Test Case, extract it
+              if node_type == 'Test Case':
+                  duration_str = node.get('duration', '0s')
+                  # Parse duration like '0.0016s' to float
+                  match = re.match(r'([0-9.]+)s?', duration_str)
+                  duration = float(match.group(1)) if match else 0.0
+                  
+                  result = node.get('result', 'Unknown')
+                  tests.append({
+                      'name': name,
+                      'classname': class_name,
+                      'time': duration,
+                      'result': result
+                  })
+              
+              # Recurse into children
+              for child in node.get('children', []):
+                  tests.extend(extract_tests(child, class_name))
+              
+              return tests
+
+          # Extract all test cases from all test nodes
+          all_tests = []
+          for test_node in data.get('testNodes', []):
+              all_tests.extend(extract_tests(test_node))
+
+          # Group by class name
           suites = {}
-          for test in data:
-              # test structure: nodeIdentifier, name, status, duration, etc.
-              node_id = test.get('nodeIdentifier', '')
-              name = test.get('name', 'UnknownTest')
-              status = test.get('status', 'unknown')
-              duration = test.get('duration', 0)
-              
-              # Parse class name from nodeIdentifier (format: TargetName/ClassName/testMethodName)
-              parts = node_id.split('/')
-              if len(parts) >= 2:
-                  class_name = parts[-2] if len(parts) >= 2 else 'UnknownClass'
-              else:
-                  class_name = 'UnknownClass'
-              
+          for test in all_tests:
+              class_name = test['classname']
               if class_name not in suites:
                   suites[class_name] = {'tests': [], 'failures': 0, 'errors': 0, 'time': 0}
-              
-              test_info = {
-                  'name': name,
-                  'classname': class_name,
-                  'time': duration,
-                  'status': status,
-                  'failure_message': test.get('failureMessage', '')
-              }
-              suites[class_name]['tests'].append(test_info)
-              suites[class_name]['time'] += duration
-              if status == 'Failure':
+              suites[class_name]['tests'].append(test)
+              suites[class_name]['time'] += test['time']
+              if test['result'] == 'Failed':
                   suites[class_name]['failures'] += 1
-              elif status == 'Error':
-                  suites[class_name]['errors'] += 1
 
           # Generate JUnit XML
           total_tests = sum(len(s['tests']) for s in suites.values())
@@ -331,16 +344,15 @@ jobs:
                   test_name = html.escape(test['name'])
                   test_class = html.escape(test['classname'])
                   test_time = test['time']
-                  status = test['status']
+                  result = test['result']
                   
-                  if status == 'Success' or status == 'Expected Failure':
+                  if result == 'Passed':
                       print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\"/>')
-                  elif status == 'Failure':
-                      msg = html.escape(test.get('failure_message', 'Test failed'))
+                  elif result == 'Failed':
                       print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\">')
-                      print(f'      <failure message=\"{msg}\"/>')
+                      print(f'      <failure message=\"Test failed\"/>')
                       print('    </testcase>')
-                  elif status == 'Skipped':
+                  elif result == 'Skipped':
                       print(f'    <testcase name=\"{test_name}\" classname=\"{test_class}\" time=\"{test_time:.3f}\">')
                       print('      <skipped/>')
                       print('    </testcase>')
