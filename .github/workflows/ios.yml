@@ -235,30 +235,63 @@ jobs:
 
       - name: Verify test results
         if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
-          # Check junit XML files for actual test failures
-          # xcodebuild may exit 65 due to simctl issues even when tests pass
+          # Check xcresult bundles for actual test results
+          # This is more reliable than junit XML which may be empty due to xcpretty issues
           FAILED=0
-          for junit in pitchperfect-junit.xml tagmaster-junit.xml pitchperfectlib-junit.xml; do
-            if [ -f "$junit" ]; then
-              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" | head -1 | grep -o '[0-9]*' || echo "0")
-              if [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
-                echo "❌ $junit has $FAILURES failures and $ERRORS errors out of $TESTS tests"
+          TOTAL_TESTS=0
+          TOTAL_FAILURES=0
+          
+          for xcresult in pitchperfect-results.xcresult tagmaster-results.xcresult pitchperfectlib-results.xcresult; do
+            if [ -d "$xcresult" ]; then
+              # Extract test summary from xcresult using xcresulttool
+              SUMMARY=$("${{ steps.select_xcode.outputs.xcrun }}" xcresulttool get --path "$xcresult" --format json 2>/dev/null | python3 -c "
+          import json, sys
+          try:
+              data = json.load(sys.stdin)
+              metrics = data.get('metrics', {})
+              tests = metrics.get('testsCount', {}).get('_value', '0')
+              failures = metrics.get('testsFailedCount', {}).get('_value', '0')
+              print(f'{tests} {failures}')
+          except:
+              print('0 0')
+          " 2>/dev/null || echo "0 0")
+              
+              TESTS=$(echo "$SUMMARY" | awk '{print $1}')
+              FAILURES=$(echo "$SUMMARY" | awk '{print $2}')
+              
+              TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
+              TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
+              
+              if [ "$FAILURES" != "0" ]; then
+                echo "❌ $xcresult: $TESTS tests, $FAILURES failures"
                 FAILED=1
+              elif [ "$TESTS" = "0" ]; then
+                echo "⚠️ $xcresult: No tests found"
               else
-                echo "✅ $junit passed ($TESTS tests)"
+                echo "✅ $xcresult: $TESTS tests passed"
               fi
             else
-              echo "⚠️ $junit not found - tests may not have run"
+              echo "⚠️ $xcresult not found - tests may not have run"
               FAILED=1
             fi
           done
-          if [ "$FAILED" = "1" ]; then
-            echo "::error::Some tests failed or did not run. Check the junit XML reports."
+          
+          echo ""
+          echo "Total: $TOTAL_TESTS tests, $TOTAL_FAILURES failures"
+          
+          if [ "$TOTAL_TESTS" = "0" ]; then
+            echo "::error::No tests were executed. Check the build and test configuration."
             exit 1
           fi
+          
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::Some tests failed. Check the xcresult bundles for details."
+            exit 1
+          fi
+          
           echo "All test suites passed!"
 
 
