@@ -126,6 +126,7 @@ jobs:
           echo "Resolving Swift Package Manager dependencies..."
           "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
             -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
             -clonedSourcePackagesDirPath SourcePackages
           echo "SPM dependencies resolved successfully"
 
@@ -521,6 +522,7 @@ jobs:
           echo "Resolving Swift Package Manager dependencies..."
           "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
             -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
             -clonedSourcePackagesDirPath SourcePackages
           echo "SPM dependencies resolved successfully"
 
