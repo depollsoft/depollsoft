@@ -27,6 +27,9 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
         // Load the view hierarchy
         _ = homeViewController.view
         homeViewController.view.layoutIfNeeded()
+        
+        // Give the run loop time to fully attach the view controller hierarchy
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
     }
     
     override func tearDown() {
