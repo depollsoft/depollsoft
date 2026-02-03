@@ -20,7 +20,18 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
         
         homeViewController = DPHomeViewController(style: .grouped)
         navigationController = UINavigationController(rootViewController: homeViewController)
-        window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 812))
+        
+        // Create window attached to foreground scene for proper view controller hierarchy
+        if let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive }) ?? UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first {
+            window = UIWindow(windowScene: windowScene)
+        } else {
+            window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 812))
+        }
+        
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
         
