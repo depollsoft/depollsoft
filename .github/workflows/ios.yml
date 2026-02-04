@@ -176,17 +176,18 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-      # Run all unit tests in parallel using test-without-building
-      - name: Run all unit tests in parallel
+      # Run all unit tests sequentially
+      # Note: Cannot run in parallel on the same simulator - causes app launch conflicts
+      - name: Run all unit tests
         id: run_tests
         continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          # Run tests in parallel - xcodebuild handles parallelization
-          # Note: junit XML is generated from xcresult bundles in the next step
-          # because xcpretty's junit output is unreliable with parallel background processes
+          FAILED=0
+
+          echo "=== Running pitchperfect tests ==="
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -197,9 +198,9 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color &
-          PID1=$!
-          
+            | xcpretty --color || FAILED=1
+
+          echo "=== Running tagmaster tests ==="
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -210,9 +211,9 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color &
-          PID2=$!
-          
+            | xcpretty --color || FAILED=1
+
+          echo "=== Running pitchperfectlib tests ==="
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
@@ -223,15 +224,8 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color &
-          PID3=$!
-          
-          # Wait for all tests to complete
-          FAILED=0
-          wait $PID1 || FAILED=1
-          wait $PID2 || FAILED=1
-          wait $PID3 || FAILED=1
-          
+            | xcpretty --color || FAILED=1
+
           # We continue even if tests fail - we'll check junit results later
           exit 0
 
