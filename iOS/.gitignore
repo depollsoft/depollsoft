@@ -27,8 +27,8 @@ DerivedData/
 
 # Swift Package Manager
 .build/
-.swiftpm/
-Package.resolved
+.swiftpm/xcode/
+# Note: Package.resolved is committed for reproducible builds
 
 # CocoaPods (removed - now using SPM)
 # Pods/

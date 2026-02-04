@@ -40,7 +40,15 @@ struct FirebaseAuthView: View {
             // This is shown when authenticated - we immediately dismiss
             Color.clear
                 .onAppear {
-                    let isNewUser = authService.currentUser?.metadata.creationDate == authService.currentUser?.metadata.lastSignInDate
+                    // Use time-based comparison with tolerance since date equality can be unreliable
+                    let metadata = authService.currentUser?.metadata
+                    let isNewUser: Bool
+                    if let creationDate = metadata?.creationDate,
+                       let lastSignInDate = metadata?.lastSignInDate {
+                        isNewUser = abs(creationDate.timeIntervalSince(lastSignInDate)) <= 1.0
+                    } else {
+                        isNewUser = false
+                    }
                     onSignIn(isNewUser)
                     onDismiss()
                 }

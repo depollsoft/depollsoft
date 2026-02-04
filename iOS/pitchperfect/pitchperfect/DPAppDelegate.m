@@ -110,7 +110,10 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary *)options {
-  // FirebaseAuthUI URL handling removed during SDK migration - now using SwiftUI auth
+  // Let Firebase Auth handle email link / OAuth redirect URLs
+  if ([[FIRAuth auth] canHandleURL:url]) {
+    return YES;
+  }
   return NO;
 }
 
