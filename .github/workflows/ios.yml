@@ -176,58 +176,134 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-      # Run all unit tests sequentially
-      # Note: Cannot run in parallel on the same simulator - causes app launch conflicts
-      - name: Run all unit tests
+      # Create additional simulators for parallel test execution
+      - name: Create simulators for parallel tests
+        id: create_sims
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          XCRUN="${{ steps.select_xcode.outputs.xcrun }}"
+
+          # Get the device type and runtime from the selected destination
+          DEST='${{ steps.simulator.outputs.destination }}'
+          DEVICE_NAME=$(echo "$DEST" | sed -n 's/.*name=\([^,]*\).*/\1/p')
+          OS_VERSION=$(echo "$DEST" | sed -n 's/.*OS=\([^,]*\).*/\1/p')
+
+          # Find the runtime identifier
+          RUNTIME=$("$XCRUN" simctl list runtimes -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          target = '$OS_VERSION'
+          for rt in data.get('runtimes', []):
+            if rt.get('isAvailable') and target in rt.get('version', ''):
+              print(rt['identifier'])
+              sys.exit(0)
+          # Fallback: find any available iOS runtime
+          for rt in data.get('runtimes', []):
+            if rt.get('isAvailable') and 'iOS' in rt.get('name', ''):
+              print(rt['identifier'])
+              sys.exit(0)
+          ")
+
+          # Find the device type
+          DEVICE_TYPE=$("$XCRUN" simctl list devicetypes -j | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          target = '$DEVICE_NAME'
+          for dt in data.get('devicetypes', []):
+            if target in dt.get('name', ''):
+              print(dt['identifier'])
+              sys.exit(0)
+          ")
+
+          echo "Creating simulators with device=$DEVICE_TYPE runtime=$RUNTIME"
+
+          # Create 3 simulators for parallel testing
+          SIM1=$("$XCRUN" simctl create "CI-PitchPerfect-$$" "$DEVICE_TYPE" "$RUNTIME")
+          SIM2=$("$XCRUN" simctl create "CI-TagMaster-$$" "$DEVICE_TYPE" "$RUNTIME")
+          SIM3=$("$XCRUN" simctl create "CI-PPLib-$$" "$DEVICE_TYPE" "$RUNTIME")
+
+          echo "sim1=$SIM1" >> $GITHUB_OUTPUT
+          echo "sim2=$SIM2" >> $GITHUB_OUTPUT
+          echo "sim3=$SIM3" >> $GITHUB_OUTPUT
+          echo "dest1=platform=iOS Simulator,id=$SIM1" >> $GITHUB_OUTPUT
+          echo "dest2=platform=iOS Simulator,id=$SIM2" >> $GITHUB_OUTPUT
+          echo "dest3=platform=iOS Simulator,id=$SIM3" >> $GITHUB_OUTPUT
+
+          echo "Created simulators: $SIM1, $SIM2, $SIM3"
+
+      # Run all unit tests in parallel using separate simulators
+      - name: Run all unit tests in parallel
         id: run_tests
         continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          FAILED=0
 
-          echo "=== Running pitchperfect tests ==="
+          echo "=== Starting parallel test execution ==="
+
+          # Run each test suite on its own simulator
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
-            -destination '${{ steps.simulator.outputs.destination }}' \
+            -destination '${{ steps.create_sims.outputs.dest1 }}' \
             -clonedSourcePackagesDirPath SourcePackages \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color || FAILED=1
+            2>&1 | xcpretty --color &
+          PID1=$!
 
-          echo "=== Running tagmaster tests ==="
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
-            -destination '${{ steps.simulator.outputs.destination }}' \
+            -destination '${{ steps.create_sims.outputs.dest2 }}' \
             -clonedSourcePackagesDirPath SourcePackages \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color || FAILED=1
+            2>&1 | xcpretty --color &
+          PID2=$!
 
-          echo "=== Running pitchperfectlib tests ==="
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
-            -destination '${{ steps.simulator.outputs.destination }}' \
+            -destination '${{ steps.create_sims.outputs.dest3 }}' \
             -clonedSourcePackagesDirPath SourcePackages \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color || FAILED=1
+            2>&1 | xcpretty --color &
+          PID3=$!
 
+          # Wait for all tests to complete
+          echo "Waiting for tests to complete (PIDs: $PID1, $PID2, $PID3)..."
+          wait $PID1 || true
+          wait $PID2 || true
+          wait $PID3 || true
+
+          echo "=== All tests completed ==="
           # We continue even if tests fail - we'll check junit results later
           exit 0
+
+      # Cleanup created simulators
+      - name: Cleanup simulators
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          XCRUN="${{ steps.select_xcode.outputs.xcrun }}"
+          "$XCRUN" simctl delete '${{ steps.create_sims.outputs.sim1 }}' 2>/dev/null || true
+          "$XCRUN" simctl delete '${{ steps.create_sims.outputs.sim2 }}' 2>/dev/null || true
+          "$XCRUN" simctl delete '${{ steps.create_sims.outputs.sim3 }}' 2>/dev/null || true
+          echo "Cleaned up test simulators"
 
       - name: Verify test results and generate junit XML
         if: always()
