@@ -113,6 +113,18 @@ class ListModel private constructor(val listName: String) {
             return model
         }
 
+        /**
+         * Deletes a list's tag IDs from local preferences.
+         * Firestore deletion is handled by CustomListsModel.deleteFromFirestore().
+         */
+        fun deleteList(key: String) {
+            val model = modelInstances[key]?.get()
+            model?.ids?.clear()
+            preferences.remove(key)
+            modelInstances.remove(key)
+            storeValue(false)
+        }
+
         private fun migrateOldFavorites() {
             val favoritesKey = "tagmaster.Favorites"
             val teachablesKey = "tagmaster.TeachableTags"
@@ -198,11 +210,14 @@ class ListModel private constructor(val listName: String) {
             val user = Firebase.auth.currentUser
             if (user != null) {
                 val userDoc = Firebase.firestore.document("users/${user.uid}")
-                userDoc.set(
-                    mapOf(
-                        "lists" to preferences
-                    ), SetOptions.merge()
+                val data = mutableMapOf<String, Any>(
+                    "lists" to preferences
                 )
+                val listMetaMap = CustomListsModel.toFirestoreMap()
+                if (listMetaMap.isNotEmpty()) {
+                    data["listMeta"] = listMetaMap
+                }
+                userDoc.set(data, SetOptions.merge())
             }
         }
 
@@ -225,6 +240,10 @@ class ListModel private constructor(val listName: String) {
 
                     fromFirestore(
                         snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>()
+                    )
+                    // Sync list metadata (gracefully handles missing listMeta for old users)
+                    CustomListsModel.fromFirestore(
+                        snapshot.get("listMeta") as? Map<*, *>
                     )
                 }
             }
