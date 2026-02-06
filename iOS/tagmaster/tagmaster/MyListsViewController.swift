@@ -92,7 +92,7 @@ import UIKit
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    // MARK: - Swipe Actions
+    // MARK: - Editing
 
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
@@ -107,13 +107,23 @@ import UIKit
         }
     }
 
-    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let meta = lists[indexPath.row]
-        let rename = UIContextualAction(style: .normal, title: "Rename") { _, _, completion in
-            self.showRenameDialog(meta)
-            completion(true)
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            let rename = UIAction(title: "Rename", image: UIImage(systemName: "pencil")) { _ in
+                self.showRenameDialog(meta)
+            }
+            let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
+                let alert = UIAlertController(title: "Delete List", message: "Delete \"\(meta.name)\"?", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+                    CustomListsModel.deleteList(meta.key)
+                    self.refreshLists()
+                })
+                self.present(alert, animated: true)
+            }
+            return UIMenu(title: "", children: [rename, delete])
         }
-        return UISwipeActionsConfiguration(actions: [rename])
     }
 
     // MARK: - Actions

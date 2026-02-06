@@ -30,7 +30,12 @@
             android:id="@+id/listsListView"
             android:layout_width="fill_parent"
             android:layout_height="0dip"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:divider="?attr/colorPrimary"
+            android:dividerHeight="1dp"
+            android:paddingBottom="56dp"
+            android:paddingTop="16dp">
         </ListView>
     </LinearLayout>
 
@@ -39,7 +44,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
         android:contentDescription="@string/CreateNewList"
         app:srcCompat="@android:drawable/ic_input_add">
     </com.google.android.material.floatingactionbutton.FloatingActionButton>
