@@ -11,6 +11,7 @@
 #import "DPUtils+Subscripts.h"
 #import "DPTagViewController.h"
 #import "DPAppDelegate.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
@@ -224,6 +225,17 @@
     if (currentOffset >= threshold) {
         [self fetchResults];
     }
+}
+
+- (UIContextMenuConfiguration *)tableView:(UITableView *)tableView contextMenuConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath point:(CGPoint)point {
+    DPTagCell *cell = (DPTagCell *)[tableView cellForRowAtIndexPath:indexPath];
+    if (!cell) return nil;
+
+    return [UIContextMenuConfiguration configurationWithIdentifier:nil
+                                                   previewProvider:nil
+                                                    actionProvider:^UIMenu * _Nullable(NSArray<UIMenuElement *> * _Nonnull suggestedActions) {
+        return [ListMenuHelper menuForTagId:cell.tagId];
+    }];
 }
 
 @end

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import com.bindroid.converters.BoolConverter
@@ -36,7 +37,7 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
         ) as LayoutInflater
         inflater.inflate(R.layout.tagitemview, this, true)
         this.isClickable = true
-        this.isLongClickable = false
+        this.isLongClickable = true
         setOnClickListener {
             if (this@TagItemView.tag != null) {
                 val i = Intent(this@TagItemView.context, TagDetailActivity::class.java)
@@ -46,7 +47,28 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
                 this@TagItemView.context.startActivity(i)
             }
         }
-        setOnLongClickListener { false }
+        setOnLongClickListener { showContextMenu(); true }
+    }
+
+    override fun onCreateContextMenu(menu: ContextMenu) {
+        val tag = this.tag ?: return
+        val allLists = CustomListsModel.allLists()
+
+        for (meta in allLists) {
+            val model = ListModel(meta.key)
+            val isInList = model.ids.contains(tag.id)
+            val title = if (isInList) "✓ ${meta.name}" else "   ${meta.name}"
+            menu.add(title).setOnMenuItemClickListener {
+                if (isInList) {
+                    model.remove(tag.id)
+                } else {
+                    model.add(tag.id)
+                }
+                true
+            }
+        }
+
+        super.onCreateContextMenu(menu)
     }
 
     override fun onAttachedToWindow() {
