@@ -182,7 +182,7 @@ class ListModel private constructor(val listName: String) {
                 // Remove lists that aren't in the data
                 preferences.keys.subtract(data.keys).forEach {
                     if (it !is String) {
-                        return
+                        return@forEach
                     }
                     val cur = ListModel.invoke(it)
                     cur.ids.clear()
@@ -190,7 +190,7 @@ class ListModel private constructor(val listName: String) {
                 // Update existing lists
                 data.keys.forEach {
                     if (it !is String) {
-                        return
+                        return@forEach
                     }
                     val cur = ListModel.invoke(it)
                     var newValue = (data[it] as? List<*>)?.mapNotNull { (it as? Long)?.toInt() }

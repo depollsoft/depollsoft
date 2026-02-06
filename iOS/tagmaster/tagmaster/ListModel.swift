@@ -101,7 +101,7 @@ import Firebase
         storeValue()
     }
 
-    /// Replaces the entire list. Used during Firestore sync.
+    /// Replaces the entire list. Used for reordering and Firestore sync.
     func setIds(_ newIds: [Int], notify: Bool = true) {
         ids = newIds
         if ids.isEmpty {
@@ -109,9 +109,19 @@ import Firebase
         } else {
             ListModel.preferences[listName] = ids
         }
+        ListModel.storeToDefaults()
         if notify {
             NotificationCenter.default.post(name: .userDataChanged, object: nil)
         }
+
+        guard ListModel.shouldStore else { return }
+        guard let user = Auth.auth().currentUser else { return }
+        let userDoc = Firestore.firestore().document("users/\(user.uid)")
+        let value: Any = ids.isEmpty ? FieldValue.delete() : ids
+        userDoc.setData(
+            ["lists": [listName: value]],
+            mergeFields: ["lists.\(listName)"]
+        )
     }
 
     // MARK: - Persistence
