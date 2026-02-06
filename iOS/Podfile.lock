@@ -135,7 +135,7 @@ DEPENDENCIES:
   - Parse
 
 SPEC REPOS:
-  https://github.com/CocoaPods/Specs.git:
+  trunk:
     - AppAuth
     - Bolts
     - Firebase
@@ -147,26 +147,25 @@ SPEC REPOS:
     - FirebaseCoreExtension
     - FirebaseCoreInternal
     - FirebaseEmailAuthUI
-    - FirebaseFunctions
-    - FirebaseMessagingInterop
-    - FirebaseUI
-    - Google-Mobile-Ads-SDK
-    - GoogleUserMessagingPlatform
-    - GoogleUtilities
-    - GTMAppAuth
-    - GTMSessionFetcher
-    - Parse
-    - RecaptchaInterop
-  trunk:
     - FirebaseFirestoreAbseilBinary
     - FirebaseFirestoreBinary
     - FirebaseFirestoreGRPCBoringSSLBinary
     - FirebaseFirestoreGRPCCoreBinary
     - FirebaseFirestoreGRPCCPPBinary
     - FirebaseFirestoreInternalBinary
+    - FirebaseFunctions
+    - FirebaseMessagingInterop
     - FirebaseSharedSwift
+    - FirebaseUI
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
+    - GoogleUtilities
+    - GTMAppAuth
+    - GTMSessionFetcher
     - leveldb-library
     - nanopb
+    - Parse
+    - RecaptchaInterop
 
 EXTERNAL SOURCES:
   FirebaseFirestore:

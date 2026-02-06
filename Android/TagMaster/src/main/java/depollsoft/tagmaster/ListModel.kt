@@ -140,6 +140,7 @@ class ListModel private constructor(val listName: String) {
         }
 
         private var shouldStore = true
+        private var emulatorConfigured = false
         
         /**
          * For testing: disable Firebase storage to allow unit testing without Firebase initialization.
@@ -148,6 +149,19 @@ class ListModel private constructor(val listName: String) {
         @JvmStatic
         fun setTestMode(enabled: Boolean) {
             shouldStore = !enabled
+        }
+
+        /**
+         * For integration testing: connect Firestore to the local emulator.
+         * Must be called before any Firestore operations. Safe to call multiple times.
+         * Uses 10.0.2.2 for Android emulator, or localhost for Robolectric/JVM tests.
+         */
+        @JvmStatic
+        fun useEmulator(host: String = "10.0.2.2", port: Int = 8080) {
+            if (!emulatorConfigured) {
+                Firebase.firestore.useEmulator(host, port)
+                emulatorConfigured = true
+            }
         }
         
         private fun fromFirestore(data: Map<*, *>) {

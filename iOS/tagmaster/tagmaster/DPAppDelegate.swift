@@ -17,6 +17,34 @@ public extension Notification.Name {
 }
 
 public extension DPAppDelegate {
+    /// Connect Firestore to the local emulator for development/testing.
+    /// Call before any Firestore operations. Gated behind --useFirebaseEmulator launch argument.
+    private static var emulatorConfigured = false
+    
+    @objc static func configureFirestoreEmulatorIfNeeded() {
+        if !emulatorConfigured && ProcessInfo.processInfo.arguments.contains("--useFirebaseEmulator") {
+            let settings = Firestore.firestore().settings
+            settings.host = "localhost:8080"
+            settings.isSSLEnabled = false
+            settings.cacheSettings = MemoryCacheSettings()
+            Firestore.firestore().settings = settings
+            emulatorConfigured = true
+        }
+    }
+    
+    @objc static func useFirestoreEmulator(host: String = "localhost", port: Int = 8080) {
+        if !emulatorConfigured {
+            let settings = Firestore.firestore().settings
+            settings.host = "\(host):\(port)"
+            settings.isSSLEnabled = false
+            settings.cacheSettings = MemoryCacheSettings()
+            Firestore.firestore().settings = settings
+            emulatorConfigured = true
+        }
+    }
+}
+
+public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
     private static let LISTS_KEY = "depollsoft.pitchperfect.lists"
     
@@ -92,6 +120,7 @@ public extension DPAppDelegate {
     }
         
     @objc func extraInit() {
+        DPAppDelegate.configureFirestoreEmulatorIfNeeded()
         DPAppDelegate.migrateOldLists()
         convertParseUser()
         try! AVAudioSession.sharedInstance().setCategory(.playback)
