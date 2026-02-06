@@ -15,6 +15,8 @@
 		1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */; };
 		A1B2C3D42F8D000000000010 /* ListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000011 /* ListModel.swift */; };
 		A1B2C3D42F8D000000000020 /* CustomListsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000021 /* CustomListsModel.swift */; };
+		A1B2C3D42F8D000000000030 /* MyListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000031 /* MyListsViewController.swift */; };
+		A1B2C3D42F8D000000000040 /* CustomListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000041 /* CustomListViewController.swift */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
@@ -162,6 +164,8 @@
 		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		A1B2C3D42F8D000000000011 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModel.swift; sourceTree = "<group>"; };
 		A1B2C3D42F8D000000000021 /* CustomListsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomListsModel.swift; sourceTree = "<group>"; };
+		A1B2C3D42F8D000000000031 /* MyListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyListsViewController.swift; sourceTree = "<group>"; };
+		A1B2C3D42F8D000000000041 /* CustomListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomListViewController.swift; sourceTree = "<group>"; };
 		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
@@ -465,6 +469,8 @@
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
 				A1B2C3D42F8D000000000011 /* ListModel.swift */,
 				A1B2C3D42F8D000000000021 /* CustomListsModel.swift */,
+				A1B2C3D42F8D000000000031 /* MyListsViewController.swift */,
+				A1B2C3D42F8D000000000041 /* CustomListViewController.swift */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
@@ -911,6 +917,8 @@
 				1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */,
 				A1B2C3D42F8D000000000010 /* ListModel.swift in Sources */,
 				A1B2C3D42F8D000000000020 /* CustomListsModel.swift in Sources */,
+				A1B2C3D42F8D000000000030 /* MyListsViewController.swift in Sources */,
+				A1B2C3D42F8D000000000040 /* CustomListViewController.swift in Sources */,
 				63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,

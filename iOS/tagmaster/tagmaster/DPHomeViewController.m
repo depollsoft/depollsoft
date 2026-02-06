@@ -153,6 +153,12 @@
                          }];
     }
     [arr addObject:@{
+                     @"title": @"My Lists",
+                     @"action": ^() {
+        [self.navigationController pushViewController:[[MyListsViewController alloc] init] animated:YES];
+    }
+                     }];
+    [arr addObject:@{
                      @"title": @"Random Tag",
                      @"action": ^() {
         [self.busyIndicator incrementBusyCount];

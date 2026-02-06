@@ -3,7 +3,9 @@
 //
 
 #import "DPAppDelegate.h"
+#import "DPBarbershop.h"
 #import "DPHomeViewController.h"
+#import "DPTagCell.h"
 #import "DPTeachableTagsController.h"
 #import "DPSettingsController.h"
 #import "DPTagTracksController.h"
