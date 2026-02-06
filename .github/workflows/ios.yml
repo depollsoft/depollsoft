@@ -134,16 +134,16 @@ jobs:
           ruby --version
           gem --version
 
-          # Check if bundler is already available
-          if ! command -v bundle &>/dev/null; then
-            echo "Bundler not found, installing to user directory..."
+          # Check if bundler is available and functional
+          if command -v bundle &>/dev/null && bundle --version &>/dev/null; then
+            echo "Bundler already available: $(bundle --version)"
+          else
+            echo "Bundler not found or broken, installing..."
             gem install bundler --user-install --no-document
             # Add user gem bin to PATH
             USER_GEM_BIN="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin"
             export PATH="$USER_GEM_BIN:$PATH"
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
-          else
-            echo "Bundler already available: $(bundle --version)"
           fi
 
           # Install gems to local vendor/bundle (no system-wide side effects)
