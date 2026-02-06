@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
@@ -182,6 +184,10 @@ class TagDetailActivity : AppCompatActivity() {
                     R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(tag.id)
                     R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(tag.id)
                     R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(tag.id)
+                    R.id.addToListMenuItem -> {
+                        showAddToListDialog(tag.id)
+                        return true
+                    }
                     R.id.shareMenuItem -> {
                         val i = this.shareIntent
                         this.startActivity(i)
@@ -211,6 +217,47 @@ class TagDetailActivity : AppCompatActivity() {
                 TeachableTagsModel.getIsTeachableTag(tag.id)
         }
         return super.onPrepareOptionsMenu(menu)
+    }
+
+    private fun showAddToListDialog(tagId: Int) {
+        val allLists = CustomListsModel.allLists()
+        val names = allLists.map { it.name }.toTypedArray()
+        val checked = allLists.map { ListModel(it.key).ids.contains(tagId) }.toBooleanArray()
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.AddToList)
+            .setMultiChoiceItems(names, checked) { _, which, isChecked ->
+                val list = allLists[which]
+                val model = ListModel(list.key)
+                if (isChecked) {
+                    model.add(tagId)
+                } else {
+                    model.remove(tagId)
+                }
+            }
+            .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(R.string.CreateNewList) { _, _ ->
+                showCreateAndAddDialog(tagId)
+            }
+            .show()
+    }
+
+    private fun showCreateAndAddDialog(tagId: Int) {
+        val editText = EditText(this)
+        editText.hint = getString(R.string.EnterListName)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.CreateNewList)
+            .setView(editText)
+            .setPositiveButton(R.string.Create) { _, _ ->
+                val name = editText.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    val key = CustomListsModel.createList(name)
+                    ListModel(key).add(tagId)
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+        editText.requestFocus()
     }
 
     companion object {

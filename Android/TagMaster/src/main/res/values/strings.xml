@@ -170,6 +170,7 @@
     <string name="MyLists">My Lists</string>
     <string name="NoCustomLists">You have not created any custom lists.</string>
     <string name="NoCustomListTags">No tags in this list.</string>
+    <string name="AddToList">Add to List…</string>
     <string name="CreateNewList">Create New List</string>
     <string name="EnterListName">Enter list name</string>
     <string name="RenameList">Rename List</string>

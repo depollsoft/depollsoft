@@ -31,6 +31,11 @@
     </item>
 
     <item
+        android:id="@+id/addToListMenuItem"
+        android:title="@string/AddToList"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/refreshMenuItem"
         android:icon="@drawable/ic_refresh"
         android:title="@string/RefreshTag"

@@ -31,6 +31,7 @@
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
 		63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4417F6342400BC1EE2 /* DPTagViewController.m */; };
+		1EA2DCFB9ED0693697B6C4C4 /* DPTagViewControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC3CEFBAB06ED12127EC69BC /* DPTagViewControllerExtension.swift */; };
 		63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */; };
 		63336A5A17F6BC2300BC1EE2 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63336A5917F6BC2300BC1EE2 /* QuickLook.framework */; };
 		63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63336A5D17F6C4FF00BC1EE2 /* screenbackground@2x.png */; };
@@ -179,6 +180,7 @@
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
 		63336A4317F6342400BC1EE2 /* DPTagViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagViewController.h; sourceTree = "<group>"; };
 		63336A4417F6342400BC1EE2 /* DPTagViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagViewController.m; sourceTree = "<group>"; };
+		EC3CEFBAB06ED12127EC69BC /* DPTagViewControllerExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagViewControllerExtension.swift; sourceTree = "<group>"; };
 		63336A4817F63E7700BC1EE2 /* DPTagSummaryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPTagSummaryController.h; sourceTree = "<group>"; };
 		63336A4917F63E7700BC1EE2 /* DPTagSummaryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPTagSummaryController.m; sourceTree = "<group>"; };
 		63336A5917F6BC2300BC1EE2 /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
@@ -498,6 +500,7 @@
 				639F293B1800C45300517583 /* DPTagVideoController.m */,
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
 				63336A4417F6342400BC1EE2 /* DPTagViewController.m */,
+				EC3CEFBAB06ED12127EC69BC /* DPTagViewControllerExtension.swift */,
 				638E73A217F7F8B3000FFE53 /* DPTeachableTagsController.h */,
 				638E73A317F7F8B3000FFE53 /* DPTeachableTagsController.m */,
 				1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */,
@@ -927,6 +930,7 @@
 				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */,
+				1EA2DCFB9ED0693697B6C4C4 /* DPTagViewControllerExtension.swift in Sources */,
 				639F292917FA643700517583 /* DPSettingsController.m in Sources */,
 				63D9472215145BBC000C8784 /* DPRemoteLocation.m in Sources */,
 				63D9472515145DE0000C8784 /* DPVideo.m in Sources */,

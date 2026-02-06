@@ -14,6 +14,7 @@
 #import "DPTagVideoController.h"
 #import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
+#import "tagmaster-Swift.h"
 
 @interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate>
 
@@ -192,6 +193,12 @@
             [DPAppDelegate removeTeachable:self.tagId];
         }]];
     }
+    
+    [actions addAction:[UIAlertAction actionWithTitle:@"Add to List..."
+                                                style:UIAlertActionStyleDefault
+                                              handler:^(UIAlertAction * _Nonnull action) {
+        [self showListPicker];
+    }]];
     
     [actions addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                 style:UIAlertActionStyleCancel
