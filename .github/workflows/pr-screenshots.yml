@@ -31,12 +31,12 @@ jobs:
     name: Detect Changed Apps
     runs-on: ubuntu-latest
     outputs:
-      android-pitchperfect: ${{ steps.changes.outputs.android-pitchperfect }}
-      android-tagmaster: ${{ steps.changes.outputs.android-tagmaster }}
-      ios-pitchperfect: ${{ steps.changes.outputs.ios-pitchperfect }}
-      ios-tagmaster: ${{ steps.changes.outputs.ios-tagmaster }}
-      any-android: ${{ steps.changes.outputs.any-android }}
-      any-ios: ${{ steps.changes.outputs.any-ios }}
+      android-pitchperfect: ${{ steps.result.outputs.android-pitchperfect }}
+      android-tagmaster: ${{ steps.result.outputs.android-tagmaster }}
+      ios-pitchperfect: ${{ steps.result.outputs.ios-pitchperfect }}
+      ios-tagmaster: ${{ steps.result.outputs.ios-tagmaster }}
+      any-android: ${{ steps.result.outputs.any-android }}
+      any-ios: ${{ steps.result.outputs.any-ios }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,6 +65,37 @@ jobs:
               - 'Android/**'
             any-ios:
               - 'iOS/**'
+            workflow-only:
+              - '.github/workflows/pr-screenshots.yml'
+
+      # When only the workflow file changed (or workflow_dispatch), treat all apps as changed
+      - name: Resolve effective changes
+        id: result
+        run: |
+          ANY_ANDROID="${{ steps.changes.outputs.any-android }}"
+          ANY_IOS="${{ steps.changes.outputs.any-ios }}"
+          ANDROID_PP="${{ steps.changes.outputs.android-pitchperfect }}"
+          ANDROID_TM="${{ steps.changes.outputs.android-tagmaster }}"
+          IOS_PP="${{ steps.changes.outputs.ios-pitchperfect }}"
+          IOS_TM="${{ steps.changes.outputs.ios-tagmaster }}"
+
+          # If no app code changed but workflow file did (or manual dispatch), screenshot everything
+          if [[ "$ANY_ANDROID" != "true" && "$ANY_IOS" != "true" ]]; then
+            echo "No app changes detected — running all apps as smoke test"
+            ANY_ANDROID="true"
+            ANY_IOS="true"
+            ANDROID_PP="true"
+            ANDROID_TM="true"
+            IOS_PP="true"
+            IOS_TM="true"
+          fi
+
+          echo "any-android=$ANY_ANDROID" >> "$GITHUB_OUTPUT"
+          echo "any-ios=$ANY_IOS" >> "$GITHUB_OUTPUT"
+          echo "android-pitchperfect=$ANDROID_PP" >> "$GITHUB_OUTPUT"
+          echo "android-tagmaster=$ANDROID_TM" >> "$GITHUB_OUTPUT"
+          echo "ios-pitchperfect=$IOS_PP" >> "$GITHUB_OUTPUT"
+          echo "ios-tagmaster=$IOS_TM" >> "$GITHUB_OUTPUT"
 
   android-screenshots:
     name: Android Screenshots
