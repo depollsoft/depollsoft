@@ -12,12 +12,14 @@ on:
     paths:
       - 'Android/**'
       - 'iOS/**'
+      - '.github/workflows/pr-screenshots.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'Android/**'
       - 'iOS/**'
+      - '.github/workflows/pr-screenshots.yml'
   workflow_dispatch:
 
 concurrency:
@@ -408,7 +410,10 @@ jobs:
   post-comment:
     name: Post Screenshot Comment
     needs: [detect-changes, android-screenshots, ios-screenshots]
-    if: always() && (needs.android-screenshots.result == 'success' || needs.ios-screenshots.result == 'success')
+    if: |
+      always() && 
+      (needs.android-screenshots.result == 'success' || needs.ios-screenshots.result == 'success' || 
+       (needs.android-screenshots.result == 'skipped' && needs.ios-screenshots.result == 'skipped'))
     runs-on: ubuntu-latest
 
     steps:
