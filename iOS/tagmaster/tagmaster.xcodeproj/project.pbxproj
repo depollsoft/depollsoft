@@ -13,6 +13,8 @@
 		1E5B19A91FE7533B00241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19A41FE7533B00241069 /* libdepolllib.a */; };
 		1E8483E61DD86F5C00AF4EAB /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8483E51DD86F5C00AF4EAB /* CoreData.framework */; };
 		1E8D89F325F447E500D9A4EA /* AppTrackingTransparency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */; };
+		A1B2C3D42F8D000000000010 /* ListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000011 /* ListModel.swift */; };
+		A1B2C3D42F8D000000000020 /* CustomListsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8D000000000021 /* CustomListsModel.swift */; };
 		1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */; };
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
@@ -21,6 +23,7 @@
 		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
 		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
 		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
+		B1C2D3E4F5A6478890ABCDEF /* ListModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A647880ABCDEF0 /* ListModelTests.swift */; };
 		594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2841862AFC447839A50EF4 /* SearchUITests.swift */; };
 		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
@@ -157,6 +160,8 @@
 		1E8D89F225F447E500D9A4EA /* AppTrackingTransparency.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppTrackingTransparency.framework; path = System/Library/Frameworks/AppTrackingTransparency.framework; sourceTree = SDKROOT; };
 		1E927AD422AB2BF20018E370 /* tagmaster-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "tagmaster-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
+		A1B2C3D42F8D000000000011 /* ListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModel.swift; sourceTree = "<group>"; };
+		A1B2C3D42F8D000000000021 /* CustomListsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomListsModel.swift; sourceTree = "<group>"; };
 		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
@@ -274,6 +279,7 @@
 		A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMTestAppDelegate.h; sourceTree = "<group>"; };
 		A3E905C8211530730C2330D4 /* Pods-tagmasterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-tagmasterTests.release.xcconfig"; path = "Target Support Files/Pods-tagmasterTests/Pods-tagmasterTests.release.xcconfig"; sourceTree = "<group>"; };
 		AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewControllerExtensionTests.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A647880ABCDEF0 /* ListModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListModelTests.swift; sourceTree = "<group>"; };
 		BD2B8BE6B099A77911B7EA73 /* Pods_tagmaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_tagmaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
@@ -457,6 +463,8 @@
 				A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */,
 				A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */,
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
+				A1B2C3D42F8D000000000011 /* ListModel.swift */,
+				A1B2C3D42F8D000000000021 /* CustomListsModel.swift */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
@@ -521,6 +529,7 @@
 				991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
 				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
+				B1C2D3E4F5A647880ABCDEF0 /* ListModelTests.swift */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -900,6 +909,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E927AD622AB2BF20018E370 /* DPAppDelegate.swift in Sources */,
+				A1B2C3D42F8D000000000010 /* ListModel.swift in Sources */,
+				A1B2C3D42F8D000000000020 /* CustomListsModel.swift in Sources */,
 				63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
@@ -943,6 +954,7 @@
 				C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
 				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
+				B1C2D3E4F5A6478890ABCDEF /* ListModelTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
