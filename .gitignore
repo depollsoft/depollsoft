@@ -22,3 +22,7 @@ Thumbs.db
 # iOS dependencies and build outputs
 iOS/Pods/
 iOS/build/
+
+# Xcode test results
+*.xcresult/
+*.xcresult
