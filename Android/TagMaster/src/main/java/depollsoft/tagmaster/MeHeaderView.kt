@@ -132,6 +132,11 @@ class MeHeaderView : LinearLayout {
                 val i = Intent(this@MeHeaderView.context, TeachableTagsActivity::class.java)
                 this@MeHeaderView.context.startActivity(i)
             }
+            val myListsButton = findViewById<View>(R.id.myListsButton)
+            myListsButton.setOnClickListener {
+                val i = Intent(this@MeHeaderView.context, MyListsActivity::class.java)
+                this@MeHeaderView.context.startActivity(i)
+            }
             val openTagByIdButton = findViewById<View>(R.id.openByIdButton)
             openTagByIdButton.setOnClickListener { v ->
                 val editText = EditText(v.context)

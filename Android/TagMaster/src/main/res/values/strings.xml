@@ -167,5 +167,17 @@
     <string name="open_tag">Open Tag</string>
     <string name="keep_screen_on">Keep Screen On</string>
     <string name="while_viewing_sheet_music">While Viewing Sheet Music</string>
+    <string name="MyLists">My Lists</string>
+    <string name="NoCustomLists">You have not created any custom lists.</string>
+    <string name="NoCustomListTags">No tags in this list.</string>
+    <string name="CreateNewList">Create New List</string>
+    <string name="EnterListName">Enter list name</string>
+    <string name="RenameList">Rename List</string>
+    <string name="DeleteList">Delete List</string>
+    <string name="DeleteListConfirm">Are you sure you want to delete this list?</string>
+    <string name="RemoveFromList">Remove from list</string>
+    <string name="Create">Create</string>
+    <string name="Rename">Rename</string>
+    <string name="Delete">Delete</string>
 
 </resources>
