@@ -223,15 +223,18 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color
 
-      # Run all unit tests in parallel using test-without-building
-      - name: Run all unit tests in parallel
+      # Run unit tests sequentially to avoid simulator contention.
+      # Parallel xcodebuild against the same simulator can deadlock.
+      - name: Run all unit tests
         id: run_tests
         continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          # Run tests in parallel - xcodebuild handles parallelization
+          FAILED=0
+
+          echo "::group::pitchperfect tests"
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -241,9 +244,10 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfect-junit.xml &
-          PID1=$!
-          
+            | xcpretty --color --report junit --output pitchperfect-junit.xml || FAILED=1
+          echo "::endgroup::"
+
+          echo "::group::tagmaster tests"
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -253,9 +257,10 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output tagmaster-junit.xml &
-          PID2=$!
-          
+            | xcpretty --color --report junit --output tagmaster-junit.xml || FAILED=1
+          echo "::endgroup::"
+
+          echo "::group::pitchperfectlib tests"
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
@@ -265,15 +270,9 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
-          PID3=$!
-          
-          # Wait for all tests to complete
-          FAILED=0
-          wait $PID1 || FAILED=1
-          wait $PID2 || FAILED=1
-          wait $PID3 || FAILED=1
-          
+            | xcpretty --color --report junit --output pitchperfectlib-junit.xml || FAILED=1
+          echo "::endgroup::"
+
           # We continue even if tests fail - we'll check junit results later
           exit 0
 
