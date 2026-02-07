@@ -95,6 +95,9 @@
 		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
 		B28B690C21E834450FD6F02A /* ParseObjC in Frameworks */ = {isa = PBXBuildFile; productRef = 5953DA4A5C171A0CD1DD1595 /* ParseObjC */; };
 		B6419FE131931C3EE072A617 /* FirebaseAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */; };
+		B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */; };
+		B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */; };
+		B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */; };
 		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
@@ -327,6 +330,9 @@
 				0B758D8DC81080A995730A82 /* FirebaseFirestore in Frameworks */,
 				F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */,
 				B6419FE131931C3EE072A617 /* FirebaseAuthSwiftUI in Frameworks */,
+				B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */,
+				B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */,
+				B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */,
 				B28B690C21E834450FD6F02A /* ParseObjC in Frameworks */,
 				2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */,
 			);
@@ -610,6 +616,9 @@
 				BCFFA90687A1925752F69F2E /* FirebaseFirestore */,
 				5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */,
 				30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */,
+				30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */,
+				30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */,
+				30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */,
 				5953DA4A5C171A0CD1DD1595 /* ParseObjC */,
 				62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */,
 			);
@@ -1267,6 +1276,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
 			productName = FirebaseAuthSwiftUI;
+		};
+		30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebaseGoogleSwiftUI;
+		};
+		30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebaseFacebookSwiftUI;
+		};
+		30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebaseAppleSwiftUI;
 		};
 		5953DA4A5C171A0CD1DD1595 /* ParseObjC */ = {
 			isa = XCSwiftPackageProductDependency;
