@@ -13,6 +13,18 @@ import SwiftUI
 #if canImport(FirebaseAuthSwiftUI)
 import FirebaseAuthSwiftUI
 #endif
+#if canImport(FirebaseGoogleSwiftUI)
+import FirebaseGoogleSwiftUI
+#endif
+#if canImport(FirebaseFacebookSwiftUI)
+import FirebaseFacebookSwiftUI
+#endif
+#if canImport(FirebaseOAuthSwiftUI)
+import FirebaseOAuthSwiftUI
+#endif
+#if canImport(FirebaseAppleSwiftUI)
+import FirebaseAppleSwiftUI
+#endif
 
 // MARK: - SwiftUI Auth View for UIKit Integration
 
@@ -31,6 +43,9 @@ struct FirebaseAuthView: View {
         
         self.authService = AuthService(configuration: configuration)
             .withEmailSignIn()
+            .withGoogleSignIn()
+            .withFacebookSignIn()
+            .withAppleSignIn()
         self.onSignIn = onSignIn
         self.onDismiss = onDismiss
     }
