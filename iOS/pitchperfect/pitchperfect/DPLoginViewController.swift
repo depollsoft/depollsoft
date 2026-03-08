@@ -25,6 +25,9 @@ import FirebaseOAuthSwiftUI
 #if canImport(FirebaseAppleSwiftUI)
 import FirebaseAppleSwiftUI
 #endif
+#if canImport(FirebasePhoneAuthSwiftUI)
+import FirebasePhoneAuthSwiftUI
+#endif
 
 // MARK: - SwiftUI Auth View for UIKit Integration
 
@@ -37,15 +40,23 @@ struct FirebaseAuthView: View {
     
     init(onSignIn: @escaping (Bool) -> Void, onDismiss: @escaping () -> Void) {
         let configuration = AuthConfiguration(
+            logo: ImageResource(name: "AuthLogo", bundle: .main),
             shouldHideCancelButton: false,
-            interactiveDismissEnabled: true
+            interactiveDismissEnabled: true,
+            customStringsBundle: .main,
+            mfaIssuer: "Pitch Perfect"
         )
         
-        self.authService = AuthService(configuration: configuration)
+        var authService = AuthService(configuration: configuration)
             .withEmailSignIn()
             .withGoogleSignIn()
             .withFacebookSignIn()
             .withAppleSignIn()
+        #if canImport(FirebasePhoneAuthSwiftUI)
+        authService = authService.withPhoneSignIn()
+        #endif
+
+        self.authService = authService
         self.onSignIn = onSignIn
         self.onDismiss = onDismiss
     }
