@@ -98,6 +98,8 @@
 		B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */; };
 		B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */; };
 		B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */; };
+		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
+		C0AUTH001000000000000011 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000012 /* FirebasePhoneAuthSwiftUI */; };
 		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
@@ -255,6 +257,7 @@
 		63DC36AB151E9000007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		63DC36AD151E9000007C46DB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		63DC36AF151E9000007C46DB /* pitchperfect-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfect-Prefix.pch"; sourceTree = "<group>"; };
+		C0AUTH001000000000000003 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		63DC36B0151E9000007C46DB /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
 		63DC36B1151E9000007C46DB /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
 		63DC36B9151E9000007C46DB /* DPPitchPipeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPPitchPipeViewController.h; sourceTree = "<group>"; };
@@ -333,6 +336,7 @@
 				B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */,
 				B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */,
 				B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */,
+				C0AUTH001000000000000011 /* FirebasePhoneAuthSwiftUI in Frameworks */,
 				B28B690C21E834450FD6F02A /* ParseObjC in Frameworks */,
 				2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */,
 			);
@@ -521,6 +525,7 @@
 				631C912E15958022004733F1 /* DPSongsModel.h */,
 				631C912F15958022004733F1 /* DPSongsModel.m */,
 				1E989A3422F533F900EA9F2E /* DPSongsModel.swift */,
+				C0AUTH001000000000000002 /* Localizable.strings */,
 				63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */,
 				63DC36A8151E9000007C46DB /* Supporting Files */,
 				6338EFC31979DFFA000187E2 /* Images.xcassets */,
@@ -619,6 +624,7 @@
 				30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */,
 				30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */,
 				30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */,
+				C0AUTH001000000000000012 /* FirebasePhoneAuthSwiftUI */,
 				5953DA4A5C171A0CD1DD1595 /* ParseObjC */,
 				62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */,
 			);
@@ -747,6 +753,7 @@
 				1E13131D2682475900F33385 /* panobackground.svg in Resources */,
 				634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */,
 				63DC36AC151E9000007C46DB /* InfoPlist.strings in Resources */,
+				C0AUTH001000000000000001 /* Localizable.strings in Resources */,
 				63DC36B5151E9000007C46DB /* MainStoryboard_iPhone.storyboard in Resources */,
 				63B403D41588703200FCA77C /* panobackground.png in Resources */,
 				63B403DC1588768700FCA77C /* pitchpipe.png in Resources */,
@@ -895,6 +902,14 @@
 				63DC36D7151E9000007C46DB /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C0AUTH001000000000000002 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C0AUTH001000000000000003 /* en */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1291,6 +1306,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
 			productName = FirebaseAppleSwiftUI;
+		};
+		C0AUTH001000000000000012 /* FirebasePhoneAuthSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 15FDAFB787B1F284FE603AD4 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebasePhoneAuthSwiftUI;
 		};
 		5953DA4A5C171A0CD1DD1595 /* ParseObjC */ = {
 			isa = XCSwiftPackageProductDependency;

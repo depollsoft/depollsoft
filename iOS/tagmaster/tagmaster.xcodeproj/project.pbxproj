@@ -24,6 +24,7 @@
 		2FA270FBF561239F254EB34F /* FirebaseGoogleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2070 /* FirebaseGoogleSwiftUI */; };
 		2FA270FBF561239F254EB350 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2071 /* FirebaseFacebookSwiftUI */; };
 		2FA270FBF561239F254EB351 /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE2072 /* FirebaseAppleSwiftUI */; };
+		C0AUTH001000000000000021 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */; };
 		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
 		45BAAFDE745C7B2FAE4B2268 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 231E00AF493A86AC7F8045FD /* FirebaseFirestore */; };
 		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
@@ -319,6 +320,7 @@
 				2FA270FBF561239F254EB34F /* FirebaseGoogleSwiftUI in Frameworks */,
 				2FA270FBF561239F254EB350 /* FirebaseFacebookSwiftUI in Frameworks */,
 				2FA270FBF561239F254EB351 /* FirebaseAppleSwiftUI in Frameworks */,
+				C0AUTH001000000000000021 /* FirebasePhoneAuthSwiftUI in Frameworks */,
 				0282005C855512F5874B0F63 /* ParseObjC in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -597,6 +599,7 @@
 				42BE55FE34E9E89B06BE2070 /* FirebaseGoogleSwiftUI */,
 				42BE55FE34E9E89B06BE2071 /* FirebaseFacebookSwiftUI */,
 				42BE55FE34E9E89B06BE2072 /* FirebaseAppleSwiftUI */,
+				C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */,
 				50A2CD57BB989F061E406481 /* ParseObjC */,
 			);
 			productName = tagmaster;
@@ -1263,6 +1266,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E19E9EAF84EEBA3C3ED71DE0 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
 			productName = FirebaseAppleSwiftUI;
+		};
+		C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E19E9EAF84EEBA3C3ED71DE0 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
+			productName = FirebasePhoneAuthSwiftUI;
 		};
 		50A2CD57BB989F061E406481 /* ParseObjC */ = {
 			isa = XCSwiftPackageProductDependency;
