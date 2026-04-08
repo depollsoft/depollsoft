@@ -209,18 +209,21 @@ jobs:
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color
 
       # Run all unit tests in parallel using test-without-building
@@ -241,6 +244,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color --report junit --output pitchperfect-junit.xml &
           PID1=$!
           
@@ -253,6 +257,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color --report junit --output tagmaster-junit.xml &
           PID2=$!
           
@@ -265,6 +270,7 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
           PID3=$!
           
@@ -632,6 +638,7 @@ jobs:
             -resultBundlePath pitchperfect-uitest-results.xcresult \
             -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color --report junit --output pitchperfect-uitest-junit.xml || true
 
       - name: Run tagmaster UI tests
@@ -649,6 +656,7 @@ jobs:
             -resultBundlePath tagmaster-uitest-results.xcresult \
             -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
             | xcpretty --color --report junit --output tagmaster-uitest-junit.xml || true
 
       - name: Summarize UI tests
