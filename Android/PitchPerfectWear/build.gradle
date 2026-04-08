@@ -5,17 +5,33 @@ android {
     namespace = 'depollsoft.pitchperfect'
     compileSdk 35
 
+    signingConfigs {
+        release {
+            keyAlias System.getenv("ANDROID_UPLOAD_KEY_ALIAS") ?: 'depollsoft'
+            keyPassword System.getenv("ANDROID_UPLOAD_KEY_PASSWORD") ?: 'depollsoft'
+            storeFile file(System.getenv("ANDROID_UPLOAD_KEYSTORE_PATH") ?: '../debug.jks')
+            storePassword System.getenv("ANDROID_UPLOAD_KEYSTORE_PASSWORD") ?: 'depollsoft'
+        }
+    }
+
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdk 26
         targetSdk 35
-        versionCode getVersionCode(build: 0, suffix: 1)
+        versionCode((findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER') ?: getVersionCode(build: 0, suffix: 1)) as Integer)
         versionName "3.0.0"
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        create("private") {
+            initWith release
+            signingConfig signingConfigs.release
+            applicationIdSuffix ".private"
+            matchingFallbacks = ['release']
         }
     }
     sourceSets {

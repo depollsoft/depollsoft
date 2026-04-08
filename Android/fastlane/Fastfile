@@ -1,0 +1,35 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build and upload private Android bundles to Play internal testing"
+  lane :deploy_private do
+    build_number = (ENV["DEPOLLSOFT_PRIVATE_BUILD_NUMBER"] || ENV["CI_BUILD_NUMBER"] || (Time.now.to_i / 10).to_s).to_s
+
+    %w[PitchPerfect TagMaster PitchPerfectWear].each do |app|
+      gradle(
+        task: ":#{app}:bundlePrivate",
+        project_dir: ".",
+        properties: {
+          "DEPOLLSOFT_PRIVATE_BUILD_NUMBER" => build_number,
+        },
+      )
+    end
+
+    {
+      "depollsoft.pitchperfect.private" => "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
+      "depollsoft.tagmaster.private" => "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
+    }.each do |package_name, aab_path|
+      upload_to_play_store(
+        package_name: package_name,
+        track: "internal",
+        json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+        aab: aab_path,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_apk: true,
+        release_status: "completed",
+      )
+    end
+  end
+end

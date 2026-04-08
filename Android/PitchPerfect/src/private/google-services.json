@@ -1,0 +1,93 @@
+{
+  "project_info": {
+    "project_number": "402153260205",
+    "firebase_url": "https://pitch-perfect-94415.firebaseio.com",
+    "project_id": "pitch-perfect-94415",
+    "storage_bucket": "pitch-perfect-94415.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402153260205:android:ac6d3da61f223569",
+        "android_client_info": {
+          "package_name": "depollsoft.pitchperfect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "402153260205-65qkddp6639bo0gua69sobf8k71fn7c6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.pitchperfect",
+            "certificate_hash": "7d8107330a57a9aa4840530f8721ec07b5f1d600"
+          }
+        },
+        {
+          "client_id": "402153260205-453pemhue4nhrejah7mjtgbdhslta2iv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkIv3aGqk8OeGI88_hijoWG6eaBFdAT28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "402153260205-453pemhue4nhrejah7mjtgbdhslta2iv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "402153260205-au5n1clmraopgfhhs1p9jlr13olva9mn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "depollsoft.pitchperfect",
+                "app_store_id": "539417298"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402153260205:android:76066360519819b891f224",
+        "android_client_info": {
+          "package_name": "depollsoft.pitchperfect.private"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "402153260205-453pemhue4nhrejah7mjtgbdhslta2iv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkIv3aGqk8OeGI88_hijoWG6eaBFdAT28"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "402153260205-453pemhue4nhrejah7mjtgbdhslta2iv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "402153260205-au5n1clmraopgfhhs1p9jlr13olva9mn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "depollsoft.pitchperfect",
+                "app_store_id": "539417298"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
