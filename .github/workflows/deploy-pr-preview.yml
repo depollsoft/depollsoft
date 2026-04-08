@@ -139,7 +139,7 @@ jobs:
 
   deploy-ios:
     name: Deploy iOS
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     needs: [validate-pr, compute-version]
     env:
       LANG: en_US.UTF-8
