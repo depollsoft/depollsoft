@@ -35,7 +35,7 @@ defaults:
 jobs:
   test:
     name: iOS Unit Tests & Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     timeout-minutes: 30
     env:
       # Set Xcode path - will be refined in Select Xcode version step

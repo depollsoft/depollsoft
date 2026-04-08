@@ -35,7 +35,7 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: ubuntu-latest
     timeout-minutes: 45
 
     steps:
