@@ -1,0 +1,53 @@
+name: Preview Deploy Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: preview-deploy-command-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Dispatch /deploy workflow
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const body = context.payload.comment.body.trim();
+            const allowed = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+            if (body !== '/deploy') {
+              core.info(`Ignoring non-deploy comment: ${body}`);
+              return;
+            }
+            if (!allowed.has(context.payload.comment.author_association)) {
+              core.info(`Ignoring /deploy from ${context.payload.comment.user.login} (${context.payload.comment.author_association})`);
+              return;
+            }
+
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-pr-preview.yml',
+              ref: context.payload.repository.default_branch || 'main',
+              inputs: {
+                'pr-number': String(context.payload.issue.number),
+                'request-comment-url': context.payload.comment.html_url,
+                'request-comment-user': context.payload.comment.user.login,
+              },
+            });
+
+            await github.request('POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });

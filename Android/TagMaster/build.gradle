@@ -75,8 +75,17 @@ android {
         minSdk 24
         targetSdk 35
         resourceConfigurations += ['en']
-        versionCode getVersionCode(build: 0, suffix: 1)
+        versionCode((findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER') ?: getVersionCode(build: 0, suffix: 1)) as Integer)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias System.getenv("ANDROID_UPLOAD_KEY_ALIAS") ?: 'depollsoft'
+            keyPassword System.getenv("ANDROID_UPLOAD_KEY_PASSWORD") ?: 'depollsoft'
+            storeFile file(System.getenv("ANDROID_UPLOAD_KEYSTORE_PATH") ?: '../debug.jks')
+            storePassword System.getenv("ANDROID_UPLOAD_KEYSTORE_PASSWORD") ?: 'depollsoft'
+        }
     }
 
     testOptions {
@@ -104,6 +113,18 @@ android {
                     targetDevices.add(localDevices.pixel2api30atd)
                 }
             }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+        create("private") {
+            initWith release
+            signingConfig signingConfigs.release
+            applicationIdSuffix ".private"
+            matchingFallbacks = ['release']
         }
     }
 }

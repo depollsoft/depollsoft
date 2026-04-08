@@ -1,0 +1,235 @@
+name: Deploy PR Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: 'PR number to deploy'
+        required: true
+        type: string
+      request-comment-url:
+        description: 'URL of the /deploy comment that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-comment-user:
+        description: 'GitHub login that requested the deploy'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: deploy-preview-${{ inputs.pr-number }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  validate-pr:
+    name: Validate PR source
+    runs-on: ubuntu-latest
+    outputs:
+      pr-head-sha: ${{ steps.validate.outputs.pr-head-sha }}
+      pr-title: ${{ steps.validate.outputs.pr-title }}
+    steps:
+      - id: validate
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pullNumber = Number('${{ inputs.pr-number }}');
+            const {data: pr} = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            if (pr.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              core.setFailed(`Refusing to deploy PR #${pullNumber} from fork ${pr.head.repo?.full_name}.`);
+              return;
+            }
+
+            core.setOutput('pr-head-sha', pr.head.sha);
+            core.setOutput('pr-title', pr.title);
+
+  compute-version:
+    name: Compute Deploy Build
+    runs-on: ubuntu-latest
+    needs: validate-pr
+    outputs:
+      build-number: ${{ steps.version.outputs.build-number }}
+    steps:
+      - id: version
+        run: echo "build-number=$(( $(date +%s) / 10 ))" >> "$GITHUB_OUTPUT"
+
+  comment-start:
+    name: PR Comment (Queued)
+    runs-on: ubuntu-latest
+    needs: [validate-pr, compute-version]
+    steps:
+      - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
+        with:
+          number: ${{ inputs.pr-number }}
+          header: preview-deploy
+          recreate: true
+          message: |
+            ## 🚀 Preview Deploy
+
+            | | Details |
+            |---|---|
+            | **Status** | ⏳ Deploying |
+            | **Requested by** | @${{ inputs.request-comment-user }} via `/deploy` |
+            | **PR** | #${{ inputs.pr-number }} |
+            | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
+            | **Source SHA** | `${{ needs.validate-pr.outputs.pr-head-sha }}` |
+            | **Workflow** | [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+            | **Request** | [View /deploy comment](${{ inputs.request-comment-url }}) |
+
+            > Deploying the current PR head to TestFlight and the Play Store internal track.
+
+  deploy-android:
+    name: Deploy Android
+    runs-on: ubuntu-latest
+    needs: [validate-pr, compute-version]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-pr.outputs.pr-head-sha }}
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;36.0.0'
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: Android
+
+      - name: Decode Android deploy credentials
+        run: |
+          echo "${{ secrets.ANDROID_UPLOAD_KEYSTORE }}" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          echo "${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}" > "$RUNNER_TEMP/play-service-account.json"
+          echo "ANDROID_UPLOAD_KEYSTORE_PATH=$RUNNER_TEMP/upload-keystore.jks" >> "$GITHUB_ENV"
+          echo "PLAY_SERVICE_ACCOUNT_JSON_PATH=$RUNNER_TEMP/play-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Deploy Android private builds
+        working-directory: Android
+        env:
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
+          PLAY_SERVICE_ACCOUNT_JSON_PATH: ${{ env.PLAY_SERVICE_ACCOUNT_JSON_PATH }}
+          PR_NUMBER: ${{ inputs.pr-number }}
+        run: bundle exec fastlane deploy_private
+
+      - name: Clean up Android deploy credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload-keystore.jks" "$RUNNER_TEMP/play-service-account.json"
+
+  deploy-ios:
+    name: Deploy iOS
+    runs-on: [self-hosted, macOS]
+    needs: [validate-pr, compute-version]
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-pr.outputs.pr-head-sha }}
+          submodules: recursive
+
+      - name: Select Xcode
+        run: echo "DEVELOPER_DIR=$(xcode-select -p 2>/dev/null || echo /Applications/Xcode.app/Contents/Developer)" >> "$GITHUB_ENV"
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: iOS
+
+      - name: Install CocoaPods
+        working-directory: iOS
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: pod install"
+            if bundle exec pod install --repo-update; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
+      - name: Deploy iOS private builds
+        working-directory: iOS
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          PR_NUMBER: ${{ inputs.pr-number }}
+          PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
+        run: bundle exec fastlane deploy_private
+
+  comment-final:
+    name: PR Comment (Final)
+    runs-on: ubuntu-latest
+    needs: [validate-pr, compute-version, deploy-android, deploy-ios]
+    if: always()
+    steps:
+      - id: deploy-status
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const statusFor = (result) => {
+              switch (result) {
+                case 'success':
+                  return '✅ Uploaded';
+                case 'skipped':
+                  return '⏭️ Skipped';
+                case 'cancelled':
+                  return '⛔ Cancelled';
+                default:
+                  return '❌ Failed';
+              }
+            };
+
+            core.setOutput('android-status', statusFor('${{ needs.deploy-android.result }}'));
+            core.setOutput('ios-status', statusFor('${{ needs.deploy-ios.result }}'));
+
+      - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
+        with:
+          number: ${{ inputs.pr-number }}
+          header: preview-deploy
+          recreate: true
+          message: |
+            ## 🚀 Preview Deploy
+
+            | | Details |
+            |---|---|
+            | **Requested by** | @${{ inputs.request-comment-user }} via `/deploy` |
+            | **PR** | #${{ inputs.pr-number }} |
+            | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
+            | **Source SHA** | `${{ needs.validate-pr.outputs.pr-head-sha }}` |
+            | **Android** | ${{ steps.deploy-status.outputs.android-status }} Play Internal Testing |
+            | **iOS** | ${{ steps.deploy-status.outputs.ios-status }} TestFlight |
+            | **Workflow** | [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+            | **Request** | [View /deploy comment](${{ inputs.request-comment-url }}) |
+
+            > Deploys the current PR head from this repository only.
