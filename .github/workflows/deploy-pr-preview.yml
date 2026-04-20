@@ -179,6 +179,7 @@ jobs:
     if: needs.validate-pr.result == 'success'
     permissions:
       issues: write
+      pull-requests: write
     steps:
       - name: Mark deploy as running
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -480,6 +481,7 @@ jobs:
     if: always()
     permissions:
       issues: write
+      pull-requests: write
     steps:
       - name: Mark deploy as complete
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
