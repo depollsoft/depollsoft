@@ -19,8 +19,7 @@ concurrency:
 permissions:
   actions: read
   contents: read
-  issues: write
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   compute-version:
@@ -28,15 +27,56 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
+      commits-list: ${{ steps.commits.outputs.list }}
     steps:
       - id: version
         run: echo "build-number=$(( $(date +%s) / 10 ))" >> "$GITHUB_OUTPUT"
+
+      - name: List PR commits
+        id: commits
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const maxDisplay = 25;
+            const sanitize = (value) =>
+              value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/@/g, '@\u200b');
+
+            const count = ${{ github.event.pull_request.commits }};
+            const lastPage = Math.max(1, Math.ceil(count / 100));
+            const {data: page} = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+              per_page: 100,
+              page: lastPage,
+            });
+            page.reverse();
+            const displayed = page.slice(0, maxDisplay);
+            const lines = displayed.map((commit) => {
+              const sha = commit.sha.substring(0, 7);
+              const message = sanitize(commit.commit.message.split('\n')[0]);
+              return `- \`${sha}\` ${message}`;
+            });
+            if (count > displayed.length) {
+              lines.push(`- *... and ${count - displayed.length} more*`);
+            }
+            const summary = `${count} commit${count !== 1 ? 's' : ''} (newest first)`;
+            const body = lines.join('\n');
+            core.setOutput('list', `### Commits\n\n<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`);
 
   comment-initial:
     name: PR Comment (Queued)
     runs-on: ubuntu-latest
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
         with:
@@ -48,6 +88,7 @@ jobs:
             | | Details |
             |---|---|
             | **PR** | #${{ github.event.pull_request.number }} |
+            | **Preview SHA** | `${{ github.event.pull_request.head.sha }}` |
             | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
             | **Android Status** | ⏳ Building |
             | **iOS Status** | ⏳ Building |
@@ -60,6 +101,8 @@ jobs:
 
             ### Promote
             Comment `/deploy` on this PR to build and upload the current PR head to TestFlight and the Play Store internal track.
+
+            ${{ needs.compute-version.outputs.commits-list }}
 
             > Build triggered by `${{ github.event.pull_request.head.sha }}`
             <!-- preview-build-source-sha:${{ github.event.pull_request.head.sha }} -->
@@ -76,6 +119,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
@@ -90,7 +134,7 @@ jobs:
 
       - name: Build private preview APKs
         working-directory: Android
-        run: ./gradlew :PitchPerfect:assemblePrivate :TagMaster:assemblePrivate --stacktrace --console=plain --no-daemon
+        run: ./gradlew :PitchPerfect:assemblePrivate :TagMaster:assemblePrivate -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{ needs.compute-version.outputs.build-number }} --stacktrace --console=plain --no-daemon
 
       - name: Collect preview APKs
         run: |
@@ -117,6 +161,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
@@ -147,17 +192,21 @@ jobs:
         working-directory: iOS
         run: |
           set -o pipefail
-          xcodebuild -workspace iOS.xcworkspace -scheme pitchperfect -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Pitch Perfect β' build | bundle exec xcpretty --color
-          xcodebuild -workspace iOS.xcworkspace -scheme tagmaster -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Tag Master β' build | bundle exec xcpretty --color
+          PRIVATE_BUILD_NUMBER='${{ needs.compute-version.outputs.build-number }}'
+          xcodebuild -workspace iOS.xcworkspace -scheme pitchperfect -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Pitch Perfect β' CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" build | bundle exec xcpretty --color
+          xcodebuild -workspace iOS.xcworkspace -scheme tagmaster -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Tag Master β' CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" build | bundle exec xcpretty --color
 
   comment-final:
     name: PR Comment (Final)
     runs-on: ubuntu-latest
     needs: [compute-version, build-android, build-ios]
     if: always() && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       - id: preview-status
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -196,6 +245,7 @@ jobs:
             | | Details |
             |---|---|
             | **PR** | #${{ github.event.pull_request.number }} |
+            | **Preview SHA** | `${{ github.event.pull_request.head.sha }}` |
             | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
             | **Android Status** | ${{ steps.preview-status.outputs.android-status }} |
             | **iOS Status** | ${{ steps.preview-status.outputs.ios-status }} |
@@ -208,6 +258,8 @@ jobs:
 
             ### Promote
             Comment `/deploy` on this PR to build and upload the current PR head to TestFlight and the Play Store internal track.
+
+            ${{ needs.compute-version.outputs.commits-list }}
 
             > Build triggered by `${{ github.event.pull_request.head.sha }}`
             <!-- preview-build-source-sha:${{ github.event.pull_request.head.sha }} -->
