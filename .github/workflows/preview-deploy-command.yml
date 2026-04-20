@@ -1,0 +1,118 @@
+name: Preview Deploy Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: preview-deploy-command-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    name: Forward /deploy command
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Dispatch PR branch deploy workflow
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = context.payload.issue.number;
+            const commandBody = context.payload.comment.body.trim();
+            const requester = context.payload.comment.user.login;
+            const requestCommentId = String(context.payload.comment.id);
+            const requestCommentUrl = context.payload.comment.html_url;
+            const requestCreatedAt = context.payload.comment.created_at;
+            const authorAssociation = context.payload.comment.author_association;
+            const allowedAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+            const previewMarker = '<!-- Sticky Pull Request Commentpreview-build -->';
+
+            if (commandBody !== '/deploy') {
+              core.info(`Ignoring PR comment without exact /deploy command: ${commandBody}`);
+              return;
+            }
+
+            if (!allowedAssociations.has(authorAssociation)) {
+              core.info(
+                `Ignoring /deploy from ${requester} with association ${authorAssociation}.`,
+              );
+              return;
+            }
+
+            const readMeta = (body, key) => {
+              const pattern = new RegExp(`<!-- ${key}:(.*?) -->`);
+              return body.match(pattern)?.[1] ?? '';
+            };
+
+            const {data: pr} = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issueNumber,
+            });
+
+            if (pr.head.repo?.full_name !== `${owner}/${repo}`) {
+              core.info(
+                `Ignoring /deploy for fork PR #${issueNumber} from ${pr.head.repo?.full_name}.`,
+              );
+              return;
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const previewComment = [...comments].reverse().find(
+              (comment) =>
+                comment.body?.includes(previewMarker) &&
+                readMeta(comment.body, 'preview-build-source-sha') === pr.head.sha,
+            );
+            const previewCommentUrl = previewComment?.html_url ?? '';
+            const previewBuildNumber = previewComment
+              ? readMeta(previewComment.body ?? '', 'preview-build-number')
+              : '';
+
+            await github.rest.actions.createWorkflowDispatch({
+              owner,
+              repo,
+              workflow_id: 'deploy-pr-preview.yml',
+              ref: pr.head.ref,
+              inputs: {
+                'pr-number': String(issueNumber),
+                'source-sha': pr.head.sha,
+                'preview-build-number': previewBuildNumber,
+                'request-comment-id': requestCommentId,
+                'request-comment-at': requestCreatedAt,
+                'request-comment-user': requester,
+                'request-comment-url': requestCommentUrl,
+                'request-preview-comment-url': previewCommentUrl,
+              },
+            });
+
+            try {
+              await github.request(
+                'POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions',
+                {
+                  owner,
+                  repo,
+                  comment_id: Number(requestCommentId),
+                  content: 'eyes',
+                  headers: {accept: 'application/vnd.github+json'},
+                },
+              );
+            } catch (error) {
+              core.warning(`Failed to add deploy reaction: ${String(error)}`);
+            }
+
+            core.notice(
+              `Dispatched deploy-pr-preview.yml from ref ${pr.head.ref} for PR #${issueNumber}.`,
+            );
