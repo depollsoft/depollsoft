@@ -7,8 +7,23 @@ on:
         description: 'PR number to deploy'
         required: true
         type: string
-      request-comment-url:
-        description: 'URL of the /deploy comment that requested the deploy'
+      source-sha:
+        description: 'Specific PR commit SHA to deploy (defaults to current PR head)'
+        required: false
+        default: ''
+        type: string
+      preview-build-number:
+        description: 'Preview build number associated with the requested SHA'
+        required: false
+        default: ''
+        type: string
+      request-comment-id:
+        description: 'Issue comment ID that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-comment-at:
+        description: 'Timestamp of the /deploy comment that requested the deploy'
         required: false
         default: ''
         type: string
@@ -17,88 +32,322 @@ on:
         required: false
         default: ''
         type: string
+      request-comment-url:
+        description: 'URL of the /deploy comment that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-preview-comment-url:
+        description: 'URL of the sticky preview comment for the requested build'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
-  group: deploy-preview-${{ inputs.pr-number }}
+  group: deploy-private
   cancel-in-progress: false
 
 permissions:
   actions: read
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   validate-pr:
     name: Validate PR source
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       pr-head-sha: ${{ steps.validate.outputs.pr-head-sha }}
+      deploy-sha: ${{ steps.validate.outputs.deploy-sha }}
       pr-title: ${{ steps.validate.outputs.pr-title }}
     steps:
-      - id: validate
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      - name: Validate PR is safe to deploy
+        id: validate
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const pullNumber = Number('${{ inputs.pr-number }}');
+            const requestedSourceSha = '${{ inputs.source-sha }}'.trim();
             const {data: pr} = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               pull_number: pullNumber,
             });
 
-            if (pr.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
-              core.setFailed(`Refusing to deploy PR #${pullNumber} from fork ${pr.head.repo?.full_name}.`);
+            if (pr.head.repo?.full_name !== `${owner}/${repo}`) {
+              core.setFailed(
+                `Refusing to deploy PR #${pullNumber} from fork ${pr.head.repo?.full_name}. ` +
+                  `Manual PR preview deploys require a branch in ${owner}/${repo}.`,
+              );
               return;
             }
 
+            let deploySha = pr.head.sha;
+            if (requestedSourceSha) {
+              const commits = await github.paginate(github.rest.pulls.listCommits, {
+                owner,
+                repo,
+                pull_number: pullNumber,
+                per_page: 100,
+              });
+
+              if (!commits.some((commit) => commit.sha === requestedSourceSha)) {
+                core.setFailed(
+                  `Requested source SHA ${requestedSourceSha} is not part of PR #${pullNumber}.`,
+                );
+                return;
+              }
+
+              deploySha = requestedSourceSha;
+            }
+
             core.setOutput('pr-head-sha', pr.head.sha);
+            core.setOutput('deploy-sha', deploySha);
             core.setOutput('pr-title', pr.title);
 
   compute-version:
     name: Compute Deploy Build
     runs-on: ubuntu-latest
     needs: validate-pr
+    if: needs.validate-pr.result == 'success'
+    permissions:
+      issues: read
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
     steps:
       - id: version
-        run: echo "build-number=$(( $(date +%s) / 10 ))" >> "$GITHUB_OUTPUT"
+        env:
+          REQUESTED_PREVIEW_BUILD_NUMBER: ${{ inputs.preview-build-number }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const requestedBuildNumberText = (process.env.REQUESTED_PREVIEW_BUILD_NUMBER || '').trim();
+            const requestedBuildNumber = /^\d+$/.test(requestedBuildNumberText)
+              ? Number(requestedBuildNumberText)
+              : 0;
+            const currentBuildNumber = Math.floor(Date.now() / 1000 / 10);
+            const statusMarker = '<!-- preview-deploy-status -->';
+            const lookbackSince = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+
+            const readMeta = (body, key) => {
+              const pattern = new RegExp(`<!-- ${key}:(.*?) -->`);
+              return body.match(pattern)?.[1] ?? '';
+            };
+
+            const comments = await github.paginate(github.rest.issues.listCommentsForRepo, {
+              owner,
+              repo,
+              per_page: 100,
+              since: lookbackSince,
+            });
+
+            let previousSuccessfulDeployBuildNumber = 0;
+            for (const comment of comments) {
+              if (!comment.body?.includes(statusMarker)) {
+                continue;
+              }
+
+              if (readMeta(comment.body, 'preview-deploy-state') !== 'success') {
+                continue;
+              }
+
+              const buildNumber = Number(readMeta(comment.body, 'preview-deploy-build-number'));
+              if (Number.isFinite(buildNumber)) {
+                previousSuccessfulDeployBuildNumber = Math.max(
+                  previousSuccessfulDeployBuildNumber,
+                  buildNumber,
+                );
+              }
+            }
+
+            let buildNumber = requestedBuildNumber || currentBuildNumber;
+            if (buildNumber <= previousSuccessfulDeployBuildNumber) {
+              buildNumber = Math.max(currentBuildNumber, previousSuccessfulDeployBuildNumber + 1);
+            }
+
+            core.setOutput('build-number', String(buildNumber));
 
   comment-start:
-    name: PR Comment (Queued)
+    name: Update PR deploy comment (start)
     runs-on: ubuntu-latest
     needs: [validate-pr, compute-version]
+    if: needs.validate-pr.result == 'success'
+    permissions:
+      issues: write
     steps:
-      - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
+      - name: Mark deploy as running
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          number: ${{ inputs.pr-number }}
-          header: preview-deploy
-          recreate: true
-          message: |
-            ## 🚀 Preview Deploy
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = Number('${{ inputs.pr-number }}');
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const previewMarker = '<!-- Sticky Pull Request Commentpreview-build -->';
+            const statusMarker = '<!-- preview-deploy-status -->';
 
-            | | Details |
-            |---|---|
-            | **Status** | ⏳ Deploying |
-            | **Requested by** | @${{ inputs.request-comment-user }} via `/deploy` |
-            | **PR** | #${{ inputs.pr-number }} |
-            | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
-            | **Source SHA** | `${{ needs.validate-pr.outputs.pr-head-sha }}` |
-            | **Workflow** | [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-            | **Request** | [View /deploy comment](${{ inputs.request-comment-url }}) |
+            const readMeta = (body, key) => {
+              const pattern = new RegExp(`<!-- ${key}:(.*?) -->`);
+              return body.match(pattern)?.[1] ?? '';
+            };
 
-            > Deploying the current PR head to TestFlight and the Play Store internal track.
+            const findStatusComment = (comments, targetRequestKey) =>
+              [...comments].reverse().find(
+                (comment) =>
+                  comment.body?.includes(statusMarker) &&
+                  readMeta(comment.body, 'preview-deploy-request-key') === targetRequestKey,
+              );
+
+            const resolvePreviewCommentUrl = ({comments, deploySha, fallbackUrl}) => {
+              const latestPreviewComment = [...comments].reverse().find((comment) => {
+                if (!comment.body?.includes(previewMarker)) {
+                  return false;
+                }
+
+                if (!deploySha) {
+                  return true;
+                }
+
+                return readMeta(comment.body, 'preview-build-source-sha') === deploySha;
+              });
+
+              return latestPreviewComment?.html_url ?? fallbackUrl;
+            };
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const requestCommentIdInput = '${{ inputs.request-comment-id }}'.trim();
+            const requestKey = requestCommentIdInput
+              ? `comment-${requestCommentIdInput}`
+              : `workflow-${context.runId}`;
+            const existing = findStatusComment(comments, requestKey);
+            const existingBody = existing?.body ?? '';
+
+            const requestedBy =
+              '${{ inputs.request-comment-user }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-by') ||
+              '${{ github.actor }}';
+            const requestedAt =
+              '${{ inputs.request-comment-at }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-at');
+            const requestCommentId =
+              requestCommentIdInput ||
+              readMeta(existingBody, 'preview-deploy-last-command-comment-id');
+            const requestCommentUrl =
+              '${{ inputs.request-comment-url }}' ||
+              readMeta(existingBody, 'preview-deploy-request-comment-url');
+            const requestedPreviewCommentUrl =
+              '${{ inputs.request-preview-comment-url }}' ||
+              readMeta(existingBody, 'preview-deploy-preview-comment-url');
+            const requestedPreviewBuildNumber =
+              '${{ inputs.preview-build-number }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-build-number');
+            const deploySha =
+              '${{ needs.validate-pr.outputs.deploy-sha }}' ||
+              readMeta(existingBody, 'preview-deploy-source-sha') ||
+              '${{ inputs.source-sha }}';
+            const deployBuildNumber =
+              '${{ needs.compute-version.outputs.build-number }}' ||
+              readMeta(existingBody, 'preview-deploy-build-number');
+            const previewCommentUrl = resolvePreviewCommentUrl({
+              comments,
+              deploySha,
+              fallbackUrl: requestedPreviewCommentUrl,
+            });
+            const requestDetails = requestCommentId
+              ? `@${requestedBy} via \`/deploy\` comment`
+              : `@${requestedBy} via workflow dispatch`;
+            const buildNumberNote =
+              requestedPreviewBuildNumber &&
+              deployBuildNumber &&
+              requestedPreviewBuildNumber !== deployBuildNumber
+                ? '> Deploy build number was bumped to preserve monotonic store build numbers.'
+                : null;
+
+            const body = [
+              '## 🚀 Preview Deploy',
+              '',
+              '| | Details |',
+              '|---|---|',
+              '| **Status** | 🔒 Lock acquired — deploying |',
+              `| **Requested by** | ${requestDetails} |`,
+              deploySha ? `| **Preview SHA** | \`${deploySha}\` |` : null,
+              requestedPreviewBuildNumber
+                ? `| **Requested Preview Build** | \`${requestedPreviewBuildNumber}\` |`
+                : null,
+              deployBuildNumber ? `| **Deploy Build** | \`${deployBuildNumber}\` |` : null,
+              '| **Android Status** | ⏳ Deploying to Play Internal Testing |',
+              '| **iOS Status** | ⏳ Uploading to TestFlight |',
+              requestCommentUrl
+                ? `| **Request** | [View /deploy comment](${requestCommentUrl}) |`
+                : null,
+              previewCommentUrl
+                ? `| **Preview Comment** | [View preview artifacts](${previewCommentUrl}) |`
+                : null,
+              requestedAt ? `| **Requested at** | ${requestedAt} |` : null,
+              `| **Workflow** | [View deploy run](${runUrl}) |`,
+              '',
+              buildNumberNote,
+              '> Duplicate requests stay locked out while this deploy is queued or running.',
+              statusMarker,
+              '<!-- preview-deploy-state:in_progress -->',
+              `<!-- preview-deploy-last-command-comment-id:${requestCommentId} -->`,
+              `<!-- preview-deploy-request-key:${requestKey} -->`,
+              `<!-- preview-deploy-requested-by:${requestedBy} -->`,
+              `<!-- preview-deploy-requested-at:${requestedAt} -->`,
+              `<!-- preview-deploy-request-comment-url:${requestCommentUrl} -->`,
+              `<!-- preview-deploy-preview-comment-url:${previewCommentUrl} -->`,
+              `<!-- preview-deploy-workflow-url:${runUrl} -->`,
+              `<!-- preview-deploy-source-sha:${deploySha} -->`,
+              `<!-- preview-deploy-build-number:${deployBuildNumber} -->`,
+              `<!-- preview-deploy-requested-build-number:${requestedPreviewBuildNumber} -->`,
+            ]
+              .filter(Boolean)
+              .join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body,
+              });
+            }
 
   deploy-android:
     name: Deploy Android
     runs-on: ubuntu-latest
-    needs: [validate-pr, compute-version]
+    needs: [validate-pr, compute-version, comment-start]
+    permissions:
+      contents: read
+    outputs:
+      source-sha: ${{ steps.capture-source.outputs.value }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate-pr.outputs.pr-head-sha }}
+          persist-credentials: false
+          ref: ${{ needs.validate-pr.outputs.deploy-sha }}
           submodules: recursive
+
+      - name: Capture source SHA
+        id: capture-source
+        run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@v4
         with:
@@ -140,15 +389,24 @@ jobs:
   deploy-ios:
     name: Deploy iOS
     runs-on: macos-latest
-    needs: [validate-pr, compute-version]
+    needs: [validate-pr, compute-version, comment-start]
+    permissions:
+      contents: read
+    outputs:
+      source-sha: ${{ steps.capture-source.outputs.value }}
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate-pr.outputs.pr-head-sha }}
+          persist-credentials: false
+          ref: ${{ needs.validate-pr.outputs.deploy-sha }}
           submodules: recursive
+
+      - name: Capture source SHA
+        id: capture-source
+        run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Select Xcode
         run: echo "DEVELOPER_DIR=$(xcode-select -p 2>/dev/null || echo /Applications/Xcode.app/Contents/Developer)" >> "$GITHUB_ENV"
@@ -187,20 +445,137 @@ jobs:
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
         run: bundle exec fastlane deploy_private
 
-  comment-final:
-    name: PR Comment (Final)
+  verify-pr-source:
+    name: Verify PR source ref
+    needs: [validate-pr, deploy-android, deploy-ios]
+    if: needs.validate-pr.result == 'success' && needs.deploy-android.result == 'success' && needs.deploy-ios.result == 'success'
     runs-on: ubuntu-latest
-    needs: [validate-pr, compute-version, deploy-android, deploy-ios]
-    if: always()
     steps:
-      - id: deploy-status
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      - name: Ensure deployed mobile builds used requested preview SHA
+        env:
+          EXPECTED_SHA: ${{ needs.validate-pr.outputs.deploy-sha }}
+          ACTUAL_IOS_SHA: ${{ needs.deploy-ios.outputs.source-sha }}
+          ACTUAL_ANDROID_SHA: ${{ needs.deploy-android.outputs.source-sha }}
+        run: |
+          if [ "$EXPECTED_SHA" != "$ACTUAL_ANDROID_SHA" ]; then
+            echo "Expected deploy SHA:      $EXPECTED_SHA"
+            echo "Actual Android deploy SHA: $ACTUAL_ANDROID_SHA"
+            echo "Play internal deploy did not build from the requested preview SHA for PR #${{ inputs.pr-number }}."
+            exit 1
+          fi
+
+          if [ "$EXPECTED_SHA" != "$ACTUAL_IOS_SHA" ]; then
+            echo "Expected deploy SHA: $EXPECTED_SHA"
+            echo "Actual iOS deploy SHA: $ACTUAL_IOS_SHA"
+            echo "TestFlight deploy did not build from the requested preview SHA for PR #${{ inputs.pr-number }}."
+            exit 1
+          fi
+
+          echo "Verified Android and iOS deploy source SHA matches requested preview SHA: $EXPECTED_SHA"
+
+  comment-finish:
+    name: Update PR deploy comment (finish)
+    runs-on: ubuntu-latest
+    needs: [validate-pr, compute-version, comment-start, deploy-android, deploy-ios, verify-pr-source]
+    if: always()
+    permissions:
+      issues: write
+    steps:
+      - name: Mark deploy as complete
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const statusFor = (result) => {
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = Number('${{ inputs.pr-number }}');
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const previewMarker = '<!-- Sticky Pull Request Commentpreview-build -->';
+            const statusMarker = '<!-- preview-deploy-status -->';
+
+            const readMeta = (body, key) => {
+              const pattern = new RegExp(`<!-- ${key}:(.*?) -->`);
+              return body.match(pattern)?.[1] ?? '';
+            };
+
+            const findStatusComment = (comments, targetRequestKey) =>
+              [...comments].reverse().find(
+                (comment) =>
+                  comment.body?.includes(statusMarker) &&
+                  readMeta(comment.body, 'preview-deploy-request-key') === targetRequestKey,
+              );
+
+            const resolvePreviewCommentUrl = ({comments, deploySha, fallbackUrl}) => {
+              const latestPreviewComment = [...comments].reverse().find((comment) => {
+                if (!comment.body?.includes(previewMarker)) {
+                  return false;
+                }
+
+                if (!deploySha) {
+                  return true;
+                }
+
+                return readMeta(comment.body, 'preview-build-source-sha') === deploySha;
+              });
+
+              return latestPreviewComment?.html_url ?? fallbackUrl;
+            };
+
+            const syncRequestCommentReaction = async (requestCommentId, targetReaction) => {
+              if (!requestCommentId) {
+                return;
+              }
+
+              const commentId = Number(requestCommentId);
+              const reactions = await github.paginate(
+                'GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions',
+                {
+                  owner,
+                  repo,
+                  comment_id: commentId,
+                  per_page: 100,
+                  headers: {accept: 'application/vnd.github+json'},
+                },
+              );
+              const managedReactionContents = new Set(['eyes', 'rocket', '-1']);
+              const botManagedReactions = reactions.filter(
+                (reaction) =>
+                  managedReactionContents.has(reaction.content) &&
+                  reaction.user?.login === 'github-actions[bot]',
+              );
+
+              for (const reaction of botManagedReactions) {
+                await github.request(
+                  'DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}',
+                  {
+                    owner,
+                    repo,
+                    comment_id: commentId,
+                    reaction_id: reaction.id,
+                    headers: {accept: 'application/vnd.github+json'},
+                  },
+                );
+              }
+
+              if (!targetReaction) {
+                return;
+              }
+
+              await github.request(
+                'POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions',
+                {
+                  owner,
+                  repo,
+                  comment_id: commentId,
+                  content: targetReaction,
+                  headers: {accept: 'application/vnd.github+json'},
+                },
+              );
+            };
+
+            const statusForPlatform = (result, successLabel) => {
               switch (result) {
                 case 'success':
-                  return '✅ Uploaded';
+                  return successLabel;
                 case 'skipped':
                   return '⏭️ Skipped';
                 case 'cancelled':
@@ -210,26 +585,166 @@ jobs:
               }
             };
 
-            core.setOutput('android-status', statusFor('${{ needs.deploy-android.result }}'));
-            core.setOutput('ios-status', statusFor('${{ needs.deploy-ios.result }}'));
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const requestCommentIdInput = '${{ inputs.request-comment-id }}'.trim();
+            const requestKey = requestCommentIdInput
+              ? `comment-${requestCommentIdInput}`
+              : `workflow-${context.runId}`;
+            const existing = findStatusComment(comments, requestKey);
+            const existingBody = existing?.body ?? '';
 
-      - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
-        with:
-          number: ${{ inputs.pr-number }}
-          header: preview-deploy
-          recreate: true
-          message: |
-            ## 🚀 Preview Deploy
+            const requestedBy =
+              '${{ inputs.request-comment-user }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-by') ||
+              '${{ github.actor }}';
+            const requestedAt =
+              '${{ inputs.request-comment-at }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-at');
+            const requestCommentId =
+              requestCommentIdInput ||
+              readMeta(existingBody, 'preview-deploy-last-command-comment-id');
+            const requestCommentUrl =
+              '${{ inputs.request-comment-url }}' ||
+              readMeta(existingBody, 'preview-deploy-request-comment-url');
+            const requestedPreviewCommentUrl =
+              '${{ inputs.request-preview-comment-url }}' ||
+              readMeta(existingBody, 'preview-deploy-preview-comment-url');
+            const requestedPreviewBuildNumber =
+              '${{ inputs.preview-build-number }}' ||
+              readMeta(existingBody, 'preview-deploy-requested-build-number');
+            const deploySha =
+              '${{ needs.validate-pr.outputs.deploy-sha }}' ||
+              readMeta(existingBody, 'preview-deploy-source-sha') ||
+              '${{ inputs.source-sha }}';
+            const deployBuildNumber =
+              '${{ needs.compute-version.outputs.build-number }}' ||
+              readMeta(existingBody, 'preview-deploy-build-number');
+            const previewCommentUrl = resolvePreviewCommentUrl({
+              comments,
+              deploySha,
+              fallbackUrl: requestedPreviewCommentUrl,
+            });
+            const requestDetails = requestCommentId
+              ? `@${requestedBy} via \`/deploy\` comment`
+              : `@${requestedBy} via workflow dispatch`;
+            const buildNumberNote =
+              requestedPreviewBuildNumber &&
+              deployBuildNumber &&
+              requestedPreviewBuildNumber !== deployBuildNumber
+                ? '> Deploy build number was bumped to preserve monotonic store build numbers.'
+                : null;
 
-            | | Details |
-            |---|---|
-            | **Requested by** | @${{ inputs.request-comment-user }} via `/deploy` |
-            | **PR** | #${{ inputs.pr-number }} |
-            | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
-            | **Source SHA** | `${{ needs.validate-pr.outputs.pr-head-sha }}` |
-            | **Android** | ${{ steps.deploy-status.outputs.android-status }} Play Internal Testing |
-            | **iOS** | ${{ steps.deploy-status.outputs.ios-status }} TestFlight |
-            | **Workflow** | [View run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-            | **Request** | [View /deploy comment](${{ inputs.request-comment-url }}) |
+            const validationResult = '${{ needs.validate-pr.result }}';
+            const androidResult = '${{ needs.deploy-android.result }}';
+            const iosResult = '${{ needs.deploy-ios.result }}';
+            const verifyResult = '${{ needs.verify-pr-source.result }}';
 
-            > Deploys the current PR head from this repository only.
+            let state = 'failed';
+            let status = '❌ Deploy failed';
+
+            if (
+              validationResult === 'success' &&
+              androidResult === 'success' &&
+              iosResult === 'success' &&
+              verifyResult === 'success'
+            ) {
+              state = 'success';
+              status = '✅ Deployed to TestFlight & Play Internal Testing';
+            } else if (
+              validationResult === 'cancelled' ||
+              androidResult === 'cancelled' ||
+              iosResult === 'cancelled'
+            ) {
+              state = 'cancelled';
+              status = '⛔ Deploy cancelled';
+            } else if (validationResult !== 'success') {
+              status = '❌ PR validation failed';
+            } else if (androidResult !== 'success' || iosResult !== 'success') {
+              status = '❌ Build or store deploy failed';
+            } else if (verifyResult !== 'success') {
+              status = '❌ Deployed artifacts did not match the requested preview SHA';
+            }
+
+            let targetReaction = '';
+            if (state === 'success') {
+              targetReaction = 'rocket';
+            } else if (state === 'failed') {
+              targetReaction = '-1';
+            }
+
+            const androidPlatformStatus =
+              validationResult !== 'success'
+                ? '⏭️ Not started'
+                : statusForPlatform(androidResult, '✅ Uploaded to Play Internal Testing');
+            const iosPlatformStatus =
+              validationResult !== 'success'
+                ? '⏭️ Not started'
+                : statusForPlatform(iosResult, '✅ Uploaded to TestFlight');
+
+            const body = [
+              '## 🚀 Preview Deploy',
+              '',
+              '| | Details |',
+              '|---|---|',
+              `| **Status** | ${status} |`,
+              `| **Requested by** | ${requestDetails} |`,
+              deploySha ? `| **Preview SHA** | \`${deploySha}\` |` : null,
+              requestedPreviewBuildNumber
+                ? `| **Requested Preview Build** | \`${requestedPreviewBuildNumber}\` |`
+                : null,
+              deployBuildNumber ? `| **Deploy Build** | \`${deployBuildNumber}\` |` : null,
+              `| **Android Status** | ${androidPlatformStatus} |`,
+              `| **iOS Status** | ${iosPlatformStatus} |`,
+              requestCommentUrl
+                ? `| **Request** | [View /deploy comment](${requestCommentUrl}) |`
+                : null,
+              previewCommentUrl
+                ? `| **Preview Comment** | [View preview artifacts](${previewCommentUrl}) |`
+                : null,
+              requestedAt ? `| **Requested at** | ${requestedAt} |` : null,
+              `| **Workflow** | [View deploy run](${runUrl}) |`,
+              '',
+              buildNumberNote,
+              '> Add a new `/deploy` comment if you want to request another deploy.',
+              statusMarker,
+              `<!-- preview-deploy-state:${state} -->`,
+              `<!-- preview-deploy-last-command-comment-id:${requestCommentId} -->`,
+              `<!-- preview-deploy-request-key:${requestKey} -->`,
+              `<!-- preview-deploy-requested-by:${requestedBy} -->`,
+              `<!-- preview-deploy-requested-at:${requestedAt} -->`,
+              `<!-- preview-deploy-request-comment-url:${requestCommentUrl} -->`,
+              `<!-- preview-deploy-preview-comment-url:${previewCommentUrl} -->`,
+              `<!-- preview-deploy-workflow-url:${runUrl} -->`,
+              `<!-- preview-deploy-source-sha:${deploySha} -->`,
+              `<!-- preview-deploy-build-number:${deployBuildNumber} -->`,
+              `<!-- preview-deploy-requested-build-number:${requestedPreviewBuildNumber} -->`,
+            ]
+              .filter(Boolean)
+              .join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body,
+              });
+            }
+
+            try {
+              await syncRequestCommentReaction(requestCommentId, targetReaction);
+            } catch (error) {
+              core.warning(`Failed to update deploy reaction: ${String(error)}`);
+            }
