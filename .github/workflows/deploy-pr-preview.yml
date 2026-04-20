@@ -1,0 +1,63 @@
+name: Deploy PR Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: 'PR number to deploy'
+        required: true
+        type: string
+      source-sha:
+        description: 'Specific PR commit SHA to deploy (defaults to current PR head)'
+        required: false
+        default: ''
+        type: string
+      preview-build-number:
+        description: 'Preview build number associated with the requested SHA'
+        required: false
+        default: ''
+        type: string
+      request-comment-id:
+        description: 'Issue comment ID that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-comment-at:
+        description: 'Timestamp of the /deploy comment that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-comment-user:
+        description: 'GitHub login that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-comment-url:
+        description: 'URL of the /deploy comment that requested the deploy'
+        required: false
+        default: ''
+        type: string
+      request-preview-comment-url:
+        description: 'URL of the sticky preview comment for the requested build'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Bootstrap placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain bootstrap behavior
+        run: |
+          echo "This placeholder workflow exists on the default branch so"
+          echo "workflow_dispatch can target a PR branch ref before the real"
+          echo "deploy-pr-preview.yml workflow is merged to main."
+          echo
+          echo "Dispatch inputs:"
+          echo "  pr-number=${{ inputs.pr-number }}"
+          echo "  source-sha=${{ inputs.source-sha }}"
+          echo "  preview-build-number=${{ inputs.preview-build-number }}"
