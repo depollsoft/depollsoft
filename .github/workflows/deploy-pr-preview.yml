@@ -463,51 +463,6 @@ jobs:
           done
           exit 1
 
-      - name: Validate iOS signing repo access
-        id: validate-match-repo
-        working-directory: iOS
-        env:
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-        run: |
-          set -euo pipefail
-
-          if [ -z "${MATCH_GIT_URL:-}" ]; then
-            echo "::error::MATCH_GIT_URL secret is empty."
-            exit 1
-          fi
-
-          if [ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
-            git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
-          fi
-
-          candidate_urls=("$MATCH_GIT_URL")
-          case "$MATCH_GIT_URL" in
-            *.git) ;;
-            *) candidate_urls+=("${MATCH_GIT_URL}.git") ;;
-          esac
-
-          git_error_log="$RUNNER_TEMP/match-git-ls-remote.log"
-          selected_url=""
-
-          for candidate_url in "${candidate_urls[@]}"; do
-            if GIT_TERMINAL_PROMPT=0 git ls-remote "$candidate_url" HEAD >/dev/null 2>"$git_error_log"; then
-              selected_url="$candidate_url"
-              break
-            fi
-          done
-
-          if [ -z "$selected_url" ]; then
-            echo "::error::Unable to access MATCH_GIT_URL with the current workflow credentials."
-            echo "::error::If MATCH_GIT_URL uses an SSH form like git@github.com:..., MATCH_GIT_BASIC_AUTHORIZATION will not apply. Prefer an https:// URL when using MATCH_GIT_BASIC_AUTHORIZATION."
-            if [ -s "$git_error_log" ]; then
-              sed 's/^/::error::/g' "$git_error_log"
-            fi
-            exit 1
-          fi
-
-          echo "match-git-url=$selected_url" >> "$GITHUB_OUTPUT"
-
       - name: Deploy iOS private builds
         working-directory: iOS
         env:
@@ -516,7 +471,7 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_GIT_URL: ${{ steps.validate-match-repo.outputs.match-git-url }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
