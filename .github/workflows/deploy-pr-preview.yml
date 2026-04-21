@@ -491,11 +491,7 @@ jobs:
           selected_url=""
 
           for candidate_url in "${candidate_urls[@]}"; do
-            if GIT_TERMINAL_PROMPT=0 git \
-              -c credential.helper= \
-              -c core.askPass= \
-              -c credential.interactive=never \
-              ls-remote "$candidate_url" HEAD >/dev/null 2>"$git_error_log"; then
+            if GIT_TERMINAL_PROMPT=0 git ls-remote "$candidate_url" HEAD >/dev/null 2>"$git_error_log"; then
               selected_url="$candidate_url"
               break
             fi
