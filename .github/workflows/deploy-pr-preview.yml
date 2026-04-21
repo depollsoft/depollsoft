@@ -366,11 +366,42 @@ jobs:
           working-directory: Android
 
       - name: Decode Android deploy credentials
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           echo "${{ secrets.ANDROID_UPLOAD_KEYSTORE }}" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
-          echo "${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}" > "$RUNNER_TEMP/play-service-account.json"
+          export PLAY_SERVICE_ACCOUNT_JSON_PATH="$RUNNER_TEMP/play-service-account.json"
+          python3 - <<'PY'
+          import base64
+          import binascii
+          import json
+          import os
+          import sys
+
+          raw = os.environ.get("PLAY_SERVICE_ACCOUNT_JSON", "").strip()
+          if not raw:
+              print("PLAY_SERVICE_ACCOUNT_JSON secret is empty.", file=sys.stderr)
+              sys.exit(1)
+
+          parsed = None
+          try:
+              parsed = json.loads(raw)
+          except json.JSONDecodeError:
+              try:
+                  decoded = base64.b64decode(raw).decode("utf-8")
+                  parsed = json.loads(decoded)
+              except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError):
+                  print(
+                      "PLAY_SERVICE_ACCOUNT_JSON must contain raw JSON or base64-encoded JSON.",
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
+
+          with open(os.environ["PLAY_SERVICE_ACCOUNT_JSON_PATH"], "w", encoding="utf-8") as handle:
+              json.dump(parsed, handle)
+          PY
           echo "ANDROID_UPLOAD_KEYSTORE_PATH=$RUNNER_TEMP/upload-keystore.jks" >> "$GITHUB_ENV"
-          echo "PLAY_SERVICE_ACCOUNT_JSON_PATH=$RUNNER_TEMP/play-service-account.json" >> "$GITHUB_ENV"
+          echo "PLAY_SERVICE_ACCOUNT_JSON_PATH=$PLAY_SERVICE_ACCOUNT_JSON_PATH" >> "$GITHUB_ENV"
 
       - name: Deploy Android private builds
         working-directory: Android
@@ -431,6 +462,30 @@ jobs:
             fi
           done
           exit 1
+
+      - name: Validate iOS signing repo access
+        working-directory: iOS
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${MATCH_GIT_URL:-}" ]; then
+            echo "::error::MATCH_GIT_URL secret is empty."
+            exit 1
+          fi
+
+          git_extra_args=()
+          if [ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            git_extra_args=(-c "http.extraheader=Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}")
+          fi
+
+          if ! GIT_TERMINAL_PROMPT=0 git "${git_extra_args[@]}" ls-remote "$MATCH_GIT_URL" HEAD >/dev/null 2>&1; then
+            echo "::error::Unable to access MATCH_GIT_URL with the current workflow credentials."
+            echo "::error::If MATCH_GIT_URL uses an SSH form like git@github.com:..., MATCH_GIT_BASIC_AUTHORIZATION will not apply. Prefer an https:// URL when using MATCH_GIT_BASIC_AUTHORIZATION."
+            exit 1
+          fi
 
       - name: Deploy iOS private builds
         working-directory: iOS
