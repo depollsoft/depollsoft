@@ -464,12 +464,13 @@ jobs:
           exit 1
 
       - name: Configure iOS signing repo auth
-        if: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION != '' }}
         working-directory: iOS
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
-          git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
+          if [ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
+          fi
 
       - name: Deploy iOS private builds
         working-directory: iOS
