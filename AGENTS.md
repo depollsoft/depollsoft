@@ -32,7 +32,7 @@
 - Comment `/deploy` on a same-repo PR to queue `.github/workflows/deploy-pr-preview.yml`, which uploads the private Pitch Perfect and Tag Master builds to TestFlight and Play Internal Testing.
 - Required GitHub Actions secrets for preview deploys: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_GIT_URL`, `MATCH_PASSWORD`, and `MATCH_GIT_BASIC_AUTHORIZATION`.
 - `PLAY_SERVICE_ACCOUNT_JSON` may be stored as either raw JSON or base64-encoded JSON; the deploy workflow now accepts both formats.
-- If you use `MATCH_GIT_BASIC_AUTHORIZATION`, set `MATCH_GIT_URL` to an `https://...` Git URL that the GitHub Actions runner can clone. Basic authorization does not apply to `git@github.com:...` SSH URLs. The current signing repo lives at `https://github.com/depollsoft/certificates`.
+- If you use `MATCH_GIT_BASIC_AUTHORIZATION`, set `MATCH_GIT_URL` to an `https://...` Git URL that the GitHub Actions runner can clone. Basic authorization does not apply to `git@github.com:...` SSH URLs. The current signing repo lives at `https://github.com/depollsoft/certificates.git`.
 - Private Firebase config files for the mobile preview variants are committed in the repository; keep signing keys and store credentials in GitHub Actions secrets only.
 
 ## Security & Configuration Tips

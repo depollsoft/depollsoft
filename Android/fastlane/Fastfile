@@ -26,11 +26,18 @@ platform :android do
         "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
       ],
     }.each do |package_name, aab_paths|
+      retained_version_codes = google_play_track_version_codes(
+        package_name: package_name,
+        track: "internal",
+        json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+      )
+
       upload_to_play_store(
         package_name: package_name,
         track: "internal",
         json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
         aab_paths: aab_paths,
+        version_codes_to_retain: retained_version_codes,
         skip_upload_metadata: true,
         skip_upload_images: true,
         skip_upload_screenshots: true,
