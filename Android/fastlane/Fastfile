@@ -16,14 +16,21 @@ platform :android do
     end
 
     {
-      "depollsoft.pitchperfect.private" => "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
-      "depollsoft.tagmaster.private" => "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
-    }.each do |package_name, aab_path|
+      # PitchPerfect phone and wear private builds share the same package ID, so they
+      # must be uploaded as a single Play release to keep existing users upgradeable.
+      "depollsoft.pitchperfect.private" => [
+        "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
+        "PitchPerfectWear/build/outputs/bundle/private/PitchPerfectWear-private.aab",
+      ],
+      "depollsoft.tagmaster.private" => [
+        "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
+      ],
+    }.each do |package_name, aab_paths|
       upload_to_play_store(
         package_name: package_name,
         track: "internal",
         json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
-        aab: aab_path,
+        aab_paths: aab_paths,
         skip_upload_metadata: true,
         skip_upload_images: true,
         skip_upload_screenshots: true,
