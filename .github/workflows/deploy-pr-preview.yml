@@ -463,6 +463,14 @@ jobs:
           done
           exit 1
 
+      - name: Configure iOS signing repo auth
+        if: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION != '' }}
+        working-directory: iOS
+        env:
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: |
+          git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
+
       - name: Deploy iOS private builds
         working-directory: iOS
         env:
@@ -470,7 +478,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
