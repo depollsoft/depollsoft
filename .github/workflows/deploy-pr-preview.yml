@@ -473,8 +473,29 @@ jobs:
             exit 1
           fi
 
-          auth="${MATCH_GIT_BASIC_AUTHORIZATION#Authorization: Basic }"
-          auth="${auth#Basic }"
+          auth="$(python3 - <<'PY'
+          import base64
+          import binascii
+          import os
+
+          raw = os.environ["MATCH_GIT_BASIC_AUTHORIZATION"].strip()
+          for prefix in ("Authorization: Basic ", "Basic "):
+              if raw.startswith(prefix):
+                  raw = raw[len(prefix):].strip()
+
+          try:
+              decoded = base64.b64decode(raw, validate=True).decode("utf-8")
+          except (binascii.Error, UnicodeDecodeError):
+              decoded = ""
+
+          if ":" in decoded:
+              print(raw)
+          elif ":" in raw:
+              print(base64.b64encode(raw.encode("utf-8")).decode("ascii"))
+          else:
+              print(base64.b64encode(f"x-access-token:{raw}".encode("utf-8")).decode("ascii"))
+          PY
+          )"
           echo "::add-mask::$auth"
           echo "MATCH_GIT_BASIC_AUTHORIZATION=$auth" >> "$GITHUB_ENV"
 
