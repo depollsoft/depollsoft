@@ -463,7 +463,7 @@ jobs:
           done
           exit 1
 
-      - name: Configure iOS signing repo auth
+      - name: Normalize iOS signing repo auth
         working-directory: iOS
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -472,7 +472,11 @@ jobs:
             echo "MATCH_GIT_BASIC_AUTHORIZATION secret is required to clone the private signing repository."
             exit 1
           fi
-          git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
+
+          auth="${MATCH_GIT_BASIC_AUTHORIZATION#Authorization: Basic }"
+          auth="${auth#Basic }"
+          echo "::add-mask::$auth"
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=$auth" >> "$GITHUB_ENV"
 
       - name: Deploy iOS private builds
         working-directory: iOS
@@ -481,7 +485,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_GIT_URL: https://github.com/depollsoft/certificates.git
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
