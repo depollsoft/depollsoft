@@ -497,7 +497,7 @@ jobs:
           PY
           )"
           echo "::add-mask::$auth"
-          echo "MATCH_GIT_BASIC_AUTHORIZATION=$auth" >> "$GITHUB_ENV"
+          git config --global http.https://github.com/.extraheader "Authorization: Basic ${auth}"
 
       - name: Deploy iOS private builds
         working-directory: iOS
