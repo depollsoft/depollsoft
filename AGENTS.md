@@ -30,9 +30,9 @@
 ## PR Preview Deploys
 - `.github/workflows/pr-preview.yml` builds private PR preview artifacts for same-repo mobile PRs and posts a sticky PR comment with APK download details plus `/deploy` instructions.
 - Comment `/deploy` on a same-repo PR to queue `.github/workflows/deploy-pr-preview.yml`, which uploads the private Pitch Perfect and Tag Master builds to TestFlight and Play Internal Testing.
-- Required GitHub Actions secrets for preview deploys: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_PASSWORD`, and `MATCH_GIT_BASIC_AUTHORIZATION`.
+- Required GitHub Actions secrets for preview deploys: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_PASSWORD`, and `MATCH_GIT_SSH_KEY`.
 - `PLAY_SERVICE_ACCOUNT_JSON` may be stored as either raw JSON or base64-encoded JSON; the deploy workflow now accepts both formats.
-- iOS preview deploys clone the private signing repo at `https://github.com/depollsoft/certificates.git` using `MATCH_GIT_BASIC_AUTHORIZATION`.
+- iOS preview deploys clone the private signing repo at `git@github.com:depollsoft/certificates.git` using `MATCH_GIT_SSH_KEY`; `MATCH_GIT_BASIC_AUTHORIZATION` is still supported as a fallback.
 - Private Firebase config files for the mobile preview variants are committed in the repository; keep signing keys and store credentials in GitHub Actions secrets only.
 
 ## Security & Configuration Tips
