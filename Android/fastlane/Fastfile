@@ -1,5 +1,20 @@
 default_platform(:android)
 
+def with_retries(label, attempts: 3, delay_seconds: 30)
+  attempt = 1
+
+  begin
+    yield
+  rescue StandardError => error
+    raise if attempt >= attempts
+
+    UI.important("#{label} failed on attempt #{attempt}/#{attempts}: #{error.message}")
+    sleep(delay_seconds * attempt)
+    attempt += 1
+    retry
+  end
+end
+
 platform :android do
   desc "Build and upload private Android bundles to Play internal testing"
   lane :deploy_private do
@@ -26,24 +41,28 @@ platform :android do
         "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
       ],
     }.each do |package_name, aab_paths|
-      retained_version_codes = google_play_track_version_codes(
-        package_name: package_name,
-        track: "internal",
-        json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
-      )
+      retained_version_codes = with_retries("Fetch #{package_name} internal track version codes") do
+        google_play_track_version_codes(
+          package_name: package_name,
+          track: "internal",
+          json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+        )
+      end
 
-      upload_to_play_store(
-        package_name: package_name,
-        track: "internal",
-        json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
-        aab_paths: aab_paths,
-        version_codes_to_retain: retained_version_codes,
-        skip_upload_metadata: true,
-        skip_upload_images: true,
-        skip_upload_screenshots: true,
-        skip_upload_apk: true,
-        release_status: "completed",
-      )
+      with_retries("Upload #{package_name} to Play internal testing") do
+        upload_to_play_store(
+          package_name: package_name,
+          track: "internal",
+          json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+          aab_paths: aab_paths,
+          version_codes_to_retain: retained_version_codes,
+          skip_upload_metadata: true,
+          skip_upload_images: true,
+          skip_upload_screenshots: true,
+          skip_upload_apk: true,
+          release_status: "completed",
+        )
+      end
     end
   end
 end

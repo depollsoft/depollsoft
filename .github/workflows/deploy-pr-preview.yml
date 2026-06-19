@@ -468,9 +468,11 @@ jobs:
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
-          if [ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
-            git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
+          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            echo "MATCH_GIT_BASIC_AUTHORIZATION secret is required to clone the private signing repository."
+            exit 1
           fi
+          git config --global http.https://github.com/.extraheader "Authorization: Basic ${MATCH_GIT_BASIC_AUTHORIZATION}"
 
       - name: Deploy iOS private builds
         working-directory: iOS
@@ -479,7 +481,8 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: https://github.com/depollsoft/certificates.git
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}

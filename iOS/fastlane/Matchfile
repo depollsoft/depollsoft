@@ -1,6 +1,8 @@
-git_url(ENV["MATCH_GIT_URL"])
+match_git_url = ENV["MATCH_GIT_URL"].to_s.strip
+git_url(match_git_url.empty? ? "https://github.com/depollsoft/certificates.git" : match_git_url)
 storage_mode("git")
 type("appstore")
 readonly(true)
 
-git_basic_authorization(ENV["MATCH_GIT_BASIC_AUTHORIZATION"]) if ENV["MATCH_GIT_BASIC_AUTHORIZATION"]
+match_git_basic_authorization = ENV["MATCH_GIT_BASIC_AUTHORIZATION"].to_s.strip
+git_basic_authorization(match_git_basic_authorization) unless match_git_basic_authorization.empty?
