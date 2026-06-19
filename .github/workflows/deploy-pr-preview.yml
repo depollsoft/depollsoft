@@ -479,15 +479,21 @@ jobs:
           import os
           import urllib.parse
 
-          raw = os.environ["MATCH_GIT_BASIC_AUTHORIZATION"].strip()
-          for prefix in ("Authorization: Basic ", "Basic "):
-              if raw.startswith(prefix):
-                  raw = raw[len(prefix):].strip()
+          def strip_basic_prefix(value):
+              value = value.strip()
+              lower = value.lower()
+              for prefix in ("authorization: basic ", "basic "):
+                  if lower.startswith(prefix):
+                      return value[len(prefix):].strip()
+              return value
+
+          raw = strip_basic_prefix(os.environ["MATCH_GIT_BASIC_AUTHORIZATION"])
 
           try:
               decoded = base64.b64decode(raw, validate=True).decode("utf-8")
           except (binascii.Error, UnicodeDecodeError):
               decoded = ""
+          decoded = strip_basic_prefix(decoded) if decoded else ""
 
           if ":" in decoded:
               credential = decoded
