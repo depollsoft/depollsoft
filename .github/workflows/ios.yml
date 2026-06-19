@@ -222,15 +222,18 @@ jobs:
             SDKROOT=iphonesimulator \
             | xcpretty --color
 
-      # Run all unit tests in parallel using test-without-building
-      - name: Run all unit tests in parallel
+      # Reuse the build-for-testing output, but run each scheme one at a time.
+      # Running multiple xcodebuild test processes against the same simulator can hang.
+      - name: Run all unit tests
         id: run_tests
         continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          # Run tests in parallel - xcodebuild handles parallelization
+
+          FAILED=0
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
@@ -241,9 +244,8 @@ jobs:
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit --output pitchperfect-junit.xml &
-          PID1=$!
-          
+            | xcpretty --color --report junit --output pitchperfect-junit.xml || FAILED=1
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -254,9 +256,8 @@ jobs:
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit --output tagmaster-junit.xml &
-          PID2=$!
-          
+            | xcpretty --color --report junit --output tagmaster-junit.xml || FAILED=1
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
@@ -267,15 +268,8 @@ jobs:
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
-          PID3=$!
-          
-          # Wait for all tests to complete
-          FAILED=0
-          wait $PID1 || FAILED=1
-          wait $PID2 || FAILED=1
-          wait $PID3 || FAILED=1
-          
+            | xcpretty --color --report junit --output pitchperfectlib-junit.xml || FAILED=1
+
           # We continue even if tests fail - we'll check junit results later
           exit 0
 
