@@ -3,9 +3,11 @@ require "shellwords"
 
 default_platform(:ios)
 
+IOS_ROOT = File.expand_path("..", __dir__)
+
 def with_private_google_service_config(config_dir)
-  original = File.join(config_dir, "GoogleService-Info.plist")
-  private_config = File.join(config_dir, "GoogleService-Info-Private.plist")
+  original = File.join(IOS_ROOT, config_dir, "GoogleService-Info.plist")
+  private_config = File.join(IOS_ROOT, config_dir, "GoogleService-Info-Private.plist")
   backup = "#{original}.backup"
 
   UI.user_error!("Missing private Firebase config at #{private_config}") unless File.exist?(private_config)
@@ -30,7 +32,7 @@ def build_private_app(
 
   with_private_google_service_config(config_dir) do
     build_app(
-      workspace: "iOS.xcworkspace",
+      workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
       scheme: scheme,
       export_method: "app-store",
       export_team_id: "43AWMS3YJX",
@@ -48,7 +50,7 @@ def build_private_app(
         "CODE_SIGN_STYLE=Manual",
         "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
       ].join(" "),
-      output_directory: "build",
+      output_directory: File.join(IOS_ROOT, "build"),
       output_name: output_name,
       clean: true,
     )
@@ -105,14 +107,14 @@ platform :ios do
 
     upload_to_testflight(
       api_key: api_key,
-      ipa: "build/PitchPerfect-private.ipa",
+      ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
       skip_waiting_for_build_processing: true,
       changelog: changelog,
     )
 
     upload_to_testflight(
       api_key: api_key,
-      ipa: "build/TagMaster-private.ipa",
+      ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
       skip_waiting_for_build_processing: true,
       changelog: changelog,
     )
