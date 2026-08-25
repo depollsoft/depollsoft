@@ -6,11 +6,11 @@ on:
       - main
     types: [opened, reopened, synchronize]
     paths:
-      - 'Android/**'
-      - 'iOS/**'
-      - '.github/workflows/pr-preview.yml'
-      - '.github/workflows/preview-deploy-command.yml'
-      - '.github/workflows/deploy-pr-preview.yml'
+      - "Android/**"
+      - "iOS/**"
+      - ".github/workflows/pr-preview.yml"
+      - ".github/workflows/preview-deploy-command.yml"
+      - ".github/workflows/deploy-pr-preview.yml"
 
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
@@ -24,7 +24,7 @@ permissions:
 jobs:
   compute-version:
     name: Compute Preview Build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
@@ -35,7 +35,8 @@ jobs:
       - name: List PR commits
         id: commits
         continue-on-error: true
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           script: |
             const maxDisplay = 25;
@@ -65,20 +66,36 @@ jobs:
             if (count > displayed.length) {
               lines.push(`- *... and ${count - displayed.length} more*`);
             }
-            const summary = `${count} commit${count !== 1 ? 's' : ''} (newest first)`;
+            const summary =
+              `${count} commit${count !== 1 ? 's' : ''} (newest first)`;
             const body = lines.join('\n');
-            core.setOutput('list', `### Commits\n\n<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`);
+            core.setOutput(
+              'list',
+              `### Commits\n\n<details>\n<summary>${summary}</summary>` +
+                `\n\n${body}\n\n</details>`,
+            );
 
   comment-initial:
     name: PR Comment (Queued)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       issues: write
       pull-requests: write
+    env:
+      RUN_URL: >-
+        https://github.com/${{ github.repository }}/actions/runs/${{
+        github.run_id }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
+      PROMOTE_TEXT: >-
+        Comment `/deploy` on this PR to build and upload the current PR head
+        to TestFlight and the Play Store internal track.
     steps:
-      - uses: marocchino/sticky-pull-request-comment@d4d6b0936434b21bc8345ad45a440c5f7d2c40ff # v3
+      # v3
+      - uses: "marocchino/sticky-pull-request-comment@\
+          d4d6b0936434b21bc8345ad45a440c5f7d2c40ff"
         with:
           header: preview-build
           recreate: true
@@ -97,21 +114,21 @@ jobs:
             | Platform | Link |
             |----------|------|
             | 🍎 **iOS** | Available after a `/deploy` preview promotion |
-            | 🤖 **Android (APK)** | [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+            | 🤖 **Android (APK)** | [View workflow run](${{ env.RUN_URL }}) |
 
             ### Promote
-            Comment `/deploy` on this PR to build and upload the current PR head to TestFlight and the Play Store internal track.
+            ${{ env.PROMOTE_TEXT }}
 
             ${{ needs.compute-version.outputs.commits-list }}
 
             > Build triggered by `${{ github.event.pull_request.head.sha }}`
-            <!-- preview-build-source-sha:${{ github.event.pull_request.head.sha }} -->
-            <!-- preview-build-number:${{ needs.compute-version.outputs.build-number }} -->
+            <!-- preview-build-source-sha:${{ env.HEAD_SHA }} -->
+            <!-- preview-build-number:${{ env.BUILD_NUMBER }} -->
             <!-- preview-build-run-id:${{ github.run_id }} -->
 
   build-android:
     name: Build Android Preview
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     outputs:
@@ -126,33 +143,49 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-35 build-tools;36.0.0'
+          packages: "platform-tools platforms;android-35 build-tools;36.0.0"
 
       - name: Build private preview APKs
         working-directory: Android
-        run: ./gradlew :PitchPerfect:assemblePrivate :TagMaster:assemblePrivate -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{ needs.compute-version.outputs.build-number }} --stacktrace --console=plain --no-daemon
+        run: >-
+          ./gradlew
+          :PitchPerfect:assemblePrivate
+          :PitchPerfectWear:assemblePrivate
+          :TagMaster:assemblePrivate
+          -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
+            needs.compute-version.outputs.build-number
+          }}
+          --stacktrace --console=plain --no-daemon
 
       - name: Collect preview APKs
         run: |
           mkdir -p preview-artifacts/android
-          find Android -path '*/build/outputs/apk/private/*.apk' -type f -exec cp {} preview-artifacts/android/ \;
+          find Android \
+            -path '*/build/outputs/apk/private/*.apk' \
+            -type f \
+            -exec cp {} preview-artifacts/android/ \;
           ls -l preview-artifacts/android
 
       - name: Upload preview APKs
         id: upload_apks
         uses: actions/upload-artifact@v4
         with:
-          name: android-preview-${{ github.event.pull_request.number }}-${{ needs.compute-version.outputs.build-number }}
+          name: >-
+            ${{ format(
+              'android-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
           path: preview-artifacts/android/*.apk
           if-no-files-found: error
 
   build-ios:
     name: Build iOS Preview
-    runs-on: macos-latest
+    runs-on: [self-hosted, macOS]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     env:
@@ -166,11 +199,16 @@ jobs:
           submodules: recursive
 
       - name: Select Xcode
-        run: echo "DEVELOPER_DIR=$(xcode-select -p 2>/dev/null || echo /Applications/Xcode.app/Contents/Developer)" >> "$GITHUB_ENV"
+        run: |
+          developer_dir="$(xcode-select -p 2>/dev/null || true)"
+          if [ -z "$developer_dir" ]; then
+            developer_dir=/Applications/Xcode.app/Contents/Developer
+          fi
+          echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
+          ruby-version: "3.3"
           bundler-cache: true
           working-directory: iOS
 
@@ -190,8 +228,138 @@ jobs:
 
       - name: Build preview apps
         working-directory: iOS
+        env:
+          PRIVATE_BUILD_NUMBER: >-
+            ${{ needs.compute-version.outputs.build-number }}
         run: |
           set -o pipefail
-          PRIVATE_BUILD_NUMBER='${{ needs.compute-version.outputs.build-number }}'
-          xcodebuild -workspace iOS.xcworkspace -scheme pitchperfect -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Pitch Perfect β' CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" build | bundle exec xcpretty --color
-          xcodebuild -workspace iOS.xcworkspace -scheme tagmaster -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private INFOPLIST_KEY_CFBundleDisplayName='Tag Master β' CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" build | bundle exec xcpretty --color
+          /usr/libexec/PlistBuddy \
+            -c 'Set :CFBundleDisplayName Pitch Perfect β' \
+            pitchperfect/pitchperfect/pitchperfect-Info.plist
+          /usr/libexec/PlistBuddy \
+            -c 'Set :CFBundleDisplayName Tag Master β' \
+            tagmaster/tagmaster/tagmaster-Info.plist
+          xcodebuild \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private \
+            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
+            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
+            build |
+              bundle exec xcpretty --color
+          xcodebuild \
+            -workspace iOS.xcworkspace \
+            -scheme tagmaster \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private \
+            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
+            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
+            build |
+              bundle exec xcpretty --color
+
+  comment-finish:
+    name: PR Comment (Complete)
+    runs-on: [self-hosted, macOS]
+    needs: [compute-version, comment-initial, build-android, build-ios]
+    if: >-
+      always() &&
+      needs.compute-version.result == 'success' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Publish preview result
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          ANDROID_RESULT: ${{ needs.build-android.result }}
+          IOS_RESULT: ${{ needs.build-ios.result }}
+          ANDROID_ARTIFACT_ID: ${{ needs.build-android.outputs.artifact-id }}
+        with:
+          script: |
+            const marker = '<!-- Sticky Pull Request Commentpreview-build -->';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = context.payload.pull_request.number;
+            const runUrl =
+              `https://github.com/${owner}/${repo}` +
+              `/actions/runs/${context.runId}`;
+            const listComments = github.rest.issues.listComments;
+            const comments = await github.paginate(listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const runMarker =
+              `<!-- preview-build-run-id:${context.runId} -->`;
+            const comment = comments.find(
+              (candidate) =>
+                candidate.user?.type === 'Bot' &&
+                candidate.body?.includes(marker) &&
+                candidate.body?.includes(runMarker),
+            );
+
+            if (!comment) {
+              core.setFailed(
+                'Could not find the queued preview comment for this run.',
+              );
+              return;
+            }
+
+            const status = (result, successText) => {
+              switch (result) {
+                case 'success':
+                  return `✅ ${successText}`;
+                case 'cancelled':
+                  return '⛔ Cancelled';
+                case 'skipped':
+                  return '⏭️ Skipped';
+                default:
+                  return '❌ Failed';
+              }
+            };
+
+            const artifactId = process.env.ANDROID_ARTIFACT_ID || '';
+            const androidLink = artifactId
+              ? [
+                  '[Download Pitch Perfect, Pitch Perfect Wear, and ',
+                  'Tag Master APKs]',
+                  `(${runUrl}/artifacts/${artifactId})`,
+                ].join('')
+              : `[View workflow run](${runUrl})`;
+            const androidStatus = status(
+              process.env.ANDROID_RESULT,
+              'APKs ready',
+            );
+            const iosStatus = status(
+              process.env.IOS_RESULT,
+              'builds validated',
+            );
+
+            const body = comment.body
+              .replace(
+                /\| \*\*Android Status\*\* \|.*\|/,
+                `| **Android Status** | ${androidStatus} |`,
+              )
+              .replace(
+                /\| \*\*iOS Status\*\* \|.*\|/,
+                `| **iOS Status** | ${iosStatus} |`,
+              )
+              .replace(
+                /\| 🤖 \*\*Android \(APK\)\*\* \|.*\|/,
+                `| 🤖 **Android (APK)** | ${androidLink} |`,
+              );
+
+            await github.rest.issues.updateComment({
+              owner,
+              repo,
+              comment_id: comment.id,
+              body,
+            });

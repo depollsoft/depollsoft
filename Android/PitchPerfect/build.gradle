@@ -107,7 +107,10 @@ android {
         targetSdk 35
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
-        versionCode((findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER') ?: getVersionCode(build: 0, suffix: 0)) as Integer)
+        def privateBuildNumber = findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER')
+        versionCode(privateBuildNumber == null
+                ? getVersionCode(build: 0, suffix: 0)
+                : (privateBuildNumber as Integer) * 10)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable Test Orchestrator for isolated test execution

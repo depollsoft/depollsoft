@@ -75,7 +75,10 @@ android {
         minSdk 24
         targetSdk 35
         resourceConfigurations += ['en']
-        versionCode((findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER') ?: getVersionCode(build: 0, suffix: 1)) as Integer)
+        def privateBuildNumber = findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER')
+        versionCode(privateBuildNumber == null
+                ? getVersionCode(build: 0, suffix: 1)
+                : (privateBuildNumber as Integer) * 10 + 1)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

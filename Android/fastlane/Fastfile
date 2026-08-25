@@ -61,6 +61,8 @@ platform :android do
           skip_upload_screenshots: true,
           skip_upload_apk: true,
           release_status: "completed",
+          changes_not_sent_for_review: true,
+          rescue_changes_not_sent_for_review: true,
         )
       end
     end

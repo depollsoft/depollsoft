@@ -10,22 +10,24 @@ on:
     branches:
       - main
     paths:
-      - 'Android/**'
-      - '.github/workflows/android.yml'
+      - "Android/**"
+      - ".github/workflows/android.yml"
   pull_request:
     branches:
       - main
     paths:
-      - 'Android/**'
-      - '.github/workflows/android.yml'
+      - "Android/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
 
 # Serialize runs per branch on self-hosted runners.
 # Queue new runs instead of canceling to reduce “superseded” failures.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref || github.ref }}
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.number
+    || github.head_ref || github.ref }}
   cancel-in-progress: false
 
 defaults:
@@ -35,25 +37,31 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0'
+          packages: >-
+            platform-tools platforms;android-34 platforms;android-35
+            build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -66,11 +74,17 @@ jobs:
           fi
 
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
-          
+
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
-          
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "platforms;android-35" \
+            "build-tools;34.0.0" \
+            "build-tools;35.0.0" \
+            "build-tools;36.0.0"
+
           echo "SDK components installed successfully."
 
       - name: Grant execute permission for gradlew
@@ -83,18 +97,26 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-unit-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: >-
+            gradle-unit-${{ runner.os }}-${{ hashFiles('**/*.gradle*',
+            '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-unit-${{ runner.os }}-
 
       - name: Run unit tests (coverage on schedule/manual)
         env:
           # Increase Gradle memory for containerized runners
-          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+          GRADLE_OPTS: >-
+            -Xmx2g -XX:MaxMetaspaceSize=512m
+            -XX:+HeapDumpOnOutOfMemoryError
         run: |
           set -euo pipefail
-          COMMON_FLAGS=(--stacktrace --build-cache --console=plain --no-daemon --no-parallel)
-          if [[ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          COMMON_FLAGS=(
+            --stacktrace --build-cache --console=plain
+            --no-daemon --no-parallel
+          )
+          if [[ "${{ github.event_name }}" == "schedule" \
+            || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             ./gradlew testDebugUnitTest jacocoTestReport "${COMMON_FLAGS[@]}"
           else
             ./gradlew testDebugUnitTest "${COMMON_FLAGS[@]}"
@@ -117,8 +139,11 @@ jobs:
           import xml.etree.ElementTree as ET
 
           # We are running with defaults.run.working-directory: Android
-          jacoco_paths = sorted(glob.glob('**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml', recursive=True))
-          junit_paths = sorted(glob.glob('**/build/test-results/testDebugUnitTest/*.xml', recursive=True))
+          jacoco_paths = sorted(glob.glob(
+            '**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml',
+            recursive=True))
+          junit_paths = sorted(glob.glob(
+            '**/build/test-results/testDebugUnitTest/*.xml', recursive=True))
 
           total_tests = total_failures = total_errors = total_skipped = 0
           for p in junit_paths:
@@ -170,9 +195,12 @@ jobs:
           summary_lines.append('## Android — Unit tests & coverage')
           summary_lines.append('')
           summary_lines.append(f"- JUnit files: {len(junit_paths)}")
-          summary_lines.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary_lines.append(
+            f"- Tests: {total_tests} (failures: {total_failures}, "
+            f"errors: {total_errors}, skipped: {total_skipped})")
           summary_lines.append(f"- JaCoCo XML files: {len(jacoco_paths)}")
-          summary_lines.append(f"- Line coverage (sum of reports): {coverage_pct:.2f}%")
+          summary_lines.append(
+            f"- Line coverage (sum of reports): {coverage_pct:.2f}%")
           summary_lines.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary_lines) + '\n')
@@ -219,31 +247,40 @@ jobs:
     runs-on: [self-hosted, macOS]
     timeout-minutes: 60
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: recursive
 
       - name: Enable KVM for emulator (Linux only)
         if: runner.os == 'Linux'
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo tee /etc/udev/rules.d/99-kvm4all.rules <<'RULE'
+          KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"
+          RULE
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0 emulator system-images;android-30;google_apis;arm64-v8a system-images;android-30;google_apis;x86_64'
+          packages: >-
+            platform-tools platforms;android-34 platforms;android-35
+            build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0
+            emulator system-images;android-30;google_apis;arm64-v8a
+            system-images;android-30;google_apis;x86_64
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -256,11 +293,17 @@ jobs:
           fi
 
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
-          
+
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
-          
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "platforms;android-35" \
+            "build-tools;34.0.0" \
+            "build-tools;35.0.0" \
+            "build-tools;36.0.0"
+
           echo "SDK components installed successfully."
 
       - name: Export Android SDK env for emulator
@@ -289,7 +332,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-instrumented-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: >-
+            gradle-instrumented-${{ runner.os }}-${{
+            hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-instrumented-${{ runner.os }}-
 
@@ -327,17 +372,18 @@ jobs:
           fi
 
           # Self-hosted runners can end up with a stuck adb server which breaks
-          # emulator boot detection ("Unable to connect to adb daemon on port: 5037").
+          # emulator boot detection ("Unable to connect to adb daemon on
+          # port: 5037").
           echo "Stopping any existing ADB server..."
           "${SDK_ROOT}/platform-tools/adb" kill-server 2>/dev/null || true
-          
+
           # Aggressively kill any lingering adb processes
           echo "Killing lingering adb processes..."
           pkill -9 -f "adb" 2>/dev/null || true
-          
+
           # Wait for processes to die and port to be released
           sleep 2
-          
+
           # Kill anything still holding port 5037
           for _ in 1 2 3; do
             if lsof -ti tcp:5037 >/dev/null 2>&1; then
@@ -348,16 +394,16 @@ jobs:
               break
             fi
           done
-          
+
           # Clean up adb state files
           rm -f "$HOME/.android/adb"* 2>/dev/null || true
-          
+
           # Final check - if port is still busy, wait longer
           if lsof -ti tcp:5037 >/dev/null 2>&1; then
             echo "Port 5037 still busy after cleanup, waiting..."
             sleep 5
           fi
-          
+
           echo "Starting fresh ADB server..."
           "${SDK_ROOT}/platform-tools/adb" start-server
           "${SDK_ROOT}/platform-tools/adb" devices
@@ -366,7 +412,8 @@ jobs:
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
-          ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
+          ADB: >-
+            ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
         with:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
@@ -376,8 +423,11 @@ jobs:
           emulator-boot-timeout: 1800
           # On macOS runners, Vulkan/SwiftShader can wedge the device/adb.
           # Disable Vulkan and use software GPU to keep it stable.
-          # Allow snapshot save here so the AVD cache is populated for future runs.
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -feature -Vulkan
+          # Allow snapshot save here so the AVD cache is populated for
+          # future runs.
+          emulator-options: >-
+            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+            -camera-back none -camera-front none -feature -Vulkan
           disable-animations: true
           script: echo "Generated AVD snapshot for caching."
           working-directory: Android
@@ -385,8 +435,11 @@ jobs:
       - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         env:
-          ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
-          GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+          ADB: >-
+            ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
+          GRADLE_OPTS: >-
+            -Xmx4g -XX:MaxMetaspaceSize=512m
+            -XX:+HeapDumpOnOutOfMemoryError
         with:
           api-level: 30
           arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
@@ -394,11 +447,40 @@ jobs:
           force-avd-creation: false
           avd-name: ci-api30-googleapis-${{ runner.arch }}
           emulator-boot-timeout: 1800
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -feature -Vulkan
+          emulator-options: >-
+            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+            -camera-back none -camera-front none -no-snapshot-save
+            -feature -Vulkan
           disable-animations: true
           working-directory: Android
           script: >
-            bash -lc 'set -euo pipefail; adb wait-for-device; echo "Waiting for boot to complete..."; for i in $(seq 1 120); do BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then echo "Boot completed after ${i}s"; break; fi; sleep 1; done; echo "Waiting for package manager..."; for i in $(seq 1 30); do if adb shell pm list packages >/dev/null 2>&1; then echo "Package manager ready after ${i}s"; break; fi; sleep 1; done; adb shell input keyevent KEYCODE_WAKEUP || true; adb shell input keyevent 82 || true; adb shell wm dismiss-keyguard || true; adb shell settings put global stay_on_while_plugged_in 3 || true; adb shell svc power stayon true || true; adb shell settings put global window_animation_scale 0; adb shell settings put global transition_animation_scale 0; adb shell settings put global animator_duration_scale 0; echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2; for attempt in $(seq 1 $MAX_ATTEMPTS); do echo "Test attempt $attempt of $MAX_ATTEMPTS"; if ./gradlew connectedDebugAndroidTest createDebugAndroidTestCoverageReport -Pandroid.testInstrumentationRunnerArguments.coverage=true --build-cache --stacktrace; then echo "Tests passed on attempt $attempt"; exit 0; fi; if [ $attempt -lt $MAX_ATTEMPTS ]; then echo "Tests failed, retrying..."; sleep 5; fi; done; echo "Tests failed after $MAX_ATTEMPTS attempts"; exit 1;'
+            bash -lc 'set -euo pipefail; adb wait-for-device;
+            echo "Waiting for boot to complete..."; for i in $(seq 1 120); do
+            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null
+            | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then
+            echo "Boot completed after ${i}s"; break; fi; sleep 1; done;
+            echo "Waiting for package manager..."; for i in $(seq 1 30); do
+            if adb shell pm list packages >/dev/null 2>&1; then
+            echo "Package manager ready after ${i}s"; break; fi; sleep 1; done;
+            adb shell input keyevent KEYCODE_WAKEUP || true;
+            adb shell input keyevent 82 || true;
+            adb shell wm dismiss-keyguard || true;
+            adb shell settings put global stay_on_while_plugged_in 3 || true;
+            adb shell svc power stayon true || true;
+            adb shell settings put global window_animation_scale 0;
+            adb shell settings put global transition_animation_scale 0;
+            adb shell settings put global animator_duration_scale 0;
+            echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2;
+            for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Test attempt $attempt of $MAX_ATTEMPTS";
+            if ./gradlew connectedDebugAndroidTest
+            createDebugAndroidTestCoverageReport
+            -Pandroid.testInstrumentationRunnerArguments.coverage=true
+            --build-cache --stacktrace; then
+            echo "Tests passed on attempt $attempt"; exit 0; fi;
+            if [ $attempt -lt $MAX_ATTEMPTS ]; then
+            echo "Tests failed, retrying..."; sleep 5; fi; done;
+            echo "Tests failed after $MAX_ATTEMPTS attempts"; exit 1;'
 
       - name: Collect instrumented test results
         if: always()
@@ -411,7 +493,9 @@ jobs:
 
           # Already in Android directory due to defaults.run.working-directory
           # Connected device test results location
-          junit_paths = sorted(glob.glob('**/build/outputs/androidTest-results/connected/**/*.xml', recursive=True))
+          junit_paths = sorted(glob.glob(
+            '**/build/outputs/androidTest-results/connected/**/*.xml',
+            recursive=True))
 
           total_tests = total_failures = total_errors = total_skipped = 0
           for p in junit_paths:
@@ -432,8 +516,11 @@ jobs:
               total_skipped += int(s.attrib.get('skipped', 0))
 
           # Collect instrumented test coverage from JaCoCo reports
-          # Coverage reports are generated in build/reports/coverage/androidTest/debug/
-          coverage_paths = sorted(glob.glob('**/build/reports/coverage/androidTest/debug/report.xml', recursive=True))
+          # Coverage reports are generated in
+          # build/reports/coverage/androidTest/debug/
+          coverage_paths = sorted(glob.glob(
+            '**/build/reports/coverage/androidTest/debug/report.xml',
+            recursive=True))
           covered = missed = 0
           for p in coverage_paths:
             try:
@@ -457,7 +544,9 @@ jobs:
           summary = []
           summary.append('## Android — UI/Instrumented Tests')
           summary.append('')
-          summary.append(f"- Tests: {total_tests} (failures: {total_failures}, errors: {total_errors}, skipped: {total_skipped})")
+          summary.append(
+            f"- Tests: {total_tests} (failures: {total_failures}, "
+            f"errors: {total_errors}, skipped: {total_skipped})")
           if total_lines > 0:
             summary.append(f"- Line coverage: {coverage_pct:.2f}%")
           summary.append('')
@@ -495,7 +584,9 @@ jobs:
     name: Android Combined Coverage
     runs-on: [self-hosted, macOS]
     needs: [test, instrumented-tests]
-    if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    if: >-
+      always() && (github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule')
     timeout-minutes: 10
     defaults:
       run:
@@ -524,8 +615,10 @@ jobs:
           import xml.etree.ElementTree as ET
 
           # Find all JaCoCo coverage reports
-          unit_coverage_paths = sorted(glob.glob('unit-coverage/**/jacocoTestReport.xml', recursive=True))
-          instr_coverage_paths = sorted(glob.glob('instrumented-coverage/**/report.xml', recursive=True))
+          unit_coverage_paths = sorted(glob.glob(
+            'unit-coverage/**/jacocoTestReport.xml', recursive=True))
+          instr_coverage_paths = sorted(glob.glob(
+            'instrumented-coverage/**/report.xml', recursive=True))
 
           def parse_jacoco_coverage(paths):
             covered = missed = 0
@@ -542,24 +635,36 @@ jobs:
             pct = (covered / total * 100.0) if total else 0.0
             return covered, missed, total, pct
 
-          unit_covered, unit_missed, unit_total, unit_pct = parse_jacoco_coverage(unit_coverage_paths)
-          instr_covered, instr_missed, instr_total, instr_pct = parse_jacoco_coverage(instr_coverage_paths)
+          unit_covered, unit_missed, unit_total, unit_pct = (
+            parse_jacoco_coverage(unit_coverage_paths))
+          instr_covered, instr_missed, instr_total, instr_pct = (
+            parse_jacoco_coverage(instr_coverage_paths))
 
           # Best coverage (since they test the same codebase)
-          combined_pct = max(unit_pct, instr_pct) if (unit_total or instr_total) else 0.0
+          combined_pct = (
+            max(unit_pct, instr_pct) if (unit_total or instr_total) else 0.0)
 
           summary = []
           summary.append('## Android — Combined Coverage Summary')
           summary.append('')
-          summary.append('| Test Type | Lines Covered | Total Lines | Coverage |')
-          summary.append('|-----------|---------------|-------------|----------|')
+          summary.append(
+            '| Test Type | Lines Covered | Total Lines | Coverage |')
+          summary.append(
+            '|-----------|---------------|-------------|----------|')
           if unit_total:
-            summary.append(f'| Unit Tests | {unit_covered} | {unit_total} | {unit_pct:.2f}% |')
+            summary.append(
+              f'| Unit Tests | {unit_covered} | {unit_total} '
+              f'| {unit_pct:.2f}% |')
           if instr_total:
-            summary.append(f'| Instrumented Tests | {instr_covered} | {instr_total} | {instr_pct:.2f}% |')
-          summary.append(f'| **Combined (best)** | - | - | **{combined_pct:.2f}%** |')
+            summary.append(
+              f'| Instrumented Tests | {instr_covered} | {instr_total} '
+              f'| {instr_pct:.2f}% |')
+          summary.append(
+            f'| **Combined (best)** | - | - | **{combined_pct:.2f}%** |')
           summary.append('')
-          summary.append('> Note: Combined shows the better coverage of the two test types.')
+          summary.append(
+            '> Note: Combined shows the better coverage of the two test '
+            'types.')
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary) + '\n')
