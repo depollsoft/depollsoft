@@ -200,9 +200,13 @@ jobs:
 
       - name: Select Xcode
         run: |
-          developer_dir="$(xcode-select -p 2>/dev/null || true)"
-          if [ -z "$developer_dir" ]; then
-            developer_dir=/Applications/Xcode.app/Contents/Developer
+          developer_dir=/Applications/Xcode.app/Contents/Developer
+          if [ ! -d "$developer_dir" ]; then
+            developer_dir="$(xcode-select -p 2>/dev/null || true)"
+          fi
+          if [ -z "$developer_dir" ] || [ ! -d "$developer_dir" ]; then
+            echo "No usable Xcode installation found." >&2
+            exit 1
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
@@ -217,7 +221,7 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "Attempt $attempt of 3: pod install"
-            if bundle exec pod install --repo-update; then
+            if bundle exec pod install; then
               exit 0
             fi
             if [ "$attempt" -lt 3 ]; then
