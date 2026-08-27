@@ -37,7 +37,7 @@ defaults:
 jobs:
   test:
     name: Android Unit Tests & Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -240,7 +240,7 @@ jobs:
 
   instrumented-tests:
     name: Android UI/Instrumented Tests
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     timeout-minutes: 60
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -574,7 +574,7 @@ jobs:
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
     name: Android Combined Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     needs: [test, instrumented-tests]
     if: >-
       always() && (github.event_name == 'workflow_dispatch' ||

@@ -12,7 +12,7 @@ jobs:
   dispatch:
     name: Handle /deploy command
     if: github.event.issue.pull_request
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     permissions:
       actions: write
       contents: read

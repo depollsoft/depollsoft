@@ -24,7 +24,7 @@ permissions:
 jobs:
   compute-version:
     name: Compute Preview Build
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
@@ -77,7 +77,7 @@ jobs:
 
   comment-initial:
     name: PR Comment (Queued)
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
@@ -128,7 +128,7 @@ jobs:
 
   build-android:
     name: Build Android Preview
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     outputs:
@@ -268,7 +268,7 @@ jobs:
 
   comment-finish:
     name: PR Comment (Complete)
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, Linux]
     needs: [compute-version, comment-initial, build-android, build-ios]
     if: >-
       always() &&
