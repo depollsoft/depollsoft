@@ -266,10 +266,142 @@ jobs:
             build |
               bundle exec xcpretty --color
 
+  publish-android-sharing:
+    name: Publish Android Internal App Sharing
+    runs-on: [self-hosted, Linux]
+    needs: [compute-version, build-android]
+    if: >-
+      needs.build-android.result == 'success' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      pitchperfect-url: ${{ steps.upload.outputs.pitchperfect-url }}
+      wear-url: ${{ steps.upload.outputs.wear-url }}
+      tagmaster-url: ${{ steps.upload.outputs.tagmaster-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: Android
+
+      - name: Download preview APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: >-
+            ${{ format(
+              'android-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
+          path: preview-artifacts/android
+
+      - name: Decode Play service account
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          export PLAY_SERVICE_ACCOUNT_JSON_PATH="${RUNNER_TEMP}/play.json"
+          python3 - <<'PY'
+          import base64
+          import binascii
+          import json
+          import os
+          import sys
+
+          raw = os.environ.get("PLAY_SERVICE_ACCOUNT_JSON", "").strip()
+          if not raw:
+              print("PLAY_SERVICE_ACCOUNT_JSON is empty.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              parsed = json.loads(raw)
+          except json.JSONDecodeError:
+              try:
+                  decoded = base64.b64decode(raw).decode("utf-8")
+                  parsed = json.loads(decoded)
+              except (
+                  binascii.Error,
+                  UnicodeDecodeError,
+                  json.JSONDecodeError,
+              ):
+                  print(
+                      "PLAY_SERVICE_ACCOUNT_JSON must be JSON or base64 JSON.",
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
+
+          with open(
+              os.environ["PLAY_SERVICE_ACCOUNT_JSON_PATH"],
+              "w",
+              encoding="utf-8",
+          ) as handle:
+              json.dump(parsed, handle)
+          PY
+          printf 'PLAY_SERVICE_ACCOUNT_JSON_PATH=%s\n' \
+            "$PLAY_SERVICE_ACCOUNT_JSON_PATH" >> "$GITHUB_ENV"
+
+      - name: Upload preview APKs to Internal App Sharing
+        id: upload
+        working-directory: Android
+        run: |
+          set -euo pipefail
+
+          upload_apk() {
+            output_name="$1"
+            package_name="$2"
+            apk_name="$3"
+            apk_path="${GITHUB_WORKSPACE}/preview-artifacts/android/${apk_name}"
+            url_file="${RUNNER_TEMP}/${output_name}.txt"
+
+            if [ ! -f "$apk_path" ]; then
+              echo "Missing preview APK: $apk_path" >&2
+              exit 1
+            fi
+
+            INTERNAL_APP_SHARING_URL_FILE="$url_file" \
+              bundle exec fastlane internal_app_sharing \
+                package_name:"$package_name" \
+                apk_path:"$apk_path"
+
+            url="$(tr -d '\r\n' < "$url_file")"
+            if [ -z "$url" ]; then
+              echo "Internal App Sharing returned no URL for $apk_name" >&2
+              exit 1
+            fi
+            echo "${output_name}=${url}" >> "$GITHUB_OUTPUT"
+          }
+
+          upload_apk \
+            pitchperfect-url \
+            depollsoft.pitchperfect.private \
+            PitchPerfect-private.apk
+          upload_apk \
+            wear-url \
+            depollsoft.pitchperfect.private \
+            PitchPerfectWear-private.apk
+          upload_apk \
+            tagmaster-url \
+            depollsoft.tagmaster.private \
+            TagMaster-private.apk
+
+      - name: Clean up Play credentials
+        if: always()
+        run: rm -f "$PLAY_SERVICE_ACCOUNT_JSON_PATH"
+
   comment-finish:
     name: PR Comment (Complete)
     runs-on: [self-hosted, Linux]
-    needs: [compute-version, comment-initial, build-android, build-ios]
+    needs:
+      - compute-version
+      - comment-initial
+      - build-android
+      - build-ios
+      - publish-android-sharing
     if: >-
       always() &&
       needs.compute-version.result == 'success' &&
@@ -283,8 +415,14 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
           ANDROID_RESULT: ${{ needs.build-android.result }}
+          SHARING_RESULT: ${{ needs.publish-android-sharing.result }}
           IOS_RESULT: ${{ needs.build-ios.result }}
           ANDROID_ARTIFACT_ID: ${{ needs.build-android.outputs.artifact-id }}
+          PITCHPERFECT_URL: >-
+            ${{ needs.publish-android-sharing.outputs.pitchperfect-url }}
+          WEAR_URL: ${{ needs.publish-android-sharing.outputs.wear-url }}
+          TAGMASTER_URL: >-
+            ${{ needs.publish-android-sharing.outputs.tagmaster-url }}
         with:
           script: |
             const marker = '<!-- Sticky Pull Request Commentpreview-build -->';
@@ -331,17 +469,33 @@ jobs:
             };
 
             const artifactId = process.env.ANDROID_ARTIFACT_ID || '';
-            const androidLink = artifactId
-              ? [
-                  '[Download Pitch Perfect, Pitch Perfect Wear, and ',
-                  'Tag Master APKs]',
+            const links = [
+              ['Install Pitch Perfect', process.env.PITCHPERFECT_URL],
+              ['Install Pitch Perfect Wear', process.env.WEAR_URL],
+              ['Install Tag Master', process.env.TAGMASTER_URL],
+            ]
+              .filter(([, url]) => url)
+              .map(([label, url]) => `[${label}](${url})`);
+            if (artifactId) {
+              links.push(
+                '[Download all APKs]' +
                   `(${runUrl}/artifacts/${artifactId})`,
-                ].join('')
+              );
+            }
+            const androidLink = links.length
+              ? links.join('<br>')
               : `[View workflow run](${runUrl})`;
-            const androidStatus = status(
+
+            let androidStatus = status(
               process.env.ANDROID_RESULT,
               'APKs ready',
             );
+            if (process.env.ANDROID_RESULT === 'success') {
+              androidStatus = status(
+                process.env.SHARING_RESULT,
+                'Internal App Sharing published',
+              );
+            }
             const iosStatus = status(
               process.env.IOS_RESULT,
               'builds validated',

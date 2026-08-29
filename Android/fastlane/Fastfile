@@ -67,4 +67,45 @@ platform :android do
       end
     end
   end
+
+  desc "Upload a private APK or AAB to Play Internal App Sharing"
+  lane :internal_app_sharing do |options|
+    package_name = options[:package_name].to_s
+    supported_packages = [
+      "depollsoft.pitchperfect.private",
+      "depollsoft.tagmaster.private",
+    ]
+    unless supported_packages.include?(package_name)
+      UI.user_error!(
+        "Unsupported package_name '#{package_name}'. Expected one of: " +
+          supported_packages.join(", "),
+      )
+    end
+
+    apk_path = options[:apk_path] || options[:apk]
+    aab_path = options[:aab_path] || options[:aab]
+    if apk_path.to_s.empty? && aab_path.to_s.empty?
+      UI.user_error!("Provide apk_path/apk or aab_path/aab")
+    end
+
+    upload_options = {
+      package_name: package_name,
+      json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+    }
+    if apk_path.to_s.empty?
+      upload_options[:aab] = File.expand_path(aab_path)
+    else
+      upload_options[:apk] = File.expand_path(apk_path)
+    end
+
+    urls = upload_to_play_store_internal_app_sharing(upload_options)
+    url = Array(urls).first.to_s
+    if url.empty?
+      UI.user_error!("Internal App Sharing upload returned no install URL")
+    end
+
+    output_file = ENV["INTERNAL_APP_SHARING_URL_FILE"].to_s
+    File.write(output_file, "#{url}\n") unless output_file.empty?
+    UI.success("Internal App Sharing URL: #{url}")
+  end
 end
