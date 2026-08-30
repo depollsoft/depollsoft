@@ -2,8 +2,8 @@ package depollsoft.tagmaster
 
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
-import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
@@ -14,7 +14,7 @@ class TagMasterApplication : RichApplication() {
         super.onCreate()
         JsonSerializer.registerAlias(
             TrackableCollection::class.java,
-            "depollsoft.lib.binding.ObservableCollection"
+            "depollsoft.lib.binding.ObservableCollection",
         )
         Firebase.auth.addAuthStateListener {
             ListModel.connectToFirestore()
@@ -23,7 +23,7 @@ class TagMasterApplication : RichApplication() {
 
         Analytics.default.logEvent(
             Analytics.APP_OPEN,
-            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null)
+            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null),
         )
     }
 

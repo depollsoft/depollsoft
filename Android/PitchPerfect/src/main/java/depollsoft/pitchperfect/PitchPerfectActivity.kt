@@ -22,14 +22,13 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
 
 class PitchPerfectActivity : AppCompatActivity() {
-
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var logInDialog: Dialog
     private var preparingMenu: Boolean = false
@@ -53,13 +52,13 @@ class PitchPerfectActivity : AppCompatActivity() {
             R.id.adContainer,
             "Visibility",
             { (this::adsShouldShow) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         uibind(
             R.id.removeAds,
             "Visibility",
             { (this::adsShouldShow) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
 
         findViewById<View>(R.id.removeAds).setOnClickListener {
@@ -69,34 +68,35 @@ class PitchPerfectActivity : AppCompatActivity() {
         bottomNavigation = findViewById(R.id.bottomNavigation)
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
-        viewPager.adapter = object : FragmentStateAdapter(this) {
-            override fun createFragment(position: Int): Fragment {
-                return when (position) {
-                    0 -> PitchPipeFragment()
-                    1 -> NoteListFragment()
-                    2 -> KeySignatureFragment()
-                    3 -> SongListFragment()
-                    else -> PitchPipeFragment()
-                }
+        viewPager.adapter =
+            object : FragmentStateAdapter(this) {
+                override fun createFragment(position: Int): Fragment =
+                    when (position) {
+                        0 -> PitchPipeFragment()
+                        1 -> NoteListFragment()
+                        2 -> KeySignatureFragment()
+                        3 -> SongListFragment()
+                        else -> PitchPipeFragment()
+                    }
+
+                override fun getItemCount(): Int = 4
             }
 
-            override fun getItemCount(): Int {
-                return 4
-            }
-        }
-
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
-                bottomNavigation.selectedItemId = when (position) {
-                    0 -> R.id.pitchpipe_item
-                    1 -> R.id.notes_item
-                    2 -> R.id.keys_item
-                    3 -> R.id.songs_item
-                    else -> R.id.pitchpipe_item
+        viewPager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
+                    bottomNavigation.selectedItemId =
+                        when (position) {
+                            0 -> R.id.pitchpipe_item
+                            1 -> R.id.notes_item
+                            2 -> R.id.keys_item
+                            3 -> R.id.songs_item
+                            else -> R.id.pitchpipe_item
+                        }
                 }
-            }
-        })
+            },
+        )
 
         bottomNavigation.setOnItemSelectedListener {
             viewPager.setCurrentItem(
@@ -106,7 +106,8 @@ class PitchPerfectActivity : AppCompatActivity() {
                     R.id.keys_item -> 2
                     R.id.songs_item -> 3
                     else -> 0
-                }, true
+                },
+                true,
             )
             true
         }
@@ -132,17 +133,18 @@ class PitchPerfectActivity : AppCompatActivity() {
 
     override fun onRestoreInstanceState(state: Bundle) {
         super.onRestoreInstanceState(state)
-        //tabHost.restoreInstanceState("tabs", state);
+        // tabHost.restoreInstanceState("tabs", state);
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        //tabHost.saveInstanceState("tabs", outState);
+        // tabHost.saveInstanceState("tabs", outState);
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        if (preparingMenu)
+        if (preparingMenu) {
             return false
+        }
         preparingMenu = true
         try {
             menu.clear()
@@ -154,7 +156,7 @@ class PitchPerfectActivity : AppCompatActivity() {
                 this@PitchPerfectActivity.startActivity(i)
                 true
             }
-            //getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
+            // getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
             return super.onPrepareOptionsMenu(menu)
         } finally {
             preparingMenu = false
@@ -168,12 +170,14 @@ class PitchPerfectActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        runOnUiThread(Runnable {
-            if (handlingResult) {
-                handlingResult = false
-                return@Runnable
-            }
-        })
+        runOnUiThread(
+            Runnable {
+                if (handlingResult) {
+                    handlingResult = false
+                    return@Runnable
+                }
+            },
+        )
 
         if (SettingsModel.wakeLock) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -191,13 +195,14 @@ class PitchPerfectActivity : AppCompatActivity() {
         // to get test ads on a physical device, e.g.,
         // "Use AdRequest.Builder.addTestDevice("ABCDE0123") to get test ads on this
         // device."
-        val adRequest: AdRequest = AdRequest.Builder()
-            .build()
+        val adRequest: AdRequest =
+            AdRequest
+                .Builder()
+                .build()
         val adSize = getAdSize()
         // Step 4 - Set the adaptive ad size on the ad view.
         adView.setAdSize(adSize)
         adView.adUnitId = resources.getString(R.string.ad_unit_id)
-
 
         // Step 5 - Start loading the ad in the background.
         adView.loadAd(adRequest)
@@ -206,6 +211,7 @@ class PitchPerfectActivity : AppCompatActivity() {
     private fun getAdSize(): AdSize {
         // Step 2 - Determine the screen width (less decorations) to use for the ad width.
         val density: Float = resources.displayMetrics.density
+
         @Suppress("DEPRECATION")
         val widthPixels: Float = resources.displayMetrics.widthPixels.toFloat()
         val adWidth = (widthPixels / density).toInt()
