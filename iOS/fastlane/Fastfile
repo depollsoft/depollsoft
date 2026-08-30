@@ -74,6 +74,44 @@ ensure
   File.binwrite(project_file, original_project) if original_project
 end
 
+
+def ensure_external_test_group(app_identifier:, tester_email:)
+  app = Spaceship::ConnectAPI::App.find(app_identifier)
+  UI.user_error!("TestFlight app #{app_identifier} was not found") unless app
+
+  group_name = "PR Preview Testers"
+  group = app.get_beta_groups.find do |candidate|
+    candidate.name == group_name && !candidate.is_internal_group
+  end
+  group ||= app.create_beta_group(
+    group_name: group_name,
+    is_internal_group: false,
+  )
+
+  tester = Spaceship::ConnectAPI::BetaTester.find(
+    email: tester_email,
+    includes: "betaGroups",
+  )
+  if tester
+    memberships = Array(tester.beta_groups)
+    unless memberships.any? { |membership| membership.id == group.id }
+      group.add_beta_testers(beta_tester_ids: [tester.id])
+    end
+  else
+    group.post_bulk_beta_tester_assignments(
+      beta_testers: [
+        {
+          email: tester_email,
+          firstName: "David",
+          lastName: "Poll",
+        },
+      ],
+    )
+  end
+
+  group.name
+end
+
 def build_private_app(
   scheme:,
   config_dir:,
@@ -180,6 +218,16 @@ platform :ios do
       end
     end
 
+    tester_email = ENV.fetch("TESTFLIGHT_TESTER_EMAIL")
+    pitch_test_group = ensure_external_test_group(
+      app_identifier: "depollsoft.pitchperfect.private",
+      tester_email: tester_email,
+    )
+    tag_test_group = ensure_external_test_group(
+      app_identifier: "depollsoft.tagmaster.private",
+      tester_email: tester_email,
+    )
+
     match(
       type: "appstore",
       readonly: !refresh_signing,
@@ -221,7 +269,9 @@ platform :ios do
       app_identifier: "depollsoft.pitchperfect.private",
       ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
       skip_waiting_for_build_processing: false,
-      distribute_external: false,
+      distribute_external: true,
+      notify_external_testers: true,
+      groups: [pitch_test_group],
       changelog: changelog,
     )
 
@@ -230,7 +280,9 @@ platform :ios do
       app_identifier: "depollsoft.tagmaster.private",
       ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
       skip_waiting_for_build_processing: false,
-      distribute_external: false,
+      distribute_external: true,
+      notify_external_testers: true,
+      groups: [tag_test_group],
       changelog: changelog,
     )
   end

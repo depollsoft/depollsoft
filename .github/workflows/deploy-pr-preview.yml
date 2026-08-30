@@ -691,6 +691,7 @@ jobs:
             ${{ needs.compute-version.outputs.build-number }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_FORCE_REGENERATE: ${{ secrets.MATCH_FORCE_REGENERATE }}
+          TESTFLIGHT_TESTER_EMAIL: ${{ secrets.TESTFLIGHT_TESTER_EMAIL }}
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
         run: bundle exec fastlane deploy_private
