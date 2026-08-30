@@ -59,7 +59,6 @@ jobs:
         with:
           persist-credentials: false
 
-
       - name: Select Xcode version
         id: select_xcode
         run: |
@@ -128,7 +127,6 @@ jobs:
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
           echo "Using simulator: $DESTINATION"
 
-
       - name: Install xcpretty
         run: |
           if ! command -v xcpretty >/dev/null 2>&1; then
@@ -155,7 +153,6 @@ jobs:
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -clonedSourcePackagesDirPath SourcePackages
-
 
       - name: List available simulators
         run: >-
@@ -527,7 +524,6 @@ jobs:
         with:
           persist-credentials: false
 
-
       - name: Select Xcode version
         id: select_xcode
         run: |
@@ -577,7 +573,6 @@ jobs:
           " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
 
-
       - name: Install xcpretty
         run: |
           if ! command -v xcpretty >/dev/null 2>&1; then
@@ -604,7 +599,6 @@ jobs:
             -workspace iOS.xcworkspace \
             -scheme pitchperfect \
             -clonedSourcePackagesDirPath SourcePackages
-
 
       - name: Run pitchperfect UI tests
         id: pitchperfect_uitest
