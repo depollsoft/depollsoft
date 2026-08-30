@@ -51,16 +51,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Restore Firebase configuration
-        env:
-          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICE_INFO_PLIST }}
-          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICE_INFO_PLIST }}
-        run: |
-          test -n "$PITCHPERFECT_CONFIG"
-          test -n "$TAGMASTER_CONFIG"
-          printf '%s' "$PITCHPERFECT_CONFIG" > pitchperfect/GoogleService-Info.plist
-          printf '%s' "$TAGMASTER_CONFIG" > tagmaster/GoogleService-Info.plist
-
       - name: Select Xcode version
         id: select_xcode
         run: |
@@ -466,16 +456,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Restore Firebase configuration
-        env:
-          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICE_INFO_PLIST }}
-          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICE_INFO_PLIST }}
-        run: |
-          test -n "$PITCHPERFECT_CONFIG"
-          test -n "$TAGMASTER_CONFIG"
-          printf '%s' "$PITCHPERFECT_CONFIG" > pitchperfect/GoogleService-Info.plist
-          printf '%s' "$TAGMASTER_CONFIG" > tagmaster/GoogleService-Info.plist
 
       - name: Select Xcode version
         id: select_xcode

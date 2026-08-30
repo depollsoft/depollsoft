@@ -19,10 +19,6 @@ local.properties
 Thumbs.db
 .DS_Store
 
-# Firebase client configuration
-Android/*/google-services.json
-iOS/*/GoogleService-Info.plist
-
 # Retired SDK configuration
 **/fabric.properties
 CloudCode/**/config/global.json
