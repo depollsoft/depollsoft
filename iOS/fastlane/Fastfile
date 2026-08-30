@@ -166,8 +166,15 @@ platform :ios do
         Spaceship::ConnectAPI::BundleIdCapability::Type::APPLE_ID_AUTH
       capabilities = bundle_id.get_capabilities(client: provisioning_client)
       unless capabilities.any? { |item| item.is_type?(capability_type) }
+        capability = Spaceship::ConnectAPI::BundleIdCapability
         bundle_id.create_capability(
           capability_type,
+          settings: [
+            {
+              key: capability::Settings::APPLE_ID_AUTH_APP_CONSENT,
+              options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
+            },
+          ],
           client: provisioning_client,
         )
       end
