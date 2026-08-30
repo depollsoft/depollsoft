@@ -1,5 +1,4 @@
 require "fileutils"
-require "shellwords"
 require "tmpdir"
 
 default_platform(:ios)
@@ -49,6 +48,31 @@ def with_private_entitlements(entitlements_path, production_bundle_identifier:, 
   end
 end
 
+
+def with_private_signing(
+  project_path:,
+  target:,
+  bundle_identifier:,
+  provisioning_profile:,
+  entitlements_path:
+)
+  original_project = File.binread(project_path)
+  update_code_signing_settings(
+    path: project_path,
+    use_automatic_signing: false,
+    team_id: "43AWMS3YJX",
+    targets: [target],
+    build_configurations: ["Release"],
+    code_sign_identity: "Apple Distribution",
+    entitlements_file_path: entitlements_path,
+    profile_name: provisioning_profile,
+    bundle_identifier: bundle_identifier,
+  )
+  yield
+ensure
+  File.binwrite(project_path, original_project) if original_project
+end
+
 def build_private_app(
   scheme:,
   config_dir:,
@@ -64,6 +88,7 @@ def build_private_app(
   provisioning_profile = "match AppStore #{bundle_identifier}"
   entitlements_file = File.join(IOS_ROOT, entitlements_path)
   info_plist_file = File.join(IOS_ROOT, info_plist_path)
+  project_file = File.join(IOS_ROOT, scheme, "#{scheme}.xcodeproj")
 
   with_private_google_service_config(config_dir) do
     with_private_display_name(info_plist_file, display_name) do
@@ -72,31 +97,34 @@ def build_private_app(
         production_bundle_identifier: production_bundle_identifier,
         bundle_identifier: bundle_identifier,
       ) do |private_entitlements_path|
-        build_app(
-          workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
-          scheme: scheme,
-          export_method: "app-store",
-          export_team_id: "43AWMS3YJX",
-          export_options: {
-            provisioningProfiles: {
-              bundle_identifier => provisioning_profile,
+        with_private_signing(
+          project_path: project_file,
+          target: scheme,
+          bundle_identifier: bundle_identifier,
+          provisioning_profile: provisioning_profile,
+          entitlements_path: private_entitlements_path,
+        ) do
+          build_app(
+            workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+            scheme: scheme,
+            export_method: "app-store",
+            export_team_id: "43AWMS3YJX",
+            export_options: {
+              provisioningProfiles: {
+                bundle_identifier => provisioning_profile,
+              },
             },
-          },
-          xcargs: [
-            "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_identifier}",
-            "APP_ICON_NAME=#{icon_name}",
-            "CURRENT_PROJECT_VERSION=#{build_number}",
-            "DEVELOPMENT_TEAM=43AWMS3YJX",
-            "CODE_SIGN_STYLE=Manual",
-            "CODE_SIGN_IDENTITY=#{Shellwords.escape('Apple Distribution')}",
-            "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
-          ].join(" "),
-          cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
-          skip_package_dependencies_resolution: true,
-          output_directory: File.join(IOS_ROOT, "build"),
-          output_name: output_name,
-          clean: true,
-        )
+            xcargs: [
+              "APP_ICON_NAME=#{icon_name}",
+              "CURRENT_PROJECT_VERSION=#{build_number}",
+            ].join(" "),
+            cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
+            skip_package_dependencies_resolution: true,
+            output_directory: File.join(IOS_ROOT, "build"),
+            output_name: output_name,
+            clean: true,
+          )
+        end
       end
     end
   end
