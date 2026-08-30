@@ -159,7 +159,7 @@ jobs:
           ${{ steps.select_xcode.outputs.xcrun }}
           simctl list devices available
 
-      # Build all test targets once, then run tests in parallel
+      # Build all test targets once, then run tests sequentially
       - name: Build test targets
         id: build_tests
         env:
@@ -214,7 +214,6 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
               --output pitchperfect-junit.xml || FAILED=1
@@ -230,7 +229,6 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
               --output tagmaster-junit.xml || FAILED=1
@@ -246,7 +244,6 @@ jobs:
             -parallel-testing-enabled YES \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
-
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
               --output pitchperfectlib-junit.xml || FAILED=1
