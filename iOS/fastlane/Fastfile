@@ -88,15 +88,25 @@ def ensure_external_test_group(app_identifier:, tester_email:)
     is_internal_group: false,
   )
 
-  group.post_bulk_beta_tester_assignments(
-    beta_testers: [
-      {
+  tester = app.get_beta_testers(
+    filter: { email: tester_email },
+    includes: "betaGroups",
+  ).first
+  if tester
+    memberships = Array(tester.beta_groups)
+    unless memberships.any? { |membership| membership.id == group.id }
+      group.add_beta_testers(beta_tester_ids: [tester.id])
+    end
+  else
+    Spaceship::ConnectAPI.post_beta_tester_assignment(
+      beta_group_ids: [group.id],
+      attributes: {
         email: tester_email,
         firstName: "David",
         lastName: "Poll",
       },
-    ],
-  )
+    )
+  end
 
   group.name
 end
