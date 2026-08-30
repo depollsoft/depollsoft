@@ -603,6 +603,7 @@ jobs:
             git -C "$repo_path" config user.name "github-actions[bot]"
             git -C "$repo_path" config user.email \
               "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C "$repo_path" config receive.denyCurrentBranch updateInstead
             git -C "$repo_path" add .
             git -C "$repo_path" commit -m "Restore encrypted signing assets"
             echo "MATCH_REPOSITORY_PATH=$repo_path" >> "$GITHUB_ENV"
