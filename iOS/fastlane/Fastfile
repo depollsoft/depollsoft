@@ -75,17 +75,18 @@ ensure
 end
 
 
-def ensure_external_test_group(app_identifier:, tester_email:)
+def ensure_internal_test_group(app_identifier:, tester_email:)
   app = Spaceship::ConnectAPI::App.find(app_identifier)
   UI.user_error!("TestFlight app #{app_identifier} was not found") unless app
 
-  group_name = "PR Preview Testers"
+  group_name = "PR Preview Internal Testers"
   group = app.get_beta_groups.find do |candidate|
-    candidate.name == group_name && !candidate.is_internal_group
+    candidate.name == group_name && candidate.is_internal_group
   end
   group ||= app.create_beta_group(
     group_name: group_name,
-    is_internal_group: false,
+    is_internal_group: true,
+    has_access_to_all_builds: true,
   )
 
   tester = app.get_beta_testers(
@@ -218,11 +219,11 @@ platform :ios do
     end
 
     tester_email = ENV.fetch("TESTFLIGHT_TESTER_EMAIL")
-    pitch_test_group = ensure_external_test_group(
+    ensure_internal_test_group(
       app_identifier: "depollsoft.pitchperfect.private",
       tester_email: tester_email,
     )
-    tag_test_group = ensure_external_test_group(
+    ensure_internal_test_group(
       app_identifier: "depollsoft.tagmaster.private",
       tester_email: tester_email,
     )
@@ -268,15 +269,13 @@ platform :ios do
       app_identifier: "depollsoft.pitchperfect.private",
       ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
       skip_waiting_for_build_processing: false,
-      distribute_external: true,
-      notify_external_testers: true,
+      distribute_external: false,
       localized_app_info: {
         "en-US" => {
           description: "Private preview builds for dependency testing.",
           feedback_email: tester_email,
         },
       },
-      groups: [pitch_test_group],
       changelog: changelog,
     )
 
@@ -285,15 +284,13 @@ platform :ios do
       app_identifier: "depollsoft.tagmaster.private",
       ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
       skip_waiting_for_build_processing: false,
-      distribute_external: true,
-      notify_external_testers: true,
+      distribute_external: false,
       localized_app_info: {
         "en-US" => {
           description: "Private preview builds for dependency testing.",
           feedback_email: tester_email,
         },
       },
-      groups: [tag_test_group],
       changelog: changelog,
     )
   end
