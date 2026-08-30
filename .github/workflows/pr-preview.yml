@@ -1,0 +1,523 @@
+name: PR Preview
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize]
+    paths:
+      - "Android/**"
+      - "iOS/**"
+      - ".github/workflows/pr-preview.yml"
+      - ".github/workflows/preview-deploy-command.yml"
+      - ".github/workflows/deploy-pr-preview.yml"
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  compute-version:
+    name: Compute Preview Build
+    runs-on: [self-hosted, Linux]
+    outputs:
+      build-number: ${{ steps.version.outputs.build-number }}
+      commits-list: ${{ steps.commits.outputs.list }}
+    steps:
+      - id: version
+        run: echo "build-number=$(( $(date +%s) / 10 ))" >> "$GITHUB_OUTPUT"
+
+      - name: List PR commits
+        id: commits
+        continue-on-error: true
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const maxDisplay = 25;
+            const sanitize = (value) =>
+              value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/@/g, '@\u200b');
+
+            const count = ${{ github.event.pull_request.commits }};
+            const lastPage = Math.max(1, Math.ceil(count / 100));
+            const {data: page} = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+              per_page: 100,
+              page: lastPage,
+            });
+            page.reverse();
+            const displayed = page.slice(0, maxDisplay);
+            const lines = displayed.map((commit) => {
+              const sha = commit.sha.substring(0, 7);
+              const message = sanitize(commit.commit.message.split('\n')[0]);
+              return `- \`${sha}\` ${message}`;
+            });
+            if (count > displayed.length) {
+              lines.push(`- *... and ${count - displayed.length} more*`);
+            }
+            const summary =
+              `${count} commit${count !== 1 ? 's' : ''} (newest first)`;
+            const body = lines.join('\n');
+            core.setOutput(
+              'list',
+              `### Commits\n\n<details>\n<summary>${summary}</summary>` +
+                `\n\n${body}\n\n</details>`,
+            );
+
+  comment-initial:
+    name: PR Comment (Queued)
+    runs-on: [self-hosted, Linux]
+    needs: compute-version
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      issues: write
+      pull-requests: write
+    env:
+      RUN_URL: >-
+        https://github.com/${{ github.repository }}/actions/runs/${{
+        github.run_id }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
+      PROMOTE_TEXT: >-
+        Comment `/deploy` on this PR to build and upload the current PR head
+        to TestFlight and the Play Store internal track.
+    steps:
+      # v3
+      - uses: "marocchino/sticky-pull-request-comment@\
+          d4d6b0936434b21bc8345ad45a440c5f7d2c40ff"
+        with:
+          header: preview-build
+          recreate: true
+          message: |
+            ## 📱 Preview Build
+
+            | | Details |
+            |---|---|
+            | **PR** | #${{ github.event.pull_request.number }} |
+            | **Preview SHA** | `${{ github.event.pull_request.head.sha }}` |
+            | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
+            | **Android Status** | ⏳ Building |
+            | **iOS Status** | ⏳ Building |
+
+            ### Install
+            | Platform | Link |
+            |----------|------|
+            | 🍎 **iOS** | Available after a `/deploy` preview promotion |
+            | 🤖 **Android (APK)** | [View workflow run](${{ env.RUN_URL }}) |
+
+            ### Promote
+            ${{ env.PROMOTE_TEXT }}
+
+            ${{ needs.compute-version.outputs.commits-list }}
+
+            > Build triggered by `${{ github.event.pull_request.head.sha }}`
+            <!-- preview-build-source-sha:${{ env.HEAD_SHA }} -->
+            <!-- preview-build-number:${{ env.BUILD_NUMBER }} -->
+            <!-- preview-build-run-id:${{ github.run_id }} -->
+
+  build-android:
+    name: Build Android Preview
+    runs-on: [self-hosted, Linux]
+    needs: compute-version
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      artifact-id: ${{ steps.upload_apks.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;36.0.0"
+
+      - name: Build private preview APKs
+        working-directory: Android
+        run: >-
+          ./gradlew
+          :PitchPerfect:assemblePrivate
+          :PitchPerfectWear:assemblePrivate
+          :TagMaster:assemblePrivate
+          -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
+            needs.compute-version.outputs.build-number
+          }}
+          --stacktrace --console=plain --no-daemon
+
+      - name: Collect preview APKs
+        run: |
+          mkdir -p preview-artifacts/android
+          find Android \
+            -path '*/build/outputs/apk/private/*.apk' \
+            -type f \
+            -exec cp {} preview-artifacts/android/ \;
+          ls -l preview-artifacts/android
+
+      - name: Upload preview APKs
+        id: upload_apks
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: >-
+            ${{ format(
+              'android-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
+          path: preview-artifacts/android/*.apk
+          if-no-files-found: error
+
+  build-ios:
+    name: Build iOS Preview
+    runs-on: [self-hosted, macOS]
+    needs: compute-version
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
+
+      - name: Select Xcode
+        run: |
+          developer_dir=/Applications/Xcode.app/Contents/Developer
+          if [ ! -d "$developer_dir" ]; then
+            developer_dir="$(xcode-select -p 2>/dev/null || true)"
+          fi
+          if [ -z "$developer_dir" ] || [ ! -d "$developer_dir" ]; then
+            echo "No usable Xcode installation found." >&2
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: iOS
+
+      - name: Install CocoaPods
+        working-directory: iOS
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: pod install"
+            if bundle exec pod install; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
+      - name: Build preview apps
+        working-directory: iOS
+        env:
+          PRIVATE_BUILD_NUMBER: >-
+            ${{ needs.compute-version.outputs.build-number }}
+        run: |
+          set -o pipefail
+          /usr/libexec/PlistBuddy \
+            -c 'Set :CFBundleDisplayName Pitch Perfect β' \
+            pitchperfect/pitchperfect/pitchperfect-Info.plist
+          /usr/libexec/PlistBuddy \
+            -c 'Set :CFBundleDisplayName Tag Master β' \
+            tagmaster/tagmaster/tagmaster-Info.plist
+          xcodebuild \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private \
+            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
+            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
+            build |
+              bundle exec xcpretty --color
+          xcodebuild \
+            -workspace iOS.xcworkspace \
+            -scheme tagmaster \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private \
+            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
+            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
+            build |
+              bundle exec xcpretty --color
+
+  publish-android-sharing:
+    name: Publish Android Internal App Sharing
+    runs-on: [self-hosted, Linux]
+    needs: [compute-version, build-android]
+    if: >-
+      needs.build-android.result == 'success' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      pitchperfect-url: ${{ steps.upload.outputs.pitchperfect-url }}
+      wear-url: ${{ steps.upload.outputs.wear-url }}
+      tagmaster-url: ${{ steps.upload.outputs.tagmaster-url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: Android
+
+      - name: Download preview APKs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: >-
+            ${{ format(
+              'android-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
+          path: preview-artifacts/android
+
+      - name: Decode Play service account
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          export PLAY_SERVICE_ACCOUNT_JSON_PATH="${RUNNER_TEMP}/play.json"
+          python3 - <<'PY'
+          import base64
+          import binascii
+          import json
+          import os
+          import sys
+
+          raw = os.environ.get("PLAY_SERVICE_ACCOUNT_JSON", "").strip()
+          if not raw:
+              print("PLAY_SERVICE_ACCOUNT_JSON is empty.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              parsed = json.loads(raw)
+          except json.JSONDecodeError:
+              try:
+                  decoded = base64.b64decode(raw).decode("utf-8")
+                  parsed = json.loads(decoded)
+              except (
+                  binascii.Error,
+                  UnicodeDecodeError,
+                  json.JSONDecodeError,
+              ):
+                  print(
+                      "PLAY_SERVICE_ACCOUNT_JSON must be JSON or base64 JSON.",
+                      file=sys.stderr,
+                  )
+                  sys.exit(1)
+
+          with open(
+              os.environ["PLAY_SERVICE_ACCOUNT_JSON_PATH"],
+              "w",
+              encoding="utf-8",
+          ) as handle:
+              json.dump(parsed, handle)
+          PY
+          printf 'PLAY_SERVICE_ACCOUNT_JSON_PATH=%s\n' \
+            "$PLAY_SERVICE_ACCOUNT_JSON_PATH" >> "$GITHUB_ENV"
+
+      - name: Upload preview APKs to Internal App Sharing
+        id: upload
+        working-directory: Android
+        run: |
+          set -euo pipefail
+
+          upload_apk() {
+            output_name="$1"
+            package_name="$2"
+            apk_name="$3"
+            apk_path="${GITHUB_WORKSPACE}/preview-artifacts/android/${apk_name}"
+            url_file="${RUNNER_TEMP}/${output_name}.txt"
+
+            if [ ! -f "$apk_path" ]; then
+              echo "Missing preview APK: $apk_path" >&2
+              exit 1
+            fi
+
+            INTERNAL_APP_SHARING_URL_FILE="$url_file" \
+              bundle exec fastlane internal_app_sharing \
+                package_name:"$package_name" \
+                apk_path:"$apk_path"
+
+            url="$(tr -d '\r\n' < "$url_file")"
+            if [ -z "$url" ]; then
+              echo "Internal App Sharing returned no URL for $apk_name" >&2
+              exit 1
+            fi
+            echo "${output_name}=${url}" >> "$GITHUB_OUTPUT"
+          }
+
+          upload_apk \
+            pitchperfect-url \
+            depollsoft.pitchperfect.private \
+            PitchPerfect-private.apk
+          upload_apk \
+            wear-url \
+            depollsoft.pitchperfect.private \
+            PitchPerfectWear-private.apk
+          upload_apk \
+            tagmaster-url \
+            depollsoft.tagmaster.private \
+            TagMaster-private.apk
+
+      - name: Clean up Play credentials
+        if: always()
+        run: rm -f "$PLAY_SERVICE_ACCOUNT_JSON_PATH"
+
+  comment-finish:
+    name: PR Comment (Complete)
+    runs-on: [self-hosted, Linux]
+    needs:
+      - compute-version
+      - comment-initial
+      - build-android
+      - build-ios
+      - publish-android-sharing
+    if: >-
+      always() &&
+      needs.compute-version.result == 'success' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Publish preview result
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          ANDROID_RESULT: ${{ needs.build-android.result }}
+          SHARING_RESULT: ${{ needs.publish-android-sharing.result }}
+          IOS_RESULT: ${{ needs.build-ios.result }}
+          ANDROID_ARTIFACT_ID: ${{ needs.build-android.outputs.artifact-id }}
+          PITCHPERFECT_URL: >-
+            ${{ needs.publish-android-sharing.outputs.pitchperfect-url }}
+          WEAR_URL: ${{ needs.publish-android-sharing.outputs.wear-url }}
+          TAGMASTER_URL: >-
+            ${{ needs.publish-android-sharing.outputs.tagmaster-url }}
+        with:
+          script: |
+            const marker = '<!-- Sticky Pull Request Commentpreview-build -->';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = context.payload.pull_request.number;
+            const runUrl =
+              `https://github.com/${owner}/${repo}` +
+              `/actions/runs/${context.runId}`;
+            const listComments = github.rest.issues.listComments;
+            const comments = await github.paginate(listComments, {
+              owner,
+              repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const runMarker =
+              `<!-- preview-build-run-id:${context.runId} -->`;
+            const comment = comments.find(
+              (candidate) =>
+                candidate.user?.type === 'Bot' &&
+                candidate.body?.includes(marker) &&
+                candidate.body?.includes(runMarker),
+            );
+
+            if (!comment) {
+              core.setFailed(
+                'Could not find the queued preview comment for this run.',
+              );
+              return;
+            }
+
+            const status = (result, successText) => {
+              switch (result) {
+                case 'success':
+                  return `✅ ${successText}`;
+                case 'cancelled':
+                  return '⛔ Cancelled';
+                case 'skipped':
+                  return '⏭️ Skipped';
+                default:
+                  return '❌ Failed';
+              }
+            };
+
+            const artifactId = process.env.ANDROID_ARTIFACT_ID || '';
+            const links = [
+              ['Install Pitch Perfect', process.env.PITCHPERFECT_URL],
+              ['Install Pitch Perfect Wear', process.env.WEAR_URL],
+              ['Install Tag Master', process.env.TAGMASTER_URL],
+            ]
+              .filter(([, url]) => url)
+              .map(([label, url]) => `[${label}](${url})`);
+            if (artifactId) {
+              links.push(
+                '[Download all APKs]' +
+                  `(${runUrl}/artifacts/${artifactId})`,
+              );
+            }
+            const androidLink = links.length
+              ? links.join('<br>')
+              : `[View workflow run](${runUrl})`;
+
+            let androidStatus = status(
+              process.env.ANDROID_RESULT,
+              'APKs ready',
+            );
+            if (process.env.ANDROID_RESULT === 'success') {
+              androidStatus = status(
+                process.env.SHARING_RESULT,
+                'Internal App Sharing published',
+              );
+            }
+            const iosStatus = status(
+              process.env.IOS_RESULT,
+              'builds validated',
+            );
+
+            const body = comment.body
+              .replace(
+                /\| \*\*Android Status\*\* \|.*\|/,
+                `| **Android Status** | ${androidStatus} |`,
+              )
+              .replace(
+                /\| \*\*iOS Status\*\* \|.*\|/,
+                `| **iOS Status** | ${iosStatus} |`,
+              )
+              .replace(
+                /\| 🤖 \*\*Android \(APK\)\*\* \|.*\|/,
+                `| 🤖 **Android (APK)** | ${androidLink} |`,
+              );
+
+            await github.rest.issues.updateComment({
+              owner,
+              repo,
+              comment_id: comment.id,
+              body,
+            });

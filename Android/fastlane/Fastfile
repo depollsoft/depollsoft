@@ -1,0 +1,111 @@
+default_platform(:android)
+
+def with_retries(label, attempts: 3, delay_seconds: 30)
+  attempt = 1
+
+  begin
+    yield
+  rescue StandardError => error
+    raise if attempt >= attempts
+
+    UI.important("#{label} failed on attempt #{attempt}/#{attempts}: #{error.message}")
+    sleep(delay_seconds * attempt)
+    attempt += 1
+    retry
+  end
+end
+
+platform :android do
+  desc "Build and upload private Android bundles to Play internal testing"
+  lane :deploy_private do
+    build_number = (ENV["DEPOLLSOFT_PRIVATE_BUILD_NUMBER"] || ENV["CI_BUILD_NUMBER"] || (Time.now.to_i / 10).to_s).to_s
+
+    %w[PitchPerfect TagMaster PitchPerfectWear].each do |app|
+      gradle(
+        task: ":#{app}:bundlePrivate",
+        project_dir: ".",
+        properties: {
+          "DEPOLLSOFT_PRIVATE_BUILD_NUMBER" => build_number,
+        },
+      )
+    end
+
+    {
+      # PitchPerfect phone and wear private builds share the same package ID, so they
+      # must be uploaded as a single Play release to keep existing users upgradeable.
+      "depollsoft.pitchperfect.private" => [
+        "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
+        "PitchPerfectWear/build/outputs/bundle/private/PitchPerfectWear-private.aab",
+      ],
+      "depollsoft.tagmaster.private" => [
+        "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
+      ],
+    }.each do |package_name, aab_paths|
+      retained_version_codes = with_retries("Fetch #{package_name} internal track version codes") do
+        google_play_track_version_codes(
+          package_name: package_name,
+          track: "internal",
+          json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+        )
+      end
+
+      with_retries("Upload #{package_name} to Play internal testing") do
+        upload_to_play_store(
+          package_name: package_name,
+          track: "internal",
+          json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+          aab_paths: aab_paths,
+          version_codes_to_retain: retained_version_codes,
+          skip_upload_metadata: true,
+          skip_upload_images: true,
+          skip_upload_screenshots: true,
+          skip_upload_apk: true,
+          release_status: "completed",
+          changes_not_sent_for_review: true,
+          rescue_changes_not_sent_for_review: true,
+        )
+      end
+    end
+  end
+
+  desc "Upload a private APK or AAB to Play Internal App Sharing"
+  lane :internal_app_sharing do |options|
+    package_name = options[:package_name].to_s
+    supported_packages = [
+      "depollsoft.pitchperfect.private",
+      "depollsoft.tagmaster.private",
+    ]
+    unless supported_packages.include?(package_name)
+      UI.user_error!(
+        "Unsupported package_name '#{package_name}'. Expected one of: " +
+          supported_packages.join(", "),
+      )
+    end
+
+    apk_path = options[:apk_path] || options[:apk]
+    aab_path = options[:aab_path] || options[:aab]
+    if apk_path.to_s.empty? && aab_path.to_s.empty?
+      UI.user_error!("Provide apk_path/apk or aab_path/aab")
+    end
+
+    upload_options = {
+      package_name: package_name,
+      json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+    }
+    if apk_path.to_s.empty?
+      upload_options[:aab] = File.expand_path(aab_path)
+    else
+      upload_options[:apk] = File.expand_path(apk_path)
+    end
+
+    urls = upload_to_play_store_internal_app_sharing(upload_options)
+    url = Array(urls).first.to_s
+    if url.empty?
+      UI.user_error!("Internal App Sharing upload returned no install URL")
+    end
+
+    output_file = ENV["INTERNAL_APP_SHARING_URL_FILE"].to_s
+    File.write(output_file, "#{url}\n") unless output_file.empty?
+    UI.success("Internal App Sharing URL: #{url}")
+  end
+end

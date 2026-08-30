@@ -76,6 +76,12 @@ android {
             storeFile file('../debug.jks')
             storePassword 'depollsoft'
         }
+        release {
+            keyAlias System.getenv("ANDROID_UPLOAD_KEY_ALIAS") ?: 'depollsoft'
+            keyPassword System.getenv("ANDROID_UPLOAD_KEY_PASSWORD") ?: 'depollsoft'
+            storeFile file(System.getenv("ANDROID_UPLOAD_KEYSTORE_PATH") ?: '../debug.jks')
+            storePassword System.getenv("ANDROID_UPLOAD_KEYSTORE_PASSWORD") ?: 'depollsoft'
+        }
     }
     namespace = 'depollsoft.pitchperfect'
     compileSdk 37
@@ -92,7 +98,10 @@ android {
         targetSdk 36
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
-        versionCode getVersionCode(build: 0, suffix: 0)
+        def privateBuildNumber = findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER')
+        versionCode(privateBuildNumber == null
+                ? getVersionCode(build: 0, suffix: 0)
+                : (privateBuildNumber as Integer) * 10)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable Test Orchestrator for isolated test execution
@@ -102,6 +111,15 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.debug
+        }
+        release {
+            signingConfig = signingConfigs.release
+        }
+        create("private") {
+            initWith release
+            signingConfig signingConfigs.release
+            applicationIdSuffix ".private"
+            matchingFallbacks = ['release']
         }
     }
 

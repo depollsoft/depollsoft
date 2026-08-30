@@ -8,7 +8,7 @@ import kotlin.reflect.KProperty
  * This separation improves testability and keeps implementation details out of the inline delegate.
  */
 @PublishedApi
-internal fun initializePreference(key: String, initialValue: Any, clazz: Class<*>) {
+internal fun initializePreference(key: String, initialValue: Any?, clazz: Class<*>) {
     Preferences.initialize(key, initialValue, clazz)
 }
 
@@ -25,17 +25,17 @@ internal fun <T> getPref(key: String): T = Preferences.get(key)
  * This separation improves testability and keeps implementation details out of the inline delegate.
  */
 @PublishedApi
-internal fun setPref(key: String, value: Any) {
+internal fun setPref(key: String, value: Any?) {
     Preferences.set(key, value)
 }
 
 inline fun <reified T> preference(key: String, initialValue: T, crossinline afterSet: (T) -> Unit = {}): ReadWriteProperty<Any?, T> {
-    initializePreference(key, initialValue as Any, T::class.java)
+    initializePreference(key, initialValue, T::class.java)
     return object : ReadWriteProperty<Any?, T> {
         override fun getValue(thisRef: Any?, property: KProperty<*>): T = getPref(key)
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-            setPref(key, value as Any)
+            setPref(key, value)
             afterSet(value)
         }
     }
