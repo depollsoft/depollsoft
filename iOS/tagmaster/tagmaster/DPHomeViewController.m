@@ -169,6 +169,12 @@
                                        minimumDownloads:[DPSettingsController minDownloads]
                                                   cache:NO
                                               fieldList:@"id"];
+                if (result.available <= 0) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.busyIndicator decrementBusyCount];
+                    });
+                    return;
+                }
                 int chosenResult = arc4random_uniform(result.available);
                 result = [DPTag query:nil
                       numberOfResults:1
@@ -182,7 +188,13 @@
                      minimumDownloads:[DPSettingsController minDownloads]
                                 cache:NO
                             fieldList:@"id"];
-                DPTag *tag = result.tags[0];
+                DPTag *tag = result.tags.firstObject;
+                if (!tag) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.busyIndicator decrementBusyCount];
+                    });
+                    return;
+                }
                 dispatch_async(dispatch_get_main_queue(), ^{
                     DPTagViewController *tagController = [[DPTagViewController alloc] init];
                     tagController.tagId = tag.tagId;
