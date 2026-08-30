@@ -153,6 +153,24 @@ class UtilTest {
     }
 
     @Test
+    fun preference_delegate_with_nullable_boolean() {
+        val key = "nullable_bool_delegate_test_${System.nanoTime()}"
+
+        class TestHolder {
+            var value: Boolean? by preference(key, null)
+        }
+
+        val holder = TestHolder()
+        assertNull(holder.value)
+
+        holder.value = true
+        assertEquals(true, holder.value)
+
+        holder.value = null
+        assertNull(holder.value)
+    }
+
+    @Test
     fun writeThroughPreference_caches_value() {
         val key = "writethrough_test_${System.nanoTime()}"
 

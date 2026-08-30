@@ -35,23 +35,23 @@ final class DPSongsModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let defaults = UserDefaults.standard
-        originalLegacySongs = defaults.object(forKey: DPSongsModel.SONGS_KEY_OLD)
-        originalLists = defaults.object(forKey: DPSongsModel.SONG_LISTS_KEY)
-        defaults.removeObject(forKey: DPSongsModel.SONGS_KEY_OLD)
-        defaults.removeObject(forKey: DPSongsModel.SONG_LISTS_KEY)
+        originalLegacySongs = defaults.object(forKey: DPSongsModel.legacySongsKey)
+        originalLists = defaults.object(forKey: DPSongsModel.songListsKey)
+        defaults.removeObject(forKey: DPSongsModel.legacySongsKey)
+        defaults.removeObject(forKey: DPSongsModel.songListsKey)
     }
 
     override func tearDown() {
         let defaults = UserDefaults.standard
         if let legacy = originalLegacySongs {
-            defaults.setValue(legacy, forKey: DPSongsModel.SONGS_KEY_OLD)
+            defaults.setValue(legacy, forKey: DPSongsModel.legacySongsKey)
         } else {
-            defaults.removeObject(forKey: DPSongsModel.SONGS_KEY_OLD)
+            defaults.removeObject(forKey: DPSongsModel.legacySongsKey)
         }
         if let lists = originalLists {
-            defaults.setValue(lists, forKey: DPSongsModel.SONG_LISTS_KEY)
+            defaults.setValue(lists, forKey: DPSongsModel.songListsKey)
         } else {
-            defaults.removeObject(forKey: DPSongsModel.SONG_LISTS_KEY)
+            defaults.removeObject(forKey: DPSongsModel.songListsKey)
         }
         // Detach from Firestore on shared instance to clean state
         DPSongsModel.sharedInstance.detachFromFirestore()
@@ -87,7 +87,7 @@ final class DPSongsModelTests: XCTestCase {
         model.storeAll()
 
         let defaults = UserDefaults.standard
-        let storedLists = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let storedLists = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         let serialized = storedLists?["custom"] as? [String: Any]
         XCTAssertEqual(serialized?["name"] as? String, "Custom")
         let storedSongs = serialized?["songs"] as? [[AnyHashable: Any]]
@@ -96,7 +96,7 @@ final class DPSongsModelTests: XCTestCase {
         customList.removeSong(song)
         model.removeSongList(forKey: "custom")
 
-        let cleared = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let cleared = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         XCTAssertNil(cleared?["custom"])
 
         XCTAssertGreaterThanOrEqual(notificationCount, 5)
@@ -113,6 +113,18 @@ final class DPSongsModelTests: XCTestCase {
     func testDefaultSongListNameIsSet() {
         let model = DPSongsModel()
         XCTAssertEqual(model.defaultSongList.name, "Default")
+    }
+
+    func testMissingDefaultListIsRecreatedFromStoredLists() {
+        UserDefaults.standard.set([
+            "custom": ["name": "Custom", "songs": []]
+        ], forKey: DPSongsModel.songListsKey)
+
+        let model = DPSongsModel()
+
+        XCTAssertEqual(model.defaultSongList.id, "default")
+        XCTAssertEqual(model.defaultSongList.name, "Default")
+        XCTAssertNotNil(model.songLists["custom"])
     }
     
     // MARK: - Song List Addition and Removal
@@ -344,7 +356,7 @@ final class DPSongsModelTests: XCTestCase {
         testList.storeValue()
         
         let defaults = UserDefaults.standard
-        let storedLists = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let storedLists = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         
         XCTAssertNotNil(storedLists?["storeTest"])
         let serialized = storedLists?["storeTest"] as? [String: Any]
@@ -366,7 +378,7 @@ final class DPSongsModelTests: XCTestCase {
         model.storeAll()
         
         let defaults = UserDefaults.standard
-        let storedLists = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let storedLists = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         
         XCTAssertNotNil(storedLists?["list1"])
         XCTAssertNotNil(storedLists?["list2"])
@@ -378,8 +390,8 @@ final class DPSongsModelTests: XCTestCase {
         // Note: Legacy migration requires specific serialization format
         // This test verifies the default song list is created even without legacy data
         let defaults = UserDefaults.standard
-        defaults.removeObject(forKey: DPSongsModel.SONGS_KEY_OLD)
-        defaults.removeObject(forKey: DPSongsModel.SONG_LISTS_KEY)
+        defaults.removeObject(forKey: DPSongsModel.legacySongsKey)
+        defaults.removeObject(forKey: DPSongsModel.songListsKey)
         
         // Create new model - should create default list
         let model = DPSongsModel()
@@ -425,9 +437,9 @@ final class DPSongsModelTests: XCTestCase {
         let model = DPSongsModel()
         model.defaultSongList.songs = [] // Clear for clean test
         
-        for i in 0..<5 {
+        for index in 0..<5 {
             let song = DPPitchedSong()
-            song.name = "Song \(i)"
+            song.name = "Song \(index)"
             if let key = DPKey.majorKeys().first as? DPKey {
                 song.key = key
             }

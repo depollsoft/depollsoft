@@ -170,7 +170,13 @@
                                        minimumDownloads:[DPSettingsController minDownloads]
                                                   cache:NO
                                               fieldList:@"id"];
-                int chosenResult = arc4random_uniform(result.available);
+                if (result.available <= 0) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.busyIndicator decrementBusyCount];
+                    });
+                    return;
+                }
+                int chosenResult = arc4random_uniform((uint32_t)result.available);
                 result = [DPTag query:nil
                       numberOfResults:1
                                 start:chosenResult
@@ -183,11 +189,13 @@
                      minimumDownloads:[DPSettingsController minDownloads]
                                 cache:NO
                             fieldList:@"id"];
-                DPTag *tag = result.tags[0];
+                DPTag *tag = result.tags.firstObject;
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    DPTagViewController *tagController = [[DPTagViewController alloc] init];
-                    tagController.tagId = tag.tagId;
-                    [self.navigationController pushViewController:tagController animated:YES];
+                    if (tag) {
+                        DPTagViewController *tagController = [[DPTagViewController alloc] init];
+                        tagController.tagId = tag.tagId;
+                        [self.navigationController pushViewController:tagController animated:YES];
+                    }
                     [self.busyIndicator decrementBusyCount];
                 });
             }
@@ -230,14 +238,19 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == 0) {
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-        cell.textLabel.text = [self navigationItems][indexPath.row][@"title"];
+        NSArray *items = [self navigationItems];
+        if (indexPath.row < items.count) {
+            cell.textLabel.text = items[indexPath.row][@"title"];
+        }
         cell.backgroundColor = [UIColor clearColor];
         return cell;
     }
-    
-    int tagId = [[DPAppDelegate favorites][indexPath.row] intValue];
+
     DPTagCell *tagCell = [self.tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
-    tagCell.tagId = tagId;
+    NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+    if (indexPath.row < favorites.count) {
+        tagCell.tagId = favorites[indexPath.row].intValue;
+    }
     return tagCell;
 }
 
@@ -256,13 +269,18 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     if (indexPath.section == 0) {
-        void (^block)(void) = [self navigationItems][indexPath.row][@"action"];
-        block();
+        NSArray *items = [self navigationItems];
+        if (indexPath.row < items.count) {
+            void (^block)(void) = items[indexPath.row][@"action"];
+            block();
+        }
     } else {
-        int tagId = [[DPAppDelegate favorites][indexPath.row] intValue];
-        DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
-        tagViewController.tagId = tagId;
-        [self.navigationController pushViewController:tagViewController animated:YES];
+        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+        if (indexPath.row < favorites.count) {
+            DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
+            tagViewController.tagId = favorites[indexPath.row].intValue;
+            [self.navigationController pushViewController:tagViewController animated:YES];
+        }
     }
 }
 
@@ -275,7 +293,10 @@
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        [DPAppDelegate removeFavorite:[[DPAppDelegate favorites][indexPath.row] intValue]];
+        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+        if (indexPath.row < favorites.count) {
+            [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
+        }
     }
 }
 
@@ -283,7 +304,11 @@
     if (indexPath.section == 0) {
         return [super tableView:tableView heightForRowAtIndexPath:indexPath];
     } else {
-        DPTag *tag = [DPTag loadFromCache:[[DPAppDelegate favorites][indexPath.row] intValue]];
+        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+        if (indexPath.row >= favorites.count) {
+            return tableView.rowHeight;
+        }
+        DPTag *tag = [DPTag loadFromCache:favorites[indexPath.row].intValue];
         return [DPTagCell tagHeight:tag];
     }
 }

@@ -87,7 +87,7 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 }
 
 + (DPTag *)queryById:(int)tagId {
-    return [self queryByIds:@[@(tagId)]][0];
+    return [self queryByIds:@[@(tagId)]].firstObject;
 }
 
 + (NSArray<DPTag *> *)queryByIds:(NSArray<NSNumber *> *)tagIds {
@@ -125,12 +125,14 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
         NSURL *url = [NSURL URLWithString:builtString];
         DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
         NSArray *parseResult = [parser parseWithUrl:url];
-        DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
-        
+        DPTagQueryResult *queryResult = [parseResult.firstObject isKindOfClass:[DPTagQueryResult class]]
+            ? parseResult.firstObject
+            : nil;
+
         @synchronized (results) {
             for (NSArray<NSNumber *> *queryIds in allQueries) {
                 NSMutableArray<DPTag *> *tags = [NSMutableArray array];
-                for (DPTag *tag in queryResult.tags) {
+                for (DPTag *tag in queryResult.tags ?: @[]) {
                     if ([queryIds containsObject:[NSNumber numberWithInt:tag.tagId]]) {
                         [tags addObject:tag];
                     }
@@ -311,9 +313,14 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     NSURL *url = [NSURL URLWithString:builtString];
     DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
     NSArray *parseResult = [parser parseWithUrl:url];
-    DPTagQueryResult *queryResult = [parseResult objectAtIndex:0];
+    DPTagQueryResult *queryResult = [parseResult.firstObject isKindOfClass:[DPTagQueryResult class]]
+        ? parseResult.firstObject
+        : [[DPTagQueryResult alloc] init];
     queryResult.start = start;
-    
+    if (!queryResult.tags) {
+        queryResult.tags = @[];
+    }
+
     if (cache) {
         for (DPTag *tag in queryResult.tags) {
             [tag cache];
