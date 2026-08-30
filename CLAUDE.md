@@ -33,7 +33,7 @@ This is a polyglot monorepo containing several mobile applications and backend s
 ### iOS Projects
 ```bash
 # From /iOS directory
-pod install                         # Install dependencies
+xcodebuild -resolvePackageDependencies -workspace iOS.xcworkspace -scheme pitchperfect
 xcodebuild -workspace iOS.xcworkspace -scheme pitchperfect -configuration Debug
 xcodebuild -workspace iOS.xcworkspace -scheme tagmaster -configuration Debug
 ```
@@ -72,10 +72,9 @@ npm run deploy                     # Deploy to Firebase
 
 ### iOS Architecture
 - Mixed Objective-C and Swift codebase with Swift bridging headers
-- CocoaPods for dependency management with shared pod configurations
+- Swift Package Manager for Firebase, FirebaseUI, and Google Mobile Ads dependencies
 - Custom UI components in depolllib (has test coverage)
 - Both apps share common Firebase and authentication dependencies
-- Post-install scripts handle deployment target configurations
 
 ### Backend Architecture
 - **API Server**: Node.js/TypeScript service on Google Cloud Run
@@ -164,7 +163,7 @@ xcodebuild test -workspace ../iOS.xcworkspace -scheme <scheme-name>
 
 ### Mobile Development
 1. **Android**: Import project in Android Studio, sync Gradle
-2. **iOS**: Run `pod install` first, then open `.xcworkspace` in Xcode
+2. **iOS**: Open `iOS.xcworkspace`; Xcode resolves Swift packages automatically
 3. Configure Firebase files (google-services.json / GoogleService-Info.plist)
 4. Build and run on device/simulator
 
@@ -178,14 +177,14 @@ xcodebuild test -workspace ../iOS.xcworkspace -scheme <scheme-name>
 
 ### Common Pitfalls
 1. **Configuration files**: Many required files are not in source control
-2. **Pod install**: Always run after pulling iOS changes
+2. **SPM resolution**: Run `xcodebuild -resolvePackageDependencies` after package changes
 3. **Firebase setup**: Both platforms need proper Firebase configuration
 4. **Legacy code**: Ignore .NET/Silverlight projects unless specifically needed
-5. **API Node version**: Uses older Node 16.3.0, may have compatibility issues
+5. **Node versions**: Firebase Functions use Node 22 and the API container uses Node 24
 
 ### Best Practices
 1. Follow MVVM pattern on Android using Bindroid
-2. Use shared pod configurations for iOS apps
+2. Keep shared iOS package versions aligned across both Xcode projects
 3. Test Bindroid changes thoroughly - it's a core dependency
 4. Check CI/CD logs if API deployment fails
 5. Use strict TypeScript settings for API development

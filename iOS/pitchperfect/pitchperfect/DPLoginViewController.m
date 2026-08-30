@@ -13,25 +13,18 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 // Facebook Login removed during SDK migration
 #import "pitchperfect-Swift.h"
 
 @interface DPLoginViewController ()
-
-@property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
-
 @end
 
 @implementation DPLoginViewController
 
-@synthesize loginTaskCompletionSource;
-
 - (instancetype)init {
     if (self = [super init]) {
-        loginTaskCompletionSource = [BFTaskCompletionSource taskCompletionSource];
         self.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         if ([UIDevice currentDevice].systemVersion.floatValue >= 8.0) {
             self.providesPresentationContextTransitionStyle = YES;
@@ -43,10 +36,6 @@
         }
     }
     return self;
-}
-
-- (BFTask *)loginTask {
-    return self.loginTaskCompletionSource.task;
 }
 
 - (void)viewDidLoad
@@ -148,13 +137,17 @@
         [[DPSettingsModel sharedInstance] attachToFirestore];
         [[DPSongsModel sharedInstance] attachToFirestoreWithStore:YES];
     }
-    [loginTaskCompletionSource trySetResult:nil];
+    if (self.loginCompletion) {
+        self.loginCompletion();
+    }
 }
 
 - (void)skip {
     [self dismissViewControllerAnimated:YES completion:^{
     }];
-    [loginTaskCompletionSource trySetResult:nil];
+    if (self.loginCompletion) {
+        self.loginCompletion();
+    }
 }
 
 // Ads removed

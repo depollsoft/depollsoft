@@ -1,9 +1,0 @@
-[extend]
-useDefault = true
-
-[[allowlists]]
-description = "CocoaPods dependency checksums"
-paths = [
-  '''(^|/)Podfile\.lock$''',
-  '''(^|/)Pods/''',
-]

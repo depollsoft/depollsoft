@@ -24,3 +24,9 @@ DerivedData/
 
 ## Gcc Patch
 /*.gcno
+
+# Swift Package Manager
+.build/
+.swiftpm/xcode/
+SourcePackages/
+# Note: Package.resolved is committed for reproducible builds

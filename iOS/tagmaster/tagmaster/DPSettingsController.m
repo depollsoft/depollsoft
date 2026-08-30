@@ -6,10 +6,10 @@
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
 
+#if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsController.h"
 
-@import Firebase;
-@import FirebaseAuthUI;
+@import FirebaseAuth;
 #import "DPAppDelegate.h"
 #import "tagmaster-Swift.h"
 
@@ -286,3 +286,4 @@
 }
 
 @end
+#endif

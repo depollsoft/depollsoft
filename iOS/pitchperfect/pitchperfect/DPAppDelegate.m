@@ -22,7 +22,8 @@
 // #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import "pitchperfect-Swift.h"
 
-@import Firebase;
+@import FirebaseAuth;
+@import FirebaseCore;
 
 #define PRODUCTION
 //#define TEST_ADS
@@ -102,8 +103,11 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary *)options {
-  NSString *sourceApplication = options[UIApplicationOpenURLOptionsSourceApplicationKey];
-  return [[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication];
+  // Let Firebase Auth handle email link / OAuth redirect URLs
+  if ([[FIRAuth auth] canHandleURL:url]) {
+    return YES;
+  }
+  return NO;
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {
