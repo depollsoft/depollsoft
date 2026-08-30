@@ -270,6 +270,8 @@ platform :ios do
       skip_waiting_for_build_processing: false,
       distribute_external: true,
       notify_external_testers: true,
+      beta_app_description: "Private preview builds for dependency testing.",
+      beta_app_feedback_email: tester_email,
       groups: [pitch_test_group],
       changelog: changelog,
     )
@@ -281,6 +283,8 @@ platform :ios do
       skip_waiting_for_build_processing: false,
       distribute_external: true,
       notify_external_testers: true,
+      beta_app_description: "Private preview builds for dependency testing.",
+      beta_app_feedback_email: tester_email,
       groups: [tag_test_group],
       changelog: changelog,
     )
