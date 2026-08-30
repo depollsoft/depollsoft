@@ -151,6 +151,25 @@ platform :ios do
     )
 
     refresh_signing = ENV["MATCH_FORCE_REGENERATE"] == "true"
+    if refresh_signing
+      bundle_id = Spaceship::ConnectAPI::BundleId.find(
+        "depollsoft.tagmaster.private",
+      )
+      UI.user_error!("Tag Master private App ID was not found") unless bundle_id
+
+      capability = Spaceship::ConnectAPI::BundleIdCapability
+      bundle_id.update_capability(
+        capability::Type::APPLE_ID_AUTH,
+        enabled: true,
+        settings: [
+          {
+            key: capability::Settings::APPLE_ID_AUTH_APP_CONSENT,
+            options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
+          },
+        ],
+      )
+    end
+
     match(
       type: "appstore",
       readonly: !refresh_signing,
