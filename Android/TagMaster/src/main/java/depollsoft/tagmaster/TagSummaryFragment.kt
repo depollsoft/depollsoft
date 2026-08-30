@@ -34,7 +34,7 @@ class TagSummaryFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
 
@@ -43,7 +43,7 @@ class TagSummaryFragment : Fragment() {
             R.id.titleTextView,
             "Visibility",
             { parent.tag?.title },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.akaTextView, "Text", { parent.tag?.alternativeTitle })
@@ -51,7 +51,7 @@ class TagSummaryFragment : Fragment() {
             R.id.akaLayout,
             "Visibility",
             { parent.tag?.alternativeTitle },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.versionTextView, "Text", { parent.tag?.version })
@@ -59,7 +59,7 @@ class TagSummaryFragment : Fragment() {
             R.id.versionLayout,
             "Visibility",
             { parent.tag?.version },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.tagIdTextView, "Text", { parent.tag?.id }, ToStringConverter())
@@ -68,46 +68,46 @@ class TagSummaryFragment : Fragment() {
             R.id.ratingTextView,
             "Text",
             { parent.tag?.rating },
-            ToStringConverter("%3.2f")
+            ToStringConverter("%3.2f"),
         )
         rootView.bindTo(
             R.id.ratingTextView,
             "Visibility",
             { parent.tag?.rating },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(
             R.id.ratingProgressBar,
             "Progress",
             { parent.tag?.rating },
-            RatingConverter()
+            RatingConverter(),
         )
         rootView.bindTo(
             R.id.rateButton,
             "Enabled",
             { canRate },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(
             R.id.partsTextView,
             "Text",
             { parent.tag?.parts },
-            ToStringConverter()
+            ToStringConverter(),
         )
         rootView.bindTo(
             R.id.partsRow,
             "Visibility",
             { parent.tag?.parts },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(
             R.id.tagTypeTextView,
             "Text",
             { parent.tag?.tagType },
-            ToStringConverter()
+            ToStringConverter(),
         )
 
         rootView.bindTo(R.id.playKeyNoteButton, "Note", { parent.tag?.keyNote })
@@ -116,20 +116,20 @@ class TagSummaryFragment : Fragment() {
             R.id.keyRow,
             "Visibility",
             { parent.tag?.writtenKey },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(
             R.id.classicTagTextView,
             "Text",
             { parent.tag?.classicTagNumber },
-            ToStringConverter()
+            ToStringConverter(),
         )
         rootView.bindTo(
             R.id.classicTagRow,
             "Visibility",
             { parent.tag?.classicTagNumber },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.notesTextView, "Text", { parent.tag?.notes })
@@ -143,20 +143,20 @@ class TagSummaryFragment : Fragment() {
             R.id.sheetMusicLink,
             "Visibility",
             { parent.tag?.sheetMusicUri },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(
             R.id.favoriteMarkerTextView,
             "Visibility",
             { FavoritesModel.getIsFavorite(parent.tag!!.id) },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
         rootView.bindTo(
             R.id.teachableMarkerTextView,
             "Visibility",
             { TeachableTagsModel.getIsTeachableTag(parent.tag!!.id) },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         val link = rootView.findViewById(R.id.sheetMusicLink) as Hyperlink
@@ -173,22 +173,24 @@ class TagSummaryFragment : Fragment() {
             cache.loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith { task ->
                 if (task.isFaulted) {
                     parent.runOnUiThread {
-                        Toast.makeText(
-                            parent,
-                            "Unable to load sheet music.  Please try again later.",
-                            Toast.LENGTH_SHORT
-                        )
-                            .show()
+                        Toast
+                            .makeText(
+                                parent,
+                                "Unable to load sheet music.  Please try again later.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         progress.safeDismiss()
                     }
                 } else {
                     try {
-                        val contentPath = ("content://depollsoft.tagmaster/" + sheetMusicType + "/"
-                                + Base64.encodeToString(
-                            sheetMusicUri.toByteArray(),
-                            Base64.URL_SAFE
-                        ) +
-                                "/" + tag.id + "." + sheetMusicType)
+                        val contentPath = (
+                            "content://${parent.packageName}/" + sheetMusicType + "/" +
+                                Base64.encodeToString(
+                                    sheetMusicUri.toByteArray(),
+                                    Base64.URL_SAFE,
+                                ) +
+                                "/" + tag.id + "." + sheetMusicType
+                        )
                         val path = Uri.parse(contentPath)
                         val intent = Intent(Intent.ACTION_VIEW)
                         intent.putExtra("tagId", tag.id)
@@ -199,24 +201,26 @@ class TagSummaryFragment : Fragment() {
                             intent.setDataAndType(path, "application/pdf")
                         } else {
                             val map = MimeTypeMap.getSingleton()
-                            val mimeType = map.getMimeTypeFromExtension(
-                                sheetMusicType
-                                    .lowercase(Locale.US)
-                            )
+                            val mimeType =
+                                map.getMimeTypeFromExtension(
+                                    sheetMusicType
+                                        .lowercase(Locale.US),
+                                )
                             intent.setDataAndType(path, mimeType)
                         }
                         try {
                             parent.startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
                             parent.runOnUiThread {
-                                Toast.makeText(
-                                    parent,
-                                    "No application available to view this sheet music (" + sheetMusicType
-                                            + ").", Toast.LENGTH_SHORT
-                                ).show()
+                                Toast
+                                    .makeText(
+                                        parent,
+                                        "No application available to view this sheet music (" + sheetMusicType +
+                                            ").",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                             }
                         }
-
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
@@ -231,33 +235,36 @@ class TagSummaryFragment : Fragment() {
         rateButton.setOnClickListener {
             if (!canRate) return@setOnClickListener
             val popup = RatingsPopup(parent)
-            popup.setOnDismissListener(OnDismissListener {
-                if (popup.rating == null)
-                    return@OnDismissListener
-                val tag = parent.tag
-                val pd = ProgressDialog(parent)
-                pd.isIndeterminate = true
-                pd.setMessage("Submitting rating...")
-                pd.show()
-                tag!!.rate(popup.rating!!).continueWith { task ->
-                    if (task.isFaulted) {
-                        parent.runOnUiThread {
-                            Toast.makeText(
-                                parent,
-                                "Failed to submit rating.  Please try again later.",
-                                Toast.LENGTH_SHORT
-                            )
-                                .show()
+            popup.setOnDismissListener(
+                OnDismissListener {
+                    if (popup.rating == null) {
+                        return@OnDismissListener
+                    }
+                    val tag = parent.tag
+                    val pd = ProgressDialog(parent)
+                    pd.isIndeterminate = true
+                    pd.setMessage("Submitting rating...")
+                    pd.show()
+                    tag!!.rate(popup.rating!!).continueWith { task ->
+                        if (task.isFaulted) {
+                            parent.runOnUiThread {
+                                Toast
+                                    .makeText(
+                                        parent,
+                                        "Failed to submit rating.  Please try again later.",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                pd.safeDismiss()
+                            }
+                        } else {
+                            RatingsModel.addRating(tag.id)
+                            _canRate.set(false)
                             pd.safeDismiss()
                         }
-                    } else {
-                        RatingsModel.addRating(tag.id)
-                        _canRate.set(false)
-                        pd.safeDismiss()
+                        null
                     }
-                    null
-                }
-            })
+                },
+            )
             popup.show()
         }
 

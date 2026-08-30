@@ -1,0 +1,101 @@
+{
+  "project_info": {
+    "project_number": "572337670650",
+    "firebase_url": "https://tag-master.firebaseio.com",
+    "project_id": "tag-master",
+    "storage_bucket": "tag-master.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:572337670650:android:278170d8d95bb5a6",
+        "android_client_info": {
+          "package_name": "depollsoft.tagmaster"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "572337670650-2v0v77c5qcinp3m53mpht4dtvk1resi8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.tagmaster",
+            "certificate_hash": "5a2dbc1280e9886e06ede7b05786877a289b6264"
+          }
+        },
+        {
+          "client_id": "572337670650-oesp6qp8cinva94kn4o0qu9s348hobvm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.tagmaster",
+            "certificate_hash": "7d8107330a57a9aa4840530f8721ec07b5f1d600"
+          }
+        },
+        {
+          "client_id": "572337670650-5mh6j8nvkglmsm3gqeh6s9ah8e7vhvn6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD70_yucFYwMqw_OJeAcAsNYiPOOsW_ZaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "572337670650-5mh6j8nvkglmsm3gqeh6s9ah8e7vhvn6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "572337670650-1g9cr8frnk55s35aso5ic642492jvdf3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "depollsoft.tagmaster",
+                "app_store_id": "721186126"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:572337670650:android:50e818820a9098fb4bbc43",
+        "android_client_info": {
+          "package_name": "depollsoft.tagmaster.private"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "572337670650-5mh6j8nvkglmsm3gqeh6s9ah8e7vhvn6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD70_yucFYwMqw_OJeAcAsNYiPOOsW_ZaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "572337670650-5mh6j8nvkglmsm3gqeh6s9ah8e7vhvn6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "572337670650-1g9cr8frnk55s35aso5ic642492jvdf3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "depollsoft.tagmaster",
+                "app_store_id": "721186126"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

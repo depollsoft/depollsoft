@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'xcpretty', '~> 0.4'
+gem 'fastlane', '~> 2.225'
+
+# Required for Ruby 4.0+ (kconv was moved from stdlib to nkf gem)
+gem 'nkf'

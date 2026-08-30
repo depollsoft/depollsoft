@@ -214,6 +214,9 @@
 
 - (NSArray *)parseWithUrl:(NSURL *)url {
     NSData *data = [NSData dataWithContentsOfURL:url];
+    if (!data) {
+        return nil;
+    }
     return [self parseWithData:data];
 }
 

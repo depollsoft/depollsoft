@@ -57,7 +57,7 @@
 
         <provider
             android:name="depollsoft.lib.util.ContentCacheFileProvider"
-            android:authorities="depollsoft.tagmaster"
+            android:authorities="${applicationId}"
             android:enabled="true"
             android:exported="true"
             android:grantUriPermissions="true"

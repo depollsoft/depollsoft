@@ -176,7 +176,7 @@ final class DPSongListEdgeCaseTests: XCTestCase {
         list.storeValue()
         
         let defaults = UserDefaults.standard
-        let storedLists = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let storedLists = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         let storedList = storedLists?["storeTest"] as? [String: Any]
         
         XCTAssertEqual(storedList?["name"] as? String, "Persisted Name")
@@ -196,7 +196,7 @@ final class DPSongListEdgeCaseTests: XCTestCase {
         list.storeValue()
         
         let defaults = UserDefaults.standard
-        let storedLists = defaults.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) as? [String: Any]
+        let storedLists = defaults.dictionary(forKey: DPSongsModel.songListsKey) as? [String: Any]
         let storedList = storedLists?["storeSongsTest"] as? [String: Any]
         let storedSongs = storedList?["songs"] as? [[AnyHashable: Any]]
         

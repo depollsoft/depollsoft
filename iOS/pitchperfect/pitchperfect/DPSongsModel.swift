@@ -15,10 +15,10 @@ public extension Notification.Name {
 }
 
 @objc public class DPSongsModel: NSObject {
-    // swiftlint:disable:next identifier_name
-    static let SONGS_KEY_OLD = "depollsoft.pitchperfect.Songs"
-    // swiftlint:disable:next identifier_name
-    static let SONG_LISTS_KEY = "depollsoft.pitchperfect.SongLists"
+
+    static let legacySongsKey = "depollsoft.pitchperfect.Songs"
+    static let songListsKey = "depollsoft.pitchperfect.SongLists"
+
     @objc public static let songsChangedNotificationName = Notification.Name.songsChanged
     @objc public static let sharedInstance = DPSongsModel()
     
@@ -27,31 +27,38 @@ public extension Notification.Name {
     
     public override init() {
         super.init()
-        if let serializedSongs = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONGS_KEY_OLD) {
-            let songs = DPJsonSerializer.deserializeDictionary(serializedSongs) as? [DPPitchedSong] ?? []
-            self.songLists["default"] = DPSongList(id: "default")
-            self.defaultSongList.name = "Default"
-            self.defaultSongList.songs = songs
+
+        if let serializedSongs = UserDefaults.standard.dictionary(forKey: DPSongsModel.legacySongsKey),
+           let songs = DPJsonSerializer.deserializeDictionary(serializedSongs) as? [DPPitchedSong] {
+            let defaultList = DPSongList(id: "default")
+            defaultList.name = "Default"
+            defaultList.songs = songs
+            self.songLists["default"] = defaultList
+
             self.storeAll()
-            UserDefaults.standard.removeObject(forKey: DPSongsModel.SONGS_KEY_OLD)
-        } else if let serializedLists = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) {
+            UserDefaults.standard.removeObject(forKey: DPSongsModel.legacySongsKey)
+        } else if let serializedLists = UserDefaults.standard.dictionary(forKey: DPSongsModel.songListsKey) {
             for (id, serializedList) in serializedLists {
-                guard let castList = serializedList as? [String: Any] else {
+
+                guard let castList = serializedList as? [String: Any],
+                      let serializedSongs = castList["songs"] as? [[AnyHashable: Any]] else {
                     continue
                 }
-                let name = castList["name"] as? String ?? id
-                let serializedSongs = castList["songs"] as? [[AnyHashable: Any]] ?? []
+
                 let songs = serializedSongs.compactMap {
                     DPJsonSerializer.deserializeDictionary($0) as? DPPitchedSong
                 }
                 let songList = DPSongList(id: id)
-                songList.name = name
+                songList.name = castList["name"] as? String ?? id
                 songList.songs = songs
                 self.songLists[id] = songList
             }
-        } else {
-            self.songLists["default"] = DPSongList(id: "default")
-            self.defaultSongList.name = "Default"
+        }
+
+        if self.songLists["default"] == nil {
+            let defaultList = DPSongList(id: "default")
+            defaultList.name = "Default"
+            self.songLists["default"] = defaultList
         }
         if self.songLists["default"] == nil {
             self.songLists["default"] = DPSongList(id: "default")
@@ -103,9 +110,9 @@ public extension Notification.Name {
     
     @objc public func removeSongList(forKey: String) {
         self.songLists.removeValue(forKey:forKey)
-        var dict: [String: Any] = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) ?? [:]
+        var dict: [String: Any] = UserDefaults.standard.dictionary(forKey: DPSongsModel.songListsKey) ?? [:]
         dict.removeValue(forKey: forKey)
-        UserDefaults.standard.set(dict, forKey: DPSongsModel.SONG_LISTS_KEY)
+        UserDefaults.standard.set(dict, forKey: DPSongsModel.songListsKey)
     }
     
     @objc public var songLists: [String: DPSongList] = [:] {
@@ -158,7 +165,9 @@ public extension Notification.Name {
     }
     
     func restore(snapshot: DocumentSnapshot) {
-        self.name = snapshot.get("name") as? String ?? self.name
+
+        self.name = snapshot.get("name") as? String ?? self.id
+
         let serializedSongs = snapshot.get("songs") as? [[AnyHashable: Any]] ?? []
         self.songs = serializedSongs.compactMap {
             DPJsonSerializer.deserializeDictionary($0) as? DPPitchedSong
@@ -199,10 +208,10 @@ public extension Notification.Name {
     }
     
     @objc public func storeValue() {
-        var dict: [String: Any] = UserDefaults.standard.dictionary(forKey: DPSongsModel.SONG_LISTS_KEY) ?? [:]
+        var dict: [String: Any] = UserDefaults.standard.dictionary(forKey: DPSongsModel.songListsKey) ?? [:]
         let serializedSongs = self.songs.map { DPJsonSerializer.serialize($0) }
         dict[self.id] = ["name": self.name, "songs": serializedSongs]
-        UserDefaults.standard.setValue(dict, forKey: DPSongsModel.SONG_LISTS_KEY)
+        UserDefaults.standard.setValue(dict, forKey: DPSongsModel.songListsKey)
         self.reference?.setData([
             "name": self.name,
             "songs": serializedSongs
