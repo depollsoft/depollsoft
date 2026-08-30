@@ -13,7 +13,6 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <Parse/Parse.h>
 #import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"

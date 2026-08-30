@@ -25,10 +25,9 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
-import com.parse.ParseUser
+import com.google.firebase.auth.auth
+import com.google.firebase.functions.functions
+import com.google.firebase.Firebase
 import depollsoft.lib.ui.ChangelogViewer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

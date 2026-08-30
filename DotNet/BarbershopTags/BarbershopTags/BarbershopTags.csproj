@@ -113,16 +113,16 @@
     <Reference Include="Microsoft.Phone.Controls, Version=8.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\DepollSoft\packages\WPtoolkit.4.2012.10.30\lib\sl4-windowsphone71\Microsoft.Phone.Controls.Toolkit.dll</HintPath>
+      <HintPath>..\..\DepollSoft\packages\WPtoolkit.4.2013.08.16\lib\sl4-windowsphone71\Microsoft.Phone.Controls.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\DepollSoft\packages\parse.1.0.2\lib\wp8\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\DepollSoft\packages\parse.1.7.0\lib\wp8\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Parse">
-      <HintPath>..\..\DepollSoft\packages\parse.1.0.2\lib\wp8\Parse.dll</HintPath>
+      <HintPath>..\..\DepollSoft\packages\parse.1.7.0\lib\wp8\Parse.dll</HintPath>
     </Reference>
     <Reference Include="Parse.Phone">
-      <HintPath>..\..\DepollSoft\packages\parse.1.0.2\lib\wp8\Parse.Phone.dll</HintPath>
+      <HintPath>..\..\DepollSoft\packages\parse.1.7.0\lib\wp8\Parse.Phone.dll</HintPath>
     </Reference>
     <Reference Include="PhonePerformance, Version=1.0.0.0, Culture=neutral, PublicKeyToken=eb13ab44d9ca0fe1, processorArchitecture=MSIL" />
     <Reference Include="SLaB.Controls.Phone">

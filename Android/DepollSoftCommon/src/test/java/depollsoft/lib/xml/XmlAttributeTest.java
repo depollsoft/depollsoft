@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config;
  * Unit tests for the XmlAttribute class.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class XmlAttributeTest {
 
     private XmlAttribute attribute;

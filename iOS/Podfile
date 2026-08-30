@@ -26,15 +26,10 @@ def google_utilites
   end
 
 def shared_pods
-    pod 'Parse'
     pod 'Bolts/Tasks'
     # 'GoogleUtilities' pulled transitively by Firebase/Google pods; avoid pinning conflicting versions
     pod 'Firebase/Auth'
     pod 'Firebase/Firestore'
-    # Use precompiled Firestore SDK for faster build times
-    # https://github.com/invertase/firestore-ios-sdk-frameworks
-    pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.2.0'
-    pod 'Firebase/Functions'
     pod 'FirebaseUI/Auth'
     pod 'FirebaseUI/Email'
     # Protobuf, gRPC-Core, gRPC-C++ are bundled with precompiled FirebaseFirestore
@@ -54,6 +49,7 @@ end
 target 'pitchperfect' do
     project 'pitchperfect/pitchperfect.xcodeproj'
     shared_pods
+    pod 'Firebase/Functions'
     pod 'Google-Mobile-Ads-SDK'
 
     target 'pitchperfectTests' do

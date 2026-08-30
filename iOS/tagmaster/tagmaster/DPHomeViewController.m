@@ -8,7 +8,6 @@
 
 #import "DPHomeViewController.h"
 
-#import <Parse/Parse.h>
 
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"

@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
  * Tests complex object graphs, edge cases, and error handling.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class JsonSerializerEdgeCasesTest {
 
     // =====================================================================

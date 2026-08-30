@@ -8,14 +8,11 @@
 
 import Foundation
 import Firebase
-import Parse
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
 
     @objc func extraInit() {
-        convertParseUser()
-
         var registration: ListenerRegistration? = nil
         _ = Auth.auth().addStateDidChangeListener { (_, user) in
             if let reg = registration {
@@ -39,26 +36,4 @@ public extension DPAppDelegate {
         }
     }
     
-    func convertParseUser() {
-        let curUser = PFUser.current()
-        if curUser != nil {
-            Functions.functions().httpsCallable("exchangeAuthToken")
-                .call(["token":curUser?.sessionToken]) { res, error in
-                    if error != nil {
-                        print(error!)
-                        return
-                    }
-                    let dataDict = res!.data as! Dictionary<String, Any>
-                    let firebaseToken = dataDict["token"] as! String
-                    Auth.auth().signIn(withCustomToken: firebaseToken){ (res, error) in
-                        if error != nil {
-                            print(error!)
-                            return
-                        }
-                        PFUser.logOut()
-                        print("Logged out Parse: \(curUser!.objectId!) and logged in Firebase: \(res!.user.uid)")
-                    }
-            }
-        }
-    }
 }

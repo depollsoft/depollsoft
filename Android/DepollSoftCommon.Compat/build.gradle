@@ -7,9 +7,9 @@ dependencies {
 
 android {
     namespace = 'depollsoft.lib.compat'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
-        minSdk 21
+        minSdk 23
     }
 }

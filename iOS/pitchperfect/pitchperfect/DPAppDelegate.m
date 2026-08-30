@@ -8,7 +8,6 @@
 
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
-#import <Parse/Parse.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import "DPJsonSerializer.h"
@@ -41,12 +40,6 @@
     [FIRApp configure];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
-    [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
-        configuration.applicationId = @"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9";
-        configuration.clientKey = @"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE";
-        configuration.server = @"https://pitchperfect-api.depollsoft.xyz";
-    }]];
     
     [DPJsonSerializer registerAlias:@"List" forClass:NSClassFromString(@"__NSArrayM")];
     [DPJsonSerializer registerAlias:@"Key" forClass:[DPKey class]];

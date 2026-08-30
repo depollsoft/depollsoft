@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Android CI
 
 permissions:
@@ -10,17 +11,17 @@ on:
     branches:
       - main
     paths:
-      - 'Android/**'
-      - '.github/workflows/android.yml'
+      - "Android/**"
+      - ".github/workflows/android.yml"
   pull_request:
     branches:
       - main
     paths:
-      - 'Android/**'
-      - '.github/workflows/android.yml'
+      - "Android/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
 
 # Serialize runs per branch on self-hosted runners.
 # Queue new runs instead of canceling to reduce “superseded” failures.
@@ -40,20 +41,30 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: recursive
 
+      - name: Restore Firebase configuration
+        env:
+          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICES_JSON }}
+          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$PITCHPERFECT_CONFIG"
+          test -n "$TAGMASTER_CONFIG"
+          printf '%s' "$PITCHPERFECT_CONFIG" > PitchPerfect/google-services.json
+          printf '%s' "$TAGMASTER_CONFIG" > TagMaster/google-services.json
+
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0'
+          packages: "platform-tools platforms;android-34 platforms;android-35 platforms;android-37.0 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0"
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -66,11 +77,11 @@ jobs:
           fi
 
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
-          
+
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
-          
+          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "platforms;android-37.0" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
+
           echo "SDK components installed successfully."
 
       - name: Grant execute permission for gradlew
@@ -78,7 +89,7 @@ jobs:
 
       # Cache Gradle dependencies and wrapper for faster builds
       - name: Cache Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ~/.gradle/caches
@@ -101,7 +112,7 @@ jobs:
           fi
       - name: Upload Gradle profile reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: android-gradle-profiles
           path: Android/**/build/reports/profile/
@@ -180,7 +191,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: steps.metrics.outputs.jacoco_count != '0'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         continue-on-error: true
         timeout-minutes: 5
         with:
@@ -191,7 +202,7 @@ jobs:
 
       - name: Publish unit test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: Android Unit Tests
           path: Android/**/build/test-results/testDebugUnitTest/*.xml
@@ -200,7 +211,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: android-test-results
           path: Android/**/build/test-results/
@@ -208,7 +219,7 @@ jobs:
 
       - name: Upload unit test coverage reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: android-unit-coverage
           path: Android/**/build/reports/jacoco/
@@ -223,9 +234,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: recursive
+
+      - name: Restore Firebase configuration
+        env:
+          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICES_JSON }}
+          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICES_JSON }}
+        run: |
+          test -n "$PITCHPERFECT_CONFIG"
+          test -n "$TAGMASTER_CONFIG"
+          printf '%s' "$PITCHPERFECT_CONFIG" > PitchPerfect/google-services.json
+          printf '%s' "$TAGMASTER_CONFIG" > TagMaster/google-services.json
 
       - name: Enable KVM for emulator (Linux only)
         if: runner.os == 'Linux'
@@ -235,15 +256,15 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:
-          packages: 'platform-tools platforms;android-34 platforms;android-35 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0 emulator system-images;android-30;google_apis;arm64-v8a system-images;android-30;google_apis;x86_64'
+          packages: "platform-tools platforms;android-34 platforms;android-35 platforms;android-37.0 build-tools;34.0.0 build-tools;35.0.0 build-tools;36.0.0 emulator system-images;android-30;google_apis;arm64-v8a system-images;android-30;google_apis;x86_64"
 
       - name: Repair Android SDK (self-hosted)
         shell: bash
@@ -256,11 +277,11 @@ jobs:
           fi
 
           (yes | sdkmanager --licenses) >/dev/null 2>&1 || true
-          
+
           # Install required SDK components and verify success
           echo "Installing SDK components..."
-          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
-          
+          sdkmanager --install "platform-tools" "platforms;android-34" "platforms;android-35" "platforms;android-37.0" "build-tools;34.0.0" "build-tools;35.0.0" "build-tools;36.0.0"
+
           echo "SDK components installed successfully."
 
       - name: Export Android SDK env for emulator
@@ -284,7 +305,7 @@ jobs:
 
       # Cache Gradle dependencies and wrapper
       - name: Cache Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ~/.gradle/caches
@@ -295,7 +316,7 @@ jobs:
 
       # Cache AVD for faster emulator startup
       - name: AVD cache
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         id: avd-cache
         with:
           path: |
@@ -330,14 +351,14 @@ jobs:
           # emulator boot detection ("Unable to connect to adb daemon on port: 5037").
           echo "Stopping any existing ADB server..."
           "${SDK_ROOT}/platform-tools/adb" kill-server 2>/dev/null || true
-          
+
           # Aggressively kill any lingering adb processes
           echo "Killing lingering adb processes..."
           pkill -9 -f "adb" 2>/dev/null || true
-          
+
           # Wait for processes to die and port to be released
           sleep 2
-          
+
           # Kill anything still holding port 5037
           for _ in 1 2 3; do
             if lsof -ti tcp:5037 >/dev/null 2>&1; then
@@ -348,23 +369,23 @@ jobs:
               break
             fi
           done
-          
+
           # Clean up adb state files
           rm -f "$HOME/.android/adb"* 2>/dev/null || true
-          
+
           # Final check - if port is still busy, wait longer
           if lsof -ti tcp:5037 >/dev/null 2>&1; then
             echo "Port 5037 still busy after cleanup, waiting..."
             sleep 5
           fi
-          
+
           echo "Starting fresh ADB server..."
           "${SDK_ROOT}/platform-tools/adb" start-server
           "${SDK_ROOT}/platform-tools/adb" devices
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         env:
           ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
         with:
@@ -383,7 +404,7 @@ jobs:
           working-directory: Android
 
       - name: Run instrumented tests
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         env:
           ADB: ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
           GRADLE_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
@@ -467,7 +488,7 @@ jobs:
 
       - name: Publish instrumented test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: Android UI Tests
           path: Android/**/build/outputs/androidTest-results/**/*.xml
@@ -476,7 +497,7 @@ jobs:
 
       - name: Upload instrumented test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: android-instrumented-test-results
           path: Android/**/build/outputs/androidTest-results/
@@ -484,7 +505,7 @@ jobs:
 
       - name: Upload instrumented test coverage reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: android-instrumented-coverage
           path: Android/**/build/reports/coverage/
@@ -503,14 +524,14 @@ jobs:
 
     steps:
       - name: Download unit test coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: android-unit-coverage
           path: unit-coverage
 
       - name: Download instrumented test coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: android-instrumented-coverage

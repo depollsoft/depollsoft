@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config;
  * Unit tests for the SpannableUtilities class.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class SpannableUtilitiesTest {
 
     // =====================================================================
