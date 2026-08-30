@@ -570,7 +570,47 @@ jobs:
           MATCH_GIT_SSH_KEY: ${{ secrets.MATCH_GIT_SSH_KEY }}
           MATCH_GIT_BASIC_AUTHORIZATION: >-
             ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_REPOSITORY_ARCHIVE_PART_1: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
         run: |
+          if [ -n "${MATCH_REPOSITORY_ARCHIVE_PART_1:-}" ] && \
+            [ -n "${MATCH_REPOSITORY_ARCHIVE_PART_2:-}" ]; then
+            repo_path="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID"
+            archive_path="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID.tgz"
+            rm -rf "$repo_path" "$archive_path"
+            mkdir -p "$repo_path"
+            python3 - <<'PY'
+          import base64
+          import os
+
+          encoded = (
+              os.environ["MATCH_REPOSITORY_ARCHIVE_PART_1"]
+              + os.environ["MATCH_REPOSITORY_ARCHIVE_PART_2"]
+          )
+          with open(
+              os.path.join(
+                  os.environ["RUNNER_TEMP"],
+                  f"match-repository-{os.environ['GITHUB_RUN_ID']}.tgz",
+              ),
+              "wb",
+          ) as archive:
+              archive.write(base64.b64decode(encoded, validate=True))
+          PY
+            tar -xzf "$archive_path" -C "$repo_path"
+            git -C "$repo_path" init -b master
+            git -C "$repo_path" config user.name "github-actions[bot]"
+            git -C "$repo_path" config user.email \
+              "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C "$repo_path" add .
+            git -C "$repo_path" commit -m "Restore encrypted signing assets"
+            echo "MATCH_REPOSITORY_PATH=$repo_path" >> "$GITHUB_ENV"
+            echo "MATCH_REPOSITORY_ARCHIVE_PATH=$archive_path" >> "$GITHUB_ENV"
+            echo "MATCH_GIT_URL=file://$repo_path" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
           if [ -n "${MATCH_GIT_SSH_KEY:-}" ]; then
             key_path="$RUNNER_TEMP/match-git-key"
             printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
@@ -652,6 +692,12 @@ jobs:
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
         run: bundle exec fastlane deploy_private
+
+      - name: Clean up iOS signing repository
+        if: always()
+        run: |
+          rm -rf "${MATCH_REPOSITORY_PATH:-}" \
+            "${MATCH_REPOSITORY_ARCHIVE_PATH:-}"
 
   verify-pr-source:
     name: Verify PR source ref
