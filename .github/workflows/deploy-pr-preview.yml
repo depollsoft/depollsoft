@@ -552,17 +552,27 @@ jobs:
           path: |
             iOS/SourcePackages
             ~/Library/Caches/org.swift.swiftpm
-          key: deploy-spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: deploy-spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            deploy-spm-${{ runner.os }}-
+            deploy-spm-v2-${{ runner.os }}-
 
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          xcodebuild -resolvePackageDependencies \
-            -workspace iOS.xcworkspace \
-            -scheme pitchperfect \
-            -clonedSourcePackagesDirPath SourcePackages
+          for attempt in 1 2; do
+            xcodebuild -resolvePackageDependencies \
+              -workspace iOS.xcworkspace \
+              -scheme pitchperfect \
+              -clonedSourcePackagesDirPath SourcePackages
+            if find SourcePackages/artifacts -name '*.xcframework' \
+              -print -quit 2>/dev/null | grep -q .; then
+              exit 0
+            fi
+            echo "SPM binary artifacts are incomplete; resolving cleanly."
+            rm -rf SourcePackages
+          done
+          echo "SPM binary artifacts are still missing after a clean resolve." >&2
+          exit 1
 
       - name: Configure iOS signing repo auth
         working-directory: iOS
