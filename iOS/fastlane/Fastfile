@@ -83,11 +83,25 @@ def ensure_internal_test_group(app_identifier:, tester_email:)
   group = app.get_beta_groups.find do |candidate|
     candidate.name == group_name && candidate.is_internal_group
   end
-  group ||= app.create_beta_group(
-    group_name: group_name,
-    is_internal_group: true,
-    has_access_to_all_builds: true,
-  )
+  unless group
+    response = Spaceship::ConnectAPI.test_flight_request_client.post(
+      "v1/betaGroups",
+      {
+        data: {
+          attributes: {
+            name: group_name,
+            isInternalGroup: true,
+            hasAccessToAllBuilds: true,
+          },
+          relationships: {
+            app: { data: { id: app.id, type: "apps" } },
+          },
+          type: "betaGroups",
+        },
+      },
+    )
+    group = response.to_models.first
+  end
 
   tester = app.get_beta_testers(
     filter: { email: tester_email },
