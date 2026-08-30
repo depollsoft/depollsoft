@@ -152,8 +152,13 @@ platform :ios do
 
     refresh_signing = ENV["MATCH_FORCE_REGENERATE"] == "true"
     if refresh_signing
+      provisioning_client = Spaceship::ConnectAPI::Provisioning::Client.new(
+        token: Spaceship::ConnectAPI.token,
+        current_team_id: "43AWMS3YJX",
+      )
       bundle_id = Spaceship::ConnectAPI::BundleId.find(
         "depollsoft.tagmaster.private",
+        client: provisioning_client,
       )
       UI.user_error!("Tag Master private App ID was not found") unless bundle_id
 
@@ -167,6 +172,7 @@ platform :ios do
             options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
           },
         ],
+        client: provisioning_client,
       )
     end
 
