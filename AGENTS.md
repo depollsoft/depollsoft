@@ -31,6 +31,7 @@
 - PRs: Clear description, affected modules, testing steps, and screenshots for UI changes. Ensure Android, iOS, and API builds pass. Avoid committing secrets or local config.
 
 ## PR Preview Deploys
+
 - `.github/workflows/pr-preview.yml` builds private PR preview artifacts for same-repo mobile PRs and posts a sticky PR comment with APK download details plus `/deploy` instructions.
 - Comment `/deploy` on a same-repo PR to queue `.github/workflows/deploy-pr-preview.yml`, which uploads the private Pitch Perfect and Tag Master builds to TestFlight and Play Internal Testing.
 - Required GitHub Actions secrets for preview deploys: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_PASSWORD`, and `MATCH_GIT_SSH_KEY`.
