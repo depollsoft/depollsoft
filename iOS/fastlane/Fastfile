@@ -56,7 +56,8 @@ def with_private_signing(
   provisioning_profile:,
   entitlements_path:
 )
-  original_project = File.binread(project_path)
+  project_file = File.join(project_path, "project.pbxproj")
+  original_project = File.binread(project_file)
   update_code_signing_settings(
     path: project_path,
     use_automatic_signing: false,
@@ -70,7 +71,7 @@ def with_private_signing(
   )
   yield
 ensure
-  File.binwrite(project_path, original_project) if original_project
+  File.binwrite(project_file, original_project) if original_project
 end
 
 def build_private_app(
