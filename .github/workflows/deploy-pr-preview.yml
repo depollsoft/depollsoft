@@ -571,26 +571,8 @@ jobs:
           MATCH_GIT_BASIC_AUTHORIZATION: >-
             ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: |
-          if [ -n "${MATCH_GIT_SSH_KEY:-}" ]; then
-            key_path="$RUNNER_TEMP/match-git-key"
-            printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
-            chmod 600 "$key_path"
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            ssh_opts="-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-            echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" >> "$GITHUB_ENV"
-            echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
-              >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
-            echo "MATCH_GIT_SSH_KEY or MATCH_GIT_BASIC_AUTHORIZATION secret" \
-              "is required to clone the private signing repository."
-            exit 1
-          fi
-
-          auth_url="$(python3 - <<'PY'
+          if [ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
+            auth_url="$(python3 - <<'PY'
           import base64
           import binascii
           import os
@@ -627,9 +609,27 @@ jobs:
               "@github.com/depollsoft/certificates.git"
           )
           PY
-          )"
-          echo "::add-mask::$auth_url"
-          echo "MATCH_GIT_URL=$auth_url" >> "$GITHUB_ENV"
+            )"
+            echo "::add-mask::$auth_url"
+            echo "MATCH_GIT_URL=$auth_url" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if [ -z "${MATCH_GIT_SSH_KEY:-}" ]; then
+            echo "MATCH_GIT_BASIC_AUTHORIZATION or MATCH_GIT_SSH_KEY secret" \
+              "is required to clone the private signing repository."
+            exit 1
+          fi
+
+          key_path="$RUNNER_TEMP/match-git-key"
+          printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
+          chmod 600 "$key_path"
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh_opts="-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" >> "$GITHUB_ENV"
+          echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
+            >> "$GITHUB_ENV"
 
       - name: Deploy iOS private builds
         working-directory: iOS
