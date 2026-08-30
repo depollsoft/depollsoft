@@ -30,7 +30,7 @@ The Android projects are located in the `Android` directory. They are built usin
 
 ### iOS
 
-The iOS projects are located in the `iOS` directory. They use CocoaPods for dependency management. The main applications are `pitchperfect` and `tagmaster`. The `Podfile` shows that both projects use Firebase (Auth, Firestore, Functions), Parse, and various Google utilities. The `pitchperfect` project also includes the Google Mobile Ads SDK.
+The iOS projects are located in the `iOS` directory. They use CocoaPods for dependency management. The main applications are `pitchperfect` and `tagmaster`. The `Podfile` shows that both projects use Firebase Auth and Firestore with various Google utilities. Pitch Perfect also uses Firebase Functions and the Google Mobile Ads SDK.
 
 ## Development Conventions
 

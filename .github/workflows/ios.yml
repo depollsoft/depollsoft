@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: iOS CI
 
 permissions:
@@ -10,17 +11,17 @@ on:
     branches:
       - main
     paths:
-      - 'iOS/**'
-      - '.github/workflows/ios.yml'
+      - "iOS/**"
+      - ".github/workflows/ios.yml"
   pull_request:
     branches:
       - main
     paths:
-      - 'iOS/**'
-      - '.github/workflows/ios.yml'
+      - "iOS/**"
+      - ".github/workflows/ios.yml"
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: "0 4 * * *"
 
 # Serialize runs per branch on self-hosted runners.
 # Queue new runs instead of canceling to reduce “superseded” failures.
@@ -46,7 +47,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Restore Firebase configuration
+        env:
+          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICE_INFO_PLIST }}
+          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          test -n "$PITCHPERFECT_CONFIG"
+          test -n "$TAGMASTER_CONFIG"
+          printf '%s' "$PITCHPERFECT_CONFIG" > pitchperfect/GoogleService-Info.plist
+          printf '%s' "$TAGMASTER_CONFIG" > tagmaster/GoogleService-Info.plist
 
       - name: Select Xcode version
         id: select_xcode
@@ -62,7 +73,7 @@ jobs:
             echo "No Xcode installation found!"
             exit 1
           fi
-          
+
           # Pin the developer directory for subsequent steps (no global xcode-select).
           DEVELOPER_DIR="$XCODE_PATH/Contents/Developer"
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
@@ -155,7 +166,7 @@ jobs:
 
       # Cache CocoaPods dependencies for faster builds
       - name: Cache CocoaPods
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             iOS/Pods
@@ -243,7 +254,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfect-junit.xml &
           PID1=$!
-          
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme tagmaster \
@@ -255,7 +266,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output tagmaster-junit.xml &
           PID2=$!
-          
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -scheme pitchperfectlib \
@@ -267,13 +278,13 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty --color --report junit --output pitchperfectlib-junit.xml &
           PID3=$!
-          
+
           # Wait for all tests to complete
           FAILED=0
           wait $PID1 || FAILED=1
           wait $PID2 || FAILED=1
           wait $PID3 || FAILED=1
-          
+
           # We continue even if tests fail - we'll check junit results later
           exit 0
 
@@ -304,7 +315,6 @@ jobs:
             exit 1
           fi
           echo "All test suites passed!"
-
 
       - name: Summarize tests & coverage
         if: always()
@@ -412,7 +422,6 @@ jobs:
             f.write(f"comment_path={rel}\n")
           PY
 
-
       - name: Generate coverage report for pitchperfect
         if: always()
         env:
@@ -453,7 +462,7 @@ jobs:
           fi
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-test-results
@@ -465,7 +474,7 @@ jobs:
 
       - name: Publish unit test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: iOS Unit Tests
           path: iOS/*-junit.xml
@@ -475,7 +484,7 @@ jobs:
       - name: Find existing PR comment
         if: github.event_name == 'pull_request'
         id: find_comment
-        uses: peter-evans/find-comment@v3
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: github-actions[bot]
@@ -483,7 +492,7 @@ jobs:
 
       - name: Create or update PR comment
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
@@ -503,7 +512,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Restore Firebase configuration
+        env:
+          PITCHPERFECT_CONFIG: ${{ secrets.PITCHPERFECT_GOOGLE_SERVICE_INFO_PLIST }}
+          TAGMASTER_CONFIG: ${{ secrets.TAGMASTER_GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          test -n "$PITCHPERFECT_CONFIG"
+          test -n "$TAGMASTER_CONFIG"
+          printf '%s' "$PITCHPERFECT_CONFIG" > pitchperfect/GoogleService-Info.plist
+          printf '%s' "$TAGMASTER_CONFIG" > tagmaster/GoogleService-Info.plist
 
       - name: Select Xcode version
         id: select_xcode
@@ -582,7 +601,7 @@ jobs:
 
       # Cache CocoaPods dependencies for faster builds
       - name: Cache CocoaPods
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             iOS/Pods
@@ -599,7 +618,7 @@ jobs:
           if [ -d "$HOME/.cocoapods/repos/master" ]; then
             rm -rf "$HOME/.cocoapods/repos/master"
           fi
-          
+
           # Retry pod install up to 3 times to handle transient network failures
           for attempt in 1 2 3; do
             echo "Attempt $attempt of 3: Running pod install..."
@@ -702,21 +721,21 @@ jobs:
             xcresult = f'{scheme}-uitest-results.xcresult'
             tests, failures, errors = junit_stats(junit)
             cov = xccov_percent(xcresult)
-            
+
             if tests == 0:
               summary.append(f"⚠️ **{scheme}**: Tests did not run")
             elif failures == 0 and errors == 0:
               summary.append(f"✅ **{scheme}**: {tests} tests passed (line coverage: {cov:.2f}%)")
             else:
               summary.append(f"❌ **{scheme}**: {tests} tests, {failures} failures, {errors} errors (line coverage: {cov:.2f}%)")
-          
+
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
             s.write('\n'.join(summary) + '\n')
           PY
 
       - name: Upload UI test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-uitest-results
@@ -727,7 +746,7 @@ jobs:
 
       - name: Publish UI test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: iOS UI Tests
           path: iOS/*-uitest-junit.xml
@@ -749,14 +768,14 @@ jobs:
 
     steps:
       - name: Download unit test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: ios-test-results
           path: iOS/unit-test-results
 
       - name: Download UI test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: ios-uitest-results

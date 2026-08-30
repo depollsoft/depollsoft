@@ -19,7 +19,7 @@ import java.util.List;
  * Supplements XmlDocumentTest with more edge cases and scenarios.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class XmlDocumentParsingTest {
 
     // =====================================================================

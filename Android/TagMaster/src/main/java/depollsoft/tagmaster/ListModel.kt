@@ -1,12 +1,12 @@
 package depollsoft.tagmaster
 
 import com.bindroid.trackable.*
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import depollsoft.lib.util.Preferences
 import java.lang.ref.WeakReference
 

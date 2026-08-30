@@ -15,10 +15,9 @@ This is a polyglot monorepo containing several mobile applications and backend s
 - `/Android/` - Android applications and libraries (Java/Kotlin)
 - `/iOS/` - iOS applications (Mixed Objective-C and Swift)
 - `/api/` - Node.js/TypeScript backend service deployed to Google Cloud Run
-- `/Firebase/` - Firebase functions for PitchPerfect and TagMaster
+- `/Firebase/` - Firebase configuration and PitchPerfect account-deletion function
 - `/DotNet/` - Legacy Silverlight/Windows Phone applications (not actively maintained)
 - `/AppEngine/` - Google App Engine services (appears unused)
-- `/CloudCode/` - Parse Server backend (legacy)
 
 ## Build Commands
 
@@ -90,7 +89,6 @@ npm run deploy                     # Deploy to Firebase
   - Firebase Functions for serverless backend logic
   - Authentication shared across platforms
 - **Legacy Systems**:
-  - Parse backend integration (being phased out)
   - Silverlight/.NET projects (no longer maintained)
 
 ## Key Dependencies
@@ -99,14 +97,12 @@ npm run deploy                     # Deploy to Firebase
 - Firebase (Auth, Firestore, Functions)
 - Google Play Services (Ads, Wearable)
 - Facebook SDK
-- Parse SDK
 - AndroidX libraries
 - Kotlin coroutines
 
 ### iOS  
 - Firebase (Auth, Firestore, Functions)
 - FirebaseUI for authentication flows
-- Parse SDK
 - Google Mobile Ads
 - Google Sign-In
 
@@ -114,14 +110,13 @@ npm run deploy                     # Deploy to Firebase
 - Express.js for API server
 - Firebase Admin SDK
 - Google Cloud SDK (BigQuery, Pub/Sub)
-- MongoDB driver
 
 ## Development Setup & Configuration
 
 ### Prerequisites
-- Android minimum SDK: 21 (Android 5.0)
-- iOS deployment target: 13.0
-- Node.js version: 16 (for Firebase functions and API)
+- Android minimum SDK: 23 (Android 6.0)
+- iOS deployment target: 15.0
+- Node.js version: 22 for Firebase Functions; the API container uses Node.js 24
 - Docker (for API development)
 
 ### Critical Configuration Files (NOT in source control)
@@ -133,7 +128,7 @@ npm run deploy                     # Deploy to Firebase
 ### Security & Secrets
 - Android debug keystore: `/Android/debug.jks` (password: "depollsoft")
 - GitHub Actions uses secrets: `GCP_PROJECT_ID`, `GCP_SA_KEY` for API deployment
-- Fabric API keys in `fabric.properties` (Android apps)
+- Firebase client configuration is restored in CI from the `PITCHPERFECT_GOOGLE_*` and `TAGMASTER_GOOGLE_*` repository secrets
 
 ## Testing
 

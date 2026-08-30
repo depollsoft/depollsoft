@@ -3,12 +3,12 @@ apply plugin: 'com.android.application'
 
 android {
     namespace = 'depollsoft.pitchperfect'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
         applicationId "depollsoft.pitchperfect"
         minSdk 26
-        targetSdk 35
+        targetSdk 36
         versionCode getVersionCode(build: 0, suffix: 1)
         versionName "3.0.0"
     }
@@ -29,9 +29,9 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.support:wearable:2.9.0'
     compileOnly 'com.google.android.wearable:wearable:2.9.0'
-    implementation 'com.google.android.gms:play-services-wearable:18.2.0'
+    implementation 'com.google.android.gms:play-services-wearable:20.0.1'
     implementation project(':bindroid')
     implementation project(':PitchPerfectLib')
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.14.1'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
 }

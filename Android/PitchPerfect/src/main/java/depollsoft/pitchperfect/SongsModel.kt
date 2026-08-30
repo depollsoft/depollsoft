@@ -1,12 +1,12 @@
 package depollsoft.pitchperfect
 
 import com.bindroid.trackable.TrackableCollection
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference

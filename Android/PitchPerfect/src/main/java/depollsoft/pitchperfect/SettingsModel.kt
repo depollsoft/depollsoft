@@ -1,14 +1,13 @@
 package depollsoft.pitchperfect
 
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.Firebase
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.licensing.LicenseChecker
-import com.parse.ParseUser
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import kotlinx.coroutines.tasks.await

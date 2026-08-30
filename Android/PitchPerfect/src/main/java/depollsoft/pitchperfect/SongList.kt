@@ -4,7 +4,7 @@ import com.bindroid.trackable.*
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.getField
+import com.google.firebase.firestore.getField
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.toMap
 import depollsoft.pitchperfect.lib.PitchedSong

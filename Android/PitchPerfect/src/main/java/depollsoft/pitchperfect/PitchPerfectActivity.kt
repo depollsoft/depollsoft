@@ -22,7 +22,8 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.parse.ParseUser
+import com.google.firebase.auth.auth
+import com.google.firebase.Firebase
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
@@ -110,7 +111,7 @@ class PitchPerfectActivity : AppCompatActivity() {
             true
         }
 
-        if (RunUtils.runOnce("loginDialog") && ParseUser.getCurrentUser() == null) {
+        if (RunUtils.runOnce("loginDialog") && Firebase.auth.currentUser == null) {
             logInDialog.show()
         } else {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
