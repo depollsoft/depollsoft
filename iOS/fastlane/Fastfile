@@ -150,9 +150,11 @@ platform :ios do
       is_key_content_base64: false,
     )
 
+    refresh_signing = ENV["MATCH_FORCE_REGENERATE"] == "true"
     match(
       type: "appstore",
-      readonly: true,
+      readonly: !refresh_signing,
+      force: refresh_signing,
       app_identifier: [
         "depollsoft.pitchperfect.private",
         "depollsoft.tagmaster.private",
