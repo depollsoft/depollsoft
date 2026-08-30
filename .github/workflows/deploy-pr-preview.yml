@@ -689,15 +689,34 @@ jobs:
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_FORCE_REGENERATE: ${{ secrets.MATCH_FORCE_REGENERATE }}
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
         run: bundle exec fastlane deploy_private
+
+      - name: Package refreshed iOS signing repository
+        if: always()
+        run: |
+          if [ -d "${MATCH_REPOSITORY_PATH:-}" ]; then
+            tar -C "$MATCH_REPOSITORY_PATH" --exclude=.git -czf \
+              "$RUNNER_TEMP/refreshed-match-repository.tgz" .
+          fi
+
+      - name: Upload refreshed iOS signing repository
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: refreshed-match-repository
+          path: ${{ runner.temp }}/refreshed-match-repository.tgz
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Clean up iOS signing repository
         if: always()
         run: |
           rm -rf "${MATCH_REPOSITORY_PATH:-}" \
-            "${MATCH_REPOSITORY_ARCHIVE_PATH:-}"
+            "${MATCH_REPOSITORY_ARCHIVE_PATH:-}" \
+            "$RUNNER_TEMP/refreshed-match-repository.tgz"
 
   verify-pr-source:
     name: Verify PR source ref
