@@ -126,7 +126,7 @@ public class Preferences {
 
   public static void initialize(String key, Object value, Class<?> type) {
     if (testMode) {
-      if (!testValues.containsKey(key)) {
+      if (value != null && !testValues.containsKey(key)) {
         testValues.put(key, value);
       }
       return;
@@ -169,13 +169,20 @@ public class Preferences {
 
   public static boolean set(String key, Object value) {
     if (testMode) {
-      testValues.put(key, value);
+      if (value == null) {
+        testValues.remove(key);
+      } else {
+        testValues.put(key, value);
+      }
       return true;
     }
 
     ensureInitialized();
     if (Preferences.preferences == null) {
       return false;
+    }
+    if (value == null) {
+      return Preferences.preferences.edit().remove(key).commit();
     }
     if (value instanceof Map) {
       value = fromMap((Map<?, ?>)value);

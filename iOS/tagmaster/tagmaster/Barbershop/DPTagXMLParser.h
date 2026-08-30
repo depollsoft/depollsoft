@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 @interface DPTagXMLParser : NSObject<NSXMLParserDelegate> {
     NSMutableArray *result;
