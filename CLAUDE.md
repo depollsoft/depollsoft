@@ -18,7 +18,6 @@ This is a polyglot monorepo containing several mobile applications and backend s
 - `/iOS/` - iOS applications (Mixed Objective-C and Swift)
 - `/api/` - Node.js/TypeScript backend service deployed to Google Cloud Run
 - `/Firebase/` - Firebase configuration and PitchPerfect account-deletion function
-- `/DotNet/` - Legacy Silverlight/Windows Phone applications (not actively maintained)
 - `/AppEngine/` - Google App Engine services (appears unused)
 
 ## Build Commands
@@ -96,8 +95,6 @@ npm run deploy                     # Deploy to Firebase
   - Firestore for data storage
   - Firebase Functions for serverless backend logic
   - Authentication shared across platforms
-- **Legacy Systems**:
-  - Silverlight/.NET projects (no longer maintained)
 
 ## Key Dependencies
 
@@ -155,7 +152,6 @@ npm run deploy                     # Deploy to Firebase
   - depolllib: Has tests
   - pitchperfectlib: Has tests
   - tagmaster: Has tests
-- **.NET**: Legacy projects have test coverage
 
 ### Running Tests
 
@@ -199,8 +195,7 @@ xcodebuild test -workspace ../iOS.xcworkspace -scheme <scheme-name>
 1. **Configuration files**: Firebase client configs are tracked; service credentials still belong in environment variables or secret managers
 2. **SPM resolution**: Run `xcodebuild -resolvePackageDependencies` after package changes
 3. **Firebase setup**: Both platforms need proper Firebase configuration
-4. **Legacy code**: Ignore .NET/Silverlight projects unless specifically needed
-5. **Node versions**: Firebase Functions use Node 22 and the API container uses Node 24
+4. **Node versions**: Firebase Functions use Node 22 and the API container uses Node 24
 
 ### Best Practices
 

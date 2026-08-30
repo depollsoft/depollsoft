@@ -5,7 +5,6 @@
 - `api/`: TypeScript Express service (GCP Pub/Sub + BigQuery).
 - `Android/`: Gradle multi-module projects (Kotlin/Java).
 - `iOS/`: Xcode workspace with Swift Package Manager (`iOS.xcworkspace`).
-- `DotNet/`: Legacy .NET solutions and libraries.
 - `Firebase/`, `CloudCode/`, `AppEngine/`: Hosting/config and cloud code.
 
 ## Build, Test, and Development Commands
@@ -13,7 +12,6 @@
 - API: `cd api && npm ci && npm run build && npm start` (uses `PORT`, `PUBSUB_VERIFICATION_TOKEN`). Docker: `npm run docker-build`, `npm run docker-run`.
 - Android: `cd Android && ./gradlew assembleDebug` (build), `./gradlew test` (unit tests), `./gradlew connectedDebugAndroidTest` (instrumentation).
 - iOS: `cd iOS && xcodebuild -resolvePackageDependencies -workspace iOS.xcworkspace -scheme <Scheme>`, then open `iOS/iOS.xcworkspace`. CLI build: `xcodebuild -workspace iOS/iOS.xcworkspace -scheme <Scheme> -configuration Debug build`.
-- .NET: Open the `.sln` in Visual Studio/MSBuild; some solutions target legacy frameworks. For SDK-style projects, `dotnet build` and `dotnet test`.
 
 ## Coding Style & Naming Conventions
 
