@@ -1,0 +1,176 @@
+require "fileutils"
+require "shellwords"
+require "tmpdir"
+
+default_platform(:ios)
+
+IOS_ROOT = File.expand_path("..", __dir__)
+
+def with_private_google_service_config(config_dir)
+  original = File.join(IOS_ROOT, config_dir, "GoogleService-Info.plist")
+  private_config = File.join(IOS_ROOT, config_dir, "GoogleService-Info-Private.plist")
+  backup = "#{original}.backup"
+
+  UI.user_error!("Missing private Firebase config at #{private_config}") unless File.exist?(private_config)
+
+  FileUtils.cp(original, backup)
+  FileUtils.cp(private_config, original)
+  yield
+ensure
+  FileUtils.mv(backup, original, force: true) if File.exist?(backup)
+end
+
+def with_private_display_name(info_plist_path, display_name)
+  original = File.read(info_plist_path)
+  updated = original.sub(
+    /(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]*(<\/string>)/,
+    "\\1#{display_name}\\2",
+  )
+  UI.user_error!("Missing CFBundleDisplayName in #{info_plist_path}") if updated == original
+
+  File.write(info_plist_path, updated)
+  yield
+ensure
+  File.write(info_plist_path, original) if original
+end
+
+def with_private_entitlements(entitlements_path, production_bundle_identifier:, bundle_identifier:)
+  entitlements = File.read(entitlements_path)
+    .gsub(
+      /\n\s*<key>aps-environment<\/key>\n\s*<string>[^<]*<\/string>/,
+      "",
+    )
+    .gsub(production_bundle_identifier, bundle_identifier)
+
+  Dir.mktmpdir("private-entitlements") do |directory|
+    private_entitlements_path = File.join(directory, "private.entitlements")
+    File.write(private_entitlements_path, entitlements)
+    yield private_entitlements_path
+  end
+end
+
+def build_private_app(
+  scheme:,
+  config_dir:,
+  info_plist_path:,
+  entitlements_path:,
+  production_bundle_identifier:,
+  bundle_identifier:,
+  display_name:,
+  icon_name:,
+  output_name:,
+  build_number:
+)
+  provisioning_profile = "match AppStore #{bundle_identifier}"
+  entitlements_file = File.join(IOS_ROOT, entitlements_path)
+  info_plist_file = File.join(IOS_ROOT, info_plist_path)
+
+  with_private_google_service_config(config_dir) do
+    with_private_display_name(info_plist_file, display_name) do
+      with_private_entitlements(
+        entitlements_file,
+        production_bundle_identifier: production_bundle_identifier,
+        bundle_identifier: bundle_identifier,
+      ) do |private_entitlements_path|
+        build_app(
+          workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+          scheme: scheme,
+          export_method: "app-store",
+          export_team_id: "43AWMS3YJX",
+          export_options: {
+            provisioningProfiles: {
+              bundle_identifier => provisioning_profile,
+            },
+          },
+          xcargs: [
+            "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_identifier}",
+            "ASSETCATALOG_COMPILER_APPICON_NAME=#{icon_name}",
+            "CURRENT_PROJECT_VERSION=#{build_number}",
+            "DEVELOPMENT_TEAM=43AWMS3YJX",
+            "CODE_SIGN_STYLE=Manual",
+            "CODE_SIGN_IDENTITY=#{Shellwords.escape('Apple Distribution')}",
+            "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
+            "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
+          ].join(" "),
+          output_directory: File.join(IOS_ROOT, "build"),
+          output_name: output_name,
+          clean: true,
+        )
+      end
+    end
+  end
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+  end
+
+  desc "Build and upload private iOS apps to TestFlight"
+  lane :deploy_private do
+    build_number = (ENV["DEPOLLSOFT_PRIVATE_BUILD_NUMBER"] || ENV["CI_BUILD_NUMBER"] || (Time.now.to_i / 10).to_s).to_s
+    pr_number = ENV["PR_NUMBER"].to_s.strip
+    pr_title = ENV["PR_TITLE"].to_s.strip
+    changelog = pr_number.empty? ? "Private preview build" : "PR ##{pr_number}: #{pr_title}"
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: false,
+    )
+
+    match(
+      type: "appstore",
+      readonly: true,
+      app_identifier: [
+        "depollsoft.pitchperfect.private",
+        "depollsoft.tagmaster.private",
+      ],
+    )
+
+    build_private_app(
+      scheme: "pitchperfect",
+      config_dir: "pitchperfect",
+      info_plist_path: "pitchperfect/pitchperfect/pitchperfect-Info.plist",
+      entitlements_path: "pitchperfect/pitchperfect/pitchperfect.entitlements",
+      production_bundle_identifier: "depollsoft.pitchperfect",
+      bundle_identifier: "depollsoft.pitchperfect.private",
+      display_name: "Pitch Perfect β",
+      icon_name: "AppIcon-Private",
+      output_name: "PitchPerfect-private.ipa",
+      build_number: build_number,
+    )
+
+    build_private_app(
+      scheme: "tagmaster",
+      config_dir: "tagmaster",
+      info_plist_path: "tagmaster/tagmaster/tagmaster-Info.plist",
+      entitlements_path: "tagmaster/tagmaster/tagmaster.entitlements",
+      production_bundle_identifier: "depollsoft.tagmaster",
+      bundle_identifier: "depollsoft.tagmaster.private",
+      display_name: "Tag Master β",
+      icon_name: "AppIcon-Private",
+      output_name: "TagMaster-private.ipa",
+      build_number: build_number,
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: "depollsoft.pitchperfect.private",
+      ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
+      skip_waiting_for_build_processing: false,
+      distribute_external: false,
+      changelog: changelog,
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: "depollsoft.tagmaster.private",
+      ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
+      skip_waiting_for_build_processing: false,
+      distribute_external: false,
+      changelog: changelog,
+    )
+  end
+end
