@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Deploy PR Preview
 
 on:
@@ -392,7 +393,7 @@ jobs:
     outputs:
       source-sha: ${{ steps.capture-source.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
@@ -402,16 +403,16 @@ jobs:
         id: capture-source
         run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:
-          packages: "platform-tools platforms;android-35 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-35 platforms;android-37.0 build-tools;36.0.0"
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -497,7 +498,7 @@ jobs:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: >-
             ${{ env.PLAY_SERVICE_ACCOUNT_JSON_PATH }}
           PR_NUMBER: ${{ inputs.pr-number }}
-        run: bundle exec fastlane deploy_private
+        run: ruby -S bundle exec fastlane deploy_private
 
       - name: Clean up Android deploy credentials
         if: always()
@@ -517,7 +518,7 @@ jobs:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
@@ -539,25 +540,29 @@ jobs:
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: iOS
 
-      - name: Install CocoaPods
+      - name: Cache SPM dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            iOS/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: deploy-spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            deploy-spm-${{ runner.os }}-
+
+      - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3: pod install"
-            if bundle exec pod install; then
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then
-              sleep 10
-            fi
-          done
-          exit 1
+          xcodebuild -resolvePackageDependencies \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -clonedSourcePackagesDirPath SourcePackages
 
       - name: Configure iOS signing repo auth
         working-directory: iOS

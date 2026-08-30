@@ -84,7 +84,7 @@ def build_private_app(
           },
           xcargs: [
             "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_identifier}",
-            "ASSETCATALOG_COMPILER_APPICON_NAME=#{icon_name}",
+            "APP_ICON_NAME=#{icon_name}",
             "CURRENT_PROJECT_VERSION=#{build_number}",
             "DEVELOPMENT_TEAM=43AWMS3YJX",
             "CODE_SIGN_STYLE=Manual",
@@ -92,6 +92,8 @@ def build_private_app(
             "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
             "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
           ].join(" "),
+          cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
+          skip_package_dependencies_resolution: true,
           output_directory: File.join(IOS_ROOT, "build"),
           output_name: output_name,
           clean: true,
