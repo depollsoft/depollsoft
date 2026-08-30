@@ -7,54 +7,111 @@
 //
 
 import Foundation
-import Firebase
-#if canImport(FirebaseAuthUI)
-import FirebaseAuthUI
+import FirebaseAuth
+import SwiftUI
+
+#if canImport(FirebaseAuthSwiftUI)
+import FirebaseAuthSwiftUI
 #endif
-#if canImport(FirebaseEmailAuthUI)
-import FirebaseEmailAuthUI
+#if canImport(FirebaseGoogleSwiftUI)
+import FirebaseGoogleSwiftUI
+#endif
+#if canImport(FirebaseFacebookSwiftUI)
+import FirebaseFacebookSwiftUI
+#endif
+#if canImport(FirebaseOAuthSwiftUI)
+import FirebaseOAuthSwiftUI
+#endif
+#if canImport(FirebaseAppleSwiftUI)
+import FirebaseAppleSwiftUI
+#endif
+#if canImport(FirebasePhoneAuthSwiftUI)
+import FirebasePhoneAuthSwiftUI
 #endif
 
-#if canImport(FirebaseAuthUI)
-extension DPSettingsController: FUIAuthDelegate {
-    @objc func logInClick() {
-        guard Auth.auth().currentUser == nil else {
-            try? Auth.auth().signOut()
-            self.refreshLoginButton()
-            return
-        }
+// MARK: - SwiftUI Auth View for UIKit Integration
 
-        guard let authUI = FUIAuth.defaultAuthUI() else {
-            return
-        }
+#if canImport(FirebaseAuthSwiftUI)
+/// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
+struct TagMasterAuthView: View {
+    let authService: AuthService
+    let onAuthStateChanged: () -> Void
+    let onDismiss: () -> Void
 
-        var providers: [FUIAuthProvider] = []
+    init(onAuthStateChanged: @escaping () -> Void, onDismiss: @escaping () -> Void) {
+        let configuration = AuthConfiguration(
+            logo: ImageResource(name: "AuthLogo", bundle: .main),
+            shouldHideCancelButton: false,
+            interactiveDismissEnabled: true,
+            customStringsBundle: .main,
+            mfaIssuer: "Tag Master"
+        )
 
-        #if canImport(FirebaseEmailAuthUI)
-        let emailProvider = FUIEmailAuth(authAuthUI: authUI,
-                                         signInMethod: EmailPasswordAuthSignInMethod,
-                                         forceSameDevice: false,
-                                         allowNewEmailAccounts: true,
-                                         requireDisplayName: false,
-                                         actionCodeSetting: ActionCodeSettings())
-        providers.append(emailProvider)
+        var authService = AuthService(configuration: configuration)
+            .withEmailSignIn()
+            .withGoogleSignIn()
+            .withFacebookSignIn()
+            .withAppleSignIn()
+        #if canImport(FirebasePhoneAuthSwiftUI)
+        authService = authService.withPhoneSignIn()
         #endif
 
-        guard !providers.isEmpty else {
-            return
+        self.authService = authService
+        self.onAuthStateChanged = onAuthStateChanged
+        self.onDismiss = onDismiss
+    }
+
+    var body: some View {
+        AuthPickerView {
+            // This is shown when authenticated - we immediately dismiss
+            Color.clear
+                .onAppear {
+                    onAuthStateChanged()
+                    onDismiss()
+                }
         }
-
-        authUI.providers = providers
-        authUI.delegate = self
-        present(authUI.authViewController(), animated: true)
-    }
-
-    public func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-        refreshLoginButton()
-    }
-
-    public func authUI(_ authUI: FUIAuth, didFinish operation: FUIAccountSettingsOperationType, error: Error?) {
-        refreshLoginButton()
+        .environment(authService)
+        .onAppear {
+            authService.isPresented = true
+        }
     }
 }
 #endif
+
+// MARK: - UIKit Extension for Settings
+
+extension DPSettingsController {
+
+    /// Handles login/logout button tap
+    @objc func logInClick() {
+        // If user is already signed in, sign out
+        guard Auth.auth().currentUser == nil else {
+            do {
+                try Auth.auth().signOut()
+                self.refreshLoginButton()
+            } catch {
+                print("Error signing out: \(error.localizedDescription)")
+            }
+            return
+        }
+
+        // Present sign-in UI
+        #if canImport(FirebaseAuthSwiftUI)
+        let authView = TagMasterAuthView(
+            onAuthStateChanged: { [weak self] in
+                self?.refreshLoginButton()
+            },
+            onDismiss: { [weak self] in
+                self?.dismiss(animated: true)
+            }
+        )
+
+        let hostingController = UIHostingController(rootView: authView)
+        hostingController.modalPresentationStyle = .pageSheet
+        present(hostingController, animated: true)
+        #else
+        // Fallback: Direct Firebase Auth if FirebaseAuthSwiftUI not available
+        print("FirebaseAuthSwiftUI not available - implement fallback auth")
+        #endif
+    }
+}

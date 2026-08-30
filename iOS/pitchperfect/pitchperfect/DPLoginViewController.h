@@ -7,12 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <Bolts/Bolts.h>
 #import "DPToolbarViewController.h"
 
 @interface DPLoginViewController : DPToolbarViewController
 
-@property (nonatomic, readonly) BFTask *loginTask;
+@property (nonatomic, copy, nullable) void (^loginCompletion)(void);
 @property (nonatomic, readwrite) BOOL isHoomiLogout;
 
 - (void)completeLogIn:(BOOL)isNew NS_SWIFT_NAME(completeLogIn(_:));

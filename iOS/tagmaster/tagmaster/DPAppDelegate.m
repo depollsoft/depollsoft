@@ -8,7 +8,8 @@
 
 #import "DPAppDelegate.h"
 
-@import FirebaseAuthUI;
+@import FirebaseAuth;
+@import FirebaseCore;
 
 #if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
@@ -23,8 +24,6 @@
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
-
-@import Firebase;
 
 @implementation DPAppDelegate
 
@@ -80,10 +79,7 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-    NSString *sourceApplication = options[UIApplicationOpenURLOptionsSourceApplicationKey];
-    if ([[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication]) {
-        return YES;
-    }
+    // FirebaseAuthUI URL handling removed during SDK migration - now using SwiftUI auth
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
         NSString *tagNumberString = url.pathComponents[2];
         @try {

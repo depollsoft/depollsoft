@@ -7,7 +7,9 @@
 //
 
 import Foundation
-import Firebase
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseFunctions
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil

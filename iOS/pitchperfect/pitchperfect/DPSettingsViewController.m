@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsViewController.h"
 #import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
@@ -22,9 +23,9 @@
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
 #import "UIToolbar+DPUtils.h"
-@import Firebase;
+@import FirebaseAuth;
+@import FirebaseFunctions;
 @import UIKit;
-@import FirebaseAuthUI;
 
 @interface DPSettingsViewController ()
 
@@ -279,7 +280,7 @@
         FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
         [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
             if (!error) {
-                [FUIAuth.defaultAuthUI signOutWithError:nil];
+                [[FIRAuth auth] signOut:nil];
                 [self->tableView reloadData];
                 [activity stopAnimating];
             }
@@ -300,14 +301,13 @@
         UIActivityIndicatorView *activity = (UIActivityIndicatorView*)cell.accessoryView;
         [activity startAnimating];
         __block DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+        loginViewController.loginCompletion = ^{
+            [activity stopAnimating];
+            [self->tableView reloadData];
+            loginViewController.loginCompletion = nil;
+            loginViewController = nil;
+        };
         [loginViewController logIn:self];
-        [loginViewController.loginTask continueWithExecutor:[BFExecutor mainThreadExecutor]
-                                                  withBlock:^id(BFTask *task) {
-                                                      [activity stopAnimating];
-                                                      [self->tableView reloadData];
-                                                      loginViewController = nil;
-                                                      return nil;
-                                                  }];
     }
 }
 
@@ -351,3 +351,4 @@
 }
 
 @end
+#endif
