@@ -276,6 +276,9 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
     XCTAssertNotNil(randomAction);
     XCTAssertNotNil([home valueForKey:@"busyIndicator"]);
 
+    [DPAppDelegate setFavorites:@[]];
+    [home.tableView reloadData];
+    [home.tableView layoutIfNeeded];
     window.hidden = YES;
     window.rootViewController = nil;
 }
