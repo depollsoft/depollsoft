@@ -90,7 +90,6 @@ def build_private_app(
             "CODE_SIGN_STYLE=Manual",
             "CODE_SIGN_IDENTITY=#{Shellwords.escape('Apple Distribution')}",
             "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
-            "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
           ].join(" "),
           cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
           skip_package_dependencies_resolution: true,
