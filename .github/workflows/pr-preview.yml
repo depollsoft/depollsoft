@@ -223,9 +223,10 @@ jobs:
           path: |
             iOS/SourcePackages
             ~/Library/Caches/org.swift.swiftpm
-          key: preview-spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
-          restore-keys: |
-            preview-spm-${{ runner.os }}-
+          key: >-
+            preview-spm-v2-${{ runner.os }}-${{
+              hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
+            }}
 
       - name: Resolve SPM dependencies
         working-directory: iOS
