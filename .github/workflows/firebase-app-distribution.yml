@@ -12,14 +12,55 @@ concurrency:
 permissions:
   actions: read
   contents: read
+  pull-requests: read
 
 jobs:
-  android:
-    name: Android — ${{ matrix.app }}
+  metadata:
+    name: Resolve PR Preview metadata
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: [self-hosted, Linux]
+    outputs:
+      pr-number: ${{ steps.resolve.outputs.pr-number }}
+      head-sha: ${{ steps.resolve.outputs.head-sha }}
+    steps:
+      - name: Resolve source pull request
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PAYLOAD_PR_NUMBER: >-
+            ${{ github.event.workflow_run.pull_requests[0].number }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_number="$PAYLOAD_PR_NUMBER"
+          if [[ -z "$pr_number" ]]; then
+            pr_number="$(gh api \
+              "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA/pulls" \
+              --jq '[.[] | select(.base.ref == "main")][0].number // empty')"
+          fi
+          if [[ -z "$pr_number" ]]; then
+            pr_number="$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts" \
+              --jq '.artifacts[].name
+                | select(startswith("android-preview-"))
+                | split("-")[2]' | head -1)"
+          fi
+          if [[ ! "$pr_number" =~ ^[0-9]+$ ]]; then
+            echo "Unable to resolve source pull request number." >&2
+            exit 1
+          fi
+          echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "head-sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+  android:
+    name: Android — ${{ matrix.app }}
+    needs: metadata
+    if: needs.metadata.result == 'success'
     runs-on: [self-hosted, Linux]
     timeout-minutes: 20
     strategy:
@@ -37,10 +78,7 @@ jobs:
       - name: Download private APKs from PR Preview
         uses: actions/download-artifact@v4
         with:
-          pattern: >-
-            android-preview-${{
-              github.event.workflow_run.pull_requests[0].number
-            }}-*
+          pattern: "android-preview-*"
           path: preview-artifacts/android
           merge-multiple: true
           repository: ${{ github.repository }}
@@ -81,8 +119,8 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
-          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
@@ -107,10 +145,8 @@ jobs:
 
   ios:
     name: iOS — ${{ matrix.app }}
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+    needs: metadata
+    if: needs.metadata.result == 'success'
     runs-on: [self-hosted, macOS]
     timeout-minutes: 40
     env:
@@ -139,10 +175,7 @@ jobs:
       - name: Download unsigned archives from PR Preview
         uses: actions/download-artifact@v4
         with:
-          pattern: >-
-            ios-preview-${{
-              github.event.workflow_run.pull_requests[0].number
-            }}-*
+          pattern: "ios-preview-*"
           path: preview-artifacts/ios
           merge-multiple: true
           repository: ${{ github.repository }}
@@ -261,8 +294,8 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
-          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
