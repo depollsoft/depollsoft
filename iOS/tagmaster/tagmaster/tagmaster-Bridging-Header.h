@@ -3,8 +3,7 @@
 //
 
 #import "DPAppDelegate.h"
-#import "DPHomeViewController.h"
-#import "DPTeachableTagsController.h"
-#import "DPSettingsController.h"
-#import "DPTagTracksController.h"
-#import "DPTagViewController.h"
+#import "DPTag.h"
+#import "DPTagQueryResult.h"
+#import "DPTrack.h"
+#import "DPVideo.h"

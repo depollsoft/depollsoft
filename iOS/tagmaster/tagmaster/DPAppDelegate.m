@@ -6,6 +6,9 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+
 #import "DPAppDelegate.h"
 
 @import FirebaseAuthUI;
@@ -19,10 +22,7 @@
 #endif
 
 #import "DPBarbershop.h"
-#import "DPHomeViewController.h"
-#import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
-#import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
 
 @import Firebase;
@@ -71,13 +71,9 @@
     
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
-    [self.window makeKeyAndVisible];
     
-    UINavigationController *navController = [[UINavigationController alloc] init];
-    self.window.rootViewController = navController;
-    [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
-    
-    navigationController = navController;
+    UIViewController *rootViewController = [MainAppViewHostingController createRoot];
+    self.window.rootViewController = rootViewController;
     [self.window makeKeyAndVisible];
     
     [self extraInit];
@@ -92,13 +88,11 @@
     }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
         NSString *tagNumberString = url.pathComponents[2];
-        @try {
-            int tagId = tagNumberString.intValue;
-            DPTagViewController *controller = [[DPTagViewController alloc] init];
-            controller.tagId = tagId;
-            [self.navigationController pushViewController:controller animated:YES];
-        }
-        @catch (NSException *exception) {
+        NSScanner *scanner = [NSScanner scannerWithString:tagNumberString];
+        int tagId = 0;
+        if ([scanner scanInt:&tagId] && scanner.isAtEnd && tagId > 0) {
+            [MainAppViewHostingController openTagWithId:tagId];
+            return YES;
         }
         return NO;
     }
@@ -213,3 +207,5 @@
 
 
 @end
+
+#endif

@@ -7,7 +7,7 @@
 //
 
 #import "DPPitchedSong.h"
-#import "DPUtils+NSString.h"
+#import "../../../depolllib/depolllib/utils/DPUtils+NSString.h"
 #import "DPKey.h"
 #import "DPNote.h"
 

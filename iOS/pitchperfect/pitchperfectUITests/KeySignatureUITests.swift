@@ -41,7 +41,7 @@ final class KeySignatureUITests: XCTestCase {
     func testKeyListDisplays() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -51,7 +51,7 @@ final class KeySignatureUITests: XCTestCase {
     func testKeyListHasCells() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -73,7 +73,7 @@ final class KeySignatureUITests: XCTestCase {
             throw XCTSkip("App is not running - feature may not be available in CI")
         }
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -98,7 +98,7 @@ final class KeySignatureUITests: XCTestCase {
     func testCanSelectKey() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -118,7 +118,7 @@ final class KeySignatureUITests: XCTestCase {
     func testCanSelectDifferentKeys() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -150,7 +150,7 @@ final class KeySignatureUITests: XCTestCase {
     func testCanScrollKeyList() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 3) else {
             throw XCTSkip("Key table not found")
         }
@@ -171,7 +171,7 @@ final class KeySignatureUITests: XCTestCase {
     func testReturnToPitchPipeAfterKeySelection() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -203,7 +203,7 @@ final class KeySignatureUITests: XCTestCase {
     func testRapidKeySelection() throws {
         navigateToKeys()
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 10) else {
             throw XCTSkip("Key table not found - feature may not be available in CI")
         }
@@ -217,8 +217,8 @@ final class KeySignatureUITests: XCTestCase {
         let cellCount = min(table.cells.count, 5)  // Test up to 5 cells
         
         // Rapidly tap different keys
-        for i in 0..<cellCount {
-            table.cells.element(boundBy: i).tap()
+        for cellIndex in 0..<cellCount {
+            table.cells.element(boundBy: cellIndex).tap()
         }
         
         XCTAssertEqual(app.state, .runningForeground, "App should handle rapid key selection")

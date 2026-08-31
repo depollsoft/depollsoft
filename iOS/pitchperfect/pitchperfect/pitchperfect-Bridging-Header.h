@@ -1,10 +1,16 @@
 //
-//  Use this file to import your target's public headers that you would like to expose to Swift.
+//  Objective-C models and iOS lifecycle exposed to the SwiftUI application.
 //
 
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
 #import "DPAppDelegate.h"
-#import "DPPitchedSong.h"
-#import "DPJsonSerializer.h"
-#import "DPLoginViewController.h"
-#import "DPSettingsViewController.h"
-#import "DPPitchPipeViewController.h"
+#import "DPBannerAdView.h"
+#endif
+#import "../pitchperfectlib/pitchperfectlib/DPAccidental.h"
+#import "../pitchperfectlib/pitchperfectlib/DPKey.h"
+#import "../pitchperfectlib/pitchperfectlib/DPKeyType.h"
+#import "../pitchperfectlib/pitchperfectlib/DPNote.h"
+#import "DPPitchPipeModel.h"
+#import "../pitchperfectlib/pitchperfectlib/DPPitchedSong.h"
+#import "../../depolllib/depolllib/json/DPJsonSerializer.h"

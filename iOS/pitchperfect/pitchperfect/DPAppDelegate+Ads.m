@@ -1,3 +1,5 @@
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
 #import "DPAppDelegate+Ads.h"
 #import "GoogleMobileAdsStub.h"
 
@@ -6,3 +8,5 @@
     return [GADRequest request];
 }
 @end
+
+#endif

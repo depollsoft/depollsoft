@@ -7,10 +7,11 @@
 //
 
 import Foundation
+import UIKit
 import Firebase
 
-let WAKE_LOCK_KEY = "depollsoft.pitchperfect.WakeLock"
-let TOGGLE_NOTE_KEY = "depollsoft.pitchperfect.ToggleNote"
+let wakeLockKey = "depollsoft.pitchperfect.WakeLock"
+let toggleNoteKey = "depollsoft.pitchperfect.ToggleNote"
 
 public extension Notification.Name {
     static let settingsChanged = Notification.Name("pitchPerfect.settingsChanged")
@@ -23,8 +24,9 @@ public extension Notification.Name {
     @objc public static let settingsChangedNotificationName = Notification.Name.settingsChanged
     
     @objc public func attachToFirestore() {
-        let user = Auth.auth().currentUser
-        userRef = Firestore.firestore().document("users/\(user!.uid)")
+        guard let user = Auth.auth().currentUser else { return }
+        detachFromFirestore()
+        userRef = Firestore.firestore().document("users/\(user.uid)")
         listenerRegistration = userRef?.addSnapshotListener { snapshot, error in
             if error != nil {
                 return
@@ -67,10 +69,13 @@ public extension Notification.Name {
     
     @objc public var wakeLock: Bool {
         get {
-            UserDefaults.standard.bool(forKey: WAKE_LOCK_KEY)
+            UserDefaults.standard.bool(forKey: wakeLockKey)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: WAKE_LOCK_KEY)
+            UserDefaults.standard.set(newValue, forKey: wakeLockKey)
+            DispatchQueue.main.async {
+                UIApplication.shared.isIdleTimerDisabled = newValue
+            }
             if userRef != nil {
                 userRef?.setData(["wakeLock": newValue], merge: true)
             }
@@ -80,10 +85,10 @@ public extension Notification.Name {
     
     @objc public var toggleNotes: Bool {
         get {
-            UserDefaults.standard.bool(forKey: TOGGLE_NOTE_KEY)
+            UserDefaults.standard.bool(forKey: toggleNoteKey)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: TOGGLE_NOTE_KEY)
+            UserDefaults.standard.set(newValue, forKey: toggleNoteKey)
             if userRef != nil {
                 userRef?.setData(["toggleNotes": newValue], merge: true)
             }
@@ -95,16 +100,17 @@ public extension Notification.Name {
     
     private override init() {
         super.init()
-        self.wakeLock = false
-        self.toggleNotes = false
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = self.wakeLock
+        }
     }
 }
 /*
 #import "DPSettingsModel.h"
 #import <Parse/Parse.h>
 
-#define WAKE_LOCK_KEY @"depollsoft.pitchperfect.WakeLock"
-#define TOGGLE_NOTE_KEY @"depollsoft.pitchperfect.ToggleNote"
+#define wakeLockKey @"depollsoft.pitchperfect.WakeLock"
+#define toggleNoteKey @"depollsoft.pitchperfect.ToggleNote"
 
 @interface DPSettingsModel ()
 
@@ -126,21 +132,21 @@ public extension Notification.Name {
 }
 
 - (BOOL)wakeLock {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:WAKE_LOCK_KEY];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:wakeLockKey];
 }
 
 - (void)setWakeLock:(BOOL)wakeLock {
-    [[NSUserDefaults standardUserDefaults] setBool:wakeLock forKey:WAKE_LOCK_KEY];
+    [[NSUserDefaults standardUserDefaults] setBool:wakeLock forKey:wakeLockKey];
     [UIApplication sharedApplication].idleTimerDisabled = wakeLock;
     [self refreshUser];
 }
 
 - (BOOL)toggleNotes {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:TOGGLE_NOTE_KEY];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:toggleNoteKey];
 }
 
 - (void)setToggleNotes:(BOOL)toggleNotes {
-    [[NSUserDefaults standardUserDefaults] setBool:toggleNotes forKey:TOGGLE_NOTE_KEY];
+    [[NSUserDefaults standardUserDefaults] setBool:toggleNotes forKey:toggleNoteKey];
     [self refreshUser];
 }
 

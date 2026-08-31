@@ -36,25 +36,27 @@ class SongManagementUITests: XCTestCase {
     }
     
     private func findAddButton() -> XCUIElement? {
-        if app.navigationBars.buttons["Add"].exists {
-            return app.navigationBars.buttons["Add"]
-        } else if app.buttons["+"].exists {
-            return app.buttons["+"]
-        } else if app.buttons["add"].exists {
-            return app.buttons["add"]
-        }
-        return nil
+        let editButton = app.navigationBars.buttons["Edit"]
+        if editButton.waitForExistence(timeout: 3) { editButton.tap() }
+
+        let candidates = [
+            app.buttons["AddSong"],
+            app.buttons["Add song"],
+            app.navigationBars.buttons["AddSong"],
+            app.navigationBars.buttons["Add song"]
+        ]
+        return candidates.first { $0.waitForExistence(timeout: 1) }
     }
     
     // MARK: - Song List Display Tests
     
     func testSongListTableExists() throws {
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.waitForExistence(timeout: 2), "Songs table should exist")
     }
     
     func testSongListDisplaysContent() throws {
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 2) else {
             XCTFail("Songs table not found")
             return
@@ -109,14 +111,34 @@ class SongManagementUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
         
         // Should be back at song list
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.exists, "Should return to songs list")
     }
     
+    func testCanAddSong() throws {
+        guard let addButton = findAddButton() else {
+            XCTFail("Add song button not found")
+            return
+        }
+
+        addButton.tap()
+        let nameField = app.textFields["SongName"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
+        let songName = "UI Test Song \(UUID().uuidString.prefix(8))"
+        nameField.tap()
+        nameField.typeText(songName)
+        app.navigationBars["Add Song"].buttons["Done"].tap()
+
+        let savedSong = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", songName)
+        ).firstMatch
+        XCTAssertTrue(savedSong.waitForExistence(timeout: 3))
+    }
+
     // MARK: - Song Interaction Tests
     
     func testCanTapSongIfExists() throws {
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 2) else {
             XCTFail("Songs table not found")
             return
@@ -134,7 +156,7 @@ class SongManagementUITests: XCTestCase {
     }
     
     func testCanSwipeOnSongIfExists() throws {
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 2) else {
             XCTFail("Songs table not found")
             return
@@ -159,7 +181,7 @@ class SongManagementUITests: XCTestCase {
     // MARK: - Scrolling Tests
     
     func testCanScrollSongList() throws {
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 2) else {
             XCTFail("Songs table not found")
             return

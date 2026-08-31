@@ -42,8 +42,8 @@ final class SettingsUITests: XCTestCase {
         
         // Try tapping info/settings in navigation bar
         let navButtons = app.navigationBars.buttons
-        for i in 0..<navButtons.count {
-            let button = navButtons.element(boundBy: i)
+        for buttonIndex in 0..<navButtons.count {
+            let button = navButtons.element(boundBy: buttonIndex)
             let label = button.label.lowercased()
             if label.contains("setting") || label.contains("gear") || label.contains("info") {
                 button.tap()
@@ -85,7 +85,7 @@ final class SettingsUITests: XCTestCase {
         // Should show some settings content
         let hasSettingsContent = app.navigationBars["Settings"].exists ||
                                  app.staticTexts["Settings"].exists ||
-                                 app.tables.firstMatch.exists
+                                 firstList(in: app).exists
         
         XCTAssertTrue(hasSettingsContent, "Settings screen should show content")
     }
@@ -100,7 +100,7 @@ final class SettingsUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
         
         // Settings should have a table or some content
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         let hasContent = table.exists || app.staticTexts.count > 0
         
         XCTAssertTrue(hasContent, "Settings should have content")

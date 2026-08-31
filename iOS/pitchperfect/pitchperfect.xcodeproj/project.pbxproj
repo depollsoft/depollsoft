@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		107BA705973E6928C2FB233B /* PitchPipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B349115BDE26EB841C168715 /* PitchPipeView.swift */; };
 		1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E131315267FD07600F33385 /* DPSettingsModel.swift */; };
 		1E13131D2682475900F33385 /* panobackground.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E13131A2682475900F33385 /* panobackground.svg */; };
 		1E5B19891FE74ED000241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19841FE74ED000241069 /* libdepolllib.a */; };
-		1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */; };
 		1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */; };
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
@@ -20,11 +20,11 @@
 		1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCE32A18234926C3795761C /* KeySignatureUITests.swift */; };
 		299FC208CD04C88A41A821FB /* pitchperfectUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */; };
 		47172D6AC4A2EE44B24A9BD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C312820713220954FBDB7D29 /* Foundation.framework */; };
+		4E629E09885A6A4ECF1700DC /* KeysView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97A03ACA48D0A24A45D941 /* KeysView.swift */; };
 		4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB387F /* SettingsUITests.swift */; };
 		51CA84C6B857B426B4DEEE29 /* Pods_pitchperfectTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
-		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
 		631C9126159455F1004733F1 /* keys.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9124159455F1004733F1 /* keys.png */; };
 		631C9127159455F1004733F1 /* keys@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9125159455F1004733F1 /* keys@2x.png */; };
 		631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912915957B58004733F1 /* DPSongListViewController.m */; };
@@ -71,16 +71,12 @@
 		63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403E6158EA92E00FCA77C /* AudioToolbox.framework */; };
 		63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A96157A997600348592 /* CoreAudio.framework */; };
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
-		63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E615964EAA00116907 /* DPSettingsViewController.m */; };
-		63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E91597D67400116907 /* DPSongEditorViewController.m */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A5151E9000007C46DB /* CoreGraphics.framework */; };
 		63DC36AC151E9000007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36AA151E9000007C46DB /* InfoPlist.strings */; };
 		63DC36AE151E9000007C46DB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36AD151E9000007C46DB /* main.m */; };
 		63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36B1151E9000007C46DB /* DPAppDelegate.m */; };
-		63DC36B5151E9000007C46DB /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */; };
-		63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */; };
 		63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36C1151E9000007C46DB /* DPNotesViewController.m */; };
 		63DC36CF151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
@@ -88,10 +84,14 @@
 		63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36DA151E9000007C46DB /* pitchperfectTests.m */; };
 		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
 		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
-		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
+		664F8ED15DD116FC4E1D20EE /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA92F66EBA35CD62FA37AB5 /* MainTabView.swift */; };
+		70FA1BA85033AF9F3B4A8371 /* DPRootViewBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD70B749CCBD70E60B1B9231 /* DPRootViewBridge.swift */; };
 		A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */; };
 		A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */; };
+		C0A120021234567890ABCDEF /* DPBannerAdView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0A120011234567890ABCDEF /* DPBannerAdView.m */; };
 		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
+		A4959FB45E92F33B3756E9FE /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D59356BC0D2AF79AD4CD8FD /* SongEditorView.swift */; };
+		ADF715656AE17FA378E18361 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9604B0E0F67626ADAA8A85A4 /* SettingsView.swift */; };
 		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
@@ -102,7 +102,11 @@
 		C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */; };
 		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
+		C0A11E011234567890ABCDEF /* SwiftUIMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A11E001234567890ABCDEF /* SwiftUIMigrationTests.swift */; };
+		C3F0576459F256CF4925C540 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EC4644304AC842180F56AA1 /* LoginView.swift */; };
+		CC01E5D41BAFB285C97A5042 /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8774D28DBF4268B9819A4B /* NotesView.swift */; };
 		D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */; };
+		FEB5586595F880FA8D6399E7 /* SongListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C669F9E158C2CE2BC1FB6C9E /* SongListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -167,6 +171,7 @@
 /* Begin PBXFileReference section */
 		0A3F7FC214FBE062E9009FA5 /* Pods-pitchperfectTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfectTests.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfectTests/Pods-pitchperfectTests.debug.xcconfig"; sourceTree = "<group>"; };
 		0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SongManagementUITests.swift; sourceTree = "<group>"; };
+		1D59356BC0D2AF79AD4CD8FD /* SongEditorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
 		1E131315267FD07600F33385 /* DPSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModel.swift; sourceTree = "<group>"; };
 		1E13131A2682475900F33385 /* panobackground.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = panobackground.svg; sourceTree = "<group>"; };
 		1E5B19801FE74ED000241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
@@ -180,7 +185,9 @@
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		3FA92F66EBA35CD62FA37AB5 /* MainTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		4A1F6B73BEB8E800B006625C /* Pods-pitchperfect.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.debug.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.debug.xcconfig"; sourceTree = "<group>"; };
+		5EC4644304AC842180F56AA1 /* LoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
 		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
@@ -268,12 +275,16 @@
 		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
 		6AE01B2A3073D56B65CDBC0B /* Pods-pitchperfectTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfectTests.release.xcconfig"; path = "Target Support Files/Pods-pitchperfectTests/Pods-pitchperfectTests.release.xcconfig"; sourceTree = "<group>"; };
 		7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9604B0E0F67626ADAA8A85A4 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DPAppDelegate+Ads.m"; sourceTree = "<group>"; };
+		C0A120001234567890ABCDEF /* DPBannerAdView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPBannerAdView.h; sourceTree = "<group>"; };
+		C0A120011234567890ABCDEF /* DPBannerAdView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPBannerAdView.m; sourceTree = "<group>"; };
 		A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPTestAppDelegate.h; sourceTree = "<group>"; };
 		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
 		A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = pitchperfectUITests.swift; sourceTree = "<group>"; };
+		B349115BDE26EB841C168715 /* PitchPipeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchPipeView.swift; sourceTree = "<group>"; };
 		BDCE32A18234926C3795761C /* KeySignatureUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeySignatureUITests.swift; sourceTree = "<group>"; };
 		BF5A9239DD6F1B199D1E7307 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A1 /* LayoutManagersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LayoutManagersTests.m; sourceTree = "<group>"; };
@@ -286,11 +297,16 @@
 		C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
+		C0A11E001234567890ABCDEF /* SwiftUIMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIMigrationTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
+		C669F9E158C2CE2BC1FB6C9E /* SongListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SongListView.swift; sourceTree = "<group>"; };
+		CC8774D28DBF4268B9819A4B /* NotesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		D02911C3498313947E60EED4 /* Pods_pitchperfectTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfectTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC97A03ACA48D0A24A45D941 /* KeysView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeysView.swift; sourceTree = "<group>"; };
 		DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_pitchperfect.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F566BA2AB45D3F92A549B184 /* Pods-pitchperfect.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-pitchperfect.release.xcconfig"; path = "Target Support Files/Pods-pitchperfect/Pods-pitchperfect.release.xcconfig"; sourceTree = "<group>"; };
+		FD70B749CCBD70E60B1B9231 /* DPRootViewBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DPRootViewBridge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -454,7 +470,7 @@
 			children = (
 				63DC369D151E9000007C46DB /* pitchperfect.app */,
 				63DC36CC151E9000007C46DB /* pitchperfectTests.xctest */,
-				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */,
+				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -536,8 +552,11 @@
 				1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */,
 				A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */,
 				A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */,
+				C0A120001234567890ABCDEF /* DPBannerAdView.h */,
+				C0A120011234567890ABCDEF /* DPBannerAdView.m */,
 				1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */,
 				1E95FFA02686560500B5299C /* DPCommon.swift */,
+				9842E4955D7F6102991E487B /* SwiftUI */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -568,6 +587,7 @@
 				C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */,
 				C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */,
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
+				C0A11E001234567890ABCDEF /* SwiftUIMigrationTests.swift */,
 				63DC36D4151E9000007C46DB /* Supporting Files */,
 			);
 			path = pitchperfectTests;
@@ -580,6 +600,22 @@
 				63DC36D6151E9000007C46DB /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		9842E4955D7F6102991E487B /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				FD70B749CCBD70E60B1B9231 /* DPRootViewBridge.swift */,
+				DC97A03ACA48D0A24A45D941 /* KeysView.swift */,
+				5EC4644304AC842180F56AA1 /* LoginView.swift */,
+				3FA92F66EBA35CD62FA37AB5 /* MainTabView.swift */,
+				CC8774D28DBF4268B9819A4B /* NotesView.swift */,
+				B349115BDE26EB841C168715 /* PitchPipeView.swift */,
+				9604B0E0F67626ADAA8A85A4 /* SettingsView.swift */,
+				1D59356BC0D2AF79AD4CD8FD /* SongEditorView.swift */,
+				C669F9E158C2CE2BC1FB6C9E /* SongListView.swift */,
+			);
+			path = SwiftUI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -600,7 +636,7 @@
 			);
 			name = pitchperfectUITests;
 			productName = pitchperfectUITests;
-			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */;
+			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		63DC369C151E8FFF007C46DB /* pitchperfect */ = {
@@ -741,7 +777,6 @@
 				1E13131D2682475900F33385 /* panobackground.svg in Resources */,
 				634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */,
 				63DC36AC151E9000007C46DB /* InfoPlist.strings in Resources */,
-				63DC36B5151E9000007C46DB /* MainStoryboard_iPhone.storyboard in Resources */,
 				63B403D41588703200FCA77C /* panobackground.png in Resources */,
 				63B403DC1588768700FCA77C /* pitchpipe.png in Resources */,
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
@@ -922,27 +957,27 @@
 				63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */,
 				A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */,
 				A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */,
-				63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */,
-				63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */,
+				C0A120021234567890ABCDEF /* DPBannerAdView.m in Sources */,
 				63A99D7A1588359700C78CC0 /* DPPitchPipeModel.m in Sources */,
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
 				634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */,
 				634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */,
 				634C898515885F6A000D9AFE /* HLayoutView.m in Sources */,
 				634C898815885F6A000D9AFE /* VLayoutView.m in Sources */,
-				631C912315945219004733F1 /* DPKeysViewController.m in Sources */,
-				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
-				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
-				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
-				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
-				1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */,
-				63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */,
 				A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */,
 				1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */,
 				1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */,
-				63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */,
+				70FA1BA85033AF9F3B4A8371 /* DPRootViewBridge.swift in Sources */,
+				4E629E09885A6A4ECF1700DC /* KeysView.swift in Sources */,
+				C3F0576459F256CF4925C540 /* LoginView.swift in Sources */,
+				664F8ED15DD116FC4E1D20EE /* MainTabView.swift in Sources */,
+				CC01E5D41BAFB285C97A5042 /* NotesView.swift in Sources */,
+				107BA705973E6928C2FB233B /* PitchPipeView.swift in Sources */,
+				ADF715656AE17FA378E18361 /* SettingsView.swift in Sources */,
+				A4959FB45E92F33B3756E9FE /* SongEditorView.swift in Sources */,
+				FEB5586595F880FA8D6399E7 /* SongListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -956,11 +991,10 @@
 				C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */,
 				C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */,
 				C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */,
-				C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */,
-				C0NEWT0010000000000000F1 /* DPCommonTests.swift in Sources */,
 				C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */,
 				C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
+				C0A11E011234567890ABCDEF /* SwiftUIMigrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

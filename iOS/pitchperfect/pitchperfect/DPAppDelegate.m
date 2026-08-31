@@ -6,6 +6,9 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
 #import <Parse/Parse.h>
@@ -24,6 +27,7 @@
 #import "pitchperfect-Swift.h"
 
 @import Firebase;
+@import FirebaseAuthUI;
 
 #define PRODUCTION
 //#define TEST_ADS
@@ -60,18 +64,9 @@
     [DPJsonSerializer registerAlias:@"Boolean" forObjCType:[NSString stringWithUTF8String:@encode(BOOL)]];
     [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {
-            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
-            DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
-            [self.window.rootViewController presentViewController:loginViewController
-                                                         animated:YES
-                                                       completion:^{
-                                                       }];
-        }
-    });
-    
-    // Facebook SDK initialization removed
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.rootViewController = [DPRootViewBridge rootViewController];
+    [self.window makeKeyAndVisible];
     
     [self extraInit];
     
@@ -138,3 +133,5 @@
 // Ads removed; no ad requests
 
 @end
+
+#endif

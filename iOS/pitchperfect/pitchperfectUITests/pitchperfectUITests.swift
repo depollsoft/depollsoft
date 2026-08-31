@@ -1,5 +1,11 @@
 import XCTest
 
+func firstList(in app: XCUIApplication) -> XCUIElement {
+    let table = app.tables.firstMatch
+    if table.exists { return table }
+    return app.collectionViews.firstMatch
+}
+
 /**
  * UI Tests for the Pitch Perfect iOS app.
  * Tests core navigation, pitch pipe interaction, and basic functionality.
@@ -10,7 +16,7 @@ import XCTest
  * - Use waitForExistence with appropriate timeouts
  * - Keep tests focused and independent
  */
-class pitchperfectUITests: XCTestCase {
+class PitchPerfectUITests: XCTestCase {
     
     var app: XCUIApplication!
     
@@ -124,7 +130,7 @@ class pitchperfectUITests: XCTestCase {
         notesTab.tap()
         
         // Verify a table or list appears
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.waitForExistence(timeout: 3), "Should see a table on Notes tab")
     }
     
@@ -144,7 +150,7 @@ class pitchperfectUITests: XCTestCase {
         keysTab.tap()
         
         // Verify a table or list appears
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.waitForExistence(timeout: 3), "Should see a table on Keys tab")
     }
     
@@ -164,7 +170,7 @@ class pitchperfectUITests: XCTestCase {
         songsTab.tap()
         
         // Verify a table or list appears (songs list or empty state)
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.waitForExistence(timeout: 3), "Should see a table on Songs tab")
     }
     
@@ -267,7 +273,7 @@ class pitchperfectUITests: XCTestCase {
     func testNotesListHasContent() throws {
         navigateToTab("Notes")
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 3) else {
             XCTFail("Notes table not found")
             return
@@ -280,7 +286,7 @@ class pitchperfectUITests: XCTestCase {
     func testCanTapNoteInList() throws {
         navigateToTab("Notes")
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 3) else {
             XCTFail("Notes table not found")
             return
@@ -304,7 +310,7 @@ class pitchperfectUITests: XCTestCase {
     func testKeysListHasContent() throws {
         navigateToTab("Keys")
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 3) else {
             XCTFail("Keys table not found")
             return
@@ -317,7 +323,7 @@ class pitchperfectUITests: XCTestCase {
     func testCanTapKeyInList() throws {
         navigateToTab("Keys")
         
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         guard table.waitForExistence(timeout: 3) else {
             XCTFail("Keys table not found")
             return
@@ -342,7 +348,7 @@ class pitchperfectUITests: XCTestCase {
         navigateToTab("Songs")
         
         // Should have a table (possibly with empty state)
-        let table = app.tables.firstMatch
+        let table = firstList(in: app)
         XCTAssertTrue(table.waitForExistence(timeout: 3), "Should see a table on Songs tab")
     }
     

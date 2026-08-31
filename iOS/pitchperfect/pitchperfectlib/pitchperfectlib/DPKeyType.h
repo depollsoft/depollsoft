@@ -7,6 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "DPEnum.h"
+#import "../../../depolllib/depolllib/DPEnum.h"
 
 DEFINE_ENUM(DPKeyType, Major, Minor)

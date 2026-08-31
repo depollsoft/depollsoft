@@ -1,3 +1,5 @@
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
 #import "GoogleMobileAdsStub.h"
 
 #if !__has_include(<GoogleMobileAds/GoogleMobileAds.h>)
@@ -39,4 +41,6 @@
 - (void)disableSDKCrashReporting {
 }
 @end
+#endif
+
 #endif
