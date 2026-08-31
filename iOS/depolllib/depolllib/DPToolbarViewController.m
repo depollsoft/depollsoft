@@ -30,7 +30,11 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(_toolbar)]];
     
-    [_toolbar sizeToFit];
+    if (@available(iOS 26.0, *)) {
+        [_toolbar.heightAnchor constraintEqualToConstant:60.0].active = YES;
+    } else {
+        [_toolbar sizeToFit];
+    }
     [_toolbar layoutIfNeeded];
     // Do any additional setup after loading the view.
 }
