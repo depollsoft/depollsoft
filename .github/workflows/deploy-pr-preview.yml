@@ -517,6 +517,8 @@ jobs:
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "60"
+      FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "3"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
