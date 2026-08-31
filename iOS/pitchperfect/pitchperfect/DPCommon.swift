@@ -16,8 +16,29 @@ import Foundation
         viewController.present(settings, animated: true)
     }
     
+    @objc public static func barButton(
+        systemName: String,
+        target: Any,
+        selector: Selector
+    ) -> UIBarButtonItem {
+        let configuration = UIImage.SymbolConfiguration(
+            pointSize: 17,
+            weight: .regular,
+            scale: .medium
+        )
+        let image = UIImage(
+            systemName: systemName,
+            withConfiguration: configuration
+        )
+        return UIBarButtonItem(
+            image: image,
+            style: .plain,
+            target: target,
+            action: selector
+        )
+    }
+
     @objc public static func getSettingsButton(target: Any, selector: Selector) -> UIBarButtonItem {
-        let settingsButton = UIBarButtonItem(image: UIImage(systemName: "gearshape"), style: .plain, target: target, action: selector)
-        return settingsButton
+        barButton(systemName: "gearshape", target: target, selector: selector)
     }
 }

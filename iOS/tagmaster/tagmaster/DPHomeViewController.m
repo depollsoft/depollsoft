@@ -97,9 +97,10 @@
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
-                                                                                           target:self
-                                                                                           action:@selector(search)];
+    self.navigationItem.rightBarButtonItem =
+        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
+                                             target:self
+                                             action:@selector(search)];
     [self viewDidLoadExtension];
 }
 

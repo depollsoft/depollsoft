@@ -199,6 +199,21 @@
     [self setTeachable:teachable];
 }
 
++ (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
+                                          target:(id)target
+                                          action:(SEL)action {
+    UIImageSymbolConfiguration *configuration =
+        [UIImageSymbolConfiguration configurationWithPointSize:17
+                                                        weight:UIImageSymbolWeightRegular
+                                                         scale:UIImageSymbolScaleMedium];
+    UIImage *image = [UIImage systemImageNamed:systemName
+                             withConfiguration:configuration];
+    return [[UIBarButtonItem alloc] initWithImage:image
+                                            style:UIBarButtonItemStylePlain
+                                           target:target
+                                           action:action];
+}
+
 + (void)setUpBackground:(UIView *)view {
     view.backgroundColor = [UIColor systemBackgroundColor];
     UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];

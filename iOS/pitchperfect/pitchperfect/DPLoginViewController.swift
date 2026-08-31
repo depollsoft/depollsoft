@@ -107,7 +107,7 @@ private struct PitchPerfectAppleSignInButton: View {
             }
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(height: 50)
+        .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
         .alert(
             "Apple sign-in failed",
             isPresented: Binding(
@@ -154,33 +154,39 @@ struct FirebaseAuthView: View {
         self.onDismiss = onDismiss
     }
 
-    var body: some View {
-        AuthPickerView {
-            // This is shown when authenticated - we immediately dismiss
-            Color.clear
-                .onAppear {
-                    guard let currentUser = authService.currentUser,
-                          Auth.auth().currentUser?.uid == currentUser.uid else {
-                        return
-                    }
+    @State private var didFinish = false
 
-                    // Use time-based comparison with tolerance since date equality can be unreliable
-                    let metadata = currentUser.metadata
-                    let isNewUser: Bool
-                    if let creationDate = metadata.creationDate,
-                       let lastSignInDate = metadata.lastSignInDate {
-                        isNewUser = abs(creationDate.timeIntervalSince(lastSignInDate)) <= 1.0
-                    } else {
-                        isNewUser = false
-                    }
-                    onSignIn(isNewUser)
+    var body: some View {
+        AuthPickerView { Color.clear }
+            .environment(authService)
+            .onAppear {
+                authService.isPresented = true
+            }
+            .onChange(of: authService.currentUser?.uid) { _, userID in
+                guard !didFinish,
+                      let currentUser = authService.currentUser,
+                      userID == Auth.auth().currentUser?.uid else {
+                    return
+                }
+
+                didFinish = true
+                let metadata = currentUser.metadata
+                let isNewUser: Bool
+                if let creationDate = metadata.creationDate,
+                   let lastSignInDate = metadata.lastSignInDate {
+                    isNewUser = abs(
+                        creationDate.timeIntervalSince(lastSignInDate)
+                    ) <= 1.0
+                } else {
+                    isNewUser = false
+                }
+                onSignIn(isNewUser)
+            }
+            .onChange(of: authService.isPresented) { _, isPresented in
+                if !isPresented && !didFinish {
                     onDismiss()
                 }
-        }
-        .environment(authService)
-        .onAppear {
-            authService.isPresented = true
-        }
+            }
     }
 }
 #endif
@@ -194,8 +200,13 @@ extension DPLoginViewController {
     @objc public func logIn(_ viewController: UIViewController) {
         #if canImport(FirebaseAuthSwiftUI)
         let authView = FirebaseAuthView(
-            onSignIn: { [weak self] isNewUser in
+            onSignIn: { [weak self, weak viewController] isNewUser in
                 self?.completeLogIn(isNewUser)
+                viewController?.dismiss(animated: true) {
+                    if viewController === self {
+                        self?.dismiss(animated: true)
+                    }
+                }
             },
             onDismiss: { [weak viewController] in
                 viewController?.dismiss(animated: true)

@@ -30,5 +30,8 @@
 + (void)removeTeachable:(int)tagId;
 
 + (void)setUpBackground:(UIView *)view;
++ (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
+                                          target:(id)target
+                                          action:(SEL)action;
 
 @end
