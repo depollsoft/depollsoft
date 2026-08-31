@@ -10,7 +10,7 @@ import XCTest
  * - Use waitForExistence with appropriate timeouts
  * - Keep tests focused and independent
  */
-class pitchperfectUITests: XCTestCase {
+final class PitchPerfectUITests: XCTestCase {
     
     var app: XCUIApplication!
     
@@ -363,6 +363,31 @@ class pitchperfectUITests: XCTestCase {
     }
     
     // MARK: - App Stability Tests
+
+    func testOpeningLoginScreenDoesNotCrash() throws {
+        app.terminate()
+        app.launchArguments = [
+            "-depollsoft.pitchperfect.LoginShown", "NO",
+        ]
+        app.launch()
+
+        let loginButton = app.buttons["Sign up or log in"]
+        XCTAssertTrue(
+            loginButton.waitForExistence(timeout: 5),
+            "Login prompt should be visible",
+        )
+        loginButton.tap()
+
+        XCTAssertTrue(
+            app.textFields["email-field"].waitForExistence(timeout: 5),
+            "Firebase login screen should open",
+        )
+        XCTAssertEqual(
+            app.state,
+            .runningForeground,
+            "Opening the login screen must not terminate the app",
+        )
+    }
     
     func testAppDoesNotCrashOnRapidTabSwitching() throws {
         let tabBar = app.tabBars.firstMatch
