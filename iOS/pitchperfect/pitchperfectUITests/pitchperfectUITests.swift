@@ -364,6 +364,35 @@ final class PitchPerfectUITests: XCTestCase {
     
     // MARK: - App Stability Tests
 
+    func testAuthProvidersRenderAndPhoneEntryOpens() throws {
+        app.terminate()
+        app.launchArguments = [
+            "-depollsoft.pitchperfect.LoginShown", "NO",
+        ]
+        app.launch()
+
+        let loginButton = app.buttons["Sign up or log in"]
+        XCTAssertTrue(loginButton.waitForExistence(timeout: 5))
+        loginButton.tap()
+        XCTAssertTrue(app.textFields["email-field"].waitForExistence(timeout: 5))
+
+        for provider in [
+            "Sign in with Google",
+            "Sign in with Facebook",
+            "Sign in with Apple",
+            "Sign in with Phone",
+        ] {
+            XCTAssertTrue(
+                app.buttons[provider].exists,
+                "Missing provider button: (provider)",
+            )
+        }
+
+        app.buttons["Sign in with Phone"].tap()
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+    }
+
     func testOpeningLoginScreenDoesNotCrash() throws {
         app.terminate()
         app.launchArguments = [

@@ -6,6 +6,8 @@
 //  Copyright © 2019 DepollSoft. All rights reserved.
 //
 
+import AuthenticationServices
+import CryptoKit
 import Foundation
 import FirebaseAuth
 import SwiftUI
@@ -22,9 +24,6 @@ import FirebaseFacebookSwiftUI
 #if canImport(FirebaseOAuthSwiftUI)
 import FirebaseOAuthSwiftUI
 #endif
-#if canImport(FirebaseAppleSwiftUI)
-import FirebaseAppleSwiftUI
-#endif
 #if canImport(FirebasePhoneAuthSwiftUI)
 import FirebasePhoneAuthSwiftUI
 #endif
@@ -32,6 +31,98 @@ import FirebasePhoneAuthSwiftUI
 // MARK: - SwiftUI Auth View for UIKit Integration
 
 #if canImport(FirebaseAuthSwiftUI)
+private enum TagMasterAppleNonce {
+    static func random() throws -> String {
+        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var bytes = [UInt8](repeating: 0, count: 32)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard status == errSecSuccess else {
+            throw NSError(
+                domain: "TagMasterAppleSignIn",
+                code: Int(status),
+                userInfo: [NSLocalizedDescriptionKey: "Unable to create a secure sign-in request."]
+            )
+        }
+        return String(bytes.map { characters[Int($0) % characters.count] })
+    }
+
+    static func hash(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+    }
+}
+
+private final class TagMasterAppleProvider: AuthProviderSwift {}
+
+private final class TagMasterAppleProviderUI: AuthProviderUI {
+    let id = "apple.com"
+    let displayName = "Apple"
+    let provider: AuthProviderSwift = TagMasterAppleProvider()
+
+    @MainActor func authButton() -> AnyView {
+        AnyView(TagMasterAppleSignInButton())
+    }
+}
+
+private struct TagMasterAppleSignInButton: View {
+    @Environment(AuthService.self) private var authService
+    @State private var nonce: String?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        SignInWithAppleButton(.signIn) { request in
+            do {
+                let nonce = try TagMasterAppleNonce.random()
+                self.nonce = nonce
+                request.requestedScopes = [.fullName, .email]
+                request.nonce = TagMasterAppleNonce.hash(nonce)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        } onCompletion: { result in
+            Task { @MainActor in
+                do {
+                    let authorization = try result.get()
+                    guard let appleCredential =
+                            authorization.credential as? ASAuthorizationAppleIDCredential,
+                          let tokenData = appleCredential.identityToken,
+                          let token = String(data: tokenData, encoding: .utf8),
+                          let nonce else {
+                        throw NSError(
+                            domain: "TagMasterAppleSignIn",
+                            code: -1,
+                            userInfo: [NSLocalizedDescriptionKey: "Apple did not return valid credentials."]
+                        )
+                    }
+                    let credential = OAuthProvider.appleCredential(
+                        withIDToken: token,
+                        rawNonce: nonce,
+                        fullName: appleCredential.fullName
+                    )
+                    _ = try await authService.signIn(credentials: credential)
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+        }
+        .signInWithAppleButtonStyle(.black)
+        .frame(height: 50)
+        .alert(
+            "Apple sign-in failed",
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage ?? "Please try again.")
+        }
+    }
+}
+
+
 /// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
 struct TagMasterAuthView: View {
     let authService: AuthService
@@ -47,13 +138,15 @@ struct TagMasterAuthView: View {
             mfaIssuer: "Tag Master"
         )
 
-        var authService = AuthService(configuration: configuration)
+        let authService = AuthService(configuration: configuration)
             .withEmailSignIn()
             .withGoogleSignIn()
             .withFacebookSignIn()
-            .withAppleSignIn()
+        authService.registerProvider(
+            providerWithButton: TagMasterAppleProviderUI()
+        )
         #if canImport(FirebasePhoneAuthSwiftUI)
-        authService = authService.withPhoneSignIn()
+        _ = authService.withPhoneSignIn()
         #endif
 
         self.authService = authService
@@ -66,6 +159,10 @@ struct TagMasterAuthView: View {
             // This is shown when authenticated - we immediately dismiss
             Color.clear
                 .onAppear {
+                    guard let currentUser = authService.currentUser,
+                          Auth.auth().currentUser?.uid == currentUser.uid else {
+                        return
+                    }
                     onAuthStateChanged()
                     onDismiss()
                 }

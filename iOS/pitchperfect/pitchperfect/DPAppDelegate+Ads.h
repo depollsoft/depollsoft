@@ -6,10 +6,11 @@
 //
 
 #import "DPAppDelegate.h"
-@class GADRequest;
+#import "GoogleMobileAdsStub.h"
 
-@interface DPAppDelegate (Ads)
+@interface DPAppDelegate (Ads) <GADBannerViewDelegate>
 
 + (GADRequest *)adRequest;
++ (NSString *)bannerAdUnitID;
 
 @end

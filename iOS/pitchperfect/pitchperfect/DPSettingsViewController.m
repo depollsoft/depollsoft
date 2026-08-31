@@ -67,10 +67,14 @@
     
     // Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
+    bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
+        self.view.frame.size.width
+    );
     [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
+    bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
