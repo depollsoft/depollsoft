@@ -190,7 +190,9 @@
     
     settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
 
-    addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
+    addButton = [DPCommon barButtonWithSystemName:@"plus"
+                                                  target:self
+                                                selector:@selector(addSong)];
     
     editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     

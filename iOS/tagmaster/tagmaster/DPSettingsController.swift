@@ -107,7 +107,7 @@ private struct TagMasterAppleSignInButton: View {
             }
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(height: 50)
+        .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
         .alert(
             "Apple sign-in failed",
             isPresented: Binding(
@@ -154,23 +154,28 @@ struct TagMasterAuthView: View {
         self.onDismiss = onDismiss
     }
 
+    @State private var didFinish = false
+
     var body: some View {
-        AuthPickerView {
-            // This is shown when authenticated - we immediately dismiss
-            Color.clear
-                .onAppear {
-                    guard let currentUser = authService.currentUser,
-                          Auth.auth().currentUser?.uid == currentUser.uid else {
-                        return
-                    }
-                    onAuthStateChanged()
+        AuthPickerView { Color.clear }
+            .environment(authService)
+            .onAppear {
+                authService.isPresented = true
+            }
+            .onChange(of: authService.currentUser?.uid) { _, userID in
+                guard !didFinish,
+                      let userID,
+                      userID == Auth.auth().currentUser?.uid else {
+                    return
+                }
+                didFinish = true
+                onAuthStateChanged()
+            }
+            .onChange(of: authService.isPresented) { _, isPresented in
+                if !isPresented && !didFinish {
                     onDismiss()
                 }
-        }
-        .environment(authService)
-        .onAppear {
-            authService.isPresented = true
-        }
+            }
     }
 }
 #endif
@@ -197,6 +202,7 @@ extension DPSettingsController {
         let authView = TagMasterAuthView(
             onAuthStateChanged: { [weak self] in
                 self?.refreshLoginButton()
+                self?.dismiss(animated: true)
             },
             onDismiss: { [weak self] in
                 self?.dismiss(animated: true)
