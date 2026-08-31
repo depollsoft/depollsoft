@@ -225,24 +225,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -n "${MATCH_GIT_SSH_KEY:-}" ]]; then
-            key_path="$RUNNER_TEMP/match-git-key-${GITHUB_RUN_ID}"
-            printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
-            chmod 600 "$key_path"
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            ssh_opts='-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
-            echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" \
-              >> "$GITHUB_ENV"
-            echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
-              >> "$GITHUB_ENV"
+          if [[ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]]; then
+            match_url=https://github.com/depollsoft/certificates.git
+            echo "MATCH_GIT_URL=$match_url" >> "$GITHUB_ENV"
             exit 0
           fi
-          if [[ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]]; then
+          if [[ -z "${MATCH_GIT_SSH_KEY:-}" ]]; then
             echo "Missing Match repository credentials." >&2
             exit 1
           fi
-          echo "MATCH_GIT_URL=https://github.com/depollsoft/certificates.git" \
+          key_path="$RUNNER_TEMP/match-git-key-${GITHUB_RUN_ID}"
+          printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
+          chmod 600 "$key_path"
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh_opts='-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
+          echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" \
+            >> "$GITHUB_ENV"
+          echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
             >> "$GITHUB_ENV"
 
       - name: Export signed private IPA
