@@ -178,10 +178,12 @@ platform :ios do
   lane :export_firebase_private do |options|
     configs = {
       "PitchPerfect" => {
+        scheme: "pitchperfect",
         bundle_identifier: "depollsoft.pitchperfect.private",
         output_name: "PitchPerfect-private.ipa",
       },
       "TagMaster" => {
+        scheme: "tagmaster",
         bundle_identifier: "depollsoft.tagmaster.private",
         output_name: "TagMaster-private.ipa",
       },
@@ -211,6 +213,7 @@ platform :ios do
     build_app(
       skip_build_archive: true,
       archive_path: archive_path,
+      scheme: config[:scheme],
       export_method: "ad-hoc",
       export_team_id: "43AWMS3YJX",
       export_options: {
