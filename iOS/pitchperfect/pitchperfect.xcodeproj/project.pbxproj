@@ -103,6 +103,7 @@
 		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
 		D2B14510622EBCA4C11C8431 /* Pods_pitchperfect.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFCFF30EA72CE3F461FDC90D /* Pods_pitchperfect.framework */; };
+		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -275,6 +276,7 @@
 		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
 		A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = pitchperfectUITests.swift; sourceTree = "<group>"; };
 		BDCE32A18234926C3795761C /* KeySignatureUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeySignatureUITests.swift; sourceTree = "<group>"; };
+		BE992AD2E1386173B2838076 /* DPAppLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DPAppLog.swift; path = ../depolllib/DPAppLog.swift; sourceTree = "<group>"; };
 		BF5A9239DD6F1B199D1E7307 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A1 /* LayoutManagersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LayoutManagersTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelTests.swift; sourceTree = "<group>"; };
@@ -370,6 +372,14 @@
 			path = ../Pods;
 			sourceTree = "<group>";
 		};
+		247BE43A751251C2ED05EE2D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				BE992AD2E1386173B2838076 /* DPAppLog.swift */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
 		2F83E4AA7C036637AFBB484D /* pitchperfectUITests */ = {
 			isa = PBXGroup;
 			children = (
@@ -446,6 +456,7 @@
 				63DC369E151E9000007C46DB /* Products */,
 				220C7B9B618E4D1B28CCEFD4 /* Pods */,
 				2F83E4AA7C036637AFBB484D /* pitchperfectUITests */,
+				247BE43A751251C2ED05EE2D /* Shared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -454,7 +465,7 @@
 			children = (
 				63DC369D151E9000007C46DB /* pitchperfect.app */,
 				63DC36CC151E9000007C46DB /* pitchperfectTests.xctest */,
-				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */,
+				7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -600,7 +611,7 @@
 			);
 			name = pitchperfectUITests;
 			productName = pitchperfectUITests;
-			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests */;
+			productReference = 7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		63DC369C151E8FFF007C46DB /* pitchperfect */ = {
@@ -943,6 +954,7 @@
 				1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */,
 				1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */,
 				63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */,
+				FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

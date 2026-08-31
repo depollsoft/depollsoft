@@ -1,0 +1,6 @@
+[allowlist]
+description = "Firebase mobile client API keys are public app configuration."
+paths = [
+  '''Android/.*/google-services\.json''',
+  '''iOS/.*/GoogleService-Info(?:-Private)?\.plist''',
+]

@@ -3,6 +3,8 @@ package depollsoft.lib.activity;
 import android.app.Application;
 import android.content.Context;
 
+import depollsoft.lib.util.AppLog;
+
 public class RichApplication extends Application {
   private static Context context;
 
@@ -14,5 +16,6 @@ public class RichApplication extends Application {
   public void onCreate() {
     super.onCreate();
     RichApplication.context = this.getApplicationContext();
+    AppLog.initialize(this);
   }
 }
