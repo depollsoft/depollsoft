@@ -226,8 +226,34 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]]; then
-            match_url=https://github.com/depollsoft/certificates.git
-            echo "MATCH_GIT_URL=$match_url" >> "$GITHUB_ENV"
+            auth_url="$(python3 - <<'PY'
+          import base64
+          import binascii
+          import os
+          import urllib.parse
+
+          raw = os.environ["MATCH_GIT_BASIC_AUTHORIZATION"].strip()
+          for prefix in ("authorization: basic ", "basic "):
+              if raw.lower().startswith(prefix):
+                  raw = raw[len(prefix):].strip()
+          try:
+              decoded = base64.b64decode(raw, validate=True).decode()
+          except (binascii.Error, UnicodeDecodeError):
+              decoded = ""
+          credential = decoded if ":" in decoded else raw
+          if ":" not in credential:
+              credential = f"x-access-token:{credential}"
+          username, password = credential.split(":", 1)
+          print(
+              "https://"
+              f"{urllib.parse.quote(username, safe='')}:"
+              f"{urllib.parse.quote(password, safe='')}"
+              "@github.com/depollsoft/certificates.git"
+          )
+          PY
+            )"
+            echo "::add-mask::$auth_url"
+            echo "MATCH_GIT_URL=$auth_url" >> "$GITHUB_ENV"
             exit 0
           fi
           if [[ -z "${MATCH_GIT_SSH_KEY:-}" ]]; then
@@ -254,8 +280,6 @@ jobs:
             ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: >-
             ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          MATCH_GIT_BASIC_AUTHORIZATION: >-
-            ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         shell: bash
         run: >-
