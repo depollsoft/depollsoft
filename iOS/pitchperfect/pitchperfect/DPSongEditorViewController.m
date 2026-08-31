@@ -20,6 +20,7 @@
 #import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "pitchperfect-Swift.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -120,9 +121,13 @@
     
     [self.view addSubview:rootLayout];
     
-    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
+    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
+                                                         target:self
+                                                       selector:@selector(complete)];
     
-    UIBarButtonItem *cancelItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
+    UIBarButtonItem *cancelItem = [DPCommon barButtonWithSystemName:@"xmark"
+                                                           target:self
+                                                         selector:@selector(cancel)];
     
     UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
     

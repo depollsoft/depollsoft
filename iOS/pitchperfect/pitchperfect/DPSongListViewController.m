@@ -194,11 +194,15 @@
                                                   target:self
                                                 selector:@selector(addSong)];
     
-    editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
+    editItem = [DPCommon barButtonWithSystemName:@"pencil"
+                                            target:self
+                                          selector:@selector(edit)];
     
     sortItem = [[UIBarButtonItem alloc] initWithTitle:@"Sort Alphabetically" style:UIBarButtonItemStylePlain target:self action:@selector(sort)];
     
-    doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditing)];
+    doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
+                                            target:self
+                                          selector:@selector(doneEditing)];
     
     normalButtons = [NSArray arrayWithObjects:editItem, flexibleSpace, settingsButton, nil];
     editingButtons = [NSArray arrayWithObjects:doneItem, sortItem, flexibleSpace, addButton, nil];

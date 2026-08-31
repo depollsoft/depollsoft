@@ -110,7 +110,9 @@
     
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
-    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
+    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
+                                                         target:self
+                                                       selector:@selector(complete)];
     
     toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneItem, nil];
     

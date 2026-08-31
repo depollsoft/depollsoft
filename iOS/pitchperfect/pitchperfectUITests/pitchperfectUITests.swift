@@ -388,6 +388,11 @@ final class PitchPerfectUITests: XCTestCase {
             )
         }
 
+        let providerScreenshot = XCTAttachment(screenshot: app.screenshot())
+        providerScreenshot.name = "Fixed auth provider buttons"
+        providerScreenshot.lifetime = .keepAlways
+        add(providerScreenshot)
+
         app.buttons["Sign in with Phone"].tap()
         XCTAssertEqual(app.state, .runningForeground)
         XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
