@@ -10,7 +10,7 @@
 #import <UIKit/UIKit.h>
 #import <UIKit/NSLayoutAnchor.h>
 
-@interface DPToolbarViewController () <UIToolbarDelegate>
+@interface DPToolbarViewController () <UINavigationBarDelegate>
 
 @end
 
@@ -19,23 +19,19 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _toolbar = [[UIToolbar alloc] init];
-    _toolbar.delegate = self;
-    _toolbar.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    [self.view addSubview:_toolbar];
-    [_toolbar.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_toolbar]|"
+    _topNavigationBar = [[UINavigationBar alloc] init];
+    _topNavigationBar.delegate = self;
+    _topNavigationBar.translatesAutoresizingMaskIntoConstraints = NO;
+
+    _topNavigationItem = [[UINavigationItem alloc] init];
+    [_topNavigationBar setItems:@[_topNavigationItem]];
+
+    [self.view addSubview:_topNavigationBar];
+    [_topNavigationBar.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_topNavigationBar]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_toolbar)]];
-    
-    if (@available(iOS 26.0, *)) {
-        [_toolbar.heightAnchor constraintEqualToConstant:60.0].active = YES;
-    } else {
-        [_toolbar sizeToFit];
-    }
-    [_toolbar layoutIfNeeded];
+                                                                        views:NSDictionaryOfVariableBindings(_topNavigationBar)]];
     // Do any additional setup after loading the view.
 }
 

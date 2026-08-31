@@ -43,7 +43,8 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationBar *navigationBar = self.topNavigationBar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
@@ -82,10 +83,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     
     nameField = [[UITextField alloc] init];
@@ -129,20 +130,18 @@
                                                            target:self
                                                          selector:@selector(cancel)];
     
-    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    toolbar.items = [NSArray arrayWithObjects:cancelItem, flexibleSpace, titleItem, flexibleSpace, doneItem, nil];
+    navigationItem.title = @"Pitch Perfect";
+    navigationItem.leftBarButtonItem = cancelItem;
+    navigationItem.rightBarButtonItem = doneItem;
     
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout, toolbar)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout, navigationBar)]];
     
 }
 

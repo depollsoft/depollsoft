@@ -51,7 +51,8 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationBar *navigationBar = self.topNavigationBar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
@@ -85,10 +86,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
     
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     
@@ -106,15 +107,11 @@
     tableView.backgroundView = nil;
     [rootLayout addSubview:tableView row:2 column:0];
     
-    [toolbar addTitle:@"Settings"];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
-                                                         target:self
-                                                       selector:@selector(complete)];
-    
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneItem, nil];
+    navigationItem.title = @"Settings";
+    navigationItem.rightBarButtonItem =
+        [DPCommon barButtonWithSystemName:@"checkmark"
+                                   target:self
+                                 selector:@selector(complete)];
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
@@ -122,10 +119,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0

@@ -48,7 +48,8 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationBar *navigationBar = self.topNavigationBar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     //VLayoutView *topLayout = [[VLayoutView alloc] init];
     self.noteButtons = [NSMutableArray arrayWithCapacity:12];
@@ -73,16 +74,12 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
-    
-    toolbar.barStyle = UIBarStyleDefault;
-    
-    [toolbar sizeToFit];
     
     DPGridLayout *buttonLayout = [[DPGridLayout alloc] init];
     buttonLayout.rowDimensions = @[
@@ -119,12 +116,10 @@
     typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
     [buttonLayout addSubview:[typeSwitcher centered] row:1 column:1 rowSpan:2 colSpan:2];
     
-    [toolbar addTitle:@"Pitch Perfect"];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, settingsButton, nil];
+    navigationItem.title = @"Pitch Perfect";
+    settingsButton = [DPCommon getSettingsButtonWithTarget:self
+                                                  selector:@selector(openSettings)];
+    navigationItem.rightBarButtonItem = settingsButton;
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
@@ -144,10 +139,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
     [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;
