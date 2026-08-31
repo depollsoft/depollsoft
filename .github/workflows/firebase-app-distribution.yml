@@ -1,0 +1,421 @@
+name: Firebase App Distribution
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'Android/**'
+      - 'iOS/**'
+      - '.github/workflows/firebase-app-distribution.yml'
+
+concurrency:
+  group: firebase-app-distribution-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android — ${{ matrix.app }}
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: PitchPerfect
+            module: PitchPerfect
+            firebase_app_id: '1:402153260205:android:76066360519819b891f224'
+          - app: TagMaster
+            module: TagMaster
+            firebase_app_id: '1:572337670650:android:50e818820a9098fb4bbc43'
+
+    steps:
+      - name: Check distribution credentials
+        id: credentials
+        env:
+          FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON }}
+          ANDROID_UPLOAD_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: >-
+            ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: >-
+            ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ matrix.app }}" == "PitchPerfect" ]]; then
+            firebase="$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON"
+          else
+            firebase="$FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON"
+          fi
+          required=(
+            "$firebase"
+            "$ANDROID_UPLOAD_KEYSTORE"
+            "$ANDROID_UPLOAD_KEY_ALIAS"
+            "$ANDROID_UPLOAD_KEY_PASSWORD"
+            "$ANDROID_UPLOAD_KEYSTORE_PASSWORD"
+          )
+          for value in "${required[@]}"; do
+            if [[ -z "$value" ]]; then
+              echo "available=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Skipping ${{ matrix.app }}: credentials missing."
+              exit 0
+            fi
+          done
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up Node.js 22
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up JDK 17
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Android SDK
+        if: steps.credentials.outputs.available == 'true'
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools platforms;android-35 build-tools;35.0.0
+            build-tools;36.0.0
+
+      - name: Decode Android signing key
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          key_path="$RUNNER_TEMP/firebase-upload-key-${GITHUB_RUN_ID}.jks"
+          export KEY_PATH="$key_path"
+          python3 - <<'PY'
+          import base64
+          import os
+
+          encoded = "".join(os.environ["ANDROID_UPLOAD_KEYSTORE"].split())
+          with open(os.environ["KEY_PATH"], "wb") as key_file:
+              key_file.write(base64.b64decode(encoded, validate=True))
+          PY
+          chmod 600 "$key_path"
+          echo "ANDROID_UPLOAD_KEYSTORE_PATH=$key_path" >> "$GITHUB_ENV"
+
+      - name: Build signed private APK
+        if: steps.credentials.outputs.available == 'true'
+        working-directory: Android
+        env:
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: >-
+            ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: >-
+            ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew ":${{ matrix.module }}:assemblePrivate" \
+            -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER="${{ github.run_number }}" \
+            --stacktrace --build-cache --console=plain --no-daemon \
+            --no-parallel
+
+          output="${{ matrix.module }}/build/outputs/apk/private"
+          apk="$(find "$output" -type f -name '*.apk' -print -quit)"
+          if [[ -z "$apk" ]]; then
+            echo "No private APK was produced for ${{ matrix.module }}" >&2
+            exit 1
+          fi
+          cp "$apk" "$RUNNER_TEMP/${{ matrix.app }}-private.apk"
+
+      - name: Configure Firebase credentials
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON }}
+        id: firebase
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="${{ matrix.app }}"
+          credentials="$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
+          if [[ "$app" == "PitchPerfect" ]]; then
+            printf '%s' "$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON" \
+              > "$credentials"
+          else
+            printf '%s' "$FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON" \
+              > "$credentials"
+          fi
+          chmod 600 "$credentials"
+          echo "credentials_file=$credentials" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK to Firebase App Distribution
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: >-
+            ${{ steps.firebase.outputs.credentials_file }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_notes="$(printf 'PR #%s: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_SHA")"
+          npx --yes firebase-tools@15.28.2 \
+            appdistribution:distribute \
+            "$RUNNER_TEMP/${{ matrix.app }}-private.apk" \
+            --app "${{ matrix.firebase_app_id }}" \
+            --groups "$TESTER_GROUPS" \
+            --release-notes "$release_notes"
+
+      - name: Remove Android credentials
+        if: always() && steps.credentials.outputs.available == 'true'
+        shell: bash
+        run: |
+          app="${{ matrix.app }}"
+          rm -f \
+            "$RUNNER_TEMP/firebase-upload-key-${GITHUB_RUN_ID}.jks" \
+            "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json" \
+            "$RUNNER_TEMP/${app}-private.apk"
+
+  ios:
+    name: iOS — ${{ matrix.app }}
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 75
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: PitchPerfect
+            ipa: PitchPerfect-private.ipa
+            firebase_app_id: '1:402153260205:ios:9eb7589d0e3abe5b91f224'
+          - app: TagMaster
+            ipa: TagMaster-private.ipa
+            firebase_app_id: '1:572337670650:ios:5a5295f5bb91237e4bbc43'
+
+    steps:
+      - name: Check distribution credentials
+        id: credentials
+        env:
+          FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: >-
+            ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: >-
+            ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: >-
+            ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_REPOSITORY_ARCHIVE_PART_1: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ matrix.app }}" == "PitchPerfect" ]]; then
+            firebase="$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON"
+          else
+            firebase="$FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON"
+          fi
+          required=(
+            "$firebase"
+            "$APP_STORE_CONNECT_API_KEY_CONTENT"
+            "$APP_STORE_CONNECT_API_KEY_ID"
+            "$APP_STORE_CONNECT_API_ISSUER_ID"
+            "$MATCH_PASSWORD"
+            "$MATCH_REPOSITORY_ARCHIVE_PART_1"
+            "$MATCH_REPOSITORY_ARCHIVE_PART_2"
+          )
+          for value in "${required[@]}"; do
+            if [[ -z "$value" ]]; then
+              echo "available=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Skipping ${{ matrix.app }}: credentials missing."
+              exit 0
+            fi
+          done
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up Node.js 22
+        if: steps.credentials.outputs.available == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Select Xcode
+        if: steps.credentials.outputs.available == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          developer_dir=/Applications/Xcode.app/Contents/Developer
+          if [[ ! -d "$developer_dir" ]]; then
+            developer_dir="$(xcode-select -p 2>/dev/null || true)"
+          fi
+          if [[ -z "$developer_dir" || ! -d "$developer_dir" ]]; then
+            echo "No usable Xcode installation found." >&2
+            exit 1
+          fi
+          echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
+
+      - name: Set up Ruby
+        if: steps.credentials.outputs.available == 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: iOS
+
+      - name: Install CocoaPods
+        if: steps.credentials.outputs.available == 'true'
+        working-directory: iOS
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if bundle exec pod install; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 3 ]]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
+      - name: Restore encrypted signing repository
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          MATCH_REPOSITORY_ARCHIVE_PART_1: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID-${{ matrix.app }}"
+          archive="$repo.tgz"
+          rm -rf "$repo" "$archive"
+          mkdir -p "$repo"
+          export ARCHIVE_PATH="$archive"
+          python3 - <<'PY'
+          import base64
+          import os
+
+          encoded = (
+              os.environ["MATCH_REPOSITORY_ARCHIVE_PART_1"]
+              + os.environ["MATCH_REPOSITORY_ARCHIVE_PART_2"]
+          )
+          with open(os.environ["ARCHIVE_PATH"], "wb") as output:
+              output.write(base64.b64decode(encoded, validate=True))
+          PY
+          tar -xzf "$archive" -C "$repo"
+          git -C "$repo" init -b master
+          git -C "$repo" config user.name 'github-actions[bot]'
+          git -C "$repo" config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$repo" add .
+          git -C "$repo" commit -m 'Restore encrypted signing assets'
+          echo "MATCH_GIT_URL=file://$repo" >> "$GITHUB_ENV"
+
+      - name: Build signed private IPA
+        if: steps.credentials.outputs.available == 'true'
+        working-directory: iOS
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: >-
+            ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: >-
+            ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: >-
+            ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          DEPOLLSOFT_PRIVATE_BUILD_NUMBER: ${{ github.run_number }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        shell: bash
+        run: bundle exec fastlane build_firebase_private app:${{ matrix.app }}
+
+      - name: Configure Firebase credentials
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON: >-
+            ${{ secrets.FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON }}
+        id: firebase
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="${{ matrix.app }}"
+          credentials="$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
+          if [[ "$app" == "PitchPerfect" ]]; then
+            printf '%s' "$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON" \
+              > "$credentials"
+          else
+            printf '%s' "$FIREBASE_TAGMASTER_SERVICE_ACCOUNT_JSON" \
+              > "$credentials"
+          fi
+          chmod 600 "$credentials"
+          echo "credentials_file=$credentials" >> "$GITHUB_OUTPUT"
+
+      - name: Upload IPA to Firebase App Distribution
+        if: steps.credentials.outputs.available == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: >-
+            ${{ steps.firebase.outputs.credentials_file }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_notes="$(printf 'PR #%s: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_SHA")"
+          npx --yes firebase-tools@15.28.2 \
+            appdistribution:distribute \
+            "iOS/build/${{ matrix.ipa }}" \
+            --app "${{ matrix.firebase_app_id }}" \
+            --groups "$TESTER_GROUPS" \
+            --release-notes "$release_notes"
+
+      - name: Remove iOS credentials and build artifacts
+        if: always() && steps.credentials.outputs.available == 'true'
+        shell: bash
+        run: |
+          app="${{ matrix.app }}"
+          repo="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID-${app}"
+          rm -rf "$repo" "$repo.tgz" "iOS/build"
+          rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
