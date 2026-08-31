@@ -34,6 +34,20 @@ ensure
   File.write(info_plist_path, original) if original
 end
 
+def with_private_build_metadata(info_plist_path, build_number, pr_number)
+  original = File.binread(info_plist_path)
+  plist_buddy = "/usr/libexec/PlistBuddy"
+  system(plist_buddy, "-c", "Delete :PrivateBuildNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Delete :PrivatePRNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Add :PrivateBuildNumber string #{build_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private build number")
+  system(plist_buddy, "-c", "Add :PrivatePRNumber string #{pr_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private PR number")
+  yield
+ensure
+  File.binwrite(info_plist_path, original) if original
+end
+
 def with_private_entitlements(entitlements_path, production_bundle_identifier:, bundle_identifier:)
   entitlements = File.read(entitlements_path)
     .gsub(
@@ -67,12 +81,17 @@ def build_private_app(
 
   with_private_google_service_config(config_dir) do
     with_private_display_name(info_plist_file, display_name) do
-      with_private_entitlements(
-        entitlements_file,
-        production_bundle_identifier: production_bundle_identifier,
-        bundle_identifier: bundle_identifier,
-      ) do |private_entitlements_path|
-        build_app(
+      with_private_build_metadata(
+        info_plist_file,
+        build_number,
+        ENV["PR_NUMBER"].to_s,
+      ) do
+        with_private_entitlements(
+          entitlements_file,
+          production_bundle_identifier: production_bundle_identifier,
+          bundle_identifier: bundle_identifier,
+        ) do |private_entitlements_path|
+          build_app(
           workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
           scheme: scheme,
           export_method: "app-store",
@@ -94,8 +113,9 @@ def build_private_app(
           ].join(" "),
           output_directory: File.join(IOS_ROOT, "build"),
           output_name: output_name,
-          clean: true,
-        )
+            clean: true,
+          )
+        end
       end
     end
   end

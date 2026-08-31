@@ -78,6 +78,10 @@ dependencies {
 }
 
 android {
+    buildFeatures {
+        buildConfig = true
+    }
+
     signingConfigs {
         debug {
             keyAlias 'depollsoft'
@@ -111,6 +115,8 @@ android {
         versionCode(privateBuildNumber == null
                 ? getVersionCode(build: 0, suffix: 0)
                 : (privateBuildNumber as Integer) * 10)
+        buildConfigField "String", "PRIVATE_BUILD_NUMBER", '""'
+        buildConfigField "String", "PRIVATE_PR_NUMBER", '""'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable Test Orchestrator for isolated test execution
@@ -128,6 +134,10 @@ android {
             initWith release
             signingConfig signingConfigs.release
             applicationIdSuffix ".private"
+            def privateNumber = findProperty("DEPOLLSOFT_PRIVATE_BUILD_NUMBER") ?: ""
+            def privatePr = findProperty("DEPOLLSOFT_PRIVATE_PR_NUMBER") ?: ""
+            buildConfigField "String", "PRIVATE_BUILD_NUMBER", "\"${privateNumber}\""
+            buildConfigField "String", "PRIVATE_PR_NUMBER", "\"${privatePr}\""
             matchingFallbacks = ['release']
         }
     }
