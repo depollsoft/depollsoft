@@ -18,8 +18,21 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "DPLoginViewController.h"
-// Facebook SDK removed during SDK migration
-// #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import "DPAppDelegate+Ads.h"
+#import "GoogleMobileAdsStub.h"
+#if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
+#define HAS_FBSDK 1
+#else
+#define HAS_FBSDK 0
+#endif
+
+#if __has_include(<GoogleSignIn/GoogleSignIn.h>)
+#import <GoogleSignIn/GoogleSignIn.h>
+#define HAS_GOOGLE_SIGN_IN 1
+#else
+#define HAS_GOOGLE_SIGN_IN 0
+#endif
 #import "pitchperfect-Swift.h"
 
 @import FirebaseAuth;
@@ -39,6 +52,13 @@
     }
 
     [FIRApp configure];
+#if HAS_FBSDK
+    [[FBSDKApplicationDelegate sharedInstance] application:application
+                             didFinishLaunchingWithOptions:launchOptions];
+#endif
+    [[GADMobileAds sharedInstance] startWithCompletionHandler:nil];
+    [application registerForRemoteNotifications];
+
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
     
@@ -103,11 +123,19 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary *)options {
-  // Let Firebase Auth handle email link / OAuth redirect URLs
-  if ([[FIRAuth auth] canHandleURL:url]) {
-    return YES;
-  }
-  return NO;
+#if HAS_GOOGLE_SIGN_IN
+    if ([[GIDSignIn sharedInstance] handleURL:url]) {
+        return YES;
+    }
+#endif
+#if HAS_FBSDK
+    if ([[FBSDKApplicationDelegate sharedInstance] application:app
+                                                     openURL:url
+                                                     options:options]) {
+        return YES;
+    }
+#endif
+    return [[FIRAuth auth] canHandleURL:url];
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {

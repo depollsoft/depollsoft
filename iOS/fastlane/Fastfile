@@ -1,22 +1,36 @@
 require "fileutils"
+require "plist"
 require "tmpdir"
 
 default_platform(:ios)
 
 IOS_ROOT = File.expand_path("..", __dir__)
 
-def with_private_google_service_config(config_dir)
+def with_private_google_service_config(config_dir, info_plist_path)
   original = File.join(IOS_ROOT, config_dir, "GoogleService-Info.plist")
   private_config = File.join(IOS_ROOT, config_dir, "GoogleService-Info-Private.plist")
   backup = "#{original}.backup"
+  original_info_plist = File.read(info_plist_path)
 
   UI.user_error!("Missing private Firebase config at #{private_config}") unless File.exist?(private_config)
 
+  private_values = Plist.parse_xml(private_config)
+  reversed_client_id = private_values.fetch("REVERSED_CLIENT_ID")
+  info_values = Plist.parse_xml(info_plist_path)
+  info_values.fetch("CFBundleURLTypes").each do |url_type|
+    schemes = url_type["CFBundleURLSchemes"] || []
+    schemes.map! do |scheme|
+      scheme.start_with?("com.googleusercontent.apps.") ? reversed_client_id : scheme
+    end
+  end
+
   FileUtils.cp(original, backup)
   FileUtils.cp(private_config, original)
+  File.write(info_plist_path, info_values.to_plist)
   yield
 ensure
   FileUtils.mv(backup, original, force: true) if File.exist?(backup)
+  File.write(info_plist_path, original_info_plist) if original_info_plist
 end
 
 def with_private_display_name(info_plist_path, display_name)
@@ -36,8 +50,8 @@ end
 def with_private_entitlements(entitlements_path, production_bundle_identifier:, bundle_identifier:)
   entitlements = File.read(entitlements_path)
     .gsub(
-      /\n\s*<key>aps-environment<\/key>\n\s*<string>[^<]*<\/string>/,
-      "",
+      /(<key>aps-environment<\/key>\s*<string>)[^<]*(<\/string>)/,
+      "\\1production\\2",
     )
     .gsub(production_bundle_identifier, bundle_identifier)
 
@@ -143,7 +157,7 @@ def build_private_app(
   info_plist_file = File.join(IOS_ROOT, info_plist_path)
   project_file = File.join(IOS_ROOT, scheme, "#{scheme}.xcodeproj")
 
-  with_private_google_service_config(config_dir) do
+  with_private_google_service_config(config_dir, info_plist_file) do
     with_private_display_name(info_plist_file, display_name) do
       with_private_entitlements(
         entitlements_file,
@@ -208,27 +222,37 @@ platform :ios do
         token: Spaceship::ConnectAPI.token,
         current_team_id: "43AWMS3YJX",
       )
-      bundle_id = Spaceship::ConnectAPI::BundleId.find(
-        "depollsoft.tagmaster.private",
-        client: provisioning_client,
-      )
-      UI.user_error!("Tag Master private App ID was not found") unless bundle_id
+      capability = Spaceship::ConnectAPI::BundleIdCapability
+      capability_settings = {
+        capability::Type::APPLE_ID_AUTH => [
+          {
+            key: capability::Settings::APPLE_ID_AUTH_APP_CONSENT,
+            options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
+          },
+        ],
+        capability::Type::PUSH_NOTIFICATIONS => [],
+      }
 
-      capability_type =
-        Spaceship::ConnectAPI::BundleIdCapability::Type::APPLE_ID_AUTH
-      capabilities = bundle_id.get_capabilities(client: provisioning_client)
-      unless capabilities.any? { |item| item.is_type?(capability_type) }
-        capability = Spaceship::ConnectAPI::BundleIdCapability
-        bundle_id.create_capability(
-          capability_type,
-          settings: [
-            {
-              key: capability::Settings::APPLE_ID_AUTH_APP_CONSENT,
-              options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
-            },
-          ],
+      [
+        "depollsoft.pitchperfect.private",
+        "depollsoft.tagmaster.private",
+      ].each do |identifier|
+        bundle_id = Spaceship::ConnectAPI::BundleId.find(
+          identifier,
           client: provisioning_client,
         )
+        UI.user_error!("Private App ID #{identifier} was not found") unless bundle_id
+
+        capabilities = bundle_id.get_capabilities(client: provisioning_client)
+        capability_settings.each do |capability_type, settings|
+          next if capabilities.any? { |item| item.is_type?(capability_type) }
+
+          bundle_id.create_capability(
+            capability_type,
+            settings: settings,
+            client: provisioning_client,
+          )
+        end
       end
     end
 

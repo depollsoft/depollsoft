@@ -18,6 +18,13 @@
 #define HAS_FBSDK 0
 #endif
 
+#if __has_include(<GoogleSignIn/GoogleSignIn.h>)
+#import <GoogleSignIn/GoogleSignIn.h>
+#define HAS_GOOGLE_SIGN_IN 1
+#else
+#define HAS_GOOGLE_SIGN_IN 0
+#endif
+
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
@@ -47,6 +54,7 @@
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
 #endif
+    [application registerForRemoteNotifications];
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
@@ -79,7 +87,21 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-    // FirebaseAuthUI URL handling removed during SDK migration - now using SwiftUI auth
+#if HAS_GOOGLE_SIGN_IN
+    if ([[GIDSignIn sharedInstance] handleURL:url]) {
+        return YES;
+    }
+#endif
+#if HAS_FBSDK
+    if ([[FBSDKApplicationDelegate sharedInstance] application:app
+                                                     openURL:url
+                                                     options:options]) {
+        return YES;
+    }
+#endif
+    if ([[FIRAuth auth] canHandleURL:url]) {
+        return YES;
+    }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
         NSString *tagNumberString = url.pathComponents[2];
         @try {
@@ -90,7 +112,7 @@
         }
         @catch (NSException *exception) {
         }
-        return NO;
+        return YES;
     }
     return NO;
 }
