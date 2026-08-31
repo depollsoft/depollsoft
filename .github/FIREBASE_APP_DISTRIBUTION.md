@@ -10,6 +10,13 @@ Contributor-controlled Gradle, CocoaPods, and Fastlane code never runs in a job
 that has signing or Firebase credentials. Distribution only consumes the APKs
 and unsigned archives produced by the PR workflow.
 
+## Runner routing
+
+The iOS signing job runs on a self-hosted macOS runner labeled `heavy`. Its
+signed IPA artifact is handed to a separate self-hosted macOS runner labeled
+`light` for the Firebase upload. Metadata, Android, and comment-update jobs use
+self-hosted runners labeled `heavy`.
+
 ## Firebase configuration
 
 The following Actions secrets contain service-account JSON keys with the

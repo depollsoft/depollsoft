@@ -1,6 +1,8 @@
 name: Firebase App Distribution
 
 on:
+  # zizmor: ignore[dangerous-triggers]
+  # Artifacts are built without secrets; this workflow only signs/uploads them.
   workflow_run:
     workflows: ["PR Preview"]
     types: [completed]
@@ -21,10 +23,12 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, heavy]
     outputs:
       pr-number: ${{ steps.resolve.outputs.pr-number }}
+      pr-title: ${{ steps.resolve.outputs.pr-title }}
       head-sha: ${{ steps.resolve.outputs.head-sha }}
+      commit-message: ${{ steps.resolve.outputs.commit-message }}
     steps:
       - name: Resolve source pull request
         id: resolve
@@ -54,14 +58,21 @@ jobs:
             echo "Unable to resolve source pull request number." >&2
             exit 1
           fi
+          pr_title="$(gh api \
+            "repos/$GITHUB_REPOSITORY/pulls/$pr_number" --jq .title)"
+          commit_message="$(gh api \
+            "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA" \
+            --jq '.commit.message | split("\n")[0]')"
           echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr-title=$pr_title" >> "$GITHUB_OUTPUT"
           echo "head-sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "commit-message=$commit_message" >> "$GITHUB_OUTPUT"
 
   android:
     name: Android — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, heavy]
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -76,7 +87,9 @@ jobs:
 
     steps:
       - name: Download private APKs from PR Preview
-        uses: actions/download-artifact@v4
+        # v4
+        uses: >-
+          actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: "android-preview-*"
           path: preview-artifacts/android
@@ -86,7 +99,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js 22
-        uses: actions/setup-node@v4
+        # v4
+        uses: >-
+          actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
 
@@ -120,15 +135,17 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
           PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
           set -euo pipefail
           apk="preview-artifacts/android/${{ matrix.apk }}"
           test -f "$apk"
-          release_notes="$(printf 'PR #%s\nCommit: %s' \
-            "$PR_NUMBER" "$COMMIT_SHA")"
+          release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$apk" \
             --app "${{ matrix.firebase_app_id }}" \
@@ -143,11 +160,11 @@ jobs:
           rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           rm -rf preview-artifacts
 
-  ios:
-    name: iOS — ${{ matrix.app }}
+  ios-build:
+    name: Build iOS — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, heavy]
     timeout-minutes: 40
     env:
       LANG: en_US.UTF-8
@@ -167,13 +184,17 @@ jobs:
 
     steps:
       - name: Checkout trusted distribution tooling
-        uses: actions/checkout@v4
+        # v4
+        uses: >-
+          actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
           ref: ${{ github.event.repository.default_branch }}
 
       - name: Download unsigned archives from PR Preview
-        uses: actions/download-artifact@v4
+        # v4
+        uses: >-
+          actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: "ios-preview-*"
           path: preview-artifacts/ios
@@ -191,12 +212,8 @@ jobs:
           ditto -x -k "$zip" preview-artifacts/ios
           test -d "preview-artifacts/ios/${{ matrix.archive }}"
 
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
       - name: Select Xcode
+        id: xcode
         shell: bash
         run: |
           set -euo pipefail
@@ -208,16 +225,19 @@ jobs:
             echo "No usable Xcode installation found." >&2
             exit 1
           fi
-          echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
+          echo "developer-dir=$developer_dir" >> "$GITHUB_OUTPUT"
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        # v1
+        uses: >-
+          ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: iOS
 
       - name: Restore readonly signing repository
+        id: signing
         env:
           MATCH_REPOSITORY_ARCHIVE_PART_1: >-
             ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
@@ -252,7 +272,7 @@ jobs:
           git -C "$source" add .
           git -C "$source" commit -m 'Restore encrypted signing assets'
           git clone --bare "$source" "$remote"
-          echo "MATCH_GIT_URL=file://$remote" >> "$GITHUB_ENV"
+          echo "git-url=file://$remote" >> "$GITHUB_OUTPUT"
 
       - name: Export signed private IPA
         working-directory: iOS
@@ -264,6 +284,8 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: >-
             ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          DEVELOPER_DIR: ${{ steps.xcode.outputs.developer-dir }}
+          MATCH_GIT_URL: ${{ steps.signing.outputs.git-url }}
         shell: bash
         run: >-
           bundle exec fastlane export_firebase_private
@@ -271,6 +293,64 @@ jobs:
           archive:"$GITHUB_WORKSPACE/preview-artifacts/ios/${{
             matrix.archive
           }}"
+
+      - name: Upload signed IPA artifact
+        # v4
+        uses: >-
+          actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: >-
+            firebase-ios-${{ github.event.workflow_run.id }}-${{ matrix.app }}
+          path: iOS/build/${{ matrix.ipa }}
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove signing material and build artifacts
+        if: always()
+        shell: bash
+        run: |
+          app="${{ matrix.app }}"
+          run_key="$GITHUB_RUN_ID-${app}"
+          rm -f "$RUNNER_TEMP/match-${run_key}.tgz"
+          rm -rf \
+            "$RUNNER_TEMP/match-source-${run_key}" \
+            "$RUNNER_TEMP/match-remote-${run_key}.git" \
+            preview-artifacts \
+            iOS/build
+
+  ios-publish:
+    name: Publish iOS — ${{ matrix.app }}
+    needs: [metadata, ios-build]
+    if: needs.ios-build.result == 'success'
+    runs-on: [self-hosted, macOS, light]
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: PitchPerfect
+            ipa: PitchPerfect-private.ipa
+            firebase_app_id: "1:402153260205:ios:9eb7589d0e3abe5b91f224"
+          - app: TagMaster
+            ipa: TagMaster-private.ipa
+            firebase_app_id: "1:572337670650:ios:5a5295f5bb91237e4bbc43"
+
+    steps:
+      - name: Download signed IPA
+        # v4
+        uses: >-
+          actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: >-
+            firebase-ios-${{ github.event.workflow_run.id }}-${{ matrix.app }}
+          path: signed-ios
+
+      - name: Set up Node.js 22
+        # v4
+        uses: >-
+          actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
 
       - name: Configure Firebase credentials
         id: firebase
@@ -302,32 +382,127 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
           PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
           set -euo pipefail
-          ipa="iOS/build/${{ matrix.ipa }}"
+          ipa="signed-ios/${{ matrix.ipa }}"
           test -f "$ipa"
-          release_notes="$(printf 'PR #%s\nCommit: %s' \
-            "$PR_NUMBER" "$COMMIT_SHA")"
+          release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$ipa" \
             --app "${{ matrix.firebase_app_id }}" \
             --groups "$TESTER_GROUPS" \
             --release-notes "$release_notes"
 
-      - name: Remove signing material, credentials, and artifacts
+      - name: Remove Firebase credentials and IPA
         if: always()
         shell: bash
         run: |
           app="${{ matrix.app }}"
-          run_key="$GITHUB_RUN_ID-${app}"
-          rm -f \
-            "$RUNNER_TEMP/match-${run_key}.tgz" \
-            "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
-          rm -rf \
-            "$RUNNER_TEMP/match-source-${run_key}" \
-            "$RUNNER_TEMP/match-remote-${run_key}.git" \
-            preview-artifacts \
-            iOS/build
+          rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
+          rm -rf signed-ios
+
+  update-comments:
+    name: Update Firebase distribution comments
+    needs: [metadata, android, ios-publish]
+    if: always() && needs.metadata.result == 'success'
+    runs-on: [self-hosted, Linux, heavy]
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Update preview and deploy comments
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          SOURCE_SHA: ${{ needs.metadata.outputs.head-sha }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
+          ANDROID_RESULT: ${{ needs.android.result }}
+          IOS_RESULT: ${{ needs.ios-publish.result }}
+          RUN_URL: >-
+            https://github.com/${{ github.repository }}/actions/runs/${{
+              github.run_id
+            }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = Number(process.env.PR_NUMBER);
+            const sourceSha = process.env.SOURCE_SHA;
+            const succeeded =
+              process.env.ANDROID_RESULT === 'success' &&
+              process.env.IOS_RESULT === 'success';
+            const status = succeeded ? '✅ Published' : '❌ Failed';
+            const runLink = `[View run](${process.env.RUN_URL})`;
+            const contextLine =
+              `${process.env.PR_TITLE} · ${process.env.COMMIT_MESSAGE}`;
+            const value = `${status} · ${runLink}<br>${contextLine}`;
+            const previewMarker =
+              '<!-- Sticky Pull Request Commentpreview-build -->';
+            const deployMarker = '<!-- preview-deploy-status -->';
+            const firebaseMarker = '<!-- firebase-app-distribution -->';
+            const readMeta = (body, key) => {
+              const match = body.match(new RegExp(`<!-- ${key}:(.*?) -->`));
+              return match?.[1]?.trim() || '';
+            };
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: issueNumber, per_page: 100 },
+            );
+
+            for (const comment of comments) {
+              const body = comment.body || '';
+              const isPreview =
+                body.includes(previewMarker) &&
+                readMeta(body, 'preview-build-source-sha') === sourceSha;
+              const isDeploy =
+                body.includes(deployMarker) &&
+                readMeta(body, 'preview-deploy-source-sha') === sourceSha;
+              if (!isPreview && !isDeploy) continue;
+
+              let updated = body;
+              if (isPreview) {
+                const row = `| **Firebase App Distribution** | ${value} |`;
+                const pattern = new RegExp(
+                  '^\\| \\*\\*Firebase App Distribution\\*\\* \\|.*\\|$',
+                  'm',
+                );
+                if (pattern.test(updated)) {
+                  updated = updated.replace(pattern, row);
+                } else {
+                  const iOSRow = /^(\| \*\*iOS Status\*\* \|.*\|)$/m;
+                  updated = updated.replace(iOSRow, `$1\n${row}`);
+                }
+              } else {
+                const section = [
+                  '### Firebase App Distribution',
+                  '',
+                  value,
+                  '',
+                  firebaseMarker,
+                ].join('\n');
+                const pattern = new RegExp(
+                  '### Firebase App Distribution[\\s\\S]*?' +
+                    '<!-- firebase-app-distribution -->',
+                );
+                updated = pattern.test(updated)
+                  ? updated.replace(pattern, section)
+                  : `${updated}\n\n${section}`;
+              }
+
+              if (updated !== body) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id,
+                  body: updated,
+                });
+              }
+            }

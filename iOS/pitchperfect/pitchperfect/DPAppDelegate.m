@@ -38,6 +38,7 @@
         return YES;
     }
 
+    [DPAppLog start];
     [FIRApp configure];
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];

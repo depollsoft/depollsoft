@@ -44,6 +44,7 @@
         return YES;
     }
 
+    [DPAppLog start];
     [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
         configuration.applicationId = @"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj";
         configuration.clientKey = @"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4";
