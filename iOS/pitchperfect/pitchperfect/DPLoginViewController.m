@@ -13,26 +13,18 @@
 #import "UIToolbar+DPUtils.h"
 #import "UIView+DPUtils.h"
 #import "DPUtils+UIControl.h"
-#import <Parse/Parse.h>
-#import <Bolts/Bolts.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 // Facebook Login removed during SDK migration
 #import "pitchperfect-Swift.h"
 
 @interface DPLoginViewController ()
-
-@property (nonatomic, readonly) BFTaskCompletionSource *loginTaskCompletionSource;
-
 @end
 
 @implementation DPLoginViewController
 
-@synthesize loginTaskCompletionSource;
-
 - (instancetype)init {
     if (self = [super init]) {
-        loginTaskCompletionSource = [BFTaskCompletionSource taskCompletionSource];
         self.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
         if ([UIDevice currentDevice].systemVersion.floatValue >= 8.0) {
             self.providesPresentationContextTransitionStyle = YES;
@@ -46,15 +38,11 @@
     return self;
 }
 
-- (BFTask *)loginTask {
-    return self.loginTaskCompletionSource.task;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     // Do any additional setup after loading the view, typically from a nib.
     self.view.backgroundColor = [UIColor systemBackgroundColor];
@@ -66,19 +54,17 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
-    [toolbar addTitle:@"Log In To Pitch Perfect"];
-    
-    UIBarButtonItem *skipItem = [[UIBarButtonItem alloc] initWithTitle:@"Skip" style:UIBarButtonItemStylePlain target:nil action:@selector(skip)];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, skipItem, nil];
+    navigationItem.title = @"Log In To Pitch Perfect";
+    navigationItem.rightBarButtonItem =
+        [[UIBarButtonItem alloc] initWithTitle:@"Skip"
+                                        style:UIBarButtonItemStylePlain
+                                       target:self
+                                       action:@selector(skip)];
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
@@ -131,10 +117,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
     [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;
@@ -149,13 +135,17 @@
         [[DPSettingsModel sharedInstance] attachToFirestore];
         [[DPSongsModel sharedInstance] attachToFirestoreWithStore:YES];
     }
-    [loginTaskCompletionSource trySetResult:nil];
+    if (self.loginCompletion) {
+        self.loginCompletion();
+    }
 }
 
 - (void)skip {
     [self dismissViewControllerAnimated:YES completion:^{
     }];
-    [loginTaskCompletionSource trySetResult:nil];
+    if (self.loginCompletion) {
+        self.loginCompletion();
+    }
 }
 
 // Ads removed

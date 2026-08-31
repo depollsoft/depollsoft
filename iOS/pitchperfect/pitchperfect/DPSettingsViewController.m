@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
 
+#if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsViewController.h"
 #import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
@@ -22,9 +23,9 @@
 #import "UIView+DPUtils.h"
 #import "DPLoginViewController.h"
 #import "UIToolbar+DPUtils.h"
-@import Firebase;
+@import FirebaseAuth;
+@import FirebaseFunctions;
 @import UIKit;
-@import FirebaseAuthUI;
 
 @interface DPSettingsViewController ()
 
@@ -50,7 +51,7 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
@@ -59,17 +60,21 @@
     // Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
                                  ];
     
     // Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
+    bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
+        self.view.frame.size.width
+    );
     [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
+    bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     UIView *background = [[UIView alloc] init];
     background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
@@ -80,10 +85,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     
@@ -101,13 +106,11 @@
     tableView.backgroundView = nil;
     [rootLayout addSubview:tableView row:2 column:0];
     
-    [toolbar addTitle:@"Settings"];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
-    
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneItem, nil];
+    navigationItem.title = @"Settings";
+    navigationItem.rightBarButtonItem =
+        [DPCommon barButtonWithSystemName:@"checkmark"
+                                   target:self
+                                 selector:@selector(complete)];
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
@@ -115,10 +118,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -292,7 +295,7 @@
         FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
         [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
             if (!error) {
-                [FUIAuth.defaultAuthUI signOutWithError:nil];
+                [[FIRAuth auth] signOut:nil];
                 [self->tableView reloadData];
                 [activity stopAnimating];
             }
@@ -313,14 +316,13 @@
         UIActivityIndicatorView *activity = (UIActivityIndicatorView*)cell.accessoryView;
         [activity startAnimating];
         __block DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
+        loginViewController.loginCompletion = ^{
+            [activity stopAnimating];
+            [self->tableView reloadData];
+            loginViewController.loginCompletion = nil;
+            loginViewController = nil;
+        };
         [loginViewController logIn:self];
-        [loginViewController.loginTask continueWithExecutor:[BFExecutor mainThreadExecutor]
-                                                  withBlock:^id(BFTask *task) {
-                                                      [activity stopAnimating];
-                                                      [self->tableView reloadData];
-                                                      loginViewController = nil;
-                                                      return nil;
-                                                  }];
     }
 }
 
@@ -384,3 +386,4 @@
 }
 
 @end
+#endif

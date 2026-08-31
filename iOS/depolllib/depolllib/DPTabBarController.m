@@ -82,6 +82,9 @@
         [newItems addObject:controller.tabBarItem];
     }
     tabBar.items = newItems;
+    if (newItems.count == 0) {
+        return;
+    }
     [tabBar setSelectedItem:newItems[0]];
     [self tabBar:tabBar didSelectItem:newItems[0]];
 }

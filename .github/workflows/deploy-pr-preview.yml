@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: Deploy PR Preview
 
 on:
@@ -404,7 +405,7 @@ jobs:
     outputs:
       source-sha: ${{ steps.capture-source.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
@@ -414,16 +415,16 @@ jobs:
         id: capture-source
         run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:
-          packages: "platform-tools platforms;android-35 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-35 platforms;android-37.0 build-tools;36.0.0"
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
@@ -509,7 +510,7 @@ jobs:
           PLAY_SERVICE_ACCOUNT_JSON_PATH: >-
             ${{ env.PLAY_SERVICE_ACCOUNT_JSON_PATH }}
           PR_NUMBER: ${{ inputs.pr-number }}
-        run: bundle exec fastlane deploy_private
+        run: ruby -S bundle exec fastlane deploy_private
 
       - name: Clean up Android deploy credentials
         if: always()
@@ -528,8 +529,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "60"
+      FASTLANE_XCODEBUILD_SETTINGS_RETRIES: "3"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           ref: ${{ needs.validate-pr.outputs.deploy-sha }}
@@ -551,24 +554,38 @@ jobs:
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: iOS
 
-      - name: Install CocoaPods
+      - name: Cache SPM dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            iOS/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: deploy-spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            deploy-spm-v2-${{ runner.os }}-
+
+      - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3: pod install"
-            if bundle exec pod install; then
+          for attempt in 1 2; do
+            xcodebuild -resolvePackageDependencies \
+              -workspace iOS.xcworkspace \
+              -scheme pitchperfect \
+              -clonedSourcePackagesDirPath SourcePackages
+            if find SourcePackages/artifacts -name '*.xcframework' \
+              -print -quit 2>/dev/null | grep -q .; then
               exit 0
             fi
-            if [ "$attempt" -lt 3 ]; then
-              sleep 10
-            fi
+            echo "SPM binary artifacts are incomplete; resolving cleanly."
+            rm -rf SourcePackages
           done
+          echo "SPM binary artifacts are still missing after a clean resolve." >&2
           exit 1
 
       - name: Configure iOS signing repo auth
@@ -577,23 +594,70 @@ jobs:
           MATCH_GIT_SSH_KEY: ${{ secrets.MATCH_GIT_SSH_KEY }}
           MATCH_GIT_BASIC_AUTHORIZATION: >-
             ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_REPOSITORY_ARCHIVE_PART_1: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
         run: |
+          if [ -n "${MATCH_REPOSITORY_ARCHIVE_PART_1:-}" ] && \
+            [ -n "${MATCH_REPOSITORY_ARCHIVE_PART_2:-}" ]; then
+            repo_path="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID"
+            archive_path="$RUNNER_TEMP/match-repository-$GITHUB_RUN_ID.tgz"
+            rm -rf "$repo_path" "$archive_path"
+            mkdir -p "$repo_path"
+            python3 - <<'PY'
+          import base64
+          import os
+
+          encoded = (
+              os.environ["MATCH_REPOSITORY_ARCHIVE_PART_1"]
+              + os.environ["MATCH_REPOSITORY_ARCHIVE_PART_2"]
+          )
+          with open(
+              os.path.join(
+                  os.environ["RUNNER_TEMP"],
+                  f"match-repository-{os.environ['GITHUB_RUN_ID']}.tgz",
+              ),
+              "wb",
+          ) as archive:
+              archive.write(base64.b64decode(encoded, validate=True))
+          PY
+            tar -xzf "$archive_path" -C "$repo_path"
+            git -C "$repo_path" init -b master
+            git -C "$repo_path" config user.name "github-actions[bot]"
+            git -C "$repo_path" config user.email \
+              "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C "$repo_path" config receive.denyCurrentBranch updateInstead
+            git -C "$repo_path" add .
+            git -C "$repo_path" commit -m "Restore encrypted signing assets"
+            echo "MATCH_REPOSITORY_PATH=$repo_path" >> "$GITHUB_ENV"
+            echo "MATCH_REPOSITORY_ARCHIVE_PATH=$archive_path" >> "$GITHUB_ENV"
+            echo "MATCH_GIT_URL=file://$repo_path" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
           if [ -n "${MATCH_GIT_SSH_KEY:-}" ]; then
             key_path="$RUNNER_TEMP/match-git-key"
             printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
             chmod 600 "$key_path"
             mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            ssh_opts="-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-            echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" >> "$GITHUB_ENV"
-            echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
-              >> "$GITHUB_ENV"
-            exit 0
+            ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts
+            ssh_opts="-o Hostname=ssh.github.com -p 443 -o IdentitiesOnly=yes"
+            ssh_opts="$ssh_opts -o StrictHostKeyChecking=yes"
+            git_ssh_command="ssh -i $key_path $ssh_opts"
+            if GIT_SSH_COMMAND="$git_ssh_command" git ls-remote \
+              git@github.com:depollsoft/certificates.git HEAD >/dev/null; then
+              echo "GIT_SSH_COMMAND=$git_ssh_command" >> "$GITHUB_ENV"
+              echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
+                >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "SSH signing-repository authentication failed; trying HTTPS."
           fi
 
           if [ -z "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]; then
             echo "MATCH_GIT_SSH_KEY or MATCH_GIT_BASIC_AUTHORIZATION secret" \
-              "is required to clone the private signing repository."
+              "must grant read access to the private signing repository."
             exit 1
           fi
 
@@ -650,9 +714,35 @@ jobs:
           DEPOLLSOFT_PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_FORCE_REGENERATE: ${{ secrets.MATCH_FORCE_REGENERATE }}
+          TESTFLIGHT_TESTER_EMAIL: ${{ secrets.TESTFLIGHT_TESTER_EMAIL }}
           PR_NUMBER: ${{ inputs.pr-number }}
           PR_TITLE: ${{ needs.validate-pr.outputs.pr-title }}
         run: bundle exec fastlane deploy_private
+
+      - name: Package refreshed iOS signing repository
+        if: always()
+        run: |
+          if [ -d "${MATCH_REPOSITORY_PATH:-}" ]; then
+            tar -C "$MATCH_REPOSITORY_PATH" --exclude=.git -czf \
+              "$RUNNER_TEMP/refreshed-match-repository.tgz" .
+          fi
+
+      - name: Upload refreshed iOS signing repository
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: refreshed-match-repository
+          path: ${{ runner.temp }}/refreshed-match-repository.tgz
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Clean up iOS signing repository
+        if: always()
+        run: |
+          rm -rf "${MATCH_REPOSITORY_PATH:-}" \
+            "${MATCH_REPOSITORY_ARCHIVE_PATH:-}" \
+            "$RUNNER_TEMP/refreshed-match-repository.tgz"
 
   verify-pr-source:
     name: Verify PR source ref

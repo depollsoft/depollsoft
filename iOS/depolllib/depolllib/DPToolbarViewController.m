@@ -7,52 +7,16 @@
 //
 
 #import "DPToolbarViewController.h"
-#import <UIKit/UIKit.h>
-#import <UIKit/NSLayoutAnchor.h>
-
-@interface DPToolbarViewController () <UIToolbarDelegate>
-
-@end
 
 @implementation DPToolbarViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    _toolbar = [[UIToolbar alloc] init];
-    _toolbar.delegate = self;
-    _toolbar.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    [self.view addSubview:_toolbar];
-    [_toolbar.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_toolbar]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_toolbar)]];
-    
-    [_toolbar sizeToFit];
-    [_toolbar layoutIfNeeded];
-    // Do any additional setup after loading the view.
+    self.edgesForExtendedLayout = UIRectEdgeNone;
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
-
-- (UIBarPosition)positionForBar:(id<UIBarPositioning>)bar {
-    return UIBarPositionTopAttached;
+- (UINavigationItem *)topNavigationItem {
+    return self.navigationItem;
 }
 
 @end
-

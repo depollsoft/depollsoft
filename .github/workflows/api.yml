@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: API CI
 
 on:
@@ -5,11 +6,10 @@ on:
     branches:
       - main
     paths:
-      - 'api/**'
+      - "api/**"
   workflow_dispatch:
   schedule:
     - cron: 30 0 * * 3
-
 
 defaults:
   run:
@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '16'
+          node-version: "16"
 
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Setup GCP Service Account
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
@@ -41,7 +41,7 @@ jobs:
       - name: Download geoip data using gsutil
         run: gsutil -m cp -r gs://depollsoft-build-data/node_modules/geoip-lite/data node_modules/geoip-lite/
 
-      - uses: whoan/docker-build-with-cache-action@v5
+      - uses: whoan/docker-build-with-cache-action@79574702d64f46f39ecaf1f1d771d45230e10b93
         with:
           username: _json_key
           password: "${{ secrets.GCP_SA_KEY }}"
@@ -50,7 +50,7 @@ jobs:
           context: api
 
       - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@main
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d
         with:
           service: api
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/api

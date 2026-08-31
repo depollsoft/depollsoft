@@ -94,9 +94,10 @@
     [DPAppDelegate setUpBackground:self.view];
     //[self.view bringSubviewToFront:scroller];
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
-                                                                                           target:self
-                                                                                           action:@selector(search)];
+    self.navigationItem.rightBarButtonItem =
+        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
+                                             target:self
+                                             action:@selector(search)];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
                                    initWithTarget:self

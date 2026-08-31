@@ -140,11 +140,11 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
                                  ];
@@ -152,10 +152,14 @@
     notes = [DPNote prunedNotes];
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
+    bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
+        self.view.frame.size.width
+    );
     [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
+    bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     [rootLayout addSubview:bannerView row:1 column:0];
     
@@ -168,10 +172,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
     
@@ -185,13 +189,10 @@
         [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(self->notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     });
     
-    [toolbar addTitle:@"Pitch Perfect"];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, settingsButton, nil];
-    [toolbar sizeToFit];
+    navigationItem.title = @"Pitch Perfect";
+    settingsButton = [DPCommon getSettingsButtonWithTarget:self
+                                                  selector:@selector(openSettings)];
+    navigationItem.rightBarButtonItem = settingsButton;
     
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
@@ -199,10 +200,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0

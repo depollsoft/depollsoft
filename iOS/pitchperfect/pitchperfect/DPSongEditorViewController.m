@@ -20,6 +20,7 @@
 #import "DPAppDelegate+Ads.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "pitchperfect-Swift.h"
 
 #define SHARP_STRING @"ì"
 #define FLAT_STRING @"í"
@@ -42,7 +43,7 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
@@ -50,7 +51,7 @@
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
@@ -58,10 +59,14 @@
     
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
+    bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
+        self.view.frame.size.width
+    );
     [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
+    bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     NSMutableArray *keys = [NSMutableArray array];
     [keys addObjectsFromArray:[DPKey majorKeys]];
@@ -77,10 +82,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     
     nameField = [[UITextField alloc] init];
@@ -116,24 +121,26 @@
     
     [self.view addSubview:rootLayout];
     
-    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(complete)];
+    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
+                                                         target:self
+                                                       selector:@selector(complete)];
     
-    UIBarButtonItem *cancelItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
+    UIBarButtonItem *cancelItem = [DPCommon barButtonWithSystemName:@"xmark"
+                                                           target:self
+                                                         selector:@selector(cancel)];
     
-    UIBarButtonItem *titleItem = [[UIBarButtonItem alloc] initWithTitle:@"Pitch Perfect" style:UIBarButtonItemStylePlain target:nil action:nil];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    toolbar.items = [NSArray arrayWithObjects:cancelItem, flexibleSpace, titleItem, flexibleSpace, doneItem, nil];
+    navigationItem.title = @"Pitch Perfect";
+    navigationItem.leftBarButtonItem = cancelItem;
+    navigationItem.rightBarButtonItem = doneItem;
     
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout, toolbar)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     
 }
 

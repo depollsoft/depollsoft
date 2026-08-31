@@ -8,7 +8,6 @@
 
 #import "DPHomeViewController.h"
 
-#import <Parse/Parse.h>
 
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"
@@ -98,9 +97,10 @@
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch
-                                                                                           target:self
-                                                                                           action:@selector(search)];
+    self.navigationItem.rightBarButtonItem =
+        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
+                                             target:self
+                                             action:@selector(search)];
     [self viewDidLoadExtension];
 }
 
@@ -176,7 +176,9 @@
                     });
                     return;
                 }
+
                 int chosenResult = arc4random_uniform((uint32_t)result.available);
+
                 result = [DPTag query:nil
                       numberOfResults:1
                                 start:chosenResult
@@ -190,6 +192,14 @@
                                 cache:NO
                             fieldList:@"id"];
                 DPTag *tag = result.tags.firstObject;
+
+                if (!tag) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.busyIndicator decrementBusyCount];
+                    });
+                    return;
+                }
+
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (tag) {
                         DPTagViewController *tagController = [[DPTagViewController alloc] init];

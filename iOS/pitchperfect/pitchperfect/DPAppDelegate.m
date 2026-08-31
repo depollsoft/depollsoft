@@ -8,7 +8,6 @@
 
 #import "DPAppDelegate.h"
 #import <AVFoundation/AVFoundation.h>
-#import <Parse/Parse.h>
 #import "DPSettingsModel.h"
 #import "DPSongsModel.h"
 #import "DPJsonSerializer.h"
@@ -19,11 +18,25 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "DPLoginViewController.h"
-// Facebook SDK removed during SDK migration
-// #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import "DPAppDelegate+Ads.h"
+#import "GoogleMobileAdsStub.h"
+#if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
+#define HAS_FBSDK 1
+#else
+#define HAS_FBSDK 0
+#endif
+
+#if __has_include(<GoogleSignIn/GoogleSignIn.h>)
+#import <GoogleSignIn/GoogleSignIn.h>
+#define HAS_GOOGLE_SIGN_IN 1
+#else
+#define HAS_GOOGLE_SIGN_IN 0
+#endif
 #import "pitchperfect-Swift.h"
 
-@import Firebase;
+@import FirebaseAuth;
+@import FirebaseCore;
 
 #define PRODUCTION
 //#define TEST_ADS
@@ -32,22 +45,46 @@
 
 @synthesize window = _window;
 
+- (void)configureRootNavigationControllers {
+    UITabBarController *tabBarController =
+        (UITabBarController *)self.window.rootViewController;
+    if (![tabBarController isKindOfClass:[UITabBarController class]]) {
+        return;
+    }
+
+    NSMutableArray<UIViewController *> *controllers = [NSMutableArray array];
+    for (UIViewController *controller in tabBarController.viewControllers) {
+        if ([controller isKindOfClass:[UINavigationController class]]) {
+            [controllers addObject:controller];
+            continue;
+        }
+        UINavigationController *navigationController =
+            [[UINavigationController alloc] initWithRootViewController:controller];
+        navigationController.tabBarItem = controller.tabBarItem;
+        [controllers addObject:navigationController];
+    }
+    tabBarController.viewControllers = controllers;
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [self configureRootNavigationControllers];
+
     if (NSClassFromString(@"XCTestCase") != nil) {
         return YES;
     }
 
     [DPAppLog start];
     [FIRApp configure];
+#if HAS_FBSDK
+    [[FBSDKApplicationDelegate sharedInstance] application:application
+                             didFinishLaunchingWithOptions:launchOptions];
+#endif
+    [[GADMobileAds sharedInstance] startWithCompletionHandler:nil];
+    [application registerForRemoteNotifications];
+
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback error:nil];
-    
-    [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
-        configuration.applicationId = @"cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9";
-        configuration.clientKey = @"Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE";
-        configuration.server = @"https://pitchperfect-api.depollsoft.xyz";
-    }]];
     
     [DPJsonSerializer registerAlias:@"List" forClass:NSClassFromString(@"__NSArrayM")];
     [DPJsonSerializer registerAlias:@"Key" forClass:[DPKey class]];
@@ -65,10 +102,11 @@
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
-            [self.window.rootViewController presentViewController:loginViewController
+            UINavigationController *navigationController =
+                [[UINavigationController alloc] initWithRootViewController:loginViewController];
+            [self.window.rootViewController presentViewController:navigationController
                                                          animated:YES
-                                                       completion:^{
-                                                       }];
+                                                       completion:nil];
         }
     });
     
@@ -110,8 +148,19 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary *)options {
-  NSString *sourceApplication = options[UIApplicationOpenURLOptionsSourceApplicationKey];
-  return [[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication];
+#if HAS_GOOGLE_SIGN_IN
+    if ([[GIDSignIn sharedInstance] handleURL:url]) {
+        return YES;
+    }
+#endif
+#if HAS_FBSDK
+    if ([[FBSDKApplicationDelegate sharedInstance] application:app
+                                                     openURL:url
+                                                     options:options]) {
+        return YES;
+    }
+#endif
+    return [[FIRAuth auth] canHandleURL:url];
 }
 
 + (void)noteTouchStarted:(DPNote *)note forCell:(UITableViewCell *)cell {

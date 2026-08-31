@@ -1,47 +1,37 @@
 package depollsoft.pitchperfect
 
-import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.multidex.MultiDex
 import com.bindroid.trackable.TrackableCollection
 import com.google.android.gms.ads.MobileAds
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.functions.FirebaseFunctionsException
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
-import com.parse.*
-import com.parse.facebook.ParseFacebookUtils
+import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 
 class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
         super.onCreate()
         val isDebugSigned = false
-        Note.setPlayer(object : Note.NotePlayer {
-            override fun play(n: Note) {
-                Note.DEFAULT_PLAYER.play(n)
-                PitchPipeAppWidget.updateWidgets()
-            }
+        Note.setPlayer(
+            object : Note.NotePlayer {
+                override fun play(n: Note) {
+                    Note.DEFAULT_PLAYER.play(n)
+                    PitchPipeAppWidget.updateWidgets()
+                }
 
-            override fun stop(n: Note) {
-                Note.DEFAULT_PLAYER.stop(n)
-                PitchPipeAppWidget.updateWidgets()
-            }
-        })
+                override fun stop(n: Note) {
+                    Note.DEFAULT_PLAYER.stop(n)
+                    PitchPipeAppWidget.updateWidgets()
+                }
+            },
+        )
         MobileAds.initialize(this)
         JsonSerializer.registerAlias(java.lang.Integer::class.java, "Integer")
         JsonSerializer.registerAlias(java.lang.Integer.TYPE, "int")
@@ -58,15 +48,6 @@ class PitchPerfectApplication : RichApplication() {
         JsonSerializer.registerAlias(java.lang.Double::class.java, "Double")
         JsonSerializer.registerAlias(java.lang.Double.TYPE, "double")
         JsonSerializer.registerAlias(TrackableCollection::class.java, "List")
-        Parse.initialize(
-            Parse.Configuration.Builder(this)
-                .applicationId("cXYwcCUUP2f78OBfMlXu7dk03f2JRMQYXpCnv7H9")
-                .clientKey("Y9ZIP3kLs1Jbh9Mpr2s8tRw9tjdGt6GuseuRHNdE")
-                .server("https://pitchperfect-api.depollsoft.xyz")
-                .build()
-        )
-        ParseFacebookUtils.initialize(this)
-
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
     }
@@ -74,8 +55,6 @@ class PitchPerfectApplication : RichApplication() {
     private var userDoc: DocumentReference? = null
 
     private fun extraInit() {
-        convertParseUser()
-
         var registration: ListenerRegistration? = null
         Firebase.auth.addAuthStateListener { auth ->
             val user = auth.currentUser
@@ -88,11 +67,12 @@ class PitchPerfectApplication : RichApplication() {
                 SongsModel.get().attachToFirestore()
                 SettingsModel.attachToFirestore()
                 userDoc = Firebase.firestore.document("users/${user.uid}")
-                registration = userDoc!!.addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        Log.e("depollsoft.pitchperfect", "Failed to listen to user document", error)
+                registration =
+                    userDoc!!.addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Log.e("depollsoft.pitchperfect", "Failed to listen to user document", error)
+                        }
                     }
-                }
             } else {
                 userDoc = null
             }
@@ -104,47 +84,8 @@ class PitchPerfectApplication : RichApplication() {
         Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
     }
 
-    fun convertParseUser() {
-        val curUser = ParseUser.getCurrentUser()
-        if (curUser != null && Firebase.auth.currentUser != null) {
-            ParseUser.logOut()
-            return
-        }
-        CoroutineScope(Dispatchers.Default + Job()).launch {
-            if (curUser != null) {
-                try {
-                    val sessionToken = curUser.sessionToken ?: ParseUser.getCurrentSessionTokenAsync().await()
-                    val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
-                        .call(mapOf("token" to sessionToken)).await()
-                    val dataDict = result.getData() as? Map<*, *> ?: return@launch
-                    val firebaseToken = dataDict["token"] as String
-                    Firebase.auth.signInWithCustomToken(firebaseToken).await()
-                    ParseUser.logOut()
-                    Log.d(
-                        "depollsoft.pitchperfect",
-                        "Logged out Parse: ${curUser.objectId} and logged in Firebase: ${Firebase.auth.currentUser?.uid}"
-                    )
-                } catch(e: FirebaseFunctionsException) {
-                    if (e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED) {
-                        Log.e("depollsoft.pitchperfect", "Failed to exchange token and logging out", e)
-                        ParseUser.logOut()
-                    } else {
-                        Log.e("depollsoft.pitchperfect", "Failed to exchange token", e)
-                    }
-                } catch(e: Exception) {
-                    Log.e("depollsoft.pitchperfect", "Failed to exchange token", e)
-                }
-            }
-        }
-    }
-
     override fun onTerminate() {
         super.onTerminate()
-    }
-
-    protected override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
     }
 
     companion object {
@@ -154,8 +95,9 @@ class PitchPerfectApplication : RichApplication() {
         private const val FACEBOOK_PRODUCTION = "263872380333771"
 
         var themeMode: Int
-            get() = Preferences.get("pitchperfect.theme")
-                ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            get() =
+                Preferences.get("pitchperfect.theme")
+                    ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             set(value) {
                 AppCompatDelegate.setDefaultNightMode(value)
                 Preferences.set("pitchperfect.theme", value)

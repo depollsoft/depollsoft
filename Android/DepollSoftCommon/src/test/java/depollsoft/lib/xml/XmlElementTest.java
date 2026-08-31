@@ -16,7 +16,7 @@ import java.util.List;
  * Unit tests for the XmlElement class.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class XmlElementTest {
 
     private XmlElement element;

@@ -24,13 +24,12 @@ import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
-import com.parse.ParseUser
+import com.google.firebase.auth.auth
+import com.google.firebase.functions.functions
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
 import kotlinx.coroutines.Dispatchers
@@ -238,7 +237,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<View>(R.id.copyLogsButton).setOnClickListener {
             val clipboard = getSystemService(ClipboardManager::class.java)
             clipboard.setPrimaryClip(
-                ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}")
+                ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"),
             )
             Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
         }

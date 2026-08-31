@@ -8,14 +8,21 @@
 
 #import "DPAppDelegate.h"
 
-@import FirebaseAuthUI;
+@import FirebaseAuth;
+@import FirebaseCore;
 
-#import <Parse/Parse.h>
 #if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #define HAS_FBSDK 1
 #else
 #define HAS_FBSDK 0
+#endif
+
+#if __has_include(<GoogleSignIn/GoogleSignIn.h>)
+#import <GoogleSignIn/GoogleSignIn.h>
+#define HAS_GOOGLE_SIGN_IN 1
+#else
+#define HAS_GOOGLE_SIGN_IN 0
 #endif
 
 #import "DPBarbershop.h"
@@ -24,8 +31,6 @@
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
-
-@import Firebase;
 
 @implementation DPAppDelegate
 
@@ -45,16 +50,12 @@
     }
 
     [DPAppLog start];
-    [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
-        configuration.applicationId = @"RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj";
-        configuration.clientKey = @"7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4";
-        configuration.server = @"https://tagmaster-api.depollsoft.xyz";
-    }]];
     [FIRApp configure];
 #if HAS_FBSDK
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
 #endif
+    [application registerForRemoteNotifications];
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
@@ -87,8 +88,19 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-    NSString *sourceApplication = options[UIApplicationOpenURLOptionsSourceApplicationKey];
-    if ([[FUIAuth defaultAuthUI] handleOpenURL:url sourceApplication:sourceApplication]) {
+#if HAS_GOOGLE_SIGN_IN
+    if ([[GIDSignIn sharedInstance] handleURL:url]) {
+        return YES;
+    }
+#endif
+#if HAS_FBSDK
+    if ([[FBSDKApplicationDelegate sharedInstance] application:app
+                                                     openURL:url
+                                                     options:options]) {
+        return YES;
+    }
+#endif
+    if ([[FIRAuth auth] canHandleURL:url]) {
         return YES;
     }
     if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
@@ -101,7 +113,7 @@
         }
         @catch (NSException *exception) {
         }
-        return NO;
+        return YES;
     }
     return NO;
 }
@@ -186,6 +198,21 @@
     NSMutableArray *teachable = [NSMutableArray arrayWithArray:self.teachable];
     [teachable removeObject:@(tagId)];
     [self setTeachable:teachable];
+}
+
++ (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
+                                          target:(id)target
+                                          action:(SEL)action {
+    UIImageSymbolConfiguration *configuration =
+        [UIImageSymbolConfiguration configurationWithPointSize:17
+                                                        weight:UIImageSymbolWeightRegular
+                                                         scale:UIImageSymbolScaleMedium];
+    UIImage *image = [UIImage systemImageNamed:systemName
+                             withConfiguration:configuration];
+    return [[UIBarButtonItem alloc] initWithImage:image
+                                            style:UIBarButtonItemStylePlain
+                                           target:target
+                                           action:action];
 }
 
 + (void)setUpBackground:(UIView *)view {

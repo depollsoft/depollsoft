@@ -19,6 +19,10 @@ local.properties
 Thumbs.db
 .DS_Store
 
+# Retired SDK configuration
+**/fabric.properties
+CloudCode/**/config/global.json
+
 # iOS dependencies and build outputs
 iOS/Pods/
 iOS/build/

@@ -24,9 +24,8 @@ import com.bindroid.utils.bind
 import com.bindroid.utils.compiledProp
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.parse.facebook.ParseFacebookUtils
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.compat.ui.ActionBars
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
@@ -59,7 +58,6 @@ class SettingsActivity : AppCompatActivity() {
         data: Intent?,
     ) {
         super.onActivityResult(requestCode, resultCode, data)
-        ParseFacebookUtils.onActivityResult(requestCode, resultCode, data)
         loginTrackable.updateTrackers()
     }
 

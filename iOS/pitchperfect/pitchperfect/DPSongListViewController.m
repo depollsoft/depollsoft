@@ -123,8 +123,6 @@
 @property (nonatomic, strong) UIBarButtonItem *sortItem;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
 @property (nonatomic, strong) UIBarButtonItem *addItem;
-@property (nonatomic, strong) NSArray *editingButtons;
-@property (nonatomic, strong) NSArray *normalButtons;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
 @property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
@@ -132,28 +130,32 @@
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, editingButtons, normalButtons, addButton, settingsButton;
+@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, addButton, settingsButton;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
                                  ];
     
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
-    bannerView.adUnitID = @"a14fd7eba4542f0";
+    bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
+        self.view.frame.size.width
+    );
     [self resetBannerViewSize];
     
     bannerView.rootViewController = self;
+    bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     [rootLayout addSubview:bannerView row:1 column:0];
     
@@ -166,10 +168,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
     
@@ -182,24 +184,24 @@
     [rootLayout addSubview:tableView row:2 column:0];
     
     
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
     settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
 
-    addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addSong)];
+    addButton = [DPCommon barButtonWithSystemName:@"plus"
+                                                  target:self
+                                                selector:@selector(addSong)];
     
-    editItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
+    editItem = [DPCommon barButtonWithSystemName:@"pencil"
+                                            target:self
+                                          selector:@selector(edit)];
     
     sortItem = [[UIBarButtonItem alloc] initWithTitle:@"Sort Alphabetically" style:UIBarButtonItemStylePlain target:self action:@selector(sort)];
     
-    doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditing)];
+    doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
+                                            target:self
+                                          selector:@selector(doneEditing)];
     
-    normalButtons = [NSArray arrayWithObjects:editItem, flexibleSpace, settingsButton, nil];
-    editingButtons = [NSArray arrayWithObjects:doneItem, sortItem, flexibleSpace, addButton, nil];
-        
-    toolbar.items = normalButtons;
-    
-    [toolbar sizeToFit];
+    navigationItem.leftBarButtonItem = editItem;
+    navigationItem.rightBarButtonItem = settingsButton;
     
     [NSNotificationCenter.defaultCenter addObserver:self
                                            selector:@selector(songsChanged)
@@ -212,10 +214,10 @@
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -320,12 +322,15 @@
 
 - (void)edit {
     [tableView setEditing:YES animated:YES];
-    [self.toolbar setItems:editingButtons animated:YES];
+    [self.topNavigationItem setLeftBarButtonItems:@[doneItem, sortItem]
+                                         animated:YES];
+    [self.topNavigationItem setRightBarButtonItem:addButton animated:YES];
 }
 
 - (void)doneEditing {
     [tableView setEditing:NO animated:YES];
-    [self.toolbar setItems:normalButtons animated:YES];
+    [self.topNavigationItem setLeftBarButtonItem:editItem animated:YES];
+    [self.topNavigationItem setRightBarButtonItem:settingsButton animated:YES];
 }
 
 - (void)openSettings {
@@ -334,9 +339,11 @@
 
 - (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.preferredContentSize = CGSizeMake(320, 480);
-    editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
-    editor.modalPresentationStyle = UIModalPresentationAutomatic;
+    UINavigationController *navigationController =
+        [[UINavigationController alloc] initWithRootViewController:editor];
+    navigationController.preferredContentSize = CGSizeMake(320, 480);
+    navigationController.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
+    navigationController.modalPresentationStyle = UIModalPresentationAutomatic;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
         if (!cancelled) {
@@ -344,14 +351,16 @@
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    [self presentViewController:editor animated:YES completion:nil];
+    [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)addSong {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.preferredContentSize = CGSizeMake(320, 480);
-    editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-    editor.modalPresentationStyle = UIModalPresentationAutomatic;
+    UINavigationController *navigationController =
+        [[UINavigationController alloc] initWithRootViewController:editor];
+    navigationController.preferredContentSize = CGSizeMake(320, 480);
+    navigationController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    navigationController.modalPresentationStyle = UIModalPresentationAutomatic;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
@@ -366,7 +375,7 @@
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    [self presentViewController:editor animated:YES completion:nil];
+    [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)songsChanged {

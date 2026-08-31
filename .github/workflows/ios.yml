@@ -1,9 +1,8 @@
+# yamllint disable rule:line-length
 name: iOS CI
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 on:
   push:
@@ -37,6 +36,10 @@ defaults:
 jobs:
   test:
     name: iOS Unit Tests & Coverage
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     runs-on: [self-hosted, macOS]
     if: >-
       github.event_name != 'pull_request' ||
@@ -45,13 +48,14 @@ jobs:
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      # UTF-8 encoding for CocoaPods
+      # UTF-8 encoding for build tools
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
@@ -67,7 +71,9 @@ jobs:
             exit 1
           fi
 
+
           # Pin the active developer directory for subsequent steps.
+
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
           echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
 
@@ -121,101 +127,39 @@ jobs:
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
           echo "Using simulator: $DESTINATION"
 
-      - name: Setup Ruby and Install CocoaPods
-        # Works on both GitHub-hosted and self-hosted macOS runners.
-        # Prefers Homebrew Ruby (3.x) over macOS system Ruby (2.6) which is
-        # too old for modern gems.
+      - name: Install xcpretty
         run: |
-          set -euo pipefail
+          if ! command -v xcpretty >/dev/null 2>&1; then
+            gem install xcpretty --user-install --no-document
+            USER_GEM_BIN="$(ruby -e 'puts Gem.user_dir')/bin"
 
-          # Prefer Homebrew Ruby over system Ruby (macOS system Ruby 2.6 is
-          # too old)
-          if [ -x "/opt/homebrew/opt/ruby/bin/ruby" ]; then
-            export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-            export PATH="$(/opt/homebrew/opt/ruby/bin/gem \
-              environment gemdir)/bin:$PATH"
-            echo "/opt/homebrew/opt/ruby/bin" >> "$GITHUB_PATH"
-            echo "$(/opt/homebrew/opt/ruby/bin/gem \
-              environment gemdir)/bin" >> "$GITHUB_PATH"
-          elif [ -x "/usr/local/opt/ruby/bin/ruby" ]; then
-            # Intel Mac Homebrew location
-            export PATH="/usr/local/opt/ruby/bin:$PATH"
-            export PATH="$(/usr/local/opt/ruby/bin/gem \
-              environment gemdir)/bin:$PATH"
-            echo "/usr/local/opt/ruby/bin" >> "$GITHUB_PATH"
-            echo "$(/usr/local/opt/ruby/bin/gem \
-              environment gemdir)/bin" >> "$GITHUB_PATH"
-          fi
-
-          ruby --version
-          gem --version
-
-          # Check if bundler is already available
-          if ! command -v bundle &>/dev/null; then
-            echo "Bundler not found, installing to user directory..."
-            gem install bundler --user-install --no-document
-            # Add user gem bin to PATH
-            USER_GEM_BIN="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin"
-            export PATH="$USER_GEM_BIN:$PATH"
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
-          else
-            echo "Bundler already available: $(bundle --version)"
           fi
 
-          # Install gems to local vendor/bundle (no system-wide side effects)
-          bundle config set --local path vendor/bundle
-          bundle install
-
-          bundle exec pod --version
-          bundle exec xcpretty --version
-
-      # Cache CocoaPods dependencies for faster builds
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Cache SPM dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            iOS/Pods
-            ~/Library/Caches/CocoaPods
-          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+            iOS/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            pods-${{ runner.os }}-
+            spm-${{ runner.os }}-
 
-      - name: Install CocoaPods dependencies
+      - name: Resolve SPM dependencies
         run: |
-          # Remove old git-based CocoaPods repos - we now use CDN
-          # This prevents conflicts between old git repos and CDN
-          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
-            echo "Removing old git-based CocoaPods repo (now using CDN)..."
-            rm -rf "$HOME/.cocoapods/repos/cocoapods"
-          fi
-          if [ -d "$HOME/.cocoapods/repos/master" ]; then
-            echo "Removing old master CocoaPods repo (now using CDN)..."
-            rm -rf "$HOME/.cocoapods/repos/master"
-          fi
 
-          # Retry pod install up to 3 times to handle transient network failures
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3: Running pod install..."
-            if bundle exec pod install; then
-              echo "pod install succeeded on attempt $attempt"
-              exit 0
-            else
-              echo "pod install failed on attempt $attempt"
-              if [ $attempt -lt 3 ]; then
-                echo "Waiting 10 seconds before retry..."
-                sleep 10
-              fi
-            fi
-          done
-          echo "pod install failed after 3 attempts"
-          exit 1
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -clonedSourcePackagesDirPath SourcePackages
 
       - name: List available simulators
         run: >-
           ${{ steps.select_xcode.outputs.xcrun }}
           simctl list devices available
 
-      # Build all test targets once, then run tests in parallel
+      # Build all test targets once, then run tests sequentially
       - name: Build test targets
         id: build_tests
         env:
@@ -224,6 +168,7 @@ jobs:
           set -o pipefail
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -231,6 +176,7 @@ jobs:
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -238,6 +184,7 @@ jobs:
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -259,6 +206,7 @@ jobs:
 
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -270,8 +218,10 @@ jobs:
             | xcpretty --color --report junit \
               --output pitchperfect-junit.xml || FAILED=1
 
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -283,8 +233,10 @@ jobs:
             | xcpretty --color --report junit \
               --output tagmaster-junit.xml || FAILED=1
 
+
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -295,6 +247,7 @@ jobs:
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
               --output pitchperfectlib-junit.xml || FAILED=1
+
 
           # We continue even if tests fail - we'll check junit results later
           exit 0
@@ -508,7 +461,7 @@ jobs:
           fi
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-test-results
@@ -520,7 +473,7 @@ jobs:
 
       - name: Publish unit test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: iOS Unit Tests
           path: iOS/*-junit.xml
@@ -530,7 +483,7 @@ jobs:
       - name: Find existing PR comment
         if: github.event_name == 'pull_request'
         id: find_comment
-        uses: peter-evans/find-comment@v3
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: github-actions[bot]
@@ -538,7 +491,7 @@ jobs:
 
       - name: Create or update PR comment
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-id: ${{ steps.find_comment.outputs.comment-id }}
@@ -547,6 +500,9 @@ jobs:
 
   ui-tests:
     name: iOS UI Tests
+    permissions:
+      contents: read
+      checks: write
     runs-on: [self-hosted, macOS]
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
@@ -560,7 +516,8 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
@@ -613,74 +570,32 @@ jobs:
           " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
           echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
 
-      - name: Setup Ruby and Install CocoaPods
-        # Prefer Homebrew Ruby over system Ruby (macOS system Ruby 2.6 is
-        # too old)
+      - name: Install xcpretty
         run: |
-          set -euo pipefail
+          if ! command -v xcpretty >/dev/null 2>&1; then
+            gem install xcpretty --user-install --no-document
+            USER_GEM_BIN="$(ruby -e 'puts Gem.user_dir')/bin"
+            echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
 
-          if [ -x "/opt/homebrew/opt/ruby/bin/ruby" ]; then
-            # Apple Silicon Mac
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-            export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-            export PATH="$(/opt/homebrew/opt/ruby/bin/gem \
-              environment gemdir)/bin:$PATH"
-            echo "/opt/homebrew/opt/ruby/bin" >> "$GITHUB_PATH"
-            echo "$(/opt/homebrew/opt/ruby/bin/gem \
-              environment gemdir)/bin" >> "$GITHUB_PATH"
-          elif [ -x "/usr/local/opt/ruby/bin/ruby" ]; then
-            # Intel Mac
-            eval "$(/usr/local/bin/brew shellenv)"
-            export PATH="/usr/local/opt/ruby/bin:$PATH"
-            export PATH="$(/usr/local/opt/ruby/bin/gem \
-              environment gemdir)/bin:$PATH"
-            echo "/usr/local/opt/ruby/bin" >> "$GITHUB_PATH"
-            echo "$(/usr/local/opt/ruby/bin/gem \
-              environment gemdir)/bin" >> "$GITHUB_PATH"
           fi
 
-          ruby --version
-          gem --version
-
-          gem install cocoapods --no-document
-          gem install xcpretty --no-document
-
-      # Cache CocoaPods dependencies for faster builds
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
+      - name: Cache SPM dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            iOS/Pods
-            ~/Library/Caches/CocoaPods
-          key: pods-${{ runner.os }}-${{ hashFiles('iOS/Podfile.lock') }}
+            iOS/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            pods-${{ runner.os }}-
+            spm-${{ runner.os }}-
 
-      - name: Install CocoaPods dependencies
+      - name: Resolve SPM dependencies
         run: |
-          if [ -d "$HOME/.cocoapods/repos/cocoapods" ]; then
-            rm -rf "$HOME/.cocoapods/repos/cocoapods"
-          fi
-          if [ -d "$HOME/.cocoapods/repos/master" ]; then
-            rm -rf "$HOME/.cocoapods/repos/master"
-          fi
 
-          # Retry pod install up to 3 times to handle transient network failures
-          for attempt in 1 2 3; do
-            echo "Attempt $attempt of 3: Running pod install..."
-            if pod install --repo-update; then
-              echo "pod install succeeded on attempt $attempt"
-              exit 0
-            else
-              echo "pod install failed on attempt $attempt"
-              if [ $attempt -lt 3 ]; then
-                echo "Waiting 10 seconds before retry..."
-                sleep 10
-              fi
-            fi
-          done
-          echo "pod install failed after 3 attempts"
-          exit 1
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
+            -workspace iOS.xcworkspace \
+            -scheme pitchperfect \
+            -clonedSourcePackagesDirPath SourcePackages
 
       - name: Run pitchperfect UI tests
         id: pitchperfect_uitest
@@ -691,6 +606,7 @@ jobs:
           set -o pipefail
           "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -710,6 +626,7 @@ jobs:
           set -o pipefail
           "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmasterUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -779,9 +696,11 @@ jobs:
                 f"✅ **{scheme}**: {tests} tests passed "
                 f"(line coverage: {cov:.2f}%)")
             else:
+
               summary.append(
                 f"❌ **{scheme}**: {tests} tests, {failures} failures, "
                 f"{errors} errors (line coverage: {cov:.2f}%)")
+
 
           summary.append('')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
@@ -789,7 +708,7 @@ jobs:
           PY
 
       - name: Upload UI test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-uitest-results
@@ -800,7 +719,7 @@ jobs:
 
       - name: Publish UI test results (PR check)
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
         with:
           name: iOS UI Tests
           path: iOS/*-uitest-junit.xml
@@ -824,14 +743,14 @@ jobs:
 
     steps:
       - name: Download unit test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: ios-test-results
           path: iOS/unit-test-results
 
       - name: Download UI test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         continue-on-error: true
         with:
           name: ios-uitest-results
