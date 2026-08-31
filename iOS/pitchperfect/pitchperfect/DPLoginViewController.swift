@@ -14,6 +14,7 @@ import SwiftUI
 
 #if canImport(FirebaseAuthSwiftUI)
 import FirebaseAuthSwiftUI
+import FirebaseAuthUIComponents
 #endif
 #if canImport(FirebaseGoogleSwiftUI)
 import FirebaseGoogleSwiftUI
@@ -72,16 +73,12 @@ private struct PitchPerfectAppleSignInButton: View {
 
     var body: some View {
         ZStack {
-            Capsule()
-                .fill(Color.black)
-
-            HStack(spacing: 12) {
-                Image(systemName: "apple.logo")
-                    .font(.system(size: 20, weight: .medium))
-                Text("Sign in with Apple")
-                    .font(.system(size: 18, weight: .regular))
-            }
-            .foregroundStyle(.white)
+            AuthProviderButton(
+                label: "Sign in with Apple",
+                style: .apple,
+                accessibilityId: "sign-in-with-apple-visual"
+            ) {}
+            .allowsHitTesting(false)
             .accessibilityHidden(true)
 
             SignInWithAppleButton(.signIn) { request in
@@ -123,6 +120,7 @@ private struct PitchPerfectAppleSignInButton: View {
                 }
             }
             .signInWithAppleButtonStyle(.black)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .opacity(0.001)
         }
         .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
