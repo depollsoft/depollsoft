@@ -24,7 +24,9 @@ jobs:
     runs-on: [self-hosted, Linux]
     outputs:
       pr-number: ${{ steps.resolve.outputs.pr-number }}
+      pr-title: ${{ steps.resolve.outputs.pr-title }}
       head-sha: ${{ steps.resolve.outputs.head-sha }}
+      commit-message: ${{ steps.resolve.outputs.commit-message }}
     steps:
       - name: Resolve source pull request
         id: resolve
@@ -54,8 +56,15 @@ jobs:
             echo "Unable to resolve source pull request number." >&2
             exit 1
           fi
+          pr_title="$(gh api \
+            "repos/$GITHUB_REPOSITORY/pulls/$pr_number" --jq .title)"
+          commit_message="$(gh api \
+            "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA" \
+            --jq '.commit.message | split("\n")[0]')"
           echo "pr-number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr-title=$pr_title" >> "$GITHUB_OUTPUT"
           echo "head-sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "commit-message=$commit_message" >> "$GITHUB_OUTPUT"
 
   android:
     name: Android — ${{ matrix.app }}
@@ -120,15 +129,17 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
           PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
           set -euo pipefail
           apk="preview-artifacts/android/${{ matrix.apk }}"
           test -f "$apk"
-          release_notes="$(printf 'PR #%s\nCommit: %s' \
-            "$PR_NUMBER" "$COMMIT_SHA")"
+          release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$apk" \
             --app "${{ matrix.firebase_app_id }}" \
@@ -302,15 +313,17 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: >-
             ${{ steps.firebase.outputs.credentials_file }}
           PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_SHA: ${{ needs.metadata.outputs.head-sha }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
         shell: bash
         run: |
           set -euo pipefail
           ipa="iOS/build/${{ matrix.ipa }}"
           test -f "$ipa"
-          release_notes="$(printf 'PR #%s\nCommit: %s' \
-            "$PR_NUMBER" "$COMMIT_SHA")"
+          release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
+            "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$ipa" \
             --app "${{ matrix.firebase_app_id }}" \
@@ -331,3 +344,103 @@ jobs:
             "$RUNNER_TEMP/match-remote-${run_key}.git" \
             preview-artifacts \
             iOS/build
+
+  update-comments:
+    name: Update Firebase distribution comments
+    needs: [metadata, android, ios]
+    if: always() && needs.metadata.result == 'success'
+    runs-on: [self-hosted, Linux]
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Update preview and deploy comments
+        # v9.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          PR_NUMBER: ${{ needs.metadata.outputs.pr-number }}
+          SOURCE_SHA: ${{ needs.metadata.outputs.head-sha }}
+          PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
+          COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
+          ANDROID_RESULT: ${{ needs.android.result }}
+          IOS_RESULT: ${{ needs.ios.result }}
+          RUN_URL: >-
+            https://github.com/${{ github.repository }}/actions/runs/${{
+              github.run_id
+            }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = Number(process.env.PR_NUMBER);
+            const sourceSha = process.env.SOURCE_SHA;
+            const succeeded =
+              process.env.ANDROID_RESULT === 'success' &&
+              process.env.IOS_RESULT === 'success';
+            const status = succeeded ? '✅ Published' : '❌ Failed';
+            const runLink = `[View run](${process.env.RUN_URL})`;
+            const contextLine =
+              `${process.env.PR_TITLE} · ${process.env.COMMIT_MESSAGE}`;
+            const value = `${status} · ${runLink}<br>${contextLine}`;
+            const previewMarker =
+              '<!-- Sticky Pull Request Commentpreview-build -->';
+            const deployMarker = '<!-- preview-deploy-status -->';
+            const firebaseMarker = '<!-- firebase-app-distribution -->';
+            const readMeta = (body, key) => {
+              const match = body.match(new RegExp(`<!-- ${key}:(.*?) -->`));
+              return match?.[1]?.trim() || '';
+            };
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: issueNumber, per_page: 100 },
+            );
+
+            for (const comment of comments) {
+              const body = comment.body || '';
+              const isPreview =
+                body.includes(previewMarker) &&
+                readMeta(body, 'preview-build-source-sha') === sourceSha;
+              const isDeploy =
+                body.includes(deployMarker) &&
+                readMeta(body, 'preview-deploy-source-sha') === sourceSha;
+              if (!isPreview && !isDeploy) continue;
+
+              let updated = body;
+              if (isPreview) {
+                const row = `| **Firebase App Distribution** | ${value} |`;
+                const pattern = new RegExp(
+                  '^\\| \\*\\*Firebase App Distribution\\*\\* \\|.*\\|$',
+                  'm',
+                );
+                if (pattern.test(updated)) {
+                  updated = updated.replace(pattern, row);
+                } else {
+                  const iOSRow = /^(\| \*\*iOS Status\*\* \|.*\|)$/m;
+                  updated = updated.replace(iOSRow, `$1\n${row}`);
+                }
+              } else {
+                const section = [
+                  '### Firebase App Distribution',
+                  '',
+                  value,
+                  '',
+                  firebaseMarker,
+                ].join('\n');
+                const pattern = new RegExp(
+                  '### Firebase App Distribution[\\s\\S]*?' +
+                    '<!-- firebase-app-distribution -->',
+                );
+                updated = pattern.test(updated)
+                  ? updated.replace(pattern, section)
+                  : `${updated}\n\n${section}`;
+              }
+
+              if (updated !== body) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id,
+                  body: updated,
+                });
+              }
+            }
