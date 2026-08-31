@@ -230,41 +230,94 @@ jobs:
           done
           exit 1
 
-      - name: Build preview apps
+      - name: Build unsigned private archives
         working-directory: iOS
         env:
           PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
         run: |
-          set -o pipefail
+          set -euo pipefail
+          artifact_dir="$GITHUB_WORKSPACE/preview-artifacts/ios"
+          mkdir -p "$artifact_dir"
+
+          cp pitchperfect/GoogleService-Info-Private.plist \
+            pitchperfect/GoogleService-Info.plist
+          cp tagmaster/GoogleService-Info-Private.plist \
+            tagmaster/GoogleService-Info.plist
           /usr/libexec/PlistBuddy \
             -c 'Set :CFBundleDisplayName Pitch Perfect β' \
             pitchperfect/pitchperfect/pitchperfect-Info.plist
           /usr/libexec/PlistBuddy \
             -c 'Set :CFBundleDisplayName Tag Master β' \
             tagmaster/tagmaster/tagmaster-Info.plist
-          xcodebuild \
-            -workspace iOS.xcworkspace \
-            -scheme pitchperfect \
-            -configuration Debug \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private \
-            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
-            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
-            build |
-              bundle exec xcpretty --color
-          xcodebuild \
-            -workspace iOS.xcworkspace \
-            -scheme tagmaster \
-            -configuration Debug \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private \
-            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
-            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
-            build |
-              bundle exec xcpretty --color
+
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+
+          apps = (
+              (
+                  Path("pitchperfect/pitchperfect/pitchperfect.entitlements"),
+                  "depollsoft.pitchperfect",
+              ),
+              (
+                  Path("tagmaster/tagmaster/tagmaster.entitlements"),
+                  "depollsoft.tagmaster",
+              ),
+          )
+          for path, bundle_id in apps:
+              data = plistlib.loads(path.read_bytes())
+              data.pop("aps-environment", None)
+              for key, value in tuple(data.items()):
+                  if isinstance(value, str):
+                      data[key] = value.replace(
+                          bundle_id,
+                          f"{bundle_id}.private",
+                      )
+              path.write_bytes(plistlib.dumps(data))
+          PY
+
+          archive_app() {
+            scheme="$1"
+            bundle_id="$2"
+            archive="$artifact_dir/$3.xcarchive"
+            set -o pipefail
+            xcodebuild archive \
+              -workspace iOS.xcworkspace \
+              -scheme "$scheme" \
+              -configuration Release \
+              -destination 'generic/platform=iOS' \
+              -archivePath "$archive" \
+              CODE_SIGNING_ALLOWED=NO \
+              PRODUCT_BUNDLE_IDENTIFIER="$bundle_id" \
+              ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-Private \
+              CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" |
+                bundle exec xcpretty --color
+            ditto -c -k --sequesterRsrc --keepParent \
+              "$archive" "$artifact_dir/$3.xcarchive.zip"
+            rm -rf "$archive"
+          }
+
+          archive_app \
+            pitchperfect \
+            depollsoft.pitchperfect.private \
+            PitchPerfect-private
+          archive_app \
+            tagmaster \
+            depollsoft.tagmaster.private \
+            TagMaster-private
+
+      - name: Upload unsigned iOS archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: >-
+            ${{ format(
+              'ios-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
+          path: preview-artifacts/ios/*.xcarchive.zip
+          if-no-files-found: error
 
   publish-android-sharing:
     name: Publish Android Internal App Sharing

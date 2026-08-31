@@ -173,4 +173,53 @@ platform :ios do
       changelog: changelog,
     )
   end
+
+  desc "Sign and export one prebuilt archive for Firebase App Distribution"
+  lane :export_firebase_private do |options|
+    configs = {
+      "PitchPerfect" => {
+        bundle_identifier: "depollsoft.pitchperfect.private",
+        output_name: "PitchPerfect-private.ipa",
+      },
+      "TagMaster" => {
+        bundle_identifier: "depollsoft.tagmaster.private",
+        output_name: "TagMaster-private.ipa",
+      },
+    }
+    app = options[:app].to_s
+    config = configs[app]
+    UI.user_error!("Unsupported Firebase app: #{app}") unless config
+
+    archive_path = File.expand_path(options[:archive].to_s)
+    unless File.directory?(archive_path)
+      UI.user_error!("Missing archive: #{archive_path}")
+    end
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: false,
+    )
+    profile = "match AdHoc #{config[:bundle_identifier]}"
+    match(
+      type: "adhoc",
+      readonly: false,
+      app_identifier: [config[:bundle_identifier]],
+      api_key: api_key,
+    )
+    build_app(
+      skip_build_archive: true,
+      archive_path: archive_path,
+      export_method: "ad-hoc",
+      export_team_id: "43AWMS3YJX",
+      export_options: {
+        provisioningProfiles: {
+          config[:bundle_identifier] => profile,
+        },
+      },
+      output_directory: File.join(IOS_ROOT, "build"),
+      output_name: config[:output_name],
+    )
+  end
 end
