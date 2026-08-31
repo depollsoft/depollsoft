@@ -111,6 +111,7 @@
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
+		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -294,6 +295,7 @@
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
+		BE992AD2E1386173B2838076 /* DPAppLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DPAppLog.swift; path = ../../depolllib/DPAppLog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -524,6 +526,7 @@
 				631C912F15958022004733F1 /* DPSongsModel.m */,
 				1E989A3422F533F900EA9F2E /* DPSongsModel.swift */,
 				C0AUTH001000000000000002 /* Localizable.strings */,
+				BE992AD2E1386173B2838076 /* DPAppLog.swift */,
 				63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */,
 				63DC36A8151E9000007C46DB /* Supporting Files */,
 				6338EFC31979DFFA000187E2 /* Images.xcassets */,
@@ -794,6 +797,7 @@
 			files = (
 				63DC36AE151E9000007C46DB /* main.m in Sources */,
 				63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */,
+				FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */,
 				A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */,
 				A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */,
 				63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */,

@@ -74,6 +74,7 @@
         return YES;
     }
 
+    [DPAppLog start];
     [FIRApp configure];
 #if HAS_FBSDK
     [[FBSDKApplicationDelegate sharedInstance] application:application

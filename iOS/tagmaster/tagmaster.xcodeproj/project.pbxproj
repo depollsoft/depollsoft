@@ -101,6 +101,7 @@
 		8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */; };
 		8F2CF87F6E700F499150A9F1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3FFC1E12570BCD480C047A43 /* FirebaseAuth */; };
 		983BBFE829EC4993A71F6F83 /* DPSearchViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */; };
+		9D79AFECD87180F39C32C4C9 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC6EEE9DD5603384AEEA366 /* DPAppLog.swift */; };
 		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
 		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
 		C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */; };
@@ -168,6 +169,7 @@
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
 		5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = tagmasterUITests.swift; sourceTree = "<group>"; };
+		5FC6EEE9DD5603384AEEA366 /* DPAppLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DPAppLog.swift; path = ../depolllib/DPAppLog.swift; sourceTree = "<group>"; };
 		63225BF91A35523100857B44 /* LaunchScreen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPBrowseViewController.h; sourceTree = "<group>"; };
 		63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPBrowseViewController.m; sourceTree = "<group>"; };
@@ -394,6 +396,7 @@
 				1E5B19A01FE7533B00241069 /* depolllib.xcodeproj */,
 				1E5B19A11FE7533B00241069 /* Products */,
 				11447BBC18F18E9E2C6F9803 /* tagmasterUITests */,
+				E52F5D558E587538020397F1 /* Shared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -568,6 +571,14 @@
 				63D9472415145DE0000C8784 /* DPVideo.m */,
 			);
 			name = Barbershop;
+			sourceTree = "<group>";
+		};
+		E52F5D558E587538020397F1 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				5FC6EEE9DD5603384AEEA366 /* DPAppLog.swift */,
+			);
+			name = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -793,6 +804,7 @@
 				638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */,
 				639F293C1800C45300517583 /* DPTagVideoController.m in Sources */,
 				638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */,
+				9D79AFECD87180F39C32C4C9 /* DPAppLog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

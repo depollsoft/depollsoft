@@ -1,5 +1,7 @@
 package depollsoft.tagmaster
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -26,6 +28,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.compat.ui.ActionBars
 import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.util.AppLog
 import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
@@ -316,6 +319,22 @@ class SettingsActivity : AppCompatActivity() {
         )
 
         supportActionBar?.title = "Tag Master".makeTitleString(this)
+        setupPrivateBuildDiagnostics()
+    }
+
+    private fun setupPrivateBuildDiagnostics() {
+        val build = BuildConfig.PRIVATE_BUILD_NUMBER
+        if (build.isBlank()) return
+        val pr = BuildConfig.PRIVATE_PR_NUMBER.ifBlank { "?" }
+        val metadata = "Build $build · PR #$pr"
+        findViewById<View>(R.id.privateBuildDiagnostics).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.privateBuildMetadata).text = metadata
+        AppLog.info("Settings", "Private build diagnostics opened")
+        findViewById<View>(R.id.copyLogsButton).setOnClickListener {
+            val clipboard = getSystemService(ClipboardManager::class.java)
+            clipboard.setPrimaryClip(ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"))
+            Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {

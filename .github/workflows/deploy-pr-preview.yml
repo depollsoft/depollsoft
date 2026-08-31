@@ -306,6 +306,17 @@ jobs:
               deploySha,
               fallbackUrl: requestedPreviewCommentUrl,
             });
+            const matchingPreview = [...comments].reverse().find(
+              (comment) =>
+                comment.body?.includes(previewMarker) &&
+                readMeta(comment.body, 'preview-build-source-sha') ===
+                  deploySha,
+            );
+            const firebaseMatch = matchingPreview?.body?.match(
+              /^\| \*\*Firebase App Distribution\*\* \|(.*)\|$/m,
+            );
+            const firebaseStatus =
+              firebaseMatch?.[1]?.trim() || '⏳ Awaiting publication';
             const requestDetails = requestCommentId
               ? `@${requestedBy} via \`/deploy\` comment`
               : `@${requestedBy} via workflow dispatch`;
@@ -334,6 +345,7 @@ jobs:
                 : null,
               '| **Android Status** | ⏳ Deploying to Play Internal Testing |',
               '| **iOS Status** | ⏳ Uploading to TestFlight |',
+              `| **Firebase App Distribution** | ${firebaseStatus} |`,
               requestCommentUrl
                 ? '| **Request** | ' +
                   `[View /deploy comment](${requestCommentUrl}) |`
@@ -953,6 +965,17 @@ jobs:
               deploySha,
               fallbackUrl: requestedPreviewCommentUrl,
             });
+            const matchingPreview = [...comments].reverse().find(
+              (comment) =>
+                comment.body?.includes(previewMarker) &&
+                readMeta(comment.body, 'preview-build-source-sha') ===
+                  deploySha,
+            );
+            const firebaseMatch = matchingPreview?.body?.match(
+              /^\| \*\*Firebase App Distribution\*\* \|(.*)\|$/m,
+            );
+            const firebaseStatus =
+              firebaseMatch?.[1]?.trim() || '⏳ Awaiting publication';
             const requestDetails = requestCommentId
               ? `@${requestedBy} via \`/deploy\` comment`
               : `@${requestedBy} via workflow dispatch`;
@@ -1033,6 +1056,7 @@ jobs:
                 : null,
               `| **Android Status** | ${androidPlatformStatus} |`,
               `| **iOS Status** | ${iosPlatformStatus} |`,
+              `| **Firebase App Distribution** | ${firebaseStatus} |`,
               requestCommentUrl
                 ? '| **Request** | ' +
                   `[View /deploy comment](${requestCommentUrl}) |`

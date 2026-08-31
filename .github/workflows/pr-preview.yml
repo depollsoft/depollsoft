@@ -160,6 +160,9 @@ jobs:
           -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
             needs.compute-version.outputs.build-number
           }}
+          -PDEPOLLSOFT_PRIVATE_PR_NUMBER=${{
+            github.event.pull_request.number
+          }}
           --stacktrace --console=plain --no-daemon
 
       - name: Collect preview APKs
@@ -241,6 +244,7 @@ jobs:
         env:
           PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
+          PRIVATE_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           artifact_dir="$GITHUB_WORKSPACE/preview-artifacts/ios"
@@ -256,6 +260,16 @@ jobs:
           /usr/libexec/PlistBuddy \
             -c 'Set :CFBundleDisplayName Tag Master β' \
             tagmaster/tagmaster/tagmaster-Info.plist
+          for plist in \
+            pitchperfect/pitchperfect/pitchperfect-Info.plist \
+            tagmaster/tagmaster/tagmaster-Info.plist; do
+            /usr/libexec/PlistBuddy \
+              -c "Add :PrivateBuildNumber string $PRIVATE_BUILD_NUMBER" \
+              "$plist"
+            /usr/libexec/PlistBuddy \
+              -c "Add :PrivatePRNumber string $PRIVATE_PR_NUMBER" \
+              "$plist"
+          done
           PRIVATE_BUILD_NUMBER="$PRIVATE_BUILD_NUMBER" bundle exec ruby <<'RUBY'
           require "xcodeproj"
 

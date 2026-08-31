@@ -47,6 +47,21 @@ ensure
   File.write(info_plist_path, original) if original
 end
 
+def with_private_build_metadata(info_plist_path, build_number, pr_number)
+  original = File.binread(info_plist_path)
+  pr_number = "?" if pr_number.to_s.strip.empty?
+  plist_buddy = "/usr/libexec/PlistBuddy"
+  system(plist_buddy, "-c", "Delete :PrivateBuildNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Delete :PrivatePRNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Add :PrivateBuildNumber string #{build_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private build number")
+  system(plist_buddy, "-c", "Add :PrivatePRNumber string #{pr_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private PR number")
+  yield
+ensure
+  File.binwrite(info_plist_path, original) if original
+end
+
 def with_private_entitlements(entitlements_path, production_bundle_identifier:, bundle_identifier:)
   entitlements = File.read(entitlements_path)
     .gsub(
@@ -159,38 +174,44 @@ def build_private_app(
 
   with_private_google_service_config(config_dir, info_plist_file) do
     with_private_display_name(info_plist_file, display_name) do
-      with_private_entitlements(
-        entitlements_file,
-        production_bundle_identifier: production_bundle_identifier,
-        bundle_identifier: bundle_identifier,
-      ) do |private_entitlements_path|
-        with_private_signing(
-          project_path: project_file,
-          target: scheme,
+      with_private_build_metadata(
+        info_plist_file,
+        build_number,
+        ENV["PR_NUMBER"].to_s,
+      ) do
+        with_private_entitlements(
+          entitlements_file,
+          production_bundle_identifier: production_bundle_identifier,
           bundle_identifier: bundle_identifier,
-          provisioning_profile: provisioning_profile,
-          entitlements_path: private_entitlements_path,
-        ) do
-          build_app(
-            workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
-            scheme: scheme,
-            export_method: "app-store",
-            export_team_id: "43AWMS3YJX",
-            export_options: {
-              provisioningProfiles: {
-                bundle_identifier => provisioning_profile,
+        ) do |private_entitlements_path|
+          with_private_signing(
+            project_path: project_file,
+            target: scheme,
+            bundle_identifier: bundle_identifier,
+            provisioning_profile: provisioning_profile,
+            entitlements_path: private_entitlements_path,
+          ) do
+            build_app(
+              workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+              scheme: scheme,
+              export_method: "app-store",
+              export_team_id: "43AWMS3YJX",
+              export_options: {
+                provisioningProfiles: {
+                  bundle_identifier => provisioning_profile,
+                },
               },
-            },
-            xcargs: [
-              "APP_ICON_NAME=#{icon_name}",
-              "CURRENT_PROJECT_VERSION=#{build_number}",
-            ].join(" "),
-            cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
-            skip_package_dependencies_resolution: true,
-            output_directory: File.join(IOS_ROOT, "build"),
-            output_name: output_name,
-            clean: true,
-          )
+              xcargs: [
+                "APP_ICON_NAME=#{icon_name}",
+                "CURRENT_PROJECT_VERSION=#{build_number}",
+              ].join(" "),
+              cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
+              skip_package_dependencies_resolution: true,
+              output_directory: File.join(IOS_ROOT, "build"),
+              output_name: output_name,
+              clean: true,
+            )
+          end
         end
       end
     end
