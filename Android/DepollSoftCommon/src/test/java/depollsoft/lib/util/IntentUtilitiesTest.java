@@ -26,7 +26,7 @@ import static org.robolectric.Shadows.shadowOf;
  * Unit tests for the IntentUtilities class.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class IntentUtilitiesTest {
 
     private Context context;

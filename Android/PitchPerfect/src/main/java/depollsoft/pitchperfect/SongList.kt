@@ -4,7 +4,7 @@ import com.bindroid.trackable.*
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.getField
+import com.google.firebase.firestore.getField
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.toMap
 import depollsoft.pitchperfect.lib.PitchedSong
@@ -15,11 +15,10 @@ class SongList constructor() {
     lateinit var id: String
     var name: String by trackable("")
     var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection<PitchedSong>())
-    val isRestoring = object : ThreadLocal<Boolean>() {
-        override fun initialValue(): Boolean {
-            return false
+    val isRestoring =
+        object : ThreadLocal<Boolean>() {
+            override fun initialValue(): Boolean = false
         }
-    }
 
     init {
         track({
@@ -53,15 +52,18 @@ class SongList constructor() {
         val rawSongs = snapshot.getField<Any>("songs")!! as List<Any>
         try {
             isRestoring.set(true)
-            val newSongs = rawSongs.map {
-                @Suppress("UNCHECKED_CAST")
-                JsonSerializer.deserialize(JSONObject(it as Map<String, Any?>)) as PitchedSong
-            }
-            if (songs.size == newSongs.size && songs.zip(newSongs).all {
+            val newSongs =
+                rawSongs.map {
+                    @Suppress("UNCHECKED_CAST")
+                    JsonSerializer.deserialize(JSONObject(it as Map<String, Any?>)) as PitchedSong
+                }
+            if (songs.size == newSongs.size &&
+                songs.zip(newSongs).all {
                     it.first.id == it.second.id &&
-                            it.first.name == it.second.name &&
-                            it.first.key == it.second.key
-                }) {
+                        it.first.name == it.second.name &&
+                        it.first.key == it.second.key
+                }
+            ) {
                 // No change -- ignore
                 return
             }
@@ -128,10 +130,11 @@ class SongList constructor() {
             return
         }
         SongsModel.get().songLists = SongsModel.get().songLists + (id to this)
-        val dict = mapOf(
-            "name" to name,
-            "songs" to songs.map { JsonSerializer.serialize(it).toMap() }
-        )
+        val dict =
+            mapOf(
+                "name" to name,
+                "songs" to songs.map { JsonSerializer.serialize(it).toMap() },
+            )
         reference?.set(dict, SetOptions.merge())
     }
 }

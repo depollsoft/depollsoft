@@ -9,8 +9,6 @@ import android.view.View
 import com.bindroid.converters.AdapterConverter
 import com.bindroid.trackable.TrackableCollection
 import com.bindroid.ui.UiBinder
-import com.parse.GetCallback
-import com.parse.ParseUser
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.ui.ChangelogViewer
 
@@ -27,20 +25,6 @@ class MeActivity : AppCompatActivity() {
                 FavoriteTagItemView::class.java, true, true))
 
         this.supportActionBar?.title = "Tag Master".makeTitleString(this)
-
-        if (ParseUser.getCurrentUser() != null) {
-            try {
-                ParseUser.getCurrentUser().fetchInBackground(GetCallback { _, err ->
-                    if (err != null) {
-                        return@GetCallback
-                    }
-                    FavoritesModel.restoreFromUser()
-                    TeachableTagsModel.restoreFromUser()
-                })
-            } catch (e: Exception) {
-            }
-
-        }
 
         val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
         viewer.setTitle("Tag Master Changelog")

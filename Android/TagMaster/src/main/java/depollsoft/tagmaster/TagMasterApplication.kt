@@ -1,91 +1,30 @@
 package depollsoft.tagmaster
 
-import android.content.Context
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.multidex.MultiDex
 import com.bindroid.trackable.TrackableCollection
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.functions.FirebaseFunctionsException
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
-import com.parse.Parse
-import com.parse.ParseUser
-import com.parse.facebook.ParseFacebookUtils
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
-import kotlinx.coroutines.*
-import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 
 class TagMasterApplication : RichApplication() {
     override fun onCreate() {
         super.onCreate()
         JsonSerializer.registerAlias(
             TrackableCollection::class.java,
-            "depollsoft.lib.binding.ObservableCollection"
+            "depollsoft.lib.binding.ObservableCollection",
         )
-        Parse.initialize(
-            Parse.Configuration.Builder(this)
-                .server("https://tagmaster-api.depollsoft.xyz")
-                .applicationId("RhfRllVEF5Qlm0DyVWzx6zi1yjxlmCrnqFtJFwbj")
-                .clientKey("7xDIp24FCSz218vpiHhcudEb2Bytn8AzIrBfVLM4")
-                .build()
-        )
-        ParseFacebookUtils.initialize(this)
-
         Firebase.auth.addAuthStateListener {
             ListModel.connectToFirestore()
         }
-        convertParseUser()
-
         AppCompatDelegate.setDefaultNightMode(themeMode)
 
         Analytics.default.logEvent(
             Analytics.APP_OPEN,
-            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null)
+            tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null),
         )
-    }
-
-    fun convertParseUser() {
-        val curUser = ParseUser.getCurrentUser()
-        if (curUser != null && Firebase.auth.currentUser != null) {
-            ParseUser.logOut()
-            return
-        }
-        CoroutineScope(Dispatchers.Default + Job()).launch {
-            if (curUser != null) {
-                try {
-                    val sessionToken = curUser.sessionToken ?: ParseUser.getCurrentSessionTokenAsync().await()
-                    val result = Firebase.functions.getHttpsCallable("exchangeAuthToken")
-                        .call(mapOf("token" to sessionToken)).await()
-                    val dataDict = result.getData() as? Map<*, *> ?: return@launch
-                    val firebaseToken = dataDict["token"] as String
-                    Firebase.auth.signInWithCustomToken(firebaseToken).await()
-                    ParseUser.logOut()
-                    Log.d(
-                        LOG_TAG,
-                        "Logged out Parse: ${curUser.objectId} and logged in Firebase: ${Firebase.auth.currentUser?.uid}"
-                    )
-                } catch(e: FirebaseFunctionsException) {
-                    if (e.code == FirebaseFunctionsException.Code.PERMISSION_DENIED) {
-                        Log.e("depollsoft.tagmaster", "Failed to exchange token and logging out", e)
-                        ParseUser.logOut()
-                    } else {
-                        Log.e("depollsoft.tagmaster", "Failed to exchange token", e)
-                    }
-                } catch(e: Exception) {
-                    Log.e("depollsoft.tagmaster", "Failed to exchange token", e)
-                }
-            }
-        }
-    }
-
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
     }
 
     companion object {

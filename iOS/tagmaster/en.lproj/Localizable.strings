@@ -12,3 +12,4 @@
 "smartlook-consent-sdk-privacy-consent" = "Privacy policy";
 "smartlook-consent-sdk-privacy-consent-url" = "https://apps.depoll.com/privacy/";
 "smartlook-consent-sdk-analytics-consent" = "Tag Master may collect basic analytics around app usage ands crashes.";
+"Sign in with Firebase" = "Sign in to Tag Master";

@@ -131,11 +131,16 @@
     self.viewControllers = controllers;
     
     self.navigationItem.rightBarButtonItems = @[
-        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
-                                                      target:self
-                                                      action:@selector(sendTag)],
-        self.actionBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"tag"] style:UIBarButtonItemStylePlain target:self action:@selector(showActions)],
-        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshTag)]
+        [DPAppDelegate barButtonItemWithSystemName:@"square.and.arrow.up"
+                                             target:self
+                                             action:@selector(sendTag)],
+        self.actionBarButton =
+            [DPAppDelegate barButtonItemWithSystemName:@"tag"
+                                                 target:self
+                                                 action:@selector(showActions)],
+        [DPAppDelegate barButtonItemWithSystemName:@"arrow.clockwise"
+                                             target:self
+                                             action:@selector(refreshTag)]
     ];
     
     [self setTag:self.tag];

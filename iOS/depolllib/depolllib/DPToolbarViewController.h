@@ -12,10 +12,11 @@
 
 #if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION || TARGET_OS_MACCATALYST
 #import <UIKit/UIViewController.h>
-#import <UIKit/UIToolbar.h>
+#import <UIKit/UINavigationBar.h>
+#import <UIKit/UINavigationController.h>
 
 @interface DPToolbarViewController : UIViewController
-@property (nonatomic, readonly) UIToolbar *toolbar;
+@property (nonatomic, readonly) UINavigationItem *topNavigationItem;
 @end
 
 #elif TARGET_OS_OSX

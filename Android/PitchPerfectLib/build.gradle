@@ -4,14 +4,14 @@ dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
     api project(':DepollSoftCommon')
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.14.1'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
 }
 
 android {
     namespace = 'depollsoft.pitchperfect.lib'
-    compileSdk 35
+    compileSdk 37
 
     defaultConfig {
-        minSdk 21
+        minSdk 23
     }
 }

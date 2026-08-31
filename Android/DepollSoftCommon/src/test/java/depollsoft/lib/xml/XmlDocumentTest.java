@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class XmlDocumentTest {
     @Test
     public void parse_simpleXml_builds_tree_with_attributes() {

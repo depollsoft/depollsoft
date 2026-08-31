@@ -8,8 +8,8 @@
 
 import Foundation
 import AppTrackingTransparency
-import Firebase
-import Parse
+import FirebaseAuth
+import FirebaseFirestore
 import AVKit
 
 public extension Notification.Name {
@@ -18,7 +18,7 @@ public extension Notification.Name {
 
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
-    private static let LISTS_KEY = "depollsoft.pitchperfect.lists"
+    private static let listsKey = "depollsoft.pitchperfect.lists"
     
     @objc static func setTeachable(_ teachables: [Int]) {
         setTeachable(teachables, doSave: true)
@@ -26,9 +26,9 @@ public extension DPAppDelegate {
     
     @objc static func setTeachable(_ teachables: [Int], doSave: Bool) {
         let oldTeachables = DPAppDelegate.teachable()
-        var lists = UserDefaults.standard.dictionary(forKey: LISTS_KEY) ?? [:]
+        var lists = UserDefaults.standard.dictionary(forKey: listsKey) ?? [:]
         lists["teachable"] = teachables
-        UserDefaults.standard.set(lists, forKey: LISTS_KEY)
+        UserDefaults.standard.set(lists, forKey: listsKey)
         if !oldTeachables.elementsEqual(teachables) {
             if doSave && userDoc != nil {
                 userDoc?.setData(["lists": ["teachable": teachables]], mergeFields: ["lists.teachable"])
@@ -38,16 +38,15 @@ public extension DPAppDelegate {
     }
     
     @objc static func teachable() -> [Int] {
-        let dict = UserDefaults.standard.dictionary(forKey: LISTS_KEY)
+        let dict = UserDefaults.standard.dictionary(forKey: listsKey)
         return dict?["teachable"] as? [Int] ?? []
     }
     
     static func oldTeachable() -> [Int]? {
-        let array = UserDefaults.standard.array(forKey: "teachable")
-        if array != nil {
-            return array!.map({ v -> Int in (v as! NSNumber).intValue})
+        guard let array = UserDefaults.standard.array(forKey: "teachable") else {
+            return nil
         }
-        return nil
+        return array.compactMap { ($0 as? NSNumber)?.intValue }
     }
     
     @objc static func setFavorites(_ favorites: [Int]) {
@@ -56,9 +55,9 @@ public extension DPAppDelegate {
     
     @objc static func setFavorites(_ favorites: [Int], doSave: Bool) {
         let oldFavorites = DPAppDelegate.favorites()
-        var lists = UserDefaults.standard.dictionary(forKey: LISTS_KEY) ?? [:]
+        var lists = UserDefaults.standard.dictionary(forKey: listsKey) ?? [:]
         lists["favorite"] = favorites
-        UserDefaults.standard.set(lists, forKey: LISTS_KEY)
+        UserDefaults.standard.set(lists, forKey: listsKey)
         if !oldFavorites.elementsEqual(favorites) {
             if doSave && userDoc != nil {
                 userDoc?.setData(["lists": ["favorite": favorites]], mergeFields: ["lists.favorite"])
@@ -68,16 +67,15 @@ public extension DPAppDelegate {
     }
     
     @objc static func favorites() -> [Int] {
-        let dict = UserDefaults.standard.dictionary(forKey: LISTS_KEY)
+        let dict = UserDefaults.standard.dictionary(forKey: listsKey)
         return dict?["favorite"] as? [Int] ?? []
     }
     
     static func oldFavorites() -> [Int]? {
-        let array = UserDefaults.standard.array(forKey: "favorites")
-        if array != nil {
-            return array!.map({ v -> Int in (v as! NSNumber).intValue})
+        guard let array = UserDefaults.standard.array(forKey: "favorites") else {
+            return nil
         }
-        return nil
+        return array.compactMap { ($0 as? NSNumber)?.intValue }
     }
     
     private static func migrateOldLists() {
@@ -93,11 +91,15 @@ public extension DPAppDelegate {
         
     @objc func extraInit() {
         DPAppDelegate.migrateOldLists()
-        convertParseUser()
-        try! AVAudioSession.sharedInstance().setCategory(.playback)
+
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
         
         var registration: ListenerRegistration? = nil
-        _ = Auth.auth().addStateDidChangeListener { (auth, user) in
+        _ = Auth.auth().addStateDidChangeListener { (_, user) in
             if registration != nil {
                 registration?.remove()
             }
@@ -118,8 +120,12 @@ public extension DPAppDelegate {
                         return
                     }
                     
-                    let teachableIds = (snapshot?.get("lists.teachable") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldTeachable
-                    let favoriteIds = (snapshot?.get("lists.favorite") as? [Any])?.map({ v -> Int in (v as! NSNumber).intValue}) ?? oldFavorites
+                    let teachableIds = (snapshot?.get("lists.teachable") as? [Any])?.compactMap {
+                        ($0 as? NSNumber)?.intValue
+                    } ?? oldTeachable
+                    let favoriteIds = (snapshot?.get("lists.favorite") as? [Any])?.compactMap {
+                        ($0 as? NSNumber)?.intValue
+                    } ?? oldFavorites
                                         
                     // Don't try to write these back to the server -- they're already there.
                     DPAppDelegate.setTeachable(teachableIds, doSave: false)
@@ -136,26 +142,4 @@ public extension DPAppDelegate {
         }
     }
     
-    func convertParseUser() {
-        let curUser = PFUser.current()
-        if curUser != nil {
-            Functions.functions().httpsCallable("exchangeAuthToken")
-                .call(["token":curUser?.sessionToken]) { res, error in
-                    if error != nil {
-                        print(error!)
-                        return
-                    }
-                    let dataDict = res!.data as! Dictionary<String, Any>
-                    let firebaseToken = dataDict["token"] as! String
-                    Auth.auth().signIn(withCustomToken: firebaseToken){ (res, error) in
-                        if error != nil {
-                            print(error!)
-                            return
-                        }
-                        PFUser.logOut()
-                        print("Logged out Parse: \(curUser!.objectId!) and logged in Firebase: \(res!.user.uid)")
-                    }
-            }
-        }
-    }
 }

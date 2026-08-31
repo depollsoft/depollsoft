@@ -1,12 +1,12 @@
 package depollsoft.pitchperfect
 
 import com.bindroid.trackable.TrackableCollection
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference
@@ -20,7 +20,7 @@ import kotlinx.coroutines.tasks.await
 class SongsModel private constructor() {
     var songLists: Map<String, SongList> by writeThroughPreference(
         SONG_LISTS_KEY,
-        mapOf()
+        mapOf(),
     )
 
     val defaultSongList: SongList
@@ -40,28 +40,31 @@ class SongsModel private constructor() {
     }
 
     private fun listenForSongLists() {
-        val listener = userDoc?.collection("songLists")?.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                return@addSnapshotListener
-            }
-            snapshot!!.documentChanges.forEach {
-                when (it.type) {
-                    DocumentChange.Type.ADDED -> {
-                        if (songLists.containsKey(it.document.id)) {
-                            songLists[it.document.id]?.restore(it.document)
-                        } else {
-                            songLists = songLists + (it.document.id to SongList(it.document))
+        val listener =
+            userDoc?.collection("songLists")?.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                snapshot!!.documentChanges.forEach {
+                    when (it.type) {
+                        DocumentChange.Type.ADDED -> {
+                            if (songLists.containsKey(it.document.id)) {
+                                songLists[it.document.id]?.restore(it.document)
+                            } else {
+                                songLists = songLists + (it.document.id to SongList(it.document))
+                            }
                         }
-                    }
-                    DocumentChange.Type.MODIFIED -> {
-                        songLists[it.document.id]?.restore(it.document)
-                    }
-                    DocumentChange.Type.REMOVED -> {
-                        removeSongList(it.document.id)
+
+                        DocumentChange.Type.MODIFIED -> {
+                            songLists[it.document.id]?.restore(it.document)
+                        }
+
+                        DocumentChange.Type.REMOVED -> {
+                            removeSongList(it.document.id)
+                        }
                     }
                 }
             }
-        }
         if (listener != null) {
             allListeners.add(listener)
         }
