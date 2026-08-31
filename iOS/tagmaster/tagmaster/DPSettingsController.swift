@@ -71,44 +71,62 @@ private struct TagMasterAppleSignInButton: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        SignInWithAppleButton(.signIn) { request in
-            do {
-                let nonce = try TagMasterAppleNonce.random()
-                self.nonce = nonce
-                request.requestedScopes = [.fullName, .email]
-                request.nonce = TagMasterAppleNonce.hash(nonce)
-            } catch {
-                errorMessage = error.localizedDescription
+        ZStack {
+            Capsule()
+                .fill(Color.black)
+
+            HStack(spacing: 12) {
+                Image(systemName: "apple.logo")
+                    .font(.system(size: 20, weight: .medium))
+                Text("Sign in with Apple")
+                    .font(.system(size: 18, weight: .regular))
             }
-        } onCompletion: { result in
-            Task { @MainActor in
+            .foregroundStyle(.white)
+            .accessibilityHidden(true)
+
+            SignInWithAppleButton(.signIn) { request in
                 do {
-                    let authorization = try result.get()
-                    guard let appleCredential =
-                            authorization.credential as? ASAuthorizationAppleIDCredential,
-                          let tokenData = appleCredential.identityToken,
-                          let token = String(data: tokenData, encoding: .utf8),
-                          let nonce else {
-                        throw NSError(
-                            domain: "TagMasterAppleSignIn",
-                            code: -1,
-                            userInfo: [NSLocalizedDescriptionKey: "Apple did not return valid credentials."]
-                        )
-                    }
-                    let credential = OAuthProvider.appleCredential(
-                        withIDToken: token,
-                        rawNonce: nonce,
-                        fullName: appleCredential.fullName
-                    )
-                    _ = try await authService.signIn(credentials: credential)
+                    let nonce = try TagMasterAppleNonce.random()
+                    self.nonce = nonce
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = TagMasterAppleNonce.hash(nonce)
                 } catch {
                     errorMessage = error.localizedDescription
                 }
+            } onCompletion: { result in
+                Task { @MainActor in
+                    do {
+                        let authorization = try result.get()
+                        guard let appleCredential =
+                                authorization.credential as? ASAuthorizationAppleIDCredential,
+                              let tokenData = appleCredential.identityToken,
+                              let token = String(data: tokenData, encoding: .utf8),
+                              let nonce else {
+                            throw NSError(
+                                domain: "TagMasterAppleSignIn",
+                                code: -1,
+                                userInfo: [
+                                    NSLocalizedDescriptionKey:
+                                        "Apple did not return valid credentials."
+                                ]
+                            )
+                        }
+                        let credential = OAuthProvider.appleCredential(
+                            withIDToken: token,
+                            rawNonce: nonce,
+                            fullName: appleCredential.fullName
+                        )
+                        _ = try await authService.signIn(credentials: credential)
+                    } catch {
+                        errorMessage = error.localizedDescription
+                    }
+                }
             }
+            .signInWithAppleButtonStyle(.black)
+            .opacity(0.001)
         }
-        .signInWithAppleButtonStyle(.black)
         .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
-        .clipShape(Capsule())
+        .contentShape(Capsule())
         .alert(
             "Apple sign-in failed",
             isPresented: Binding(
