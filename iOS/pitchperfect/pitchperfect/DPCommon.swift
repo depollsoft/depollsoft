@@ -30,10 +30,14 @@ import Foundation
             systemName: systemName,
             withConfiguration: configuration
         )
-        let control = UIControl(frame: CGRect(x: 0, y: 0, width: 44, height: 44))
-        control.addTarget(target, action: selector, for: .touchUpInside)
-        control.accessibilityIdentifier = systemName
-        control.accessibilityLabel = [
+        let item = UIBarButtonItem(
+            image: image,
+            style: .plain,
+            target: target,
+            action: selector
+        )
+        item.accessibilityIdentifier = systemName
+        item.accessibilityLabel = [
             "checkmark": "Done",
             "xmark": "Close",
             "gearshape": "Settings",
@@ -43,32 +47,6 @@ import Foundation
             "magnifyingglass": "Search",
             "arrow.clockwise": "Refresh",
         ][systemName] ?? systemName
-        control.accessibilityTraits = .button
-
-        var buttonConfiguration: UIButton.Configuration
-        if #available(iOS 26.0, *) {
-            buttonConfiguration = .glass()
-        } else {
-            buttonConfiguration = .gray()
-        }
-        buttonConfiguration.image = image
-        buttonConfiguration.buttonSize = .mini
-        buttonConfiguration.contentInsets = NSDirectionalEdgeInsets(
-            top: 8,
-            leading: 8,
-            bottom: 8,
-            trailing: 8
-        )
-
-        let visualButton = UIButton(configuration: buttonConfiguration)
-        visualButton.frame = CGRect(x: 4, y: 4, width: 36, height: 36)
-        visualButton.isUserInteractionEnabled = false
-        control.addSubview(visualButton)
-
-        let item = UIBarButtonItem(customView: control)
-        if #available(iOS 26.0, *) {
-            item.hidesSharedBackground = true
-        }
         return item
     }
 

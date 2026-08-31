@@ -143,7 +143,7 @@
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
                                  ];

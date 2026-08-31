@@ -72,15 +72,14 @@ private struct TagMasterAppleSignInButton: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        ZStack {
-            AuthProviderButton(
-                label: "Sign in with Apple",
-                style: .apple,
-                accessibilityId: "sign-in-with-apple-visual"
-            ) {}
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-
+        AuthProviderButton(
+            label: "Sign in with Apple",
+            style: .apple,
+            accessibilityId: "sign-in-with-apple-visual"
+        ) {}
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .overlay {
             SignInWithAppleButton(.signIn) { request in
                 do {
                     let nonce = try TagMasterAppleNonce.random()
@@ -123,7 +122,6 @@ private struct TagMasterAppleSignInButton: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .opacity(0.001)
         }
-        .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
         .contentShape(Capsule())
         .alert(
             "Apple sign-in failed",

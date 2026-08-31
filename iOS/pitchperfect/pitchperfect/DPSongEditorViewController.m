@@ -51,7 +51,7 @@
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
+                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimension],
                                  [DPGridDimension dimensionWithStars:1]
