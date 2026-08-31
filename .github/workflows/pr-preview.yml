@@ -211,6 +211,26 @@ jobs:
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: iOS
+
+      - name: Install CocoaPods
+        working-directory: iOS
+        run: |
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt of 3: pod install"
+            if bundle exec pod install; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
+
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
@@ -229,41 +249,114 @@ jobs:
             -scheme pitchperfect \
             -clonedSourcePackagesDirPath SourcePackages
 
-      - name: Build preview apps
+      - name: Build unsigned private archives
         working-directory: iOS
         env:
           PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
         run: |
-          set -o pipefail
+          set -euo pipefail
+          artifact_dir="$GITHUB_WORKSPACE/preview-artifacts/ios"
+          mkdir -p "$artifact_dir"
+
+          cp pitchperfect/GoogleService-Info-Private.plist \
+            pitchperfect/GoogleService-Info.plist
+          cp tagmaster/GoogleService-Info-Private.plist \
+            tagmaster/GoogleService-Info.plist
           /usr/libexec/PlistBuddy \
             -c 'Set :CFBundleDisplayName Pitch Perfect β' \
             pitchperfect/pitchperfect/pitchperfect-Info.plist
           /usr/libexec/PlistBuddy \
             -c 'Set :CFBundleDisplayName Tag Master β' \
             tagmaster/tagmaster/tagmaster-Info.plist
-          xcodebuild \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme pitchperfect \
-            -configuration Debug \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.pitchperfect.private \
-            APP_ICON_NAME=AppIcon-Private \
-            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
-            build
-          xcodebuild \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme tagmaster \
-            -configuration Debug \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            PRODUCT_BUNDLE_IDENTIFIER=depollsoft.tagmaster.private \
-            APP_ICON_NAME=AppIcon-Private \
-            CURRENT_PROJECT_VERSION="$PRIVATE_BUILD_NUMBER" \
-            build
+          PRIVATE_BUILD_NUMBER="$PRIVATE_BUILD_NUMBER" bundle exec ruby <<'RUBY'
+          require "xcodeproj"
+
+          apps = {
+            "pitchperfect/pitchperfect.xcodeproj" => [
+              "pitchperfect",
+              "depollsoft.pitchperfect.private",
+            ],
+            "tagmaster/tagmaster.xcodeproj" => [
+              "tagmaster",
+              "depollsoft.tagmaster.private",
+            ],
+          }
+          apps.each do |path, (target_name, bundle_id)|
+            project = Xcodeproj::Project.open(path)
+            target = project.targets.find { |item| item.name == target_name }
+            abort("Missing target #{target_name}") unless target
+            target.build_configurations.each do |configuration|
+              next unless configuration.name == "Release"
+              settings = configuration.build_settings
+              settings["PRODUCT_BUNDLE_IDENTIFIER"] = bundle_id
+              settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon-Private"
+              settings["CURRENT_PROJECT_VERSION"] = ENV.fetch(
+                "PRIVATE_BUILD_NUMBER",
+              )
+            end
+            project.save
+          end
+          RUBY
+
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+
+          apps = (
+              (
+                  Path("pitchperfect/pitchperfect/pitchperfect.entitlements"),
+                  "depollsoft.pitchperfect",
+              ),
+              (
+                  Path("tagmaster/tagmaster/tagmaster.entitlements"),
+                  "depollsoft.tagmaster",
+              ),
+          )
+          for path, bundle_id in apps:
+              data = plistlib.loads(path.read_bytes())
+              data.pop("aps-environment", None)
+              for key, value in tuple(data.items()):
+                  if isinstance(value, str):
+                      data[key] = value.replace(
+                          bundle_id,
+                          f"{bundle_id}.private",
+                      )
+              path.write_bytes(plistlib.dumps(data))
+          PY
+
+          archive_app() {
+            scheme="$1"
+            archive="$artifact_dir/$2.xcarchive"
+            set -o pipefail
+            xcodebuild archive \
+              -workspace iOS.xcworkspace \
+              -clonedSourcePackagesDirPath SourcePackages \
+              -scheme "$scheme" \
+              -configuration Release \
+              -destination 'generic/platform=iOS' \
+              -archivePath "$archive" \
+              CODE_SIGNING_ALLOWED=NO |
+                bundle exec xcpretty --color
+            ditto -c -k --sequesterRsrc --keepParent \
+              "$archive" "$artifact_dir/$2.xcarchive.zip"
+            rm -rf "$archive"
+          }
+
+          archive_app pitchperfect PitchPerfect-private
+          archive_app tagmaster TagMaster-private
+
+      - name: Upload unsigned iOS archives
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: >-
+            ${{ format(
+              'ios-preview-{0}-{1}',
+              github.event.pull_request.number,
+              needs.compute-version.outputs.build-number
+            ) }}
+          path: preview-artifacts/ios/*.xcarchive.zip
+          if-no-files-found: error
 
   publish-android-sharing:
     name: Publish Android Internal App Sharing
