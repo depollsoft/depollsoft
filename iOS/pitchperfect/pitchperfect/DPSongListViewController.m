@@ -123,8 +123,6 @@
 @property (nonatomic, strong) UIBarButtonItem *sortItem;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
 @property (nonatomic, strong) UIBarButtonItem *addItem;
-@property (nonatomic, strong) NSArray *editingButtons;
-@property (nonatomic, strong) NSArray *normalButtons;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
 @property (nonatomic, strong) UIBarButtonItem *settingsButton;
 
@@ -132,13 +130,14 @@
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, editingButtons, normalButtons, addButton, settingsButton;
+@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, addButton, settingsButton;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationBar *navigationBar = self.topNavigationBar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
@@ -170,10 +169,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
     
@@ -185,8 +184,6 @@
     tableView.backgroundColor = [UIColor clearColor];
     [rootLayout addSubview:tableView row:2 column:0];
     
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     
     settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
 
@@ -204,12 +201,8 @@
                                             target:self
                                           selector:@selector(doneEditing)];
     
-    normalButtons = [NSArray arrayWithObjects:editItem, flexibleSpace, settingsButton, nil];
-    editingButtons = [NSArray arrayWithObjects:doneItem, sortItem, flexibleSpace, addButton, nil];
-        
-    toolbar.items = normalButtons;
-    
-    [toolbar sizeToFit];
+    navigationItem.leftBarButtonItem = editItem;
+    navigationItem.rightBarButtonItem = settingsButton;
     
     [NSNotificationCenter.defaultCenter addObserver:self
                                            selector:@selector(songsChanged)
@@ -222,10 +215,10 @@
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -330,12 +323,15 @@
 
 - (void)edit {
     [tableView setEditing:YES animated:YES];
-    [self.toolbar setItems:editingButtons animated:YES];
+    [self.topNavigationItem setLeftBarButtonItems:@[doneItem, sortItem]
+                                         animated:YES];
+    [self.topNavigationItem setRightBarButtonItem:addButton animated:YES];
 }
 
 - (void)doneEditing {
     [tableView setEditing:NO animated:YES];
-    [self.toolbar setItems:normalButtons animated:YES];
+    [self.topNavigationItem setLeftBarButtonItem:editItem animated:YES];
+    [self.topNavigationItem setRightBarButtonItem:settingsButton animated:YES];
 }
 
 - (void)openSettings {

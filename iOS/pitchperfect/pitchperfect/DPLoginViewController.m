@@ -42,7 +42,8 @@
 {
     [super viewDidLoad];
     
-    UIToolbar *toolbar = self.toolbar;
+    UINavigationBar *navigationBar = self.topNavigationBar;
+    UINavigationItem *navigationItem = self.topNavigationItem;
     
     // Do any additional setup after loading the view, typically from a nib.
     self.view.backgroundColor = [UIColor systemBackgroundColor];
@@ -54,19 +55,17 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
     
-    [toolbar addTitle:@"Log In To Pitch Perfect"];
-    
-    UIBarButtonItem *skipItem = [[UIBarButtonItem alloc] initWithTitle:@"Skip" style:UIBarButtonItemStylePlain target:nil action:@selector(skip)];
-    
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    
-    
-    toolbar.items = [NSArray arrayWithObjects:flexibleSpace, skipItem, nil];
+    navigationItem.title = @"Log In To Pitch Perfect";
+    navigationItem.rightBarButtonItem =
+        [[UIBarButtonItem alloc] initWithTitle:@"Skip"
+                                        style:UIBarButtonItemStylePlain
+                                       target:self
+                                       action:@selector(skip)];
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
@@ -119,10 +118,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolbar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(toolbar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
     [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;
