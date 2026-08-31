@@ -108,6 +108,7 @@ private struct PitchPerfectAppleSignInButton: View {
         }
         .signInWithAppleButtonStyle(.black)
         .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 50)
+        .clipShape(Capsule())
         .alert(
             "Apple sign-in failed",
             isPresented: Binding(
