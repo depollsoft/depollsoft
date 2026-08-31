@@ -24,8 +24,13 @@ public extension Notification.Name {
     @objc public static let settingsChangedNotificationName = Notification.Name.settingsChanged
     
     @objc public func attachToFirestore() {
-        let user = Auth.auth().currentUser
-        userRef = Firestore.firestore().document("users/\(user!.uid)")
+        guard let user = Auth.auth().currentUser else {
+            detachFromFirestore()
+            return
+        }
+
+        listenerRegistration?.remove()
+        userRef = Firestore.firestore().document("users/\(user.uid)")
         listenerRegistration = userRef?.addSnapshotListener { snapshot, error in
             if error != nil {
                 return

@@ -66,11 +66,16 @@ struct FirebaseAuthView: View {
             // This is shown when authenticated - we immediately dismiss
             Color.clear
                 .onAppear {
+                    guard let currentUser = authService.currentUser,
+                          Auth.auth().currentUser?.uid == currentUser.uid else {
+                        return
+                    }
+
                     // Use time-based comparison with tolerance since date equality can be unreliable
-                    let metadata = authService.currentUser?.metadata
+                    let metadata = currentUser.metadata
                     let isNewUser: Bool
-                    if let creationDate = metadata?.creationDate,
-                       let lastSignInDate = metadata?.lastSignInDate {
+                    if let creationDate = metadata.creationDate,
+                       let lastSignInDate = metadata.lastSignInDate {
                         isNewUser = abs(creationDate.timeIntervalSince(lastSignInDate)) <= 1.0
                     } else {
                         isNewUser = false
