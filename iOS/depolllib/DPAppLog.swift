@@ -40,7 +40,10 @@ public final class DPAppLog: NSObject {
         guard let data = try? Data(contentsOf: fileURL), data.count > maximumBytes else {
             return
         }
-        let tail = data.suffix(maximumBytes / 2)
-        try? Data(tail).write(to: fileURL, options: .atomic)
+        var start = data.count - maximumBytes / 2
+        while start < data.count, data[start] & 0xC0 == 0x80 {
+            start += 1
+        }
+        try? data.subdata(in: start..<data.count).write(to: fileURL, options: .atomic)
     }
 }

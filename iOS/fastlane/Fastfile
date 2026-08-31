@@ -36,6 +36,7 @@ end
 
 def with_private_build_metadata(info_plist_path, build_number, pr_number)
   original = File.binread(info_plist_path)
+  pr_number = "?" if pr_number.to_s.strip.empty?
   plist_buddy = "/usr/libexec/PlistBuddy"
   system(plist_buddy, "-c", "Delete :PrivateBuildNumber", info_plist_path, out: File::NULL, err: File::NULL)
   system(plist_buddy, "-c", "Delete :PrivatePRNumber", info_plist_path, out: File::NULL, err: File::NULL)

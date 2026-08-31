@@ -88,6 +88,9 @@ public final class AppLog {
     }
     byte[] bytes = readBytes(file);
     int start = Math.max(0, bytes.length - (int) (MAX_BYTES / 2));
+    while (start < bytes.length && (bytes[start] & 0xC0) == 0x80) {
+      start++;
+    }
     try (FileOutputStream output = new FileOutputStream(file, false)) {
       output.write(bytes, start, bytes.length - start);
     }
