@@ -26,6 +26,7 @@ platform :android do
         project_dir: ".",
         properties: {
           "DEPOLLSOFT_PRIVATE_BUILD_NUMBER" => build_number,
+          "DEPOLLSOFT_PRIVATE_PR_NUMBER" => ENV["PR_NUMBER"].to_s,
         },
       )
     end

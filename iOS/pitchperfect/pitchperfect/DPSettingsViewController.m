@@ -252,6 +252,19 @@
             }
             break;
         }
+        case 2:
+        {
+            if (indexPath.row == 0) {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"BuildCell"];
+                cell.textLabel.text = @"Private Build";
+                cell.detailTextLabel.text = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
+            } else {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"CopyLogsCell"];
+                cell.textLabel.text = @"Copy Logs";
+                [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(copyLogs)]];
+            }
+            break;
+        }
         default:
             break;
     }
@@ -319,6 +332,8 @@
             return 2;
         case 1:
             return [FIRAuth auth].currentUser ? 2 : 1;
+        case 2:
+            return [self isPrivateBuild] ? 2 : 0;
         default:
             break;
     }
@@ -326,7 +341,7 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
+    return [self isPrivateBuild] ? 3 : 2;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
@@ -346,6 +361,24 @@
         return @"Log in to back up and synchronize your song list and settings.";
     }
     return nil;
+}
+
+- (BOOL)isPrivateBuild {
+    return [self privateBuildNumber].length > 0;
+}
+
+- (NSString *)privateBuildNumber {
+    return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PrivateBuildNumber"] ?: @"";
+}
+
+- (NSString *)privatePRNumber {
+    return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PrivatePRNumber"] ?: @"?";
+}
+
+- (void)copyLogs {
+    NSString *metadata = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
+    [DPAppLog log:@"Settings: copied app logs"];
+    [UIPasteboard generalPasteboard].string = [NSString stringWithFormat:@"%@\n\n%@", metadata, [DPAppLog contents]];
 }
 
 - (void)complete {

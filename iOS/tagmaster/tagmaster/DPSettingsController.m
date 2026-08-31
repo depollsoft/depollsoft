@@ -50,20 +50,16 @@
     self.title = @"Settings";
     
     DPGridLayout *grid = [[DPGridLayout alloc] init];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension]
-                           ];
+    NSMutableArray *rows = [NSMutableArray array];
+    for (NSInteger index = 0; index < 12; index++) {
+        [rows addObject:[DPGridDimension dimension]];
+    }
+    if ([self isPrivateBuild]) {
+        [rows addObject:[DPGridDimension dimension]];
+        [rows addObject:[DPGridDimension dimension]];
+        [rows addObject:[DPGridDimension dimension]];
+    }
+    grid.rowDimensions = rows;
     grid.columnDimensions = @[
                               [DPGridDimension dimension],
                               [DPGridDimension dimensionWithSize:8],
@@ -123,6 +119,18 @@
     [grid addSubview:[self.sheetMusic padHorizontal:0 vertical:8] row:10 column:2];
     [grid addSubview:learningTracksHeader row:11 column:0];
     [grid addSubview:[self.learningTracks padHorizontal:0 vertical:8] row:11 column:2];
+    if ([self isPrivateBuild]) {
+        UILabel *buildHeader = [self makeTitleLabel];
+        buildHeader.text = @"Private Build";
+        UILabel *metadata = [self makeBodyLabel];
+        metadata.text = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
+        UIButton *copyLogs = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+        [copyLogs setTitle:@"Copy Logs" forState:UIControlStateNormal];
+        [copyLogs addTarget:self action:@selector(copyLogs) forControlEvents:UIControlEventTouchUpInside];
+        [grid addSubview:buildHeader row:12 column:0 rowSpan:1 colSpan:3];
+        [grid addSubview:metadata row:13 column:0 rowSpan:1 colSpan:3];
+        [grid addSubview:copyLogs row:14 column:0 rowSpan:1 colSpan:3];
+    }
     
     [self.logInButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
     
@@ -240,6 +248,24 @@
 
 + (void)setLearningTracksValue:(NSInteger)value {
     [[NSUserDefaults standardUserDefaults] setInteger:value forKey:@"random.learningTracks"];
+}
+
+- (BOOL)isPrivateBuild {
+    return [self privateBuildNumber].length > 0;
+}
+
+- (NSString *)privateBuildNumber {
+    return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PrivateBuildNumber"] ?: @"";
+}
+
+- (NSString *)privatePRNumber {
+    return [[NSBundle mainBundle] objectForInfoDictionaryKey:@"PrivatePRNumber"] ?: @"?";
+}
+
+- (void)copyLogs {
+    NSString *metadata = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
+    [DPAppLog log:@"Settings: copied app logs"];
+    [UIPasteboard generalPasteboard].string = [NSString stringWithFormat:@"%@\n\n%@", metadata, [DPAppLog contents]];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {

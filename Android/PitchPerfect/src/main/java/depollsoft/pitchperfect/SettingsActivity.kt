@@ -1,6 +1,8 @@
 package depollsoft.pitchperfect
 
 import android.app.Dialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -29,6 +31,7 @@ import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
 import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -219,6 +222,24 @@ class SettingsActivity : AppCompatActivity() {
             if (!this@SettingsActivity.isDestroyed) {
                 keepTracking
             }
+        }
+        setupPrivateBuildDiagnostics()
+    }
+
+    private fun setupPrivateBuildDiagnostics() {
+        val build = BuildConfig.PRIVATE_BUILD_NUMBER
+        if (build.isBlank()) return
+        val pr = BuildConfig.PRIVATE_PR_NUMBER.ifBlank { "?" }
+        val metadata = "Build $build · PR #$pr"
+        findViewById<View>(R.id.privateBuildDiagnostics).visibility = View.VISIBLE
+        findViewById<android.widget.TextView>(R.id.privateBuildMetadata).text = metadata
+        AppLog.info("Settings", "Private build diagnostics opened")
+        findViewById<View>(R.id.copyLogsButton).setOnClickListener {
+            val clipboard = getSystemService(ClipboardManager::class.java)
+            clipboard.setPrimaryClip(
+                ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"),
+            )
+            Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
         }
     }
 
