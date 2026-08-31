@@ -59,11 +59,9 @@ def build_private_app(
   display_name:,
   icon_name:,
   output_name:,
-  build_number:,
-  export_method: "app-store",
-  profile_type: "AppStore"
+  build_number:
 )
-  provisioning_profile = "match #{profile_type} #{bundle_identifier}"
+  provisioning_profile = "match AppStore #{bundle_identifier}"
   entitlements_file = File.join(IOS_ROOT, entitlements_path)
   info_plist_file = File.join(IOS_ROOT, info_plist_path)
 
@@ -74,45 +72,30 @@ def build_private_app(
         production_bundle_identifier: production_bundle_identifier,
         bundle_identifier: bundle_identifier,
       ) do |private_entitlements_path|
-        project_path = File.join(IOS_ROOT, config_dir, "#{scheme}.xcodeproj")
-        project_file = File.join(project_path, "project.pbxproj")
-        original_project = File.read(project_file)
-
-        begin
-          update_code_signing_settings(
-            path: project_path,
-            use_automatic_signing: false,
-            sdk: "iphoneos*",
-            team_id: "43AWMS3YJX",
-            targets: [scheme],
-            build_configurations: ["Release"],
-            code_sign_identity: "Apple Distribution",
-            entitlements_file_path: private_entitlements_path,
-            profile_name: provisioning_profile,
-            bundle_identifier: bundle_identifier,
-          )
-
-          build_app(
-            workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
-            scheme: scheme,
-            export_method: export_method,
-            export_team_id: "43AWMS3YJX",
-            export_options: {
-              provisioningProfiles: {
-                bundle_identifier => provisioning_profile,
-              },
+        build_app(
+          workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+          scheme: scheme,
+          export_method: "app-store",
+          export_team_id: "43AWMS3YJX",
+          export_options: {
+            provisioningProfiles: {
+              bundle_identifier => provisioning_profile,
             },
-            xcargs: [
-              "ASSETCATALOG_COMPILER_APPICON_NAME=#{icon_name}",
-              "CURRENT_PROJECT_VERSION=#{build_number}",
-            ].join(" "),
-            output_directory: File.join(IOS_ROOT, "build"),
-            output_name: output_name,
-            clean: true,
-          )
-        ensure
-          File.write(project_file, original_project)
-        end
+          },
+          xcargs: [
+            "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_identifier}",
+            "ASSETCATALOG_COMPILER_APPICON_NAME=#{icon_name}",
+            "CURRENT_PROJECT_VERSION=#{build_number}",
+            "DEVELOPMENT_TEAM=43AWMS3YJX",
+            "CODE_SIGN_STYLE=Manual",
+            "CODE_SIGN_IDENTITY=#{Shellwords.escape('Apple Distribution')}",
+            "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
+            "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
+          ].join(" "),
+          output_directory: File.join(IOS_ROOT, "build"),
+          output_name: output_name,
+          clean: true,
+        )
       end
     end
   end
@@ -191,61 +174,52 @@ platform :ios do
     )
   end
 
-  desc "Build one private Ad Hoc IPA for Firebase App Distribution"
-  lane :build_firebase_private do |options|
-    app = options[:app].to_s
+  desc "Sign and export one prebuilt archive for Firebase App Distribution"
+  lane :export_firebase_private do |options|
     configs = {
       "PitchPerfect" => {
-        scheme: "pitchperfect",
-        config_dir: "pitchperfect",
-        info_plist_path: "pitchperfect/pitchperfect/pitchperfect-Info.plist",
-        entitlements_path: "pitchperfect/pitchperfect/pitchperfect.entitlements",
-        production_bundle_identifier: "depollsoft.pitchperfect",
         bundle_identifier: "depollsoft.pitchperfect.private",
-        display_name: "Pitch Perfect β",
-        icon_name: "AppIcon-Private",
         output_name: "PitchPerfect-private.ipa",
       },
       "TagMaster" => {
-        scheme: "tagmaster",
-        config_dir: "tagmaster",
-        info_plist_path: "tagmaster/tagmaster/tagmaster-Info.plist",
-        entitlements_path: "tagmaster/tagmaster/tagmaster.entitlements",
-        production_bundle_identifier: "depollsoft.tagmaster",
         bundle_identifier: "depollsoft.tagmaster.private",
-        display_name: "Tag Master β",
-        icon_name: "AppIcon-Private",
         output_name: "TagMaster-private.ipa",
       },
     }
+    app = options[:app].to_s
     config = configs[app]
     UI.user_error!("Unsupported Firebase app: #{app}") unless config
 
-    build_number = (
-      ENV["DEPOLLSOFT_PRIVATE_BUILD_NUMBER"] ||
-      ENV["CI_BUILD_NUMBER"] ||
-      (Time.now.to_i / 10).to_s
-    ).to_s
+    archive_path = File.expand_path(options[:archive].to_s)
+    unless File.directory?(archive_path)
+      UI.user_error!("Missing archive: #{archive_path}")
+    end
+
     api_key = app_store_connect_api_key(
       key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
       issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
       key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
       is_key_content_base64: false,
     )
-
+    profile = "match AdHoc #{config[:bundle_identifier]}"
     match(
       type: "adhoc",
       readonly: false,
       app_identifier: [config[:bundle_identifier]],
       api_key: api_key,
     )
-
-    build_private_app(
-      **config,
-      build_number: build_number,
+    build_app(
+      skip_build_archive: true,
+      archive_path: archive_path,
       export_method: "ad-hoc",
-      profile_type: "AdHoc",
+      export_team_id: "43AWMS3YJX",
+      export_options: {
+        provisioningProfiles: {
+          config[:bundle_identifier] => profile,
+        },
+      },
+      output_directory: File.join(IOS_ROOT, "build"),
+      output_name: config[:output_name],
     )
   end
-
 end
