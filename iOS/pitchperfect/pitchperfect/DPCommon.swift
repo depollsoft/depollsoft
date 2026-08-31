@@ -11,9 +11,12 @@ import Foundation
 @objc public class DPCommon: NSObject {
     @objc public static func openSettings(_ viewController: UIViewController, barButtonItem: UIBarButtonItem) {
         let settings = DPSettingsViewController.sharedInstance()!
-        settings.modalTransitionStyle = .coverVertical
-        settings.modalPresentationStyle = .automatic
-        viewController.present(settings, animated: true)
+        let navigationController = UINavigationController(
+            rootViewController: settings
+        )
+        navigationController.modalTransitionStyle = .coverVertical
+        navigationController.modalPresentationStyle = .automatic
+        viewController.present(navigationController, animated: true)
     }
     
     @objc public static func barButton(

@@ -43,7 +43,6 @@
 {
     [super viewDidLoad];
     
-    UINavigationBar *navigationBar = self.topNavigationBar;
     UINavigationItem *navigationItem = self.topNavigationItem;
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
@@ -83,10 +82,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     
     nameField = [[UITextField alloc] init];
@@ -138,10 +137,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(rootLayout)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout, navigationBar)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     
 }
 

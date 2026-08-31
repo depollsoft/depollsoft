@@ -48,7 +48,6 @@
 {
     [super viewDidLoad];
     
-    UINavigationBar *navigationBar = self.topNavigationBar;
     UINavigationItem *navigationItem = self.topNavigationItem;
     
     //VLayoutView *topLayout = [[VLayoutView alloc] init];
@@ -74,10 +73,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
     
@@ -139,10 +138,10 @@
         
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
     [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;

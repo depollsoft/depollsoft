@@ -136,7 +136,6 @@
 {
     [super viewDidLoad];
     
-    UINavigationBar *navigationBar = self.topNavigationBar;
     UINavigationItem *navigationItem = self.topNavigationItem;
     
 	// Do any additional setup after loading the view.
@@ -169,10 +168,10 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][background]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(navigationBar, background)]];
+                                                                        views:NSDictionaryOfVariableBindings(background)]];
     
     [bannerView loadRequest:[DPAppDelegate adRequest]];
     
@@ -215,10 +214,10 @@
     
     self.edgesForExtendedLayout = UIRectEdgeNone;
     
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[navigationBar][rootLayout]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
                                                                       options:0
                                                                       metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(navigationBar, rootLayout)]];
+                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -340,9 +339,11 @@
 
 - (void)editSong:(DPPitchedSong *)song fromUi:(UIView *)view {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.preferredContentSize = CGSizeMake(320, 480);
-    editor.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
-    editor.modalPresentationStyle = UIModalPresentationAutomatic;
+    UINavigationController *navigationController =
+        [[UINavigationController alloc] initWithRootViewController:editor];
+    navigationController.preferredContentSize = CGSizeMake(320, 480);
+    navigationController.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
+    navigationController.modalPresentationStyle = UIModalPresentationAutomatic;
     editor.song = song;
     editor.completionCallback = ^(BOOL cancelled) {
         if (!cancelled) {
@@ -350,14 +351,16 @@
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    [self presentViewController:editor animated:YES completion:nil];
+    [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)addSong {
     DPSongEditorViewController *editor = [[DPSongEditorViewController alloc] init];
-    editor.preferredContentSize = CGSizeMake(320, 480);
-    editor.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-    editor.modalPresentationStyle = UIModalPresentationAutomatic;
+    UINavigationController *navigationController =
+        [[UINavigationController alloc] initWithRootViewController:editor];
+    navigationController.preferredContentSize = CGSizeMake(320, 480);
+    navigationController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+    navigationController.modalPresentationStyle = UIModalPresentationAutomatic;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
@@ -372,7 +375,7 @@
             [[DPSongsModel sharedInstance].defaultSongList storeValue];
         }
     };
-    [self presentViewController:editor animated:YES completion:nil];
+    [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)songsChanged {

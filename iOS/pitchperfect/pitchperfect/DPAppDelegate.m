@@ -45,8 +45,31 @@
 
 @synthesize window = _window;
 
+- (void)configureRootNavigationControllers {
+    UITabBarController *tabBarController =
+        (UITabBarController *)self.window.rootViewController;
+    if (![tabBarController isKindOfClass:[UITabBarController class]]) {
+        return;
+    }
+
+    NSMutableArray<UIViewController *> *controllers = [NSMutableArray array];
+    for (UIViewController *controller in tabBarController.viewControllers) {
+        if ([controller isKindOfClass:[UINavigationController class]]) {
+            [controllers addObject:controller];
+            continue;
+        }
+        UINavigationController *navigationController =
+            [[UINavigationController alloc] initWithRootViewController:controller];
+        navigationController.tabBarItem = controller.tabBarItem;
+        [controllers addObject:navigationController];
+    }
+    tabBarController.viewControllers = controllers;
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [self configureRootNavigationControllers];
+
     if (NSClassFromString(@"XCTestCase") != nil) {
         return YES;
     }
@@ -78,10 +101,11 @@
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];
-            [self.window.rootViewController presentViewController:loginViewController
+            UINavigationController *navigationController =
+                [[UINavigationController alloc] initWithRootViewController:loginViewController];
+            [self.window.rootViewController presentViewController:navigationController
                                                          animated:YES
-                                                       completion:^{
-                                                       }];
+                                                       completion:nil];
         }
     });
     
