@@ -21,7 +21,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, heavy]
     outputs:
       pr-number: ${{ steps.resolve.outputs.pr-number }}
       pr-title: ${{ steps.resolve.outputs.pr-title }}
@@ -70,7 +70,7 @@ jobs:
     name: Android — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, heavy]
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -154,11 +154,11 @@ jobs:
           rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           rm -rf preview-artifacts
 
-  ios:
-    name: iOS — ${{ matrix.app }}
+  ios-build:
+    name: Build iOS — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, heavy]
     timeout-minutes: 40
     env:
       LANG: en_US.UTF-8
@@ -201,11 +201,6 @@ jobs:
           test -f "$zip"
           ditto -x -k "$zip" preview-artifacts/ios
           test -d "preview-artifacts/ios/${{ matrix.archive }}"
-
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
 
       - name: Select Xcode
         shell: bash
@@ -283,6 +278,58 @@ jobs:
             matrix.archive
           }}"
 
+      - name: Upload signed IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: >-
+            firebase-ios-${{ github.event.workflow_run.id }}-${{ matrix.app }}
+          path: iOS/build/${{ matrix.ipa }}
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove signing material and build artifacts
+        if: always()
+        shell: bash
+        run: |
+          app="${{ matrix.app }}"
+          run_key="$GITHUB_RUN_ID-${app}"
+          rm -f "$RUNNER_TEMP/match-${run_key}.tgz"
+          rm -rf \
+            "$RUNNER_TEMP/match-source-${run_key}" \
+            "$RUNNER_TEMP/match-remote-${run_key}.git" \
+            preview-artifacts \
+            iOS/build
+
+  ios-publish:
+    name: Publish iOS — ${{ matrix.app }}
+    needs: [metadata, ios-build]
+    if: needs.ios-build.result == 'success'
+    runs-on: [self-hosted, macOS, light]
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: PitchPerfect
+            ipa: PitchPerfect-private.ipa
+            firebase_app_id: "1:402153260205:ios:9eb7589d0e3abe5b91f224"
+          - app: TagMaster
+            ipa: TagMaster-private.ipa
+            firebase_app_id: "1:572337670650:ios:5a5295f5bb91237e4bbc43"
+
+    steps:
+      - name: Download signed IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: >-
+            firebase-ios-${{ github.event.workflow_run.id }}-${{ matrix.app }}
+          path: signed-ios
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Configure Firebase credentials
         id: firebase
         env:
@@ -320,7 +367,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ipa="iOS/build/${{ matrix.ipa }}"
+          ipa="signed-ios/${{ matrix.ipa }}"
           test -f "$ipa"
           release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
             "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
@@ -330,26 +377,19 @@ jobs:
             --groups "$TESTER_GROUPS" \
             --release-notes "$release_notes"
 
-      - name: Remove signing material, credentials, and artifacts
+      - name: Remove Firebase credentials and IPA
         if: always()
         shell: bash
         run: |
           app="${{ matrix.app }}"
-          run_key="$GITHUB_RUN_ID-${app}"
-          rm -f \
-            "$RUNNER_TEMP/match-${run_key}.tgz" \
-            "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
-          rm -rf \
-            "$RUNNER_TEMP/match-source-${run_key}" \
-            "$RUNNER_TEMP/match-remote-${run_key}.git" \
-            preview-artifacts \
-            iOS/build
+          rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
+          rm -rf signed-ios
 
   update-comments:
     name: Update Firebase distribution comments
-    needs: [metadata, android, ios]
+    needs: [metadata, android, ios-publish]
     if: always() && needs.metadata.result == 'success'
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted, Linux, heavy]
     permissions:
       issues: write
       pull-requests: write
@@ -363,7 +403,7 @@ jobs:
           PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           ANDROID_RESULT: ${{ needs.android.result }}
-          IOS_RESULT: ${{ needs.ios.result }}
+          IOS_RESULT: ${{ needs.ios-publish.result }}
           RUN_URL: >-
             https://github.com/${{ github.repository }}/actions/runs/${{
               github.run_id
