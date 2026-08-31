@@ -164,7 +164,7 @@ jobs:
     name: Build iOS — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, heavy]
+    runs-on: [self-hosted, macOS, heavy]
     timeout-minutes: 40
     env:
       LANG: en_US.UTF-8
