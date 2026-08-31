@@ -217,59 +217,42 @@ jobs:
           bundler-cache: true
           working-directory: iOS
 
-      - name: Configure persistent signing repository
+      - name: Restore readonly signing repository
         env:
-          MATCH_GIT_SSH_KEY: ${{ secrets.MATCH_GIT_SSH_KEY }}
-          MATCH_GIT_BASIC_AUTHORIZATION: >-
-            ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_REPOSITORY_ARCHIVE_PART_1: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: >-
+            ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -n "${MATCH_GIT_BASIC_AUTHORIZATION:-}" ]]; then
-            auth_url="$(python3 - <<'PY'
+          run_key="$GITHUB_RUN_ID-${{ matrix.app }}"
+          source="$RUNNER_TEMP/match-source-$run_key"
+          remote="$RUNNER_TEMP/match-remote-$run_key.git"
+          archive="$RUNNER_TEMP/match-$run_key.tgz"
+          rm -rf "$source" "$remote" "$archive"
+          mkdir -p "$source"
+          export MATCH_ARCHIVE_PATH="$archive"
+          python3 - <<'PY'
           import base64
-          import binascii
           import os
-          import urllib.parse
 
-          raw = os.environ["MATCH_GIT_BASIC_AUTHORIZATION"].strip()
-          for prefix in ("authorization: basic ", "basic "):
-              if raw.lower().startswith(prefix):
-                  raw = raw[len(prefix):].strip()
-          try:
-              decoded = base64.b64decode(raw, validate=True).decode()
-          except (binascii.Error, UnicodeDecodeError):
-              decoded = ""
-          credential = decoded if ":" in decoded else raw
-          if ":" not in credential:
-              credential = f"x-access-token:{credential}"
-          username, password = credential.split(":", 1)
-          print(
-              "https://"
-              f"{urllib.parse.quote(username, safe='')}:"
-              f"{urllib.parse.quote(password, safe='')}"
-              "@github.com/depollsoft/certificates.git"
+          encoded = (
+              os.environ["MATCH_REPOSITORY_ARCHIVE_PART_1"]
+              + os.environ["MATCH_REPOSITORY_ARCHIVE_PART_2"]
           )
+          with open(os.environ["MATCH_ARCHIVE_PATH"], "wb") as output:
+              output.write(base64.b64decode(encoded, validate=True))
           PY
-            )"
-            echo "::add-mask::$auth_url"
-            echo "MATCH_GIT_URL=$auth_url" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          if [[ -z "${MATCH_GIT_SSH_KEY:-}" ]]; then
-            echo "Missing Match repository credentials." >&2
-            exit 1
-          fi
-          key_path="$RUNNER_TEMP/match-git-key-${GITHUB_RUN_ID}"
-          printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key_path"
-          chmod 600 "$key_path"
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          ssh_opts='-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
-          echo "GIT_SSH_COMMAND=ssh -i $key_path $ssh_opts" \
-            >> "$GITHUB_ENV"
-          echo "MATCH_GIT_URL=git@github.com:depollsoft/certificates.git" \
-            >> "$GITHUB_ENV"
+          tar -xzf "$archive" -C "$source"
+          git -C "$source" init -b master
+          git -C "$source" config user.name 'github-actions[bot]'
+          git -C "$source" config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$source" add .
+          git -C "$source" commit -m 'Restore encrypted signing assets'
+          git clone --bare "$source" "$remote"
+          echo "MATCH_GIT_URL=file://$remote" >> "$GITHUB_ENV"
 
       - name: Export signed private IPA
         working-directory: iOS
@@ -339,7 +322,12 @@ jobs:
         shell: bash
         run: |
           app="${{ matrix.app }}"
+          run_key="$GITHUB_RUN_ID-${app}"
           rm -f \
-            "$RUNNER_TEMP/match-git-key-${GITHUB_RUN_ID}" \
+            "$RUNNER_TEMP/match-${run_key}.tgz" \
             "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
-          rm -rf preview-artifacts iOS/build
+          rm -rf \
+            "$RUNNER_TEMP/match-source-${run_key}" \
+            "$RUNNER_TEMP/match-remote-${run_key}.git" \
+            preview-artifacts \
+            iOS/build

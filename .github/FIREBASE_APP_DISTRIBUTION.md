@@ -30,15 +30,17 @@ Android preview APKs are built without repository secrets and uploaded directly
 to the private Firebase apps.
 
 iOS archives are signed after the PR build completes. The trusted signing job
-uses the persistent Match repository and these existing secrets:
+restores the encrypted Match assets into a temporary readonly bare repository.
+It uses these existing secrets:
 
 - `APP_STORE_CONNECT_API_KEY_CONTENT`
 - `APP_STORE_CONNECT_API_KEY_ID`
 - `APP_STORE_CONNECT_API_ISSUER_ID`
-- `MATCH_GIT_SSH_KEY` or `MATCH_GIT_BASIC_AUTHORIZATION`
 - `MATCH_PASSWORD`
+- `MATCH_REPOSITORY_ARCHIVE_PART_1`
+- `MATCH_REPOSITORY_ARCHIVE_PART_2`
 
-Match creates and retains Ad Hoc profiles for the private bundle identifiers.
+The Match archive contains Ad Hoc profiles for the private bundle identifiers.
 Those profiles must contain the device UDIDs for everyone installing an iOS
 build. Add new tester devices to the Apple Developer account before the next
 workflow run.

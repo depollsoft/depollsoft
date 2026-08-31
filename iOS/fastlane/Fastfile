@@ -204,7 +204,7 @@ platform :ios do
     profile = "match AdHoc #{config[:bundle_identifier]}"
     match(
       type: "adhoc",
-      readonly: false,
+      readonly: true,
       app_identifier: [config[:bundle_identifier]],
       api_key: api_key,
     )
