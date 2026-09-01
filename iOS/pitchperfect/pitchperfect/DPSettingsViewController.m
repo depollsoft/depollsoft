@@ -61,9 +61,8 @@
     // Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
     // Do any additional setup after loading the view, typically from a nib.
@@ -105,7 +104,7 @@
     tableView.allowsSelection = NO;
     tableView.backgroundColor = [UIColor clearColor];
     tableView.backgroundView = nil;
-    [rootLayout addSubview:tableView row:2 column:0];
+    [rootLayout addSubview:tableView row:0 column:0];
     
     navigationItem.title = @"Settings";
     navigationItem.rightBarButtonItem =
@@ -271,7 +270,7 @@
     if (!cell) {
         cell = [[UITableViewCell alloc] init];
     }
-    cell.backgroundColor = DPTheme.plateRow;
+    [DPTheme styleListCell:cell];
     return cell;
 }
 

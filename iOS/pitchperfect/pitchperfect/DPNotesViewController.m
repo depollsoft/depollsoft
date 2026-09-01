@@ -144,9 +144,8 @@
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
     notes = [DPNote prunedNotes];
@@ -183,7 +182,7 @@
     tableView.dataSource = self;
     tableView.allowsSelection = NO;
     tableView.backgroundColor = [UIColor clearColor];
-    [rootLayout addSubview:tableView row:2 column:0];
+    [rootLayout addSubview:tableView row:0 column:0];
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(self->notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
@@ -239,7 +238,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPNote *note = [notes objectAtIndex:indexPath.row];
     DPNoteCell *cell = [[DPNoteCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateRow;
+    [DPTheme styleListCell:cell];
     cell.note = note;
     
     return cell;

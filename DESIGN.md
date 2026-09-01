@@ -75,7 +75,7 @@ The one moment of light is functional, not decorative: when a note sounds, its c
 
 ## Colors
 
-Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
+Nine grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
 
 ### Primary
 
@@ -85,6 +85,7 @@ Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 
 - **Plate Ground** (#DADBDC / #0E0F10): window background and the instrument panel itself.
 - **Plate Surface** (#E7E8E9 / #16181A): resting glass cells, the range-selector frame, FABs, Material `colorSurface`.
+- **Plate Row** (82% Plate Ground): translucent list/table-cell fill. It protects text contrast while keeping the full-bleed score visible behind every row.
 - **Plate Ink** (#1C1E20 / #D9DBDD): primary text, natural-note engravings, icons.
 - **Plate Ink Secondary** (#55585C / #898D92): accidental engravings, frequency readouts, section headers, nameplate captions, empty states.
 - **Plate Ink Bar** (#141618 / #0A0B0C): action bar, bottom nav, system bars — the darkest band framing the panel on both themes.
@@ -151,7 +152,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### List Rows
 
-- 56–64dp rows on `plate-ground`, 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+- 56–64dp rows on 82%-opaque `plate-row`, over explicitly transparent ListView/RecyclerView/UITableView surfaces, with 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
 
 ### Song Editing
 

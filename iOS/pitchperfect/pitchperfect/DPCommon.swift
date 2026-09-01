@@ -14,11 +14,29 @@ import Foundation
         let navigationController = UINavigationController(
             rootViewController: settings
         )
+        configureInstrumentChrome(navigationController)
         navigationController.modalTransitionStyle = .coverVertical
         navigationController.modalPresentationStyle = .automatic
         viewController.present(navigationController, animated: true)
     }
     
+    @objc public static func configureInstrumentChrome(_ navigationController: UINavigationController) {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .systemBackground
+        appearance.shadowColor = .separator
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.label,
+            .font: UIFont(name: "Oswald-Medium", size: 19)
+                ?? UIFont.preferredFont(forTextStyle: .headline),
+        ]
+        navigationController.navigationBar.standardAppearance = appearance
+        navigationController.navigationBar.scrollEdgeAppearance = appearance
+        navigationController.navigationBar.compactAppearance = appearance
+        navigationController.navigationBar.tintColor = .label
+        navigationController.navigationBar.isTranslucent = false
+    }
+
     @objc public static func barButton(
         systemName: String,
         target: Any,
