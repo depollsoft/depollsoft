@@ -271,6 +271,7 @@
     if (!cell) {
         cell = [[UITableViewCell alloc] init];
     }
+    cell.backgroundColor = DPTheme.plateRow;
     return cell;
 }
 

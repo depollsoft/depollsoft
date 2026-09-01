@@ -125,7 +125,7 @@ Screen chrome stacks vertically: action bar (ink-bar) → instrument/content pan
 
 ## Elevation & Depth
 
-No shadows. Depth is conveyed by material: the brushed-metal grain (1px hairlines every 4px at 3–8% alpha), the etched staff plus two sparse heritage watermarks (treble clef/key signature upper-left, bass clef/key signature lower-right), the anode ring inset at 86% of each cell's radius, and the one radial bloom (radius = cell × 2.4, lit color fading 60% → 0%) that leaks light across the panel under a sounding cell. Surfaces separate by tone (ground vs. surface vs. ink-bar), never by drop shadow.
+No shadows. Depth is conveyed by material: the brushed-metal grain (1px hairlines every 4px at 3–8% alpha), the original score artwork tiled full-bleed at low contrast (treble/bass clefs, key signatures, staff, and notation), the anode ring inset at 86% of each cell's radius, and the one radial bloom (radius = cell × 2.4, lit color fading 60% → 0%) that leaks light across the panel under a sounding cell. Surfaces separate by tone (ground vs. surface vs. ink-bar), never by drop shadow.
 
 **The Etched-Not-Cast Rule.** Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.
 
@@ -192,7 +192,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
 - **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
-- **Do** keep the background mostly clean staff lines; add only two low-contrast marks from the original artwork — treble/key signature and bass/key signature — to preserve the icon lineage.
+- **Do** tile the original score artwork edge-to-edge as a low-contrast background on every screen. Use translucent plate rows so the score remains continuous without competing with text.
 - **Do** honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
 
 ### Don't

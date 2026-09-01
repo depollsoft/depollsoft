@@ -92,7 +92,7 @@ class PitchInstrumentView
             runCatching { BitmapFactory.decodeResource(resources, R.drawable.panobackground) }.getOrNull()
         private val heritagePaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                alpha = 38
+                alpha = 26
                 colorFilter = PorterDuffColorFilter(inkSecondary, PorterDuff.Mode.SRC_IN)
             }
 
@@ -236,21 +236,7 @@ class PitchInstrumentView
                 grainY += 4f
             }
 
-            // Etched staff heritage: five-line groups engraved across the panel.
-            strokePaint.color = hairline
-            strokePaint.strokeWidth = 1f
-            strokePaint.alpha = 64
-            val staffGap = cellRadius * 0.30f
-            var staffTop = staffGap * 2f
-            while (staffTop < height) {
-                for (line in 0 until 5) {
-                    val y = staffTop + line * staffGap
-                    canvas.drawLine(0f, y, width.toFloat(), y, strokePaint)
-                }
-                staffTop += staffGap * 12f
-            }
-            strokePaint.alpha = 255
-            drawHeritageMarks(canvas)
+            drawHeritageBackground(canvas)
 
             val breath = 0.82f + 0.18f * sin(breathePhase)
 
@@ -309,39 +295,22 @@ class PitchInstrumentView
             manageBreathing()
         }
 
-        private fun drawHeritageMarks(canvas: Canvas) {
+        private fun drawHeritageBackground(canvas: Canvas) {
             val bitmap = heritageBitmap ?: return
-            val markWidth = width * 0.23f
-            val markHeight = markWidth * 0.58f
-            val trebleSource = Rect(0, 0, bitmap.width / 3, bitmap.height / 2)
-            val bassSource = Rect(0, bitmap.height / 2, bitmap.width / 3, bitmap.height)
-            val ringOuterTop = faceCy - ringRadius - cellRadius
-            val ringOuterBottom = faceCy + ringRadius + cellRadius
-            val trebleTop = maxOf(18f, ringOuterTop - markHeight * 0.82f)
-            val bassTop = minOf(height - markHeight - 70f, ringOuterBottom + cellRadius * 0.45f)
+            val source = Rect(0, 0, bitmap.width, bitmap.height)
+            val tileHeight = width * (bitmap.height.toFloat() / bitmap.width.toFloat())
+            if (tileHeight <= 0f) return
 
-            canvas.drawBitmap(
-                bitmap,
-                trebleSource,
-                RectF(
-                    width * 0.06f,
-                    trebleTop,
-                    width * 0.06f + markWidth,
-                    trebleTop + markHeight,
-                ),
-                heritagePaint,
-            )
-            canvas.drawBitmap(
-                bitmap,
-                bassSource,
-                RectF(
-                    width * 0.94f - markWidth,
-                    bassTop,
-                    width * 0.94f,
-                    bassTop + markHeight,
-                ),
-                heritagePaint,
-            )
+            var tileTop = 0f
+            while (tileTop < height) {
+                canvas.drawBitmap(
+                    bitmap,
+                    source,
+                    RectF(0f, tileTop, width.toFloat(), tileTop + tileHeight),
+                    heritagePaint,
+                )
+                tileTop += tileHeight
+            }
         }
 
         private fun drawCenter(

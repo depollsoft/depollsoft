@@ -26,7 +26,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
-            app:srcCompat="@drawable/bg_etched_staff"/>
+            app:srcCompat="@color/plate_ground"/>
 
         <depollsoft.pitchperfect.HeritageScoreView
             android:layout_width="match_parent"

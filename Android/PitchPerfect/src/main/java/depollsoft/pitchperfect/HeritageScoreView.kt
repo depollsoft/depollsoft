@@ -13,7 +13,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
 
-/** Sparse heritage marks over the clean staff: one treble and one bass clef. */
+/** Full-bleed, low-contrast score engraving behind every app surface. */
 class HeritageScoreView
     @JvmOverloads
     constructor(
@@ -22,13 +22,13 @@ class HeritageScoreView
     ) : View(context, attrs) {
         private val artwork =
             runCatching { BitmapFactory.decodeResource(resources, R.drawable.panobackground) }.getOrNull()
-        private val hairline =
+        private val engravingColor =
             runCatching { ContextCompat.getColor(context, R.color.plate_ink_secondary) }
                 .getOrElse { Color.GRAY }
         private val paint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                alpha = 42
-                colorFilter = PorterDuffColorFilter(hairline, PorterDuff.Mode.SRC_IN)
+                alpha = 28
+                colorFilter = PorterDuffColorFilter(engravingColor, PorterDuff.Mode.SRC_IN)
             }
 
         init {
@@ -40,32 +40,19 @@ class HeritageScoreView
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val bitmap = artwork ?: return
-            val density = resources.displayMetrics.density
-            val markWidth = minOf(width * 0.43f, 220f * density)
-            val markHeight = markWidth * 0.58f
-            val margin = 14f * density
+            val source = Rect(0, 0, bitmap.width, bitmap.height)
+            val tileHeight = width * (bitmap.height.toFloat() / bitmap.width.toFloat())
+            if (tileHeight <= 0f) return
 
-            val trebleSource = Rect(0, 0, bitmap.width / 3, bitmap.height / 2)
-            val bassSource = Rect(0, bitmap.height / 2, bitmap.width / 3, bitmap.height)
-            val trebleTop = height * 0.08f
-            val bassTop = height * 0.66f
-
-            canvas.drawBitmap(
-                bitmap,
-                trebleSource,
-                RectF(margin, trebleTop, margin + markWidth, trebleTop + markHeight),
-                paint,
-            )
-            canvas.drawBitmap(
-                bitmap,
-                bassSource,
-                RectF(
-                    width - margin - markWidth,
-                    bassTop,
-                    width - margin,
-                    bassTop + markHeight,
-                ),
-                paint,
-            )
+            var tileTop = 0f
+            while (tileTop < height) {
+                canvas.drawBitmap(
+                    bitmap,
+                    source,
+                    RectF(0f, tileTop, width.toFloat(), tileTop + tileHeight),
+                    paint,
+                )
+                tileTop += tileHeight
+            }
         }
     }

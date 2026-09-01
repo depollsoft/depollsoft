@@ -282,7 +282,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPKey *key = [keys objectAtIndex:indexPath.row];
     DPKeyCell *cell = [[DPKeyCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateGround;
+    cell.backgroundColor = DPTheme.plateRow;
     cell.key = key;
     return cell;
 }

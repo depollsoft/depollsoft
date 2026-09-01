@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T07:33:47.837Z",
+  "generatedAt": "2026-09-01T18:01:54.343Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -150,7 +150,7 @@
   ],
   "narrative": {
     "northStar": "The Laboratory Instrument",
-    "overview": "Pitch Perfect is drawn as a grayscale precision instrument: bench aluminum by day, blackened steel at night. Clean five-line staff engraving remains the base; two sparse marks from the original artwork (treble clef/key signature upper-left, bass clef/key signature lower-right) preserve the icon lineage. Each finger independently owns a radial cell, so chords remain sounding as other fingers release. The only light is functional: sounding cells ignite and breathe.",
+    "overview": "Pitch Perfect is drawn as a grayscale precision instrument: bench aluminum by day, blackened steel at night. The original score artwork (treble/bass clefs, key signatures, staff, and notation) tiles edge-to-edge at low contrast across every screen. Translucent plate rows preserve the continuous background without sacrificing legibility. Each finger independently owns a radial cell, so chords remain sounding as other fingers release. The only light is functional: sounding cells ignite and breathe.",
     "keyCharacteristics": [
       "Grayscale only; zero chromatic color anywhere in first-party UI",
       "One luminous element maximum, and only while sound exists",
@@ -158,8 +158,8 @@
       "Hairline strokes (1–1.5px) as the primary structural device; near-square 2dp corners",
       "Identical tokens and instrument geometry on both platforms; chrome stays platform-native",
       "True multi-touch chords: each finger owns and releases its note independently",
-      "Clean staff backgrounds with exactly two low-contrast heritage clef/key-signature marks",
-      "Android song-row chrome appears only in explicit Edit mode; iOS uses native Edit mode"
+      "Android song-row chrome appears only in explicit Edit mode; iOS uses native Edit mode",
+      "Original score artwork tiles full-bleed at low contrast across every screen"
     ],
     "rules": [
       {
@@ -184,7 +184,7 @@
       },
       {
         "name": "The Heritage Restraint Rule",
-        "body": "The background remains primarily clean staff lines. Reuse the original score artwork only as two faint engravings: treble/key signature upper-left and bass/key signature lower-right. Never restore the dense full wallpaper.",
+        "body": "Tile the original score artwork edge-to-edge at low contrast. It is a background material, never a floating watermark. Content rows use a translucent plate fill so notation remains continuous but never competes with text.",
         "section": "elevation"
       }
     ],
@@ -197,7 +197,8 @@
       "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.",
       "Do preserve true multi-touch chord holding: releasing one finger must not stop notes owned by other fingers.",
       "Do expose Android song pencils and drag handles only after the user taps Edit Songs.",
-      "Do keep iOS nav/tab chrome opaque grayscale and load ads only after the real view width is known."
+      "Do keep iOS nav/tab chrome opaque grayscale and load ads only after the real view width is known.",
+      "Do keep the original score artwork full-bleed on every screen, behind translucent plate content."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",
