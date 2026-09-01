@@ -179,7 +179,10 @@
     tableView.dataSource = self;
     tableView.delegate = self;
     tableView.allowsSelection = NO;
-    tableView.backgroundColor = [UIColor clearColor];
+    tableView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.backgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+    tableView.backgroundView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.opaque = NO;
     [rootLayout addSubview:tableView row:0 column:0];
     
     

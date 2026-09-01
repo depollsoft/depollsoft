@@ -254,8 +254,6 @@
 		<string>NoteHedz170.ttf</string>
 		<string>MusiSync.ttf</string>
 	</array>
-	<key>UIDesignRequiresCompatibility</key>
-	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
