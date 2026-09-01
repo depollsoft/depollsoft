@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T18:01:54.343Z",
+  "generatedAt": "2026-09-01T18:24:26.156Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -61,6 +61,16 @@
         "displayName": "Plate Hairline",
         "canonical": "#B7B9BC",
         "darkValue": "#2C2F33"
+      },
+      "plate-row": {
+        "role": "neutral",
+        "displayName": "Plate Row",
+        "canonical": "rgba(218,219,220,0.82)",
+        "darkValue": "rgba(14,15,16,0.82)",
+        "tonalRamp": [
+          "#0E0F10",
+          "#DADBDC"
+        ]
       }
     },
     "typographyMeta": {
@@ -119,9 +129,9 @@
       "name": "List Row",
       "kind": "card",
       "refersTo": "list-row",
-      "description": "Note/song row: condensed name, mono trailing datum, hairline divider; pressing lights it like a cell.",
+      "description": "Note/song row: condensed name, mono trailing datum, hairline divider, and an 82%-opaque plate fill that preserves the full-bleed score background.",
       "html": "<div class=\"ds-row\"><span class=\"ds-row-name\">A</span><span class=\"ds-row-data\">440.0 Hz</span></div>",
-      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: #DADBDC; border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
+      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: rgba(218,219,220,0.82); border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
     },
     {
       "name": "Section Header",

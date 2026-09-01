@@ -160,9 +160,8 @@
     
 	DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
     keys = [DPKey majorKeys];
@@ -220,7 +219,7 @@
     tableView.dataSource = self;
     tableView.allowsSelection = NO;
     tableView.backgroundColor = [UIColor clearColor];
-    [rootLayout addSubview:tableView row:2 column:0];
+    [rootLayout addSubview:tableView row:0 column:0];
     
     [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(keys.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     
@@ -282,7 +281,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPKey *key = [keys objectAtIndex:indexPath.row];
     DPKeyCell *cell = [[DPKeyCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateRow;
+    [DPTheme styleListCell:cell];
     cell.key = key;
     return cell;
 }

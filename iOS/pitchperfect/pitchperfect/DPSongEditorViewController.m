@@ -51,10 +51,9 @@
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
                                  [DPGridDimension dimension],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
 	// Do any additional setup after loading the view, typically from a nib.
@@ -124,11 +123,11 @@
     [nameField sizeToFit];
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-        [rootLayout addSubview:bannerView row:1 column:0];
+        [rootLayout addSubview:bannerView row:2 column:0];
         
         // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     }
-    [rootLayout addSubview:[nameField pad:5] row:2 column:0];
+    [rootLayout addSubview:[nameField pad:5] row:0 column:0];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
     keyPicker = [[UIPickerView alloc] init];
@@ -137,7 +136,7 @@
     [keyPicker sizeToFit];
     [keyPicker selectRow:[allKeys indexOfObject:song.key] inComponent:0 animated:YES];
     
-    [rootLayout addSubview:[keyPicker alignBottom] row:3 column:0];
+    [rootLayout addSubview:[keyPicker alignBottom] row:1 column:0];
     
     [self.view addSubview:rootLayout];
     

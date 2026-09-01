@@ -141,9 +141,8 @@
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
 	// Do any additional setup after loading the view, typically from a nib.
@@ -181,7 +180,7 @@
     tableView.delegate = self;
     tableView.allowsSelection = NO;
     tableView.backgroundColor = [UIColor clearColor];
-    [rootLayout addSubview:tableView row:2 column:0];
+    [rootLayout addSubview:tableView row:0 column:0];
     
     
     settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
@@ -267,7 +266,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPPitchedSong *song = [[[DPSongsModel sharedInstance].defaultSongList songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateRow;
+    [DPTheme styleListCell:cell];
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
     __block __weak UIButton *weakDisclosureButton = disclosureButton;
     cell.editingAccessoryView = disclosureButton;

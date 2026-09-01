@@ -59,6 +59,7 @@
             android:id="@+id/songListView"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
+            android:background="@android:color/transparent"
             android:paddingBottom="90dp"
             android:clipToPadding="false">
         </androidx.recyclerview.widget.RecyclerView>
