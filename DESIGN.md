@@ -169,7 +169,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Navigation
 
-- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS keeps the iOS 26 Liquid Glass tab and navigation bars; the tab icons ship as grayscale template images (label tint) so the glass treatment never morphs or flickers them, and bars use the default glass material — never fully transparent — with the Oswald title. Android system bars match `plate-ink-bar`.
+- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS keeps the iOS 26 Liquid Glass tab and navigation bars; the tab icons ship as grayscale template images (label tint) so the glass treatment never morphs or flickers them. The score surface extends under both bars and the system glass samples it directly; only title typography and tint are overridden. Android system bars match `plate-ink-bar`.
 
 ### Ad Slot
 
@@ -192,7 +192,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
 - **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
-- **Do** tile the original score artwork edge-to-edge as a low-contrast background on every screen. Use translucent plate rows so the score remains continuous without competing with text.
+- **Do** tile the original score artwork edge-to-edge, including beneath iOS navigation and tab bars. Keep list rows transparent so the score remains continuous without competing with text.
 - **Do** honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
 
 ### Don't

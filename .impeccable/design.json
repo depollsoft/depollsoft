@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T19:37:40.673Z",
+  "generatedAt": "2026-09-01T21:04:08.957Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -197,7 +197,7 @@
       "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.",
       "Do preserve true multi-touch chord holding: releasing one finger must not stop notes owned by other fingers.",
       "Do expose Android song pencils and drag handles only via the title-bar Edit Songs action.",
-      "Do keep iOS Liquid Glass bars with grayscale template icons, and load ads only after the real view width is known.",
+      "Do run the score beneath iOS Liquid Glass bars, keep tab icons as grayscale templates, and load ads only after the real view width is known.",
       "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it."
     ],
     "donts": [

@@ -21,19 +21,13 @@ import Foundation
     }
     
     @objc public static func configureInstrumentChrome(_ navigationController: UINavigationController) {
-        // Glass material (never fully transparent) with the Oswald title:
-        // the bar stays visible over the score background without giving up
-        // the Liquid Glass look.
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.titleTextAttributes = [
+        // Leave the Liquid Glass background untouched; only the Oswald title
+        // and label tint ride on top via the legacy attributes.
+        navigationController.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.label,
             .font: UIFont(name: "Oswald-Medium", size: 19)
                 ?? UIFont.preferredFont(forTextStyle: .headline),
         ]
-        navigationController.navigationBar.standardAppearance = appearance
-        navigationController.navigationBar.scrollEdgeAppearance = appearance
-        navigationController.navigationBar.compactAppearance = appearance
         navigationController.navigationBar.tintColor = .label
     }
 

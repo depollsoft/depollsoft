@@ -158,11 +158,18 @@
     
     [rootLayout addSubview:bannerView row:1 column:0];
     
-    UIView *background = [[UIView alloc] init];
+    UIScrollView *background = [[UIScrollView alloc] init];
+    background.scrollEnabled = NO;
     background.backgroundColor = [DPTheme staffBackgroundColor];
     [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    // The glass bars sample this full-bleed scroll surface; without it iOS 26
+    // paints an opaque hard edge over non-scrolling content.
+    [self setContentScrollView:background forEdge:NSDirectionalRectEdgeAll];
+    // DPToolbarViewController (shared, pre-safe-area) opts out of extended
+    // layout; Pitch Perfect runs its score surface under the glass bars.
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
                                                                       options:0
                                                                       metrics:nil
@@ -214,12 +221,9 @@
     
     [self.view addSubview:rootLayout];
     
-    self.edgesForExtendedLayout = UIRectEdgeNone;
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+    // Full-bleed: the score background runs under the glass bars; content
+    // starts at the safe area so nothing hides beneath them.
+    [rootLayout.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0

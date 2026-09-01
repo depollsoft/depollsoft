@@ -88,15 +88,9 @@
             <objects>
                 <tabBarController id="4" sceneMemberID="viewController">
                     <nil key="simulatedBottomBarMetrics"/>
-                    <tabBar key="tabBar" contentMode="scaleToFill" translucent="NO" id="5">
+                    <tabBar key="tabBar" contentMode="scaleToFill" id="5">
                         <rect key="frame" x="0.0" y="431" width="320" height="49"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <tabBarAppearance key="standardAppearance">
-                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        </tabBarAppearance>
-                        <tabBarAppearance key="scrollEdgeAppearance">
-                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        </tabBarAppearance>
                     </tabBar>
                     <connections>
                         <segue destination="2" kind="relationship" relationship="viewControllers" id="26"/>

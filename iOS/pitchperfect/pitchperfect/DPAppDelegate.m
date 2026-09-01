@@ -65,13 +65,12 @@
     }
     tabBarController.viewControllers = controllers;
 
-    // Liquid Glass stays on. The tab icons ship as template images so the
-    // glass treatment never morphs or flickers them on first selection, and
-    // the bars keep the system glass material with the Oswald title on top.
-    UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
-    [navigationAppearance configureWithDefaultBackground];
+    // Liquid Glass owns the bars untouched: no appearance overrides. The tab
+    // icons ship as template images so the glass treatment never morphs or
+    // flickers them, and the Oswald title rides on the legacy attributes,
+    // which leave the glass background alone.
     UIFont *titleFont = [UIFont fontWithName:@"Oswald-Medium" size:19] ?: [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
-    navigationAppearance.titleTextAttributes = @{
+    NSDictionary *titleAttributes = @{
         NSForegroundColorAttributeName: UIColor.labelColor,
         NSFontAttributeName: titleFont
     };
@@ -84,9 +83,7 @@
         item.image = templateImage;
         item.selectedImage = templateImage;
 
-        navigationController.navigationBar.standardAppearance = navigationAppearance;
-        navigationController.navigationBar.scrollEdgeAppearance = navigationAppearance;
-        navigationController.navigationBar.compactAppearance = navigationAppearance;
+        navigationController.navigationBar.titleTextAttributes = titleAttributes;
         navigationController.navigationBar.tintColor = UIColor.labelColor;
     }
 }
