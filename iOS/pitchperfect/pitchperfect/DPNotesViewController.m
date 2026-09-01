@@ -239,7 +239,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPNote *note = [notes objectAtIndex:indexPath.row];
     DPNoteCell *cell = [[DPNoteCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateGround;
+    cell.backgroundColor = DPTheme.plateRow;
     cell.note = note;
     
     return cell;

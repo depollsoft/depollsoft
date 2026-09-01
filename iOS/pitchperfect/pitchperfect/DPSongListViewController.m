@@ -267,7 +267,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPPitchedSong *song = [[[DPSongsModel sharedInstance].defaultSongList songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = DPTheme.plateGround;
+    cell.backgroundColor = DPTheme.plateRow;
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
     __block __weak UIButton *weakDisclosureButton = disclosureButton;
     cell.editingAccessoryView = disclosureButton;

@@ -363,62 +363,23 @@ private extension DPPitchInstrumentView {
             grainY += 4
         }
 
-        // Etched staff heritage: five-line groups engraved across the panel.
-        context.setStrokeColor(hairline.withAlphaComponent(0.5).cgColor)
-        context.setLineWidth(0.7)
-        let staffGap = cellRadius * 0.30
-        var staffTop = staffGap * 2
-        while staffTop < bounds.height {
-            for line in 0..<5 {
-                let lineY = staffTop + CGFloat(line) * staffGap
-                context.move(to: CGPoint(x: 0, y: lineY))
-                context.addLine(to: CGPoint(x: bounds.width, y: lineY))
-            }
-            staffTop += staffGap * 12
-        }
-        context.strokePath()
-        drawHeritageMarks(markColor: markColor)
+        drawHeritageBackground(markColor: markColor)
     }
 
-    private func drawHeritageMarks(markColor: UIColor) {
-        guard let artwork = UIImage(named: "panobackground.png"),
-              let image = artwork.cgImage else { return }
-        let trebleRect = CGRect(x: 0, y: 0, width: image.width / 3, height: image.height / 2)
-        let bassRect = CGRect(x: 0, y: image.height / 2, width: image.width / 3, height: image.height / 2)
-        let markWidth = bounds.width * 0.23
-        let markHeight = markWidth * 0.58
-        let ringOuterTop = faceCenter.y - ringRadius - cellRadius
-        let ringOuterBottom = faceCenter.y + ringRadius + cellRadius
-        let trebleTop = max(12, ringOuterTop - markHeight * 0.82)
-        let bassTop = min(bounds.height - markHeight - 52, ringOuterBottom + cellRadius * 0.45)
+    private func drawHeritageBackground(markColor: UIColor) {
+        guard let artwork = UIImage(named: "panobackground.png") else { return }
+        let engraving = artwork.withTintColor(markColor, renderingMode: .alwaysOriginal)
+        let tileHeight = bounds.width * (artwork.size.height / artwork.size.width)
+        guard tileHeight > 0 else { return }
 
-        if let crop = image.cropping(to: trebleRect) {
-            UIImage(cgImage: crop)
-                .withTintColor(markColor, renderingMode: .alwaysOriginal)
-                .draw(
-                    in: CGRect(
-                        x: bounds.width * 0.06,
-                        y: trebleTop,
-                        width: markWidth,
-                        height: markHeight,
-                    ),
-                    blendMode: .normal,
-                    alpha: 0.13,
-                )
-        }
-        if let crop = image.cropping(to: bassRect) {
-            UIImage(cgImage: crop)
-                .withTintColor(markColor, renderingMode: .alwaysOriginal)
-                .draw(
-                    in: CGRect(
-                        x: bounds.width * 0.94 - markWidth,
-                        y: bassTop,
-                        width: markWidth,
-                        height: markHeight,
-                    ),
-                    blendMode: .normal,
-                    alpha: 0.13,
-                )
+        var tileTop: CGFloat = 0
+        while tileTop < bounds.height {
+            engraving.draw(
+                in: CGRect(x: 0, y: tileTop, width: bounds.width, height: tileHeight),
+                blendMode: .normal,
+                alpha: 0.10
+            )
+            tileTop += tileHeight
         }
     }
 
