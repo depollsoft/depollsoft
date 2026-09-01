@@ -147,11 +147,11 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Center Readout
 
-- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Chord: all sounding note names share the display and the mono line reads "<n> NOTES". Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
+- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Two-note chords share the display and name the ascending musical interval (for example, "PERFECT 5TH"); larger chords read "<n> NOTES". Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
 
 ### List Rows
 
-- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
 
 ### Song Editing
 
@@ -175,6 +175,10 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here.
 
+### Haptics
+
+**The Instrument Answers You.** Starting a note produces one crisp system detent; sliding to another cell produces the next detent; changing octave range produces a selection tick. A successful song save produces one quiet confirmation pulse. Releasing notes, idle states, and ordinary navigation stay silent. Platform haptic settings remain authoritative.
+
 ### Motion
 
 - One motion: the 4-second sinusoidal breath (phase 0→2π, linear) modulating bloom alpha (0.82 + 0.18·sin) and lit-cell fill (0.9 + 0.1·sin) while any note sounds. Android drops it when animator duration scale is 0; iOS honors Reduce Motion. No other animation beyond platform defaults.
@@ -193,7 +197,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
 - **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
 - **Do** tile the original score artwork edge-to-edge, including beneath iOS navigation and tab bars. Keep list rows transparent so the score remains continuous without competing with text.
-- **Do** honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
+- **Do** honor reduce-motion settings by stopping the breath entirely, keep haptics to note starts, real range changes, and successful song saves, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
 
 ### Don't
 

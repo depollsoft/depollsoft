@@ -16,6 +16,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.Settings
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
@@ -105,7 +106,10 @@ class PitchInstrumentView
         private val rangeHighRect = Rect()
         private val touchTracker =
             PitchMultiTouchTracker(
-                onStart = { cell -> notes().getOrNull(cell)?.play() },
+                onStart = { cell ->
+                    notes().getOrNull(cell)?.play()
+                    performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                },
                 onStop = { cell -> notes().getOrNull(cell)?.stop() },
             )
         private var breathePhase = 0f
@@ -317,12 +321,13 @@ class PitchInstrumentView
             canvas: Canvas,
             currentNotes: List<Note>,
         ) {
-            val playingNotes = currentNotes.filter { it.isPlaying }
+            val playingNotes = currentNotes.withIndex().filter { it.value.isPlaying }
             if (playingNotes.isNotEmpty()) {
                 textPaint.color = ink
                 textPaint.textSize = if (playingNotes.size == 1) ringRadius * 0.30f else ringRadius * 0.17f
                 val label =
-                    playingNotes.joinToString(" ") { note ->
+                    playingNotes.joinToString(" ") { indexed ->
+                        val note = indexed.value
                         when (note.accidental) {
                             Accidental.Natural -> note.friendlyName
                             else -> "${sharpNameOf(note)}\u266F"
@@ -333,7 +338,9 @@ class PitchInstrumentView
                 monoPaint.textSize = ringRadius * 0.15f
                 val readout =
                     if (playingNotes.size == 1) {
-                        String.format("%.1f Hz", playingNotes[0].frequency)
+                        String.format("%.1f Hz", playingNotes[0].value.frequency)
+                    } else if (playingNotes.size == 2) {
+                        PitchInterval.name(playingNotes[0].index, playingNotes[1].index)
                     } else {
                         "${playingNotes.size} NOTES"
                     }
@@ -456,13 +463,19 @@ class PitchInstrumentView
                     val y = event.getY(pointerIndex)
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                         if (rangeLowRect.contains(x.toInt(), y.toInt())) {
-                            model?.isFromFToF = false
+                            if (model?.isFromFToF != false) {
+                                model?.isFromFToF = false
+                                performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            }
                             stopEverything()
                             invalidate()
                             return true
                         }
                         if (rangeHighRect.contains(x.toInt(), y.toInt())) {
-                            model?.isFromFToF = true
+                            if (model?.isFromFToF != true) {
+                                model?.isFromFToF = true
+                                performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            }
                             stopEverything()
                             invalidate()
                             return true
@@ -473,6 +486,7 @@ class PitchInstrumentView
                         if (toggleMode) {
                             val note = currentNotes[index]
                             note.isPlaying = !note.isPlaying
+                            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         } else {
                             touchTracker.press(pointerId, index)
                         }

@@ -196,6 +196,8 @@
 - (void)complete {
     song.name = nameField.text;
     song.key = [allKeys objectAtIndex:[keyPicker selectedRowInComponent:0]];
+    UINotificationFeedbackGenerator *feedback = [[UINotificationFeedbackGenerator alloc] init];
+    [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
     [self onComplete:NO];
     [self dismissViewControllerAnimated:YES completion:^{
         

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T21:04:08.957Z",
+  "generatedAt": "2026-09-01T21:11:22.213Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -103,7 +103,7 @@
       "name": "Instrument Cell (sounding)",
       "kind": "custom",
       "refersTo": "instrument-cell-lit",
-      "description": "The one luminous element: lit fill, 3px lit rim, radial bloom leaking across the panel (dark-mode values).",
+      "description": "The one luminous element: lit fill, 3px lit rim, radial bloom, and one crisp system haptic when the note starts.",
       "html": "<div class=\"ds-cell-lit-stage\"><div class=\"ds-cell-lit\"><span class=\"ds-cell-lit-label\">C</span></div></div>",
       "css": ".ds-cell-lit-stage { width: 220px; height: 220px; background: #0E0F10; display: flex; align-items: center; justify-content: center; } .ds-cell-lit { width: 88px; height: 88px; border-radius: 50%; background: #F2EFE6; border: 3px solid #F2EFE6; box-shadow: 0 0 60px 30px rgba(242,239,230,0.45); display: flex; align-items: center; justify-content: center; position: relative; } .ds-cell-lit::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 1px solid rgba(16,18,20,0.43); } .ds-cell-lit-label { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 40px; color: #101214; }"
     },
@@ -111,7 +111,7 @@
       "name": "Range Selector",
       "kind": "custom",
       "refersTo": "range-selector",
-      "description": "One machined frame with two range positions; the selected row carries an ink wash and a lit dot.",
+      "description": "One machined frame with two range positions; a real change carries an ink wash, lit dot, and one selection tick.",
       "html": "<div class=\"ds-range\"><div class=\"ds-range-row ds-range-selected\"><span class=\"ds-range-dot\"></span>C TO B</div><div class=\"ds-range-row\">F TO E</div></div>",
       "css": ".ds-range { width: 200px; border: 1.5px solid #B7B9BC; border-radius: 5px; background: rgba(231,232,233,0.92); overflow: hidden; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; } .ds-range-row { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.16em; font-size: 15px; color: rgba(85,88,92,0.75); } .ds-range-row + .ds-range-row { border-top: 1px solid rgba(183,185,188,0.63); } .ds-range-selected { background: rgba(28,30,32,0.1); color: #1C1E20; } .ds-range-dot { position: absolute; left: 18px; width: 10px; height: 10px; border-radius: 50%; background: #141618; }"
     },
@@ -119,7 +119,7 @@
       "name": "List Row",
       "kind": "card",
       "refersTo": "list-row",
-      "description": "Note/song row: condensed name, mono trailing datum, hairline divider, fully transparent over the full-bleed score; pressing lights it like a cell.",
+      "description": "Note/song row: condensed name, mono trailing datum, hairline divider, fully transparent over the score; an empty song list uses the engraved NO SONGS ON FILE prompt.",
       "html": "<div class=\"ds-row\"><span class=\"ds-row-name\">A</span><span class=\"ds-row-data\">440.0 Hz</span></div>",
       "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: transparent; border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
     },
@@ -198,7 +198,8 @@
       "Do preserve true multi-touch chord holding: releasing one finger must not stop notes owned by other fingers.",
       "Do expose Android song pencils and drag handles only via the title-bar Edit Songs action.",
       "Do run the score beneath iOS Liquid Glass bars, keep tab icons as grayscale templates, and load ads only after the real view width is known.",
-      "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it."
+      "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it.",
+      "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",
