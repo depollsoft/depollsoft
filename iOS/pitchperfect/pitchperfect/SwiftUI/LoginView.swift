@@ -1,16 +1,8 @@
 import SwiftUI
-import FirebaseAuth
-#if canImport(FirebaseAuthUI)
-import FirebaseAuthUI
-#endif
-#if canImport(FirebaseEmailAuthUI)
-import FirebaseEmailAuthUI
-#endif
 
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var showFirebaseUI = false
-    @State private var errorMessage: String?
+    @State private var showAuth = false
 
     let onFinish: () -> Void
 
@@ -32,13 +24,11 @@ struct LoginView: View {
                         )
                         .font(.body)
 
-                        Button("Sign up or log in") {
-                            showFirebaseUI = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-                        .frame(maxWidth: .infinity)
-                        .accessibilityIdentifier("SignIn")
+                        Button("Sign up or log in") { showAuth = true }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                            .frame(maxWidth: .infinity)
+                            .accessibilityIdentifier("SignIn")
                     }
                     .padding()
                     .frame(maxWidth: 680)
@@ -47,33 +37,20 @@ struct LoginView: View {
             }
             .navigationBarTitle("Log In To Pitch Perfect", displayMode: .inline)
             .navigationBarItems(trailing: Button("Skip", action: finish))
-            .sheet(isPresented: $showFirebaseUI) {
-                #if canImport(FirebaseAuthUI)
-                FirebaseUIAuthView { result, error in
-                    showFirebaseUI = false
-                    if let error {
-                        errorMessage = error.localizedDescription
-                    } else if result != nil {
-                        DispatchQueue.main.async { finish() }
-                    }
+            .background {
+                if showAuth {
+                    PitchPerfectAuthView(
+                        onSignIn: finish,
+                        onDismiss: { showAuth = false }
+                    )
                 }
-                #else
-                Text("Firebase Auth UI is not available.")
-                #endif
-            }
-            .alert("Could Not Log In", isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "Please try again.")
             }
         }
         .navigationViewStyle(.stack)
     }
 
     private func finish() {
+        showAuth = false
         onFinish()
         dismiss()
     }
@@ -82,43 +59,3 @@ struct LoginView: View {
 extension Color {
     static let systemBackground = Color(uiColor: .systemBackground)
 }
-
-#if canImport(FirebaseAuthUI)
-struct FirebaseUIAuthView: UIViewControllerRepresentable {
-    let onCompletion: (AuthDataResult?, Error?) -> Void
-
-    func makeUIViewController(context: Context) -> UIViewController {
-        guard let authUI = FUIAuth.defaultAuthUI() else { return UIViewController() }
-        authUI.delegate = context.coordinator
-        #if canImport(FirebaseEmailAuthUI)
-        authUI.providers = [
-            FUIEmailAuth(
-                authAuthUI: authUI,
-                signInMethod: EmailPasswordAuthSignInMethod,
-                forceSameDevice: false,
-                allowNewEmailAccounts: true,
-                requireDisplayName: false,
-                actionCodeSetting: ActionCodeSettings()
-            )
-        ]
-        #endif
-        return authUI.authViewController()
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator { Coordinator(onCompletion: onCompletion) }
-
-    final class Coordinator: NSObject, FUIAuthDelegate {
-        let onCompletion: (AuthDataResult?, Error?) -> Void
-
-        init(onCompletion: @escaping (AuthDataResult?, Error?) -> Void) {
-            self.onCompletion = onCompletion
-        }
-
-        func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-            onCompletion(authDataResult, error)
-        }
-    }
-}
-#endif

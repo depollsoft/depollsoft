@@ -1,3 +1,5 @@
+import FirebaseAuth
+import FirebaseCore
 import XCTest
 @testable import pitchperfect
 
@@ -181,6 +183,19 @@ final class DPSettingsModelTests: XCTestCase {
         XCTAssertTrue(receivedObject as AnyObject === model)
     }
     
+    // MARK: - Firestore Attachment Tests
+
+    func testAttachToFirestoreWithoutAuthenticatedUserIsNoOp() throws {
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        try? Auth.auth().signOut()
+
+        DPSettingsModel.sharedInstance.attachToFirestore()
+
+        XCTAssertNil(Auth.auth().currentUser)
+    }
+
     // MARK: - Detach From Firestore Tests
     
     func testDetachFromFirestoreIsIdempotent() {

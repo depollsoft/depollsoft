@@ -40,6 +40,11 @@
 
 - (void)disableSDKCrashReporting {
 }
+- (void)startWithCompletionHandler:(void (^)(id status))completionHandler {
+    if (completionHandler) {
+        completionHandler(nil);
+    }
+}
 @end
 #endif
 

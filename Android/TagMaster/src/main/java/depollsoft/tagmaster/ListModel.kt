@@ -1,19 +1,20 @@
 package depollsoft.tagmaster
 
 import com.bindroid.trackable.*
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
 import depollsoft.lib.util.Preferences
 import java.lang.ref.WeakReference
 
-class ListModel private constructor(val listName: String) {
-
+class ListModel private constructor(
+    val listName: String,
+) {
     var ids: TrackableCollection<Int>
-            by trackable(preferences[listName] ?: TrackableCollection())
+        by trackable(preferences[listName] ?: TrackableCollection())
 
     fun add(id: Int) {
         if (!ids.contains(id)) ids.add(id)
@@ -29,9 +30,7 @@ class ListModel private constructor(val listName: String) {
         return index > 0
     }
 
-    fun contains(id: Int): Boolean {
-        return ids.contains(id)
-    }
+    fun contains(id: Int): Boolean = ids.contains(id)
 
     fun moveDown(id: Int) {
         ids.transaction {
@@ -72,21 +71,26 @@ class ListModel private constructor(val listName: String) {
             val userDoc = Firebase.firestore.document("users/${user.uid}")
             userDoc.set(
                 mapOf(
-                    "lists" to mapOf(
-                        listName to if (ids.isEmpty()) FieldValue.delete() else ids
-                    )
-                ), SetOptions.mergeFields("lists.${listName}")
+                    "lists" to
+                        mapOf(
+                            listName to if (ids.isEmpty()) FieldValue.delete() else ids,
+                        ),
+                ),
+                SetOptions.mergeFields("lists.$listName"),
             )
         }
     }
 
     init {
-        Trackable.track(object : Tracker {
-            override fun update() {
-                storeValue()
-                Trackable.track(this, { ids.track() })
-            }
-        }, { ids.track() })
+        Trackable.track(
+            object : Tracker {
+                override fun update() {
+                    storeValue()
+                    Trackable.track(this, { ids.track() })
+                }
+            },
+            { ids.track() },
+        )
     }
 
     companion object {
@@ -104,6 +108,7 @@ class ListModel private constructor(val listName: String) {
         }
 
         private val modelInstances: MutableMap<String, WeakReference<ListModel>> = mutableMapOf()
+
         operator fun invoke(listName: String): ListModel {
             var model = modelInstances[listName]?.get()
             if (model == null) {
@@ -140,7 +145,7 @@ class ListModel private constructor(val listName: String) {
         }
 
         private var shouldStore = true
-        
+
         /**
          * For testing: disable Firebase storage to allow unit testing without Firebase initialization.
          * Call this in @Before methods of tests that create ListModel instances.
@@ -149,7 +154,7 @@ class ListModel private constructor(val listName: String) {
         fun setTestMode(enabled: Boolean) {
             shouldStore = !enabled
         }
-        
+
         private fun fromFirestore(data: Map<*, *>) {
             shouldStore = false
             try {
@@ -167,13 +172,14 @@ class ListModel private constructor(val listName: String) {
                         return
                     }
                     val cur = ListModel.invoke(it)
-                    var newValue = (data[it] as? List<*>)?.mapNotNull { (it as? Long)?.toInt() }
-                        ?.toMutableList() ?: mutableListOf();
+                    var newValue =
+                        (data[it] as? List<*>)
+                            ?.mapNotNull { (it as? Long)?.toInt() }
+                            ?.toMutableList() ?: mutableListOf()
                     if (!newValue.equals(cur.ids)) {
                         cur.ids.replaceBackingStore(newValue)
                     }
                 }
-
             } finally {
                 shouldStore = true
             }
@@ -186,33 +192,36 @@ class ListModel private constructor(val listName: String) {
                 val userDoc = Firebase.firestore.document("users/${user.uid}")
                 userDoc.set(
                     mapOf(
-                        "lists" to preferences
-                    ), SetOptions.merge()
+                        "lists" to preferences,
+                    ),
+                    SetOptions.merge(),
                 )
             }
         }
 
         var registration: ListenerRegistration? = null
+
         fun connectToFirestore() {
             registration?.remove()
             val user = Firebase.auth.currentUser
             if (user != null) {
                 val userDoc = Firebase.firestore.document("users/${user.uid}")
-                registration = userDoc.addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        print(error)
-                        return@addSnapshotListener
-                    }
+                registration =
+                    userDoc.addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            print(error)
+                            return@addSnapshotListener
+                        }
 
-                    if (!snapshot!!.exists()) {
-                        // There was no existing user, so initialize the user
-                        toFirestore()
-                    }
+                        if (!snapshot!!.exists()) {
+                            // There was no existing user, so initialize the user
+                            toFirestore()
+                        }
 
-                    fromFirestore(
-                        snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>()
-                    )
-                }
+                        fromFirestore(
+                            snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>(),
+                        )
+                    }
             }
         }
 

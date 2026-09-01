@@ -19,7 +19,7 @@ import java.util.List;
  * Supplements existing XmlDocument tests with more complex scenarios.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class XmlDocumentEdgeCasesTest {
 
     // =====================================================================

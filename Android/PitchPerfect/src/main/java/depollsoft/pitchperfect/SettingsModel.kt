@@ -1,14 +1,13 @@
 package depollsoft.pitchperfect
 
-import com.google.firebase.auth.ktx.auth
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.licensing.LicenseChecker
-import com.parse.ParseUser
 import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import kotlinx.coroutines.tasks.await
@@ -25,6 +24,7 @@ object SettingsModel {
     val appStore: String
         get() = RichApplication.getAppContext().getString(R.string.app_store)
     var areAdsRemoved: Boolean by preference(ARE_ADS_REMOVED_KEY, false)
+
     @JvmStatic
     var toggleNotes: Boolean by preference(TOGGLE_NOTE_KEY, false) {
         if (!restoring) {
@@ -43,18 +43,19 @@ object SettingsModel {
     fun attachToFirestore() {
         val user = Firebase.auth.currentUser!!
         userRef = Firebase.firestore.document("users/${user.uid}")
-        listenerRegistration = userRef!!.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                return@addSnapshotListener
+        listenerRegistration =
+            userRef!!.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                restoring = true
+                try {
+                    wakeLock = snapshot!!.getBoolean("wakeLock") ?: wakeLock
+                    toggleNotes = snapshot!!.getBoolean("toggleNotes") ?: toggleNotes
+                } finally {
+                    restoring = false
+                }
             }
-            restoring = true
-            try {
-                wakeLock = snapshot!!.getBoolean("wakeLock") ?: wakeLock
-                toggleNotes = snapshot!!.getBoolean("toggleNotes") ?: toggleNotes
-            } finally {
-                restoring =false
-            }
-        }
     }
 
     fun detachFromFirestore() {

@@ -26,36 +26,52 @@ platform :android do
         project_dir: ".",
         properties: {
           "DEPOLLSOFT_PRIVATE_BUILD_NUMBER" => build_number,
+          "DEPOLLSOFT_PRIVATE_PR_NUMBER" => ENV["PR_NUMBER"].to_s,
         },
       )
     end
 
-    {
-      # PitchPerfect phone and wear private builds share the same package ID, so they
-      # must be uploaded as a single Play release to keep existing users upgradeable.
-      "depollsoft.pitchperfect.private" => [
-        "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
-        "PitchPerfectWear/build/outputs/bundle/private/PitchPerfectWear-private.aab",
-      ],
-      "depollsoft.tagmaster.private" => [
-        "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
-      ],
-    }.each do |package_name, aab_paths|
-      retained_version_codes = with_retries("Fetch #{package_name} internal track version codes") do
-        google_play_track_version_codes(
-          package_name: package_name,
-          track: "internal",
+    # The Play app has no Wear form-factor track configured. Keep building the
+    # companion bundle for validation, but only upload the configured phone apps.
+    base_version_code = build_number.to_i * 10
+    deployments = [
+      {
+        label: "Pitch Perfect phone",
+        package_name: "depollsoft.pitchperfect.private",
+        track: "internal",
+        aab: "PitchPerfect/build/outputs/bundle/private/PitchPerfect-private.aab",
+        version_code: base_version_code,
+      },
+      {
+        label: "Tag Master",
+        package_name: "depollsoft.tagmaster.private",
+        track: "internal",
+        aab: "TagMaster/build/outputs/bundle/private/TagMaster-private.aab",
+        version_code: base_version_code + 1,
+      },
+    ]
+
+    deployments.each do |deployment|
+      with_retries("Upload #{deployment[:label]} to Play #{deployment[:track]}") do
+        active_version_codes = google_play_track_version_codes(
+          package_name: deployment[:package_name],
+          track: deployment[:track],
           json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
         )
-      end
 
-      with_retries("Upload #{package_name} to Play internal testing") do
+        if active_version_codes.map(&:to_i).include?(deployment[:version_code])
+          UI.success(
+            "#{deployment[:label]} version #{deployment[:version_code]} " +
+              "is already active on #{deployment[:track]}",
+          )
+          next
+        end
+
         upload_to_play_store(
-          package_name: package_name,
-          track: "internal",
+          package_name: deployment[:package_name],
+          track: deployment[:track],
           json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
-          aab_paths: aab_paths,
-          version_codes_to_retain: retained_version_codes,
+          aab: deployment[:aab],
           skip_upload_metadata: true,
           skip_upload_images: true,
           skip_upload_screenshots: true,

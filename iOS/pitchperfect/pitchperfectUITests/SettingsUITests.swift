@@ -38,6 +38,9 @@ final class SettingsUITests: XCTestCase {
         } else if app.buttons["gear"].exists {
             app.buttons["gear"].tap()
             return true
+        } else if app.buttons["gearshape"].exists {
+            app.buttons["gearshape"].tap()
+            return true
         }
         
         // Try tapping info/settings in navigation bar
@@ -88,6 +91,11 @@ final class SettingsUITests: XCTestCase {
                                  firstList(in: app).exists
         
         XCTAssertTrue(hasSettingsContent, "Settings screen should show content")
+
+        let toolbarScreenshot = XCTAttachment(screenshot: app.screenshot())
+        toolbarScreenshot.name = "Fixed settings title bar"
+        toolbarScreenshot.lifetime = .keepAlways
+        add(toolbarScreenshot)
     }
     
     // MARK: - Settings Content Tests

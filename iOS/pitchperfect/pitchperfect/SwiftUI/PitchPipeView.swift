@@ -70,7 +70,7 @@ struct PitchPipeView: View {
             .sheet(isPresented: $showSettings, onDismiss: refreshSettings) {
                 SettingsView()
             }
-            .onChange(of: isFromFToF) { newValue in
+            .onChange(of: isFromFToF) { _, newValue in
                 stopAllNotes()
                 model.isFromFToF = newValue
             }
@@ -78,7 +78,7 @@ struct PitchPipeView: View {
                 stopAllNotes()
                 refreshSettings()
             }
-            .onChange(of: scenePhase) { phase in
+            .onChange(of: scenePhase) { _, phase in
                 if phase != .active { stopAllNotes() }
             }
             .onDisappear(perform: stopAllNotes)

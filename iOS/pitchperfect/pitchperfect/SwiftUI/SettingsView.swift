@@ -26,7 +26,7 @@ struct SettingsView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .onChange(of: toggleNotes) { value in
+                        .onChange(of: toggleNotes) { _, value in
                             guard !isRefreshing else { return }
                             DPSettingsModel.sharedInstance.toggleNotes = value
                         }
@@ -39,7 +39,7 @@ struct SettingsView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .onChange(of: wakeLock) { value in
+                        .onChange(of: wakeLock) { _, value in
                             guard !isRefreshing else { return }
                             DPSettingsModel.sharedInstance.wakeLock = value
                         }

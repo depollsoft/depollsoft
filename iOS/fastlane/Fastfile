@@ -1,23 +1,36 @@
 require "fileutils"
-require "shellwords"
+require "plist"
 require "tmpdir"
 
 default_platform(:ios)
 
 IOS_ROOT = File.expand_path("..", __dir__)
 
-def with_private_google_service_config(config_dir)
+def with_private_google_service_config(config_dir, info_plist_path)
   original = File.join(IOS_ROOT, config_dir, "GoogleService-Info.plist")
   private_config = File.join(IOS_ROOT, config_dir, "GoogleService-Info-Private.plist")
   backup = "#{original}.backup"
+  original_info_plist = File.read(info_plist_path)
 
   UI.user_error!("Missing private Firebase config at #{private_config}") unless File.exist?(private_config)
 
+  private_values = Plist.parse_xml(private_config)
+  reversed_client_id = private_values.fetch("REVERSED_CLIENT_ID")
+  info_values = Plist.parse_xml(info_plist_path)
+  info_values.fetch("CFBundleURLTypes").each do |url_type|
+    schemes = url_type["CFBundleURLSchemes"] || []
+    schemes.map! do |scheme|
+      scheme.start_with?("com.googleusercontent.apps.") ? reversed_client_id : scheme
+    end
+  end
+
   FileUtils.cp(original, backup)
   FileUtils.cp(private_config, original)
+  File.write(info_plist_path, info_values.to_plist)
   yield
 ensure
   FileUtils.mv(backup, original, force: true) if File.exist?(backup)
+  File.write(info_plist_path, original_info_plist) if original_info_plist
 end
 
 def with_private_display_name(info_plist_path, display_name)
@@ -34,11 +47,26 @@ ensure
   File.write(info_plist_path, original) if original
 end
 
+def with_private_build_metadata(info_plist_path, build_number, pr_number)
+  original = File.binread(info_plist_path)
+  pr_number = "?" if pr_number.to_s.strip.empty?
+  plist_buddy = "/usr/libexec/PlistBuddy"
+  system(plist_buddy, "-c", "Delete :PrivateBuildNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Delete :PrivatePRNumber", info_plist_path, out: File::NULL, err: File::NULL)
+  system(plist_buddy, "-c", "Add :PrivateBuildNumber string #{build_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private build number")
+  system(plist_buddy, "-c", "Add :PrivatePRNumber string #{pr_number}", info_plist_path) ||
+    UI.user_error!("Unable to add private PR number")
+  yield
+ensure
+  File.binwrite(info_plist_path, original) if original
+end
+
 def with_private_entitlements(entitlements_path, production_bundle_identifier:, bundle_identifier:)
   entitlements = File.read(entitlements_path)
     .gsub(
-      /\n\s*<key>aps-environment<\/key>\n\s*<string>[^<]*<\/string>/,
-      "",
+      /(<key>aps-environment<\/key>\s*<string>)[^<]*(<\/string>)/,
+      "\\1production\\2",
     )
     .gsub(production_bundle_identifier, bundle_identifier)
 
@@ -47,6 +75,84 @@ def with_private_entitlements(entitlements_path, production_bundle_identifier:, 
     File.write(private_entitlements_path, entitlements)
     yield private_entitlements_path
   end
+end
+
+
+def with_private_signing(
+  project_path:,
+  target:,
+  bundle_identifier:,
+  provisioning_profile:,
+  entitlements_path:
+)
+  project_file = File.join(project_path, "project.pbxproj")
+  original_project = File.binread(project_file)
+  update_code_signing_settings(
+    path: project_path,
+    use_automatic_signing: false,
+    team_id: "43AWMS3YJX",
+    targets: [target],
+    build_configurations: ["Release"],
+    code_sign_identity: "Apple Distribution",
+    entitlements_file_path: entitlements_path,
+    profile_name: provisioning_profile,
+    bundle_identifier: bundle_identifier,
+  )
+  yield
+ensure
+  File.binwrite(project_file, original_project) if original_project
+end
+
+
+def ensure_internal_test_group(app_identifier:, tester_email:)
+  app = Spaceship::ConnectAPI::App.find(app_identifier)
+  UI.user_error!("TestFlight app #{app_identifier} was not found") unless app
+
+  group_name = "PR Preview Internal Testers"
+  group = app.get_beta_groups.find do |candidate|
+    candidate.name == group_name && candidate.is_internal_group
+  end
+  unless group
+    response = Spaceship::ConnectAPI.test_flight_request_client.post(
+      "v1/betaGroups",
+      {
+        data: {
+          attributes: {
+            name: group_name,
+            isInternalGroup: true,
+            hasAccessToAllBuilds: true,
+          },
+          relationships: {
+            app: { data: { id: app.id, type: "apps" } },
+          },
+          type: "betaGroups",
+        },
+      },
+    )
+    group = response.to_models.first
+  end
+
+  tester = app.get_beta_testers(
+    filter: { email: tester_email },
+    includes: "betaGroups",
+  ).first
+  if tester
+    memberships = Array(tester.beta_groups)
+    unless memberships.any? { |membership| membership.id == group.id }
+      group.add_beta_testers(beta_tester_ids: [tester.id])
+    end
+  else
+    Spaceship::ConnectAPI.post_beta_tester_assignment(
+      beta_group_ids: [group.id],
+      attributes: {
+        email: tester_email,
+        firstName: "David",
+        lastName: "Poll",
+      },
+    )
+  end
+
+  group.name
 end
 
 def build_private_app(
@@ -64,38 +170,49 @@ def build_private_app(
   provisioning_profile = "match AppStore #{bundle_identifier}"
   entitlements_file = File.join(IOS_ROOT, entitlements_path)
   info_plist_file = File.join(IOS_ROOT, info_plist_path)
+  project_file = File.join(IOS_ROOT, scheme, "#{scheme}.xcodeproj")
 
-  with_private_google_service_config(config_dir) do
+  with_private_google_service_config(config_dir, info_plist_file) do
     with_private_display_name(info_plist_file, display_name) do
-      with_private_entitlements(
-        entitlements_file,
-        production_bundle_identifier: production_bundle_identifier,
-        bundle_identifier: bundle_identifier,
-      ) do |private_entitlements_path|
-        build_app(
-          workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
-          scheme: scheme,
-          export_method: "app-store",
-          export_team_id: "43AWMS3YJX",
-          export_options: {
-            provisioningProfiles: {
-              bundle_identifier => provisioning_profile,
-            },
-          },
-          xcargs: [
-            "PRODUCT_BUNDLE_IDENTIFIER=#{bundle_identifier}",
-            "ASSETCATALOG_COMPILER_APPICON_NAME=#{icon_name}",
-            "CURRENT_PROJECT_VERSION=#{build_number}",
-            "DEVELOPMENT_TEAM=43AWMS3YJX",
-            "CODE_SIGN_STYLE=Manual",
-            "CODE_SIGN_IDENTITY=#{Shellwords.escape('Apple Distribution')}",
-            "CODE_SIGN_ENTITLEMENTS=#{Shellwords.escape(private_entitlements_path)}",
-            "PROVISIONING_PROFILE_SPECIFIER=#{Shellwords.escape(provisioning_profile)}",
-          ].join(" "),
-          output_directory: File.join(IOS_ROOT, "build"),
-          output_name: output_name,
-          clean: true,
-        )
+      with_private_build_metadata(
+        info_plist_file,
+        build_number,
+        ENV["PR_NUMBER"].to_s,
+      ) do
+        with_private_entitlements(
+          entitlements_file,
+          production_bundle_identifier: production_bundle_identifier,
+          bundle_identifier: bundle_identifier,
+        ) do |private_entitlements_path|
+          with_private_signing(
+            project_path: project_file,
+            target: scheme,
+            bundle_identifier: bundle_identifier,
+            provisioning_profile: provisioning_profile,
+            entitlements_path: private_entitlements_path,
+          ) do
+            build_app(
+              workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+              scheme: scheme,
+              export_method: "app-store",
+              export_team_id: "43AWMS3YJX",
+              export_options: {
+                provisioningProfiles: {
+                  bundle_identifier => provisioning_profile,
+                },
+              },
+              xcargs: [
+                "APP_ICON_NAME=#{icon_name}",
+                "CURRENT_PROJECT_VERSION=#{build_number}",
+              ].join(" "),
+              cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
+              skip_package_dependencies_resolution: true,
+              output_directory: File.join(IOS_ROOT, "build"),
+              output_name: output_name,
+              clean: true,
+            )
+          end
+        end
       end
     end
   end
@@ -120,9 +237,60 @@ platform :ios do
       is_key_content_base64: false,
     )
 
+    refresh_signing = ENV["MATCH_FORCE_REGENERATE"] == "true"
+    if refresh_signing
+      provisioning_client = Spaceship::ConnectAPI::Provisioning::Client.new(
+        token: Spaceship::ConnectAPI.token,
+        current_team_id: "43AWMS3YJX",
+      )
+      capability = Spaceship::ConnectAPI::BundleIdCapability
+      capability_settings = {
+        capability::Type::APPLE_ID_AUTH => [
+          {
+            key: capability::Settings::APPLE_ID_AUTH_APP_CONSENT,
+            options: [{ key: capability::Options::PRIMARY_APP_CONSENT }],
+          },
+        ],
+        capability::Type::PUSH_NOTIFICATIONS => [],
+      }
+
+      [
+        "depollsoft.pitchperfect.private",
+        "depollsoft.tagmaster.private",
+      ].each do |identifier|
+        bundle_id = Spaceship::ConnectAPI::BundleId.find(
+          identifier,
+          client: provisioning_client,
+        )
+        UI.user_error!("Private App ID #{identifier} was not found") unless bundle_id
+
+        capabilities = bundle_id.get_capabilities(client: provisioning_client)
+        capability_settings.each do |capability_type, settings|
+          next if capabilities.any? { |item| item.is_type?(capability_type) }
+
+          bundle_id.create_capability(
+            capability_type,
+            settings: settings,
+            client: provisioning_client,
+          )
+        end
+      end
+    end
+
+    tester_email = ENV.fetch("TESTFLIGHT_TESTER_EMAIL")
+    ensure_internal_test_group(
+      app_identifier: "depollsoft.pitchperfect.private",
+      tester_email: tester_email,
+    )
+    ensure_internal_test_group(
+      app_identifier: "depollsoft.tagmaster.private",
+      tester_email: tester_email,
+    )
+
     match(
       type: "appstore",
-      readonly: true,
+      readonly: !refresh_signing,
+      force: refresh_signing,
       app_identifier: [
         "depollsoft.pitchperfect.private",
         "depollsoft.tagmaster.private",
@@ -161,6 +329,12 @@ platform :ios do
       ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
       skip_waiting_for_build_processing: false,
       distribute_external: false,
+      localized_app_info: {
+        "en-US" => {
+          description: "Private preview builds for dependency testing.",
+          feedback_email: tester_email,
+        },
+      },
       changelog: changelog,
     )
 
@@ -170,7 +344,65 @@ platform :ios do
       ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
       skip_waiting_for_build_processing: false,
       distribute_external: false,
+      localized_app_info: {
+        "en-US" => {
+          description: "Private preview builds for dependency testing.",
+          feedback_email: tester_email,
+        },
+      },
       changelog: changelog,
+    )
+  end
+
+  desc "Sign and export one prebuilt archive for Firebase App Distribution"
+  lane :export_firebase_private do |options|
+    configs = {
+      "PitchPerfect" => {
+        scheme: "pitchperfect",
+        bundle_identifier: "depollsoft.pitchperfect.private",
+        output_name: "PitchPerfect-private.ipa",
+      },
+      "TagMaster" => {
+        scheme: "tagmaster",
+        bundle_identifier: "depollsoft.tagmaster.private",
+        output_name: "TagMaster-private.ipa",
+      },
+    }
+    app = options[:app].to_s
+    config = configs[app]
+    UI.user_error!("Unsupported Firebase app: #{app}") unless config
+
+    archive_path = File.expand_path(options[:archive].to_s)
+    unless File.directory?(archive_path)
+      UI.user_error!("Missing archive: #{archive_path}")
+    end
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: false,
+    )
+    profile = "match AdHoc #{config[:bundle_identifier]}"
+    match(
+      type: "adhoc",
+      readonly: false,
+      app_identifier: [config[:bundle_identifier]],
+      api_key: api_key,
+    )
+    build_app(
+      skip_build_archive: true,
+      archive_path: archive_path,
+      scheme: config[:scheme],
+      export_method: "ad-hoc",
+      export_team_id: "43AWMS3YJX",
+      export_options: {
+        provisioningProfiles: {
+          config[:bundle_identifier] => profile,
+        },
+      },
+      output_directory: File.join(IOS_ROOT, "build"),
+      output_name: config[:output_name],
     )
   end
 end

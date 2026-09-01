@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Firebase client bundle configuration is distributed with the apps"
+paths = [
+  '''(^|/)Android/.*/google-services\.json$''',
+  '''(^|/)iOS/.*/GoogleService-Info(?:-Private)?\.plist$''',
+]

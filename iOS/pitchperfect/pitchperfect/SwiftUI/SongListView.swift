@@ -60,12 +60,12 @@ struct SongListView: View {
                     songListObserver.refresh()
                 }
             }
-            .onChange(of: editMode) { _ in stopAllSongs() }
+            .onChange(of: editMode) { _, _ in stopAllSongs() }
             .onReceive(NotificationCenter.default.publisher(for: DPSettingsModel.settingsChangedNotificationName)) { _ in
                 stopAllSongs()
                 refreshSettings()
             }
-            .onChange(of: scenePhase) { phase in
+            .onChange(of: scenePhase) { _, phase in
                 if phase != .active { stopAllSongs() }
             }
             .onDisappear(perform: stopAllSongs)

@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * Supplements existing JsonSerializerTest and JsonSerializerExtraTest.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+@Config(sdk = Build.VERSION_CODES.M)
 public class JsonSerializerTypesTest {
 
     // =====================================================================

@@ -1,11 +1,5 @@
 import XCTest
 
-func firstList(in app: XCUIApplication) -> XCUIElement {
-    let table = app.tables.firstMatch
-    if table.exists { return table }
-    return app.collectionViews.firstMatch
-}
-
 /**
  * UI Tests for the Pitch Perfect iOS app.
  * Tests core navigation, pitch pipe interaction, and basic functionality.
@@ -16,7 +10,7 @@ func firstList(in app: XCUIApplication) -> XCUIElement {
  * - Use waitForExistence with appropriate timeouts
  * - Keep tests focused and independent
  */
-class PitchPerfectUITests: XCTestCase {
+final class PitchPerfectUITests: XCTestCase {
     
     var app: XCUIApplication!
     
@@ -368,7 +362,69 @@ class PitchPerfectUITests: XCTestCase {
         }
     }
     
+}
+
+extension PitchPerfectUITests {
     // MARK: - App Stability Tests
+
+    func testAuthProvidersRenderAndPhoneEntryOpens() throws {
+        app.terminate()
+        app.launchArguments = [
+            "-depollsoft.pitchperfect.LoginShown", "NO",
+        ]
+        app.launch()
+
+        let loginButton = app.buttons["Sign up or log in"]
+        XCTAssertTrue(loginButton.waitForExistence(timeout: 5))
+        loginButton.tap()
+        XCTAssertTrue(app.textFields["email-field"].waitForExistence(timeout: 5))
+
+        for provider in [
+            "Sign in with Google",
+            "Sign in with Facebook",
+            "Sign in with Apple",
+            "Sign in with Phone",
+        ] {
+            XCTAssertTrue(
+                app.buttons[provider].exists,
+                "Missing provider button: (provider)",
+            )
+        }
+
+        let providerScreenshot = XCTAttachment(screenshot: app.screenshot())
+        providerScreenshot.name = "Fixed auth provider buttons"
+        providerScreenshot.lifetime = .keepAlways
+        add(providerScreenshot)
+
+        app.buttons["Sign in with Phone"].tap()
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testOpeningLoginScreenDoesNotCrash() throws {
+        app.terminate()
+        app.launchArguments = [
+            "-depollsoft.pitchperfect.LoginShown", "NO",
+        ]
+        app.launch()
+
+        let loginButton = app.buttons["Sign up or log in"]
+        XCTAssertTrue(
+            loginButton.waitForExistence(timeout: 5),
+            "Login prompt should be visible",
+        )
+        loginButton.tap()
+
+        XCTAssertTrue(
+            app.textFields["email-field"].waitForExistence(timeout: 5),
+            "Firebase login screen should open",
+        )
+        XCTAssertEqual(
+            app.state,
+            .runningForeground,
+            "Opening the login screen must not terminate the app",
+        )
+    }
     
     func testAppDoesNotCrashOnRapidTabSwitching() throws {
         let tabBar = app.tabBars.firstMatch

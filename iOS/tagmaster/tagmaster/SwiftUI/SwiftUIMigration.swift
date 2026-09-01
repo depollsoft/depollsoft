@@ -2,12 +2,6 @@ import SwiftUI
 import AVKit
 import QuickLook
 import FirebaseAuth
-#if canImport(FirebaseAuthUI)
-import FirebaseAuthUI
-#endif
-#if canImport(FirebaseEmailAuthUI)
-import FirebaseEmailAuthUI
-#endif
 
 extension View {
     @ViewBuilder
@@ -20,25 +14,21 @@ extension View {
     }
 }
 
-// MARK: - Objective-C app lifecycle bridge
-
-@MainActor
-@objcMembers
-public final class MainAppViewHostingController: NSObject {
-    private static let sharedState = TagMasterAppState()
-
-    public static func createRoot() -> UIViewController {
-        UIHostingController(rootView: MainAppView().environmentObject(sharedState))
-    }
-
-    public static func openTag(withId tagId: Int32) {
-        sharedState.pendingTagID = tagId
-    }
-}
+// MARK: - App state and deep links
 
 @MainActor
 final class TagMasterAppState: ObservableObject {
+    static let shared = TagMasterAppState()
     @Published var pendingTagID: Int32?
+    private init() {}
+}
+
+@MainActor
+@objcMembers
+public final class TagMasterDeepLinkRouter: NSObject {
+    public static func openTag(withId tagId: Int32) {
+        TagMasterAppState.shared.pendingTagID = tagId
+    }
 }
 
 // MARK: - Testable query and filter values
@@ -139,14 +129,14 @@ struct MainAppView: View {
     static func copyrightText(for year: Int) -> String { "Depollsoft © \(year)" }
     @EnvironmentObject private var appState: TagMasterAppState
     @StateObject private var lists = TagListsManager()
-    @State private var selectedTagID: Int32?
+    @State private var tagPath: [Int32] = []
     @State private var tagIDInput = ""
     @State private var showOpenTag = false
     @State private var isLoadingRandom = false
     @State private var randomError: String?
 
     var body: some View {
-        NavigationView {
+        NavigationStack(path: $tagPath) {
             List {
                 Section("Main") {
                     NavigationLink("Browse", destination: BrowseView())
@@ -165,7 +155,7 @@ struct MainAppView: View {
                             .foregroundColor(.secondary)
                     }
                     ForEach(lists.favorites, id: \.self) { tagID in
-                        NavigationLink(destination: TagDetailHostView(tagID: tagID)) {
+                        NavigationLink(value: tagID) {
                             TagCellView(tagID: tagID)
                         }
                     }
@@ -186,6 +176,9 @@ struct MainAppView: View {
                     .font(.caption)
                 }
             }
+            .navigationDestination(for: Int32.self) { tagID in
+                TagDetailHostView(tagID: tagID)
+            }
             .overlay {
                 if isLoadingRandom { ProgressView("Finding a tag...") }
             }
@@ -200,13 +193,14 @@ struct MainAppView: View {
                     .accessibilityIdentifier("Search")
                 }
             }
-            .background(hiddenTagLink)
             .alert("Open Tag", isPresented: $showOpenTag) {
                 TextField("Enter Tag ID", text: $tagIDInput)
                     .keyboardType(.decimalPad)
                 Button("Cancel", role: .cancel) { tagIDInput = "" }
                 Button("Open") {
-                    selectedTagID = Int32(tagIDInput).flatMap { $0 > 0 ? $0 : nil }
+                    if let tagID = Int32(tagIDInput), tagID > 0 {
+                        tagPath.append(tagID)
+                    }
                     tagIDInput = ""
                 }
                 .disabled(Int32(tagIDInput).map { $0 <= 0 } ?? true)
@@ -219,28 +213,15 @@ struct MainAppView: View {
             } message: {
                 Text(randomError ?? "Please try again.")
             }
-            .onChange(of: appState.pendingTagID) { consumeDeepLink($0) }
+            .onChange(of: appState.pendingTagID) { _, value in consumeDeepLink(value) }
             .onAppear { consumeDeepLink(appState.pendingTagID) }
         }
-        .navigationViewStyle(.stack)
     }
 
-    private var hiddenTagLink: some View {
-        NavigationLink(
-            destination: Group {
-                if let selectedTagID { TagDetailHostView(tagID: selectedTagID) }
-            },
-            isActive: Binding(
-                get: { selectedTagID != nil },
-                set: { if !$0 { selectedTagID = nil } }
-            )
-        ) { EmptyView() }
-        .hidden()
-    }
 
     private func consumeDeepLink(_ tagID: Int32?) {
         guard let tagID, tagID > 0 else { return }
-        selectedTagID = tagID
+        tagPath.append(tagID)
         appState.pendingTagID = nil
     }
 
@@ -280,7 +261,7 @@ struct MainAppView: View {
             let tag = (result.tags as? [DPTag])?.first
             DispatchQueue.main.async {
                 isLoadingRandom = false
-                if let tag { selectedTagID = tag.tagId }
+                if let tag { tagPath.append(tag.tagId) }
                 else { randomError = "The selected tag could not be loaded." }
             }
         }
@@ -506,14 +487,14 @@ struct SearchView: View {
                     Text("Easy Tags").tag(2)
                 }
             }
-            NavigationLink(
-                destination: searchResults,
-                isActive: Binding(
-                    get: { submittedOptions != nil },
-                    set: { if !$0 { submittedOptions = nil } }
-                )
-            ) { EmptyView() }
-            .hidden()
+        }
+        .navigationDestination(
+            isPresented: Binding(
+                get: { submittedOptions != nil },
+                set: { if !$0 { submittedOptions = nil } }
+            )
+        ) {
+            searchResults
         }
         .navigationTitle("Search")
         .toolbar {
@@ -626,16 +607,16 @@ struct TagSettingsView: View {
             }
         }
         .navigationTitle("Settings")
-        .sheet(isPresented: $showAuth, onDismiss: refreshAuth) {
-            #if canImport(FirebaseAuthUI)
-            TagMasterAuthView { error in
-                showAuth = false
-                authError = error?.localizedDescription
-                refreshAuth()
+        .background {
+            if showAuth {
+                TagMasterAuthView(
+                    onAuthStateChanged: {
+                        showAuth = false
+                        refreshAuth()
+                    },
+                    onDismiss: { showAuth = false }
+                )
             }
-            #else
-            Text("Firebase Auth UI is not available.")
-            #endif
         }
         .confirmationDialog(
             "Clear \(clearAction?.rawValue ?? "list")?",
@@ -688,36 +669,3 @@ struct TagSettingsView: View {
         clearAction = nil
     }
 }
-
-#if canImport(FirebaseAuthUI)
-struct TagMasterAuthView: UIViewControllerRepresentable {
-    let completion: (Error?) -> Void
-
-    func makeCoordinator() -> Coordinator { Coordinator(completion: completion) }
-
-    func makeUIViewController(context: Context) -> UIViewController {
-        guard let authUI = FUIAuth.defaultAuthUI() else { return UIViewController() }
-        authUI.delegate = context.coordinator
-        #if canImport(FirebaseEmailAuthUI)
-        authUI.providers = [
-            FUIEmailAuth(
-                authAuthUI: authUI, signInMethod: EmailPasswordAuthSignInMethod,
-                forceSameDevice: false, allowNewEmailAccounts: true,
-                requireDisplayName: false, actionCodeSetting: ActionCodeSettings()
-            )
-        ]
-        #endif
-        return authUI.authViewController()
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-
-    final class Coordinator: NSObject, FUIAuthDelegate {
-        let completion: (Error?) -> Void
-        init(completion: @escaping (Error?) -> Void) { self.completion = completion }
-        func authUI(_ authUI: FUIAuth, didSignInWith result: AuthDataResult?, error: Error?) {
-            completion(error)
-        }
-    }
-}
-#endif

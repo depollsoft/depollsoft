@@ -48,9 +48,9 @@
     }
     UIInterfaceOrientation orientation = self.window.windowScene.interfaceOrientation;
     if (UIInterfaceOrientationIsLandscape(orientation)) {
-        self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(width);
+        self.bannerView.adSize = GADLargeLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(width);
     } else {
-        self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(width);
+        self.bannerView.adSize = GADLargePortraitAnchoredAdaptiveBannerAdSizeWithWidth(width);
     }
     UIViewController *controller = self.window.rootViewController;
     while (controller.presentedViewController) {

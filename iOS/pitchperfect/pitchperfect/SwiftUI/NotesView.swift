@@ -1,16 +1,12 @@
 import SwiftUI
 
 struct PitchPerfectBackground: View {
-    private let image = UIImage(named: "panobackground.png")
-
     var body: some View {
         Color(uiColor: .systemBackground)
             .overlay {
-                if let image {
-                    Rectangle()
-                        .fill(ImagePaint(image: Image(uiImage: image), scale: 1))
-                        .opacity(0.5)
-                }
+                Rectangle()
+                    .fill(ImagePaint(image: Image("panobackground"), scale: 1))
+                    .opacity(0.5)
             }
             .ignoresSafeArea()
     }
@@ -104,7 +100,7 @@ struct NotesView: View {
                 stopAllNotes()
                 refreshSettings()
             }
-            .onChange(of: scenePhase) { phase in
+            .onChange(of: scenePhase) { _, phase in
                 if phase != .active { stopAllNotes() }
             }
             .onDisappear(perform: stopAllNotes)

@@ -1,6 +1,8 @@
 package depollsoft.pitchperfect
 
 import android.app.Dialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,14 +24,14 @@ import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
-import com.parse.ParseUser
+import com.google.firebase.auth.auth
+import com.google.firebase.functions.functions
 import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -42,11 +44,15 @@ class SettingsActivity : AppCompatActivity() {
     val licensed: Boolean
         get() = SettingsModel.licensed
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        return if (keyCode == KeyEvent.KEYCODE_BACK && loggingIn) {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent,
+    ): Boolean =
+        if (keyCode == KeyEvent.KEYCODE_BACK && loggingIn) {
             true
-        } else super.onKeyDown(keyCode, event)
-    }
+        } else {
+            super.onKeyDown(keyCode, event)
+        }
 
     val loggedIn: Boolean
         get() {
@@ -79,55 +85,60 @@ class SettingsActivity : AppCompatActivity() {
         UiBinder.bind(
             this,
             CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CheckBox),
-            "ToggleNotes", BindingMode.TWO_WAY
+            "ToggleNotes",
+            BindingMode.TWO_WAY,
         )
         UiBinder.bind(
             this,
             CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CheckBox),
-            "WakeLock", BindingMode.TWO_WAY
+            "WakeLock",
+            BindingMode.TWO_WAY,
         )
         UiBinder.bind(
             this,
             R.id.rateReviewHyperlink,
             "Visibility",
             "ShowBuyLink",
-            BoolConverter.get()
+            BoolConverter.get(),
         )
         uibind(
             R.id.aboutPurchased,
             "Visibility",
             { (this::licensed) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         uibind(
             R.id.loginButton,
             "Visibility",
             { (this::loggedIn) },
-            converter = BoolConverter.get(true)
+            converter = BoolConverter.get(true),
         )
         uibind(
             R.id.logoutButton,
             "Visibility",
             { (this::loggedIn) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         uibind(
             R.id.deleteAccountButton,
             "Visibility",
             { (this::loggedIn) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         uibind(
             R.id.manageSubscriptionButton,
             "Visibility",
             { (this::areAdsRemoved) },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         findViewById<View>(R.id.manageSubscriptionButton).setOnClickListener {
-            val manageIntent = Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("https://play.google.com/store/account/subscriptions?sku=${PurchaseService.REMOVE_ADS_SKU}&package=${applicationContext.packageName}")
-            )
+            val manageIntent =
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(
+                        "https://play.google.com/store/account/subscriptions?sku=${PurchaseService.REMOVE_ADS_SKU}&package=${applicationContext.packageName}",
+                    ),
+                )
             startActivity(manageIntent)
         }
         findViewById<View>(R.id.loginButton).setOnClickListener {
@@ -140,36 +151,46 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
         findViewById<View>(R.id.deleteAccountButton).setOnClickListener {
-            AlertDialog.Builder(this).setMessage(R.string.DeleteAccountConfirmation)
-                .setTitle("Delete account (${userString})")
+            AlertDialog
+                .Builder(this)
+                .setMessage(R.string.DeleteAccountConfirmation)
+                .setTitle("Delete account ($userString)")
                 .setPositiveButton(R.string.Yes) { dlg, which ->
                     GlobalScope.launch(Dispatchers.IO) {
                         SongsModel.get().detachFromFirestore()
                         SettingsModel.detachFromFirestore()
-                        Firebase.functions.getHttpsCallable("deleteUser").call().await()
+                        Firebase.functions
+                            .getHttpsCallable("deleteUser")
+                            .call()
+                            .await()
                         AuthUI.getInstance().signOut(it.context).await()
                         loginTrackable.updateTrackers()
                     }
                 }.setNegativeButton(R.string.No) { dlg, which ->
                     // Do nothing
-                }.create().show()
+                }.create()
+                .show()
         }
         val clearSongListButton = findViewById<View>(R.id.clearSongListButton)
         clearSongListButton.setOnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
-            builder.setMessage("Are you sure you want to clear your song list?")
+            builder
+                .setMessage("Are you sure you want to clear your song list?")
                 .setPositiveButton("Yes") { dialog, which ->
                     SongsModel.get().defaultSongList.resetSongs()
-                    Toast.makeText(this@SettingsActivity, "Song list cleared.", Toast.LENGTH_SHORT)
+                    Toast
+                        .makeText(this@SettingsActivity, "Song list cleared.", Toast.LENGTH_SHORT)
                         .show()
-                }
-                .setNegativeButton("No") { dialog, which -> }.show()
+                }.setNegativeButton("No") { dialog, which -> }
+                .show()
         }
         findViewById<View>(R.id.changelogButton).setOnClickListener {
-            val viewer = ChangelogViewer(
-                this@SettingsActivity, this@SettingsActivity
-                    .getString(R.string.Changelog)
-            )
+            val viewer =
+                ChangelogViewer(
+                    this@SettingsActivity,
+                    this@SettingsActivity
+                        .getString(R.string.Changelog),
+                )
             viewer.setTitle("Pitch Perfect Changelog")
             viewer.setIcon(R.mipmap.ic_launcher)
             viewer.show()
@@ -186,16 +207,39 @@ class SettingsActivity : AppCompatActivity() {
         }
         track({ PitchPerfectApplication.themeMode }) {
             when (it()) {
-                AppCompatDelegate.MODE_NIGHT_YES ->
+                AppCompatDelegate.MODE_NIGHT_YES -> {
                     findViewById<RadioButton>(R.id.radio_dark).isChecked = true
-                AppCompatDelegate.MODE_NIGHT_NO ->
+                }
+
+                AppCompatDelegate.MODE_NIGHT_NO -> {
                     findViewById<RadioButton>(R.id.radio_light).isChecked = true
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM ->
+                }
+
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> {
                     findViewById<RadioButton>(R.id.radio_system).isChecked = true
+                }
             }
             if (!this@SettingsActivity.isDestroyed) {
                 keepTracking
             }
+        }
+        setupPrivateBuildDiagnostics()
+    }
+
+    private fun setupPrivateBuildDiagnostics() {
+        val build = BuildConfig.PRIVATE_BUILD_NUMBER
+        if (build.isBlank()) return
+        val pr = BuildConfig.PRIVATE_PR_NUMBER.ifBlank { "?" }
+        val metadata = "Build $build · PR #$pr"
+        findViewById<View>(R.id.privateBuildDiagnostics).visibility = View.VISIBLE
+        findViewById<android.widget.TextView>(R.id.privateBuildMetadata).text = metadata
+        AppLog.info("Settings", "Private build diagnostics opened")
+        findViewById<View>(R.id.copyLogsButton).setOnClickListener {
+            val clipboard = getSystemService(ClipboardManager::class.java)
+            clipboard.setPrimaryClip(
+                ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"),
+            )
+            Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
         }
     }
 

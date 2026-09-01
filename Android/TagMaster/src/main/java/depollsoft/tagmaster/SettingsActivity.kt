@@ -1,5 +1,7 @@
 package depollsoft.tagmaster
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -22,11 +24,11 @@ import com.bindroid.utils.bind
 import com.bindroid.utils.compiledProp
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import com.parse.facebook.ParseFacebookUtils
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import depollsoft.lib.compat.ui.ActionBars
 import depollsoft.lib.ui.ChangelogViewer
+import depollsoft.lib.util.AppLog
 import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
@@ -50,9 +52,12 @@ class SettingsActivity : AppCompatActivity() {
         }
 
     @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
-        ParseFacebookUtils.onActivityResult(requestCode, resultCode, data)
         loginTrackable.updateTrackers()
     }
 
@@ -65,16 +70,18 @@ class SettingsActivity : AppCompatActivity() {
         this.sheetMusicSpinner = this.findViewById(R.id.sheetMusicSpinner) as Spinner
         this.learningTrackSpinner = this.findViewById(R.id.learningTracksSpinner) as Spinner
 
-        this.minDownloadChoices = Arrays.asList(
-            *this.resources.getStringArray(
-                R.array.MinDownloadChoices
+        this.minDownloadChoices =
+            Arrays.asList(
+                *this.resources.getStringArray(
+                    R.array.MinDownloadChoices,
+                ),
             )
-        )
-        this.minRatingChoices = Arrays.asList(
-            *this.resources.getStringArray(
-                R.array.MinRatingChoices
+        this.minRatingChoices =
+            Arrays.asList(
+                *this.resources.getStringArray(
+                    R.array.MinRatingChoices,
+                ),
             )
-        )
         Arrays.asList(*this.resources.getStringArray(R.array.SheetMusicChoices))
         Arrays.asList(*this.resources.getStringArray(R.array.LearningTracksChoices))
 
@@ -85,146 +92,196 @@ class SettingsActivity : AppCompatActivity() {
 
         this.refreshCacheSize()
 
-        this.findViewById<View>(R.id.clearCacheButton).setOnClickListener(OnClickListener {
-            val builder = AlertDialog.Builder(this@SettingsActivity)
-            builder
-                .setMessage(
-                    "Are you sure you want to clear your cache?  Cached sheet music and tracks will not be accessible until you are connected to the internet again."
-                )
-                .setPositiveButton("Yes") { _, _ ->
-                    SettingsModel.clearCache()
-                    this@SettingsActivity.refreshCacheSize()
-                    Toast.makeText(this@SettingsActivity, "Cache cleared.", Toast.LENGTH_SHORT)
-                        .show()
-                }.setNegativeButton("No") { _, _ -> }.show()
-        })
+        this.findViewById<View>(R.id.clearCacheButton).setOnClickListener(
+            OnClickListener {
+                val builder = AlertDialog.Builder(this@SettingsActivity)
+                builder
+                    .setMessage(
+                        "Are you sure you want to clear your cache?  Cached sheet music and tracks will not be accessible until you are connected to the internet again.",
+                    ).setPositiveButton("Yes") { _, _ ->
+                        SettingsModel.clearCache()
+                        this@SettingsActivity.refreshCacheSize()
+                        Toast
+                            .makeText(this@SettingsActivity, "Cache cleared.", Toast.LENGTH_SHORT)
+                            .show()
+                    }.setNegativeButton("No") { _, _ -> }
+                    .show()
+            },
+        )
 
-        this.minDownloadSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
-                val selected = arg0?.selectedItem as String
-                var amount = 0
-                if (selected != "Any")
-                    amount = Integer.parseInt(selected)
-                SettingsModel.minimumRandomDownloads = amount
+        this.minDownloadSpinner!!.onItemSelectedListener =
+            object : OnItemSelectedListener {
+                override fun onItemSelected(
+                    arg0: AdapterView<*>?,
+                    arg1: View?,
+                    arg2: Int,
+                    arg3: Long,
+                ) {
+                    val selected = arg0?.selectedItem as String
+                    var amount = 0
+                    if (selected != "Any") {
+                        amount = Integer.parseInt(selected)
+                    }
+                    SettingsModel.minimumRandomDownloads = amount
+                }
+
+                override fun onNothingSelected(arg0: AdapterView<*>?) {}
+            }
+        this.minRatingSpinner!!.onItemSelectedListener =
+            object : OnItemSelectedListener {
+                override fun onItemSelected(
+                    arg0: AdapterView<*>?,
+                    arg1: View?,
+                    arg2: Int,
+                    arg3: Long,
+                ) {
+                    val selected = arg0?.selectedItem as String
+                    var amount = 0.0
+                    if (selected != "Any") {
+                        amount = java.lang.Double.parseDouble(selected)
+                    }
+                    SettingsModel.minimumRandomTagRating = amount
+                }
+
+                override fun onNothingSelected(arg0: AdapterView<*>?) {}
             }
 
-            override fun onNothingSelected(arg0: AdapterView<*>?) {}
-        }
-        this.minRatingSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
-                val selected = arg0?.selectedItem as String
-                var amount = 0.0
-                if (selected != "Any")
-                    amount = java.lang.Double.parseDouble(selected)
-                SettingsModel.minimumRandomTagRating = amount
+        this.learningTrackSpinner!!.onItemSelectedListener =
+            object : OnItemSelectedListener {
+                override fun onItemSelected(
+                    arg0: AdapterView<*>?,
+                    arg1: View?,
+                    arg2: Int,
+                    arg3: Long,
+                ) {
+                    val selected = arg0?.selectedItem as String
+                    var result: Boolean? = null
+                    if (selected == "Yes") {
+                        result = true
+                    } else if (selected == "No") {
+                        result = false
+                    }
+                    SettingsModel.randomLearningTracksFilter = result
+                }
+
+                override fun onNothingSelected(arg0: AdapterView<*>?) {}
             }
+        this.sheetMusicSpinner!!.onItemSelectedListener =
+            object : OnItemSelectedListener {
+                override fun onItemSelected(
+                    arg0: AdapterView<*>?,
+                    arg1: View?,
+                    arg2: Int,
+                    arg3: Long,
+                ) {
+                    val selected = arg0?.selectedItem as String
+                    var result: Boolean? = null
+                    if (selected == "Yes") {
+                        result = true
+                    } else if (selected == "No") {
+                        result = false
+                    }
+                    SettingsModel.randomSheetMusicFilter = result
+                }
 
-            override fun onNothingSelected(arg0: AdapterView<*>?) {}
-        }
-
-        this.learningTrackSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
-                val selected = arg0?.selectedItem as String
-                var result: Boolean? = null
-                if (selected == "Yes")
-                    result = true
-                else if (selected == "No")
-                    result = false
-                SettingsModel.randomLearningTracksFilter = result
+                override fun onNothingSelected(arg0: AdapterView<*>?) {}
             }
-
-            override fun onNothingSelected(arg0: AdapterView<*>?) {}
-        }
-        this.sheetMusicSpinner!!.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(arg0: AdapterView<*>?, arg1: View?, arg2: Int, arg3: Long) {
-                val selected = arg0?.selectedItem as String
-                var result: Boolean? = null
-                if (selected == "Yes")
-                    result = true
-                else if (selected == "No")
-                    result = false
-                SettingsModel.randomSheetMusicFilter = result
-            }
-
-            override fun onNothingSelected(arg0: AdapterView<*>?) {}
-        }
-        this.findViewById<View>(R.id.clearFavoritesButton).setOnClickListener(OnClickListener {
-            val builder = AlertDialog.Builder(this@SettingsActivity)
-            builder.setMessage("Are you sure you want to clear your favorite tags list?")
-                .setPositiveButton("Yes") { _, _ ->
-                    FavoritesModel.resetFavorites()
-                    Toast.makeText(
-                        this@SettingsActivity,
-                        "Favorite tags cleared.",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }.setNegativeButton("No") { _, _ -> }.show()
-        })
-        this.findViewById<View>(R.id.clearTeachableTags).setOnClickListener(OnClickListener {
-            val builder = AlertDialog.Builder(this@SettingsActivity)
-            builder.setMessage("Are you sure you want to clear your teachable tags list?")
-                .setPositiveButton("Yes") { _, _ ->
-                    TeachableTagsModel.resetTeachableTags()
-                    Toast
-                        .makeText(
-                            this@SettingsActivity,
-                            "Teachable tags cleared.",
-                            Toast.LENGTH_SHORT
-                        )
-                        .show()
-                }.setNegativeButton("No") { _, _ -> }.show()
-        })
+        this.findViewById<View>(R.id.clearFavoritesButton).setOnClickListener(
+            OnClickListener {
+                val builder = AlertDialog.Builder(this@SettingsActivity)
+                builder
+                    .setMessage("Are you sure you want to clear your favorite tags list?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        FavoritesModel.resetFavorites()
+                        Toast
+                            .makeText(
+                                this@SettingsActivity,
+                                "Favorite tags cleared.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                    }.setNegativeButton("No") { _, _ -> }
+                    .show()
+            },
+        )
+        this.findViewById<View>(R.id.clearTeachableTags).setOnClickListener(
+            OnClickListener {
+                val builder = AlertDialog.Builder(this@SettingsActivity)
+                builder
+                    .setMessage("Are you sure you want to clear your teachable tags list?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        TeachableTagsModel.resetTeachableTags()
+                        Toast
+                            .makeText(
+                                this@SettingsActivity,
+                                "Teachable tags cleared.",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                    }.setNegativeButton("No") { _, _ -> }
+                    .show()
+            },
+        )
 
         UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true))
         UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get())
 
         this.findViewById<View>(R.id.loginButton).setOnClickListener {
             startActivityForResult(
-                AuthUI.getInstance().createSignInIntentBuilder()
+                AuthUI
+                    .getInstance()
+                    .createSignInIntentBuilder()
                     .setAvailableProviders(
                         listOf(
-                            AuthUI.IdpConfig.EmailBuilder()
+                            AuthUI.IdpConfig
+                                .EmailBuilder()
                                 .setRequireName(false)
                                 .setAllowNewAccounts(true)
                                 .build(),
                             AuthUI.IdpConfig.GoogleBuilder().build(),
                             AuthUI.IdpConfig.FacebookBuilder().build(),
-                        )
-                    )
-                    .setTheme(R.style.AppTheme)
-                    .build(), RC_SIGN_IN
+                        ),
+                    ).setTheme(R.style.AppTheme)
+                    .build(),
+                RC_SIGN_IN,
             )
         }
-        this.findViewById<View>(R.id.logoutButton).setOnClickListener(OnClickListener {
-            AuthUI.getInstance().signOut(this@SettingsActivity).continueWith {
-                loginTrackable.updateTrackers()
-            }
-        })
+        this.findViewById<View>(R.id.logoutButton).setOnClickListener(
+            OnClickListener {
+                AuthUI.getInstance().signOut(this@SettingsActivity).continueWith {
+                    loginTrackable.updateTrackers()
+                }
+            },
+        )
 
-        this.findViewById<View>(R.id.changelogButton).setOnClickListener(OnClickListener {
-            val viewer = ChangelogViewer(
-                this@SettingsActivity, this@SettingsActivity
-                    .getString(R.string.Changelog)
-            )
-            viewer.setTitle("Tag Master Changelog")
-            viewer.setIcon(R.mipmap.ic_launcher)
-            viewer.show()
-        })
+        this.findViewById<View>(R.id.changelogButton).setOnClickListener(
+            OnClickListener {
+                val viewer =
+                    ChangelogViewer(
+                        this@SettingsActivity,
+                        this@SettingsActivity
+                            .getString(R.string.Changelog),
+                    )
+                viewer.setTitle("Tag Master Changelog")
+                viewer.setIcon(R.mipmap.ic_launcher)
+                viewer.show()
+            },
+        )
 
         uibind(
             R.id.radio_system,
             "IsChecked",
             compiledProp { TagMasterApplication.Companion::themeMode },
-            converter = object : ValueConverter() {
-                override fun convertToSource(targetValue: Any?, sourceType: Class<*>?): Any {
-                    return super.convertToSource(targetValue, sourceType)
-                }
+            converter =
+                object : ValueConverter() {
+                    override fun convertToSource(
+                        targetValue: Any?,
+                        sourceType: Class<*>?,
+                    ): Any = super.convertToSource(targetValue, sourceType)
 
-                override fun convertToTarget(sourceValue: Any?, targetType: Class<*>?): Any {
-                    return super.convertToTarget(sourceValue, targetType)
-                }
-            }
+                    override fun convertToTarget(
+                        sourceValue: Any?,
+                        targetType: Class<*>?,
+                    ): Any = super.convertToTarget(sourceValue, targetType)
+                },
         )
 
         this.findViewById<RadioButton>(R.id.radio_system).setOnClickListener {
@@ -238,12 +295,17 @@ class SettingsActivity : AppCompatActivity() {
         }
         track({ TagMasterApplication.themeMode }) {
             when (it()) {
-                AppCompatDelegate.MODE_NIGHT_YES ->
+                AppCompatDelegate.MODE_NIGHT_YES -> {
                     findViewById<RadioButton>(R.id.radio_dark).isChecked = true
-                AppCompatDelegate.MODE_NIGHT_NO ->
+                }
+
+                AppCompatDelegate.MODE_NIGHT_NO -> {
                     findViewById<RadioButton>(R.id.radio_light).isChecked = true
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM ->
+                }
+
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> {
                     findViewById<RadioButton>(R.id.radio_system).isChecked = true
+                }
             }
             if (!this@SettingsActivity.isDestroyed) {
                 keepTracking
@@ -253,19 +315,36 @@ class SettingsActivity : AppCompatActivity() {
         bind(
             CompoundButtonCheckedProperty(findViewById(R.id.sheetMusicWakeLockCheckBox)),
             compiledProp { SettingsModel::wakeLockOnSheetMusic },
-            BindingMode.TWO_WAY
+            BindingMode.TWO_WAY,
         )
 
         supportActionBar?.title = "Tag Master".makeTitleString(this)
+        setupPrivateBuildDiagnostics()
+    }
+
+    private fun setupPrivateBuildDiagnostics() {
+        val build = BuildConfig.PRIVATE_BUILD_NUMBER
+        if (build.isBlank()) return
+        val pr = BuildConfig.PRIVATE_PR_NUMBER.ifBlank { "?" }
+        val metadata = "Build $build · PR #$pr"
+        findViewById<View>(R.id.privateBuildDiagnostics).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.privateBuildMetadata).text = metadata
+        AppLog.info("Settings", "Private build diagnostics opened")
+        findViewById<View>(R.id.copyLogsButton).setOnClickListener {
+            val clipboard = getSystemService(ClipboardManager::class.java)
+            clipboard.setPrimaryClip(ClipData.newPlainText("App logs", "$metadata\n\n${AppLog.contents()}"))
+            Toast.makeText(this, "Logs copied", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        return keyCode == KeyEvent.KEYCODE_BACK && this.loggingIn || super.onKeyDown(keyCode, event)
-    }
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent,
+    ): Boolean = keyCode == KeyEvent.KEYCODE_BACK && this.loggingIn || super.onKeyDown(keyCode, event)
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
@@ -282,47 +361,52 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun refreshCacheSize() {
-        (this.findViewById(R.id.cacheSizeDisplay) as TextView).text = String.format(
-            "%1.2f MB",
-            SettingsModel.cacheSizeInMegabytes
-        )
+        (this.findViewById(R.id.cacheSizeDisplay) as TextView).text =
+            String.format(
+                "%1.2f MB",
+                SettingsModel.cacheSizeInMegabytes,
+            )
     }
 
     private fun refreshLearningTracksChoice() {
         val index: Int
-        if (SettingsModel.randomLearningTracksFilter == null)
+        if (SettingsModel.randomLearningTracksFilter == null) {
             index = 0
-        else if (SettingsModel.randomLearningTracksFilter == true)
+        } else if (SettingsModel.randomLearningTracksFilter == true) {
             index = 1
-        else
+        } else {
             index = 2
+        }
         this.learningTrackSpinner!!.setSelection(index)
     }
 
     private fun refreshMinDownload() {
-        val index = Math.max(
-            0,
-            this.minDownloadChoices!!.indexOf("" + SettingsModel.minimumRandomDownloads)
-        )
+        val index =
+            Math.max(
+                0,
+                this.minDownloadChoices!!.indexOf("" + SettingsModel.minimumRandomDownloads),
+            )
         this.minDownloadSpinner!!.setSelection(index)
     }
 
     private fun refreshMinRating() {
-        val index = Math.max(
-            0,
-            this.minRatingChoices!!.indexOf("" + SettingsModel.minimumRandomTagRating.toInt())
-        )
+        val index =
+            Math.max(
+                0,
+                this.minRatingChoices!!.indexOf("" + SettingsModel.minimumRandomTagRating.toInt()),
+            )
         this.minRatingSpinner!!.setSelection(index)
     }
 
     private fun refreshSheetMusicChoice() {
         val index: Int
-        if (SettingsModel.randomSheetMusicFilter == null)
+        if (SettingsModel.randomSheetMusicFilter == null) {
             index = 0
-        else if (SettingsModel.randomSheetMusicFilter == true)
+        } else if (SettingsModel.randomSheetMusicFilter == true) {
             index = 1
-        else
+        } else {
             index = 2
+        }
         this.sheetMusicSpinner!!.setSelection(index)
     }
 }

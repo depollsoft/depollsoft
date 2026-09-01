@@ -10,13 +10,19 @@
 #import "DPTagXMLParser.h"
 #import "DPFileCache.h"
 #import "DPUtils+Subscripts.h"
-#import "DPUtils+NSString.h"
 #import "DPTrack.h"
 #import "DPAccidental.h"
 #import <objc/runtime.h>
 
 const int APP_VERSION = 1;
 NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client=TagMaster&";
+
+static NSString *DPQueryEncode(NSString *value) {
+    NSCharacterSet *allowed = [NSCharacterSet characterSetWithCharactersInString:
+        @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~"];
+    NSString *encoded = [value stringByAddingPercentEncodingWithAllowedCharacters:allowed];
+    return [encoded stringByReplacingOccurrencesOfString:@"%20" withString:@"+"];
+}
 
 @implementation DPTag
 
@@ -121,7 +127,7 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
         }
         NSMutableString *builtString = [NSMutableString stringWithString:API_URI_STRING];
         NSString *tagIdsCombined = [allTagIds componentsJoinedByString:@"|"];
-        [builtString appendFormat:@"id=%@&n=%lu", [tagIdsCombined stringByURLEncoding], (unsigned long)allTagIds.count];
+        [builtString appendFormat:@"id=%@&n=%lu", DPQueryEncode(tagIdsCombined), (unsigned long)allTagIds.count];
         NSURL *url = [NSURL URLWithString:builtString];
         DPTagXMLParser *parser = [[DPTagXMLParser alloc] init];
         NSArray *parseResult = [parser parseWithUrl:url];
@@ -257,7 +263,7 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
     }
     [builtString appendFormat:@"&start=%d", start + 1];
     if (query && [[query stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length]) {
-        [builtString appendFormat:@"&q=%@", [query stringByURLEncoding]];
+        [builtString appendFormat:@"&q=%@", DPQueryEncode(query)];
     }
     if (parts) {
         [builtString appendFormat:@"&Parts=%@", parts];

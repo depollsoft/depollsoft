@@ -66,6 +66,30 @@ class SongManagementUITests: XCTestCase {
         XCTAssertTrue(table.exists, "Songs table should be displayed")
     }
     
+    func testNavigationBarEditingActions() throws {
+        let navigationBar = app.navigationBars.firstMatch
+        XCTAssertTrue(
+            navigationBar.waitForExistence(timeout: 2),
+            "Songs should use a system navigation bar"
+        )
+
+        let editButton = navigationBar.buttons["Edit"]
+        XCTAssertTrue(editButton.exists, "Edit action should be visible")
+        XCTAssertTrue(
+            navigationBar.buttons["Settings"].exists,
+            "Settings action should be visible"
+        )
+
+        editButton.tap()
+        XCTAssertTrue(navigationBar.buttons["Done"].exists)
+        XCTAssertTrue(navigationBar.buttons["Sort Alphabetically"].exists)
+        XCTAssertTrue(navigationBar.buttons["Add"].exists)
+
+        navigationBar.buttons["Done"].tap()
+        XCTAssertTrue(navigationBar.buttons["Edit"].exists)
+        XCTAssertTrue(navigationBar.buttons["Settings"].exists)
+    }
+
     // MARK: - Add Song Tests
     
     func testAddSongButtonExists() throws {

@@ -1,0 +1,20 @@
+If:
+  PathMatch: iOS/.*\.(m|h)$
+Diagnostics:
+  Suppress:
+    - module_not_built
+
+CompileFlags:
+  Add:
+    - -xobjective-c
+    - -fobjc-arc
+    - -fmodules
+    - -isysroot
+    - /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
+    - -F/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks
+    - -I../../depolllib/depolllib
+    - -I../../depolllib/depolllib/utils
+    - -I../LayoutManagers
+    - -I../pitchperfectlib/pitchperfectlib
+    - -I.
+    - -fmodule-map-file=../../Pods/Firebase/CoreOnly/Sources/module.modulemap

@@ -190,12 +190,19 @@ static NSNumber *kFalse;
         }
         id cur = [dictionary objectForKey:key];
         if (cur == [NSNull null]) {
-            cur = nil;
-        } else if ([cur isKindOfClass:[NSDictionary class]]) {
+            continue;
+        }
+        if ([cur isKindOfClass:[NSDictionary class]]) {
             cur = [DPJsonSerializer deserializeDictionary:cur];
         }
         SEL selector = NSSelectorFromString([NSString stringWithFormat:@"set%@:", [key propertyCapitalize]]);
+        if (![result respondsToSelector:selector]) {
+            continue;
+        }
         NSMethodSignature *meth = [result methodSignatureForSelector:selector];
+        if (!meth) {
+            continue;
+        }
         NSInvocation *inv = [NSInvocation invocationWithMethodSignature:meth];
         inv.target = result;
         inv.selector = selector;

@@ -7,7 +7,6 @@
 //
 
 #import "DPPitchedSong.h"
-#import "../../../depolllib/depolllib/utils/DPUtils+NSString.h"
 #import "DPKey.h"
 #import "DPNote.h"
 
@@ -23,7 +22,7 @@
 
 - (id)init {
     if (self = [super init]) {
-        self.id = [NSString stringWithUUID];
+        self.id = NSUUID.UUID.UUIDString;
     }
     return self;
 }

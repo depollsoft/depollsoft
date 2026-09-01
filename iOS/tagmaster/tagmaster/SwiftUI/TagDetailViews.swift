@@ -35,7 +35,6 @@ struct TagDetailHostView: View {
     @State private var errorMessage: String?
     @State private var isFavorite = false
     @State private var isTeachable = false
-    @State private var showShare = false
 
     var body: some View {
         Group {
@@ -63,10 +62,17 @@ struct TagDetailHostView: View {
         .navigationTitle(tag?.title ?? "Tag")
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button { showShare = true } label: { Image(systemName: "square.and.arrow.up") }
+                if let tag, let uri = tag.tagUri() {
+                    ShareLink(
+                        item: uri,
+                        subject: Text(tag.title ?? "Tag Master"),
+                        message: Text("\(tag.title ?? "") - Tag Master for iOS")
+                    ) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
                     .accessibilityLabel("Share")
                     .accessibilityIdentifier("Share")
-                    .disabled(tag == nil)
+                }
                 Menu {
                     Button(isFavorite ? "Remove Favorite" : "Add Favorite", action: toggleFavorite)
                     Button(isTeachable ? "Unmark as Teachable" : "Mark as Teachable", action: toggleTeachable)
@@ -78,11 +84,6 @@ struct TagDetailHostView: View {
                 .disabled(tag == nil)
                 Button { loadTag(refresh: true) } label: { Image(systemName: "arrow.clockwise") }
                     .accessibilityLabel("Refresh tag")
-            }
-        }
-        .sheet(isPresented: $showShare) {
-            if let tag, let uri = tag.tagUri() {
-                ActivityView(items: ["\(tag.title ?? "") - Tag Master for iOS", uri])
             }
         }
         .onAppear {
@@ -182,12 +183,7 @@ struct TagSummaryView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
-        .sheet(item: Binding(
-            get: { sheetMusicURL.map(PreviewURL.init) },
-            set: { sheetMusicURL = $0?.url }
-        )) { item in
-            QuickLookView(url: item.url, title: tag.title ?? "Sheet Music")
-        }
+        .quickLookPreview($sheetMusicURL)
         .alert("Sheet Music Error", isPresented: Binding(
             get: { sheetMusicError != nil },
             set: { if !$0 { sheetMusicError = nil } }
@@ -228,31 +224,6 @@ struct TagSummaryView: View {
     }
 }
 
-private struct PreviewURL: Identifiable {
-    let url: URL
-    var id: URL { url }
-}
-
-struct QuickLookView: UIViewControllerRepresentable {
-    let url: URL
-    let title: String
-
-    func makeCoordinator() -> Coordinator { Coordinator(url: url, title: title) }
-    func makeUIViewController(context: Context) -> QLPreviewController {
-        let controller = QLPreviewController()
-        controller.dataSource = context.coordinator
-        return controller
-    }
-    func updateUIViewController(_ controller: QLPreviewController, context: Context) {}
-
-    final class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewItem {
-        let previewItemURL: URL?
-        let previewItemTitle: String?
-        init(url: URL, title: String) { previewItemURL = url; previewItemTitle = title }
-        func numberOfPreviewItems(in controller: QLPreviewController) -> Int { 1 }
-        func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { self }
-    }
-}
 
 struct TagDetailView: View {
     let tag: DPTag
@@ -412,12 +383,4 @@ struct TagVideoView: View {
             }
         }
     }
-}
-
-struct ActivityView: UIViewControllerRepresentable {
-    let items: [Any]
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }

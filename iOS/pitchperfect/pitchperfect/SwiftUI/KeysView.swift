@@ -60,12 +60,12 @@ struct KeysView: View {
             .sheet(isPresented: $showSettings, onDismiss: refreshSettings) {
                 SettingsView()
             }
-            .onChange(of: keyKind) { _ in stopAllNotes() }
+            .onChange(of: keyKind) { _, _ in stopAllNotes() }
             .onReceive(NotificationCenter.default.publisher(for: DPSettingsModel.settingsChangedNotificationName)) { _ in
                 stopAllNotes()
                 refreshSettings()
             }
-            .onChange(of: scenePhase) { phase in
+            .onChange(of: scenePhase) { _, phase in
                 if phase != .active { stopAllNotes() }
             }
             .onDisappear(perform: stopAllNotes)
