@@ -42,4 +42,16 @@
         android:layout_marginRight="16dp">
     </TextView>
 
+    <ImageView
+        android:id="@+id/dragHandle"
+        android:layout_width="44dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@string/ReorderSong"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/ic_drag_handle"
+        app:tint="@color/plate_ink_secondary" />
+
 </LinearLayout>

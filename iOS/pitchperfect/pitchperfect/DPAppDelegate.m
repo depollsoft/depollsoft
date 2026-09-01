@@ -64,6 +64,51 @@
         [controllers addObject:navigationController];
     }
     tabBarController.viewControllers = controllers;
+
+    // Pitch Perfect owns a stable grayscale instrument world. The opaque
+    // appearance and template images avoid Liquid Glass icon morphing/flicker
+    // when switching tabs in light mode.
+    UITabBarAppearance *appearance = [[UITabBarAppearance alloc] init];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = UIColor.systemBackgroundColor;
+    appearance.shadowColor = UIColor.separatorColor;
+    NSArray<UITabBarItemAppearance *> *itemAppearances = @[
+        appearance.stackedLayoutAppearance,
+        appearance.inlineLayoutAppearance,
+        appearance.compactInlineLayoutAppearance
+    ];
+    for (UITabBarItemAppearance *itemAppearance in itemAppearances) {
+        itemAppearance.normal.iconColor = UIColor.secondaryLabelColor;
+        itemAppearance.normal.titleTextAttributes = @{NSForegroundColorAttributeName: UIColor.secondaryLabelColor};
+        itemAppearance.selected.iconColor = UIColor.labelColor;
+        itemAppearance.selected.titleTextAttributes = @{NSForegroundColorAttributeName: UIColor.labelColor};
+    }
+    tabBarController.tabBar.standardAppearance = appearance;
+    tabBarController.tabBar.scrollEdgeAppearance = appearance;
+    tabBarController.tabBar.translucent = NO;
+
+    UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
+    [navigationAppearance configureWithOpaqueBackground];
+    navigationAppearance.backgroundColor = UIColor.systemBackgroundColor;
+    navigationAppearance.shadowColor = UIColor.separatorColor;
+    UIFont *titleFont = [UIFont fontWithName:@"Oswald-Medium" size:19] ?: [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+    navigationAppearance.titleTextAttributes = @{
+        NSForegroundColorAttributeName: UIColor.labelColor,
+        NSFontAttributeName: titleFont
+    };
+
+    for (UINavigationController *navigationController in controllers) {
+        UITabBarItem *item = navigationController.tabBarItem;
+        UIImage *templateImage = [item.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+        item.image = templateImage;
+        item.selectedImage = templateImage;
+
+        navigationController.navigationBar.standardAppearance = navigationAppearance;
+        navigationController.navigationBar.scrollEdgeAppearance = navigationAppearance;
+        navigationController.navigationBar.compactAppearance = navigationAppearance;
+        navigationController.navigationBar.tintColor = UIColor.labelColor;
+        navigationController.navigationBar.translucent = NO;
+    }
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions

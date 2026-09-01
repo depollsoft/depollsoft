@@ -2,11 +2,15 @@ package depollsoft.pitchperfect
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RadialGradient
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.os.Bundle
@@ -46,18 +50,28 @@ class PitchInstrumentView
             }
         var toggleMode: Boolean = false
 
-        private val ground = ContextCompat.getColor(context, R.color.plate_ground)
-        private val surface = ContextCompat.getColor(context, R.color.plate_surface)
-        private val ink = ContextCompat.getColor(context, R.color.plate_ink)
-        private val inkSecondary = ContextCompat.getColor(context, R.color.plate_ink_secondary)
-        private val hairline = ContextCompat.getColor(context, R.color.plate_hairline)
-        private val lit = ContextCompat.getColor(context, R.color.plate_accent)
-        private val onLit = ContextCompat.getColor(context, R.color.plate_on_accent)
+        private fun colorOrFallback(
+            resourceId: Int,
+            fallback: String,
+        ): Int =
+            runCatching { ContextCompat.getColor(context, resourceId) }
+                .getOrElse { Color.parseColor(fallback) }
+
+        private val ground = colorOrFallback(R.color.plate_ground, "#0E0F10")
+        private val surface = colorOrFallback(R.color.plate_surface, "#16181A")
+        private val ink = colorOrFallback(R.color.plate_ink, "#D9DBDD")
+        private val inkSecondary = colorOrFallback(R.color.plate_ink_secondary, "#898D92")
+        private val hairline = colorOrFallback(R.color.plate_hairline, "#2C2F33")
+        private val lit = colorOrFallback(R.color.plate_accent, "#F2EFE6")
+        private val onLit = colorOrFallback(R.color.plate_on_accent, "#101214")
 
         private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
         private val displayTypeface: Typeface =
-            androidx.core.content.res.ResourcesCompat.getFont(context, R.font.oswald_medium)
+            runCatching {
+                androidx.core.content.res.ResourcesCompat
+                    .getFont(context, R.font.oswald_medium)
+            }.getOrNull()
                 ?: Typeface.create("sans-serif-condensed", Typeface.NORMAL)
         private val textPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -67,12 +81,20 @@ class PitchInstrumentView
         init {
             textPaint.typeface = displayTypeface
         }
+
         private val monoPaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 textAlign = Paint.Align.CENTER
                 typeface = Typeface.MONOSPACE
             }
         private val bloomPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        private val heritageBitmap =
+            runCatching { BitmapFactory.decodeResource(resources, R.drawable.panobackground) }.getOrNull()
+        private val heritagePaint =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                alpha = 38
+                colorFilter = PorterDuffColorFilter(inkSecondary, PorterDuff.Mode.SRC_IN)
+            }
 
         private var cellCenters = arrayOfNulls<FloatArray>(12)
         private var cellRadius = 0f
@@ -81,7 +103,11 @@ class PitchInstrumentView
         private var faceCy = 0f
         private val rangeLowRect = Rect()
         private val rangeHighRect = Rect()
-        private var pressedIndex = -1
+        private val touchTracker =
+            PitchMultiTouchTracker(
+                onStart = { cell -> notes().getOrNull(cell)?.play() },
+                onStop = { cell -> notes().getOrNull(cell)?.stop() },
+            )
         private var breathePhase = 0f
         private var breatheAnimator: ValueAnimator? = null
 
@@ -224,6 +250,7 @@ class PitchInstrumentView
                 staffTop += staffGap * 12f
             }
             strokePaint.alpha = 255
+            drawHeritageMarks(canvas)
 
             val breath = 0.82f + 0.18f * sin(breathePhase)
 
@@ -282,24 +309,63 @@ class PitchInstrumentView
             manageBreathing()
         }
 
+        private fun drawHeritageMarks(canvas: Canvas) {
+            val bitmap = heritageBitmap ?: return
+            val markWidth = width * 0.31f
+            val markHeight = markWidth * 0.58f
+            val trebleSource = Rect(0, 0, bitmap.width / 3, bitmap.height / 2)
+            val bassSource = Rect(0, bitmap.height / 2, bitmap.width / 3, bitmap.height)
+
+            canvas.drawBitmap(
+                bitmap,
+                trebleSource,
+                RectF(
+                    width * 0.06f,
+                    faceCy - ringRadius * 0.72f,
+                    width * 0.06f + markWidth,
+                    faceCy - ringRadius * 0.72f + markHeight,
+                ),
+                heritagePaint,
+            )
+            canvas.drawBitmap(
+                bitmap,
+                bassSource,
+                RectF(
+                    width * 0.94f - markWidth,
+                    faceCy + ringRadius * 0.34f,
+                    width * 0.94f,
+                    faceCy + ringRadius * 0.34f + markHeight,
+                ),
+                heritagePaint,
+            )
+        }
+
         private fun drawCenter(
             canvas: Canvas,
             currentNotes: List<Note>,
         ) {
-            val playingNote = currentNotes.firstOrNull { it.isPlaying }
-            if (playingNote != null) {
+            val playingNotes = currentNotes.filter { it.isPlaying }
+            if (playingNotes.isNotEmpty()) {
                 textPaint.color = ink
-                textPaint.textSize = ringRadius * 0.30f
+                textPaint.textSize = if (playingNotes.size == 1) ringRadius * 0.30f else ringRadius * 0.17f
                 val label =
-                    when (playingNote.accidental) {
-                        Accidental.Natural -> playingNote.friendlyName
-                        else -> "${sharpNameOf(playingNote)}\u266F"
-                    } + playingNote.octave
+                    playingNotes.joinToString(" ") { note ->
+                        when (note.accidental) {
+                            Accidental.Natural -> note.friendlyName
+                            else -> "${sharpNameOf(note)}\u266F"
+                        } + note.octave
+                    }
                 canvas.drawText(label, faceCx, faceCy - ringRadius * 0.18f, textPaint)
                 monoPaint.color = ink
                 monoPaint.textSize = ringRadius * 0.15f
+                val readout =
+                    if (playingNotes.size == 1) {
+                        String.format("%.1f Hz", playingNotes[0].frequency)
+                    } else {
+                        "${playingNotes.size} NOTES"
+                    }
                 canvas.drawText(
-                    String.format("%.1f Hz", playingNote.frequency),
+                    readout,
                     faceCx,
                     faceCy + ringRadius * 0.02f,
                     monoPaint,
@@ -316,20 +382,33 @@ class PitchInstrumentView
             // One machined frame contains both range positions.
             fillPaint.color = withAlpha(surface, 235)
             canvas.drawRoundRect(
-                rangeLowRect.left.toFloat(), rangeLowRect.top.toFloat(),
-                rangeHighRect.right.toFloat(), rangeHighRect.bottom.toFloat(), 5f, 5f, fillPaint,
+                rangeLowRect.left.toFloat(),
+                rangeLowRect.top.toFloat(),
+                rangeHighRect.right.toFloat(),
+                rangeHighRect.bottom.toFloat(),
+                5f,
+                5f,
+                fillPaint,
             )
             strokePaint.color = hairline
             strokePaint.strokeWidth = 1.5f
             canvas.drawRoundRect(
-                rangeLowRect.left.toFloat(), rangeLowRect.top.toFloat(),
-                rangeHighRect.right.toFloat(), rangeHighRect.bottom.toFloat(), 5f, 5f, strokePaint,
+                rangeLowRect.left.toFloat(),
+                rangeLowRect.top.toFloat(),
+                rangeHighRect.right.toFloat(),
+                rangeHighRect.bottom.toFloat(),
+                5f,
+                5f,
+                strokePaint,
             )
             strokePaint.strokeWidth = 1f
             strokePaint.color = withAlpha(hairline, 160)
             canvas.drawLine(
-                rangeLowRect.left.toFloat(), rangeLowRect.bottom.toFloat(),
-                rangeLowRect.right.toFloat(), rangeLowRect.bottom.toFloat(), strokePaint,
+                rangeLowRect.left.toFloat(),
+                rangeLowRect.bottom.toFloat(),
+                rangeLowRect.right.toFloat(),
+                rangeLowRect.bottom.toFloat(),
+                strokePaint,
             )
             drawRangeRow(canvas, rangeLowRect, context.getString(R.string.CtoC), low)
             drawRangeRow(canvas, rangeHighRect, context.getString(R.string.FtoF), !low)
@@ -344,8 +423,11 @@ class PitchInstrumentView
             if (selected) {
                 fillPaint.color = withAlpha(ink, 26)
                 canvas.drawRect(
-                    rect.left.toFloat(), rect.top.toFloat(),
-                    rect.right.toFloat(), rect.bottom.toFloat(), fillPaint,
+                    rect.left.toFloat(),
+                    rect.top.toFloat(),
+                    rect.right.toFloat(),
+                    rect.bottom.toFloat(),
+                    fillPaint,
                 )
                 fillPaint.color = lit
                 canvas.drawCircle(
@@ -394,9 +476,11 @@ class PitchInstrumentView
         override fun onTouchEvent(event: MotionEvent): Boolean {
             val currentNotes = notes()
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                    val x = event.x
-                    val y = event.y
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                    val pointerIndex = event.actionIndex
+                    val pointerId = event.getPointerId(pointerIndex)
+                    val x = event.getX(pointerIndex)
+                    val y = event.getY(pointerIndex)
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                         if (rangeLowRect.contains(x.toInt(), y.toInt())) {
                             model?.isFromFToF = false
@@ -414,31 +498,41 @@ class PitchInstrumentView
                     val index = cellAt(x, y)
                     if (index != -1 && index < currentNotes.size) {
                         if (toggleMode) {
-                            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                                val note = currentNotes[index]
-                                note.isPlaying = !note.isPlaying
-                            }
-                        } else if (index != pressedIndex) {
-                            if (pressedIndex in currentNotes.indices) currentNotes[pressedIndex].stop()
-                            currentNotes[index].play()
-                            pressedIndex = index
+                            val note = currentNotes[index]
+                            note.isPlaying = !note.isPlaying
+                        } else {
+                            touchTracker.press(pointerId, index)
                         }
                         invalidate()
-                        return true
                     }
-                    if (event.actionMasked == MotionEvent.ACTION_MOVE && pressedIndex != -1 && !toggleMode) {
-                        if (pressedIndex in currentNotes.indices) currentNotes[pressedIndex].stop()
-                        pressedIndex = -1
-                        invalidate()
+                    return true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (!toggleMode) {
+                        var changed = false
+                        for (pointerIndex in 0 until event.pointerCount) {
+                            val pointerId = event.getPointerId(pointerIndex)
+                            val newCell =
+                                cellAt(event.getX(pointerIndex), event.getY(pointerIndex))
+                                    .takeIf { it in currentNotes.indices }
+                            changed = touchTracker.move(pointerId, newCell) || changed
+                        }
+                        if (changed) invalidate()
                     }
+                    return true
+                }
+
+                MotionEvent.ACTION_POINTER_UP -> {
+                    touchTracker.release(event.getPointerId(event.actionIndex))
+                    invalidate()
+                    return true
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (!toggleMode && pressedIndex in currentNotes.indices) {
-                        currentNotes[pressedIndex].stop()
-                    }
-                    pressedIndex = -1
+                    if (!toggleMode) touchTracker.clear()
                     invalidate()
+                    return true
                 }
             }
             return super.onTouchEvent(event)
@@ -449,7 +543,7 @@ class PitchInstrumentView
                 it.isPlaying = false
                 it.stop()
             }
-            pressedIndex = -1
+            touchTracker.clear()
         }
 
         fun stopAll() {

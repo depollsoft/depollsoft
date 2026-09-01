@@ -79,7 +79,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
     
-    [bannerView loadRequest:[DPAppDelegate adRequest]];
+    // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     
     DPPitchInstrumentView *instrument = [[DPPitchInstrumentView alloc] initWithFrame:self.view.bounds];
     self.instrumentView = instrument;
@@ -127,18 +127,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch (self.view.window.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
+    [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {

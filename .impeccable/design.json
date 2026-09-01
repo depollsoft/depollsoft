@@ -1,27 +1,93 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-31T00:00:00Z",
+  "generatedAt": "2026-09-01T07:33:47.837Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
-      "plate-lit": { "role": "primary", "displayName": "Plate Lit", "canonical": "#141618", "darkValue": "#F2EFE6", "tonalRamp": ["#0A0B0C", "#141618", "#2C2F33", "#55585C", "#898D92", "#B7B9BC", "#DADBDC", "#F2EFE6"] },
-      "plate-on-lit": { "role": "primary", "displayName": "Plate On-Lit", "canonical": "#F2F3F4", "darkValue": "#101214" },
-      "plate-ground": { "role": "neutral", "displayName": "Plate Ground", "canonical": "#DADBDC", "darkValue": "#0E0F10" },
-      "plate-surface": { "role": "neutral", "displayName": "Plate Surface", "canonical": "#E7E8E9", "darkValue": "#16181A" },
-      "plate-ink": { "role": "neutral", "displayName": "Plate Ink", "canonical": "#1C1E20", "darkValue": "#D9DBDD" },
-      "plate-ink-secondary": { "role": "neutral", "displayName": "Plate Ink Secondary", "canonical": "#55585C", "darkValue": "#898D92" },
-      "plate-ink-bar": { "role": "neutral", "displayName": "Plate Ink Bar", "canonical": "#141618", "darkValue": "#0A0B0C" },
-      "plate-hairline": { "role": "neutral", "displayName": "Plate Hairline", "canonical": "#B7B9BC", "darkValue": "#2C2F33" }
+      "plate-lit": {
+        "role": "primary",
+        "displayName": "Plate Lit",
+        "canonical": "#141618",
+        "darkValue": "#F2EFE6",
+        "tonalRamp": [
+          "#0A0B0C",
+          "#141618",
+          "#2C2F33",
+          "#55585C",
+          "#898D92",
+          "#B7B9BC",
+          "#DADBDC",
+          "#F2EFE6"
+        ]
+      },
+      "plate-on-lit": {
+        "role": "primary",
+        "displayName": "Plate On-Lit",
+        "canonical": "#F2F3F4",
+        "darkValue": "#101214"
+      },
+      "plate-ground": {
+        "role": "neutral",
+        "displayName": "Plate Ground",
+        "canonical": "#DADBDC",
+        "darkValue": "#0E0F10"
+      },
+      "plate-surface": {
+        "role": "neutral",
+        "displayName": "Plate Surface",
+        "canonical": "#E7E8E9",
+        "darkValue": "#16181A"
+      },
+      "plate-ink": {
+        "role": "neutral",
+        "displayName": "Plate Ink",
+        "canonical": "#1C1E20",
+        "darkValue": "#D9DBDD"
+      },
+      "plate-ink-secondary": {
+        "role": "neutral",
+        "displayName": "Plate Ink Secondary",
+        "canonical": "#55585C",
+        "darkValue": "#898D92"
+      },
+      "plate-ink-bar": {
+        "role": "neutral",
+        "displayName": "Plate Ink Bar",
+        "canonical": "#141618",
+        "darkValue": "#0A0B0C"
+      },
+      "plate-hairline": {
+        "role": "neutral",
+        "displayName": "Plate Hairline",
+        "canonical": "#B7B9BC",
+        "darkValue": "#2C2F33"
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display / Engraving", "purpose": "Oswald Medium condensed caps with wide tracking: action-bar title, cell engravings, nameplate, range labels." },
-      "body": { "displayName": "Body", "purpose": "Platform condensed sans for list-row primary text." },
-      "mono": { "displayName": "Mono / Data", "purpose": "Monospace for every measured value: Hz readouts, song keys, octaves." },
-      "label": { "displayName": "Section Header", "purpose": "Monospace 12sp, 0.14 tracking, secondary ink." }
+      "display": {
+        "displayName": "Display / Engraving",
+        "purpose": "Oswald Medium condensed caps with wide tracking: action-bar title, cell engravings, nameplate, range labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Platform condensed sans for list-row primary text."
+      },
+      "mono": {
+        "displayName": "Mono / Data",
+        "purpose": "Monospace for every measured value: Hz readouts, song keys, octaves."
+      },
+      "label": {
+        "displayName": "Section Header",
+        "purpose": "Monospace 12sp, 0.14 tracking, secondary ink."
+      }
     },
     "shadows": [],
     "motion": [
-      { "name": "breath", "value": "4000ms linear infinite sinusoidal phase", "purpose": "Modulates the sounding cell's bloom (0.82 + 0.18·sin) and fill (0.9 + 0.1·sin) while any note sounds; disabled under reduce-motion." }
+      {
+        "name": "breath",
+        "value": "4000ms linear infinite sinusoidal phase",
+        "purpose": "Modulates the sounding cell's bloom (0.82 + 0.18·sin) and fill (0.9 + 0.1·sin) while any note sounds; disabled under reduce-motion."
+      }
     ]
   },
   "components": [
@@ -72,23 +138,55 @@
       "description": "Add-song FAB in plate-surface with ink glyph; never accent-filled.",
       "html": "<button class=\"ds-fab\" aria-label=\"Add song\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#1C1E20\" stroke-width=\"2\"><path d=\"M12 5v14M5 12h14\"/></svg></button>",
       "css": ".ds-fab { width: 56px; height: 56px; border-radius: 50%; background: #E7E8E9; border: 1px solid #B7B9BC; display: flex; align-items: center; justify-content: center; cursor: pointer; } .ds-fab:active { background: #DADBDC; }"
+    },
+    {
+      "name": "Song Edit Mode",
+      "kind": "custom",
+      "refersTo": "song-edit-mode",
+      "description": "Normal rows are chrome-free. Edit Songs reveals a pencil and drag handle on every row plus Sort; Done hides them. Drag order persists on drop.",
+      "html": "<div class=\"ds-song-edit\"><button>✓ STOP EDITING</button><div>✎ Adeline <span>C</span> ☰</div></div>",
+      "css": ".ds-song-edit { color: #D9DBDD; background: #0E0F10; font-family: Oswald, sans-serif; } .ds-song-edit div { min-height: 56px; display:flex; align-items:center; gap:16px; border-bottom:1px solid #2C2F33; }"
     }
   ],
   "narrative": {
     "northStar": "The Laboratory Instrument",
-    "overview": "Pitch Perfect is drawn as a piece of precision lab hardware, not a grid of platform buttons. The light variant is a bench-aluminum plate; the dark variant is blackened steel. Both are grayscale to the bone. Every surface carries machined texture: brushed grain, an etched five-line staff engraved into the panel, hairline anode rings inside each glass cell. The one moment of light is functional, not decorative: when a note sounds, its cell ignites white-hot with a radial bloom, the note name and live frequency digits appear in the ring's hole, and the glow breathes on a slow 4-second cycle. Release, and the panel goes dark again.",
+    "overview": "Pitch Perfect is drawn as a grayscale precision instrument: bench aluminum by day, blackened steel at night. Clean five-line staff engraving remains the base; two sparse marks from the original artwork (treble clef/key signature upper-left, bass clef/key signature lower-right) preserve the icon lineage. Each finger independently owns a radial cell, so chords remain sounding as other fingers release. The only light is functional: sounding cells ignite and breathe.",
     "keyCharacteristics": [
       "Grayscale only; zero chromatic color anywhere in first-party UI",
       "One luminous element maximum, and only while sound exists",
       "Engraved condensed caps (Oswald Medium, wide tracking) for labels; monospace for every measurement",
       "Hairline strokes (1–1.5px) as the primary structural device; near-square 2dp corners",
-      "Identical tokens and instrument geometry on both platforms; chrome stays platform-native"
+      "Identical tokens and instrument geometry on both platforms; chrome stays platform-native",
+      "True multi-touch chords: each finger owns and releases its note independently",
+      "Clean staff backgrounds with exactly two low-contrast heritage clef/key-signature marks",
+      "Android song-row chrome appears only in explicit Edit mode; iOS uses native Edit mode"
     ],
     "rules": [
-      { "name": "The One-Glow Rule", "body": "The sounding note is the only luminous element on screen. Nothing else blooms, tints, or lights up; all other state is expressed with ink, hairlines, and surface shifts. Silence means a dark (or matte) panel.", "section": "colors" },
-      { "name": "The Grayscale Rule", "body": "No chromatic color, ever, in first-party UI. The seed contract and PRODUCT.md both pin it. Third-party ad creative inside the ad slot is the only place color may appear, and it is quarantined there.", "section": "colors" },
-      { "name": "The Mono-Measurement Rule", "body": "Any value with a unit or a key — Hz, octaves, song keys — is set in monospace at secondary weight. Names get the condensed face; numbers get the mono face.", "section": "typography" },
-      { "name": "The Etched-Not-Cast Rule", "body": "Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.", "section": "elevation" }
+      {
+        "name": "The One-Glow Rule",
+        "body": "The sounding note is the only luminous element on screen. Nothing else blooms, tints, or lights up; all other state is expressed with ink, hairlines, and surface shifts. Silence means a dark (or matte) panel.",
+        "section": "colors"
+      },
+      {
+        "name": "The Grayscale Rule",
+        "body": "No chromatic color, ever, in first-party UI. The seed contract and PRODUCT.md both pin it. Third-party ad creative inside the ad slot is the only place color may appear, and it is quarantined there.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono-Measurement Rule",
+        "body": "Any value with a unit or a key — Hz, octaves, song keys — is set in monospace at secondary weight. Names get the condensed face; numbers get the mono face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Etched-Not-Cast Rule",
+        "body": "Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Heritage Restraint Rule",
+        "body": "The background remains primarily clean staff lines. Reuse the original score artwork only as two faint engravings: treble/key signature upper-left and bass/key signature lower-right. Never restore the dense full wallpaper.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do keep every first-party pixel grayscale, drawing from the eight plate-* role pairs.",
@@ -96,7 +194,10 @@
       "Do set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.",
       "Do build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).",
       "Do mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.",
-      "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name."
+      "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.",
+      "Do preserve true multi-touch chord holding: releasing one finger must not stop notes owned by other fingers.",
+      "Do expose Android song pencils and drag handles only after the user taps Edit Songs.",
+      "Do keep iOS nav/tab chrome opaque grayscale and load ads only after the real view width is known."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",
