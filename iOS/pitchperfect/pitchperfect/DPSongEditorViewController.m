@@ -74,7 +74,7 @@
     allKeys = [NSArray arrayWithArray:keys];
     
     UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    background.backgroundColor = [DPTheme staffBackgroundColor];
     [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
@@ -90,7 +90,7 @@
     
     nameField = [[UITextField alloc] init];
     UILabel *nameLabel = [[UILabel alloc] init];
-    nameLabel.text = @" Name:";
+    nameLabel.text = @" Song Title:";
     nameLabel.textColor = [UIColor lightGrayColor];
     [nameLabel sizeToFit];
     nameField.leftView = nameLabel;

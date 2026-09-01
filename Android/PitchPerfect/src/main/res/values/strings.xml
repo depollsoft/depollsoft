@@ -5,8 +5,8 @@
     <string name="facebook_application_id">263872380333771</string>
     <string name="fb_login_protocol_scheme">fb263872380333771</string>
     <string name="facebook_client_token">eb375cce82f2fbb23c5e4f4044986c14</string>
-    <string name="CtoC">From C to B</string>
-    <string name="FtoF">From F to E</string>
+    <string name="CtoC">C to B</string>
+    <string name="FtoF">F to E</string>
     <string name="AddSong">Add Song</string>
     <string name="SongTitle">Song Title</string>
     <string name="SongKey">Song Key</string>
@@ -18,11 +18,11 @@
     <string name="RemoveSong">Remove Song</string>
     <string name="MoveUp">Move Up</string>
     <string name="MoveDown">Move Down</string>
-    <string name="NoSongsInList">There are currently no songs in your song list.</string>
+    <string name="NoSongsInList">NO SONGS ON FILE\n\nPress + to add your first song and its key</string>
     <string name="Settings">Settings</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="ClearSongList">Clear Song List</string>
-    <string name="NotesToggle">Notes play until pressed a second time</string>
+    <string name="NotesToggle">Notes play until pressed again</string>
     <string name="Purchase">Purchase to remove ads</string>
     <string name="Purchased">(Licensed)</string>
     <string name="DepollSoft">DepollSoft</string>
@@ -67,7 +67,7 @@
         </p>]]>
     </string>
     <string name="RemoveAds"><u>Tired of Ads?</u></string>
-    <string name="quick_pitch">Quick Pitch</string>
+    <string name="quick_pitch">Pitch Pipe</string>
     <string name="notes">Notes</string>
     <string name="keys">Keys</string>
     <string name="songs">Songs</string>
@@ -78,4 +78,12 @@
     <string name="theme_system">Default</string>
     <string name="themeTitle">Theme</string>
     <string name="manage_subscription">Manage Subscription</string>
+    <string name="RangeLowDescription">Octave range C to B</string>
+    <string name="RangeHighDescription">Octave range F to E</string>
+    <string name="SwitchToMajorKeys">Showing minor keys. Switch to major keys.</string>
+    <string name="SwitchToMinorKeys">Showing major keys. Switch to minor keys.</string>
+    <string name="SectionPitchPipe">Pitch Pipe</string>
+    <string name="SectionAccount">Account</string>
+    <string name="SectionAppearance">Appearance</string>
+    <string name="SectionAbout">About</string>
 </resources>

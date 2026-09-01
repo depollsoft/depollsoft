@@ -112,9 +112,11 @@ class PitchPerfectActivity : AppCompatActivity() {
             true
         }
 
-        if (RunUtils.runOnce("loginDialog") && Firebase.auth.currentUser == null) {
+        // First launch belongs to the first pitch: the login prompt waits for the next session.
+        val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")
+        if (!isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog")) {
             logInDialog.show()
-        } else {
+        } else if (!isFirstLaunchEver) {
             val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
             viewer.setTitle("Pitch Perfect Changelog")
             viewer.setIcon(R.mipmap.ic_launcher)
@@ -189,6 +191,12 @@ class PitchPerfectActivity : AppCompatActivity() {
     private fun loadBanner() {
         val adContainer = findViewById<FrameLayout>(R.id.adContainer)
         adContainer.removeAllViews()
+        val reservedSize = getAdSize()
+        // Reserve the slot height before the ad loads so the layout never reflows.
+        adContainer.layoutParams =
+            adContainer.layoutParams.apply {
+                height = reservedSize.getHeightInPixels(this@PitchPerfectActivity)
+            }
         val adView = AdView(this)
         adContainer.addView(adView)
         // Create an ad request. Check your logcat output for the hashed device ID

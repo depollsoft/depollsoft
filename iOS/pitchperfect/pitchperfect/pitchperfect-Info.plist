@@ -248,6 +248,7 @@
 	</array>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Oswald-Medium.ttf</string>
 		<string>MusiQwik.ttf</string>
 		<string>MusiQwikB.ttf</string>
 		<string>NoteHedz170.ttf</string>

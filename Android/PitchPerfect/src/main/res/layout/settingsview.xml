@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_panobackground" />
+        app:srcCompat="@drawable/bg_etched_staff" />
 
     <LinearLayout
         android:id="@+id/topLinearLayout"
@@ -31,6 +31,13 @@
                 android:layout_marginEnd="8dp"
                 android:orientation="vertical">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/SectionPitchPipe"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
+
                 <CheckBox
                     android:id="@+id/toggleNoteCheckBox"
                     android:layout_width="wrap_content"
@@ -50,6 +57,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/ClearSongList" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/SectionAccount"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
 
                 <TextView
                     android:id="@+id/textView2"
@@ -91,10 +105,10 @@
                     android:id="@+id/themeTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:layout_marginBottom="5dp"
-                    android:text="@string/themeTitle"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:text="@string/SectionAppearance"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
 
                 <RadioGroup
                     android:layout_width="wrap_content"
@@ -126,6 +140,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="@string/manage_subscription" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/SectionAbout"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
 
                 <Button
                     android:id="@+id/changelogButton"

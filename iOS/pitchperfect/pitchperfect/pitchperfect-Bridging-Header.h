@@ -8,3 +8,6 @@
 #import "DPLoginViewController.h"
 #import "DPSettingsViewController.h"
 #import "DPPitchPipeViewController.h"
+#import "DPPitchPipeModel.h"
+#import "DPNote.h"
+#import "DPAccidental.h"

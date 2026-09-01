@@ -53,6 +53,8 @@ Accounts are optional. Local use remains possible, while signed-in users can bac
 
 Pitch Perfect, Tag Master, DepollSoft, and BarbershopTags.com are established names in the product experience. The products use specific music-community language rather than generic media or education terminology.
 
+Pitch Perfect keeps its long-standing grayscale-first aesthetic: neutral monochrome surfaces carry the interface, with at most a single luminous emphasis for the sounding note. Saturated multi-color themes are off-brand for this app.
+
 Tag Master must respect barbershop culture as a participatory social practice. Copy and product decisions should recognize singers, teachers, voice parts, tags, and afterglows without flattening them into generic lesson content.
 
 ## Evidence on Hand

@@ -47,7 +47,7 @@
     // Do any additional setup after loading the view, typically from a nib.
     self.view.backgroundColor = [UIColor systemBackgroundColor];
     UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    background.backgroundColor = [DPTheme staffBackgroundColor];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
