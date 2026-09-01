@@ -1,7 +1,9 @@
 package depollsoft.pitchperfect;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -120,6 +122,11 @@ public class AddSongActivity extends AppCompatActivity {
         } else {
             SongsModel.get().getDefaultSongList().addSong(AddSongActivity.this.getSong());
         }
+        View feedbackView = AddSongActivity.this.findViewById(R.id.saveSongButton);
+        int feedback = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                ? HapticFeedbackConstants.CONFIRM
+                : HapticFeedbackConstants.CONTEXT_CLICK;
+        feedbackView.performHapticFeedback(feedback);
         AddSongActivity.this.setResult(1);
         PitchPerfectActivity.handlingResult = true;
         AddSongActivity.this.finish();

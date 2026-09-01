@@ -118,6 +118,7 @@
 @interface DPSongListViewController ()
 
 @property (nonatomic, strong) GADBannerView *bannerView;
+@property (nonatomic, strong) UILabel *emptyStateLabel;
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UIBarButtonItem *editItem;
 @property (nonatomic, strong) UIBarButtonItem *sortItem;
@@ -187,9 +188,27 @@
     tableView.delegate = self;
     tableView.allowsSelection = NO;
     tableView.backgroundColor = [DPTheme staffBackgroundColor];
-    tableView.backgroundView = [[UIView alloc] initWithFrame:CGRectZero];
-    tableView.backgroundView.backgroundColor = [DPTheme staffBackgroundColor];
+    UIView *tableBackground = [[UIView alloc] initWithFrame:CGRectZero];
+    tableBackground.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.backgroundView = tableBackground;
     tableView.opaque = NO;
+
+    self.emptyStateLabel = [[UILabel alloc] init];
+    self.emptyStateLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    self.emptyStateLabel.numberOfLines = 0;
+    self.emptyStateLabel.textAlignment = NSTextAlignmentCenter;
+    self.emptyStateLabel.textColor = DPTheme.plateInkSecondary;
+    self.emptyStateLabel.font = [UIFont fontWithName:@"Oswald-Medium" size:15]
+        ?: [UIFont preferredFontForTextStyle:UIFontTextStyleCallout];
+    self.emptyStateLabel.text = @"NO SONGS ON FILE\n\nTap + to add your first song and its key";
+    self.emptyStateLabel.accessibilityLabel = @"No songs on file. Tap Add to add your first song and its key.";
+    [tableBackground addSubview:self.emptyStateLabel];
+    [NSLayoutConstraint activateConstraints:@[
+        [self.emptyStateLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:tableBackground.leadingAnchor constant:32],
+        [self.emptyStateLabel.trailingAnchor constraintLessThanOrEqualToAnchor:tableBackground.trailingAnchor constant:-32],
+        [self.emptyStateLabel.centerXAnchor constraintEqualToAnchor:tableBackground.centerXAnchor],
+        [self.emptyStateLabel.topAnchor constraintEqualToAnchor:tableBackground.topAnchor constant:48],
+    ]];
     [rootLayout addSubview:tableView row:0 column:0];
     
     
@@ -285,7 +304,9 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [[DPSongsModel sharedInstance].defaultSongList songs].count;
+    NSInteger count = [[DPSongsModel sharedInstance].defaultSongList songs].count;
+    self.emptyStateLabel.hidden = count > 0;
+    return count;
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {

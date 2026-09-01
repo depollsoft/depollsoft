@@ -37,12 +37,16 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
     private var activeTouches: [ObjectIdentifier: Int] = [:]
     private var breathePhase: CGFloat = 0
     private var displayLink: CADisplayLink?
+    private let noteFeedback = UIImpactFeedbackGenerator(style: .rigid)
+    private let rangeFeedback = UISelectionFeedbackGenerator()
 
     override public init(frame: CGRect) {
         super.init(frame: frame)
         isOpaque = true
         isMultipleTouchEnabled = true
         isAccessibilityElement = false
+        noteFeedback.prepare()
+        rangeFeedback.prepare()
     }
 
     @available(*, unavailable)
@@ -232,8 +236,10 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
             if toggleMode {
                 let note = notes[index]
                 if note.isPlaying { note.stop() } else { note.play() }
+                noteFeedback.impactOccurred(intensity: 0.55)
+                noteFeedback.prepare()
             } else {
-                notes[index].play()
+                startNote(at: index)
                 activeTouches[ObjectIdentifier(touch)] = index
             }
         }
@@ -253,7 +259,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
                     notes[currentCell].stop()
                 }
                 if newCell >= 0, newCell < notes.count {
-                    notes[newCell].play()
+                    startNote(at: newCell)
                     activeTouches[key] = newCell
                 }
                 changed = true
@@ -274,6 +280,12 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
 }
 
 private extension DPPitchInstrumentView {
+    private func startNote(at index: Int) {
+        notes[index].play()
+        noteFeedback.impactOccurred(intensity: 0.55)
+        noteFeedback.prepare()
+    }
+
     private func flatPartner(of name: String) -> String {
         guard let first = name.first, let index = Self.letters.firstIndex(of: first) else { return name }
         return String(Self.letters[(index + 1) % Self.letters.count])
@@ -400,10 +412,14 @@ private extension DPPitchInstrumentView {
             )
             let nameSize = nameLabel.size()
             nameLabel.draw(at: CGPoint(x: faceCenter.x - nameSize.width / 2, y: faceCenter.y - ringRadius * 0.46))
-            let readout =
-                playingIndices.count == 1
-                    ? String(format: "%.1f Hz", notes[playingIndices[0]].frequency)
-                    : "\(playingIndices.count) NOTES"
+            let readout: String
+            if playingIndices.count == 1 {
+                readout = String(format: "%.1f Hz", notes[playingIndices[0]].frequency)
+            } else if playingIndices.count == 2 {
+                readout = intervalName(between: playingIndices[0], and: playingIndices[1])
+            } else {
+                readout = "\(playingIndices.count) NOTES"
+            }
             let freqLabel = NSAttributedString(
                 string: readout,
                 attributes: [.font: monoFont(size: ringRadius * 0.13), .foregroundColor: ink],
@@ -449,8 +465,21 @@ private extension DPPitchInstrumentView {
         return -1
     }
 
+    private func intervalName(between first: Int, and second: Int) -> String {
+        let names = [
+            "UNISON", "MINOR 2ND", "MAJOR 2ND", "MINOR 3RD",
+            "MAJOR 3RD", "PERFECT 4TH", "TRITONE", "PERFECT 5TH",
+            "MINOR 6TH", "MAJOR 6TH", "MINOR 7TH", "MAJOR 7TH",
+        ]
+        return names[min(abs(second - first), names.count - 1)]
+    }
+
     private func selectRange(high: Bool) {
         stopAll()
+        if high != isHighRange {
+            rangeFeedback.selectionChanged()
+            rangeFeedback.prepare()
+        }
         isHighRange = high
         onRangeChange?(high)
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
