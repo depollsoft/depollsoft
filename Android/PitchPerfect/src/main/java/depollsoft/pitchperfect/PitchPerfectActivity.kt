@@ -32,6 +32,12 @@ class PitchPerfectActivity : AppCompatActivity() {
     private lateinit var bottomNavigation: BottomNavigationView
     private lateinit var logInDialog: Dialog
     private var preparingMenu: Boolean = false
+    private var selectedPage: Int = 0
+    private var songListFragment: SongListFragment? = null
+
+    private fun resolveSongListFragment(): SongListFragment? =
+        songListFragment
+            ?: supportFragmentManager.fragments.filterIsInstance<SongListFragment>().firstOrNull()
 
     val adsShouldShow: Boolean
         get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
@@ -75,7 +81,7 @@ class PitchPerfectActivity : AppCompatActivity() {
                         0 -> PitchPipeFragment()
                         1 -> NoteListFragment()
                         2 -> KeySignatureFragment()
-                        3 -> SongListFragment()
+                        3 -> SongListFragment().also { songListFragment = it }
                         else -> PitchPipeFragment()
                     }
 
@@ -85,6 +91,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         viewPager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
+                    selectedPage = position
                     Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
                     bottomNavigation.selectedItemId =
                         when (position) {
@@ -153,12 +160,41 @@ class PitchPerfectActivity : AppCompatActivity() {
             val mi = MenuInflater(this)
             mi.inflate(R.menu.mainmenu, menu)
 
-            menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener {
+            val settingsItem = menu.findItem(R.id.settingsMenuItem)
+            settingsItem.setOnMenuItemClickListener {
                 val i = Intent(this@PitchPerfectActivity, SettingsActivity::class.java)
                 this@PitchPerfectActivity.startActivity(i)
                 true
             }
-            // getLocalActivityManager().getCurrentActivity().onPrepareOptionsMenu(menu);
+
+            if (selectedPage == 3) {
+                settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+                mi.inflate(R.menu.songsmenu, menu)
+                val songs = resolveSongListFragment()
+                val editItem = menu.findItem(R.id.editSongsMenuItem)
+                editItem.title =
+                    getString(
+                        if (songs?.isEditingSongs() == true) R.string.StopEditing else R.string.EditSongList,
+                    )
+                editItem.setIcon(
+                    if (songs?.isEditingSongs() == true) R.drawable.ic_check else R.drawable.ic_edit_button,
+                )
+                editItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                editItem.setOnMenuItemClickListener {
+                    // Resolve at click time: the menu can build before the page-3
+                    // fragment transaction commits.
+                    resolveSongListFragment()?.toggleEditingSongs()
+                    true
+                }
+
+                val sortItem = menu.findItem(R.id.sortMenuItem)
+                sortItem.isVisible = songs?.isEditingSongs() == true
+                sortItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                sortItem.setOnMenuItemClickListener {
+                    resolveSongListFragment()?.sortSongs()
+                    true
+                }
+            }
             return super.onPrepareOptionsMenu(menu)
         } finally {
             preparingMenu = false

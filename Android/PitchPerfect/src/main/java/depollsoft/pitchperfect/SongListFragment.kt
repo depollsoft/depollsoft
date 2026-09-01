@@ -98,24 +98,6 @@ class SongListFragment : Fragment() {
         touchHelper.attachToRecyclerView(recycler)
         songAdapter.onStartDrag = { holder -> touchHelper.startDrag(holder) }
 
-        val editSongsButton = rootView.findViewById<com.google.android.material.button.MaterialButton>(R.id.editSongsButton)
-        val sortSongsButton = rootView.findViewById<com.google.android.material.button.MaterialButton>(R.id.sortSongsButton)
-
-        fun updateEditControls() {
-            editSongsButton.text = getString(if (editing) R.string.StopEditing else R.string.EditSongList)
-            editSongsButton.setIconResource(if (editing) R.drawable.ic_check else R.drawable.ic_edit_button)
-            sortSongsButton.visibility = if (editing) View.VISIBLE else View.GONE
-        }
-        editSongsButton.setOnClickListener {
-            editing = !editing
-            songAdapter.editing = editing
-            updateEditControls()
-        }
-        sortSongsButton.setOnClickListener {
-            SongsModel.get().defaultSongList.sortSongs()
-        }
-        updateEditControls()
-
         val fragment = this
         track({ model.defaultSongList.songs.track() }) {
             if (fragment.view != null) {
@@ -143,6 +125,18 @@ class SongListFragment : Fragment() {
         fab?.show()
 
         return rootView
+    }
+
+    fun isEditingSongs(): Boolean = editing
+
+    fun toggleEditingSongs() {
+        editing = !editing
+        adapter?.editing = editing
+        activity?.invalidateOptionsMenu()
+    }
+
+    fun sortSongs() {
+        model.defaultSongList.sortSongs()
     }
 
     @Deprecated("Deprecated in Java")

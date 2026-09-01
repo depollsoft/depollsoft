@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T18:24:26.156Z",
+  "generatedAt": "2026-09-01T19:37:40.673Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -61,16 +61,6 @@
         "displayName": "Plate Hairline",
         "canonical": "#B7B9BC",
         "darkValue": "#2C2F33"
-      },
-      "plate-row": {
-        "role": "neutral",
-        "displayName": "Plate Row",
-        "canonical": "rgba(218,219,220,0.82)",
-        "darkValue": "rgba(14,15,16,0.82)",
-        "tonalRamp": [
-          "#0E0F10",
-          "#DADBDC"
-        ]
       }
     },
     "typographyMeta": {
@@ -129,9 +119,9 @@
       "name": "List Row",
       "kind": "card",
       "refersTo": "list-row",
-      "description": "Note/song row: condensed name, mono trailing datum, hairline divider, and an 82%-opaque plate fill that preserves the full-bleed score background.",
+      "description": "Note/song row: condensed name, mono trailing datum, hairline divider, fully transparent over the full-bleed score; pressing lights it like a cell.",
       "html": "<div class=\"ds-row\"><span class=\"ds-row-name\">A</span><span class=\"ds-row-data\">440.0 Hz</span></div>",
-      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: rgba(218,219,220,0.82); border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
+      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: transparent; border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
     },
     {
       "name": "Section Header",
@@ -153,7 +143,7 @@
       "name": "Song Edit Mode",
       "kind": "custom",
       "refersTo": "song-edit-mode",
-      "description": "Normal rows are chrome-free. Edit Songs reveals a pencil and drag handle on every row plus Sort; Done hides them. Drag order persists on drop.",
+      "description": "Rows are chrome-free until the title-bar pencil enters edit mode: Done and Sort become app-bar actions while each row shows its pencil and drag handle; order persists on drop.",
       "html": "<div class=\"ds-song-edit\"><button>✓ STOP EDITING</button><div>✎ Adeline <span>C</span> ☰</div></div>",
       "css": ".ds-song-edit { color: #D9DBDD; background: #0E0F10; font-family: Oswald, sans-serif; } .ds-song-edit div { min-height: 56px; display:flex; align-items:center; gap:16px; border-bottom:1px solid #2C2F33; }"
     }
@@ -206,9 +196,9 @@
       "Do mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.",
       "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.",
       "Do preserve true multi-touch chord holding: releasing one finger must not stop notes owned by other fingers.",
-      "Do expose Android song pencils and drag handles only after the user taps Edit Songs.",
-      "Do keep iOS nav/tab chrome opaque grayscale and load ads only after the real view width is known.",
-      "Do keep the original score artwork full-bleed on every screen, behind translucent plate content."
+      "Do expose Android song pencils and drag handles only via the title-bar Edit Songs action.",
+      "Do keep iOS Liquid Glass bars with grayscale template icons, and load ads only after the real view width is known.",
+      "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",

@@ -75,7 +75,7 @@ The one moment of light is functional, not decorative: when a note sounds, its c
 
 ## Colors
 
-Nine grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
+Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
 
 ### Primary
 
@@ -85,7 +85,6 @@ Nine grayscale roles, each with a light (bench-aluminum) and dark (blackened-ste
 
 - **Plate Ground** (#DADBDC / #0E0F10): window background and the instrument panel itself.
 - **Plate Surface** (#E7E8E9 / #16181A): resting glass cells, the range-selector frame, FABs, Material `colorSurface`.
-- **Plate Row** (82% Plate Ground): translucent list/table-cell fill. It protects text contrast while keeping the full-bleed score visible behind every row.
 - **Plate Ink** (#1C1E20 / #D9DBDD): primary text, natural-note engravings, icons.
 - **Plate Ink Secondary** (#55585C / #898D92): accidental engravings, frequency readouts, section headers, nameplate captions, empty states.
 - **Plate Ink Bar** (#141618 / #0A0B0C): action bar, bottom nav, system bars — the darkest band framing the panel on both themes.
@@ -152,11 +151,11 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### List Rows
 
-- 56–64dp rows on 82%-opaque `plate-row`, over explicitly transparent ListView/RecyclerView/UITableView surfaces, with 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
 
 ### Song Editing
 
-- Android normal mode keeps rows clean. A persistent one-tap **Edit Songs** control switches to **Stop Editing**, reveals each row's pencil and drag handle, and exposes Sort. Dragging uses RecyclerView/ItemTouchHelper and persists once on drop.
+- Android normal mode keeps rows clean. **Edit Songs** is a title-bar action (pencil) that flips to a Done checkmark, reveals each row's pencil and drag handle, and surfaces Sort beside it; Settings folds into the overflow while on Songs. Dragging uses RecyclerView/ItemTouchHelper and persists once on drop.
 - Add/Edit Song keeps the one-tap app-bar checkmark and also supplies a full-width **Save Song** button. Empty titles are blocked inline.
 - iOS uses its native Edit/Done table mode. In the song editor, Return is Done, a keyboard accessory Done button is always present, and tapping outside dismisses the keyboard so the key picker is never trapped.
 
@@ -170,7 +169,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Navigation
 
-- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS uses opaque grayscale HIG navigation/tab bars with stable template icons and opts out of iOS 26 Liquid Glass because its morphing/glow conflicts with the instrument world. Action bars carry the Oswald title. System bars match `plate-ink-bar`.
+- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS keeps the iOS 26 Liquid Glass tab and navigation bars; the tab icons ship as grayscale template images (label tint) so the glass treatment never morphs or flickers them, and bars use the default glass material — never fully transparent — with the Oswald title. Android system bars match `plate-ink-bar`.
 
 ### Ad Slot
 

@@ -24,17 +24,10 @@ import UIKit
 
     @objc public static let plateGround = dyn(rgb(0xDADBDC), rgb(0x0E0F10))
     @objc public static let plateSurface = dyn(rgb(0xE7E8E9), rgb(0x16181A))
-    @objc public static let plateRow = dyn(
-        rgb(0xDADBDC).withAlphaComponent(0.82),
-        rgb(0x0E0F10).withAlphaComponent(0.82)
-    )
-
     @objc public static func styleListCell(_ cell: UITableViewCell) {
-        cell.backgroundColor = plateRow
+        cell.backgroundColor = .clear
         cell.contentView.backgroundColor = .clear
-        var configuration = UIBackgroundConfiguration.clear()
-        configuration.backgroundColor = plateRow
-        cell.backgroundConfiguration = configuration
+        cell.backgroundConfiguration = UIBackgroundConfiguration.clear()
     }
     @objc public static let plateInk = dyn(rgb(0x1C1E20), rgb(0xD9DBDD))
     @objc public static let plateInkSecondary = dyn(rgb(0x55585C), rgb(0x898D92))

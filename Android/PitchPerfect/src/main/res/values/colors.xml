@@ -3,7 +3,6 @@
     <!-- Laboratory Instrument, bench-aluminum variant: grayscale only. -->
     <color name="plate_ground">#DADBDC</color>
     <color name="plate_surface">#E7E8E9</color>
-    <color name="plate_row">#D1DADBDC</color>
     <color name="plate_ink">#1C1E20</color>
     <color name="plate_ink_bar">#141618</color>
     <color name="plate_ink_secondary">#55585C</color>

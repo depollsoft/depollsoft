@@ -65,37 +65,18 @@
     }
     tabBarController.viewControllers = controllers;
 
-    // Pitch Perfect owns a stable grayscale instrument world. The opaque
-    // appearance and template images avoid Liquid Glass icon morphing/flicker
-    // when switching tabs in light mode.
-    UITabBarAppearance *appearance = [[UITabBarAppearance alloc] init];
-    [appearance configureWithOpaqueBackground];
-    appearance.backgroundColor = UIColor.systemBackgroundColor;
-    appearance.shadowColor = UIColor.separatorColor;
-    NSArray<UITabBarItemAppearance *> *itemAppearances = @[
-        appearance.stackedLayoutAppearance,
-        appearance.inlineLayoutAppearance,
-        appearance.compactInlineLayoutAppearance
-    ];
-    for (UITabBarItemAppearance *itemAppearance in itemAppearances) {
-        itemAppearance.normal.iconColor = UIColor.secondaryLabelColor;
-        itemAppearance.normal.titleTextAttributes = @{NSForegroundColorAttributeName: UIColor.secondaryLabelColor};
-        itemAppearance.selected.iconColor = UIColor.labelColor;
-        itemAppearance.selected.titleTextAttributes = @{NSForegroundColorAttributeName: UIColor.labelColor};
-    }
-    tabBarController.tabBar.standardAppearance = appearance;
-    tabBarController.tabBar.scrollEdgeAppearance = appearance;
-    tabBarController.tabBar.translucent = NO;
-
+    // Liquid Glass stays on. The tab icons ship as template images so the
+    // glass treatment never morphs or flickers them on first selection, and
+    // the bars keep the system glass material with the Oswald title on top.
     UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
-    [navigationAppearance configureWithOpaqueBackground];
-    navigationAppearance.backgroundColor = UIColor.systemBackgroundColor;
-    navigationAppearance.shadowColor = UIColor.separatorColor;
+    [navigationAppearance configureWithDefaultBackground];
     UIFont *titleFont = [UIFont fontWithName:@"Oswald-Medium" size:19] ?: [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
     navigationAppearance.titleTextAttributes = @{
         NSForegroundColorAttributeName: UIColor.labelColor,
         NSFontAttributeName: titleFont
     };
+
+    tabBarController.tabBar.tintColor = UIColor.labelColor;
 
     for (UINavigationController *navigationController in controllers) {
         UITabBarItem *item = navigationController.tabBarItem;
@@ -107,7 +88,6 @@
         navigationController.navigationBar.scrollEdgeAppearance = navigationAppearance;
         navigationController.navigationBar.compactAppearance = navigationAppearance;
         navigationController.navigationBar.tintColor = UIColor.labelColor;
-        navigationController.navigationBar.translucent = NO;
     }
 }
 

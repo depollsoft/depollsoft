@@ -9,36 +9,6 @@
         android:layout_height="fill_parent"
         android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="end|center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/sortSongsButton"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="@string/SortAll"
-                android:textColor="@color/plate_ink"
-                android:visibility="gone"
-                app:icon="@drawable/ic_sort_button"
-                app:iconTint="@color/plate_ink" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/editSongsButton"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="@string/EditSongList"
-                android:textColor="@color/plate_ink"
-                app:icon="@drawable/ic_edit_button"
-                app:iconTint="@color/plate_ink" />
-        </LinearLayout>
-
         <TextView
             android:id="@+id/sorryText"
             android:layout_width="match_parent"
