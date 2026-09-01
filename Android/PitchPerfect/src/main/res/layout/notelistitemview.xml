@@ -1,29 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent"
+    android:gravity="center_vertical"
+    android:minHeight="56dp" >
 
     <TextView
         android:id="@+id/noteNameTextView"
         android:layout_width="0dip"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1"
-        android:textSize="20sp"
-        android:layout_marginStart="16dp">
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="@color/pitch_button_text"
+        android:textSize="24sp"
+        android:layout_marginStart="20dp">
     </TextView>
 
     <TextView
         android:id="@+id/noteFrequencyTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="8dp"
-        android:textSize="20sp"
-        android:layout_marginEnd="16dp">
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp"
+        android:fontFamily="monospace"
+        android:letterSpacing="0.04"
+        android:textColor="@color/pitch_row_secondary"
+        android:textSize="14sp"
+        android:layout_marginEnd="20dp">
     </TextView>
 
 </LinearLayout>

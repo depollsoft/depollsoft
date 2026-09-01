@@ -8,6 +8,7 @@
 
 #if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsViewController.h"
+#import "pitchperfect-Swift.h"
 #import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
 #import "DPKey.h"
@@ -77,7 +78,7 @@
     bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
     UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    background.backgroundColor = [DPTheme staffBackgroundColor];
     [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
@@ -187,7 +188,7 @@
                 {
                     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
                     cell.textLabel.text = @"Toggle Notes";
-                    cell.detailTextLabel.text = @"Play until pressed again";
+                    cell.detailTextLabel.text = @"Notes play until pressed again";
                     UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
                     __weak UISwitch *weakSwitchView = switchView;
                     [switchView setOn:[DPSettingsModel sharedInstance].toggleNotes];
@@ -209,6 +210,19 @@
                     [switchView addBlock:^{
                         [DPSettingsModel sharedInstance].wakeLock = weakSwitchView.isOn;
                     } forControlEvents:UIControlEventValueChanged];
+                    break;
+                }
+                case 2:
+                {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"ThemeCell"];
+                    cell.textLabel.text = @"Theme";
+                    UISegmentedControl *themeControl = [[UISegmentedControl alloc] initWithItems:@[@"Default", @"Light", @"Dark"]];
+                    themeControl.selectedSegmentIndex = DPTheme.storedTheme;
+                    __weak UISegmentedControl *weakThemeControl = themeControl;
+                    [themeControl addBlock:^{
+                        DPTheme.storedTheme = weakThemeControl.selectedSegmentIndex;
+                    } forControlEvents:UIControlEventValueChanged];
+                    cell.accessoryView = themeControl;
                     break;
                 }
                 default:
@@ -294,10 +308,19 @@
         [[DPSettingsModel sharedInstance] detachFromFirestore];
         FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
         [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
+            [activity stopAnimating];
             if (!error) {
                 [[FIRAuth auth] signOut:nil];
                 [self->tableView reloadData];
-                [activity stopAnimating];
+            } else {
+                UIAlertController *errorAlert =
+                    [UIAlertController alertControllerWithTitle:@"Couldn't Delete Account"
+                                                        message:[NSString stringWithFormat:@"Something went wrong and your account was not deleted. Please try again. (%@)", error.localizedDescription]
+                                                 preferredStyle:UIAlertControllerStyleAlert];
+                [errorAlert addAction:[UIAlertAction actionWithTitle:@"OK"
+                                                               style:UIAlertActionStyleDefault
+                                                             handler:nil]];
+                [self presentViewController:errorAlert animated:YES completion:nil];
             }
         }];
     }]];
@@ -329,7 +352,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return 2;
+            return 3;
         case 1:
             return [FIRAuth auth].currentUser ? 2 : 1;
         case 2:

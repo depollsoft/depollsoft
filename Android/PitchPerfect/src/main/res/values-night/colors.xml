@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Laboratory Instrument, blackened-steel night variant: the glow lives here. -->
+    <color name="plate_ground">#0E0F10</color>
+    <color name="plate_surface">#16181A</color>
+    <color name="plate_ink">#D9DBDD</color>
+    <color name="plate_ink_bar">#0A0B0C</color>
+    <color name="plate_ink_secondary">#898D92</color>
+    <color name="plate_hairline">#2C2F33</color>
+    <color name="plate_accent">#F2EFE6</color>
+    <color name="plate_on_accent">#101214</color>
+
     <color name="pano_color">#11DDDDDD</color>
 </resources>

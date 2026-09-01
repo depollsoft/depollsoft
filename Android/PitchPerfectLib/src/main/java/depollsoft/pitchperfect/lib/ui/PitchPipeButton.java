@@ -97,6 +97,31 @@ public class PitchPipeButton extends Button {
 
   public void setNote(Note value) {
     this.note.set(value);
+    this.updateAccessibilityDescription();
+  }
+
+  private void updateAccessibilityDescription() {
+    Note n = this.getNote();
+    if (n == null) {
+      this.setContentDescription(null);
+      return;
+    }
+    StringBuilder description = new StringBuilder();
+    if (n.getAccidental() == depollsoft.pitchperfect.lib.Accidental.Natural) {
+      description.append(n.getFriendlyName());
+    } else if (n.getAccidental() == depollsoft.pitchperfect.lib.Accidental.Sharp) {
+      description.append(n.getFriendlyName()).append(" sharp");
+      if (n.getAlternate() != null) {
+        description.append(", ").append(n.getAlternate().getFriendlyName()).append(" flat");
+      }
+    } else {
+      description.append(n.getFriendlyName()).append(" flat");
+      if (n.getAlternate() != null) {
+        description.append(", ").append(n.getAlternate().getFriendlyName()).append(" sharp");
+      }
+    }
+    description.append(", octave ").append(n.getOctave());
+    this.setContentDescription(description.toString());
   }
 
 }

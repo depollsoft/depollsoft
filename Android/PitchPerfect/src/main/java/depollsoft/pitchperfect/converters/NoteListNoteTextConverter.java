@@ -35,7 +35,7 @@ public class NoteListNoteTextConverter extends ValueConverter {
       break;
     }
     res.append("" + note.getOctave());
-    SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(.5f));
+    SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(.68f));
     SpannableUtilities.applyToLastChar(res, new SubscriptSpan());
     if (note.getAlternate() != null) {
       note = note.getAlternate();
@@ -58,7 +58,7 @@ public class NoteListNoteTextConverter extends ValueConverter {
         break;
       }
       res.append("" + note.getOctave());
-      SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(.5f));
+      SpannableUtilities.applyToLastChar(res, new RelativeSizeSpan(.68f));
       SpannableUtilities.applyToLastChar(res, new SubscriptSpan());
     }
     return res;

@@ -98,7 +98,15 @@
     [DPJsonSerializer registerAlias:@"Boolean" forObjCType:[NSString stringWithUTF8String:@encode(BOOL)]];
     [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
     
+    [DPTheme applyStoredAppearance];
+
     dispatch_async(dispatch_get_main_queue(), ^{
+        // First launch belongs to the first pitch: the login prompt waits for the next session.
+        BOOL firstLaunchEver = ![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.FirstLaunchSeen"];
+        if (firstLaunchEver) {
+            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.FirstLaunchSeen"];
+            return;
+        }
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-31T00:00:00Z",
+  "title": "Design System: Pitch Perfect",
+  "extensions": {
+    "colorMeta": {
+      "plate-lit": { "role": "primary", "displayName": "Plate Lit", "canonical": "#141618", "darkValue": "#F2EFE6", "tonalRamp": ["#0A0B0C", "#141618", "#2C2F33", "#55585C", "#898D92", "#B7B9BC", "#DADBDC", "#F2EFE6"] },
+      "plate-on-lit": { "role": "primary", "displayName": "Plate On-Lit", "canonical": "#F2F3F4", "darkValue": "#101214" },
+      "plate-ground": { "role": "neutral", "displayName": "Plate Ground", "canonical": "#DADBDC", "darkValue": "#0E0F10" },
+      "plate-surface": { "role": "neutral", "displayName": "Plate Surface", "canonical": "#E7E8E9", "darkValue": "#16181A" },
+      "plate-ink": { "role": "neutral", "displayName": "Plate Ink", "canonical": "#1C1E20", "darkValue": "#D9DBDD" },
+      "plate-ink-secondary": { "role": "neutral", "displayName": "Plate Ink Secondary", "canonical": "#55585C", "darkValue": "#898D92" },
+      "plate-ink-bar": { "role": "neutral", "displayName": "Plate Ink Bar", "canonical": "#141618", "darkValue": "#0A0B0C" },
+      "plate-hairline": { "role": "neutral", "displayName": "Plate Hairline", "canonical": "#B7B9BC", "darkValue": "#2C2F33" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Engraving", "purpose": "Oswald Medium condensed caps with wide tracking: action-bar title, cell engravings, nameplate, range labels." },
+      "body": { "displayName": "Body", "purpose": "Platform condensed sans for list-row primary text." },
+      "mono": { "displayName": "Mono / Data", "purpose": "Monospace for every measured value: Hz readouts, song keys, octaves." },
+      "label": { "displayName": "Section Header", "purpose": "Monospace 12sp, 0.14 tracking, secondary ink." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "breath", "value": "4000ms linear infinite sinusoidal phase", "purpose": "Modulates the sounding cell's bloom (0.82 + 0.18·sin) and fill (0.9 + 0.1·sin) while any note sounds; disabled under reduce-motion." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Instrument Cell (resting)",
+      "kind": "custom",
+      "refersTo": "instrument-cell",
+      "description": "A glass cell on the panel: surface fill, hairline rim, inner anode ring, engraved note letter.",
+      "html": "<div class=\"ds-cell\"><span class=\"ds-cell-label\">C</span></div>",
+      "css": ".ds-cell { width: 88px; height: 88px; border-radius: 50%; background: #E7E8E9; border: 1.5px solid #B7B9BC; display: flex; align-items: center; justify-content: center; position: relative; } .ds-cell::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 1px solid rgba(85,88,92,0.27); } .ds-cell-label { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 40px; color: #1C1E20; }"
+    },
+    {
+      "name": "Instrument Cell (sounding)",
+      "kind": "custom",
+      "refersTo": "instrument-cell-lit",
+      "description": "The one luminous element: lit fill, 3px lit rim, radial bloom leaking across the panel (dark-mode values).",
+      "html": "<div class=\"ds-cell-lit-stage\"><div class=\"ds-cell-lit\"><span class=\"ds-cell-lit-label\">C</span></div></div>",
+      "css": ".ds-cell-lit-stage { width: 220px; height: 220px; background: #0E0F10; display: flex; align-items: center; justify-content: center; } .ds-cell-lit { width: 88px; height: 88px; border-radius: 50%; background: #F2EFE6; border: 3px solid #F2EFE6; box-shadow: 0 0 60px 30px rgba(242,239,230,0.45); display: flex; align-items: center; justify-content: center; position: relative; } .ds-cell-lit::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 1px solid rgba(16,18,20,0.43); } .ds-cell-lit-label { font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 40px; color: #101214; }"
+    },
+    {
+      "name": "Range Selector",
+      "kind": "custom",
+      "refersTo": "range-selector",
+      "description": "One machined frame with two range positions; the selected row carries an ink wash and a lit dot.",
+      "html": "<div class=\"ds-range\"><div class=\"ds-range-row ds-range-selected\"><span class=\"ds-range-dot\"></span>C TO B</div><div class=\"ds-range-row\">F TO E</div></div>",
+      "css": ".ds-range { width: 200px; border: 1.5px solid #B7B9BC; border-radius: 5px; background: rgba(231,232,233,0.92); overflow: hidden; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 500; } .ds-range-row { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.16em; font-size: 15px; color: rgba(85,88,92,0.75); } .ds-range-row + .ds-range-row { border-top: 1px solid rgba(183,185,188,0.63); } .ds-range-selected { background: rgba(28,30,32,0.1); color: #1C1E20; } .ds-range-dot { position: absolute; left: 18px; width: 10px; height: 10px; border-radius: 50%; background: #141618; }"
+    },
+    {
+      "name": "List Row",
+      "kind": "card",
+      "refersTo": "list-row",
+      "description": "Note/song row: condensed name, mono trailing datum, hairline divider; pressing lights it like a cell.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-row-name\">A</span><span class=\"ds-row-data\">440.0 Hz</span></div>",
+      "css": ".ds-row { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding: 0 20px; background: #DADBDC; border-bottom: 1px solid #B7B9BC; cursor: pointer; } .ds-row-name { font-family: 'Arial Narrow', sans-serif; font-size: 24px; color: #1C1E20; } .ds-row-data { font-family: ui-monospace, monospace; font-size: 14px; letter-spacing: 0.04em; color: #55585C; } .ds-row:active { background: #141618; } .ds-row:active .ds-row-name { color: #F2F3F4; } .ds-row:active .ds-row-data { color: #F2F3F4; }"
+    },
+    {
+      "name": "Section Header",
+      "kind": "custom",
+      "refersTo": "section-header",
+      "description": "Engraved mono label for grouped settings/lists.",
+      "html": "<div class=\"ds-section-header\">PITCH PIPE</div>",
+      "css": ".ds-section-header { font-family: ui-monospace, monospace; font-size: 12px; letter-spacing: 0.14em; color: #55585C; padding: 12px 20px 4px; }"
+    },
+    {
+      "name": "Steel FAB",
+      "kind": "button",
+      "refersTo": "fab",
+      "description": "Add-song FAB in plate-surface with ink glyph; never accent-filled.",
+      "html": "<button class=\"ds-fab\" aria-label=\"Add song\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#1C1E20\" stroke-width=\"2\"><path d=\"M12 5v14M5 12h14\"/></svg></button>",
+      "css": ".ds-fab { width: 56px; height: 56px; border-radius: 50%; background: #E7E8E9; border: 1px solid #B7B9BC; display: flex; align-items: center; justify-content: center; cursor: pointer; } .ds-fab:active { background: #DADBDC; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Laboratory Instrument",
+    "overview": "Pitch Perfect is drawn as a piece of precision lab hardware, not a grid of platform buttons. The light variant is a bench-aluminum plate; the dark variant is blackened steel. Both are grayscale to the bone. Every surface carries machined texture: brushed grain, an etched five-line staff engraved into the panel, hairline anode rings inside each glass cell. The one moment of light is functional, not decorative: when a note sounds, its cell ignites white-hot with a radial bloom, the note name and live frequency digits appear in the ring's hole, and the glow breathes on a slow 4-second cycle. Release, and the panel goes dark again.",
+    "keyCharacteristics": [
+      "Grayscale only; zero chromatic color anywhere in first-party UI",
+      "One luminous element maximum, and only while sound exists",
+      "Engraved condensed caps (Oswald Medium, wide tracking) for labels; monospace for every measurement",
+      "Hairline strokes (1–1.5px) as the primary structural device; near-square 2dp corners",
+      "Identical tokens and instrument geometry on both platforms; chrome stays platform-native"
+    ],
+    "rules": [
+      { "name": "The One-Glow Rule", "body": "The sounding note is the only luminous element on screen. Nothing else blooms, tints, or lights up; all other state is expressed with ink, hairlines, and surface shifts. Silence means a dark (or matte) panel.", "section": "colors" },
+      { "name": "The Grayscale Rule", "body": "No chromatic color, ever, in first-party UI. The seed contract and PRODUCT.md both pin it. Third-party ad creative inside the ad slot is the only place color may appear, and it is quarantined there.", "section": "colors" },
+      { "name": "The Mono-Measurement Rule", "body": "Any value with a unit or a key — Hz, octaves, song keys — is set in monospace at secondary weight. Names get the condensed face; numbers get the mono face.", "section": "typography" },
+      { "name": "The Etched-Not-Cast Rule", "body": "Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every first-party pixel grayscale, drawing from the eight plate-* role pairs.",
+      "Do reserve plate-lit for the sounding note, its bloom, the pressed row, and the range dot — light means \"this is live.\"",
+      "Do set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.",
+      "Do build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).",
+      "Do mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.",
+      "Do honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name."
+    ],
+    "donts": [
+      "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",
+      "Don't use drop shadows or elevation overlays; depth is etched (grain, staff, anode rings), never cast.",
+      "Don't replace the engraved \"♯/♭\" cell glyphs with full note names on the face; full names belong to the center readout and accessibility tree.",
+      "Don't style the FAB or any control with an accent fill; steel surface + ink icon is the ceiling.",
+      "Don't let anything but third-party ad creative occupy the ad slot's color exemption, and don't move the slot from its fixed position above the nav."
+    ]
+  }
+}

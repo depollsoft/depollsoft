@@ -16,6 +16,8 @@
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
 		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
+		B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */; };
+		76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C584F19CA54391BAD09BEC /* DPTheme.swift */; };
 		1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */; };
 		1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3422F533F900EA9F2E /* DPSongsModel.swift */; };
 		1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCE32A18234926C3795761C /* KeySignatureUITests.swift */; };
@@ -48,6 +50,7 @@
 		6338EFC01979DEB2000187E2 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFBF1979DEB2000187E2 /* CoreLocation.framework */; };
 		6338EFC21979DEBD000187E2 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFC11979DEBD000187E2 /* CoreTelephony.framework */; };
 		6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6338EFC31979DFFA000187E2 /* Images.xcassets */; };
+		7FB9FEC7BBCA4996B8B7E164 /* Oswald-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */; };
 		634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897915885F6A000D9AFE /* AbstractLayoutView.m */; };
 		634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897B15885F6A000D9AFE /* GridLayoutView.m */; };
 		634C898515885F6A000D9AFE /* HLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897D15885F6A000D9AFE /* HLayoutView.m */; };
@@ -184,6 +187,9 @@
 		1E8EA647267E5BC400255826 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1E95FFA02686560500B5299C /* DPCommon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPCommon.swift; sourceTree = "<group>"; };
+		0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Oswald-Medium.ttf"; sourceTree = "<group>"; };
+		4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchInstrumentView.swift; sourceTree = "<group>"; };
+		E9C584F19CA54391BAD09BEC /* DPTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTheme.swift; sourceTree = "<group>"; };
 		1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfect-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
@@ -537,6 +543,9 @@
 				A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */,
 				1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */,
 				1E95FFA02686560500B5299C /* DPCommon.swift */,
+				0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */,
+				4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */,
+				E9C584F19CA54391BAD09BEC /* DPTheme.swift */,
 			);
 			path = pitchperfect;
 			sourceTree = "<group>";
@@ -758,6 +767,7 @@
 				63B403DC1588768700FCA77C /* pitchpipe.png in Resources */,
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
 				6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */,
+				7FB9FEC7BBCA4996B8B7E164 /* Oswald-Medium.ttf in Resources */,
 				631C911715906D2B004733F1 /* notes.png in Resources */,
 				1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */,
 				631C911815906D2B004733F1 /* notes@2x.png in Resources */,
@@ -812,6 +822,8 @@
 				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
 				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
 				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
+				B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */,
+				76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
 				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,

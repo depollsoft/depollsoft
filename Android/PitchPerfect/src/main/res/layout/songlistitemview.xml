@@ -22,6 +22,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="@color/plate_ink"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
         android:textSize="20sp">
     </TextView>
 
@@ -31,7 +35,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_marginEnd="16dp"
-        android:textSize="20sp"
+        android:fontFamily="monospace"
+        android:textColor="@color/plate_ink_secondary"
+        android:letterSpacing="0.06"
+        android:textSize="16sp"
         android:layout_marginRight="16dp">
     </TextView>
 

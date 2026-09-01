@@ -9,7 +9,7 @@
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_panobackground"/>
+        app:srcCompat="@drawable/bg_etched_staff" />
 
     <LinearLayout
         android:id="@+id/linearLayout1"
