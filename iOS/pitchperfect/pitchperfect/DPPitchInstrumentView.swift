@@ -385,8 +385,12 @@ private extension DPPitchInstrumentView {
               let image = artwork.cgImage else { return }
         let trebleRect = CGRect(x: 0, y: 0, width: image.width / 3, height: image.height / 2)
         let bassRect = CGRect(x: 0, y: image.height / 2, width: image.width / 3, height: image.height / 2)
-        let markWidth = bounds.width * 0.31
+        let markWidth = bounds.width * 0.23
         let markHeight = markWidth * 0.58
+        let ringOuterTop = faceCenter.y - ringRadius - cellRadius
+        let ringOuterBottom = faceCenter.y + ringRadius + cellRadius
+        let trebleTop = max(12, ringOuterTop - markHeight * 0.82)
+        let bassTop = min(bounds.height - markHeight - 52, ringOuterBottom + cellRadius * 0.45)
 
         if let crop = image.cropping(to: trebleRect) {
             UIImage(cgImage: crop)
@@ -394,12 +398,12 @@ private extension DPPitchInstrumentView {
                 .draw(
                     in: CGRect(
                         x: bounds.width * 0.06,
-                        y: faceCenter.y - ringRadius * 0.72,
+                        y: trebleTop,
                         width: markWidth,
                         height: markHeight,
                     ),
                     blendMode: .normal,
-                    alpha: 0.15,
+                    alpha: 0.13,
                 )
         }
         if let crop = image.cropping(to: bassRect) {
@@ -408,12 +412,12 @@ private extension DPPitchInstrumentView {
                 .draw(
                     in: CGRect(
                         x: bounds.width * 0.94 - markWidth,
-                        y: faceCenter.y + ringRadius * 0.34,
+                        y: bassTop,
                         width: markWidth,
                         height: markHeight,
                     ),
                     blendMode: .normal,
-                    alpha: 0.15,
+                    alpha: 0.13,
                 )
         }
     }

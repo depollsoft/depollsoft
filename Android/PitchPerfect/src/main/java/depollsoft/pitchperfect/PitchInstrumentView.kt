@@ -6,9 +6,9 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RadialGradient
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.RadialGradient
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
@@ -311,19 +311,23 @@ class PitchInstrumentView
 
         private fun drawHeritageMarks(canvas: Canvas) {
             val bitmap = heritageBitmap ?: return
-            val markWidth = width * 0.31f
+            val markWidth = width * 0.23f
             val markHeight = markWidth * 0.58f
             val trebleSource = Rect(0, 0, bitmap.width / 3, bitmap.height / 2)
             val bassSource = Rect(0, bitmap.height / 2, bitmap.width / 3, bitmap.height)
+            val ringOuterTop = faceCy - ringRadius - cellRadius
+            val ringOuterBottom = faceCy + ringRadius + cellRadius
+            val trebleTop = maxOf(18f, ringOuterTop - markHeight * 0.82f)
+            val bassTop = minOf(height - markHeight - 70f, ringOuterBottom + cellRadius * 0.45f)
 
             canvas.drawBitmap(
                 bitmap,
                 trebleSource,
                 RectF(
                     width * 0.06f,
-                    faceCy - ringRadius * 0.72f,
+                    trebleTop,
                     width * 0.06f + markWidth,
-                    faceCy - ringRadius * 0.72f + markHeight,
+                    trebleTop + markHeight,
                 ),
                 heritagePaint,
             )
@@ -332,9 +336,9 @@ class PitchInstrumentView
                 bassSource,
                 RectF(
                     width * 0.94f - markWidth,
-                    faceCy + ringRadius * 0.34f,
+                    bassTop,
                     width * 0.94f,
-                    faceCy + ringRadius * 0.34f + markHeight,
+                    bassTop + markHeight,
                 ),
                 heritagePaint,
             )

@@ -48,7 +48,7 @@ public class SongListItemView extends LinearLayout implements
   private void init() {
     View.inflate(this.getContext(), R.layout.songlistitemview, this);
     this.setEditing(false);
-    this.setBackgroundDrawable(new ListView(this.getContext()).getSelector());
+    this.setBackgroundDrawable(this.getContext().getDrawable(R.drawable.row_lit));
   }
 
   @Override
