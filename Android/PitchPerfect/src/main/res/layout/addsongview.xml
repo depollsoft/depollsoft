@@ -11,6 +11,11 @@
         android:scaleType="centerCrop"
         app:srcCompat="@drawable/bg_etched_staff" />
 
+        <depollsoft.pitchperfect.HeritageScoreView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no" />
+
     <LinearLayout
         android:id="@+id/linearLayout1"
         android:layout_width="fill_parent"
@@ -49,6 +54,17 @@
                 android:layout_height="75dp">
             </Spinner>
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveSongButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/oswald_medium"
+            android:letterSpacing="0.1"
+            android:text="@string/SaveSong" />
     </LinearLayout>
 
 </FrameLayout>

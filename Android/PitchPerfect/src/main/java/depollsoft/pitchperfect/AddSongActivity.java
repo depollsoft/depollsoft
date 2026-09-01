@@ -89,6 +89,8 @@ public class AddSongActivity extends AppCompatActivity {
 
         int keyIndex = this.getAllKeys().indexOf(this.getSong().getKey());
 
+        this.findViewById(R.id.saveSongButton).setOnClickListener(v -> okClicked());
+
         final Spinner spinner = (Spinner) this.findViewById(R.id.songKeySpinner);
         spinner.setSelection(keyIndex);
         spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -104,6 +106,13 @@ public class AddSongActivity extends AppCompatActivity {
     }
 
     private void okClicked() {
+        String name = AddSongActivity.this.getSong().getName();
+        if (name == null || name.trim().isEmpty()) {
+            EditText titleField = (EditText) AddSongActivity.this.findViewById(R.id.songTitleEditText);
+            titleField.setError(AddSongActivity.this.getString(R.string.SongTitleRequired));
+            titleField.requestFocus();
+            return;
+        }
         if (AddSongActivity.this.editing) {
             AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
             AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());

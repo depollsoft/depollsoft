@@ -34,14 +34,14 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
     private var faceCenter: CGPoint = .zero
     private var rangeLowRect: CGRect = .zero
     private var rangeHighRect: CGRect = .zero
-    private var pressedIndex: Int = -1
+    private var activeTouches: [ObjectIdentifier: Int] = [:]
     private var breathePhase: CGFloat = 0
     private var displayLink: CADisplayLink?
 
     override public init(frame: CGRect) {
         super.init(frame: frame)
         isOpaque = true
-        isMultipleTouchEnabled = false
+        isMultipleTouchEnabled = true
         isAccessibilityElement = false
     }
 
@@ -59,7 +59,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         for note in notes {
             note.stop()
         }
-        pressedIndex = -1
+        activeTouches.removeAll()
         setNeedsDisplay()
     }
 
@@ -70,20 +70,6 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
     // MARK: - Names
 
     private static let letters: [Character] = ["C", "D", "E", "F", "G", "A", "B"]
-
-    private func flatPartner(of name: String) -> String {
-        guard let first = name.first, let index = Self.letters.firstIndex(of: first) else { return name }
-        return String(Self.letters[(index + 1) % Self.letters.count])
-    }
-
-    private func spokenName(at index: Int) -> String {
-        let note = notes[index]
-        let name = note.friendlyName ?? ""
-        if naturals.indices.contains(index), naturals[index] {
-            return "\(name), octave \(note.octave)"
-        }
-        return "\(name) sharp, \(flatPartner(of: name)) flat, octave \(note.octave)"
-    }
 
     // MARK: - Layout
 
@@ -120,66 +106,12 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
 
     // MARK: - Breathing
 
-    private func anyPlaying() -> Bool {
-        notes.contains { $0.isPlaying }
-    }
-
-    private func manageBreathing() {
-        if anyPlaying(), !UIAccessibility.isReduceMotionEnabled {
-            if displayLink == nil {
-                let link = CADisplayLink(target: self, selector: #selector(breathe))
-                link.add(to: .main, forMode: .common)
-                displayLink = link
-            }
-        } else {
-            displayLink?.invalidate()
-            displayLink = nil
-            breathePhase = 0
-        }
-    }
-
-    @objc private func breathe() {
-        breathePhase += CGFloat.pi * 2 / (4.0 * 60.0)
-        if breathePhase > CGFloat.pi * 2 { breathePhase -= CGFloat.pi * 2 }
-        setNeedsDisplay()
-    }
-
     override public func willMove(toWindow newWindow: UIWindow?) {
         super.willMove(toWindow: newWindow)
         if newWindow == nil {
             displayLink?.invalidate()
             displayLink = nil
         }
-    }
-
-    // MARK: - Fonts
-
-    private func condensedFont(size: CGFloat) -> UIFont {
-        if let oswald = UIFont(name: "Oswald-Medium", size: size) {
-            return oswald
-        }
-        if #available(iOS 16.0, *) {
-            return UIFont.systemFont(ofSize: size, weight: .regular, width: .condensed)
-        }
-        return UIFont.systemFont(ofSize: size, weight: .regular)
-    }
-
-    private func monoFont(size: CGFloat) -> UIFont {
-        UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
-    }
-
-    private func glyphLabel(size: CGFloat, color: UIColor) -> NSAttributedString {
-        if let noteHedz = UIFont(name: "NoteHedz", size: size * 1.2) {
-            let label = NSMutableAttributedString()
-            label.append(NSAttributedString(string: "\u{00EC}", attributes: [.font: noteHedz, .foregroundColor: color]))
-            label.append(NSAttributedString(string: "/", attributes: [.font: condensedFont(size: size * 0.8), .foregroundColor: color, .baselineOffset: size * 0.15]))
-            label.append(NSAttributedString(string: "\u{00ED}", attributes: [.font: noteHedz, .foregroundColor: color]))
-            return label
-        }
-        return NSAttributedString(
-            string: "\u{266F}/\u{266D}",
-            attributes: [.font: condensedFont(size: size * 0.9), .foregroundColor: color],
-        )
     }
 
     // MARK: - Drawing
@@ -195,7 +127,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         let lit = DPTheme.plateLit.resolvedColor(with: traits)
         let onLit = DPTheme.plateOnLit.resolvedColor(with: traits)
 
-        drawPanel(context: context, ground: ground, hairline: hairline)
+        drawPanel(context: context, ground: ground, hairline: hairline, markColor: inkSecondary)
 
         let breath = 0.82 + 0.18 * sin(breathePhase)
 
@@ -282,7 +214,140 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         manageBreathing()
     }
 
-    private func drawPanel(context: CGContext, ground: UIColor, hairline: UIColor) {
+    // MARK: - Touch
+
+    override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let point = touch.location(in: self)
+            if activeTouches.isEmpty, rangeLowRect.contains(point) {
+                selectRange(high: false)
+                continue
+            }
+            if activeTouches.isEmpty, rangeHighRect.contains(point) {
+                selectRange(high: true)
+                continue
+            }
+            let index = cellIndex(at: point)
+            guard index >= 0, index < notes.count else { continue }
+            if toggleMode {
+                let note = notes[index]
+                if note.isPlaying { note.stop() } else { note.play() }
+            } else {
+                notes[index].play()
+                activeTouches[ObjectIdentifier(touch)] = index
+            }
+        }
+        setNeedsDisplay()
+    }
+
+    override public func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard !toggleMode else { return }
+        var changed = false
+        for touch in touches {
+            let key = ObjectIdentifier(touch)
+            guard let currentCell = activeTouches[key] else { continue }
+            let newCell = cellIndex(at: touch.location(in: self))
+            if newCell != currentCell {
+                activeTouches[key] = nil
+                if currentCell < notes.count, !activeTouches.values.contains(currentCell) {
+                    notes[currentCell].stop()
+                }
+                if newCell >= 0, newCell < notes.count {
+                    notes[newCell].play()
+                    activeTouches[key] = newCell
+                }
+                changed = true
+            }
+        }
+        if changed { setNeedsDisplay() }
+    }
+
+    override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        releaseTouches(touches)
+    }
+
+    override public func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        releaseTouches(touches)
+    }
+
+
+}
+
+private extension DPPitchInstrumentView {
+    private func flatPartner(of name: String) -> String {
+        guard let first = name.first, let index = Self.letters.firstIndex(of: first) else { return name }
+        return String(Self.letters[(index + 1) % Self.letters.count])
+    }
+
+    private func spokenName(at index: Int) -> String {
+        let note = notes[index]
+        let name = note.friendlyName ?? ""
+        if naturals.indices.contains(index), naturals[index] {
+            return "\(name), octave \(note.octave)"
+        }
+        return "\(name) sharp, \(flatPartner(of: name)) flat, octave \(note.octave)"
+    }
+
+    private func anyPlaying() -> Bool {
+        notes.contains { $0.isPlaying }
+    }
+
+    private func manageBreathing() {
+        if anyPlaying(), !UIAccessibility.isReduceMotionEnabled {
+            if displayLink == nil {
+                let link = CADisplayLink(target: self, selector: #selector(breathe))
+                link.add(to: .main, forMode: .common)
+                displayLink = link
+            }
+        } else {
+            displayLink?.invalidate()
+            displayLink = nil
+            breathePhase = 0
+        }
+    }
+
+    @objc private func breathe() {
+        breathePhase += CGFloat.pi * 2 / (4.0 * 60.0)
+        if breathePhase > CGFloat.pi * 2 { breathePhase -= CGFloat.pi * 2 }
+        setNeedsDisplay()
+    }
+
+    // MARK: - Fonts
+
+    private func condensedFont(size: CGFloat) -> UIFont {
+        if let oswald = UIFont(name: "Oswald-Medium", size: size) {
+            return oswald
+        }
+        if #available(iOS 16.0, *) {
+            return UIFont.systemFont(ofSize: size, weight: .regular, width: .condensed)
+        }
+        return UIFont.systemFont(ofSize: size, weight: .regular)
+    }
+
+    private func monoFont(size: CGFloat) -> UIFont {
+        UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
+    }
+
+    private func glyphLabel(size: CGFloat, color: UIColor) -> NSAttributedString {
+        if let noteHedz = UIFont(name: "NoteHedz", size: size * 1.2) {
+            let label = NSMutableAttributedString()
+            label.append(NSAttributedString(string: "\u{00EC}", attributes: [.font: noteHedz, .foregroundColor: color]))
+            label.append(NSAttributedString(string: "/", attributes: [.font: condensedFont(size: size * 0.8), .foregroundColor: color, .baselineOffset: size * 0.15]))
+            label.append(NSAttributedString(string: "\u{00ED}", attributes: [.font: noteHedz, .foregroundColor: color]))
+            return label
+        }
+        return NSAttributedString(
+            string: "\u{266F}/\u{266D}",
+            attributes: [.font: condensedFont(size: size * 0.9), .foregroundColor: color],
+        )
+    }
+
+    private func drawPanel(
+        context: CGContext,
+        ground: UIColor,
+        hairline: UIColor,
+        markColor: UIColor
+    ) {
         ground.setFill()
         context.fill(bounds)
 
@@ -312,21 +377,70 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
             staffTop += staffGap * 12
         }
         context.strokePath()
+        drawHeritageMarks(markColor: markColor)
+    }
+
+    private func drawHeritageMarks(markColor: UIColor) {
+        guard let artwork = UIImage(named: "panobackground.png"),
+              let image = artwork.cgImage else { return }
+        let trebleRect = CGRect(x: 0, y: 0, width: image.width / 3, height: image.height / 2)
+        let bassRect = CGRect(x: 0, y: image.height / 2, width: image.width / 3, height: image.height / 2)
+        let markWidth = bounds.width * 0.31
+        let markHeight = markWidth * 0.58
+
+        if let crop = image.cropping(to: trebleRect) {
+            UIImage(cgImage: crop)
+                .withTintColor(markColor, renderingMode: .alwaysOriginal)
+                .draw(
+                    in: CGRect(
+                        x: bounds.width * 0.06,
+                        y: faceCenter.y - ringRadius * 0.72,
+                        width: markWidth,
+                        height: markHeight,
+                    ),
+                    blendMode: .normal,
+                    alpha: 0.15,
+                )
+        }
+        if let crop = image.cropping(to: bassRect) {
+            UIImage(cgImage: crop)
+                .withTintColor(markColor, renderingMode: .alwaysOriginal)
+                .draw(
+                    in: CGRect(
+                        x: bounds.width * 0.94 - markWidth,
+                        y: faceCenter.y + ringRadius * 0.34,
+                        width: markWidth,
+                        height: markHeight,
+                    ),
+                    blendMode: .normal,
+                    alpha: 0.15,
+                )
+        }
     }
 
     private func drawCenter(context: CGContext, ink: UIColor, inkSecondary: UIColor) {
-        if let playingIndex = notes.firstIndex(where: { $0.isPlaying }) {
-            let note = notes[playingIndex]
-            let natural = naturals.indices.contains(playingIndex) && naturals[playingIndex]
-            let name = "\(note.friendlyName ?? "")\(natural ? "" : "\u{266F}")\(note.octave)"
+        let playingIndices = notes.indices.filter { notes[$0].isPlaying }
+        if !playingIndices.isEmpty {
+            let name = playingIndices
+                .map { index -> String in
+                    let note = notes[index]
+                    let natural = naturals.indices.contains(index) && naturals[index]
+                    return "\(note.friendlyName ?? "")\(natural ? "" : "\u{266F}")\(note.octave)"
+                }
+                .joined(separator: " ")
+            let nameSize2 = playingIndices.count == 1 ? ringRadius * 0.28 : ringRadius * 0.16
             let nameLabel = NSAttributedString(
                 string: name,
-                attributes: [.font: condensedFont(size: ringRadius * 0.28), .foregroundColor: ink],
+                attributes: [.font: condensedFont(size: nameSize2), .foregroundColor: ink],
             )
             let nameSize = nameLabel.size()
             nameLabel.draw(at: CGPoint(x: faceCenter.x - nameSize.width / 2, y: faceCenter.y - ringRadius * 0.46))
+            let readout =
+                playingIndices.count == 1
+                    ? String(format: "%.1f Hz", notes[playingIndices[0]].frequency)
+                    : "\(playingIndices.count) NOTES"
             let freqLabel = NSAttributedString(
-                string: String(format: "%.1f Hz", note.frequency),
+                string: readout,
                 attributes: [.font: monoFont(size: ringRadius * 0.13), .foregroundColor: ink],
             )
             let freqSize = freqLabel.size()
@@ -361,8 +475,6 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         text.draw(at: CGPoint(x: rect.midX - size.width / 2, y: rect.midY - size.height / 2))
     }
 
-    // MARK: - Touch
-
     private func cellIndex(at point: CGPoint) -> Int {
         for (index, center) in cellCenters.enumerated() {
             let deltaX = point.x - center.x
@@ -379,56 +491,15 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         UIAccessibility.post(notification: .layoutChanged, argument: nil)
     }
 
-    override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let point = touches.first?.location(in: self) else { return }
-        if rangeLowRect.contains(point) {
-            selectRange(high: false)
-            return
-        }
-        if rangeHighRect.contains(point) {
-            selectRange(high: true)
-            return
-        }
-        let index = cellIndex(at: point)
-        guard index >= 0, index < notes.count else { return }
-        if toggleMode {
-            let note = notes[index]
-            if note.isPlaying { note.stop() } else { note.play() }
-        } else {
-            notes[index].play()
-            pressedIndex = index
-        }
-        setNeedsDisplay()
-    }
-
-    override public func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard !toggleMode, let point = touches.first?.location(in: self) else { return }
-        let index = cellIndex(at: point)
-        if index != pressedIndex {
-            if pressedIndex >= 0, pressedIndex < notes.count { notes[pressedIndex].stop() }
-            if index >= 0, index < notes.count {
-                notes[index].play()
-                pressedIndex = index
-            } else {
-                pressedIndex = -1
+    private func releaseTouches(_ touches: Set<UITouch>) {
+        for touch in touches {
+            let key = ObjectIdentifier(touch)
+            guard let cell = activeTouches[key] else { continue }
+            activeTouches[key] = nil
+            if !toggleMode, cell < notes.count, !activeTouches.values.contains(cell) {
+                notes[cell].stop()
             }
-            setNeedsDisplay()
         }
-    }
-
-    override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        endMomentaryPress()
-    }
-
-    override public func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        endMomentaryPress()
-    }
-
-    private func endMomentaryPress() {
-        if !toggleMode, pressedIndex >= 0, pressedIndex < notes.count {
-            notes[pressedIndex].stop()
-        }
-        pressedIndex = -1
         setNeedsDisplay()
     }
 

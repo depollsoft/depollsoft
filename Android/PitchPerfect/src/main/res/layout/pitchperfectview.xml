@@ -28,6 +28,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
             android:scaleType="centerCrop"
             app:srcCompat="@drawable/bg_etched_staff"/>
 
+        <depollsoft.pitchperfect.HeritageScoreView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no" />
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"

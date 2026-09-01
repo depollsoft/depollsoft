@@ -125,7 +125,7 @@ Screen chrome stacks vertically: action bar (ink-bar) → instrument/content pan
 
 ## Elevation & Depth
 
-No shadows. Depth is conveyed by material: the brushed-metal grain (1px hairlines every 4px at 3–8% alpha), the etched staff (five-line groups at 25% alpha hairline, spaced from cell geometry), the anode ring inset at 86% of each cell's radius, and the one radial bloom (radius = cell × 2.4, lit color fading 60% → 0%) that leaks light across the panel under a sounding cell. Surfaces separate by tone (ground vs. surface vs. ink-bar), never by drop shadow.
+No shadows. Depth is conveyed by material: the brushed-metal grain (1px hairlines every 4px at 3–8% alpha), the etched staff plus two sparse heritage watermarks (treble clef/key signature upper-left, bass clef/key signature lower-right), the anode ring inset at 86% of each cell's radius, and the one radial bloom (radius = cell × 2.4, lit color fading 60% → 0%) that leaks light across the panel under a sounding cell. Surfaces separate by tone (ground vs. surface vs. ink-bar), never by drop shadow.
 
 **The Etched-Not-Cast Rule.** Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.
 
@@ -139,7 +139,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - **Resting:** surface-filled circle, 1.5px hairline rim, 1px anode ring at 86% radius, engraved label (naturals: full-size letter in ink; accidentals: smaller "♯/♭" glyph in secondary ink).
 - **Sounding:** fills with `plate-lit`, 3px lit rim, bloom underneath, label flips to `plate-on-lit`; opacity breathes with the 4s cycle.
-- **Behavior:** press-and-hold to sound (slide between cells retunes); toggle mode latches. Only rendered state changes — no ripple, no platform ink.
+- **Behavior:** press-and-hold to sound; true multi-touch lets each finger own a cell independently so chords remain sounding as other fingers release. Sliding one finger retunes only that pointer; toggle mode latches. Only rendered state changes — no ripple, no platform ink.
 
 ### Range Selector (machined)
 
@@ -147,11 +147,17 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Center Readout
 
-- Sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
+- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Chord: all sounding note names share the display and the mono line reads "<n> NOTES". Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
 
 ### List Rows
 
 - 56–64dp rows on `plate-ground`, 1px hairline dividers. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+
+### Song Editing
+
+- Android normal mode keeps rows clean. A persistent one-tap **Edit Songs** control switches to **Stop Editing**, reveals each row's pencil and drag handle, and exposes Sort. Dragging uses RecyclerView/ItemTouchHelper and persists once on drop.
+- Add/Edit Song keeps the one-tap app-bar checkmark and also supplies a full-width **Save Song** button. Empty titles are blocked inline.
+- iOS uses its native Edit/Done table mode. In the song editor, Return is Done, a keyboard accessory Done button is always present, and tapping outside dismisses the keyboard so the key picker is never trapped.
 
 ### FAB
 
@@ -163,11 +169,11 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Navigation
 
-- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked); iOS: HIG tab bar. Action bar carries the Oswald title. System bars match `plate-ink-bar`.
+- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS uses opaque grayscale HIG navigation/tab bars with stable template icons and opts out of iOS 26 Liquid Glass because its morphing/glow conflicts with the instrument world. Action bars carry the Oswald title. System bars match `plate-ink-bar`.
 
 ### Ad Slot
 
-- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. Third-party creative lives only here.
+- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here.
 
 ### Motion
 
@@ -186,6 +192,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
 - **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
+- **Do** keep the background mostly clean staff lines; add only two low-contrast marks from the original artwork — treble/key signature and bass/key signature — to preserve the icon lineage.
 - **Do** honor reduce-motion settings by stopping the breath entirely, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
 
 ### Don't

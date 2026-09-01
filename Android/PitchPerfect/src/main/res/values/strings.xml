@@ -78,6 +78,9 @@
     <string name="theme_system">Default</string>
     <string name="themeTitle">Theme</string>
     <string name="manage_subscription">Manage Subscription</string>
+    <string name="SaveSong">Save Song</string>
+    <string name="SongTitleRequired">Song title is required</string>
+    <string name="ReorderSong">Drag to reorder</string>
     <string name="RangeLowDescription">Octave range C to B</string>
     <string name="RangeHighDescription">Octave range F to E</string>
     <string name="SwitchToMajorKeys">Showing minor keys. Switch to major keys.</string>

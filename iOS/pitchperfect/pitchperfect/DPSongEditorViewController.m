@@ -98,15 +98,35 @@
     nameField.text = song.name;
     nameField.contentMode = UIViewContentModeCenter;
     nameField.borderStyle = UITextBorderStyleRoundedRect;
-    nameField.returnKeyType = UIReturnKeyNext;
+    nameField.returnKeyType = UIReturnKeyDone;
     nameField.autocapitalizationType = UITextAutocapitalizationTypeWords;
     nameField.delegate = self;
+
+    // The key picker sits under the keyboard, so the keyboard must always be
+    // dismissible: Done on the return key, Done above the keyboard, and a tap
+    // anywhere outside the field.
+    UIToolbar *accessoryBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                                                   target:nil
+                                                                                   action:nil];
+    UIBarButtonItem *keyboardDone = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                                                                  target:self
+                                                                                  action:@selector(dismissKeyboard)];
+    accessoryBar.items = @[flexibleSpace, keyboardDone];
+    [accessoryBar sizeToFit];
+    nameField.inputAccessoryView = accessoryBar;
+
+    UITapGestureRecognizer *dismissTap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                                 action:@selector(dismissKeyboard)];
+    dismissTap.cancelsTouchesInView = NO;
+    [self.view addGestureRecognizer:dismissTap];
+
     [nameField sizeToFit];
     
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
-        [bannerView loadRequest:[DPAppDelegate adRequest]];
+        // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     }
     [rootLayout addSubview:[nameField pad:5] row:2 column:0];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
@@ -145,18 +165,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch (self.view.window.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
+    [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -169,6 +178,10 @@
         [self resetBannerViewSize];
     }];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+}
+
+- (void)dismissKeyboard {
+    [self.view endEditing:YES];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
