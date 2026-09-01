@@ -34,7 +34,7 @@
     } else {
         bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(width);
     }
-    bannerView.backgroundColor = UIColor.systemBackgroundColor;
+    bannerView.backgroundColor = UIColor.clearColor;
     bannerView.clipsToBounds = YES;
     [bannerView loadRequest:[self adRequest]];
 }
