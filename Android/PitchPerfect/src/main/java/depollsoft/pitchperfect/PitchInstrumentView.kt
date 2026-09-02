@@ -429,7 +429,7 @@ class PitchInstrumentView
             textPaint.textSize = ringRadius * 0.085f
             textPaint.letterSpacing = 0.34f
             canvas.drawText(
-                "CHROMATIC PITCH REFERENCE",
+                "DIGITAL PITCH PIPE",
                 faceCx,
                 height - textPaint.textSize * 1.6f,
                 textPaint,

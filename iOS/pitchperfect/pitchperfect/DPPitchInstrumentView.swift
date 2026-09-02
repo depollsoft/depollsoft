@@ -205,7 +205,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
 
         // Nameplate.
         let nameplate = NSAttributedString(
-            string: "CHROMATIC PITCH REFERENCE",
+            string: "DIGITAL PITCH PIPE",
             attributes: [
                 .font: condensedFont(size: ringRadius * 0.08),
                 .foregroundColor: inkSecondary.withAlphaComponent(0.65),
