@@ -47,6 +47,7 @@ object PitchPipeWidgetRenderer {
         highRange: Boolean,
         width: Int,
         height: Int,
+        drawControls: Boolean = true,
     ): Bitmap {
         val p = Palette(context)
         val bmp = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
@@ -71,26 +72,58 @@ object PitchPipeWidgetRenderer {
         val cx = width / 2f
         val cy = height * 0.43f
         val ring = min(width.toFloat(), height * 0.82f) * 0.365f
-        val radius = ring * 0.245f
+        val radius = ring * 0.225f
 
         val faceNotes = notes.take(13)
         val step = 360.0 / faceNotes.size.coerceAtLeast(1)
         val start = -90.0 + step / 2.0
-        faceNotes.forEachIndexed { index, note ->
-            val angle = Math.toRadians(start + index * step)
-            val x = cx + (cos(angle) * ring).toFloat()
-            val y = cy + (sin(angle) * ring).toFloat()
-            drawCell(canvas, note, x, y, radius, p, fill, stroke, display)
+        if (drawControls) {
+            faceNotes.forEachIndexed { index, note ->
+                val angle = Math.toRadians(start + index * step)
+                val x = cx + (cos(angle) * ring).toFloat()
+                val y = cy + (sin(angle) * ring).toFloat()
+                drawCell(canvas, note, x, y, radius, p, fill, stroke, display)
+            }
         }
 
         drawReadout(canvas, notes, cx, cy, ring, p, display, mono)
-        drawRange(canvas, cx, cy + ring * 0.20f, ring * 0.78f, ring * 0.145f, highRange, p, fill, stroke, display)
+        if (drawControls) {
+            drawRange(canvas, cx, cy + ring * 0.20f, ring * 0.78f, ring * 0.145f, highRange, p, fill, stroke, display)
+        }
 
         display.color = withAlpha(p.inkSecondary, 165)
         display.textSize = ring * 0.08f
         display.letterSpacing = 0.28f
         canvas.drawText("DIGITAL PITCH PIPE", cx, height * 0.91f, display)
         display.letterSpacing = 0f
+        return bmp
+    }
+
+    fun cell(context: Context, note: Note, size: Int): Bitmap {
+        val p = Palette(context)
+        val bmp = Bitmap.createBitmap(size.coerceAtLeast(1), size.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+        val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textAlign = Paint.Align.CENTER
+            typeface = p.display
+        }
+        drawCell(canvas, note, size / 2f, size / 2f, size * 0.44f, p, fill, stroke, text)
+        return bmp
+    }
+
+    fun rangeSelector(context: Context, high: Boolean, width: Int, height: Int): Bitmap {
+        val p = Palette(context)
+        val bmp = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+        val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textAlign = Paint.Align.CENTER
+            typeface = p.display
+        }
+        drawRange(canvas, width / 2f, 0f, width * 0.96f, height / 2f, high, p, fill, stroke, text)
         return bmp
     }
 

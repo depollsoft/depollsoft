@@ -98,12 +98,31 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.pitchpipewidgetview)
         views.setImageViewBitmap(
             R.id.widgetFace,
-            PitchPipeWidgetRenderer.face(renderContext, notes, model.isFromFToF, facePx, facePx),
+            PitchPipeWidgetRenderer.face(
+                renderContext,
+                notes,
+                model.isFromFToF,
+                facePx,
+                facePx,
+                drawControls = !positionTargets,
+            ),
         )
+        val face = min(widthDp, heightDp)
+        val ring = face * 0.365f
+        val cellTarget = maxOf(52f, ring * 0.45f)
+        val rangeWidth = maxOf(132f, ring * 0.9f)
+        val rangeHeight = maxOf(56f, ring * 0.32f)
         CELL_IDS.forEachIndexed { index, id ->
             val note = notes[index]
             views.setContentDescription(id, spokenName(note))
             views.setOnClickPendingIntent(id, noteIntent(context, note, index))
+            if (positionTargets) {
+                val pixels = (cellTarget * density).roundToInt()
+                views.setImageViewBitmap(
+                    id,
+                    PitchPipeWidgetRenderer.cell(renderContext, note, pixels),
+                )
+            }
         }
         val high = model.isFromFToF
         views.setContentDescription(
@@ -112,7 +131,24 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         )
         views.setOnClickPendingIntent(R.id.rangeToggle, rangeIntent(context, !high))
         if (positionTargets) {
-            positionModernHitTargets(views, widthDp, heightDp, notes.size)
+            views.setImageViewBitmap(
+                R.id.rangeToggle,
+                PitchPipeWidgetRenderer.rangeSelector(
+                    renderContext,
+                    high,
+                    (rangeWidth * density).roundToInt(),
+                    (rangeHeight * density).roundToInt(),
+                ),
+            )
+            positionModernHitTargets(
+                views,
+                widthDp,
+                heightDp,
+                notes.size,
+                cellTarget,
+                rangeWidth,
+                rangeHeight,
+            )
         }
         return views
     }
@@ -122,6 +158,9 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         widgetWidth: Float,
         widgetHeight: Float,
         count: Int,
+        target: Float,
+        toggleWidth: Float,
+        toggleHeight: Float,
     ) {
         val face = min(widgetWidth, widgetHeight)
         val originX = (widgetWidth - face) / 2f
@@ -131,7 +170,6 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         val ring = face * 0.365f
         val step = 360.0 / count.coerceAtLeast(1)
         val start = -90.0 + step / 2.0
-        val target = 52f
         CELL_IDS.forEachIndexed { index, id ->
             val angle = Math.toRadians(start + index * step)
             val x = centerX + (cos(angle) * ring).toFloat() - target / 2f
@@ -141,8 +179,6 @@ class PitchPipeAppWidget : AppWidgetProvider() {
             views.setViewLayoutMargin(id, RemoteViews.MARGIN_LEFT, x, TypedValue.COMPLEX_UNIT_DIP)
             views.setViewLayoutMargin(id, RemoteViews.MARGIN_TOP, y, TypedValue.COMPLEX_UNIT_DIP)
         }
-        val toggleWidth = 132f
-        val toggleHeight = 56f
         views.setViewLayoutWidth(R.id.rangeToggle, toggleWidth, TypedValue.COMPLEX_UNIT_DIP)
         views.setViewLayoutHeight(R.id.rangeToggle, toggleHeight, TypedValue.COMPLEX_UNIT_DIP)
         views.setViewLayoutMargin(
