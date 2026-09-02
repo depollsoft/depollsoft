@@ -233,7 +233,8 @@
     
     [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(keys.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     
-    navigationItem.titleView = majorMinorChooser;
+    navigationItem.title = @"Keys";
+    navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:majorMinorChooser];
     settingsButton = [DPCommon getSettingsButtonWithTarget:self
                                                   selector:@selector(openSettings)];
     navigationItem.rightBarButtonItem = settingsButton;

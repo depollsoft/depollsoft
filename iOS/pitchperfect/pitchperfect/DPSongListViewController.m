@@ -228,7 +228,7 @@
                                             target:self
                                           selector:@selector(doneEditing)];
     
-    navigationItem.title = @"Pitch Perfect";
+    navigationItem.title = @"Songs";
     navigationItem.leftBarButtonItem = editItem;
     navigationItem.rightBarButtonItem = settingsButton;
     

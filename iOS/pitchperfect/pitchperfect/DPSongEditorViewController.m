@@ -155,7 +155,7 @@
                                                            target:self
                                                          selector:@selector(cancel)];
     
-    navigationItem.title = @"Pitch Perfect";
+    navigationItem.title = song.name.length > 0 ? @"Edit Song" : @"Add Song";
     navigationItem.leftBarButtonItem = cancelItem;
     navigationItem.rightBarButtonItem = doneItem;
     
