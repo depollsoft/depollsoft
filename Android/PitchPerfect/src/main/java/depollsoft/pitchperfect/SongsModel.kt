@@ -29,9 +29,17 @@ class SongsModel private constructor() {
     val allListeners: MutableList<ListenerRegistration> = mutableListOf()
 
     private var userDoc: DocumentReference? = null
+    private val attachment = AuthAttachmentState()
 
     fun attachToFirestore(store: Boolean = false) {
-        userDoc = Firebase.firestore.document("/users/${Firebase.auth.currentUser!!.uid}")
+        val user = Firebase.auth.currentUser ?: return
+        if (attachment.isConnectedTo(user.uid, allListeners.isNotEmpty())) {
+            if (store) storeAll()
+            return
+        }
+        detachFromFirestore()
+        attachment.connect(user.uid)
+        userDoc = Firebase.firestore.document("/users/${user.uid}")
         songLists.values.forEach { it.setParent(userDoc!!) }
         if (store) {
             storeAll()
@@ -74,6 +82,7 @@ class SongsModel private constructor() {
         allListeners.forEach { it.remove() }
         allListeners.clear()
         userDoc = null
+        attachment.clear()
     }
 
     fun removeSongList(key: String) {

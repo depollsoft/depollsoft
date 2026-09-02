@@ -179,6 +179,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - Android presents a concise plate-styled backup/sync explanation before FirebaseUI. The primary action is **Choose sign-in method**; **Not now** preserves local use. Launching disables the action and changes its label to **Opening sign-in…**; cancellation or provider error returns to the same prompt with an accessibility-live recovery message and enabled retry.
 - FirebaseUI Auth stays on the latest stable line (9.1.1) with a dedicated `AuthTheme`: ink-colored fields, activated controls, progress, and actions remain visible against plate ground in light and dark. Email, Google, and Facebook remain explicit provider choices. Facebook requests email/public profile, but the account label tolerates a missing email.
 - FirebaseUI Credential Manager saving is deliberately disabled for this flow. FirebaseUI 9.x passes a nullable Facebook email into a non-null credential-save API and crashes after otherwise successful authentication; disabling optional credential saving removes that crash path without disabling Firebase Auth, provider login, Firestore attachment, or account sync.
+- **Single Attachment Rule.** The application auth-state listener owns normal Firestore attachment. The result callback only requests the new-user local-song upload. Settings and Songs attachment is idempotent per user, so either callback order produces one live listener set; Settings refreshes its login-bound controls explicitly on success and `onResume`.
 
 ### Navigation
 
