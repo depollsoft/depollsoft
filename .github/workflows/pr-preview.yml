@@ -234,10 +234,22 @@ jobs:
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          xcodebuild -resolvePackageDependencies \
-            -workspace iOS.xcworkspace \
-            -scheme pitchperfect \
-            -clonedSourcePackagesDirPath SourcePackages
+          # A restored cache can carry package checkouts without their binary
+          # xcframeworks; resolve reports success but the build then fails.
+          for attempt in 1 2; do
+            xcodebuild -resolvePackageDependencies \
+              -workspace iOS.xcworkspace \
+              -scheme pitchperfect \
+              -clonedSourcePackagesDirPath SourcePackages
+            if find SourcePackages/artifacts -name '*.xcframework' \
+              -print -quit 2>/dev/null | grep -q .; then
+              exit 0
+            fi
+            echo "SPM binary artifacts are incomplete; resolving cleanly."
+            rm -rf SourcePackages
+          done
+          echo "SPM binary artifacts are still missing after a clean resolve." >&2
+          exit 1
 
       - name: Build unsigned private archives
         working-directory: iOS
