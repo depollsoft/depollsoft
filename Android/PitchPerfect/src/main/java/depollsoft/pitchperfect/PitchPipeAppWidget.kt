@@ -175,6 +175,7 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                 R.id.pitchButton9,
                 R.id.pitchButton10,
                 R.id.pitchButton11,
+                R.id.pitchButton12,
             )
 
         @JvmStatic

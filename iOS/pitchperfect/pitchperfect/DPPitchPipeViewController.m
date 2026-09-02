@@ -151,6 +151,38 @@
     [self.instrumentView stopAll];
 }
 
+- (void)playWidgetNoteNamed:(NSString *)name
+                 accidental:(NSString *)accidental
+                     octave:(NSInteger)octave
+                  highRange:(BOOL)highRange {
+    [self stopNotes];
+    self.model.isFromFToF = highRange;
+    [self refreshButtons];
+    if (name.length == 0) {
+        return;
+    }
+
+    enum kDPAccidental value = Natural;
+    if ([accidental isEqualToString:@"sharp"]) {
+        value = Sharp;
+    } else if ([accidental isEqualToString:@"flat"]) {
+        value = Flat;
+    }
+    DPNote *note = [DPNote findNoteWithName:name
+                                accidental:[DPAccidental enumWithInt:value]
+                                    octave:(int)octave];
+    if (!note) {
+        return;
+    }
+    [note play];
+    [self.instrumentView refreshDisplay];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        [note stop];
+        [self.instrumentView refreshDisplay];
+    });
+}
+
 - (void)viewDidDisappear:(BOOL)animated {
     [self stopNotes];
     [super viewDidDisappear:animated];

@@ -22,9 +22,10 @@
         android:paddingBottom="60dp">
 
         <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
-            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <ImageView android:id="@+id/pitchButton12" style="@style/Widget.Plate.WidgetHit" />
             <ImageView android:id="@+id/pitchButton0" style="@style/Widget.Plate.WidgetHit" />
-            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
         </LinearLayout>
         <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
             <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />

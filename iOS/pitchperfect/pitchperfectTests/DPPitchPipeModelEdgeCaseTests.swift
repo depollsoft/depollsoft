@@ -41,8 +41,8 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
             return
         }
         
-        for i in 1..<notes.count {
-            XCTAssertGreaterThanOrEqual(notes[i].frequency, notes[i-1].frequency,
+        for index in 1..<notes.count {
+            XCTAssertGreaterThanOrEqual(notes[index].frequency, notes[index-1].frequency,
                 "Notes should be in ascending frequency order")
         }
     }
@@ -56,15 +56,15 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
             return
         }
         
-        for i in 1..<notes.count {
-            XCTAssertGreaterThanOrEqual(notes[i].frequency, notes[i-1].frequency,
+        for index in 1..<notes.count {
+            XCTAssertGreaterThanOrEqual(notes[index].frequency, notes[index-1].frequency,
                 "Notes should be in ascending frequency order")
         }
     }
     
     // MARK: - Note Count Consistency
     
-    func testAlways12Notes() {
+    func testAlways13Notes() {
         let model = DPPitchPipeModel()
         
         model.isFromFToF = false
@@ -72,14 +72,14 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
             XCTFail("Expected notes to bridge to [DPNote]")
             return
         }
-        XCTAssertEqual(ctocNotes.count, 12)
+        XCTAssertEqual(ctocNotes.count, 13)
         
         model.isFromFToF = true
         guard let ftofNotes = model.notes as? [DPNote] else {
             XCTFail("Expected notes to bridge to [DPNote]")
             return
         }
-        XCTAssertEqual(ftofNotes.count, 12)
+        XCTAssertEqual(ftofNotes.count, 13)
     }
     
     // MARK: - First and Last Note Tests
@@ -96,7 +96,7 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
         XCTAssertEqual(notes.first?.friendlyName, "C")
     }
     
-    func testCToCLastNoteIsB() {
+    func testCToCLastNoteIsC5() {
         let model = DPPitchPipeModel()
         model.isFromFToF = false
         
@@ -105,7 +105,8 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(notes.last?.friendlyName, "B")
+        XCTAssertEqual(notes.last?.friendlyName, "C")
+        XCTAssertEqual(notes.last?.octave, 5)
     }
     
     func testFToFFirstNoteIsF() {
@@ -120,7 +121,7 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
         XCTAssertEqual(notes.first?.friendlyName, "F")
     }
     
-    func testFToFLastNoteIsE() {
+    func testFToFLastNoteIsF5() {
         let model = DPPitchPipeModel()
         model.isFromFToF = true
         
@@ -129,7 +130,8 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(notes.last?.friendlyName, "E")
+        XCTAssertEqual(notes.last?.friendlyName, "F")
+        XCTAssertEqual(notes.last?.octave, 5)
     }
     
     // MARK: - Mode Switching Edge Cases
@@ -185,7 +187,7 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
         }
     }
     
-    func testEachModeHas7Naturals() {
+    func testEachModeHas8Naturals() {
         let model = DPPitchPipeModel()
         
         for mode in [false, true] {
@@ -204,7 +206,7 @@ final class DPPitchPipeModelEdgeCaseTests: XCTestCase {
                 }
             }
             
-            XCTAssertEqual(naturalCount, 7, "Mode \(mode ? "F-to-F" : "C-to-C") should have 7 naturals")
+            XCTAssertEqual(naturalCount, 8, "Inclusive \(mode ? "F-to-F" : "C-to-C") should have 8 natural pitches")
         }
     }
     

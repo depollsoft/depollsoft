@@ -5,8 +5,8 @@
     <string name="facebook_application_id">263872380333771</string>
     <string name="fb_login_protocol_scheme">fb263872380333771</string>
     <string name="facebook_client_token">eb375cce82f2fbb23c5e4f4044986c14</string>
-    <string name="CtoC">C to B</string>
-    <string name="FtoF">F to E</string>
+    <string name="CtoC">C to C</string>
+    <string name="FtoF">F to F</string>
     <string name="AddSong">Add Song</string>
     <string name="SongTitle">Song Title</string>
     <string name="SongKey">Song Key</string>
@@ -39,7 +39,7 @@
     <string name="LogInInfo">Log in to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
-    <string name="widget_description">The twelve-note pitch pipe on your home screen. Tap a cell to sound it, tap again to stop.</string>
+    <string name="widget_description">The thirteen-note pitch pipe on your home screen. Tap a cell to sound it, tap again to stop.</string>
     <string name="widget_open_app">Open Pitch Perfect</string>
     <string name="MoreLogins"><u>More login options</u></string>
     <string name="SkipLogin">Skip</string>
@@ -83,8 +83,8 @@
     <string name="SaveSong">Save Song</string>
     <string name="SongTitleRequired">Song title is required</string>
     <string name="ReorderSong">Drag to reorder</string>
-    <string name="RangeLowDescription">Octave range C to B</string>
-    <string name="RangeHighDescription">Octave range F to E</string>
+    <string name="RangeLowDescription">Octave range C to C</string>
+    <string name="RangeHighDescription">Octave range F to F</string>
     <string name="SwitchToMajorKeys">Showing minor keys. Switch to major keys.</string>
     <string name="SwitchToMinorKeys">Showing major keys. Switch to minor keys.</string>
     <string name="SectionPitchPipe">Pitch Pipe</string>

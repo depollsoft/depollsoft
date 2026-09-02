@@ -116,7 +116,7 @@ Seven grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 
 ## Layout
 
-The pitch-pipe screen is a single custom-drawn view (`PitchInstrumentView.kt` / `DPPitchInstrumentView.swift`) with identical geometry on both platforms: face center at 44% of height; ring radius = min(w, h × 0.82) × 0.365; 12 cells on a true circle starting at −90° in 30° steps; cell radius = ring radius × 0.245; the range selector seated in the ring's hole (width = ring × 0.72, row height = ring × 0.145, top at center + ring × 0.20). The nameplate caption sits at the panel's bottom edge.
+The pitch-pipe screen is a single custom-drawn view (`PitchInstrumentView.kt` / `DPPitchInstrumentView.swift`) with identical geometry on both platforms: face center at 44% of height; ring radius = min(w, h × 0.82) × 0.365; 13 cells on a true circle with the inclusive octave endpoints flanking −90° (step = 360° / 13); cell radius = ring radius × 0.225; the range selector seated in the ring's hole (width = ring × 0.72, row height = ring × 0.145, top at center + ring × 0.20). The nameplate caption sits at the panel's bottom edge.
 
 On compact Android widths, screen chrome stacks vertically: action bar (plate surface, hairline bottom edge) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (plate surface, hairline top edge). At 600dp and wider, the same four destinations move to a plate-surface navigation rail with a hairline trailing edge while the content, remove-ads line, and ad slot remain one vertical instrument bay. Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
 
@@ -140,7 +140,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Range Selector (machined)
 
-- One 5px round-rect frame in the ring's hole containing two rows (C TO B / F TO E, uppercase Oswald, 0.16 tracking). Selected row gets a 10%-ink wash, a small `plate-lit` dot at its left, and full-ink text; unselected text is secondary at 75% alpha. Switching range stops all sound.
+- One 5px round-rect frame in the ring's hole containing two rows (C TO C / F TO F, uppercase Oswald, 0.16 tracking). Selected row gets a 10%-ink wash, a small `plate-lit` dot at its left, and full-ink text; unselected text is secondary at 75% alpha. Switching range stops all sound.
 
 ### Center Readout
 
@@ -160,10 +160,11 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - Steel, not accent: `plate-surface` background with `plate-ink` icon, 16dp margin, bottom-end.
 
-### Home-Screen Widget (Android)
+### Home-Screen Widgets
 
-- The instrument's face mounted on the launcher: a plate panel (`plate-ground`, 1px hairline, system corner radius) with the score tiled behind, twelve glass cells ringing the perimeter clockwise from C, the hole's readout in the middle, and the two-row machined range selector beneath it. Cells, readout, and selector are rendered by `PitchPipeWidgetRenderer` with the same tokens, geometry, and Oswald engraving as `PitchInstrumentView`, and re-render when the system theme changes.
-- A widget cannot hold, so cells toggle: tap to sound, tap to stop; the sounding cell lights exactly as in the app and the readout shows note and frequency (interval name for two notes). The range selector switches octave and silences the ring, as in the app. The readout opens the app. The picker preview is a real render of the widget.
+- Both platforms mount the same inclusive 13-cell circular instrument on the home screen: plate ground, full-bleed score, glass/anode cells, center readout, C–C/F–F selector, and DIGITAL PITCH PIPE nameplate. Android uses `PitchPipeWidgetRenderer`; iOS uses the `PitchPerfectWidget` WidgetKit extension. Both include real system-gallery previews and follow light/dark appearance.
+- Android widgets can sound in place, so cells toggle: tap to sound, tap to stop; the sounding cell lights and the readout shows note/frequency or a two-note interval. The selector changes range and silences the ring; the readout opens the app.
+- WidgetKit does not provide a reliable continuous-audio execution window. iOS cells therefore deep-link to Pitch Pipe, apply the widget's configured range, and sound the chosen pitch for 1.5 seconds with the app's visible cell feedback. Each iOS widget chooses C–C or F–F through the system Edit Widget configuration.
 
 ### Section Headers
 
@@ -193,7 +194,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Accessibility
 
-- The instrument exposes virtualized elements: Android `ExploreByTouchHelper` (12 cells + 2 range rows as virtual Buttons with bounds), iOS `UIAccessibilityElement` containers. Spoken names carry full note names ("C sharp, D flat, octave 4") even where the engraving shows only "♯/♭"; range rows report selection; a screen-reader tap sounds the note for 1.5s.
+- The instrument exposes virtualized elements: Android `ExploreByTouchHelper` (13 cells + 2 range rows as virtual Buttons with bounds), iOS `UIAccessibilityElement` containers. Spoken names carry full note names ("C sharp, D flat, octave 4") even where the engraving shows only "♯/♭"; range rows report selection; a screen-reader tap sounds the note for 1.5s.
 
 ## Do's and Don'ts
 
@@ -204,6 +205,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
 - **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
+- **Do** preserve the saved range booleans exactly: false means inclusive C4–C5 and true means inclusive F4–F5; old C–B/F–E presentation is treated as the same full octave.
 - **Do** tile the original score artwork edge-to-edge, including beneath iOS navigation and tab bars. Keep list rows transparent so the score remains continuous without competing with text.
 - **Do** honor reduce-motion settings by stopping the breath entirely, keep haptics to note starts, real range changes, and successful song saves, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
 

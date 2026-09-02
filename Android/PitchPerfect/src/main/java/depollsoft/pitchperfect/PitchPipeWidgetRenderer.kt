@@ -73,8 +73,11 @@ object PitchPipeWidgetRenderer {
         val ring = min(width.toFloat(), height * 0.82f) * 0.365f
         val radius = ring * 0.245f
 
-        notes.take(12).forEachIndexed { index, note ->
-            val angle = Math.toRadians(-90.0 + index * 30.0)
+        val faceNotes = notes.take(13)
+        val step = 360.0 / faceNotes.size.coerceAtLeast(1)
+        val start = -90.0 - step / 2.0
+        faceNotes.forEachIndexed { index, note ->
+            val angle = Math.toRadians(start + index * step)
             val x = cx + (cos(angle) * ring).toFloat()
             val y = cy + (sin(angle) * ring).toFloat()
             drawCell(canvas, note, x, y, radius, p, fill, stroke, display)
@@ -185,8 +188,8 @@ object PitchPipeWidgetRenderer {
         canvas.drawRoundRect(left, top, right, bottom, 5f, 5f, stroke)
         stroke.strokeWidth = 1f
         canvas.drawLine(left, top + rowHeight, right, top + rowHeight, stroke)
-        drawRangeRow(canvas, left, right, top, rowHeight, "C TO B", !high, p, fill, text)
-        drawRangeRow(canvas, left, right, top + rowHeight, rowHeight, "F TO E", high, p, fill, text)
+        drawRangeRow(canvas, left, right, top, rowHeight, "C TO C", !high, p, fill, text)
+        drawRangeRow(canvas, left, right, top + rowHeight, rowHeight, "F TO F", high, p, fill, text)
     }
 
     private fun drawRangeRow(

@@ -16,6 +16,7 @@ object PitchInterval {
             "MAJOR 6TH",
             "MINOR 7TH",
             "MAJOR 7TH",
+            "OCTAVE",
         )
 
     fun name(

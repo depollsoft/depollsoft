@@ -10,6 +10,8 @@
 #import "DPNote.h"
 #import "DPAccidental.h"
 
+// Compatibility contract: the existing boolean still selects the range.
+// False now means the full inclusive C4–C5 octave; true means F4–F5.
 #define F_TO_F_KEY @"depollsoft.pitchperfect.isFToF"
 
 @interface DPPitchPipeModel ()
@@ -32,9 +34,8 @@
 }
 
 - (id)init {
-    if (self = [super init]) {        
-        NSMutableArray *temp;
-        temp = [NSMutableArray arrayWithCapacity:12];
+    if (self = [super init]) {
+        NSMutableArray *temp = [NSMutableArray arrayWithCapacity:13];
         [temp addObject:[DPNote findNoteWithName:@"C" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"C" accidental:[DPAccidental enumWithInt:Sharp] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"D" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
@@ -47,9 +48,10 @@
         [temp addObject:[DPNote findNoteWithName:@"A" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"A" accidental:[DPAccidental enumWithInt:Sharp] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"B" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
+        [temp addObject:[DPNote findNoteWithName:@"C" accidental:[DPAccidental enumWithInt:Natural] octave:5]];
         self.cToC = [NSArray arrayWithArray:temp];
-        
-        temp = [NSMutableArray arrayWithCapacity:12];
+
+        temp = [NSMutableArray arrayWithCapacity:13];
         [temp addObject:[DPNote findNoteWithName:@"F" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"F" accidental:[DPAccidental enumWithInt:Sharp] octave:4]];
         [temp addObject:[DPNote findNoteWithName:@"G" accidental:[DPAccidental enumWithInt:Natural] octave:4]];
@@ -62,17 +64,14 @@
         [temp addObject:[DPNote findNoteWithName:@"D" accidental:[DPAccidental enumWithInt:Natural] octave:5]];
         [temp addObject:[DPNote findNoteWithName:@"D" accidental:[DPAccidental enumWithInt:Sharp] octave:5]];
         [temp addObject:[DPNote findNoteWithName:@"E" accidental:[DPAccidental enumWithInt:Natural] octave:5]];
+        [temp addObject:[DPNote findNoteWithName:@"F" accidental:[DPAccidental enumWithInt:Natural] octave:5]];
         self.fToF = [NSArray arrayWithArray:temp];
     }
     return self;
 }
 
 - (NSArray *)notes {
-    if (self.isFromFToF) {
-        return self.fToF;
-    } else {
-        return self.cToC;
-    }
+    return self.isFromFToF ? self.fToF : self.cToC;
 }
 
 @end
