@@ -23,7 +23,7 @@ final class DPPitchPipeModelTests: XCTestCase {
             XCTFail("Expected notes to bridge to [DPNote]")
             return
         }
-        XCTAssertEqual(originalNotes.count, 12)
+        XCTAssertEqual(originalNotes.count, 13)
 
         let firstFriendly = originalNotes.first?.friendlyName
 
@@ -32,7 +32,7 @@ final class DPPitchPipeModelTests: XCTestCase {
             XCTFail("Expected toggled notes to bridge to [DPNote]")
             return
         }
-        XCTAssertEqual(toggledNotes.count, 12)
+        XCTAssertEqual(toggledNotes.count, 13)
 
         let toggledFirst = toggledNotes.first?.friendlyName
         XCTAssertNotEqual(firstFriendly, toggledFirst)
@@ -44,13 +44,13 @@ final class DPPitchPipeModelTests: XCTestCase {
     
     // MARK: - Note Collection Tests
     
-    func testNotesArrayHas12Notes() {
+    func testNotesArrayHas13Notes() {
         let model = DPPitchPipeModel()
         guard let notes = model.notes as? [DPNote] else {
             XCTFail("Expected notes to bridge to [DPNote]")
             return
         }
-        XCTAssertEqual(notes.count, 12, "Pitch pipe should always have exactly 12 notes")
+        XCTAssertEqual(notes.count, 13, "Pitch pipe should always have exactly 13 notes")
     }
     
     func testCToCRangeStartsWithC() {
@@ -65,7 +65,7 @@ final class DPPitchPipeModelTests: XCTestCase {
         XCTAssertEqual(notes.first?.friendlyName, "C", "C-to-C range should start with C")
     }
     
-    func testCToCRangeEndsWithB() {
+    func testCToCRangeEndsWithC() {
         let model = DPPitchPipeModel()
         model.isFromFToF = false
         
@@ -74,7 +74,8 @@ final class DPPitchPipeModelTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(notes.last?.friendlyName, "B", "C-to-C range should end with B")
+        XCTAssertEqual(notes.last?.friendlyName, "C", "C-to-C range should end with C")
+        XCTAssertEqual(notes.last?.octave, 5)
     }
     
     func testFToFRangeStartsWithF() {
@@ -89,7 +90,7 @@ final class DPPitchPipeModelTests: XCTestCase {
         XCTAssertEqual(notes.first?.friendlyName, "F", "F-to-F range should start with F")
     }
     
-    func testFToFRangeEndsWithE() {
+    func testFToFRangeEndsWithF() {
         let model = DPPitchPipeModel()
         model.isFromFToF = true
         
@@ -98,7 +99,8 @@ final class DPPitchPipeModelTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(notes.last?.friendlyName, "E", "F-to-F range should end with E")
+        XCTAssertEqual(notes.last?.friendlyName, "F", "F-to-F range should end with F")
+        XCTAssertEqual(notes.last?.octave, 5)
     }
     
     // MARK: - Key Change Persistence Tests
@@ -162,10 +164,9 @@ final class DPPitchPipeModelTests: XCTestCase {
             return
         }
         
-        // All notes in C-to-C range should be octave 4
-        for note in notes {
-            XCTAssertEqual(note.octave, 4, "C-to-C range notes should all be octave 4")
-        }
+        XCTAssertEqual(notes.dropLast().map(\.octave), Array(repeating: 4, count: 12))
+        XCTAssertEqual(notes.last?.friendlyName, "C")
+        XCTAssertEqual(notes.last?.octave, 5)
     }
     
     func testFToFRangeOctaves() {
@@ -205,7 +206,7 @@ final class DPPitchPipeModelTests: XCTestCase {
             return
         }
         
-        let expectedOrder = ["C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B"]
+        let expectedOrder = ["C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B", "C"]
         
         for (index, note) in notes.enumerated() {
             XCTAssertEqual(note.friendlyName, expectedOrder[index], 
@@ -222,7 +223,7 @@ final class DPPitchPipeModelTests: XCTestCase {
             return
         }
         
-        let expectedOrder = ["F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E"]
+        let expectedOrder = ["F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E", "F"]
         
         for (index, note) in notes.enumerated() {
             XCTAssertEqual(note.friendlyName, expectedOrder[index], 
@@ -269,7 +270,7 @@ final class DPPitchPipeModelTests: XCTestCase {
             }
         }
         
-        XCTAssertEqual(naturalCount, 7, "C-to-C range should have 7 naturals")
+        XCTAssertEqual(naturalCount, 8, "Inclusive C-to-C range should have 8 natural pitches")
     }
     
     // MARK: - Fresh Instance Tests

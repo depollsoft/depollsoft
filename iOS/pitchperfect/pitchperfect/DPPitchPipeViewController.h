@@ -12,4 +12,9 @@
 
 @interface DPPitchPipeViewController : DPToolbarViewController
 
+- (void)playWidgetNoteNamed:(NSString *)name
+                 accidental:(NSString *)accidental
+                     octave:(NSInteger)octave
+                  highRange:(BOOL)highRange;
+
 @end

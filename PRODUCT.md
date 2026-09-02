@@ -43,7 +43,7 @@ Accounts are optional. Local use remains possible, while signed-in users can bac
 - Preserve native iOS and Android support for both products.
 - Preserve the names Pitch Perfect and Tag Master.
 - Preserve established music terminology, including pitch pipe, notes, keys, songs, key signatures, tags, learning tracks, parts, tenor, lead, baritone, bass, favorites, and teachable tags.
-- Pitch Perfect supports chromatic note playback, key references, saved songs, key signatures, themes, and optional account-based synchronization of songs and settings. Android also contains widget and Wear integrations.
+- Pitch Perfect supports inclusive 13-pitch chromatic octaves (C–C or F–F), key references, saved songs, key signatures, themes, Android and iOS home-screen widgets, and optional account-based synchronization of songs and settings. Android also contains Wear integration.
 - Tag Master supports BarbershopTags.com browsing and search, tag details, random selection, ratings, sheet music, learning tracks, videos, part playback, favorites, teachable lists, sharing, caching, and optional account-based synchronization of tag lists.
 - Keep the BarbershopTags.com relationship and content attribution intact.
 - Preserve current cloud-sync and privacy commitments. Do not broaden claims about personal-data collection without verified product and legal review.

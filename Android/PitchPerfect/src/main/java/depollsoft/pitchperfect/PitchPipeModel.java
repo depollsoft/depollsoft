@@ -28,6 +28,7 @@ public class PitchPipeModel {
     this.cToC.add(Note.findNote("A", Accidental.Natural, 4));
     this.cToC.add(Note.findNote("A", Accidental.Sharp, 4));
     this.cToC.add(Note.findNote("B", Accidental.Natural, 4));
+    this.cToC.add(Note.findNote("C", Accidental.Natural, 5));
 
     this.fToF = new TrackableCollection<Note>();
     this.fToF.add(Note.findNote("F", Accidental.Natural, 4));
@@ -42,6 +43,7 @@ public class PitchPipeModel {
     this.fToF.add(Note.findNote("D", Accidental.Natural, 5));
     this.fToF.add(Note.findNote("D", Accidental.Sharp, 5));
     this.fToF.add(Note.findNote("E", Accidental.Natural, 5));
+    this.fToF.add(Note.findNote("F", Accidental.Natural, 5));
 
     Preferences.initialize(PitchPipeModel.PitchPipeModelKey + ".IsFromFToF", false);
     if (this.getIsFromFToF())

@@ -150,7 +150,7 @@
         DPPitchPipeViewController *vc = (DPPitchPipeViewController *)controller;
         NSArray *noteButtons = [vc valueForKey:@"noteButtons"];
         
-        XCTAssertEqual(noteButtons.count, 12, @"Should have 12 note buttons for chromatic scale");
+        XCTAssertEqual(noteButtons.count, 13, @"Should have 13 note buttons for an inclusive chromatic octave");
         
         // Exercise all buttons
         for (id wrapper in noteButtons) {

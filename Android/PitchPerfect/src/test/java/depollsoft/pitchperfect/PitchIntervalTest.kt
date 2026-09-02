@@ -11,6 +11,7 @@ class PitchIntervalTest {
         assertEquals("TRITONE", PitchInterval.name(2, 8))
         assertEquals("PERFECT 5TH", PitchInterval.name(0, 7))
         assertEquals("MAJOR 7TH", PitchInterval.name(0, 11))
+        assertEquals("OCTAVE", PitchInterval.name(0, 12))
     }
 
     @Test

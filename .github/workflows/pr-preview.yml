@@ -308,6 +308,17 @@ jobs:
                 "PRIVATE_BUILD_NUMBER",
               )
             end
+            if target_name == "pitchperfect"
+              widget = project.targets.find { |item| item.name == "PitchPerfectWidget" }
+              abort("Missing PitchPerfectWidget target") unless widget
+              widget.build_configurations.each do |configuration|
+                next unless configuration.name == "Release"
+                configuration.build_settings["PRODUCT_BUNDLE_IDENTIFIER"] =
+                  "depollsoft.pitchperfect.private.widget"
+                configuration.build_settings["CURRENT_PROJECT_VERSION"] =
+                  ENV.fetch("PRIVATE_BUILD_NUMBER")
+              end
+            end
             project.save
           end
           RUBY

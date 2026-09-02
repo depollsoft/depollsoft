@@ -55,6 +55,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
     @objc public func setNotes(_ notes: [DPNote], naturals: [NSNumber]) {
         self.notes = notes
         self.naturals = naturals.map { $0.boolValue }
+        setNeedsLayout()
         rebuildAccessibilityElements()
         setNeedsDisplay()
     }
@@ -84,9 +85,12 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         guard panelWidth > 0, panelHeight > 0 else { return }
         faceCenter = CGPoint(x: panelWidth / 2, y: panelHeight * 0.44)
         ringRadius = min(panelWidth, panelHeight * 0.82) * 0.365
-        cellRadius = ringRadius * 0.245
-        cellCenters = (0..<12).map { index in
-            let angle = (-90.0 + Double(index) * 30.0) * Double.pi / 180.0
+        let count = max(notes.count, 1)
+        cellRadius = ringRadius * (count > 12 ? 0.225 : 0.245)
+        let step = 360.0 / Double(count)
+        let start = -90.0 - step / 2.0
+        cellCenters = (0..<count).map { index in
+            let angle = (start + Double(index) * step) * Double.pi / 180.0
             return CGPoint(
                 x: faceCenter.x + ringRadius * CGFloat(cos(angle)),
                 y: faceCenter.y + ringRadius * CGFloat(sin(angle)),
@@ -200,8 +204,8 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         context.move(to: CGPoint(x: rangeLowRect.minX, y: rangeLowRect.maxY))
         context.addLine(to: CGPoint(x: rangeLowRect.maxX, y: rangeLowRect.maxY))
         context.strokePath()
-        drawRange(rect: rangeLowRect, label: "C TO B", selected: !isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, hairline: hairline, lit: lit)
-        drawRange(rect: rangeHighRect, label: "F TO E", selected: isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, hairline: hairline, lit: lit)
+        drawRange(rect: rangeLowRect, label: "C TO C", selected: !isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, hairline: hairline, lit: lit)
+        drawRange(rect: rangeHighRect, label: "F TO F", selected: isHighRange, context: context, ink: ink, inkSecondary: inkSecondary, hairline: hairline, lit: lit)
 
         // Nameplate.
         let nameplate = NSAttributedString(
@@ -469,7 +473,7 @@ private extension DPPitchInstrumentView {
         let names = [
             "UNISON", "MINOR 2ND", "MAJOR 2ND", "MINOR 3RD",
             "MAJOR 3RD", "PERFECT 4TH", "TRITONE", "PERFECT 5TH",
-            "MINOR 6TH", "MAJOR 6TH", "MINOR 7TH", "MAJOR 7TH",
+            "MINOR 6TH", "MAJOR 6TH", "MINOR 7TH", "MAJOR 7TH", "OCTAVE",
         ]
         return names[min(abs(second - first), names.count - 1)]
     }
@@ -529,7 +533,7 @@ private extension DPPitchInstrumentView {
         }
         let lowElement = InstrumentAccessibilityElement(accessibilityContainer: self)
         lowElement.accessibilityFrameInContainerSpace = rangeLowRect
-        lowElement.accessibilityLabel = "Octave range C to B"
+        lowElement.accessibilityLabel = "Octave range C to C"
         lowElement.accessibilityTraits = isHighRange ? .button : [.button, .selected]
         lowElement.onActivate = { [weak self] in
             self?.selectRange(high: false)
@@ -538,7 +542,7 @@ private extension DPPitchInstrumentView {
         elements.append(lowElement)
         let highElement = InstrumentAccessibilityElement(accessibilityContainer: self)
         highElement.accessibilityFrameInContainerSpace = rangeHighRect
-        highElement.accessibilityLabel = "Octave range F to E"
+        highElement.accessibilityLabel = "Octave range F to F"
         highElement.accessibilityTraits = isHighRange ? [.button, .selected] : .button
         highElement.onActivate = { [weak self] in
             self?.selectRange(high: true)

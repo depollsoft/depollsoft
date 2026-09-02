@@ -50,7 +50,7 @@ public class PitchPipeModelTest {
             TrackableCollection<Note> notes = model.getNotes();
             
             assertNotNull(notes);
-            assertEquals(12, notes.size());
+            assertEquals(13, notes.size());
             // C-to-C range starts with C4
             assertEquals("C", notes.get(0).getFriendlyName());
             assertEquals(Accidental.Natural, notes.get(0).getAccidental());
@@ -68,7 +68,7 @@ public class PitchPipeModelTest {
             TrackableCollection<Note> notes = model.getNotes();
             
             assertNotNull(notes);
-            assertEquals(12, notes.size());
+            assertEquals(13, notes.size());
             // F-to-F range starts with F4
             assertEquals("F", notes.get(0).getFriendlyName());
             assertEquals(Accidental.Natural, notes.get(0).getAccidental());
@@ -139,22 +139,23 @@ public class PitchPipeModelTest {
             PitchPipeModel model = new PitchPipeModel();
             TrackableCollection<Note> notes = model.getNotes();
             
-            // Verify all 12 chromatic notes from C to B in octave 4
-            String[] expectedNotes = {"C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B"};
+            // Full inclusive chromatic octave: C4 through C5.
+            String[] expectedNotes = {"C", "C", "D", "D", "E", "F", "F", "G", "G", "A", "A", "B", "C"};
             Accidental[] expectedAccidentals = {
-                Accidental.Natural, Accidental.Sharp, 
-                Accidental.Natural, Accidental.Sharp,
-                Accidental.Natural, 
                 Accidental.Natural, Accidental.Sharp,
                 Accidental.Natural, Accidental.Sharp,
+                Accidental.Natural,
                 Accidental.Natural, Accidental.Sharp,
-                Accidental.Natural
+                Accidental.Natural, Accidental.Sharp,
+                Accidental.Natural, Accidental.Sharp,
+                Accidental.Natural, Accidental.Natural
             };
-            
-            for (int i = 0; i < 12; i++) {
+            int[] expectedOctaves = {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5};
+
+            for (int i = 0; i < expectedNotes.length; i++) {
                 assertEquals("Note " + i + " name mismatch", expectedNotes[i], notes.get(i).getFriendlyName());
                 assertEquals("Note " + i + " accidental mismatch", expectedAccidentals[i], notes.get(i).getAccidental());
-                assertEquals("Note " + i + " octave mismatch", 4, notes.get(i).getOctave());
+                assertEquals("Note " + i + " octave mismatch", expectedOctaves[i], notes.get(i).getOctave());
             }
         }
     }
@@ -167,8 +168,8 @@ public class PitchPipeModelTest {
             PitchPipeModel model = new PitchPipeModel();
             TrackableCollection<Note> notes = model.getNotes();
             
-            // Verify F4 to E5 range
-            String[] expectedNotes = {"F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E"};
+            // Full inclusive chromatic octave: F4 through F5.
+            String[] expectedNotes = {"F", "F", "G", "G", "A", "A", "B", "C", "C", "D", "D", "E", "F"};
             Accidental[] expectedAccidentals = {
                 Accidental.Natural, Accidental.Sharp,
                 Accidental.Natural, Accidental.Sharp,
@@ -176,11 +177,11 @@ public class PitchPipeModelTest {
                 Accidental.Natural,
                 Accidental.Natural, Accidental.Sharp,
                 Accidental.Natural, Accidental.Sharp,
-                Accidental.Natural
+                Accidental.Natural, Accidental.Natural
             };
-            int[] expectedOctaves = {4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5};
-            
-            for (int i = 0; i < 12; i++) {
+            int[] expectedOctaves = {4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5};
+
+            for (int i = 0; i < expectedNotes.length; i++) {
                 assertEquals("Note " + i + " name mismatch", expectedNotes[i], notes.get(i).getFriendlyName());
                 assertEquals("Note " + i + " accidental mismatch", expectedAccidentals[i], notes.get(i).getAccidental());
                 assertEquals("Note " + i + " octave mismatch", expectedOctaves[i], notes.get(i).getOctave());
@@ -189,16 +190,15 @@ public class PitchPipeModelTest {
     }
 
     @Test
-    public void fToFRange_endsWithE5_notF5() {
+    public void fToFRange_endsWithF5() {
         try (MockedStatic<PitchPipeAppWidget> widgetMock = Mockito.mockStatic(PitchPipeAppWidget.class)) {
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             
             PitchPipeModel model = new PitchPipeModel();
             TrackableCollection<Note> notes = model.getNotes();
             
-            // Last note should be E5 (semitone below F)
-            Note lastNote = notes.get(11);
-            assertEquals("E", lastNote.getFriendlyName());
+            Note lastNote = notes.get(12);
+            assertEquals("F", lastNote.getFriendlyName());
             assertEquals(Accidental.Natural, lastNote.getAccidental());
             assertEquals(5, lastNote.getOctave());
         }
@@ -222,18 +222,18 @@ public class PitchPipeModelTest {
     }
 
     @Test
-    public void bothRanges_haveExactly12Notes() {
+    public void bothRanges_haveExactly13Notes() {
         try (MockedStatic<PitchPipeAppWidget> widgetMock = Mockito.mockStatic(PitchPipeAppWidget.class)) {
             // Test C-to-C
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             PitchPipeModel modelCtoC = new PitchPipeModel();
-            assertEquals(12, modelCtoC.getNotes().size());
+            assertEquals(13, modelCtoC.getNotes().size());
             
             // Test F-to-F
             Preferences.clearTestValues();
             Preferences.set(IS_FROM_F_TO_F_KEY, true);
             PitchPipeModel modelFtoF = new PitchPipeModel();
-            assertEquals(12, modelFtoF.getNotes().size());
+            assertEquals(13, modelFtoF.getNotes().size());
         }
     }
 
@@ -243,13 +243,13 @@ public class PitchPipeModelTest {
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             
             PitchPipeModel model = new PitchPipeModel();
-            assertEquals(12, model.getNotes().size());
-            
+            assertEquals(13, model.getNotes().size());
+
             model.setIsFromFToF(true);
-            assertEquals(12, model.getNotes().size());
-            
+            assertEquals(13, model.getNotes().size());
+
             model.setIsFromFToF(false);
-            assertEquals(12, model.getNotes().size());
+            assertEquals(13, model.getNotes().size());
         }
     }
 

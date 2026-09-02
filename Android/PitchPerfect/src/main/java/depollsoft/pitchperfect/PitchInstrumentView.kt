@@ -97,7 +97,7 @@ class PitchInstrumentView
                 colorFilter = PorterDuffColorFilter(inkSecondary, PorterDuff.Mode.SRC_IN)
             }
 
-        private var cellCenters = arrayOfNulls<FloatArray>(12)
+        private var cellCenters = emptyArray<FloatArray?>()
         private var cellRadius = 0f
         private var ringRadius = 0f
         private var faceCx = 0f
@@ -161,9 +161,13 @@ class PitchInstrumentView
             faceCx = w / 2f
             faceCy = h * 0.44f
             ringRadius = min(w.toFloat(), h * 0.82f) * 0.365f
-            cellRadius = ringRadius * 0.245f
-            for (i in 0 until 12) {
-                val angle = Math.toRadians((-90 + i * 30).toDouble())
+            val count = notes().size.coerceAtLeast(1)
+            cellRadius = ringRadius * if (count > 12) 0.225f else 0.245f
+            cellCenters = arrayOfNulls(count)
+            val step = 360.0 / count
+            val start = -90.0 - step / 2.0
+            for (i in 0 until count) {
+                val angle = Math.toRadians(start + i * step)
                 cellCenters[i] =
                     floatArrayOf(
                         faceCx + ringRadius * cos(angle).toFloat(),
@@ -246,7 +250,7 @@ class PitchInstrumentView
 
             // Bloom pass under the glass so light appears to leak across the panel.
             currentNotes.forEachIndexed { i, note ->
-                if (note.isPlaying && i < 12) {
+                if (note.isPlaying && i < cellCenters.size) {
                     val c = cellCenters[i] ?: return@forEachIndexed
                     val bloomRadius = cellRadius * 2.4f
                     bloomPaint.shader =
@@ -263,7 +267,7 @@ class PitchInstrumentView
             }
 
             currentNotes.forEachIndexed { i, note ->
-                if (i >= 12) return@forEachIndexed
+                if (i >= cellCenters.size) return@forEachIndexed
                 val c = cellCenters[i] ?: return@forEachIndexed
                 val playing = note.isPlaying
                 fillPaint.color = if (playing) withAlpha(lit, (255 * (0.9f + 0.1f * sin(breathePhase))).toInt()) else surface
@@ -446,7 +450,7 @@ class PitchInstrumentView
             x: Float,
             y: Float,
         ): Int {
-            for (i in 0 until 12) {
+            for (i in cellCenters.indices) {
                 val c = cellCenters[i] ?: continue
                 if (hypot((x - c[0]).toDouble(), (y - c[1]).toDouble()) <= cellRadius * 1.15) return i
             }
@@ -576,7 +580,7 @@ class PitchInstrumentView
             }
 
             override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
-                for (i in 0 until min(12, notes().size)) virtualViewIds.add(i)
+                for (i in 0 until min(cellCenters.size, notes().size)) virtualViewIds.add(i)
                 virtualViewIds.add(rangeLowId)
                 virtualViewIds.add(rangeHighId)
             }
