@@ -37,7 +37,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-functions'
     implementation 'com.google.android.gms:play-services-auth:22.0.0'
-    implementation 'com.firebaseui:firebase-ui-auth:9.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.11.0'

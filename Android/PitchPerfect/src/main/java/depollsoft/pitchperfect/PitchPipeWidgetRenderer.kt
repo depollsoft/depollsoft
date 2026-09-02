@@ -99,30 +99,41 @@ object PitchPipeWidgetRenderer {
         return bmp
     }
 
-    fun cell(context: Context, note: Note, size: Int): Bitmap {
+    fun cell(
+        context: Context,
+        note: Note,
+        size: Int,
+    ): Bitmap {
         val p = Palette(context)
         val bmp = Bitmap.createBitmap(size.coerceAtLeast(1), size.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
-        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            textAlign = Paint.Align.CENTER
-            typeface = p.display
-        }
+        val text =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textAlign = Paint.Align.CENTER
+                typeface = p.display
+            }
         drawCell(canvas, note, size / 2f, size / 2f, size * 0.44f, p, fill, stroke, text)
         return bmp
     }
 
-    fun rangeSelector(context: Context, high: Boolean, width: Int, height: Int): Bitmap {
+    fun rangeSelector(
+        context: Context,
+        high: Boolean,
+        width: Int,
+        height: Int,
+    ): Bitmap {
         val p = Palette(context)
         val bmp = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
-        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            textAlign = Paint.Align.CENTER
-            typeface = p.display
-        }
+        val text =
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textAlign = Paint.Align.CENTER
+                typeface = p.display
+            }
         drawRange(canvas, width / 2f, 0f, width * 0.96f, height / 2f, high, p, fill, stroke, text)
         return bmp
     }

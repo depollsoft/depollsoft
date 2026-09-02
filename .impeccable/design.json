@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T14:10:49.304Z",
+  "generatedAt": "2026-09-02T16:57:28.668Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -155,6 +155,11 @@
       "name": "Home-Screen Widget",
       "description": "Android and iOS widgets mirror the inclusive 13-cell circular instrument and score. Android uses exact 52dp size-specific targets with inert background; iOS uses non-launching AudioPlaybackIntent, active glow, and live frequency while staying on Home Screen.",
       "css": "background: var(--plate-ground); border: 1px solid var(--plate-hairline);"
+    },
+    {
+      "name": "Authentication",
+      "description": "Android uses a concise plate-styled backup/sync prompt followed by FirebaseUI 9.1.1 in AuthTheme. Provider choice is explicit; Email, Google, and Facebook remain available; Credential Manager saving is disabled to avoid null-email social-provider crashes; cancellation/error returns to a live retry message.",
+      "css": "background: var(--plate-ground); color: var(--plate-ink); min-height: 48px;"
     }
   ],
   "narrative": {

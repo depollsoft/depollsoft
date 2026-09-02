@@ -29,6 +29,22 @@
         <item name="alertDialogTheme">@style/AlertDialogTheme</item>
     </style>
 
+    <style name="AuthTheme" parent="AppTheme">
+        <!-- FirebaseUI controls need an active color distinct from the plate surface. -->
+        <item name="colorPrimary">@color/plate_ink</item>
+        <item name="colorPrimaryVariant">@color/plate_ink</item>
+        <item name="colorPrimaryDark">@color/plate_surface</item>
+        <item name="colorOnPrimary">@color/plate_ground</item>
+        <item name="colorSecondary">@color/plate_ink</item>
+        <item name="colorOnSecondary">@color/plate_ground</item>
+        <item name="colorAccent">@color/plate_ink</item>
+        <item name="android:colorAccent">@color/plate_ink</item>
+        <item name="colorControlActivated">@color/plate_ink</item>
+        <item name="android:windowBackground">@color/plate_ground</item>
+        <item name="android:textColorPrimary">@color/plate_ink</item>
+        <item name="android:textColorSecondary">@color/plate_ink_secondary</item>
+    </style>
+
     <style name="Widget.Plate.ActionBar" parent="Widget.MaterialComponents.ActionBar.Surface">
         <item name="android:background">@drawable/bar_surface_bottom_edge</item>
         <item name="background">@drawable/bar_surface_bottom_edge</item>

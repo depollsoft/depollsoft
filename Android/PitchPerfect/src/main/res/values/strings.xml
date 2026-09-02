@@ -43,32 +43,14 @@
     <string name="widget_switch_to_c">Switch to C to C</string>
     <string name="widget_switch_to_f">Switch to F to F</string>
     <string name="MoreLogins"><u>More login options</u></string>
-    <string name="SkipLogin">Skip</string>
+    <string name="SkipLogin">Not now</string>
     <string name="LoginTitle">Log in to Pitch Perfect</string>
-    <string name="LoginExplanation">
-        <![CDATA[<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>
-        <p>
-            When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device.
-            Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your
-            data goes where you go.
-        </p>
-        <p>
-            Pitch Perfect does not collect any of your personal data for this free service.
-        </p>]]>
-    </string>
-        <string name="HoomiLoginExplanation">
-        <![CDATA[<p><b>Notice:</b> You have previously logged into Pitch Perfect with Hoomi, which is being discontinued.
-        You have been logged out of Pitch Perfect.
-        You may choose to log in with Facebook, or continue without logging in.</p>
-        <p>
-            When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device.
-            Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your
-            data goes where you go.
-        </p>
-        <p>
-            Pitch Perfect does not collect any of your personal data for this free service.
-        </p>]]>
-    </string>
+    <string name="LoginExplanation"><![CDATA[<b>Back up and sync</b><br/>Sign in to keep your song list and settings available across your devices. You can keep using Pitch Perfect without an account.]]></string>
+    <string name="HoomiLoginExplanation"><![CDATA[<b>Choose a new sign-in method</b><br/>Hoomi sign-in has been discontinued. Sign in again to resume backup and sync, or continue without an account.]]></string>
+    <string name="ChooseLoginMethod">Choose sign-in method</string>
+    <string name="OpeningSignIn">Opening sign-in…</string>
+    <string name="SignInFailed">Sign-in didn\'t finish. Check your connection and try again.</string>
+    <string name="SignInCanceled">Sign-in canceled. Your local songs are unchanged.</string>
     <string name="RemoveAds"><u>Tired of Ads?</u></string>
     <string name="quick_pitch">Pitch Pipe</string>
     <string name="notes">Notes</string>
