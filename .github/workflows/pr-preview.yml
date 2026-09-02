@@ -241,8 +241,22 @@ jobs:
               -workspace iOS.xcworkspace \
               -scheme pitchperfect \
               -clonedSourcePackagesDirPath SourcePackages
-            if find SourcePackages/artifacts -name '*.xcframework' \
-              -print -quit 2>/dev/null | grep -q .; then
+            missing=0
+            for artifact in \
+              facebook-ios-sdk/FBSDKCoreKit/FBSDKCoreKit.xcframework \
+              firebase-ios-sdk/FirebaseFirestoreInternal/FirebaseFirestoreInternal.xcframework \
+              swift-package-manager-google-mobile-ads/GoogleMobileAds/GoogleMobileAds.xcframework \
+              swift-package-manager-google-user-messaging-platform/UserMessagingPlatform/UserMessagingPlatform.xcframework \
+              grpc-binary/grpc/grpc.xcframework \
+              grpc-binary/grpcpp/grpcpp.xcframework \
+              grpc-binary/openssl_grpc/openssl_grpc.xcframework \
+              abseil-cpp-binary/absl/absl.xcframework; do
+              if [ ! -d "SourcePackages/artifacts/$artifact" ]; then
+                echo "Missing SPM binary artifact: $artifact"
+                missing=1
+              fi
+            done
+            if [ "$missing" -eq 0 ]; then
               exit 0
             fi
             echo "SPM binary artifacts are incomplete; resolving cleanly."
