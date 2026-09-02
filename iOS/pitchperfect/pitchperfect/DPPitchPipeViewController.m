@@ -96,7 +96,7 @@
         [weakSelf refreshButtons];
     };
     
-    navigationItem.title = @"Pitch Perfect";
+    navigationItem.title = @"Pitch Pipe";
     settingsButton = [DPCommon getSettingsButtonWithTarget:self
                                                   selector:@selector(openSettings)];
     navigationItem.rightBarButtonItem = settingsButton;

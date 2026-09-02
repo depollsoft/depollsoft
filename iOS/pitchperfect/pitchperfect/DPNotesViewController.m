@@ -198,7 +198,7 @@
         [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(self->notes.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     });
     
-    navigationItem.title = @"Pitch Perfect";
+    navigationItem.title = @"Notes";
     settingsButton = [DPCommon getSettingsButtonWithTarget:self
                                                   selector:@selector(openSettings)];
     navigationItem.rightBarButtonItem = settingsButton;

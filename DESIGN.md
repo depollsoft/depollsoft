@@ -5,7 +5,6 @@ colors:
   plate-ground: "#DADBDC"
   plate-surface: "#E7E8E9"
   plate-ink: "#1C1E20"
-  plate-ink-bar: "#141618"
   plate-ink-secondary: "#55585C"
   plate-hairline: "#B7B9BC"
   plate-lit: "#141618"
@@ -13,7 +12,6 @@ colors:
   plate-ground-dark: "#0E0F10"
   plate-surface-dark: "#16181A"
   plate-ink-dark: "#D9DBDD"
-  plate-ink-bar-dark: "#0A0B0C"
   plate-ink-secondary-dark: "#898D92"
   plate-hairline-dark: "#2C2F33"
   plate-lit-dark: "#F2EFE6"
@@ -75,7 +73,7 @@ The one moment of light is functional, not decorative: when a note sounds, its c
 
 ## Colors
 
-Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
+Seven grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
 
 ### Primary
 
@@ -87,8 +85,7 @@ Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 - **Plate Surface** (#E7E8E9 / #16181A): resting glass cells, the range-selector frame, FABs, Material `colorSurface`.
 - **Plate Ink** (#1C1E20 / #D9DBDD): primary text, natural-note engravings, icons.
 - **Plate Ink Secondary** (#55585C / #898D92): accidental engravings, frequency readouts, section headers, nameplate captions, empty states.
-- **Plate Ink Bar** (#141618 / #0A0B0C): action bar, bottom nav, system bars — the darkest band framing the panel on both themes.
-- **Plate Hairline** (#B7B9BC / #2C2F33): every structural stroke — grain lines, staff etching, cell rims, list dividers, the range selector's frame and split line.
+- **Plate Hairline** (#B7B9BC / #2C2F33): every structural stroke — grain lines, staff etching, cell rims, list dividers, the range selector's frame and split line, and the single edge that separates each bar from the panel.
 
 ### Named Rules
 
@@ -121,7 +118,7 @@ Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 
 The pitch-pipe screen is a single custom-drawn view (`PitchInstrumentView.kt` / `DPPitchInstrumentView.swift`) with identical geometry on both platforms: face center at 44% of height; ring radius = min(w, h × 0.82) × 0.365; 12 cells on a true circle starting at −90° in 30° steps; cell radius = ring radius × 0.245; the range selector seated in the ring's hole (width = ring × 0.72, row height = ring × 0.145, top at center + ring × 0.20). The nameplate caption sits at the panel's bottom edge.
 
-On compact Android widths, screen chrome stacks vertically: action bar (ink-bar) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (ink-bar). At 600dp and wider, the same four destinations move to an ink-bar navigation rail at the leading edge while the content, remove-ads line, and ad slot remain one vertical instrument bay. Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
+On compact Android widths, screen chrome stacks vertically: action bar (plate surface, hairline bottom edge) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (plate surface, hairline top edge). At 600dp and wider, the same four destinations move to a plate-surface navigation rail with a hairline trailing edge while the content, remove-ads line, and ad slot remain one vertical instrument bay. Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
 
 ## Elevation & Depth
 
@@ -173,7 +170,9 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Navigation
 
-- Platform-native chrome in plate colors. Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+, both on `plate-ink-bar` with the same selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. Android system bars match `plate-ink-bar`.
+- **The Continuous-Plate Rule.** Bars are part of the plate, never a cast bezel: every bar sits on `plate-surface`, separated from the panel by one 1px `plate-hairline` edge, with type and icons in `plate-ink`. Bars therefore follow the theme like everything else; the only near-black in light mode is a sounding note.
+- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. System status and navigation bars match `plate-surface` with theme-appropriate icon brightness. The Android app bar carries the nameplate "Pitch Perfect"; the bottom nav labels the section.
+- iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip, which suppresses child titles by system design. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. iOS navigation titles name the screen — Pitch Pipe, Notes, Keys, Songs, Settings, Add Song / Edit Song — and Keys carries its Major/Minor control in the leading bar slot.
 
 ### Ad Slot
 
@@ -195,7 +194,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Do
 
-- **Do** keep every first-party pixel grayscale, drawing from the eight `plate-*` role pairs.
+- **Do** keep every first-party pixel grayscale, drawing from the seven `plate-*` role pairs.
 - **Do** reserve `plate-lit` for the sounding note, its bloom, the pressed row, and the range dot — light means "this is live."
 - **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
 - **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).

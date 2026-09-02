@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T03:22:34.302Z",
+  "generatedAt": "2026-09-02T06:49:50.129Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -49,12 +49,6 @@
         "displayName": "Plate Ink Secondary",
         "canonical": "#55585C",
         "darkValue": "#898D92"
-      },
-      "plate-ink-bar": {
-        "role": "neutral",
-        "displayName": "Plate Ink Bar",
-        "canonical": "#141618",
-        "darkValue": "#0A0B0C"
       },
       "plate-hairline": {
         "role": "neutral",
@@ -154,8 +148,8 @@
     },
     {
       "name": "Adaptive Navigation",
-      "description": "Android bottom navigation on compact widths becomes a leading navigation rail at 600dp+; iPhone floating bottom tabs become the native floating top tab strip on iPad.",
-      "css": "background: var(--plate-ink-bar); color: var(--plate-on-lit);"
+      "description": "Bars are plate surface with one hairline edge and follow the theme. Android bottom navigation becomes a leading rail at 600dp+; iPhone floating tabs become the iPad floating top strip. iOS titles name the screen.",
+      "css": "background: var(--plate-surface); border-color: var(--plate-hairline); color: var(--plate-ink);"
     }
   ],
   "narrative": {
@@ -199,7 +193,7 @@
       }
     ],
     "dos": [
-      "Do keep every first-party pixel grayscale, drawing from the eight plate-* role pairs.",
+      "Do keep every first-party pixel grayscale, drawing from the seven plate-* role pairs.",
       "Do reserve plate-lit for the sounding note, its bloom, the pressed row, and the range dot — light means \"this is live.\"",
       "Do set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.",
       "Do build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).",
@@ -211,7 +205,8 @@
       "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it.",
       "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves.",
       "Do move Android destinations to a navigation rail at 600dp+ and keep the ad inside the remaining content bay.",
-      "Do label the instrument nameplate DIGITAL PITCH PIPE; avoid the redundant CHROMATIC PITCH REFERENCE caption."
+      "Do label the instrument nameplate DIGITAL PITCH PIPE; avoid the redundant CHROMATIC PITCH REFERENCE caption.",
+      "Do keep every bar on plate-surface with a single hairline edge so chrome follows the theme; never a cast dark bezel."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",
