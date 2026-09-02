@@ -75,7 +75,7 @@ object PitchPipeWidgetRenderer {
 
         val faceNotes = notes.take(13)
         val step = 360.0 / faceNotes.size.coerceAtLeast(1)
-        val start = -90.0 - step / 2.0
+        val start = -90.0 + step / 2.0
         faceNotes.forEachIndexed { index, note ->
             val angle = Math.toRadians(start + index * step)
             val x = cx + (cos(angle) * ring).toFloat()

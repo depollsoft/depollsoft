@@ -52,24 +52,31 @@ final class DesignTourUITests: XCTestCase {
         attachment.name = "widget-gallery-pitch-pipe"
         attachment.lifetime = .keepAlways
         add(attachment)
-    }
 
-    func testWidgetDeepLinkOpensInclusiveEndpoint() throws {
-        let app = XCUIApplication()
-        let url = URL(string: "pitchperfect://note?name=C&accidental=natural&octave=5&range=cToC")!
-        app.open(url)
-
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let confirmation = springboard.buttons["Open"]
-        if confirmation.waitForExistence(timeout: 3) {
-            confirmation.tap()
+        let addButton = springboard.buttons.matching(
+            NSPredicate(format: "label CONTAINS %@", "Add Widget")
+        ).firstMatch
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+        XCTAssertTrue(springboard.wait(for: .runningForeground, timeout: 5))
+        let done = springboard.buttons["Done"].firstMatch
+        if done.waitForExistence(timeout: 3) {
+            done.tap()
         }
 
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 8))
+        let c4 = springboard.buttons["C, octave 4"].firstMatch
+        XCTAssertTrue(c4.waitForExistence(timeout: 8), "The configured widget should expose C4")
+        c4.tap()
         XCTAssertTrue(
-            app.buttons["C, octave 5"].waitForExistence(timeout: 5),
-            "The inclusive C5 endpoint should be exposed after a widget deep link"
+            springboard.wait(for: .runningForeground, timeout: 3),
+            "Sounding a widget pitch must keep the user on the Home Screen"
         )
+        sleep(1)
+
+        let sounding = XCTAttachment(screenshot: springboard.screenshot())
+        sounding.name = "widget-sounding-c4-on-home"
+        sounding.lifetime = .keepAlways
+        add(sounding)
     }
 
     func testCaptureEveryScreen() throws {

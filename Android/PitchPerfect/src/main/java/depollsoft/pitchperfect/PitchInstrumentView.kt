@@ -165,7 +165,7 @@ class PitchInstrumentView
             cellRadius = ringRadius * if (count > 12) 0.225f else 0.245f
             cellCenters = arrayOfNulls(count)
             val step = 360.0 / count
-            val start = -90.0 - step / 2.0
+            val start = -90.0 + step / 2.0
             for (i in 0 until count) {
                 val angle = Math.toRadians(start + i * step)
                 cellCenters[i] =

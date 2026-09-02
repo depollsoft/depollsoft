@@ -1,4 +1,5 @@
 import AppIntents
+import AVFoundation
 import SwiftUI
 import WidgetKit
 
@@ -26,19 +27,33 @@ struct PitchWidgetConfiguration: WidgetConfigurationIntent {
 private struct PitchEntry: TimelineEntry {
     let date: Date
     let range: PitchRange
+    let activePitch: Int?
 }
 
 private struct PitchProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> PitchEntry {
-        PitchEntry(date: .now, range: .cToC)
+        PitchEntry(date: .now, range: .cToC, activePitch: nil)
     }
 
     func snapshot(for configuration: PitchWidgetConfiguration, in context: Context) async -> PitchEntry {
-        PitchEntry(date: .now, range: configuration.range)
+        PitchEntry(
+            date: .now,
+            range: configuration.range,
+            activePitch: WidgetPitchState.activePitch
+        )
     }
 
     func timeline(for configuration: PitchWidgetConfiguration, in context: Context) async -> Timeline<PitchEntry> {
-        Timeline(entries: [PitchEntry(date: .now, range: configuration.range)], policy: .never)
+        Timeline(
+            entries: [
+                PitchEntry(
+                    date: .now,
+                    range: configuration.range,
+                    activePitch: WidgetPitchState.activePitch
+                )
+            ],
+            policy: .never
+        )
     }
 }
 
@@ -54,17 +69,115 @@ private struct Pitch: Identifiable {
         accidental == "natural" ? "\(name), octave \(octave)" : "\(name) sharp, octave \(octave)"
     }
 
-    func url(range: PitchRange) -> URL {
-        var parts = URLComponents()
-        parts.scheme = "pitchperfect"
-        parts.host = "note"
-        parts.queryItems = [
-            URLQueryItem(name: "name", value: name),
-            URLQueryItem(name: "accidental", value: accidental),
-            URLQueryItem(name: "octave", value: String(octave)),
-            URLQueryItem(name: "range", value: range.rawValue),
-        ]
-        return parts.url!
+
+}
+
+private enum WidgetPitchState {
+    static let key = "activePitch"
+
+    static var activePitch: Int? {
+        guard UserDefaults.standard.object(forKey: key) != nil else { return nil }
+        let value = UserDefaults.standard.integer(forKey: key)
+        return value >= 0 ? value : nil
+    }
+
+    static func set(_ value: Int?) {
+        UserDefaults.standard.set(value ?? -1, forKey: key)
+    }
+}
+
+@MainActor
+private final class WidgetTonePlayer {
+    static let shared = WidgetTonePlayer()
+
+    private var player: AVAudioPlayer?
+    private var stopTask: Task<Void, Never>?
+
+    func play(frequency: Double) throws {
+        stopTask?.cancel()
+        player?.stop()
+        player = try AVAudioPlayer(
+            data: PlayWidgetPitchIntent.tone(frequency: frequency, duration: 1.5)
+        )
+        player?.prepareToPlay()
+        player?.play()
+
+        stopTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            self?.player?.stop()
+            self?.player = nil
+            WidgetPitchState.set(nil)
+            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        }
+    }
+}
+
+struct PlayWidgetPitchIntent: AudioPlaybackIntent {
+    static let title: LocalizedStringResource = "Sound Pitch"
+    static let openAppWhenRun = false
+
+    @Parameter(title: "Pitch")
+    var pitchIndex: Int
+
+    @Parameter(title: "Frequency")
+    var frequency: Double
+
+    init() {}
+
+    init(pitchIndex: Int, frequency: Double) {
+        self.pitchIndex = pitchIndex
+        self.frequency = frequency
+    }
+
+    func perform() async throws -> some IntentResult {
+        WidgetPitchState.set(pitchIndex)
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        try await MainActor.run {
+            try WidgetTonePlayer.shared.play(frequency: frequency)
+        }
+        // Returning immediately lets WidgetKit apply the active timeline while
+        // AudioPlaybackIntent keeps the short tone alive in the extension.
+        return .result()
+    }
+
+    fileprivate static func tone(frequency: Double, duration: Double) -> Data {
+        let sampleRate = 44_100
+        let frames = Int(Double(sampleRate) * duration)
+        var pcm = Data(capacity: frames * 2)
+        let fadeFrames = sampleRate / 40
+        for frame in 0..<frames {
+            let attack = min(1.0, Double(frame) / Double(fadeFrames))
+            let release = min(1.0, Double(frames - frame) / Double(fadeFrames))
+            let envelope = min(attack, release)
+            let sample = sin(2 * .pi * frequency * Double(frame) / Double(sampleRate))
+            var value = Int16(sample * envelope * 9_000).littleEndian
+            withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
+        }
+
+        var data = Data("RIFF".utf8)
+        var riffSize = UInt32(36 + pcm.count).littleEndian
+        withUnsafeBytes(of: &riffSize) { data.append(contentsOf: $0) }
+        data.append(Data("WAVEfmt ".utf8))
+        var formatSize = UInt32(16).littleEndian
+        var audioFormat = UInt16(1).littleEndian
+        var channels = UInt16(1).littleEndian
+        var rate = UInt32(sampleRate).littleEndian
+        var byteRate = UInt32(sampleRate * 2).littleEndian
+        var blockAlign = UInt16(2).littleEndian
+        var bits = UInt16(16).littleEndian
+        withUnsafeBytes(of: &formatSize) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &audioFormat) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &channels) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &rate) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &byteRate) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &blockAlign) { data.append(contentsOf: $0) }
+        withUnsafeBytes(of: &bits) { data.append(contentsOf: $0) }
+        data.append(Data("data".utf8))
+        var dataSize = UInt32(pcm.count).littleEndian
+        withUnsafeBytes(of: &dataSize) { data.append(contentsOf: $0) }
+        data.append(pcm)
+        return data
     }
 }
 
@@ -165,26 +278,54 @@ private struct PitchFace: View {
             let cellRadius = ring * 0.225
             let pitches = PitchCatalog.notes(for: entry.range)
             let step = 360.0 / Double(pitches.count)
-            let start = -90.0 - step / 2
+            let start = -90.0 + step / 2
 
             ZStack {
                 palette.ground
-                Image("panobackground")
-                    .resizable(resizingMode: .tile)
-                    .renderingMode(.template)
-                    .foregroundStyle(palette.secondary.opacity(0.10))
+                Image("panobackground", bundle: .main)
+                    .resizable()
+                    .scaledToFill()
+                    .colorMultiply(palette.secondary)
+                    .opacity(colorScheme == .dark ? 0.14 : 0.12)
+                    .clipped()
                     .allowsHitTesting(false)
 
                 ForEach(pitches) { pitch in
                     let angle = (start + Double(pitch.id) * step) * .pi / 180
-                    Link(destination: pitch.url(range: entry.range)) {
+                    Button(
+                        intent: PlayWidgetPitchIntent(
+                            pitchIndex: pitch.id,
+                            frequency: pitch.frequency
+                        )
+                    ) {
+                        let active = entry.activePitch == pitch.id
                         ZStack {
-                            Circle().fill(palette.surface)
-                            Circle().stroke(palette.hairline, lineWidth: 1.25)
-                            Circle().stroke(palette.secondary.opacity(0.28), lineWidth: 0.7).padding(cellRadius * 0.14)
+                            if active {
+                                Circle()
+                                    .fill(palette.ink.opacity(0.16))
+                                    .blur(radius: cellRadius * 0.35)
+                                    .scaleEffect(1.45)
+                            }
+                            Circle().fill(active ? palette.ink : palette.surface)
+                            Circle().stroke(active ? palette.ink : palette.hairline, lineWidth: active ? 2 : 1.25)
+                            Circle()
+                                .stroke(
+                                    active ? palette.ground.opacity(0.45) : palette.secondary.opacity(0.28),
+                                    lineWidth: 0.7
+                                )
+                                .padding(cellRadius * 0.14)
                             Text(pitch.engraved)
-                                .font(.custom("Oswald-Medium", size: cellRadius * (pitch.accidental == "natural" ? 0.88 : 0.58)))
-                                .foregroundStyle(pitch.accidental == "natural" ? palette.ink : palette.secondary)
+                                .font(
+                                    .custom(
+                                        "Oswald-Medium",
+                                        size: cellRadius * (pitch.accidental == "natural" ? 0.88 : 0.58)
+                                    )
+                                )
+                                .foregroundStyle(
+                                    active
+                                        ? palette.ground
+                                        : (pitch.accidental == "natural" ? palette.ink : palette.secondary)
+                                )
                         }
                         .frame(width: cellRadius * 2, height: cellRadius * 2)
                     }
@@ -196,10 +337,12 @@ private struct PitchFace: View {
                     )
                 }
 
-                Text("— Hz")
-                    .font(.system(size: ring * 0.14, design: .monospaced))
-                    .foregroundStyle(palette.secondary.opacity(0.58))
-                    .position(x: center.x, y: center.y - ring * 0.04)
+                centerReadout(
+                    pitches: pitches,
+                    palette: palette,
+                    center: center,
+                    ring: ring
+                )
 
                 rangeSelector(palette: palette, center: center, ring: ring)
 
@@ -212,7 +355,32 @@ private struct PitchFace: View {
             .clipShape(ContainerRelativeShape())
         }
         .containerBackground(for: .widget) { Color.clear }
-        .widgetURL(URL(string: "pitchperfect://open?range=\(entry.range.rawValue)")!)
+    }
+
+    @ViewBuilder
+    private func centerReadout(
+        pitches: [Pitch],
+        palette: PlatePalette,
+        center: CGPoint,
+        ring: CGFloat
+    ) -> some View {
+        if let index = entry.activePitch, pitches.indices.contains(index) {
+            let pitch = pitches[index]
+            VStack(spacing: ring * 0.015) {
+                Text("\(pitch.name)\(pitch.accidental == "natural" ? "" : "♯")\(pitch.octave)")
+                    .font(.custom("Oswald-Medium", size: ring * 0.25))
+                    .foregroundStyle(palette.ink)
+                Text(String(format: "%.1f Hz", pitch.frequency))
+                    .font(.system(size: ring * 0.11, design: .monospaced))
+                    .foregroundStyle(palette.ink)
+            }
+            .position(x: center.x, y: center.y - ring * 0.07)
+        } else {
+            Text("— Hz")
+                .font(.system(size: ring * 0.14, design: .monospaced))
+                .foregroundStyle(palette.secondary.opacity(0.58))
+                .position(x: center.x, y: center.y - ring * 0.04)
+        }
     }
 
     private func rangeSelector(palette: PlatePalette, center: CGPoint, ring: CGFloat) -> some View {

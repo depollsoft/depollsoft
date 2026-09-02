@@ -163,8 +163,8 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 ### Home-Screen Widgets
 
 - Both platforms mount the same inclusive 13-cell circular instrument on the home screen: plate ground, full-bleed score, glass/anode cells, center readout, C–C/F–F selector, and DIGITAL PITCH PIPE nameplate. Android uses `PitchPipeWidgetRenderer`; iOS uses the `PitchPerfectWidget` WidgetKit extension. Both include real system-gallery previews and follow light/dark appearance.
-- Android widgets can sound in place, so cells toggle: tap to sound, tap to stop; the sounding cell lights and the readout shows note/frequency or a two-note interval. The selector changes range and silences the ring; the readout opens the app.
-- WidgetKit does not provide a reliable continuous-audio execution window. iOS cells therefore deep-link to Pitch Pipe, apply the widget's configured range, and sound the chosen pitch for 1.5 seconds with the app's visible cell feedback. Each iOS widget chooses C–C or F–F through the system Edit Widget configuration.
+- Android widgets can sound in place, so cells toggle: tap to sound, tap to stop; the sounding cell lights and the readout shows note/frequency or a two-note interval. Android 12+ receives exact size-specific RemoteViews with 52dp circular cell targets and one 132×56dp range toggle. The center and background are inert—only visible instrument controls respond, so an imprecise tap never opens the app. The widget is a non-stretched square face inside a near-square 4×3 Pixel Launcher host (responsive on other launchers).
+- iOS cells use `AudioPlaybackIntent` with `openAppWhenRun = false`: the widget stays on Home Screen, synthesizes a 1.5-second tone, lights the active cell, and updates the frequency readout before clearing. Each iOS widget chooses C–C or F–F through system Edit Widget configuration. No widget surface or control deep-links into the app.
 
 ### Section Headers
 

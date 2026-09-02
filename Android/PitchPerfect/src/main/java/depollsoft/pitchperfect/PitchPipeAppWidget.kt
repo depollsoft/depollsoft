@@ -7,16 +7,22 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.util.SizeF
+import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatDelegate
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
+import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 /**
- * The pitch pipe mounted on the home screen. Twelve cells ring the readout
+ * The pitch pipe mounted on the home screen. Thirteen cells ring the readout
  * clockwise from C, just like the instrument; a tap sounds a note (toggle
  * mode, since a widget cannot hold), and the range selector switches octaves.
  */
@@ -61,45 +67,96 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         manager: AppWidgetManager,
         appWidgetId: Int,
     ): RemoteViews {
+        val options = manager.getAppWidgetOptions(appWidgetId)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val sizes = options.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+            if (!sizes.isNullOrEmpty()) {
+                return RemoteViews(
+                    sizes.associateWith { size ->
+                        buildForSize(context, size.width, size.height, positionTargets = true)
+                    },
+                )
+            }
+        }
+        val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 280
+        val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT).takeIf { it > 0 } ?: 280
+        return buildForSize(context, width.toFloat(), height.toFloat(), positionTargets = false)
+    }
+
+    private fun buildForSize(
+        context: Context,
+        widthDp: Float,
+        heightDp: Float,
+        positionTargets: Boolean,
+    ): RemoteViews {
         val model = PitchPipeModel()
         val notes = model.notes.toList()
         val density = context.resources.displayMetrics.density
-        val options = manager.getAppWidgetOptions(appWidgetId)
-        val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 } ?: 220
-        val heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT).takeIf { it > 0 } ?: 220
-        val faceW = (widthDp * density).roundToInt().coerceAtLeast(1)
-        val faceH = (heightDp * density).roundToInt().coerceAtLeast(1)
-
+        val faceDp = min(widthDp, heightDp)
+        val facePx = (faceDp * density).roundToInt().coerceAtLeast(1)
         val renderContext = themedContext(context)
-        val rv = RemoteViews(context.packageName, R.layout.pitchpipewidgetview)
-        rv.setImageViewBitmap(
+        val views = RemoteViews(context.packageName, R.layout.pitchpipewidgetview)
+        views.setImageViewBitmap(
             R.id.widgetFace,
-            PitchPipeWidgetRenderer.face(renderContext, notes, model.isFromFToF, faceW, faceH),
+            PitchPipeWidgetRenderer.face(renderContext, notes, model.isFromFToF, facePx, facePx),
         )
-
         CELL_IDS.forEachIndexed { index, id ->
             val note = notes[index]
-            rv.setContentDescription(id, spokenName(note))
-            rv.setOnClickPendingIntent(id, noteIntent(context, note, index))
+            views.setContentDescription(id, spokenName(note))
+            views.setOnClickPendingIntent(id, noteIntent(context, note, index))
         }
-
-        rv.setContentDescription(R.id.readout, context.getString(R.string.widget_open_app))
-        rv.setContentDescription(R.id.readout, context.getString(R.string.widget_open_app))
-        rv.setOnClickPendingIntent(
-            R.id.readout,
-            PendingIntent.getActivity(
-                context,
-                0,
-                Intent(context, PitchPerfectActivity::class.java),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-            ),
+        val high = model.isFromFToF
+        views.setContentDescription(
+            R.id.rangeToggle,
+            context.getString(if (high) R.string.widget_switch_to_c else R.string.widget_switch_to_f),
         )
+        views.setOnClickPendingIntent(R.id.rangeToggle, rangeIntent(context, !high))
+        if (positionTargets) {
+            positionModernHitTargets(views, widthDp, heightDp, notes.size)
+        }
+        return views
+    }
 
-        rv.setContentDescription(R.id.rangeLow, context.getString(R.string.RangeLowDescription))
-        rv.setContentDescription(R.id.rangeHigh, context.getString(R.string.RangeHighDescription))
-        rv.setOnClickPendingIntent(R.id.rangeLow, rangeIntent(context, false))
-        rv.setOnClickPendingIntent(R.id.rangeHigh, rangeIntent(context, true))
-        return rv
+    private fun positionModernHitTargets(
+        views: RemoteViews,
+        widgetWidth: Float,
+        widgetHeight: Float,
+        count: Int,
+    ) {
+        val face = min(widgetWidth, widgetHeight)
+        val originX = (widgetWidth - face) / 2f
+        val originY = (widgetHeight - face) / 2f
+        val centerX = originX + face / 2f
+        val centerY = originY + face * 0.43f
+        val ring = face * 0.365f
+        val step = 360.0 / count.coerceAtLeast(1)
+        val start = -90.0 + step / 2.0
+        val target = 52f
+        CELL_IDS.forEachIndexed { index, id ->
+            val angle = Math.toRadians(start + index * step)
+            val x = centerX + (cos(angle) * ring).toFloat() - target / 2f
+            val y = centerY + (sin(angle) * ring).toFloat() - target / 2f
+            views.setViewLayoutWidth(id, target, TypedValue.COMPLEX_UNIT_DIP)
+            views.setViewLayoutHeight(id, target, TypedValue.COMPLEX_UNIT_DIP)
+            views.setViewLayoutMargin(id, RemoteViews.MARGIN_LEFT, x, TypedValue.COMPLEX_UNIT_DIP)
+            views.setViewLayoutMargin(id, RemoteViews.MARGIN_TOP, y, TypedValue.COMPLEX_UNIT_DIP)
+        }
+        val toggleWidth = 132f
+        val toggleHeight = 56f
+        views.setViewLayoutWidth(R.id.rangeToggle, toggleWidth, TypedValue.COMPLEX_UNIT_DIP)
+        views.setViewLayoutHeight(R.id.rangeToggle, toggleHeight, TypedValue.COMPLEX_UNIT_DIP)
+        views.setViewLayoutMargin(
+            R.id.rangeToggle,
+            RemoteViews.MARGIN_LEFT,
+            centerX - toggleWidth / 2f,
+            TypedValue.COMPLEX_UNIT_DIP,
+        )
+        views.setViewLayoutMargin(
+            R.id.rangeToggle,
+            RemoteViews.MARGIN_TOP,
+            centerY + ring * 0.20f,
+            TypedValue.COMPLEX_UNIT_DIP,
+        )
     }
 
     private fun themedContext(context: Context): Context {

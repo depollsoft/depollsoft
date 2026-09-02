@@ -40,7 +40,8 @@
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
     <string name="widget_description">The thirteen-note pitch pipe on your home screen. Tap a cell to sound it, tap again to stop.</string>
-    <string name="widget_open_app">Open Pitch Perfect</string>
+    <string name="widget_switch_to_c">Switch to C to C</string>
+    <string name="widget_switch_to_f">Switch to F to F</string>
     <string name="MoreLogins"><u>More login options</u></string>
     <string name="SkipLogin">Skip</string>
     <string name="LoginTitle">Log in to Pitch Perfect</string>
