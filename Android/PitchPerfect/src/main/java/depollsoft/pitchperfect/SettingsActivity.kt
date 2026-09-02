@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
-import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -80,17 +80,17 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         logInDialog = LoginPrompt.buildDialog(this, false)
         logInDialog.setOnDismissListener { loginTrackable.updateTrackers() }
-        this.title = "Pitch Perfect Settings"
+        this.title = getString(R.string.Settings)
         this.setContentView(R.layout.settingsview)
         UiBinder.bind(
             this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CheckBox),
+            CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CompoundButton),
             "ToggleNotes",
             BindingMode.TWO_WAY,
         )
         UiBinder.bind(
             this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CheckBox),
+            CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CompoundButton),
             "WakeLock",
             BindingMode.TWO_WAY,
         )

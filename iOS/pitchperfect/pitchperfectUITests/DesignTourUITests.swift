@@ -20,18 +20,30 @@ final class DesignTourUITests: XCTestCase {
             add(attachment)
         }
 
+        func tab(named name: String) -> XCUIElement {
+            let candidates = [
+                app.tabBars.buttons[name].firstMatch,
+                app.buttons[name].firstMatch,
+                app.cells[name].firstMatch,
+                app.otherElements[name].firstMatch,
+            ]
+            return candidates.first { $0.exists }
+                ?? app.descendants(matching: .any)[name]
+        }
+
         snap("tour-pipe")
-        for tab in ["Notes", "Keys", "Songs"] {
-            let button = app.tabBars.buttons[tab]
-            if button.waitForExistence(timeout: 5) {
-                button.tap()
+        for name in ["Notes", "Keys", "Songs"] {
+            let item = tab(named: name)
+            if item.waitForExistence(timeout: 5) {
+                item.tap()
                 sleep(1)
-                snap("tour-\(tab.lowercased())")
+                snap("tour-\(name.lowercased())")
             }
         }
-        app.tabBars.buttons["Pitch Pipe"].tap()
+        tab(named: "Pitch Pipe").tap()
         sleep(1)
-        let gear = app.navigationBars.buttons.firstMatch
+        let navigationGear = app.navigationBars.buttons.firstMatch
+        let gear = navigationGear.exists ? navigationGear : app.buttons["Settings"].firstMatch
         if gear.waitForExistence(timeout: 5) {
             gear.tap()
             sleep(1)
