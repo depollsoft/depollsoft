@@ -28,7 +28,7 @@ typography:
     fontSize: "20-24sp"
   mono:
     fontFamily: "monospace (Android) / SF Mono system monospaced (iOS)"
-    fontSize: "14-16sp"
+    fontSize: "14-18sp"
     letterSpacing: "0.04em"
   label:
     fontFamily: "monospace"
@@ -107,9 +107,9 @@ Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 
 ### Hierarchy
 
-- **Display / engraving** (Oswald Medium): action-bar title (19sp, 0.16 letter-spacing, from `TextAppearance.Plate.ActionBarTitle`); cell engravings and center note readout (sized relative to ring geometry); nameplate caption ("CHROMATIC PITCH REFERENCE", 0.34 tracking, uppercase); range-selector labels (uppercase, 0.16 tracking); empty-state text (15sp, 0.12 tracking).
+- **Display / engraving** (Oswald Medium): action-bar title (19sp, 0.16 letter-spacing, from `TextAppearance.Plate.ActionBarTitle`); cell engravings and center note readout (sized relative to ring geometry); nameplate caption ("DIGITAL PITCH PIPE", 0.34 tracking, uppercase); range-selector labels (uppercase, 0.16 tracking); empty-state text (15sp, 0.12 tracking).
 - **Body** (condensed sans, 20–24sp): list-row primary text — note names, song titles, key signatures.
-- **Mono / data** (monospace, 14–16sp, 0.04–0.06 tracking): frequencies ("261.6 Hz"), song keys, anything measured.
+- **Mono / data** (monospace, 14–18sp, 0.04–0.06 tracking): frequencies ("261.6 Hz"), song keys, anything measured.
 - **Label** (monospace, 12sp, 0.14 tracking, secondary ink): section headers (`TextAppearance.Plate.SectionHeader`).
 - **Musical glyphs**: NoteHedz for note heads/accidentals in lists and buttons; MusiQwik for key-signature notation. These are content glyphs, not UI icons.
 
@@ -151,7 +151,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### List Rows
 
-- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–16sp secondary. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–18sp secondary. Android song titles keep a 20dp leading inset and song keys use the 18sp ceiling. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
 
 ### Song Editing
 
