@@ -244,6 +244,9 @@ jobs:
             missing=0
             for artifact in \
               facebook-ios-sdk/FBSDKCoreKit/FBSDKCoreKit.xcframework \
+              facebook-ios-sdk/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.xcframework \
+              facebook-ios-sdk/FBAEMKit/FBAEMKit.xcframework \
+              facebook-ios-sdk/FBSDKLoginKit/FBSDKLoginKit.xcframework \
               firebase-ios-sdk/FirebaseFirestoreInternal/FirebaseFirestoreInternal.xcframework \
               swift-package-manager-google-mobile-ads/GoogleMobileAds/GoogleMobileAds.xcframework \
               swift-package-manager-google-user-messaging-platform/UserMessagingPlatform/UserMessagingPlatform.xcframework \
@@ -251,7 +254,7 @@ jobs:
               grpc-binary/grpcpp/grpcpp.xcframework \
               grpc-binary/openssl_grpc/openssl_grpc.xcframework \
               abseil-cpp-binary/absl/absl.xcframework; do
-              if [ ! -d "SourcePackages/artifacts/$artifact" ]; then
+              if [ ! -f "SourcePackages/artifacts/$artifact/Info.plist" ]; then
                 echo "Missing SPM binary artifact: $artifact"
                 missing=1
               fi
