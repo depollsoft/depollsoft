@@ -88,7 +88,7 @@ private class InstrumentAccessibilityElement: UIAccessibilityElement {
         let count = max(notes.count, 1)
         cellRadius = ringRadius * (count > 12 ? 0.225 : 0.245)
         let step = 360.0 / Double(count)
-        let start = -90.0 - step / 2.0
+        let start = -90.0 + step / 2.0
         cellCenters = (0..<count).map { index in
             let angle = (start + Double(index) * step) * Double.pi / 180.0
             return CGPoint(

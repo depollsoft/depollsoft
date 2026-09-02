@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T08:53:06.296Z",
+  "generatedAt": "2026-09-02T14:10:49.304Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -153,7 +153,7 @@
     },
     {
       "name": "Home-Screen Widget",
-      "description": "Android and iOS home-screen widgets mirror the inclusive 13-cell circular instrument, score, readout, range selector, and theme. Android sounds in place; iOS links into the app to sound with visible feedback.",
+      "description": "Android and iOS widgets mirror the inclusive 13-cell circular instrument and score. Android uses exact 52dp size-specific targets with inert background; iOS uses non-launching AudioPlaybackIntent, active glow, and live frequency while staying on Home Screen.",
       "css": "background: var(--plate-ground); border: 1px solid var(--plate-hairline);"
     }
   ],

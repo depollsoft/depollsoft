@@ -18,7 +18,6 @@
 #import "DPNote.h"
 #import "DPPitchedSong.h"
 #import "DPLoginViewController.h"
-#import "DPPitchPipeViewController.h"
 #import "DPAppDelegate+Ads.h"
 #import "GoogleMobileAdsStub.h"
 #if __has_include(<FBSDKCoreKit/FBSDKCoreKit.h>)
@@ -179,31 +178,6 @@
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary *)options {
-    if ([[url.scheme lowercaseString] isEqualToString:@"pitchperfect"]) {
-        NSURLComponents *components = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
-        NSMutableDictionary<NSString *, NSString *> *query = [NSMutableDictionary dictionary];
-        for (NSURLQueryItem *item in components.queryItems) {
-            if (item.value) {
-                query[item.name] = item.value;
-            }
-        }
-        BOOL highRange = [query[@"range"] isEqualToString:@"fToF"];
-        UITabBarController *tabs = (UITabBarController *)self.window.rootViewController;
-        if ([tabs isKindOfClass:[UITabBarController class]]) {
-            tabs.selectedIndex = 0;
-            UINavigationController *navigation = (UINavigationController *)tabs.selectedViewController;
-            DPPitchPipeViewController *pitchPipe =
-                (DPPitchPipeViewController *)navigation.topViewController;
-            if ([pitchPipe isKindOfClass:[DPPitchPipeViewController class]]) {
-                [pitchPipe loadViewIfNeeded];
-                [pitchPipe playWidgetNoteNamed:query[@"name"]
-                                    accidental:query[@"accidental"] ?: @"natural"
-                                        octave:[query[@"octave"] integerValue]
-                                     highRange:highRange];
-            }
-        }
-        return YES;
-    }
 #if HAS_GOOGLE_SIGN_IN
     if ([[GIDSignIn sharedInstance] handleURL:url]) {
         return YES;
