@@ -252,8 +252,10 @@ class SettingsActivity : AppCompatActivity() {
             if (curUser.providerData.size > 0) {
                 val providerData = curUser.providerData.first()
                 return when (providerData.providerId) {
-                    FacebookAuthProvider.PROVIDER_ID -> "Facebook: ${providerData.email}"
-                    GoogleAuthProvider.PROVIDER_ID -> "Google: ${providerData.email}"
+                    FacebookAuthProvider.PROVIDER_ID ->
+                        providerData.email?.let { "Facebook: $it" } ?: "Facebook account"
+                    GoogleAuthProvider.PROVIDER_ID ->
+                        providerData.email?.let { "Google: $it" } ?: "Google account"
                     PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
                     else -> providerData.email ?: "Current User: (${curUser.uid})"
                 }

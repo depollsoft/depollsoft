@@ -174,6 +174,12 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. iOS keeps native switches and its segmented theme control. Destructive/account behavior is unchanged; treatment stays grayscale and never spends the sounding-note glow.
 
+### Authentication
+
+- Android presents a concise plate-styled backup/sync explanation before FirebaseUI. The primary action is **Choose sign-in method**; **Not now** preserves local use. Launching disables the action and changes its label to **Opening sign-in…**; cancellation or provider error returns to the same prompt with an accessibility-live recovery message and enabled retry.
+- FirebaseUI Auth stays on the latest stable line (9.1.1) with a dedicated `AuthTheme`: ink-colored fields, activated controls, progress, and actions remain visible against plate ground in light and dark. Email, Google, and Facebook remain explicit provider choices. Facebook requests email/public profile, but the account label tolerates a missing email.
+- FirebaseUI Credential Manager saving is deliberately disabled for this flow. FirebaseUI 9.x passes a nullable Facebook email into a non-null credential-save API and crashes after otherwise successful authentication; disabling optional credential saving removes that crash path without disabling Firebase Auth, provider login, Firestore attachment, or account sync.
+
 ### Navigation
 
 - **The Continuous-Plate Rule.** Bars are part of the plate, never a cast bezel: every bar sits on `plate-surface`, separated from the panel by one 1px `plate-hairline` edge, with type and icons in `plate-ink`. Bars therefore follow the theme like everything else; the only near-black in light mode is a sounding note.
