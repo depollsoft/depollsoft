@@ -21,7 +21,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.wearable.Wearable
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.compat.ui.Activities
@@ -29,7 +29,7 @@ import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
 
 class PitchPerfectActivity : AppCompatActivity() {
-    private lateinit var bottomNavigation: BottomNavigationView
+    private lateinit var bottomNavigation: NavigationBarView
     private lateinit var logInDialog: Dialog
     private var preparingMenu: Boolean = false
     private var selectedPage: Int = 0

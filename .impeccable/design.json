@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-01T21:11:22.213Z",
+  "generatedAt": "2026-09-02T01:20:41.410Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -146,6 +146,16 @@
       "description": "Rows are chrome-free until the title-bar pencil enters edit mode: Done and Sort become app-bar actions while each row shows its pencil and drag handle; order persists on drop.",
       "html": "<div class=\"ds-song-edit\"><button>✓ STOP EDITING</button><div>✎ Adeline <span>C</span> ☰</div></div>",
       "css": ".ds-song-edit { color: #D9DBDD; background: #0E0F10; font-family: Oswald, sans-serif; } .ds-song-edit div { min-height: 56px; display:flex; align-items:center; gap:16px; border-bottom:1px solid #2C2F33; }"
+    },
+    {
+      "name": "Settings Controls",
+      "description": "Material switches and steel-surface outlined actions on Android; native switches and segmented theme control on iOS. Both use engraved headers and 16sp body copy.",
+      "css": "min-height: 48px; background: var(--plate-surface); border: 1px solid var(--plate-hairline);"
+    },
+    {
+      "name": "Adaptive Navigation",
+      "description": "Android bottom navigation on compact widths becomes a leading navigation rail at 600dp+; iPhone floating bottom tabs become the native floating top tab strip on iPad.",
+      "css": "background: var(--plate-ink-bar); color: var(--plate-on-lit);"
     }
   ],
   "narrative": {
@@ -199,7 +209,8 @@
       "Do expose Android song pencils and drag handles only via the title-bar Edit Songs action.",
       "Do run the score beneath iOS Liquid Glass bars, keep tab icons as grayscale templates, and load ads only after the real view width is known.",
       "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it.",
-      "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves."
+      "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves.",
+      "Do move Android destinations to a navigation rail at 600dp+ and keep the ad inside the remaining content bay."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",

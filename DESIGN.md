@@ -121,7 +121,7 @@ Eight grayscale roles, each with a light (bench-aluminum) and dark (blackened-st
 
 The pitch-pipe screen is a single custom-drawn view (`PitchInstrumentView.kt` / `DPPitchInstrumentView.swift`) with identical geometry on both platforms: face center at 44% of height; ring radius = min(w, h × 0.82) × 0.365; 12 cells on a true circle starting at −90° in 30° steps; cell radius = ring radius × 0.245; the range selector seated in the ring's hole (width = ring × 0.72, row height = ring × 0.145, top at center + ring × 0.20). The nameplate caption sits at the panel's bottom edge.
 
-Screen chrome stacks vertically: action bar (ink-bar) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (ink-bar). Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
+On compact Android widths, screen chrome stacks vertically: action bar (ink-bar) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (ink-bar). At 600dp and wider, the same four destinations move to an ink-bar navigation rail at the leading edge while the content, remove-ads line, and ad slot remain one vertical instrument bay. Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
 
 ## Elevation & Depth
 
@@ -167,9 +167,13 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - Engraved labels: monospace 12sp, 0.14 tracking, secondary ink (`TextAppearance.Plate.SectionHeader`).
 
+### Settings Controls
+
+- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. iOS keeps native switches and its segmented theme control. Destructive/account behavior is unchanged; treatment stays grayscale and never spends the sounding-note glow.
+
 ### Navigation
 
-- Platform-native chrome in plate colors. Android: Material `BottomNavigationView` on the primary-surface (ink-bar) with selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iOS keeps the iOS 26 Liquid Glass tab and navigation bars; the tab icons ship as grayscale template images (label tint) so the glass treatment never morphs or flickers them. The score surface extends under both bars and the system glass samples it directly; only title typography and tint are overridden. Android system bars match `plate-ink-bar`.
+- Platform-native chrome in plate colors. Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+, both on `plate-ink-bar` with the same selector tints (#F2F3F4 checked / #9AA0A6 unchecked). iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. Android system bars match `plate-ink-bar`.
 
 ### Ad Slot
 
