@@ -14,7 +14,9 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.auth
 
 object LoginPrompt {
     internal const val CREDENTIAL_MANAGER_ENABLED = false
@@ -25,9 +27,11 @@ object LoginPrompt {
             GoogleAuthProvider.PROVIDER_ID,
             FacebookAuthProvider.PROVIDER_ID,
         )
+
     fun buildDialog(
         activity: ComponentActivity,
         isHoomiLogout: Boolean,
+        onAuthenticated: () -> Unit = {},
     ): Dialog {
         val dialog = Capture<AlertDialog?>(null)
         lateinit var loginButton: MaterialButton
@@ -44,9 +48,15 @@ object LoginPrompt {
                         showStatus(statusText, R.string.SignInFailed)
                         return@registerForActivityResult
                     }
-                    dialog.get()?.dismiss()
-                    SettingsModel.attachToFirestore()
+                    if (Firebase.auth.currentUser == null) {
+                        showStatus(statusText, R.string.SignInFailed)
+                        return@registerForActivityResult
+                    }
+                    // The application auth listener owns normal attachment.
+                    // This idempotent call only preserves first-login local uploads.
                     SongsModel.get().attachToFirestore(response.isNewUser)
+                    dialog.get()?.dismiss()
+                    onAuthenticated()
                 } else {
                     showStatus(
                         statusText,

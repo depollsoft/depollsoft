@@ -78,8 +78,10 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        logInDialog = LoginPrompt.buildDialog(this, false)
-        logInDialog.setOnDismissListener { loginTrackable.updateTrackers() }
+        logInDialog =
+            LoginPrompt.buildDialog(this, false) {
+                loginTrackable.updateTrackers()
+            }
         this.title = getString(R.string.Settings)
         this.setContentView(R.layout.settingsview)
         UiBinder.bind(
@@ -226,6 +228,11 @@ class SettingsActivity : AppCompatActivity() {
         setupPrivateBuildDiagnostics()
     }
 
+    override fun onResume() {
+        super.onResume()
+        loginTrackable.updateTrackers()
+    }
+
     private fun setupPrivateBuildDiagnostics() {
         val build = BuildConfig.PRIVATE_BUILD_NUMBER
         if (build.isBlank()) return
@@ -252,12 +259,21 @@ class SettingsActivity : AppCompatActivity() {
             if (curUser.providerData.size > 0) {
                 val providerData = curUser.providerData.first()
                 return when (providerData.providerId) {
-                    FacebookAuthProvider.PROVIDER_ID ->
+                    FacebookAuthProvider.PROVIDER_ID -> {
                         providerData.email?.let { "Facebook: $it" } ?: "Facebook account"
-                    GoogleAuthProvider.PROVIDER_ID ->
+                    }
+
+                    GoogleAuthProvider.PROVIDER_ID -> {
                         providerData.email?.let { "Google: $it" } ?: "Google account"
-                    PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
-                    else -> providerData.email ?: "Current User: (${curUser.uid})"
+                    }
+
+                    PhoneAuthProvider.PROVIDER_ID -> {
+                        providerData.phoneNumber!!
+                    }
+
+                    else -> {
+                        providerData.email ?: "Current User: (${curUser.uid})"
+                    }
                 }
             }
             return "Current User: (${curUser.uid})"
