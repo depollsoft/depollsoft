@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T06:49:50.129Z",
+  "generatedAt": "2026-09-02T07:33:01.315Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -150,6 +150,11 @@
       "name": "Adaptive Navigation",
       "description": "Bars are plate surface with one hairline edge and follow the theme. Android bottom navigation becomes a leading rail at 600dp+; iPhone floating tabs become the iPad floating top strip. iOS titles name the screen.",
       "css": "background: var(--plate-surface); border-color: var(--plate-hairline); color: var(--plate-ink);"
+    },
+    {
+      "name": "Home-Screen Widget",
+      "description": "Android launcher widget: the instrument face on a plate panel with the score behind, twelve toggling glass cells around the readout and range selector, rendered from the same tokens and typeface; the picker preview is a real render.",
+      "css": "background: var(--plate-ground); border: 1px solid var(--plate-hairline);"
     }
   ],
   "narrative": {
@@ -206,7 +211,8 @@
       "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves.",
       "Do move Android destinations to a navigation rail at 600dp+ and keep the ad inside the remaining content bay.",
       "Do label the instrument nameplate DIGITAL PITCH PIPE; avoid the redundant CHROMATIC PITCH REFERENCE caption.",
-      "Do keep every bar on plate-surface with a single hairline edge so chrome follows the theme; never a cast dark bezel."
+      "Do keep every bar on plate-surface with a single hairline edge so chrome follows the theme; never a cast dark bezel.",
+      "Do keep touches that start on a cell or the range selector inside the instrument; never let them page tabs."
     ],
     "donts": [
       "Don't introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.",

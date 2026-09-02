@@ -66,6 +66,20 @@
         <item name="cornerRadius">2dp</item>
     </style>
 
+    <style name="Widget.Plate.WidgetHitRow" parent="android:Widget">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="Widget.Plate.WidgetHit" parent="android:Widget">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
     <style name="ShapeAppearance.Plate" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">2dp</item>

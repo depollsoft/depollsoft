@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
@@ -84,6 +85,12 @@ class PitchPerfectApplication : RichApplication() {
         Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Widget cells are pre-rendered bitmaps; redraw them in the new theme.
+        PitchPipeAppWidget.updateWidgets()
+    }
+
     override fun onTerminate() {
         super.onTerminate()
     }
@@ -101,6 +108,7 @@ class PitchPerfectApplication : RichApplication() {
             set(value) {
                 AppCompatDelegate.setDefaultNightMode(value)
                 Preferences.set("pitchperfect.theme", value)
+                PitchPipeAppWidget.updateWidgets()
             }
     }
 }

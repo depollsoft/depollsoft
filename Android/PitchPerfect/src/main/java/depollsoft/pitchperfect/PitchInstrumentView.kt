@@ -462,6 +462,13 @@ class PitchInstrumentView
                     val x = event.getX(pointerIndex)
                     val y = event.getY(pointerIndex)
                     if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                        // A finger on a cell or the range selector belongs to the
+                        // instrument: sliding between notes must never page the tabs.
+                        val onControl =
+                            rangeLowRect.contains(x.toInt(), y.toInt()) ||
+                                rangeHighRect.contains(x.toInt(), y.toInt()) ||
+                                cellAt(x, y) != -1
+                        if (onControl) parent?.requestDisallowInterceptTouchEvent(true)
                         if (rangeLowRect.contains(x.toInt(), y.toInt())) {
                             if (model?.isFromFToF != false) {
                                 model?.isFromFToF = false
@@ -518,6 +525,7 @@ class PitchInstrumentView
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     if (!toggleMode) touchTracker.clear()
+                    parent?.requestDisallowInterceptTouchEvent(false)
                     invalidate()
                     return true
                 }

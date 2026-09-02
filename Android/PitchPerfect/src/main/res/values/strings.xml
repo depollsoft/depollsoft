@@ -39,6 +39,8 @@
     <string name="LogInInfo">Log in to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
     <string name="widget_name">Pitch Pipe</string>
+    <string name="widget_description">The twelve-note pitch pipe on your home screen. Tap a cell to sound it, tap again to stop.</string>
+    <string name="widget_open_app">Open Pitch Perfect</string>
     <string name="MoreLogins"><u>More login options</u></string>
     <string name="SkipLogin">Skip</string>
     <string name="LoginTitle">Log in to Pitch Perfect</string>

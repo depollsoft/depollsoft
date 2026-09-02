@@ -157,7 +157,8 @@ class PitchPerfectActivity : AppCompatActivity() {
         preparingMenu = true
         try {
             menu.clear()
-            val mi = MenuInflater(this)
+            // AppCompat's inflater honors app:showAsAction; the framework one ignores it.
+            val mi = menuInflater
             mi.inflate(R.menu.mainmenu, menu)
 
             val settingsItem = menu.findItem(R.id.settingsMenuItem)
@@ -168,7 +169,7 @@ class PitchPerfectActivity : AppCompatActivity() {
             }
 
             if (selectedPage == 3) {
-                settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+                // The gear stays a visible action on every tab, as on iOS.
                 mi.inflate(R.menu.songsmenu, menu)
                 val songs = resolveSongListFragment()
                 val editItem = menu.findItem(R.id.editSongsMenuItem)

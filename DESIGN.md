@@ -136,7 +136,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - **Resting:** surface-filled circle, 1.5px hairline rim, 1px anode ring at 86% radius, engraved label (naturals: full-size letter in ink; accidentals: smaller "♯/♭" glyph in secondary ink).
 - **Sounding:** fills with `plate-lit`, 3px lit rim, bloom underneath, label flips to `plate-on-lit`; opacity breathes with the 4s cycle.
-- **Behavior:** press-and-hold to sound; true multi-touch lets each finger own a cell independently so chords remain sounding as other fingers release. Sliding one finger retunes only that pointer; toggle mode latches. Only rendered state changes — no ripple, no platform ink.
+- **Behavior:** press-and-hold to sound; true multi-touch lets each finger own a cell independently so chords remain sounding as other fingers release. Sliding one finger retunes only that pointer; toggle mode latches. A touch that begins on a cell or the range selector belongs to the instrument and never pages the tabs; a drag on the empty panel still does. Only rendered state changes — no ripple, no platform ink.
 
 ### Range Selector (machined)
 
@@ -160,6 +160,11 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - Steel, not accent: `plate-surface` background with `plate-ink` icon, 16dp margin, bottom-end.
 
+### Home-Screen Widget (Android)
+
+- The instrument's face mounted on the launcher: a plate panel (`plate-ground`, 1px hairline, system corner radius) with the score tiled behind, twelve glass cells ringing the perimeter clockwise from C, the hole's readout in the middle, and the two-row machined range selector beneath it. Cells, readout, and selector are rendered by `PitchPipeWidgetRenderer` with the same tokens, geometry, and Oswald engraving as `PitchInstrumentView`, and re-render when the system theme changes.
+- A widget cannot hold, so cells toggle: tap to sound, tap to stop; the sounding cell lights exactly as in the app and the readout shows note and frequency (interval name for two notes). The range selector switches octave and silences the ring, as in the app. The readout opens the app. The picker preview is a real render of the widget.
+
 ### Section Headers
 
 - Engraved labels: monospace 12sp, 0.14 tracking, secondary ink (`TextAppearance.Plate.SectionHeader`).
@@ -171,7 +176,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 ### Navigation
 
 - **The Continuous-Plate Rule.** Bars are part of the plate, never a cast bezel: every bar sits on `plate-surface`, separated from the panel by one 1px `plate-hairline` edge, with type and icons in `plate-ink`. Bars therefore follow the theme like everything else; the only near-black in light mode is a sounding note.
-- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. System status and navigation bars match `plate-surface` with theme-appropriate icon brightness. The Android app bar carries the nameplate "Pitch Perfect"; the bottom nav labels the section.
+- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. System status and navigation bars match `plate-surface` with theme-appropriate icon brightness. The Android app bar carries the nameplate "Pitch Perfect" and always shows the Settings gear as a visible action (as on iOS); the bottom nav labels the section.
 - iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip, which suppresses child titles by system design. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. iOS navigation titles name the screen — Pitch Pipe, Notes, Keys, Songs, Settings, Add Song / Edit Song — and Keys carries its Major/Minor control in the leading bar slot.
 
 ### Ad Slot

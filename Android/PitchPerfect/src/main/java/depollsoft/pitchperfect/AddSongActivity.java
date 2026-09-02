@@ -147,7 +147,7 @@ public class AddSongActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         super.onPrepareOptionsMenu(menu);
-        MenuInflater mi = new MenuInflater(this);
+        MenuInflater mi = getMenuInflater();
         mi.inflate(R.menu.songeditmenu, menu);
 
         menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
