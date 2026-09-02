@@ -26,6 +26,7 @@
         <item name="actionBarStyle">@style/Widget.Plate.ActionBar</item>
         <item name="actionBarTheme">@style/ThemeOverlay.Plate.ActionBar</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
+        <item name="alertDialogTheme">@style/AlertDialogTheme</item>
     </style>
 
     <style name="Widget.Plate.ActionBar" parent="Widget.MaterialComponents.ActionBar.Surface">
@@ -69,6 +70,7 @@
     <style name="Widget.Plate.WidgetAbsoluteHit" parent="android:Widget">
         <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">1dp</item>
+        <item name="android:scaleType">fitCenter</item>
     </style>
 
     <style name="Widget.Plate.WidgetHitRow" parent="android:Widget">
@@ -83,6 +85,12 @@
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
         <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="AlertDialogTheme" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="colorPrimary">@color/plate_ink</item>
+        <item name="colorAccent">@color/plate_ink</item>
+        <item name="android:textColorPrimary">@color/plate_ink</item>
     </style>
 
     <style name="ShapeAppearance.Plate" parent="ShapeAppearance.MaterialComponents.SmallComponent">
