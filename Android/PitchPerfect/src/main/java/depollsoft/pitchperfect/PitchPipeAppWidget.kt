@@ -172,7 +172,7 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         val originX = (widgetWidth - face) / 2f
         val originY = (widgetHeight - face) / 2f
         val centerX = originX + face / 2f
-        val centerY = originY + face * 0.43f
+        val centerY = originY + face * PitchPipeWidgetRenderer.FACE_CENTER_Y_FRACTION
         val ring = face * 0.365f
         val step = 360.0 / count.coerceAtLeast(1)
         val start = -90.0 + step / 2.0

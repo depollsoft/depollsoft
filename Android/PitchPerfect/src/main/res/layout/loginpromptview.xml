@@ -45,26 +45,10 @@
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/email_login_button"
+        android:id="@+id/login_button"
         style="@style/Widget.Plate.SettingsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/ContinueWithEmail" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/google_login_button"
-        style="@style/Widget.Plate.SettingsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/ContinueWithGoogle" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/facebook_login_button"
-        style="@style/Widget.Plate.SettingsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/ContinueWithFacebook" />
+        android:text="@string/ChooseLoginMethod" />
 </LinearLayout>

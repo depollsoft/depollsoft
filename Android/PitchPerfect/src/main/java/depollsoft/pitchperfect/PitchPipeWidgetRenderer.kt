@@ -21,6 +21,9 @@ import kotlin.math.sin
 
 /** Draws the launcher widget as the same circular instrument used in the app. */
 object PitchPipeWidgetRenderer {
+    internal const val FACE_CENTER_Y_FRACTION = 0.48f
+    private const val FOOTER_BASELINE_FRACTION = 0.97f
+
     private class Palette(
         context: Context,
     ) {
@@ -70,7 +73,7 @@ object PitchPipeWidgetRenderer {
         drawScore(context, canvas, p.inkSecondary, width, height)
 
         val cx = width / 2f
-        val cy = height * 0.43f
+        val cy = height * FACE_CENTER_Y_FRACTION
         val ring = min(width.toFloat(), height * 0.82f) * 0.365f
         val radius = ring * 0.225f
 
@@ -94,7 +97,7 @@ object PitchPipeWidgetRenderer {
         display.color = withAlpha(p.inkSecondary, 165)
         display.textSize = ring * 0.08f
         display.letterSpacing = 0.28f
-        canvas.drawText("DIGITAL PITCH PIPE", cx, height * 0.91f, display)
+        canvas.drawText("DIGITAL PITCH PIPE", cx, height * FOOTER_BASELINE_FRACTION, display)
         display.letterSpacing = 0f
         return bmp
     }
