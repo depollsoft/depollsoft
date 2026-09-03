@@ -1,15 +1,11 @@
 package depollsoft.pitchperfect
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
@@ -53,29 +49,20 @@ class PitchPerfectApplication : RichApplication() {
         extraInit()
     }
 
-    private var userDoc: DocumentReference? = null
+    private val authAttachment = AuthAttachmentState()
 
     private fun extraInit() {
-        var registration: ListenerRegistration? = null
         Firebase.auth.addAuthStateListener { auth ->
             val user = auth.currentUser
-            if (registration != null) {
-                registration!!.remove()
-                SongsModel.get().detachFromFirestore()
-                SettingsModel.detachFromFirestore()
+            if (!authAttachment.transitionTo(user?.uid)) {
+                return@addAuthStateListener
             }
+
+            SongsModel.get().detachFromFirestore()
+            SettingsModel.detachFromFirestore()
             if (user != null) {
                 SongsModel.get().attachToFirestore()
                 SettingsModel.attachToFirestore()
-                userDoc = Firebase.firestore.document("users/${user.uid}")
-                registration =
-                    userDoc!!.addSnapshotListener { snapshot, error ->
-                        if (error != null) {
-                            Log.e("depollsoft.pitchperfect", "Failed to listen to user document", error)
-                        }
-                    }
-            } else {
-                userDoc = null
             }
         }
         val tags: MutableSet<String> = mutableSetOf()

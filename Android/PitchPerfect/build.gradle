@@ -1,3 +1,7 @@
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationScope
+import depollsoft.instrumentation.FirebaseUiNullEmailClassVisitorFactory
+
 buildscript {
     repositories {
         google()
@@ -166,6 +170,16 @@ android {
                 }
             }
         }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.instrumentation.transformClassesWith(
+                FirebaseUiNullEmailClassVisitorFactory,
+                InstrumentationScope.ALL) { }
+        variant.instrumentation.setAsmFramesComputationMode(
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
     }
 }
 

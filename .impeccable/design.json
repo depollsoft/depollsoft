@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-03T03:26:25.579Z",
+  "generatedAt": "2026-09-03T06:07:08.212Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -158,7 +158,7 @@
     },
     {
       "name": "Authentication",
-      "description": "Android’s optional-sync explanation hands off to FirebaseUI 9.1.1’s own Email/Google/Facebook method picker. Credential Manager is off; the reusable handoff dialog resets stale busy/status state on every show. Crashlytics reports public and private builds. Post-auth sync is idempotent per user.",
+      "description": "Android uses FirebaseUI 9.1.1’s own Email/Google/Facebook picker. A fail-closed AGP patch permits nullable email at FirebaseUI’s CredentialSaveActivity boundary while Credential Manager is disabled. Firestore attachment transitions only when UID changes, preventing same-user listener churn and snapshot replay. Crashlytics reports public and private builds.",
       "css": "background: var(--plate-ground); color: var(--plate-ink); min-height: 48px;"
     }
   ],
