@@ -15,6 +15,7 @@
         app:itemGravity="center"
         app:itemIconTint="@color/bottom_nav_item"
         app:itemTextColor="@color/bottom_nav_item"
+        app:labelVisibilityMode="labeled"
         app:menu="@menu/navigationmenu" />
 
     <LinearLayout

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-03T17:00:13.059Z",
+  "generatedAt": "2026-09-03T18:34:21.944Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -148,7 +148,7 @@
     },
     {
       "name": "Adaptive Navigation",
-      "description": "Bars follow the plate theme. Android retains all four lightweight pages, guards ViewPager↔navigation feedback, switches without dual-page animation, shares/caches static score artwork, and cancels hidden note animation.",
+      "description": "Bars follow the plate theme. Android retains all four pages, guards ViewPager↔navigation feedback, uses one coordinated page animation, keeps every label visible with no item shifting, and shares/caches score artwork.",
       "css": "background: var(--plate-surface); border-color: var(--plate-hairline); color: var(--plate-ink);"
     },
     {
@@ -158,7 +158,7 @@
     },
     {
       "name": "Authentication",
-      "description": "Android uses FirebaseUI 9.1.1’s Email/Google/Facebook picker with a fail-closed nullable-email patch. UID-only attachment, guarded restore, and per-snapshot batching prevent Firestore writeback/replay; private logs report startup, frames, sync, ads, and logout without PII. Crashlytics covers public/private.",
+      "description": "Android uses FirebaseUI 9.1.1 with its nullable-email patch. UID-only attachment, stale-callback rejection, guarded restore, and per-snapshot batching prevent Firestore replay/writeback. Private PII-free logs cover startup, frames, sync, foreground-idle ads, and logout.",
       "css": "background: var(--plate-ground); color: var(--plate-ink); min-height: 48px;"
     }
   ],

@@ -40,13 +40,15 @@ class SongsModel private constructor() {
         if (store) {
             storeAll()
         }
-        listenForSongLists()
+        listenForSongLists(user.uid)
     }
 
-    private fun listenForSongLists() {
+    private fun listenForSongLists(userId: String) {
         val listener =
             userDoc?.collection("songLists")?.addSnapshotListener { snapshot, error ->
-                if (error != null) return@addSnapshotListener
+                if (error != null || Firebase.auth.currentUser?.uid != userId) {
+                    return@addSnapshotListener
+                }
                 val changes = snapshot?.documentChanges ?: return@addSnapshotListener
                 val startedAt = SystemClock.elapsedRealtime()
                 var updatedLists = songLists

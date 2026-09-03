@@ -58,8 +58,10 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:itemHorizontalTranslationEnabled="false"
         app:itemIconTint="@color/bottom_nav_item"
         app:itemTextColor="@color/bottom_nav_item"
+        app:labelVisibilityMode="labeled"
         app:menu="@menu/navigationmenu">
 
     </com.google.android.material.bottomnavigation.BottomNavigationView>
