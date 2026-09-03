@@ -2,7 +2,7 @@ package depollsoft.pitchperfect
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -89,13 +89,13 @@ class PitchInstrumentView
                 typeface = Typeface.MONOSPACE
             }
         private val bloomPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val heritageBitmap =
-            runCatching { BitmapFactory.decodeResource(resources, R.drawable.panobackground) }.getOrNull()
+        private val heritageBitmap = HeritageArtwork.get(resources)
         private val heritagePaint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 alpha = 26
                 colorFilter = PorterDuffColorFilter(inkSecondary, PorterDuff.Mode.SRC_IN)
             }
+        private var staticBackground: Bitmap? = null
 
         private var cellCenters = emptyArray<FloatArray?>()
         private var cellRadius = 0f
@@ -190,7 +190,31 @@ class PitchInstrumentView
                 rangeLowRect.right,
                 rangeLowRect.bottom + rowHeight,
             )
+            rebuildStaticBackground(w, h)
             touchHelper.invalidateRoot()
+        }
+
+        private fun rebuildStaticBackground(
+            width: Int,
+            height: Int,
+        ) {
+            staticBackground?.recycle()
+            staticBackground = null
+            if (width <= 0 || height <= 0) return
+
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val backgroundCanvas = Canvas(bitmap)
+            backgroundCanvas.drawColor(ground)
+            strokePaint.color = hairline
+            strokePaint.strokeWidth = 1f
+            var grainY = 0f
+            while (grainY < height) {
+                strokePaint.alpha = 8 + ((grainY.toInt() * 31) % 14)
+                backgroundCanvas.drawLine(0f, grainY, width.toFloat(), grainY, strokePaint)
+                grainY += 4f
+            }
+            drawHeritageBackground(backgroundCanvas)
+            staticBackground = bitmap
         }
 
         private fun anyPlaying(): Boolean = notes().any { it.isPlaying }
@@ -217,34 +241,26 @@ class PitchInstrumentView
                         }
                 }
             } else {
-                breatheAnimator?.cancel()
-                breatheAnimator = null
-                breathePhase = 0f
+                stopBreathing()
             }
         }
 
-        override fun onDetachedFromWindow() {
-            super.onDetachedFromWindow()
+        private fun stopBreathing() {
             breatheAnimator?.cancel()
             breatheAnimator = null
+            breathePhase = 0f
+        }
+
+        override fun onDetachedFromWindow() {
+            stopBreathing()
+            super.onDetachedFromWindow()
         }
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val currentNotes = notes()
-            canvas.drawColor(ground)
-
-            // Brushed-metal grain: fine directional noise across the whole panel.
-            strokePaint.color = hairline
-            strokePaint.strokeWidth = 1f
-            var grainY = 0f
-            while (grainY < height) {
-                strokePaint.alpha = 8 + ((grainY.toInt() * 31) % 14)
-                canvas.drawLine(0f, grainY, width.toFloat(), grainY, strokePaint)
-                grainY += 4f
-            }
-
-            drawHeritageBackground(canvas)
+            staticBackground?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+                ?: canvas.drawColor(ground)
 
             val breath = 0.82f + 0.18f * sin(breathePhase)
 
@@ -547,6 +563,7 @@ class PitchInstrumentView
 
         fun stopAll() {
             stopEverything()
+            stopBreathing()
             invalidate()
         }
 

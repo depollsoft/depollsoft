@@ -3,9 +3,9 @@ package depollsoft.pitchperfect
 import android.app.Dialog
 import android.content.Intent
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.media.AudioManager
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.*
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +20,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.wearable.Wearable
 import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.Firebase
@@ -34,6 +35,23 @@ class PitchPerfectActivity : AppCompatActivity() {
     private var preparingMenu: Boolean = false
     private var selectedPage: Int = 0
     private var songListFragment: SongListFragment? = null
+    private var frameMonitor: FramePerformanceMonitor? = null
+    private var adRequested = false
+    private var adReady = false
+    private val adLoadRunnable =
+        Runnable {
+            if (isDestroyed || !adsShouldShow || adRequested) return@Runnable
+            adRequested = true
+            val startedAt = SystemClock.elapsedRealtime()
+            MobileAds.initialize(applicationContext) {
+                runOnUiThread {
+                    if (isDestroyed) return@runOnUiThread
+                    adReady = true
+                    loadBanner()
+                    PerformanceDiagnostics.logDuration("Ads initialized and requested", startedAt)
+                }
+            }
+        }
 
     private fun resolveSongListFragment(): SongListFragment? =
         songListFragment
@@ -46,6 +64,7 @@ class PitchPerfectActivity : AppCompatActivity() {
      * Called when the activity is first created.
      */
     public override fun onCreate(savedInstanceState: Bundle?) {
+        val startedAt = SystemClock.elapsedRealtime()
         super.onCreate(savedInstanceState)
 
         logInDialog = LoginPrompt.buildDialog(this, false)
@@ -74,6 +93,7 @@ class PitchPerfectActivity : AppCompatActivity() {
         bottomNavigation = findViewById(R.id.bottomNavigation)
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
 
+        viewPager.offscreenPageLimit = 3
         viewPager.adapter =
             object : FragmentStateAdapter(this) {
                 override fun createFragment(position: Int): Fragment =
@@ -91,9 +111,11 @@ class PitchPerfectActivity : AppCompatActivity() {
         viewPager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
-                    selectedPage = position
-                    Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
-                    bottomNavigation.selectedItemId =
+                    if (selectedPage != position) {
+                        selectedPage = position
+                        Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
+                    }
+                    val itemId =
                         when (position) {
                             0 -> R.id.pitchpipe_item
                             1 -> R.id.notes_item
@@ -101,21 +123,28 @@ class PitchPerfectActivity : AppCompatActivity() {
                             3 -> R.id.songs_item
                             else -> R.id.pitchpipe_item
                         }
+                    if (bottomNavigation.selectedItemId != itemId) {
+                        bottomNavigation.selectedItemId = itemId
+                    }
                 }
             },
         )
 
         bottomNavigation.setOnItemSelectedListener {
-            viewPager.setCurrentItem(
+            val position =
                 when (it.itemId) {
                     R.id.pitchpipe_item -> 0
                     R.id.notes_item -> 1
                     R.id.keys_item -> 2
                     R.id.songs_item -> 3
                     else -> 0
-                },
-                true,
-            )
+                }
+            if (viewPager.currentItem != position) {
+                // These pages draw complex custom instruments. Switching
+                // immediately avoids rendering two full pages during a swipe.
+                viewPager.setCurrentItem(position, false)
+            }
+            scheduleAdLoadAfterIdle()
             true
         }
 
@@ -132,12 +161,15 @@ class PitchPerfectActivity : AppCompatActivity() {
 
         PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
 
-        this.onConfigurationChanged(Resources.getSystem().configuration)
+        reserveBannerSpace()
+        scheduleAdLoadAfterIdle()
+        PerformanceDiagnostics.logDuration("Main activity created", startedAt)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        loadBanner()
+        reserveBannerSpace()
+        if (adReady && adsShouldShow) loadBanner()
     }
 
     override fun onRestoreInstanceState(state: Bundle) {
@@ -202,7 +234,21 @@ class PitchPerfectActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (PerformanceDiagnostics.enabled) {
+            frameMonitor = FramePerformanceMonitor("Main").also { it.start(window) }
+        }
+    }
+
+    override fun onStop() {
+        frameMonitor?.stop(window)
+        frameMonitor = null
+        super.onStop()
+    }
+
     override fun onDestroy() {
+        window.decorView.removeCallbacks(adLoadRunnable)
         super.onDestroy()
     }
 
@@ -225,15 +271,25 @@ class PitchPerfectActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadBanner() {
+    private fun scheduleAdLoadAfterIdle() {
+        if (adRequested || !adsShouldShow) return
+        window.decorView.removeCallbacks(adLoadRunnable)
+        window.decorView.postDelayed(adLoadRunnable, AD_INITIALIZATION_DELAY_MS)
+    }
+
+    private fun reserveBannerSpace() {
         val adContainer = findViewById<FrameLayout>(R.id.adContainer)
-        adContainer.removeAllViews()
         val reservedSize = getAdSize()
-        // Reserve the slot height before the ad loads so the layout never reflows.
         adContainer.layoutParams =
             adContainer.layoutParams.apply {
                 height = reservedSize.getHeightInPixels(this@PitchPerfectActivity)
             }
+    }
+
+    private fun loadBanner() {
+        val adContainer = findViewById<FrameLayout>(R.id.adContainer)
+        adContainer.removeAllViews()
+        reserveBannerSpace()
         val adView = AdView(this)
         adContainer.addView(adView)
         // Create an ad request. Check your logcat output for the hashed device ID
@@ -265,6 +321,8 @@ class PitchPerfectActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val AD_INITIALIZATION_DELAY_MS = 5_000L
+
         @JvmField
         internal var handlingResult: Boolean = false
     }
