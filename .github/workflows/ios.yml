@@ -488,13 +488,25 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Upload test results
+      - name: Export remaining unit coverage JSON
+        if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+        run: |
+          for bundle in *-results.xcresult; do
+            [ -d "$bundle" ] || continue
+            output="${bundle%-results.xcresult}-coverage.json"
+            "${{ steps.select_xcode.outputs.xcrun }}" xccov view --report --json \
+              "$bundle" > "$output" || true
+          done
+
+      - name: Upload test summaries
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-test-results
           path: |
-            iOS/*.xcresult
+            iOS/*-coverage.json
             iOS/*-coverage.txt
             iOS/*-junit.xml
           retention-days: 14
@@ -507,6 +519,21 @@ jobs:
           path: iOS/*-junit.xml
           reporter: java-junit
           fail-on-error: true
+
+      - name: Archive raw unit test results on failure
+        if: failure()
+        run: |
+          bundles=( *-results.xcresult )
+          [ -d "${bundles[0]}" ] || exit 0
+          tar -czf ios-unit-xcresults.tgz -- "${bundles[@]}"
+
+      - name: Upload raw unit test results on failure
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: failure()
+        with:
+          name: ios-unit-xcresults
+          path: iOS/ios-unit-xcresults.tgz
+          retention-days: 7
 
       - name: Find existing PR comment
         if: github.event_name == 'pull_request'
@@ -763,13 +790,23 @@ jobs:
             s.write('\n'.join(summary) + '\n')
           PY
 
-      - name: Upload UI test results
+      - name: Export UI coverage JSON
+        if: always()
+        run: |
+          for bundle in *-uitest-results.xcresult; do
+            [ -d "$bundle" ] || continue
+            output="${bundle%-results.xcresult}-coverage.json"
+            /usr/bin/xcrun xccov view --report --json \
+              "$bundle" > "$output" || true
+          done
+
+      - name: Upload UI test summaries
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
         with:
           name: ios-uitest-results
           path: |
-            iOS/*-uitest-results.xcresult
+            iOS/*-uitest-coverage.json
             iOS/*-uitest-junit.xml
           retention-days: 7
 
@@ -781,6 +818,21 @@ jobs:
           path: iOS/*-uitest-junit.xml
           reporter: java-junit
           fail-on-error: true
+
+      - name: Archive raw UI test results on failure
+        if: failure()
+        run: |
+          bundles=( *-uitest-results.xcresult )
+          [ -d "${bundles[0]}" ] || exit 0
+          tar -czf ios-uitest-xcresults.tgz -- "${bundles[@]}"
+
+      - name: Upload raw UI test results on failure
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: failure()
+        with:
+          name: ios-uitest-xcresults
+          path: iOS/ios-uitest-xcresults.tgz
+          retention-days: 7
 
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
@@ -830,22 +882,14 @@ jobs:
           import glob
           import os
           import json
-          import subprocess
-
-          xcrun = '/usr/bin/xcrun'
-
-          def xccov_stats(xcresult: str) -> tuple:
-            """Returns (covered_lines, total_lines, percentage)"""
-            if not os.path.isdir(xcresult):
+          def coverage_stats(report: str) -> tuple:
+            """Returns (covered_lines, total_lines, percentage)."""
+            if not os.path.isfile(report):
               return (0, 0, 0.0)
             try:
-              out = subprocess.check_output(
-                [xcrun, 'xccov', 'view', '--report', '--json', xcresult],
-                stderr=subprocess.DEVNULL, text=True
-              )
-              data = json.loads(out)
+              with open(report) as f:
+                data = json.load(f)
               cov = data.get('lineCoverage', 0)
-              # Try to get line counts from targets
               covered = 0
               total = 0
               for target in data.get('targets', []):
@@ -853,18 +897,16 @@ jobs:
                   covered += file.get('coveredLines', 0)
                   total += file.get('executableLines', 0)
               if total == 0:
-                # Fallback: estimate from percentage
                 return (0, 0, cov * 100.0)
               return (covered, total, cov * 100.0)
             except Exception as e:
-              print(f"Error processing {xcresult}: {e}")
+              print(f"Error processing {report}: {e}")
               return (0, 0, 0.0)
 
-          # Find all xcresult bundles (artifacts downloaded to iOS/ prefix)
           unit_results = sorted(glob.glob(
-            'iOS/unit-test-results/**/*-results.xcresult', recursive=True))
+            'iOS/unit-test-results/**/*-coverage.json', recursive=True))
           ui_results = sorted(glob.glob(
-            'iOS/ui-test-results/**/*-uitest-results.xcresult',
+            'iOS/ui-test-results/**/*-uitest-coverage.json',
             recursive=True))
 
           summary = []
@@ -880,19 +922,19 @@ jobs:
           unit_coverages = []
           ui_coverages = []
 
-          for xcresult in unit_results:
-            scheme = os.path.basename(xcresult).replace('-results.xcresult', '')
-            covered, total, pct = xccov_stats(xcresult)
+          for report in unit_results:
+            scheme = os.path.basename(report).replace('-coverage.json', '')
+            covered, total, pct = coverage_stats(report)
             unit_total_covered += covered
             unit_total_lines += total
             unit_coverages.append(pct)
             summary.append(
               f'| Unit | {scheme} | {covered} | {total} | {pct:.2f}% |')
 
-          for xcresult in ui_results:
-            scheme = os.path.basename(xcresult).replace(
-              '-uitest-results.xcresult', '')
-            covered, total, pct = xccov_stats(xcresult)
+          for report in ui_results:
+            scheme = os.path.basename(report).replace(
+              '-uitest-coverage.json', '')
+            covered, total, pct = coverage_stats(report)
             ui_total_covered += covered
             ui_total_lines += total
             ui_coverages.append(pct)
