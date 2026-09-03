@@ -47,12 +47,8 @@
     <string name="LoginTitle">Log in to Pitch Perfect</string>
     <string name="LoginExplanation"><![CDATA[<b>Back up and sync</b><br/>Choose a sign-in method to keep your song list and settings available across your devices. You can keep using Pitch Perfect without an account.]]></string>
     <string name="HoomiLoginExplanation"><![CDATA[<b>Choose a new sign-in method</b><br/>Hoomi sign-in has been discontinued. Sign in again to resume backup and sync, or continue without an account.]]></string>
-    <string name="ContinueWithEmail">Continue with email</string>
-    <string name="ContinueWithGoogle">Continue with Google</string>
-    <string name="ContinueWithFacebook">Continue with Facebook</string>
-    <string name="OpeningEmail">Opening email sign-in…</string>
-    <string name="OpeningGoogle">Opening Google sign-in…</string>
-    <string name="ConnectingFacebook">Connecting to Facebook…</string>
+    <string name="ChooseLoginMethod">Choose sign-in method</string>
+    <string name="OpeningSignIn">Opening secure sign-in…</string>
     <string name="SignInFailed">Sign-in didn\'t finish. Check your connection and try again.</string>
     <string name="SignInCanceled">Sign-in canceled. Your local songs are unchanged.</string>
     <string name="RemoveAds"><u>Tired of Ads?</u></string>
