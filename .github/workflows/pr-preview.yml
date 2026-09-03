@@ -223,19 +223,18 @@ jobs:
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            iOS/SourcePackages
-            ~/Library/Caches/org.swift.swiftpm
+          path: ~/Library/Caches/org.swift.swiftpm
           key: >-
-            preview-spm-v2-${{ runner.os }}-${{
+            preview-spm-v3-${{ runner.os }}-${{
               hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
             }}
 
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          # A restored cache can carry package checkouts without their binary
-          # xcframeworks; resolve reports success but the build then fails.
+          # SourcePackages/workspace-state.json embeds absolute paths. Never
+          # reuse it across self-hosted runners with different work roots.
+          rm -rf SourcePackages
           for attempt in 1 2; do
             xcodebuild -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
