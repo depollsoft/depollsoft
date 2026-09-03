@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-02T22:35:45.611Z",
+  "generatedAt": "2026-09-03T02:28:59.473Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -158,7 +158,7 @@
     },
     {
       "name": "Authentication",
-      "description": "Android uses FirebaseUI 9.1.1 with visible AuthTheme, explicit providers, Credential Manager off for null-email safety, live cancel/error retry, explicit Settings auth refresh, and idempotent per-user Firestore attachment to prevent duplicate listeners/choppy UI.",
+      "description": "Android uses an app-owned three-provider prompt. Email/Google launch direct one-provider FirebaseUI 9.1.1 flows with Credential Manager off; Facebook SDK 18.3 exchanges its token directly with Firebase Auth and owns visible busy/cancel/error/retry states. Post-auth sync is idempotent per user.",
       "css": "background: var(--plate-ground); color: var(--plate-ink); min-height: 48px;"
     }
   ],

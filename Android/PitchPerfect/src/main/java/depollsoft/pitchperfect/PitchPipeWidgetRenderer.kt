@@ -114,7 +114,18 @@ object PitchPipeWidgetRenderer {
                 textAlign = Paint.Align.CENTER
                 typeface = p.display
             }
-        drawCell(canvas, note, size / 2f, size / 2f, size * 0.44f, p, fill, stroke, text)
+        drawCell(
+            canvas,
+            note,
+            size / 2f,
+            size / 2f,
+            size * 0.44f,
+            p,
+            fill,
+            stroke,
+            text,
+            bloomRadius = size / 2f,
+        )
         return bmp
     }
 
@@ -148,12 +159,20 @@ object PitchPipeWidgetRenderer {
         fill: Paint,
         stroke: Paint,
         text: Paint,
+        bloomRadius: Float = radius * 2.4f,
     ) {
         val playing = note.isPlaying
         if (playing) {
             fill.shader =
-                RadialGradient(cx, cy, radius * 2.4f, intArrayOf(withAlpha(p.lit, 150), withAlpha(p.lit, 0)), null, Shader.TileMode.CLAMP)
-            canvas.drawCircle(cx, cy, radius * 2.4f, fill)
+                RadialGradient(
+                    cx,
+                    cy,
+                    bloomRadius,
+                    intArrayOf(withAlpha(p.lit, 150), withAlpha(p.lit, 0)),
+                    null,
+                    Shader.TileMode.CLAMP,
+                )
+            canvas.drawCircle(cx, cy, bloomRadius, fill)
             fill.shader = null
         }
         fill.color = if (playing) p.lit else p.surface

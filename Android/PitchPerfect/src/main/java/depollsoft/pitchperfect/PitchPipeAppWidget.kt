@@ -13,6 +13,7 @@ import android.util.SizeF
 import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
@@ -96,6 +97,11 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         val facePx = (faceDp * density).roundToInt().coerceAtLeast(1)
         val renderContext = themedContext(context)
         val views = RemoteViews(context.packageName, R.layout.pitchpipewidgetview)
+        views.setInt(
+            R.id.widgetRoot,
+            "setBackgroundColor",
+            ContextCompat.getColor(renderContext, R.color.plate_ground),
+        )
         views.setImageViewBitmap(
             R.id.widgetFace,
             PitchPipeWidgetRenderer.face(
