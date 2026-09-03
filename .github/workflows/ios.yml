@@ -139,17 +139,16 @@ jobs:
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            iOS/SourcePackages
-            ~/Library/Caches/org.swift.swiftpm
-          key: spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            spm-${{ runner.os }}-
+            spm-v2-${{ runner.os }}-
 
       - name: Resolve SPM dependencies
         run: |
-          # A restored cache can carry package checkouts without their binary
-          # xcframeworks; resolve reports success but the build then fails.
+          # SourcePackages/workspace-state.json embeds absolute paths. Never
+          # reuse it across self-hosted runners with different work roots.
+          rm -rf SourcePackages
           for attempt in 1 2; do
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
@@ -637,17 +636,16 @@ jobs:
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            iOS/SourcePackages
-            ~/Library/Caches/org.swift.swiftpm
-          key: spm-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
-            spm-${{ runner.os }}-
+            spm-v2-${{ runner.os }}-
 
       - name: Resolve SPM dependencies
         run: |
-          # A restored cache can carry package checkouts without their binary
-          # xcframeworks; resolve reports success but the build then fails.
+          # SourcePackages/workspace-state.json embeds absolute paths. Never
+          # reuse it across self-hosted runners with different work roots.
+          rm -rf SourcePackages
           for attempt in 1 2; do
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
