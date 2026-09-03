@@ -30,13 +30,6 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <depollsoft.pitchperfect.CropFillImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:adjustViewBounds="true"
-                android:scaleType="centerCrop"
-                app:srcCompat="@color/plate_ground" />
-
             <depollsoft.pitchperfect.HeritageScoreView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

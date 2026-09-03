@@ -2,15 +2,11 @@ package depollsoft.pitchperfect
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.graphics.RadialGradient
 import android.graphics.Rect
-import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.os.Bundle
@@ -58,7 +54,6 @@ class PitchInstrumentView
             runCatching { ContextCompat.getColor(context, resourceId) }
                 .getOrElse { Color.parseColor(fallback) }
 
-        private val ground = colorOrFallback(R.color.plate_ground, "#0E0F10")
         private val surface = colorOrFallback(R.color.plate_surface, "#16181A")
         private val ink = colorOrFallback(R.color.plate_ink, "#D9DBDD")
         private val inkSecondary = colorOrFallback(R.color.plate_ink_secondary, "#898D92")
@@ -89,14 +84,6 @@ class PitchInstrumentView
                 typeface = Typeface.MONOSPACE
             }
         private val bloomPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val heritageBitmap = HeritageArtwork.get(resources)
-        private val heritagePaint =
-            Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                alpha = 26
-                colorFilter = PorterDuffColorFilter(inkSecondary, PorterDuff.Mode.SRC_IN)
-            }
-        private var staticBackground: Bitmap? = null
-
         private var cellCenters = emptyArray<FloatArray?>()
         private var cellRadius = 0f
         private var ringRadius = 0f
@@ -190,31 +177,7 @@ class PitchInstrumentView
                 rangeLowRect.right,
                 rangeLowRect.bottom + rowHeight,
             )
-            rebuildStaticBackground(w, h)
             touchHelper.invalidateRoot()
-        }
-
-        private fun rebuildStaticBackground(
-            width: Int,
-            height: Int,
-        ) {
-            staticBackground?.recycle()
-            staticBackground = null
-            if (width <= 0 || height <= 0) return
-
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val backgroundCanvas = Canvas(bitmap)
-            backgroundCanvas.drawColor(ground)
-            strokePaint.color = hairline
-            strokePaint.strokeWidth = 1f
-            var grainY = 0f
-            while (grainY < height) {
-                strokePaint.alpha = 8 + ((grainY.toInt() * 31) % 14)
-                backgroundCanvas.drawLine(0f, grainY, width.toFloat(), grainY, strokePaint)
-                grainY += 4f
-            }
-            drawHeritageBackground(backgroundCanvas)
-            staticBackground = bitmap
         }
 
         private fun anyPlaying(): Boolean = notes().any { it.isPlaying }
@@ -259,9 +222,6 @@ class PitchInstrumentView
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val currentNotes = notes()
-            staticBackground?.let { canvas.drawBitmap(it, 0f, 0f, null) }
-                ?: canvas.drawColor(ground)
-
             val breath = 0.82f + 0.18f * sin(breathePhase)
 
             // Bloom pass under the glass so light appears to leak across the panel.
@@ -317,24 +277,6 @@ class PitchInstrumentView
             drawRangeControl(canvas)
             drawNameplate(canvas)
             manageBreathing()
-        }
-
-        private fun drawHeritageBackground(canvas: Canvas) {
-            val bitmap = heritageBitmap ?: return
-            val source = Rect(0, 0, bitmap.width, bitmap.height)
-            val tileHeight = width * (bitmap.height.toFloat() / bitmap.width.toFloat())
-            if (tileHeight <= 0f) return
-
-            var tileTop = 0f
-            while (tileTop < height) {
-                canvas.drawBitmap(
-                    bitmap,
-                    source,
-                    RectF(0f, tileTop, width.toFloat(), tileTop + tileHeight),
-                    heritagePaint,
-                )
-                tileTop += tileHeight
-            }
         }
 
         private fun drawCenter(

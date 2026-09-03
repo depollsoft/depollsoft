@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-03T18:34:21.944Z",
+  "generatedAt": "2026-09-03T21:48:34.400Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -148,7 +148,7 @@
     },
     {
       "name": "Adaptive Navigation",
-      "description": "Bars follow the plate theme. Android retains all four pages, guards ViewPager↔navigation feedback, uses one coordinated page animation, keeps every label visible with no item shifting, and shares/caches score artwork.",
+      "description": "Android retains four pages, coordinates one page animation with fixed labels/no shifting, and composites transparent pages over one opaque cached ground/grain/score bitmap. Private frame logs report 8/16/32 ms thresholds for 120 Hz diagnosis.",
       "css": "background: var(--plate-surface); border-color: var(--plate-hairline); color: var(--plate-ink);"
     },
     {
