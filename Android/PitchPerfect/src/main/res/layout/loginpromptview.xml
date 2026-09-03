@@ -17,21 +17,54 @@
         android:textColor="@color/plate_ink_secondary"
         android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/loginStatusText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:accessibilityLiveRegion="polite"
-        android:textColor="@color/plate_ink"
-        android:textSize="14sp"
-        android:visibility="gone" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ProgressBar
+            android:id="@+id/loginProgress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:indeterminateTint="@color/plate_ink"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/loginStatusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/plate_ink"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/login_button"
+        android:id="@+id/email_login_button"
         style="@style/Widget.Plate.SettingsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/ChooseLoginMethod" />
+        android:text="@string/ContinueWithEmail" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/google_login_button"
+        style="@style/Widget.Plate.SettingsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/ContinueWithGoogle" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/facebook_login_button"
+        style="@style/Widget.Plate.SettingsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/ContinueWithFacebook" />
 </LinearLayout>
