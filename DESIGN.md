@@ -172,24 +172,24 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Settings Controls
 
-- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. iOS keeps native switches and its segmented theme control. Destructive/account behavior is unchanged; treatment stays grayscale and never spends the sounding-note glow.
+- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. Because FirebaseUI Credential Manager is disabled, logout immediately detaches sync, clears Facebook SDK and Firebase Auth state, and refreshes controls instead of waiting several seconds for credential-state clearing. iOS keeps native switches and its segmented theme control. Destructive/account treatment stays grayscale and never spends the sounding-note glow.
 
 ### Authentication
 
 - Android presents a concise plate-styled backup/sync explanation before FirebaseUI. The primary action is **Choose sign-in method**; **Not now** preserves local use. Launching disables the action and changes its label to **Opening sign-in…**; cancellation or provider error returns to the same prompt with an accessibility-live recovery message and enabled retry.
 - The app-owned prompt explains optional backup/sync and hands off through one clear action to FirebaseUI 9.1.1’s own method picker. FirebaseUI renders and manages Email, Google, and Facebook; Facebook uses its `FacebookBuilder` with Facebook SDK 18.3. A dedicated `AuthTheme` keeps FirebaseUI fields, controls, progress, and actions visible in light and dark. The explanatory dialog clears stale progress/status whenever it is shown, so logout followed by login always starts enabled. The account label tolerates a missing Facebook email.
 - FirebaseUI Credential Manager saving is disabled for all providers. A scoped AGP instrumentation patch removes only FirebaseUI 9.1.1’s generated non-null check on `CredentialSaveActivity.createIntent(email)`: its next API already accepts `String?` and returns success immediately when credential saving is disabled. The build fails closed if that exact upstream bytecode boundary changes. FirebaseUI’s picker, provider handling, Firebase Auth, Firestore attachment, and account sync remain intact.
-- **Single Attachment Rule.** The application auth-state listener owns normal Firestore attachment and transitions only when the authenticated UID changes. Repeated same-user callbacks no longer tear down listeners or replay Firestore snapshots on the main thread, and the former no-op user-document listener is removed. The result callback only requests the one-time new-user local-song upload. Settings refreshes its login-bound controls explicitly on success and `onResume`.
+- **Single Attachment Rule.** The application auth-state listener owns normal Firestore attachment and transitions only when the authenticated UID changes. Repeated same-user callbacks no longer tear down listeners or replay snapshots, and the former no-op user-document listener is removed. Song restoration raises its write-suppression guard before changing any trackable field, so a remote snapshot cannot write itself back; map persistence is batched once per snapshot rather than once per document. The result callback only requests the one-time new-user local-song upload. Settings refreshes login-bound controls explicitly on success and `onResume`.
 
 ### Navigation
 
 - **The Continuous-Plate Rule.** Bars are part of the plate, never a cast bezel: every bar sits on `plate-surface`, separated from the panel by one 1px `plate-hairline` edge, with type and icons in `plate-ink`. Bars therefore follow the theme like everything else; the only near-black in light mode is a sounding note.
-- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. System status and navigation bars match `plate-surface` with theme-appropriate icon brightness. The Android app bar carries the nameplate "Pitch Perfect" and always shows the Settings gear as a visible action (as on iOS); the bottom nav labels the section.
+- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. The four lightweight pages remain resident, ViewPager↔navigation updates are equality-guarded, and tab taps switch without rendering a two-page smooth-scroll transition. Static instrument/score artwork is shared and cached by size. System bars match `plate-surface`; the app bar carries “Pitch Perfect” and an always-visible Settings gear.
 - iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip, which suppresses child titles by system design. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. iOS navigation titles name the screen — Pitch Pipe, Notes, Keys, Songs, Settings, Add Song / Edit Song — and Keys carries its Major/Minor control in the leading bar slot.
 
 ### Ad Slot
 
-- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here.
+- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. Android reserves its height immediately but debounces Mobile Ads/WebView creation until five seconds after navigation becomes idle; licensed users skip initialization. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here.
 
 ### Haptics
 
@@ -197,7 +197,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Motion
 
-- One motion: the 4-second sinusoidal breath (phase 0→2π, linear) modulating bloom alpha (0.82 + 0.18·sin) and lit-cell fill (0.9 + 0.1·sin) while any note sounds. Android drops it when animator duration scale is 0; iOS honors Reduce Motion. No other animation beyond platform defaults.
+- One motion: the 4-second sinusoidal breath (phase 0→2π, linear) modulating bloom alpha (0.82 + 0.18·sin) and lit-cell fill (0.9 + 0.1·sin) while any note sounds. Android drops it when animator duration scale is 0 and cancels the infinite animator immediately when the pitch page stops, so an attached off-screen page never invalidates frames. iOS honors Reduce Motion. No other animation beyond platform defaults.
 
 ### Accessibility
 

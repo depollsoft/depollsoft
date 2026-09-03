@@ -25,7 +25,7 @@ class SongList constructor() {
             songs.track()
             name
         }) {
-            if (!isRestoring.get()!!) {
+            if (!isRestoring.get()!! && this@SongList::id.isInitialized) {
                 storeValue()
             }
             keepTracking
@@ -47,28 +47,30 @@ class SongList constructor() {
     }
 
     fun restore(snapshot: DocumentSnapshot) {
-        name = snapshot.getString("name")!!
         @Suppress("UNCHECKED_CAST")
         val rawSongs = snapshot.getField<Any>("songs")!! as List<Any>
         try {
+            // Set the guard before changing name: name is trackable and used to
+            // write this document, so restoring it unguarded feeds the snapshot
+            // straight back into Firestore before songs have been restored.
             isRestoring.set(true)
+            name = snapshot.getString("name")!!
             val newSongs =
                 rawSongs.map {
                     @Suppress("UNCHECKED_CAST")
                     JsonSerializer.deserialize(JSONObject(it as Map<String, Any?>)) as PitchedSong
                 }
-            if (songs.size == newSongs.size &&
-                songs.zip(newSongs).all {
-                    it.first.id == it.second.id &&
-                        it.first.name == it.second.name &&
-                        it.first.key == it.second.key
+            val changed =
+                songs.size != newSongs.size ||
+                    songs.zip(newSongs).any {
+                        it.first.id != it.second.id ||
+                            it.first.name != it.second.name ||
+                            it.first.key != it.second.key
+                    }
+            if (changed) {
+                songs.become(newSongs) { left, right ->
+                    left.id == right.id && left.name == right.name && left.key == right.key
                 }
-            ) {
-                // No change -- ignore
-                return
-            }
-            songs.become(newSongs) { left, right ->
-                left.id == right.id && left.name == right.name && left.key == right.key
             }
         } finally {
             isRestoring.set(false)
@@ -126,7 +128,7 @@ class SongList constructor() {
     }
 
     fun storeValue() {
-        if (!SongsModel.isInitialized) {
+        if (!this::id.isInitialized || !SongsModel.isInitialized) {
             return
         }
         SongsModel.get().songLists = SongsModel.get().songLists + (id to this)

@@ -1,9 +1,9 @@
 package depollsoft.pitchperfect
 
 import android.content.res.Configuration
+import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
@@ -14,6 +14,7 @@ import depollsoft.pitchperfect.lib.*
 
 class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
+        val startedAt = SystemClock.elapsedRealtime()
         super.onCreate()
         val isDebugSigned = false
         Note.setPlayer(
@@ -29,7 +30,6 @@ class PitchPerfectApplication : RichApplication() {
                 }
             },
         )
-        MobileAds.initialize(this)
         JsonSerializer.registerAlias(java.lang.Integer::class.java, "Integer")
         JsonSerializer.registerAlias(java.lang.Integer.TYPE, "int")
         JsonSerializer.registerAlias(Key::class.java, "Key")
@@ -47,6 +47,11 @@ class PitchPerfectApplication : RichApplication() {
         JsonSerializer.registerAlias(TrackableCollection::class.java, "List")
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
+        PerformanceDiagnostics.logDuration(
+            "Application initialized",
+            startedAt,
+            "authenticated=${Firebase.auth.currentUser != null}",
+        )
     }
 
     private val authAttachment = AuthAttachmentState()
