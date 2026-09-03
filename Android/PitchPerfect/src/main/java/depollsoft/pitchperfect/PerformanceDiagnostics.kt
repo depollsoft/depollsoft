@@ -10,9 +10,10 @@ import java.util.concurrent.Executors
 
 /** PII-free timing diagnostics included only in private preview builds. */
 internal object PerformanceDiagnostics {
-    private val logger = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "performance-log").apply { isDaemon = true }
-    }
+    private val logger =
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "performance-log").apply { isDaemon = true }
+        }
 
     val enabled: Boolean
         get() = BuildConfig.PRIVATE_BUILD_NUMBER.isNotBlank()
@@ -76,6 +77,6 @@ internal class FramePerformanceMonitor(
     }
 
     private companion object {
-        const val REPORT_INTERVAL = 120
+        const val REPORT_INTERVAL = 600
     }
 }

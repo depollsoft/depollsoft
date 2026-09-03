@@ -140,9 +140,9 @@ class PitchPerfectActivity : AppCompatActivity() {
                     else -> 0
                 }
             if (viewPager.currentItem != position) {
-                // These pages draw complex custom instruments. Switching
-                // immediately avoids rendering two full pages during a swipe.
-                viewPager.setCurrentItem(position, false)
+                // Pages stay resident and static artwork is cached, so the
+                // standard transition no longer inflates or decodes mid-swipe.
+                viewPager.setCurrentItem(position, true)
             }
             scheduleAdLoadAfterIdle()
             true
@@ -239,9 +239,11 @@ class PitchPerfectActivity : AppCompatActivity() {
         if (PerformanceDiagnostics.enabled) {
             frameMonitor = FramePerformanceMonitor("Main").also { it.start(window) }
         }
+        scheduleAdLoadAfterIdle()
     }
 
     override fun onStop() {
+        window.decorView.removeCallbacks(adLoadRunnable)
         frameMonitor?.stop(window)
         frameMonitor = null
         super.onStop()
@@ -250,6 +252,11 @@ class PitchPerfectActivity : AppCompatActivity() {
     override fun onDestroy() {
         window.decorView.removeCallbacks(adLoadRunnable)
         super.onDestroy()
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) scheduleAdLoadAfterIdle()
+        return super.dispatchTouchEvent(event)
     }
 
     override fun onResume() {

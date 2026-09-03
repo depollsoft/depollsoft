@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect
 
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -10,7 +11,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.RectF
-import android.content.res.Resources
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
