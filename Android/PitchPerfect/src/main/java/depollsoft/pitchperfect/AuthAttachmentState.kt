@@ -9,6 +9,12 @@ internal class AuthAttachmentState {
         hasLiveListener: Boolean,
     ): Boolean = userId == candidateUserId && hasLiveListener
 
+    fun transitionTo(userId: String?): Boolean {
+        if (this.userId == userId) return false
+        this.userId = userId
+        return true
+    }
+
     fun connect(userId: String) {
         this.userId = userId
     }

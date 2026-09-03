@@ -90,7 +90,7 @@ object EspressoTestUtils {
      */
     fun dismissStartupDialogs(
         maxAttempts: Int = 3,
-        buttonTexts: List<String> = listOf("Skip", "OK", "Cancel", "Dismiss", "Later")
+        buttonTexts: List<String> = listOf("Not now", "Skip", "OK", "Cancel", "Dismiss", "Later")
     ) {
         for (attempt in 1..maxAttempts) {
             var dialogDismissed = false
