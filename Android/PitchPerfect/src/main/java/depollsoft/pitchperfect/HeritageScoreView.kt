@@ -35,14 +35,21 @@ class HeritageScoreView
         attrs: AttributeSet? = null,
     ) : View(context, attrs) {
         private val artwork = HeritageArtwork.get(resources)
+        private val groundColor =
+            runCatching { ContextCompat.getColor(context, R.color.plate_ground) }
+                .getOrElse { Color.WHITE }
         private val engravingColor =
             runCatching { ContextCompat.getColor(context, R.color.plate_ink_secondary) }
                 .getOrElse { Color.GRAY }
+        private val hairlineColor =
+            runCatching { ContextCompat.getColor(context, R.color.plate_hairline) }
+                .getOrElse { Color.LTGRAY }
         private val paint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 alpha = 28
                 colorFilter = PorterDuffColorFilter(engravingColor, PorterDuff.Mode.SRC_IN)
             }
+        private val grainPaint = Paint().apply { color = hairlineColor }
         private var renderedBackground: Bitmap? = null
 
         init {
@@ -67,6 +74,13 @@ class HeritageScoreView
             if (tileHeight <= 0f) return
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val backgroundCanvas = Canvas(bitmap)
+            backgroundCanvas.drawColor(groundColor)
+            var grainY = 0f
+            while (grainY < height) {
+                grainPaint.alpha = 8 + ((grainY.toInt() * 31) % 14)
+                backgroundCanvas.drawLine(0f, grainY, width.toFloat(), grainY, grainPaint)
+                grainY += 4f
+            }
             val source = Rect(0, 0, sourceBitmap.width, sourceBitmap.height)
             var tileTop = 0f
             while (tileTop < height) {
@@ -80,6 +94,8 @@ class HeritageScoreView
             }
             renderedBackground = bitmap
         }
+
+        override fun isOpaque(): Boolean = renderedBackground != null
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)

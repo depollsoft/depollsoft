@@ -36,7 +36,9 @@ internal class FramePerformanceMonitor(
 ) {
     private val thread = HandlerThread("$screen-frame-metrics")
     private var frames = 0
-    private var slowFrames = 0
+    private var over8MsFrames = 0
+    private var over16MsFrames = 0
+    private var over32MsFrames = 0
     private var frozenFrames = 0
     private var maxDurationMs = 0L
     private var started = false
@@ -47,7 +49,9 @@ internal class FramePerformanceMonitor(
             if (durationNs <= 0) return@OnFrameMetricsAvailableListener
             val durationMs = durationNs / 1_000_000L
             frames++
-            if (durationMs > 16L) slowFrames++
+            if (durationMs > 8L) over8MsFrames++
+            if (durationMs > 16L) over16MsFrames++
+            if (durationMs > 32L) over32MsFrames++
             if (durationMs > 700L) frozenFrames++
             maxDurationMs = maxOf(maxDurationMs, durationMs)
             if (frames % REPORT_INTERVAL == 0) report("sample")
@@ -72,7 +76,9 @@ internal class FramePerformanceMonitor(
         if (frames == 0) return
         AppLog.info(
             "Performance",
-            "$screen frames ($reason): total=$frames slow=$slowFrames frozen=$frozenFrames max=${maxDurationMs}ms",
+            "$screen frames ($reason): total=$frames over8ms=$over8MsFrames " +
+                "over16ms=$over16MsFrames over32ms=$over32MsFrames " +
+                "frozen=$frozenFrames max=${maxDurationMs}ms",
         )
     }
 
