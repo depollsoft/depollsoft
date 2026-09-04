@@ -16,6 +16,41 @@ final class PitchChordTests: XCTestCase {
         XCTAssertEqual("BARBERSHOP!", PitchChord.name(cells: [10, 7, 4, 0]))
     }
 
+    func testWidgetAppGroupTracksBuildVariant() {
+        XCTAssertEqual(
+            "group.depollsoft.pitchperfect",
+            WidgetSharedDefaults.suiteName(for: "depollsoft.pitchperfect.widget")
+        )
+        XCTAssertEqual(
+            "group.depollsoft.pitchperfect.private",
+            WidgetSharedDefaults.suiteName(for: "depollsoft.pitchperfect.private.widget")
+        )
+    }
+
+    func testWidgetRangeIntentPersistsItsAssignedValue() async throws {
+        let previousRange = WidgetRangeState.rawValue
+        defer { WidgetRangeState.set(previousRange) }
+
+        _ = try await SelectWidgetRangeIntent(range: .fToF).perform()
+
+        XCTAssertEqual(PitchRange.fToF.rawValue, WidgetRangeState.rawValue)
+    }
+
+    func testWidgetIntentReturnsWhileToneIsActive() async throws {
+        WidgetPitchState.set(nil)
+        defer { WidgetPitchState.set(nil) }
+
+        let intent = PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440)
+        let startedAt = Date()
+        _ = try await intent.perform()
+
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), PlayWidgetPitchIntent.duration)
+        XCTAssertEqual(9, WidgetPitchState.activePitch)
+
+        try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.duration + 0.25))
+        XCTAssertNil(WidgetPitchState.activePitch)
+    }
+
     func testWidgetToneIsValidMonoPCM() {
         let tone = PlayWidgetPitchIntent.tone(frequency: 440, duration: 1.5)
         XCTAssertEqual("RIFF", String(data: tone.prefix(4), encoding: .utf8))

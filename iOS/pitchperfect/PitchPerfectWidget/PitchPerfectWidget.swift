@@ -2,17 +2,6 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-enum PitchRange: String, AppEnum {
-    case cToC
-    case fToF
-
-    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Octave Range")
-    static let caseDisplayRepresentations: [PitchRange: DisplayRepresentation] = [
-        .cToC: "C to C",
-        .fToF: "F to F",
-    ]
-}
-
 struct PitchWidgetConfiguration: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Pitch Pipe Range"
     static let description = IntentDescription("Choose the inclusive octave shown by this widget.")
@@ -33,23 +22,20 @@ private struct PitchProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: PitchWidgetConfiguration, in context: Context) async -> PitchEntry {
-        PitchEntry(
-            date: .now,
-            range: configuration.range,
-            activePitch: WidgetPitchState.activePitch
-        )
+        entry(for: configuration)
     }
 
     func timeline(for configuration: PitchWidgetConfiguration, in context: Context) async -> Timeline<PitchEntry> {
-        Timeline(
-            entries: [
-                PitchEntry(
-                    date: .now,
-                    range: configuration.range,
-                    activePitch: WidgetPitchState.activePitch
-                )
-            ],
-            policy: .never
+        Timeline(entries: [entry(for: configuration)], policy: .never)
+    }
+
+    private func entry(for configuration: PitchWidgetConfiguration) -> PitchEntry {
+        let selectedRange = WidgetRangeState.rawValue.flatMap(PitchRange.init(rawValue:))
+            ?? configuration.range
+        return PitchEntry(
+            date: .now,
+            range: selectedRange,
+            activePitch: WidgetPitchState.activePitch
         )
     }
 }
@@ -211,13 +197,13 @@ private struct PitchFace: View {
 
                 ForEach(pitches) { pitch in
                     let angle = (start + Double(pitch.id) * step) * .pi / 180
+                    let active = entry.activePitch == pitch.id
                     Button(
                         intent: PlayWidgetPitchIntent(
                             pitchIndex: pitch.id,
                             frequency: pitch.frequency
                         )
                     ) {
-                        let active = entry.activePitch == pitch.id
                         ZStack {
                             if active {
                                 Circle()
@@ -250,6 +236,7 @@ private struct PitchFace: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(pitch.spoken)
+                    .accessibilityValue(active ? "Playing" : "")
                     .position(
                         x: center.x + CGFloat(cos(angle)) * ring,
                         y: center.y + CGFloat(sin(angle)) * ring
@@ -303,32 +290,45 @@ private struct PitchFace: View {
     }
 
     private func rangeSelector(palette: PlatePalette, center: CGPoint, ring: CGFloat) -> some View {
-        let width = ring * 0.78
-        let rowHeight = ring * 0.145
-        return VStack(spacing: 0) {
-            rangeRow("C TO C", selected: entry.range == .cToC, palette: palette, height: rowHeight)
-            Divider().overlay(palette.hairline)
-            rangeRow("F TO F", selected: entry.range == .fToF, palette: palette, height: rowHeight)
+        let height: CGFloat = 44
+        return HStack(spacing: 0) {
+            rangeButton("C TO C", range: .cToC, palette: palette, height: height)
+            Divider()
+                .frame(width: 1)
+                .overlay(palette.hairline)
+            rangeButton("F TO F", range: .fToF, palette: palette, height: height)
         }
-        .frame(width: width, height: rowHeight * 2)
+        .frame(width: ring * 1.28, height: height)
         .background(palette.surface.opacity(0.94))
         .overlay(RoundedRectangle(cornerRadius: 3).stroke(palette.hairline, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 3))
-        .position(x: center.x, y: center.y + ring * 0.20 + rowHeight)
+        .position(x: center.x, y: center.y + ring * 0.30)
     }
 
-    private func rangeRow(_ label: String, selected: Bool, palette: PlatePalette, height: CGFloat) -> some View {
-        HStack(spacing: height * 0.14) {
-            Circle()
-                .fill(selected ? palette.ink : .clear)
-                .frame(width: height * 0.22, height: height * 0.22)
-            Text(label)
-                .font(.custom("Oswald-Medium", size: height * 0.46))
-                .tracking(height * 0.11)
-                .foregroundStyle(selected ? palette.ink : palette.secondary.opacity(0.76))
+    private func rangeButton(
+        _ label: String,
+        range: PitchRange,
+        palette: PlatePalette,
+        height: CGFloat
+    ) -> some View {
+        let selected = entry.range == range
+        return Button(intent: SelectWidgetRangeIntent(range: range)) {
+            HStack(spacing: height * 0.12) {
+                Circle()
+                    .fill(selected ? palette.ink : .clear)
+                    .frame(width: height * 0.16, height: height * 0.16)
+                Text(label)
+                    .font(.custom("Oswald-Medium", size: height * 0.25))
+                    .tracking(height * 0.04)
+                    .foregroundStyle(selected ? palette.ink : palette.secondary.opacity(0.76))
+            }
+            .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
+            .background(selected ? palette.ink.opacity(0.10) : .clear)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
-        .background(selected ? palette.ink.opacity(0.10) : .clear)
+        .buttonStyle(.plain)
+        .accessibilityLabel(range == .cToC ? "Use C to C range" : "Use F to F range")
+        .accessibilityValue(selected ? "Selected" : "")
     }
 }
 
