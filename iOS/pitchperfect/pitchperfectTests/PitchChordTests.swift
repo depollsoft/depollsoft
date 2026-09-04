@@ -36,18 +36,18 @@ final class PitchChordTests: XCTestCase {
         XCTAssertEqual(PitchRange.fToF.rawValue, WidgetRangeState.rawValue)
     }
 
-    func testWidgetIntentReturnsWhileToneIsActive() async throws {
+    func testWidgetPitchTapStartsSwitchesAndStopsTone() async throws {
         WidgetPitchState.set(nil)
-        defer { WidgetPitchState.set(nil) }
 
-        let intent = PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440)
-        let startedAt = Date()
-        _ = try await intent.perform()
-
-        XCTAssertLessThan(Date().timeIntervalSince(startedAt), PlayWidgetPitchIntent.duration)
+        let a4 = PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440)
+        _ = try await a4.perform()
         XCTAssertEqual(9, WidgetPitchState.activePitch)
 
-        try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.duration + 0.25))
+        let aSharp4 = PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16)
+        _ = try await aSharp4.perform()
+        XCTAssertEqual(10, WidgetPitchState.activePitch)
+
+        _ = try await aSharp4.perform()
         XCTAssertNil(WidgetPitchState.activePitch)
     }
 
@@ -56,6 +56,12 @@ final class PitchChordTests: XCTestCase {
         XCTAssertEqual("RIFF", String(data: tone.prefix(4), encoding: .utf8))
         XCTAssertEqual("WAVE", String(data: tone.dropFirst(8).prefix(4), encoding: .utf8))
         XCTAssertEqual(44 + 44_100 * 3, tone.count)
+
+        let loopingTone = PlayWidgetPitchIntent.loopingTone(frequency: 440)
+        XCTAssertEqual(
+            44 + Int(44_100 * PlayWidgetPitchIntent.loopDuration) * 2,
+            loopingTone.count
+        )
         XCTAssertFalse(PlayWidgetPitchIntent.openAppWhenRun)
     }
 
