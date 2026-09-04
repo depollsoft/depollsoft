@@ -25,14 +25,14 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
 
 class PitchPerfectActivity : AppCompatActivity() {
     private lateinit var bottomNavigation: NavigationBarView
     private lateinit var logInDialog: Dialog
-    private var preparingMenu: Boolean = false
+    private var optionsMenu: Menu? = null
+    private var menuSyncPending = false
     private var selectedPage: Int = 0
     private var songListFragment: SongListFragment? = null
     private var frameMonitor: FramePerformanceMonitor? = null
@@ -113,7 +113,13 @@ class PitchPerfectActivity : AppCompatActivity() {
                 override fun onPageSelected(position: Int) {
                     if (selectedPage != position) {
                         selectedPage = position
-                        Activities.invalidateOptionsMenu(this@PitchPerfectActivity)
+                        // Toolbar actions change only once the page settles, so the
+                        // menu update never lands on the first animation frame.
+                        if (viewPager.scrollState == ViewPager2.SCROLL_STATE_IDLE) {
+                            syncSongMenuItems()
+                        } else {
+                            menuSyncPending = true
+                        }
                     }
                     val itemId =
                         when (position) {
@@ -125,6 +131,13 @@ class PitchPerfectActivity : AppCompatActivity() {
                         }
                     if (bottomNavigation.selectedItemId != itemId) {
                         bottomNavigation.selectedItemId = itemId
+                    }
+                }
+
+                override fun onPageScrollStateChanged(state: Int) {
+                    if (state == ViewPager2.SCROLL_STATE_IDLE && menuSyncPending) {
+                        menuSyncPending = false
+                        syncSongMenuItems()
                     }
                 }
             },
@@ -182,62 +195,59 @@ class PitchPerfectActivity : AppCompatActivity() {
         // tabHost.saveInstanceState("tabs", outState);
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate every action once; page changes only toggle visibility. The
+        // gear stays a visible action on every tab, as on iOS. AppCompat's
+        // inflater honors app:showAsAction; the framework one ignores it.
+        menuInflater.inflate(R.menu.mainmenu, menu)
+        menuInflater.inflate(R.menu.songsmenu, menu)
+        menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener {
+            startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java))
+            true
+        }
+        menu.findItem(R.id.editSongsMenuItem).setOnMenuItemClickListener {
+            // Resolve at click time: the menu can build before the page-3
+            // fragment transaction commits.
+            resolveSongListFragment()?.toggleEditingSongs()
+            true
+        }
+        menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.sortSongs()
+            true
+        }
+        optionsMenu = menu
+        syncSongMenuItems(menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        if (preparingMenu) {
-            return false
+        syncSongMenuItems(menu)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    /** Shows the song actions only on the Songs page without rebuilding the menu. */
+    internal fun syncSongMenuItems(menu: Menu? = optionsMenu) {
+        val editItem = menu?.findItem(R.id.editSongsMenuItem) ?: return
+        val sortItem = menu.findItem(R.id.sortMenuItem) ?: return
+        val onSongs = selectedPage == 3
+        val editing = onSongs && resolveSongListFragment()?.isEditingSongs() == true
+        val title = getString(if (editing) R.string.StopEditing else R.string.EditSongList)
+        if (editItem.title?.toString() != title) {
+            editItem.title = title
+            editItem.setIcon(if (editing) R.drawable.ic_check else R.drawable.ic_edit_button)
         }
-        preparingMenu = true
-        try {
-            menu.clear()
-            // AppCompat's inflater honors app:showAsAction; the framework one ignores it.
-            val mi = menuInflater
-            mi.inflate(R.menu.mainmenu, menu)
-
-            val settingsItem = menu.findItem(R.id.settingsMenuItem)
-            settingsItem.setOnMenuItemClickListener {
-                val i = Intent(this@PitchPerfectActivity, SettingsActivity::class.java)
-                this@PitchPerfectActivity.startActivity(i)
-                true
-            }
-
-            if (selectedPage == 3) {
-                // The gear stays a visible action on every tab, as on iOS.
-                mi.inflate(R.menu.songsmenu, menu)
-                val songs = resolveSongListFragment()
-                val editItem = menu.findItem(R.id.editSongsMenuItem)
-                editItem.title =
-                    getString(
-                        if (songs?.isEditingSongs() == true) R.string.StopEditing else R.string.EditSongList,
-                    )
-                editItem.setIcon(
-                    if (songs?.isEditingSongs() == true) R.drawable.ic_check else R.drawable.ic_edit_button,
-                )
-                editItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                editItem.setOnMenuItemClickListener {
-                    // Resolve at click time: the menu can build before the page-3
-                    // fragment transaction commits.
-                    resolveSongListFragment()?.toggleEditingSongs()
-                    true
-                }
-
-                val sortItem = menu.findItem(R.id.sortMenuItem)
-                sortItem.isVisible = songs?.isEditingSongs() == true
-                sortItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                sortItem.setOnMenuItemClickListener {
-                    resolveSongListFragment()?.sortSongs()
-                    true
-                }
-            }
-            return super.onPrepareOptionsMenu(menu)
-        } finally {
-            preparingMenu = false
-        }
+        if (editItem.isVisible != onSongs) editItem.isVisible = onSongs
+        if (sortItem.isVisible != editing) sortItem.isVisible = editing
     }
 
     override fun onStart() {
         super.onStart()
         if (PerformanceDiagnostics.enabled) {
             frameMonitor = FramePerformanceMonitor("Main").also { it.start(window) }
+            window.decorView.postDelayed(
+                { PerformanceDiagnostics.logCompilationStatusOnce() },
+                COMPILATION_STATUS_DELAY_MS,
+            )
         }
         scheduleAdLoadAfterIdle()
     }
@@ -329,6 +339,7 @@ class PitchPerfectActivity : AppCompatActivity() {
 
     companion object {
         private const val AD_INITIALIZATION_DELAY_MS = 5_000L
+        private const val COMPILATION_STATUS_DELAY_MS = 10_000L
 
         @JvmField
         internal var handlingResult: Boolean = false

@@ -11,6 +11,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -92,7 +93,17 @@ class HeritageScoreView
                 )
                 tileTop += tileHeight
             }
-            renderedBackground = bitmap
+            // A hardware bitmap lives in GPU memory, so no frame re-uploads the
+            // full-screen ground on the phone.
+            renderedBackground =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    runCatching { bitmap.copy(Bitmap.Config.HARDWARE, false) }
+                        .getOrNull()
+                        ?.also { bitmap.recycle() }
+                        ?: bitmap
+                } else {
+                    bitmap
+                }
         }
 
         override fun isOpaque(): Boolean = renderedBackground != null
