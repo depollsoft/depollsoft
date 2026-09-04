@@ -167,7 +167,8 @@ def build_private_app(
   output_name:,
   build_number:,
   extension_target: nil,
-  extension_bundle_identifier: nil
+  extension_bundle_identifier: nil,
+  extension_entitlements_path: nil
 )
   provisioning_profile = "match AppStore #{bundle_identifier}"
   extension_profile = extension_bundle_identifier && "match AppStore #{extension_bundle_identifier}"
@@ -216,14 +217,27 @@ def build_private_app(
 
             if extension_target && extension_bundle_identifier
               profiles[extension_bundle_identifier] = extension_profile
-              with_private_signing(
-                project_path: project_file,
-                target: extension_target,
-                bundle_identifier: extension_bundle_identifier,
-                provisioning_profile: extension_profile,
-                entitlements_path: nil,
-                &build
-              )
+              sign_extension = proc do |private_extension_entitlements_path|
+                with_private_signing(
+                  project_path: project_file,
+                  target: extension_target,
+                  bundle_identifier: extension_bundle_identifier,
+                  provisioning_profile: extension_profile,
+                  entitlements_path: private_extension_entitlements_path,
+                  &build
+                )
+              end
+
+              if extension_entitlements_path
+                with_private_entitlements(
+                  File.join(IOS_ROOT, extension_entitlements_path),
+                  production_bundle_identifier: production_bundle_identifier,
+                  bundle_identifier: bundle_identifier,
+                  &sign_extension
+                )
+              else
+                sign_extension.call(nil)
+              end
             else
               build.call
             end
@@ -327,6 +341,7 @@ platform :ios do
       build_number: build_number,
       extension_target: "PitchPerfectWidget",
       extension_bundle_identifier: "depollsoft.pitchperfect.private.widget",
+      extension_entitlements_path: "pitchperfect/PitchPerfectWidget/PitchPerfectWidget.entitlements",
     )
 
     build_private_app(
