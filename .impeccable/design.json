@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-04T01:07:39.503Z",
+  "generatedAt": "2026-09-04T02:49:24.125Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -213,7 +213,7 @@
       "Do expose Android song pencils and drag handles only via the title-bar Edit Songs action.",
       "Do run the score beneath iOS Liquid Glass bars, keep tab icons as grayscale templates, and load ads only after the real view width is known.",
       "Do keep the original score artwork full-bleed and undimmed on every screen; rows stay transparent over it.",
-      "Do name two-note chord intervals and keep haptics to note starts, real range changes, and successful song saves.",
+      "Do name two-note chord intervals, read a barbershop seventh in any voicing as \"BARBERSHOP!\", and keep haptics to note starts, real range changes, and successful song saves.",
       "Do move Android destinations to a navigation rail at 600dp+ and keep the ad inside the remaining content bay.",
       "Do label the instrument nameplate DIGITAL PITCH PIPE; avoid the redundant CHROMATIC PITCH REFERENCE caption.",
       "Do keep every bar on plate-surface with a single hairline edge so chrome follows the theme; never a cast dark bezel.",
