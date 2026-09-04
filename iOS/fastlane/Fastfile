@@ -317,15 +317,23 @@ platform :ios do
       tester_email: tester_email,
     )
 
+    signing_identifiers = [
+      "depollsoft.pitchperfect.private",
+      "depollsoft.pitchperfect.private.widget",
+      "depollsoft.tagmaster.private",
+    ]
+    if refresh_signing
+      signing_identifiers.unshift(
+        "depollsoft.pitchperfect",
+        "depollsoft.pitchperfect.widget",
+      )
+    end
+
     match(
       type: "appstore",
       readonly: !refresh_signing,
       force: refresh_signing,
-      app_identifier: [
-        "depollsoft.pitchperfect.private",
-        "depollsoft.pitchperfect.private.widget",
-        "depollsoft.tagmaster.private",
-      ],
+      app_identifier: signing_identifiers,
     )
 
     build_private_app(
