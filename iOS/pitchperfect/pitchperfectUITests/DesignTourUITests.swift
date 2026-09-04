@@ -71,12 +71,26 @@ final class DesignTourUITests: XCTestCase {
             springboard.wait(for: .runningForeground, timeout: 3),
             "Sounding a widget pitch must keep the user on the Home Screen"
         )
-        sleep(1)
+        let playing = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Playing"),
+            object: c4
+        )
+        XCTAssertEqual(.completed, XCTWaiter.wait(for: [playing], timeout: 1.2))
 
         let sounding = XCTAttachment(screenshot: springboard.screenshot())
         sounding.name = "widget-sounding-c4-on-home"
         sounding.lifetime = .keepAlways
         add(sounding)
+
+        sleep(2)
+        let fToF = springboard.buttons["Use F to F range"].firstMatch
+        XCTAssertTrue(fToF.waitForExistence(timeout: 3), "The widget should expose its F-to-F control")
+        XCTAssertTrue(fToF.isHittable, "The F-to-F control should accept taps")
+        fToF.tap()
+        XCTAssertTrue(
+            springboard.buttons["F, octave 5"].firstMatch.waitForExistence(timeout: 8),
+            "Selecting F to F should replace C4 with F5"
+        )
     }
 
     func testCaptureEveryScreen() throws {

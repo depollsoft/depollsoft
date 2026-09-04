@@ -5,10 +5,33 @@ import WidgetKit
 
 let widgetKind = "PitchPerfectPitchPipe"
 
+enum PitchRange: String, AppEnum {
+    case cToC
+    case fToF
+
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Octave Range")
+    static let caseDisplayRepresentations: [PitchRange: DisplayRepresentation] = [
+        .cToC: "C to C",
+        .fToF: "F to F",
+    ]
+}
+
+enum WidgetSharedDefaults {
+    static func suiteName(for bundleIdentifier: String?) -> String {
+        if bundleIdentifier?.hasPrefix("depollsoft.pitchperfect.private") == true {
+            return "group.depollsoft.pitchperfect.private"
+        }
+        return "group.depollsoft.pitchperfect"
+    }
+
+    static var defaults: UserDefaults? {
+        UserDefaults(suiteName: suiteName(for: Bundle.main.bundleIdentifier))
+    }
+}
+
 enum WidgetPitchState {
-    private static let suiteName = "group.depollsoft.pitchperfect"
     private static let key = "activePitch"
-    private static var defaults: UserDefaults? { UserDefaults(suiteName: suiteName) }
+    private static var defaults: UserDefaults? { WidgetSharedDefaults.defaults }
 
     static var activePitch: Int? {
         guard let defaults, defaults.object(forKey: key) != nil else { return nil }
@@ -17,7 +40,48 @@ enum WidgetPitchState {
     }
 
     static func set(_ value: Int?) {
-        defaults?.set(value ?? -1, forKey: key)
+        guard let defaults else { return }
+        defaults.set(value ?? -1, forKey: key)
+        defaults.synchronize()
+    }
+}
+
+enum WidgetRangeState {
+    private static let key = "pitchRange"
+
+    static var rawValue: String? {
+        WidgetSharedDefaults.defaults?.string(forKey: key)
+    }
+
+    static func set(_ rawValue: String?) {
+        guard let defaults = WidgetSharedDefaults.defaults else { return }
+        if let rawValue {
+            defaults.set(rawValue, forKey: key)
+        } else {
+            defaults.removeObject(forKey: key)
+        }
+        defaults.synchronize()
+    }
+}
+
+struct SelectWidgetRangeIntent: AppIntent {
+    static let title: LocalizedStringResource = "Select Pitch Pipe Range"
+    static let openAppWhenRun = false
+
+    @Parameter(title: "Range")
+    var rangeRawValue: String
+
+    init() {}
+
+    init(range: PitchRange) {
+        rangeRawValue = range.rawValue
+    }
+
+    func perform() async throws -> some IntentResult {
+        WidgetRangeState.set(rangeRawValue)
+        WidgetPitchState.set(nil)
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        return .result()
     }
 }
 
@@ -31,9 +95,12 @@ private final class WidgetTonePlayer {
 
     private var player: AVAudioPlayer?
     private var playbackID: UUID?
+    private var stopTask: Task<Void, Never>?
 
-    func start(frequency: Double) throws -> UUID {
+    func start(frequency: Double) throws {
         let session = AVAudioSession.sharedInstance()
+        stopTask?.cancel()
+        stopTask = nil
         player?.stop()
         player = nil
         playbackID = nil
@@ -51,7 +118,16 @@ private final class WidgetTonePlayer {
             let id = UUID()
             player = nextPlayer
             playbackID = id
-            return id
+            stopTask = Task { @MainActor [weak self] in
+                do {
+                    try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.duration))
+                } catch {
+                    return
+                }
+                guard self?.stop(ifCurrent: id) == true else { return }
+                WidgetPitchState.set(nil)
+                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+            }
         } catch {
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
             throw error
@@ -63,6 +139,7 @@ private final class WidgetTonePlayer {
         player?.stop()
         player = nil
         playbackID = nil
+        stopTask = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         return true
     }
@@ -90,9 +167,8 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        let playbackID: UUID
         do {
-            playbackID = try await MainActor.run {
+            try await MainActor.run {
                 try WidgetTonePlayer.shared.start(frequency: frequency)
             }
         } catch {
@@ -103,16 +179,8 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         WidgetPitchState.set(pitchIndex)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
 
-        // Keep the app process alive until the short pitch completes. A stale
-        // intent must not stop or clear a newer pitch after a rapid second tap.
-        try? await Task.sleep(for: .seconds(Self.duration))
-        let stoppedCurrentPlayback = await MainActor.run {
-            WidgetTonePlayer.shared.stop(ifCurrent: playbackID)
-        }
-        if stoppedCurrentPlayback {
-            WidgetPitchState.set(nil)
-            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-        }
+        // WidgetKit applies the active timeline after the intent returns. The
+        // app process owns playback and clears the state when the tone ends.
         return .result()
     }
 
