@@ -298,20 +298,26 @@ class PitchInstrumentView
                 canvas.drawText(label, faceCx, faceCy - ringRadius * 0.18f, textPaint)
                 monoPaint.color = ink
                 monoPaint.textSize = ringRadius * 0.15f
-                val readout =
-                    if (playingNotes.size == 1) {
-                        String.format("%.1f Hz", playingNotes[0].value.frequency)
-                    } else if (playingNotes.size == 2) {
-                        PitchInterval.name(playingNotes[0].index, playingNotes[1].index)
-                    } else {
-                        "${playingNotes.size} NOTES"
-                    }
-                canvas.drawText(
-                    readout,
-                    faceCx,
-                    faceCy + ringRadius * 0.02f,
-                    monoPaint,
-                )
+                val chord =
+                    if (playingNotes.size > 2) PitchChord.name(playingNotes.map { it.index }) else null
+                if (chord != null) {
+                    // A chord has a name, not a measurement: engrave it in the
+                    // display face so the exclamation reads as one word.
+                    textPaint.textSize = ringRadius * 0.20f
+                    textPaint.letterSpacing = 0.12f
+                    canvas.drawText(chord, faceCx, faceCy + ringRadius * 0.04f, textPaint)
+                    textPaint.letterSpacing = 0f
+                } else {
+                    val readout =
+                        if (playingNotes.size == 1) {
+                            String.format("%.1f Hz", playingNotes[0].value.frequency)
+                        } else if (playingNotes.size == 2) {
+                            PitchInterval.name(playingNotes[0].index, playingNotes[1].index)
+                        } else {
+                            "${playingNotes.size} NOTES"
+                        }
+                    canvas.drawText(readout, faceCx, faceCy + ringRadius * 0.02f, monoPaint)
+                }
             } else {
                 monoPaint.color = withAlpha(inkSecondary, 140)
                 monoPaint.textSize = ringRadius * 0.15f

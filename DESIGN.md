@@ -144,7 +144,7 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 ### Center Readout
 
-- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Two-note chords share the display and name the ascending musical interval (for example, "PERFECT 5TH"); larger chords read "<n> NOTES". Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
+- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Two-note chords share the display and name the ascending musical interval (for example, "PERFECT 5TH"); larger chords read "<n> NOTES", except a barbershop seventh (the dominant seventh, in any voicing, doubled root included) which reads "BARBERSHOP!" in the same slot, engraved in the display face (a chord has a name, not a measurement) at 0.12em tracking. Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
 
 ### List Rows
 

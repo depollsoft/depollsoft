@@ -225,6 +225,15 @@ object PitchPipeWidgetRenderer {
         canvas.drawText(names, cx, cy - ring * 0.18f, display)
         mono.color = p.ink
         mono.textSize = ring * 0.13f
+        val chord = if (playing.size > 2) PitchChord.name(playing.map { it.index }) else null
+        if (chord != null) {
+            // A chord has a name, not a measurement: engrave it in the display face.
+            display.textSize = ring * 0.18f
+            display.letterSpacing = 0.12f
+            canvas.drawText(chord, cx, cy + ring * 0.04f, display)
+            display.letterSpacing = 0f
+            return
+        }
         val line =
             when (playing.size) {
                 1 -> String.format("%.1f Hz", playing[0].value.frequency)

@@ -117,6 +117,7 @@
 		C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */; };
 		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
+		C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0050000000000000F5 /* PitchChordTests.swift */; };
 		E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */; };
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
@@ -328,6 +329,7 @@
 		C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
+		C0NEWF0050000000000000F5 /* PitchChordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChordTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
 		C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DesignTourUITests.swift; sourceTree = "<group>"; };
@@ -630,6 +632,7 @@
 				C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */,
 				C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */,
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
+				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				63DC36D4151E9000007C46DB /* Supporting Files */,
 			);
 			path = pitchperfectTests;
@@ -934,6 +937,7 @@
 				C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */,
 				C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
+				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -416,20 +416,26 @@ private extension DPPitchInstrumentView {
             )
             let nameSize = nameLabel.size()
             nameLabel.draw(at: CGPoint(x: faceCenter.x - nameSize.width / 2, y: faceCenter.y - ringRadius * 0.46))
+            // A chord has a name, not a measurement: engrave it in the display
+            // face so the exclamation reads as one word.
+            let chord = playingIndices.count > 2 ? PitchChord.name(cells: playingIndices) : nil
             let readout: String
-            if playingIndices.count == 1 {
+            if let chord {
+                readout = chord
+            } else if playingIndices.count == 1 {
                 readout = String(format: "%.1f Hz", notes[playingIndices[0]].frequency)
             } else if playingIndices.count == 2 {
                 readout = intervalName(between: playingIndices[0], and: playingIndices[1])
             } else {
                 readout = "\(playingIndices.count) NOTES"
             }
-            let freqLabel = NSAttributedString(
-                string: readout,
-                attributes: [.font: monoFont(size: ringRadius * 0.13), .foregroundColor: ink],
-            )
+            let readoutAttributes: [NSAttributedString.Key: Any] = chord != nil
+                ? [.font: condensedFont(size: ringRadius * 0.19), .foregroundColor: ink, .kern: ringRadius * 0.023]
+                : [.font: monoFont(size: ringRadius * 0.13), .foregroundColor: ink]
+            let freqLabel = NSAttributedString(string: readout, attributes: readoutAttributes)
             let freqSize = freqLabel.size()
-            freqLabel.draw(at: CGPoint(x: faceCenter.x - freqSize.width / 2, y: faceCenter.y - ringRadius * 0.1))
+            let readoutTop = faceCenter.y - ringRadius * (chord != nil ? 0.14 : 0.1)
+            freqLabel.draw(at: CGPoint(x: faceCenter.x - freqSize.width / 2, y: readoutTop))
         } else {
             let idle = NSAttributedString(
                 string: "\u{2014} Hz",
@@ -550,5 +556,24 @@ private extension DPPitchInstrumentView {
         }
         elements.append(highElement)
         accessibilityElements = elements
+    }
+}
+
+/// Names the chord the barbershop community lives on. Cells are chromatic
+/// steps from the range root (cell 12 is the root's octave); voicing and
+/// doubled roots do not matter, only the pitch classes sounding together.
+enum PitchChord {
+    static let barbershopSeventh = "BARBERSHOP!"
+
+    /// Root, major third, perfect fifth, minor seventh: the dominant seventh.
+    private static let dominantSeventh: Set<Int> = [0, 4, 7, 10]
+
+    static func name(cells: [Int]) -> String? {
+        let pitchClasses = Set(cells.map { (($0 % 12) + 12) % 12 })
+        guard pitchClasses.count == dominantSeventh.count else { return nil }
+        let isSeventh = pitchClasses.contains { root in
+            Set(pitchClasses.map { ($0 - root + 12) % 12 }) == dominantSeventh
+        }
+        return isSeventh ? barbershopSeventh : nil
     }
 }
