@@ -91,6 +91,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [self configureRootNavigationControllers];
+    // A fresh process cannot be sounding a widget pitch; never leave a cell lit.
+    [self resetWidgetPlaybackState];
 
     if (NSClassFromString(@"XCTestCase") != nil) {
         return YES;

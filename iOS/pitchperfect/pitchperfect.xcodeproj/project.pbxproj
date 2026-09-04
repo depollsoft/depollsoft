@@ -26,6 +26,7 @@
 		47172D6AC4A2EE44B24A9BD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C312820713220954FBDB7D29 /* Foundation.framework */; };
 		4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB387F /* SettingsUITests.swift */; };
 		4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */; };
+		A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
 		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
@@ -335,6 +336,7 @@
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
 		C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DesignTourUITests.swift; sourceTree = "<group>"; };
+		A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetHitTargetUITests.swift; sourceTree = "<group>"; };
 		E676252BBFDF4F8F575E325D /* PitchPerfectWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PitchPerfectWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9C584F19CA54391BAD09BEC /* DPTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTheme.swift; sourceTree = "<group>"; };
 		ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchPerfectWidget.swift; sourceTree = "<group>"; };
@@ -440,6 +442,7 @@
 				BDCE32A18234926C3795761C /* KeySignatureUITests.swift */,
 				C486582193CBB54AC3DB387F /* SettingsUITests.swift */,
 				C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */,
+				A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */,
 				0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */,
 				A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */,
 				BF5A9239DD6F1B199D1E7307 /* Info.plist */,
@@ -966,6 +969,7 @@
 				1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */,
 				4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */,
 				4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */,
+				A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */,
 				631D517D271DCD9D67FBDBE3 /* SongManagementUITests.swift in Sources */,
 				299FC208CD04C88A41A821FB /* pitchperfectUITests.swift in Sources */,
 			);

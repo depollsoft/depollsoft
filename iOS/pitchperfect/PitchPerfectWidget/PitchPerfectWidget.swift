@@ -48,6 +48,7 @@ private struct Pitch: Identifiable {
     let frequency: Double
 
     var engraved: String { accidental == "natural" ? name : "♯/♭" }
+    var display: String { "\(name)\(accidental == "natural" ? "" : "♯")\(octave)" }
     var spoken: String {
         accidental == "natural" ? "\(name), octave \(octave)" : "\(name) sharp, octave \(octave)"
     }
@@ -115,6 +116,8 @@ private struct PlatePalette {
     let ink: Color
     let secondary: Color
     let hairline: Color
+    let lit: Color
+    let onLit: Color
 
     init(dark: Bool) {
         ground = Color(hex: dark ? 0x0E0F10 : 0xDADBDC)
@@ -122,6 +125,8 @@ private struct PlatePalette {
         ink = Color(hex: dark ? 0xD9DBDD : 0x1C1E20)
         secondary = Color(hex: dark ? 0x898D92 : 0x55585C)
         hairline = Color(hex: dark ? 0x2C2F33 : 0xB7B9BC)
+        lit = Color(hex: dark ? 0xF2EFE6 : 0x141618)
+        onLit = Color(hex: dark ? 0x101214 : 0xF2F3F4)
     }
 }
 
@@ -175,160 +180,196 @@ private struct ScoreBackground: View {
     }
 }
 
+private struct RadialLayout: Layout {
+    let radius: CGFloat
+    let cellDiameter: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let side = (radius + cellDiameter / 2) * 2
+        return CGSize(width: side, height: side)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard !subviews.isEmpty else { return }
+        // Two cells straddle twelve o'clock so the octave's root and its
+        // repeat sit side by side at the top, as on the instrument face.
+        let step = 2 * CGFloat.pi / CGFloat(subviews.count)
+        let start = -CGFloat.pi / 2 + step / 2
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let cell = ProposedViewSize(width: cellDiameter, height: cellDiameter)
+        for (index, subview) in subviews.enumerated() {
+            let angle = start + CGFloat(index) * step
+            let point = CGPoint(
+                x: center.x + cos(angle) * radius,
+                y: center.y + sin(angle) * radius
+            )
+            subview.place(at: point, anchor: .center, proposal: cell)
+        }
+    }
+}
+
+private struct PitchCell: View {
+    let pitch: Pitch
+    let active: Bool
+    let diameter: CGFloat
+    let palette: PlatePalette
+
+    var body: some View {
+        let natural = pitch.accidental == "natural"
+        Button(intent: PlayWidgetPitchIntent(pitchIndex: pitch.id, frequency: pitch.frequency)) {
+            ZStack {
+                if active {
+                    Circle()
+                        .fill(palette.lit.opacity(0.22))
+                        .blur(radius: diameter * 0.18)
+                        .scaleEffect(1.45)
+                }
+                Circle().fill(active ? palette.lit : palette.surface)
+                Circle().stroke(active ? palette.lit : palette.hairline, lineWidth: active ? 2 : 1.25)
+                Circle()
+                    .stroke(
+                        active ? palette.onLit.opacity(0.45) : palette.secondary.opacity(0.28),
+                        lineWidth: 0.7
+                    )
+                    .padding(diameter * 0.07)
+                Text(pitch.engraved)
+                    .font(.custom("Oswald-Medium", size: diameter * (natural ? 0.44 : 0.29)))
+                    .foregroundStyle(active ? palette.onLit : (natural ? palette.ink : palette.secondary))
+            }
+            .frame(width: diameter, height: diameter)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(pitch.spoken)
+        .accessibilityValue(active ? "Playing" : "")
+    }
+}
+
+private struct RangeSegment: View {
+    let range: PitchRange
+    let selected: Bool
+    let palette: PlatePalette
+
+    private var label: String { range == .cToC ? "C TO C" : "F TO F" }
+
+    var body: some View {
+        Button(intent: SelectWidgetRangeIntent(range: range)) {
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(selected ? palette.lit : .clear)
+                    .frame(width: 5, height: 5)
+                Text(label)
+                    .font(.custom("Oswald-Medium", size: 11))
+                    .tracking(1.4)
+                    .foregroundStyle(selected ? palette.ink : palette.secondary.opacity(0.75))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(selected ? palette.ink.opacity(0.10) : .clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(range == .cToC ? "Octave range C to C" : "Octave range F to F")
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
 private struct PitchFace: View {
     @Environment(\.colorScheme) private var colorScheme
     let entry: PitchEntry
 
     var body: some View {
         GeometryReader { geometry in
-            let palette = PlatePalette(dark: colorScheme == .dark)
+            let dark = colorScheme == .dark
+            let palette = PlatePalette(dark: dark)
             let size = geometry.size
-            let center = CGPoint(x: size.width / 2, y: size.height * 0.43)
+            let faceHeight = size.height * 0.86
             let ring = min(size.width, size.height * 0.82) * 0.365
-            let cellRadius = ring * 0.225
+            let cellDiameter = max(44, ring * 0.45)
             let pitches = PitchCatalog.notes(for: entry.range)
-            let step = 360.0 / Double(pitches.count)
-            let start = -90.0 + step / 2
 
             ZStack {
                 palette.ground
-                ScoreBackground(palette: palette, dark: colorScheme == .dark)
+                ScoreBackground(palette: palette, dark: dark)
                     .clipped()
 
-                ForEach(pitches) { pitch in
-                    let angle = (start + Double(pitch.id) * step) * .pi / 180
-                    let active = entry.activePitch == pitch.id
-                    Button(
-                        intent: PlayWidgetPitchIntent(
-                            pitchIndex: pitch.id,
-                            frequency: pitch.frequency
-                        )
-                    ) {
-                        ZStack {
-                            if active {
-                                Circle()
-                                    .fill(palette.ink.opacity(0.16))
-                                    .blur(radius: cellRadius * 0.35)
-                                    .scaleEffect(1.45)
+                VStack(spacing: 0) {
+                    ZStack {
+                        RadialLayout(radius: ring, cellDiameter: cellDiameter) {
+                            ForEach(pitches) { pitch in
+                                PitchCell(
+                                    pitch: pitch,
+                                    active: entry.activePitch == pitch.id,
+                                    diameter: cellDiameter,
+                                    palette: palette
+                                )
                             }
-                            Circle().fill(active ? palette.ink : palette.surface)
-                            Circle().stroke(active ? palette.ink : palette.hairline, lineWidth: active ? 2 : 1.25)
-                            Circle()
-                                .stroke(
-                                    active ? palette.ground.opacity(0.45) : palette.secondary.opacity(0.28),
-                                    lineWidth: 0.7
-                                )
-                                .padding(cellRadius * 0.14)
-                            Text(pitch.engraved)
-                                .font(
-                                    .custom(
-                                        "Oswald-Medium",
-                                        size: cellRadius * (pitch.accidental == "natural" ? 0.88 : 0.58)
-                                    )
-                                )
-                                .foregroundStyle(
-                                    active
-                                        ? palette.ground
-                                        : (pitch.accidental == "natural" ? palette.ink : palette.secondary)
-                                )
                         }
-                        .frame(width: cellRadius * 2, height: cellRadius * 2)
+                        holeContent(pitches: pitches, palette: palette, ring: ring, cellDiameter: cellDiameter)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(pitch.spoken)
-                    .accessibilityValue(active ? "Playing" : "")
-                    .position(
-                        x: center.x + CGFloat(cos(angle)) * ring,
-                        y: center.y + CGFloat(sin(angle)) * ring
-                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: faceHeight)
+
+                    Text("DIGITAL PITCH PIPE")
+                        .font(.custom("Oswald-Medium", size: ring * 0.075))
+                        .tracking(ring * 0.025)
+                        .foregroundStyle(palette.secondary.opacity(0.68))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: size.height - faceHeight)
                 }
-
-                centerReadout(
-                    pitches: pitches,
-                    palette: palette,
-                    center: center,
-                    ring: ring
-                )
-
-                rangeSelector(palette: palette, center: center, ring: ring)
-
-                Text("DIGITAL PITCH PIPE")
-                    .font(.custom("Oswald-Medium", size: ring * 0.075))
-                    .tracking(ring * 0.025)
-                    .foregroundStyle(palette.secondary.opacity(0.68))
-                    .position(x: center.x, y: size.height * 0.91)
             }
             .clipShape(ContainerRelativeShape())
         }
         .containerBackground(for: .widget) { Color.clear }
     }
 
-    @ViewBuilder
-    private func centerReadout(
+    /// The readout and the range selector share the ring's hole. The selector
+    /// keeps a 44pt row, so its width is the chord of the hole at that depth.
+    private func holeContent(
         pitches: [Pitch],
         palette: PlatePalette,
-        center: CGPoint,
-        ring: CGFloat
+        ring: CGFloat,
+        cellDiameter: CGFloat
     ) -> some View {
+        let holeRadius = ring - cellDiameter / 2 - 4
+        let selectorHeight: CGFloat = 44
+        let readoutHeight = ring * 0.5
+        let halfBlock = (readoutHeight + selectorHeight) / 2
+        let chord = 2 * sqrt(max(0, holeRadius * holeRadius - halfBlock * halfBlock))
+        let selectorWidth = min(chord - 8, ring * 1.3)
+        return VStack(spacing: 0) {
+            readout(pitches: pitches, palette: palette, ring: ring)
+                .frame(height: readoutHeight)
+            HStack(spacing: 0) {
+                RangeSegment(range: .cToC, selected: entry.range == .cToC, palette: palette)
+                Rectangle()
+                    .fill(palette.hairline)
+                    .frame(width: 1)
+                RangeSegment(range: .fToF, selected: entry.range == .fToF, palette: palette)
+            }
+            .frame(width: selectorWidth, height: selectorHeight)
+            .background(palette.surface.opacity(0.92))
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(palette.hairline, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+    }
+
+    @ViewBuilder
+    private func readout(pitches: [Pitch], palette: PlatePalette, ring: CGFloat) -> some View {
         if let index = entry.activePitch, pitches.indices.contains(index) {
             let pitch = pitches[index]
-            VStack(spacing: ring * 0.015) {
-                Text("\(pitch.name)\(pitch.accidental == "natural" ? "" : "♯")\(pitch.octave)")
-                    .font(.custom("Oswald-Medium", size: ring * 0.25))
+            VStack(spacing: ring * 0.02) {
+                Text(pitch.display)
+                    .font(.custom("Oswald-Medium", size: ring * 0.24))
                     .foregroundStyle(palette.ink)
                 Text(String(format: "%.1f Hz", pitch.frequency))
-                    .font(.system(size: ring * 0.11, design: .monospaced))
+                    .font(.system(size: ring * 0.10, design: .monospaced))
                     .foregroundStyle(palette.ink)
             }
-            .position(x: center.x, y: center.y - ring * 0.07)
         } else {
-            Text("— Hz")
-                .font(.system(size: ring * 0.14, design: .monospaced))
-                .foregroundStyle(palette.secondary.opacity(0.58))
-                .position(x: center.x, y: center.y - ring * 0.04)
+            Text("\u{2014} Hz")
+                .font(.system(size: ring * 0.13, design: .monospaced))
+                .foregroundStyle(palette.secondary.opacity(0.55))
         }
-    }
-
-    private func rangeSelector(palette: PlatePalette, center: CGPoint, ring: CGFloat) -> some View {
-        let height: CGFloat = 44
-        return HStack(spacing: 0) {
-            rangeButton("C TO C", range: .cToC, palette: palette, height: height)
-            Divider()
-                .frame(width: 1)
-                .overlay(palette.hairline)
-            rangeButton("F TO F", range: .fToF, palette: palette, height: height)
-        }
-        .frame(width: ring * 1.28, height: height)
-        .background(palette.surface.opacity(0.94))
-        .overlay(RoundedRectangle(cornerRadius: 3).stroke(palette.hairline, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .position(x: center.x, y: center.y + ring * 0.30)
-    }
-
-    private func rangeButton(
-        _ label: String,
-        range: PitchRange,
-        palette: PlatePalette,
-        height: CGFloat
-    ) -> some View {
-        let selected = entry.range == range
-        return Button(intent: SelectWidgetRangeIntent(range: range)) {
-            HStack(spacing: height * 0.12) {
-                Circle()
-                    .fill(selected ? palette.ink : .clear)
-                    .frame(width: height * 0.16, height: height * 0.16)
-                Text(label)
-                    .font(.custom("Oswald-Medium", size: height * 0.25))
-                    .tracking(height * 0.04)
-                    .foregroundStyle(selected ? palette.ink : palette.secondary.opacity(0.76))
-            }
-            .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
-            .background(selected ? palette.ink.opacity(0.10) : .clear)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(range == .cToC ? "Use C to C range" : "Use F to F range")
-        .accessibilityValue(selected ? "Selected" : "")
     }
 }
 
