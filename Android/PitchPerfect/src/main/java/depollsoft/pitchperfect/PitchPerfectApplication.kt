@@ -16,20 +16,9 @@ class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
         val startedAt = SystemClock.elapsedRealtime()
         super.onCreate()
+        PerformanceDiagnostics.startMainThreadMonitor()
         val isDebugSigned = false
-        Note.setPlayer(
-            object : Note.NotePlayer {
-                override fun play(n: Note) {
-                    Note.DEFAULT_PLAYER.play(n)
-                    PitchPipeAppWidget.updateWidgets()
-                }
-
-                override fun stop(n: Note) {
-                    Note.DEFAULT_PLAYER.stop(n)
-                    PitchPipeAppWidget.updateWidgets()
-                }
-            },
-        )
+        Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
         JsonSerializer.registerAlias(java.lang.Integer::class.java, "Integer")
         JsonSerializer.registerAlias(java.lang.Integer.TYPE, "int")
         JsonSerializer.registerAlias(Key::class.java, "Key")

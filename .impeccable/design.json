@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-04T00:24:33.470Z",
+  "generatedAt": "2026-09-04T01:07:39.503Z",
   "title": "Design System: Pitch Perfect",
   "extensions": {
     "colorMeta": {
@@ -148,7 +148,7 @@
     },
     {
       "name": "Adaptive Navigation",
-      "description": "Android retains four pages, coordinates one page animation with fixed labels/no shifting, and composites transparent pages over one opaque cached ground/grain/score bitmap. Toolbar actions inflate once and only toggle after a page settles; a baseline profile compiles app and binding code ahead of time. Private frame logs report 8/16/32 ms thresholds plus per-stage timings of slow frames for 120 Hz diagnosis.",
+      "description": "Android retains four pages, coordinates one page animation with fixed labels/no shifting, and composites transparent pages over one opaque cached ground/grain/score bitmap. Toolbar actions inflate once and only toggle after a page settles; a baseline profile compiles app and binding code ahead of time. Private frame logs report 8/16/32 ms thresholds plus per-stage timings of slow frames for 120 Hz diagnosis. Widget renders run off the main thread and coalesce so page changes never queue dozens of main-thread bitmap renders.",
       "css": "background: var(--plate-surface); border-color: var(--plate-hairline); color: var(--plate-ink);"
     },
     {

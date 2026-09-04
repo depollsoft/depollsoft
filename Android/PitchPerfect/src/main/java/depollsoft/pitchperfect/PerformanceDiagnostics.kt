@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.SystemClock
 import android.view.FrameMetrics
 import android.view.Window
@@ -19,6 +20,7 @@ internal object PerformanceDiagnostics {
             Thread(runnable, "performance-log").apply { isDaemon = true }
         }
     private val compilationLogged = AtomicBoolean(false)
+    private val mainThreadMonitorStarted = AtomicBoolean(false)
 
     val enabled: Boolean
         get() = BuildConfig.PRIVATE_BUILD_NUMBER.isNotBlank()
@@ -33,6 +35,33 @@ internal object PerformanceDiagnostics {
         val message = "$operation in ${SystemClock.elapsedRealtime() - startedAt} ms$suffix"
         logger.execute { AppLog.info("Performance", message) }
     }
+
+    /**
+     * Names any main-looper message over [SLOW_MESSAGE_MS] by its Handler and
+     * callback class. Frame stats file such time under "unknown delay".
+     */
+    fun startMainThreadMonitor() {
+        if (!enabled || !mainThreadMonitorStarted.compareAndSet(false, true)) return
+        var startedAt = 0L
+        var dispatched: String? = null
+        Looper.getMainLooper().setMessageLogging { line ->
+            if (line.startsWith(">>>>>")) {
+                startedAt = SystemClock.uptimeMillis()
+                dispatched = line
+            } else if (line.startsWith("<<<<<")) {
+                val elapsed = SystemClock.uptimeMillis() - startedAt
+                val message = dispatched
+                dispatched = null
+                if (elapsed >= SLOW_MESSAGE_MS && message != null) {
+                    logger.execute {
+                        AppLog.info("Performance", "Slow main-thread message: $elapsed ms $message")
+                    }
+                }
+            }
+        }
+    }
+
+    private const val SLOW_MESSAGE_MS = 24L
 
     /** Reports whether ART compiled this install with the shipped baseline profile. */
     fun logCompilationStatusOnce() {

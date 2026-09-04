@@ -9,6 +9,9 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.util.SizeF
 import android.util.TypedValue
 import android.widget.RemoteViews
@@ -17,6 +20,7 @@ import androidx.core.content.ContextCompat
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
+import java.util.concurrent.Executors
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -48,7 +52,7 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle,
     ) {
-        appWidgetManager.updateAppWidget(appWidgetId, build(context, appWidgetManager, appWidgetId))
+        renderAsync(context, appWidgetManager, intArrayOf(appWidgetId))
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
     }
 
@@ -57,10 +61,40 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        for (id in appWidgetIds) {
-            appWidgetManager.updateAppWidget(id, build(context, appWidgetManager, id))
-        }
+        renderAsync(context, appWidgetManager, appWidgetIds)
         super.onUpdate(context, appWidgetManager, appWidgetIds)
+    }
+
+    /**
+     * The system delivers widget broadcasts on the app's main thread, so each
+     * render (one face plus thirteen cells per size) used to stall the UI.
+     */
+    private fun renderAsync(
+        context: Context,
+        manager: AppWidgetManager,
+        ids: IntArray,
+    ) {
+        val pending = goAsync()
+        val appContext = context.applicationContext
+        RENDER_EXECUTOR.execute {
+            try {
+                render(appContext, manager, ids)
+            } finally {
+                pending?.finish()
+            }
+        }
+    }
+
+    internal fun render(
+        context: Context,
+        manager: AppWidgetManager,
+        ids: IntArray,
+    ) {
+        val startedAt = SystemClock.elapsedRealtime()
+        for (id in ids) {
+            manager.updateAppWidget(id, build(context, manager, id))
+        }
+        PerformanceDiagnostics.logDuration("Widget update rendered", startedAt, "widgets=${ids.size}")
     }
 
     private fun build(
@@ -277,19 +311,32 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                 R.id.pitchButton12,
             )
 
+        private const val UPDATE_COALESCE_MS = 40L
+        private val RENDER_EXECUTOR =
+            Executors.newSingleThreadExecutor { runnable ->
+                Thread(runnable, "widget-render").apply { isDaemon = true }
+            }
+        private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+        private val renderer by lazy { PitchPipeAppWidget() }
+        private val pendingUpdate =
+            Runnable {
+                val context = RichApplication.getAppContext() ?: return@Runnable
+                RENDER_EXECUTOR.execute {
+                    val manager = AppWidgetManager.getInstance(context)
+                    val ids = manager.getAppWidgetIds(ComponentName(context, PitchPipeAppWidget::class.java))
+                    if (ids.isEmpty()) return@execute
+                    renderer.render(context, manager, ids)
+                }
+            }
+
+        /**
+         * Coalesces bursts (a page change stops every note on it) into one
+         * render off the main thread, without a broadcast round trip.
+         */
         @JvmStatic
         fun updateWidgets() {
-            val context = RichApplication.getAppContext() ?: return
-            val ids =
-                AppWidgetManager
-                    .getInstance(context)
-                    .getAppWidgetIds(ComponentName(context, PitchPipeAppWidget::class.java))
-            if (ids.isEmpty()) return
-            val intent =
-                Intent(context, PitchPipeAppWidget::class.java)
-                    .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            context.sendBroadcast(intent)
+            mainHandler.removeCallbacks(pendingUpdate)
+            mainHandler.postDelayed(pendingUpdate, UPDATE_COALESCE_MS)
         }
     }
 }
