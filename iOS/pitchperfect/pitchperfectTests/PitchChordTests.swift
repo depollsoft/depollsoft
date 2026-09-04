@@ -16,6 +16,14 @@ final class PitchChordTests: XCTestCase {
         XCTAssertEqual("BARBERSHOP!", PitchChord.name(cells: [10, 7, 4, 0]))
     }
 
+    func testWidgetToneIsValidMonoPCM() {
+        let tone = PlayWidgetPitchIntent.tone(frequency: 440, duration: 1.5)
+        XCTAssertEqual("RIFF", String(data: tone.prefix(4), encoding: .utf8))
+        XCTAssertEqual("WAVE", String(data: tone.dropFirst(8).prefix(4), encoding: .utf8))
+        XCTAssertEqual(44 + 44_100 * 3, tone.count)
+        XCTAssertFalse(PlayWidgetPitchIntent.openAppWhenRun)
+    }
+
     func testOtherChordsStayCounted() {
         XCTAssertNil(PitchChord.name(cells: [0, 4, 7, 11]), "major seventh")
         XCTAssertNil(PitchChord.name(cells: [0, 3, 7, 10]), "minor seventh")

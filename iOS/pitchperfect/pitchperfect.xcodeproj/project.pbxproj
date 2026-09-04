@@ -119,6 +119,8 @@
 		C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */; };
 		C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0050000000000000F5 /* PitchChordTests.swift */; };
 		E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */; };
+		A7D10A020000000000000002 /* PitchWidgetAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A010000000000000001 /* PitchWidgetAudio.swift */; };
+		A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A010000000000000001 /* PitchWidgetAudio.swift */; };
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
 		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
@@ -336,6 +338,8 @@
 		E676252BBFDF4F8F575E325D /* PitchPerfectWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PitchPerfectWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9C584F19CA54391BAD09BEC /* DPTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTheme.swift; sourceTree = "<group>"; };
 		ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchPerfectWidget.swift; sourceTree = "<group>"; };
+		A7D10A010000000000000001 /* PitchWidgetAudio.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetAudio.swift; sourceTree = "<group>"; };
+		A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PitchPerfectWidget.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -414,6 +418,8 @@
 			isa = PBXGroup;
 			children = (
 				ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */,
+				A7D10A010000000000000001 /* PitchWidgetAudio.swift */,
+				A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */,
 				12D2A66DC1F2CE9D62072F6D /* Info.plist */,
 			);
 			name = PitchPerfectWidget;
@@ -750,10 +756,21 @@
 						DevelopmentTeam = 43AWMS3YJX;
 						LastSwiftMigration = 1030;
 						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
 							com.apple.Keychain = {
 								enabled = 1;
 							};
 							com.apple.Push = {
+								enabled = 1;
+							};
+						};
+					};
+					A25B75404E7DD70C06E85E78 = {
+						DevelopmentTeam = 43AWMS3YJX;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
 							};
 						};
@@ -909,6 +926,7 @@
 				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
 				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
 				B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */,
+				A7D10A020000000000000002 /* PitchWidgetAudio.swift in Sources */,
 				76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
 				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
@@ -958,6 +976,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */,
+				A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1034,6 +1053,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PitchPerfectWidget/PitchPerfectWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.0.4;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1323,6 +1343,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PitchPerfectWidget/PitchPerfectWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2.0.4;
 				GENERATE_INFOPLIST_FILE = NO;
