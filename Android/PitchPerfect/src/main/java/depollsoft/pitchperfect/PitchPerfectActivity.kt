@@ -43,14 +43,19 @@ class PitchPerfectActivity : AppCompatActivity() {
             if (isDestroyed || !adsShouldShow || adRequested) return@Runnable
             adRequested = true
             val startedAt = SystemClock.elapsedRealtime()
-            MobileAds.initialize(applicationContext) {
-                runOnUiThread {
-                    if (isDestroyed) return@runOnUiThread
-                    adReady = true
-                    loadBanner()
-                    PerformanceDiagnostics.logDuration("Ads initialized and requested", startedAt)
+            val appContext = applicationContext
+            // Initialization blocks for tens of milliseconds; the SDK allows a
+            // background thread and delivers the callback to the main thread.
+            Thread({
+                MobileAds.initialize(appContext) {
+                    runOnUiThread {
+                        if (isDestroyed) return@runOnUiThread
+                        adReady = true
+                        loadBanner()
+                        PerformanceDiagnostics.logDuration("Ads initialized and requested", startedAt)
+                    }
                 }
-            }
+            }, "ads-init").start()
         }
 
     private fun resolveSongListFragment(): SongListFragment? =
