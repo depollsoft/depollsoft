@@ -1,9 +1,6 @@
 import AppIntents
-import AVFoundation
 import SwiftUI
 import WidgetKit
-
-private let widgetKind = "PitchPerfectPitchPipe"
 
 enum PitchRange: String, AppEnum {
     case cToC
@@ -67,117 +64,6 @@ private struct Pitch: Identifiable {
     var engraved: String { accidental == "natural" ? name : "♯/♭" }
     var spoken: String {
         accidental == "natural" ? "\(name), octave \(octave)" : "\(name) sharp, octave \(octave)"
-    }
-
-
-}
-
-private enum WidgetPitchState {
-    static let key = "activePitch"
-
-    static var activePitch: Int? {
-        guard UserDefaults.standard.object(forKey: key) != nil else { return nil }
-        let value = UserDefaults.standard.integer(forKey: key)
-        return value >= 0 ? value : nil
-    }
-
-    static func set(_ value: Int?) {
-        UserDefaults.standard.set(value ?? -1, forKey: key)
-    }
-}
-
-@MainActor
-private final class WidgetTonePlayer {
-    static let shared = WidgetTonePlayer()
-
-    private var player: AVAudioPlayer?
-    private var stopTask: Task<Void, Never>?
-
-    func play(frequency: Double) throws {
-        stopTask?.cancel()
-        player?.stop()
-        player = try AVAudioPlayer(
-            data: PlayWidgetPitchIntent.tone(frequency: frequency, duration: 1.5)
-        )
-        player?.prepareToPlay()
-        player?.play()
-
-        stopTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(1.5))
-            guard !Task.isCancelled else { return }
-            self?.player?.stop()
-            self?.player = nil
-            WidgetPitchState.set(nil)
-            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-        }
-    }
-}
-
-struct PlayWidgetPitchIntent: AudioPlaybackIntent {
-    static let title: LocalizedStringResource = "Sound Pitch"
-    static let openAppWhenRun = false
-
-    @Parameter(title: "Pitch")
-    var pitchIndex: Int
-
-    @Parameter(title: "Frequency")
-    var frequency: Double
-
-    init() {}
-
-    init(pitchIndex: Int, frequency: Double) {
-        self.pitchIndex = pitchIndex
-        self.frequency = frequency
-    }
-
-    func perform() async throws -> some IntentResult {
-        WidgetPitchState.set(pitchIndex)
-        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-        try await MainActor.run {
-            try WidgetTonePlayer.shared.play(frequency: frequency)
-        }
-        // Returning immediately lets WidgetKit apply the active timeline while
-        // AudioPlaybackIntent keeps the short tone alive in the extension.
-        return .result()
-    }
-
-    fileprivate static func tone(frequency: Double, duration: Double) -> Data {
-        let sampleRate = 44_100
-        let frames = Int(Double(sampleRate) * duration)
-        var pcm = Data(capacity: frames * 2)
-        let fadeFrames = sampleRate / 40
-        for frame in 0..<frames {
-            let attack = min(1.0, Double(frame) / Double(fadeFrames))
-            let release = min(1.0, Double(frames - frame) / Double(fadeFrames))
-            let envelope = min(attack, release)
-            let sample = sin(2 * .pi * frequency * Double(frame) / Double(sampleRate))
-            var value = Int16(sample * envelope * 9_000).littleEndian
-            withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
-        }
-
-        var data = Data("RIFF".utf8)
-        var riffSize = UInt32(36 + pcm.count).littleEndian
-        withUnsafeBytes(of: &riffSize) { data.append(contentsOf: $0) }
-        data.append(Data("WAVEfmt ".utf8))
-        var formatSize = UInt32(16).littleEndian
-        var audioFormat = UInt16(1).littleEndian
-        var channels = UInt16(1).littleEndian
-        var rate = UInt32(sampleRate).littleEndian
-        var byteRate = UInt32(sampleRate * 2).littleEndian
-        var blockAlign = UInt16(2).littleEndian
-        var bits = UInt16(16).littleEndian
-        withUnsafeBytes(of: &formatSize) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &audioFormat) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &channels) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &rate) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &byteRate) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &blockAlign) { data.append(contentsOf: $0) }
-        withUnsafeBytes(of: &bits) { data.append(contentsOf: $0) }
-        data.append(Data("data".utf8))
-        var dataSize = UInt32(pcm.count).littleEndian
-        withUnsafeBytes(of: &dataSize) { data.append(contentsOf: $0) }
-        data.append(pcm)
-        return data
     }
 }
 
@@ -265,6 +151,44 @@ private extension Color {
     }
 }
 
+private final class WidgetBundleToken {}
+
+private enum WidgetArtwork {
+    static let score: UIImage? = {
+        let bundle = Bundle(for: WidgetBundleToken.self)
+        guard let url = bundle.url(forResource: "panobackground", withExtension: "png") else {
+            return nil
+        }
+        return UIImage(contentsOfFile: url.path)
+    }()
+}
+
+private struct ScoreBackground: View {
+    let palette: PlatePalette
+    let dark: Bool
+
+    var body: some View {
+        GeometryReader { geometry in
+            if let score = WidgetArtwork.score {
+                let tileHeight = geometry.size.width * score.size.height / score.size.width
+                let tileCount = max(1, Int(ceil(geometry.size.height / tileHeight)))
+                VStack(spacing: 0) {
+                    ForEach(0...tileCount, id: \.self) { _ in
+                        Image(uiImage: score)
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: geometry.size.width, height: tileHeight)
+                            .foregroundStyle(palette.secondary)
+                    }
+                }
+                .opacity(dark ? 0.14 : 0.12)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 private struct PitchFace: View {
     @Environment(\.colorScheme) private var colorScheme
     let entry: PitchEntry
@@ -282,13 +206,8 @@ private struct PitchFace: View {
 
             ZStack {
                 palette.ground
-                Image("panobackground", bundle: .main)
-                    .resizable()
-                    .scaledToFill()
-                    .colorMultiply(palette.secondary)
-                    .opacity(colorScheme == .dark ? 0.14 : 0.12)
+                ScoreBackground(palette: palette, dark: colorScheme == .dark)
                     .clipped()
-                    .allowsHitTesting(false)
 
                 ForEach(pitches) { pitch in
                     let angle = (start + Double(pitch.id) * step) * .pi / 180
