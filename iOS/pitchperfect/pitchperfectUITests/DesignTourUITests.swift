@@ -82,7 +82,13 @@ final class DesignTourUITests: XCTestCase {
         sounding.lifetime = .keepAlways
         add(sounding)
 
-        sleep(2)
+        c4.tap()
+        let stopped = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value != %@", "Playing"),
+            object: c4
+        )
+        XCTAssertEqual(.completed, XCTWaiter.wait(for: [stopped], timeout: 3))
+
         let fToF = springboard.buttons["Use F to F range"].firstMatch
         XCTAssertTrue(fToF.waitForExistence(timeout: 3), "The widget should expose its F-to-F control")
         XCTAssertTrue(fToF.isHittable, "The F-to-F control should accept taps")

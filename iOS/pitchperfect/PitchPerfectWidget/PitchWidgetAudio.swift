@@ -64,7 +64,7 @@ enum WidgetRangeState {
     }
 }
 
-struct SelectWidgetRangeIntent: AppIntent {
+struct SelectWidgetRangeIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Select Pitch Pipe Range"
     static let openAppWhenRun = false
 
@@ -78,6 +78,9 @@ struct SelectWidgetRangeIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
+        await MainActor.run {
+            WidgetTonePlayer.shared.stop()
+        }
         WidgetRangeState.set(rangeRawValue)
         WidgetPitchState.set(nil)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
@@ -94,54 +97,44 @@ private final class WidgetTonePlayer {
     static let shared = WidgetTonePlayer()
 
     private var player: AVAudioPlayer?
-    private var playbackID: UUID?
-    private var stopTask: Task<Void, Never>?
+    private var frequency: Double?
 
-    func start(frequency: Double) throws {
+    func toggle(frequency: Double) throws -> Bool {
+        if player?.isPlaying == true, self.frequency == frequency {
+            stop()
+            return false
+        }
+
         let session = AVAudioSession.sharedInstance()
-        stopTask?.cancel()
-        stopTask = nil
         player?.stop()
         player = nil
-        playbackID = nil
+        self.frequency = nil
 
         do {
             try session.setCategory(.playback, mode: .default)
             try session.setActive(true)
             let nextPlayer = try AVAudioPlayer(
-                data: PlayWidgetPitchIntent.tone(frequency: frequency, duration: PlayWidgetPitchIntent.duration)
+                data: PlayWidgetPitchIntent.loopingTone(frequency: frequency)
             )
+            nextPlayer.numberOfLoops = -1
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 throw WidgetToneError.playbackDidNotStart
             }
-            let id = UUID()
             player = nextPlayer
-            playbackID = id
-            stopTask = Task { @MainActor [weak self] in
-                do {
-                    try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.duration))
-                } catch {
-                    return
-                }
-                guard self?.stop(ifCurrent: id) == true else { return }
-                WidgetPitchState.set(nil)
-                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-            }
+            self.frequency = frequency
+            return true
         } catch {
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
             throw error
         }
     }
 
-    func stop(ifCurrent id: UUID) -> Bool {
-        guard playbackID == id else { return false }
+    func stop() {
         player?.stop()
         player = nil
-        playbackID = nil
-        stopTask = nil
+        frequency = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        return true
     }
 }
 
@@ -151,7 +144,7 @@ private final class WidgetTonePlayer {
 struct PlayWidgetPitchIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Sound Pitch"
     static let openAppWhenRun = false
-    static let duration = 1.5
+    static let loopDuration = 4.0
 
     @Parameter(title: "Pitch")
     var pitchIndex: Int
@@ -167,24 +160,28 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
     }
 
     func perform() async throws -> some IntentResult {
+        let isPlaying: Bool
         do {
-            try await MainActor.run {
-                try WidgetTonePlayer.shared.start(frequency: frequency)
+            isPlaying = try await MainActor.run {
+                try WidgetTonePlayer.shared.toggle(frequency: frequency)
             }
         } catch {
             WidgetPitchState.set(nil)
             WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
             throw error
         }
-        WidgetPitchState.set(pitchIndex)
+        WidgetPitchState.set(isPlaying ? pitchIndex : nil)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-
-        // WidgetKit applies the active timeline after the intent returns. The
-        // app process owns playback and clears the state when the tone ends.
         return .result()
     }
 
-    static func tone(frequency: Double, duration: Double) -> Data {
+    static func loopingTone(frequency: Double) -> Data {
+        let cycles = max(1, Int((frequency * loopDuration).rounded()))
+        let seamlessFrequency = Double(cycles) / loopDuration
+        return tone(frequency: seamlessFrequency, duration: loopDuration, fadeEdges: false)
+    }
+
+    static func tone(frequency: Double, duration: Double, fadeEdges: Bool = true) -> Data {
         let sampleRate = 44_100
         let frames = Int(Double(sampleRate) * duration)
         var pcm = Data(capacity: frames * 2)
@@ -192,7 +189,7 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         for frame in 0..<frames {
             let attack = min(1.0, Double(frame) / Double(fadeFrames))
             let release = min(1.0, Double(frames - frame) / Double(fadeFrames))
-            let envelope = min(attack, release)
+            let envelope = fadeEdges ? min(attack, release) : 1.0
             let sample = sin(2 * .pi * frequency * Double(frame) / Double(sampleRate))
             var value = Int16(sample * envelope * 9_000).littleEndian
             withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
