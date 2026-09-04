@@ -17,7 +17,9 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
@@ -43,19 +45,19 @@ class PitchPerfectActivity : AppCompatActivity() {
             if (isDestroyed || !adsShouldShow || adRequested) return@Runnable
             adRequested = true
             val startedAt = SystemClock.elapsedRealtime()
-            val appContext = applicationContext
-            // Initialization blocks for tens of milliseconds; the SDK allows a
-            // background thread and delivers the callback to the main thread.
-            Thread({
-                MobileAds.initialize(appContext) {
-                    runOnUiThread {
-                        if (isDestroyed) return@runOnUiThread
-                        adReady = true
-                        loadBanner()
-                        PerformanceDiagnostics.logDuration("Ads initialized and requested", startedAt)
-                    }
+            // Initialize on the main thread: it costs one idle-time hitch, but a
+            // background-thread initialization never produced a banner on a
+            // Pixel 11 Pro even though it worked on the emulator. The ads SDK
+            // loads its implementation from Play Services, so keep the path
+            // the phone has proven.
+            MobileAds.initialize(applicationContext) {
+                runOnUiThread {
+                    if (isDestroyed) return@runOnUiThread
+                    adReady = true
+                    loadBanner()
+                    PerformanceDiagnostics.logDuration("Ads initialized and requested", startedAt)
                 }
-            }, "ads-init").start()
+            }
         }
 
     private fun resolveSongListFragment(): SongListFragment? =
@@ -326,6 +328,23 @@ class PitchPerfectActivity : AppCompatActivity() {
         // Step 4 - Set the adaptive ad size on the ad view.
         adView.setAdSize(adSize)
         adView.adUnitId = resources.getString(R.string.ad_unit_id)
+        if (PerformanceDiagnostics.enabled) {
+            val requestedAt = SystemClock.elapsedRealtime()
+            adView.adListener =
+                object : AdListener() {
+                    override fun onAdLoaded() {
+                        PerformanceDiagnostics.logDuration("Banner ad loaded", requestedAt)
+                    }
+
+                    override fun onAdFailedToLoad(error: LoadAdError) {
+                        PerformanceDiagnostics.logDuration(
+                            "Banner ad failed",
+                            requestedAt,
+                            "code=${error.code}; reason=${error.message}",
+                        )
+                    }
+                }
+        }
 
         // Step 5 - Start loading the ad in the background.
         adView.loadAd(adRequest)
