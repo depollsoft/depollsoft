@@ -105,6 +105,8 @@
 		B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */; };
 		B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */; };
 		B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */; };
+		ABBB00020000000000000002 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
+		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
 		B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
 		C0AUTH001000000000000011 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000012 /* FirebasePhoneAuthSwiftUI */; };
@@ -226,6 +228,7 @@
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		24DCB8F913D487DFA23A2EDC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		ABBB00010000000000000001 /* PitchChord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChord.swift; sourceTree = "<group>"; };
 		4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchInstrumentView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -613,6 +616,7 @@
 				1E95FFA02686560500B5299C /* DPCommon.swift */,
 				0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */,
 				4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */,
+				ABBB00010000000000000001 /* PitchChord.swift */,
 				E9C584F19CA54391BAD09BEC /* DPTheme.swift */,
 			);
 			path = pitchperfect;
@@ -932,6 +936,7 @@
 				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
 				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
 				B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */,
+				ABBB00020000000000000002 /* PitchChord.swift in Sources */,
 				A7D10A020000000000000002 /* PitchWidgetAudio.swift in Sources */,
 				76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */,
 				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
@@ -984,6 +989,7 @@
 			files = (
 				E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */,
 				A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */,
+				ABBB00030000000000000003 /* PitchChord.swift in Sources */,
 				A7D10A080000000000000008 /* PitchWidgetRangeIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -3,8 +3,9 @@ import XCTest
 
 final class PitchChordTests: XCTestCase {
     func testRootPositionDominantSeventhOnEveryRootIsBarbershop() {
-        for root in 0...2 {
-            XCTAssertEqual("BARBERSHOP!", PitchChord.name(cells: [root, root + 4, root + 7, root + 10]))
+        for root in 0..<12 {
+            let cells = [0, 4, 7, 10].map { (root + $0) % 12 }
+            XCTAssertEqual("BARBERSHOP!", PitchChord.name(cells: cells))
         }
     }
 

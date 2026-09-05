@@ -396,9 +396,18 @@ private struct PitchFace: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
                     .multilineTextAlignment(.center)
-                Text("\(sounding.count) NOTES")
-                    .font(.system(size: ring * 0.10, design: .monospaced))
-                    .foregroundStyle(palette.ink)
+                if let chord = PitchChord.name(cells: sounding.map(\.id)) {
+                    Text(chord)
+                        .font(.custom("Oswald-Medium", size: ring * 0.16))
+                        .tracking(ring * 0.01)
+                        .foregroundStyle(palette.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                } else {
+                    Text("\(sounding.count) NOTES")
+                        .font(.system(size: ring * 0.10, design: .monospaced))
+                        .foregroundStyle(palette.ink)
+                }
             }
             .frame(maxWidth: ring * 1.4)
         } else {

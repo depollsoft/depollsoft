@@ -94,6 +94,46 @@ final class DesignTourUITests: XCTestCase {
         add(highRange)
     }
 
+    func testWidgetRecognizesBarbershopInBothRanges() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting"]
+        app.launch()
+        XCUIDevice.shared.press(.home)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        addPitchPipeWidget(to: springboard)
+        let barbershop = springboard.staticTexts["BARBERSHOP!"].firstMatch
+
+        // C7: the accidental cell is spoken as A sharp, equivalent to B flat.
+        for label in ["C, octave 4", "E, octave 4", "G, octave 4", "A sharp, octave 4"] {
+            springboard.pitchCell(label).tap()
+        }
+        XCTAssertTrue(barbershop.waitForExistence(timeout: 8))
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(barbershop.exists, "The Easter egg must survive the widget reload")
+        let screenshot = XCTAttachment(screenshot: springboard.screenshot())
+        screenshot.name = "widget-barbershop-c7"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        springboard.pitchCell("C, octave 5").tap()
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertTrue(springboard.pitchCell("C, octave 5").isSounding)
+        XCTAssertTrue(barbershop.exists, "Doubling the root at the octave must preserve C7")
+        springboard.pitchCell("A sharp, octave 4").tap()
+        XCTAssertTrue(springboard.staticTexts["4 NOTES"].waitForExistence(timeout: 8))
+        XCTAssertFalse(barbershop.exists, "Removing the seventh must remove the Easter egg")
+
+        springboard.buttons["Octave range F to F"].firstMatch.tap()
+        XCTAssertTrue(springboard.pitchCell("F, octave 5").waitForExistence(timeout: 8))
+        for label in ["F, octave 4", "A, octave 4", "C, octave 5", "D sharp, octave 5"] {
+            springboard.pitchCell(label).tap()
+        }
+        XCTAssertTrue(barbershop.waitForExistence(timeout: 8), "The F-to-F range must recognize F7 too")
+        springboard.buttons["Octave range C to C"].firstMatch.tap()
+        XCTAssertTrue(springboard.pitchCell("C, octave 4").waitForExistence(timeout: 8))
+        XCTAssertFalse(barbershop.exists)
+    }
+
     func testCaptureEveryScreen() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
