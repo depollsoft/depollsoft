@@ -46,7 +46,11 @@
 @interface DPSongEditorViewController (ActionsTesting)
 - (void)complete;
 - (void)cancel;
-- (void)keyChanged:(UIPickerView *)picker;
+- (void)setTitleText:(NSString *)titleText;
+- (void)selectKey:(DPKey *)key;
+- (DPKey *)selectedKey;
+- (BOOL)isMinorKeySelected;
+- (BOOL)isTitleErrorVisible;
 @end
 
 @interface DPNotesViewController (ActionsTesting)
@@ -384,8 +388,7 @@
     [self exerciseController:editor actions:^(UIViewController *controller) {
         DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
         
-        UITextField *nameField = [vc valueForKey:@"nameField"];
-        nameField.text = @"New Name";
+        [vc setTitleText:@"New Name"];
         
         [vc complete];
     }];
@@ -414,8 +417,7 @@
     [self exerciseController:editor actions:^(UIViewController *controller) {
         DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
         
-        UITextField *nameField = [vc valueForKey:@"nameField"];
-        nameField.text = @"Changed but Cancelled";
+        [vc setTitleText:@"Changed but Cancelled"];
         
         [vc cancel];
     }];
@@ -425,7 +427,7 @@
     XCTAssertEqualObjects(song.name, @"Original Name", @"Song name should not change on cancel");
 }
 
-- (void)testSongEditorKeyPickerSelection
+- (void)testSongEditorKeyDialSelection
 {
     DPPitchedSong *song = [DPPitchedSong new];
     song.name = @"Test Song";
@@ -437,21 +439,36 @@
     [self exerciseController:editor actions:^(UIViewController *controller) {
         DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
         
-        UIPickerView *picker = [vc valueForKey:@"keyPicker"];
-        XCTAssertNotNil(picker, @"Key picker should exist");
+        XCTAssertEqualObjects([vc selectedKey], song.key, @"The dial opens on the song's key");
+        XCTAssertFalse([vc isMinorKeySelected]);
         
-        NSInteger rows = [picker numberOfRowsInComponent:0];
-        XCTAssertGreaterThan(rows, 0, @"Picker should have key options");
-        
-        if (rows > 1) {
-            [picker selectRow:1 inComponent:0 animated:NO];
-            // Trigger picker delegate to handle selection
-            id<UIPickerViewDelegate> delegate = picker.delegate;
-            if (delegate && [delegate respondsToSelector:@selector(pickerView:didSelectRow:inComponent:)]) {
-                [delegate pickerView:picker didSelectRow:1 inComponent:0];
-            }
-        }
+        DPKey *minor = [DPKey minorKeys][3];
+        [vc selectKey:minor];
+        XCTAssertTrue([vc isMinorKeySelected], @"Selecting a minor key flips the mode");
+        [vc complete];
     }];
+    XCTAssertEqualObjects(song.key, [DPKey minorKeys][3], @"Completing stores the dialled key");
+}
+
+- (void)testSongEditorRequiresTitle
+{
+    DPPitchedSong *song = [DPPitchedSong new];
+    song.name = @"Keep Me";
+    song.key = [DPKey majorKeys].firstObject;
+    
+    DPSongEditorViewController *editor = [DPSongEditorViewController new];
+    editor.song = song;
+    __block NSInteger completions = 0;
+    editor.completionCallback = ^(BOOL cancelled) { completions++; };
+    
+    [self exerciseController:editor actions:^(UIViewController *controller) {
+        DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
+        [vc setTitleText:@"   "];
+        [vc complete];
+        XCTAssertTrue([vc isTitleErrorVisible], @"A blank title shows the requirement inline");
+    }];
+    XCTAssertEqual(completions, 0, @"A blank title never completes the editor");
+    XCTAssertEqualObjects(song.name, @"Keep Me");
 }
 
 // MARK: - SettingsViewController Tests

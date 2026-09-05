@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect
 
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -12,7 +11,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import org.hamcrest.Matchers.anything
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +25,7 @@ import org.junit.runner.RunWith
  * - addSongButton: FloatingActionButton to add songs
  * - sorryText: TextView shown when no songs exist
  * - songTitleEditText: EditText for song title in add dialog
- * - songKeySpinner: Spinner for key selection in add dialog
+ * - songKeyDial: Key dial for key selection in add dialog
  * - songTitleTextView: Song title in list item
  * - songKeyTextView: Key signature in list item
  * - songs_item: Bottom nav menu item for songs tab
@@ -107,7 +105,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testAddSongDialogHasKeySpinner() {
+    fun testAddSongDialogHasKeyDial() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -116,8 +114,8 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Verify the key spinner is displayed
-        onView(withId(R.id.songKeySpinner))
+        // Verify the key dial is displayed
+        onView(withId(R.id.songKeyDial))
             .check(matches(isDisplayed()))
     }
 
@@ -141,7 +139,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testCanSelectKeyFromSpinner() {
+    fun testCanTapKeyDial() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -150,19 +148,13 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Click on the key spinner to open it
-        onView(withId(R.id.songKeySpinner))
+        // Tap the dial; the centre selector and cells absorb the tap without leaving the editor
+        onView(withId(R.id.songKeyDial))
             .perform(click())
 
         EspressoTestUtils.shortWait()
 
-        // Select an item from the spinner (first item after "Select Key")
-        onData(anything())
-            .atPosition(1)
-            .perform(click())
-
-        // Verify spinner is still displayed (selection completed)
-        onView(withId(R.id.songKeySpinner))
+        onView(withId(R.id.songKeyDial))
             .check(matches(isDisplayed()))
     }
 

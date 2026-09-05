@@ -106,6 +106,9 @@
 		B6419FE131931C3EE072A619 /* FirebaseFacebookSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6414 /* FirebaseFacebookSwiftUI */; };
 		B6419FE131931C3EE072A61A /* FirebaseAppleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6415 /* FirebaseAppleSwiftUI */; };
 		ABBB00020000000000000002 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
+		ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00060000000000000006 /* PitchRadialLayout.swift */; };
+		ABBB00080000000000000008 /* PitchRadialLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00060000000000000006 /* PitchRadialLayout.swift */; };
+		ABBB000A000000000000000A /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00090000000000000009 /* SongEditorView.swift */; };
 		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
 		B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
@@ -229,6 +232,8 @@
 		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		24DCB8F913D487DFA23A2EDC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ABBB00010000000000000001 /* PitchChord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChord.swift; sourceTree = "<group>"; };
+		ABBB00060000000000000006 /* PitchRadialLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchRadialLayout.swift; sourceTree = "<group>"; };
+		ABBB00090000000000000009 /* SongEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
 		4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchInstrumentView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
@@ -617,6 +622,8 @@
 				0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */,
 				4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */,
 				ABBB00010000000000000001 /* PitchChord.swift */,
+				ABBB00060000000000000006 /* PitchRadialLayout.swift */,
+				ABBB00090000000000000009 /* SongEditorView.swift */,
 				E9C584F19CA54391BAD09BEC /* DPTheme.swift */,
 			);
 			path = pitchperfect;
@@ -933,6 +940,8 @@
 				634C898815885F6A000D9AFE /* VLayoutView.m in Sources */,
 				631C912315945219004733F1 /* DPKeysViewController.m in Sources */,
 				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
+				ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */,
+				ABBB000A000000000000000A /* SongEditorView.swift in Sources */,
 				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
 				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
 				B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */,
@@ -988,6 +997,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */,
+				ABBB00080000000000000008 /* PitchRadialLayout.swift in Sources */,
 				A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */,
 				ABBB00030000000000000003 /* PitchChord.swift in Sources */,
 				A7D10A080000000000000008 /* PitchWidgetRangeIntent.swift in Sources */,

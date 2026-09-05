@@ -10,6 +10,9 @@
     <string name="AddSong">Add Song</string>
     <string name="SongTitle">Song Title</string>
     <string name="SongKey">Song Key</string>
+    <string name="SongTitleHint">Untitled</string>
+    <string name="KeyModeMajor">Major keys</string>
+    <string name="KeyModeMinor">Minor keys</string>
     <string name="Cancel">Cancel</string>
     <string name="Ok">OK</string>
     <string name="EditSongList">Edit Songs</string>
