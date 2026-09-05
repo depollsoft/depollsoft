@@ -5,11 +5,20 @@ on:
     inputs:
       preview_run_id:
         description: Successful same-repository PR Preview run containing the widget
-        required: true
+        required: false
         type: string
       archive_artifact:
         description: Exact ios-preview artifact name from that run
-        required: true
+        required: false
+        type: string
+
+      draft_release:
+        description: Private draft release containing a locally built archive, instead of an Actions artifact
+        required: false
+        type: string
+      archive_sha256:
+        description: Expected SHA-256 of the draft release archive
+        required: false
         type: string
 
 permissions:
@@ -27,6 +36,7 @@ jobs:
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
+      DRAFT_RELEASE: ${{ inputs.draft_release }}
     steps:
       - name: Checkout trusted tooling
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -35,6 +45,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate source archive provenance
+        if: inputs.draft_release == ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SOURCE_RUN: ${{ inputs.preview_run_id }}
@@ -58,6 +69,7 @@ jobs:
           PY
 
       - name: Download existing unsigned widget archive
+        if: inputs.draft_release == ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ inputs.archive_artifact }}
@@ -66,6 +78,37 @@ jobs:
           run-id: ${{ inputs.preview_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download checked archive from private draft release
+        if: inputs.draft_release != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPECTED_SHA256: ${{ inputs.archive_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" == true ]]
+          gh release view "$DRAFT_RELEASE" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,targetCommitish > "$RUNNER_TEMP/source-run.json"
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          repo = os.environ['GITHUB_REPOSITORY']
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'source-run.json')) as source:
+              release = json.load(source)
+          assert release['isDraft'], 'Only unpublished draft releases are accepted'
+          sha = release['targetCommitish']
+          assert re.fullmatch('[0-9a-f]{40}', sha), 'Release must pin a full source commit'
+          pulls = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/commits/{sha}/pulls']))
+          assert any(pr['state'] == 'open' and pr['head']['sha'] == sha and
+                     pr['head']['repo']['full_name'] == repo for pr in pulls), 'Source must be a current same-repo PR head'
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write('SOURCE_SHA=' + sha + '\n')
+          PY
+          mkdir -p preview-artifacts/ios
+          gh release download "$DRAFT_RELEASE" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'PitchPerfect-private.xcarchive.zip' --dir preview-artifacts/ios
+          actual="$(shasum -a 256 preview-artifacts/ios/PitchPerfect-private.xcarchive.zip | awk '{print $1}')"
+          [[ "$actual" == "$EXPECTED_SHA256" ]]
       - name: Expand archive and assign fresh build number
         shell: bash
         run: |
@@ -91,6 +134,8 @@ jobs:
           path = archive / 'Info.plist'
           with path.open('rb') as source:
               info = plistlib.load(source)
+          if os.environ.get('DRAFT_RELEASE'):
+              assert info.get('SourceCommit') == os.environ['SOURCE_SHA'], 'Archive source commit differs'
           info['ApplicationProperties']['CFBundleVersion'] = version
           with path.open('wb') as output:
               plistlib.dump(info, output)
