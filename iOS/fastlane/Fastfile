@@ -427,24 +427,45 @@ platform :ios do
       is_key_content_base64: false,
     )
     identifiers = [config[:bundle_identifier], config[:extension_bundle_identifier]].compact
-    profiles = identifiers.to_h { |identifier| [identifier, "match AdHoc #{identifier}"] }
+    verifier = File.join(__dir__, "verify_firebase_ipa.py")
+    sh("python3", verifier, "--archive", archive_path, "--app", app)
     match(
       type: "adhoc",
       readonly: false,
       app_identifier: identifiers,
       api_key: api_key,
     )
-    build_app(
-      skip_build_archive: true,
-      archive_path: archive_path,
-      scheme: config[:scheme],
-      export_method: "ad-hoc",
-      export_team_id: "43AWMS3YJX",
-      export_options: {
+    # Match may suffix a replacement profile's name after capabilities change.
+    mapping = lane_context[SharedValues::MATCH_PROVISIONING_PROFILE_MAPPING]
+    profiles = identifiers.to_h { |identifier| [identifier, mapping.fetch(identifier)] }
+    output_directory = File.join(IOS_ROOT, "build")
+    FileUtils.mkdir_p(output_directory)
+    output_path = File.join(output_directory, config[:output_name])
+    Dir.mktmpdir("firebase-export-") do |directory|
+      profile_paths = identifiers.to_h do |identifier|
+        [identifier, ENV.fetch("sigh_#{identifier}_adhoc_profile-path")]
+      end
+      profile_manifest = File.join(directory, "Profiles.plist")
+      File.write(profile_manifest, profile_paths.to_plist)
+      sh("python3", verifier, "--archive", archive_path, "--app", app,
+         "--prepare-profiles", profile_manifest)
+      export_options = File.join(directory, "ExportOptions.plist")
+      export_path = File.join(directory, "ipa")
+      File.write(export_options, {
+        method: "ad-hoc",
+        teamID: "43AWMS3YJX",
+        signingStyle: "manual",
         provisioningProfiles: profiles,
-      },
-      output_directory: File.join(IOS_ROOT, "build"),
-      output_name: config[:output_name],
-    )
+        manageAppVersionAndBuildNumber: false,
+      }.to_plist)
+      # Export the compiled archive without opening a source workspace or SPM.
+      sh("xcodebuild", "-exportArchive", "-archivePath", archive_path,
+         "-exportOptionsPlist", export_options, "-exportPath", export_path)
+      ipas = Dir.glob(File.join(export_path, "*.ipa"))
+      UI.user_error!("Expected one exported IPA, found #{ipas.length}") unless ipas.length == 1
+      sh("python3", verifier, "--ipa", ipas.first, "--app", app)
+      FileUtils.cp(ipas.first, output_path)
+    end
+    UI.success("Verified Firebase IPA: #{output_path}")
   end
 end
