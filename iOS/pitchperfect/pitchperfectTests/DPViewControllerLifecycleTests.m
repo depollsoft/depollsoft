@@ -30,6 +30,11 @@
 @interface DPSongEditorViewController (Testing)
 - (void)complete;
 - (void)cancel;
+- (void)setTitleText:(NSString *)titleText;
+- (void)selectKey:(DPKey *)key;
+- (DPKey *)selectedKey;
+- (BOOL)isMinorKeySelected;
+- (BOOL)isTitleErrorVisible;
 @end
 
 @interface DPLoginViewController (Testing)
@@ -197,22 +202,56 @@
 
     [self exerciseController:editor actions:^(UIViewController *controller) {
         DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
-        UITextField *nameField = [vc valueForKey:@"nameField"];
-        XCTAssertNotNil(nameField);
-        nameField.text = @"Edited Song";
-
-        UIPickerView *picker = [vc valueForKey:@"keyPicker"];
-        XCTAssertNotNil(picker);
-        NSInteger rows = [picker numberOfRowsInComponent:0];
-        if (rows > 1) {
-            [picker selectRow:rows - 1 inComponent:0 animated:NO];
-        }
+        [vc setTitleText:@"Edited Song"];
+        [vc selectKey:[DPKey majorKeys].lastObject];
 
         [vc complete];
     }];
 
     XCTAssertTrue([[completionRecords lastObject] isEqualToNumber:@(NO)]);
     XCTAssertEqualObjects(song.name, @"Edited Song");
+}
+
+- (void)testSongEditorKeyDialSelection
+{
+    DPPitchedSong *song = [DPPitchedSong new];
+    song.name = @"Test Song";
+    song.key = [DPKey majorKeys].firstObject;
+
+    DPSongEditorViewController *editor = [DPSongEditorViewController new];
+    editor.song = song;
+
+    [self exerciseController:editor actions:^(UIViewController *controller) {
+        DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
+        XCTAssertEqualObjects([vc selectedKey], song.key, @"The dial opens on the song's key");
+        XCTAssertFalse([vc isMinorKeySelected]);
+
+        [vc selectKey:[DPKey minorKeys][3]];
+        XCTAssertTrue([vc isMinorKeySelected], @"Selecting a minor key flips the mode");
+        [vc complete];
+    }];
+    XCTAssertEqualObjects(song.key, [DPKey minorKeys][3], @"Completing stores the dialled key");
+}
+
+- (void)testSongEditorRequiresTitle
+{
+    DPPitchedSong *song = [DPPitchedSong new];
+    song.name = @"Keep Me";
+    song.key = [DPKey majorKeys].firstObject;
+
+    DPSongEditorViewController *editor = [DPSongEditorViewController new];
+    editor.song = song;
+    __block NSInteger completions = 0;
+    editor.completionCallback = ^(BOOL cancelled) { completions++; };
+
+    [self exerciseController:editor actions:^(UIViewController *controller) {
+        DPSongEditorViewController *vc = (DPSongEditorViewController *)controller;
+        [vc setTitleText:@"   "];
+        [vc complete];
+        XCTAssertTrue([vc isTitleErrorVisible], @"A blank title shows the requirement inline");
+    }];
+    XCTAssertEqual(completions, 0, @"A blank title never completes the editor");
+    XCTAssertEqualObjects(song.name, @"Keep Me");
 }
 
 - (void)testSongEditorCancel

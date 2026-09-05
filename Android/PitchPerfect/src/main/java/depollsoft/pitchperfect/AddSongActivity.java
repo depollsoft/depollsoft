@@ -3,30 +3,24 @@ package depollsoft.pitchperfect;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
-import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bindroid.BindingMode;
-import com.bindroid.converters.AdapterConverter;
-import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
+import com.google.android.material.textfield.TextInputLayout;
 
 import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.Key;
 import depollsoft.pitchperfect.lib.PitchedSong;
 
@@ -35,18 +29,8 @@ public class AddSongActivity extends AppCompatActivity {
     private boolean editing;
     private PitchedSong toEdit;
     private TrackableField<PitchedSong> song = new TrackableField<PitchedSong>();
-
-    private TrackableField<TrackableCollection<Key>> allKeys = new TrackableField<TrackableCollection<Key>>();
-
-    public AddSongActivity() {
-        this.setAllKeys(new TrackableCollection<Key>());
-        this.getAllKeys().addAll(Key.getMajorKeys());
-        this.getAllKeys().addAll(Key.getMinorKeys());
-    }
-
-    public TrackableCollection<Key> getAllKeys() {
-        return this.allKeys.get();
-    }
+    private KeyDialView keyDial;
+    private TextInputLayout titleLayout;
 
     public PitchedSong getSong() {
         return this.song.get();
@@ -55,8 +39,6 @@ public class AddSongActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.setTitle("Edit Song");
 
         if (!ActionBars.hasActionBar(this)) {
             requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -81,66 +63,73 @@ public class AddSongActivity extends AppCompatActivity {
             this.setSong(new PitchedSong());
             this.getSong().setKey(Key.getMajorKeys().get(Key.getMajorKeys().size() / 2));
         }
+        this.setTitle(this.editing ? R.string.EditSong : R.string.AddSong);
 
-        UiBinder.bind(this,
-                new EditTextTextProperty((EditText) this.findViewById(R.id.songTitleEditText)),
-                "Song.Name", BindingMode.TWO_WAY);
-
-        UiBinder.bind(this, R.id.songKeySpinner, "Adapter", "AllKeys", new AdapterConverter(
-                SongKeySignatureSelectedItemView.class, true, false, SongKeySignatureListItemView.class));
-
-        int keyIndex = this.getAllKeys().indexOf(this.getSong().getKey());
-
-        this.findViewById(R.id.saveSongButton).setOnClickListener(v -> okClicked());
-
-        final Spinner spinner = (Spinner) this.findViewById(R.id.songKeySpinner);
-        spinner.setSelection(keyIndex);
-        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+        EditText titleField = this.findViewById(R.id.songTitleEditText);
+        UiBinder.bind(this, new EditTextTextProperty(titleField), "Song.Name", BindingMode.TWO_WAY);
+        titleLayout = this.findViewById(R.id.songTitleLayout);
+        titleField.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                AddSongActivity.this.getSong().setKey((Key) spinner.getSelectedItem());
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> arg0) {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (titleLayout.getError() != null && s.toString().trim().length() > 0) {
+                    titleLayout.setError(null);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
+
+        keyDial = this.findViewById(R.id.songKeyDial);
+        keyDial.select(this.getSong().getKey());
+        keyDial.setOnKeyChange(key -> this.getSong().setKey(key));
+
+        this.findViewById(R.id.saveSongButton).setOnClickListener(v -> okClicked());
+    }
+
+    @Override
+    protected void onPause() {
+        keyDial.stopPreview();
+        super.onPause();
     }
 
     private void okClicked() {
-        String name = AddSongActivity.this.getSong().getName();
+        String name = this.getSong().getName();
         if (name == null || name.trim().isEmpty()) {
-            EditText titleField = (EditText) AddSongActivity.this.findViewById(R.id.songTitleEditText);
-            titleField.setError(AddSongActivity.this.getString(R.string.SongTitleRequired));
+            titleLayout.setError(this.getString(R.string.SongTitleRequired));
+            titleLayout.requestFocus();
+            View titleField = this.findViewById(R.id.songTitleEditText);
             titleField.requestFocus();
+            titleField.performHapticFeedback(HapticFeedbackConstants.REJECT);
             return;
         }
-        if (AddSongActivity.this.editing) {
-            AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
-            AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
+        this.getSong().setName(name.trim());
+        if (this.editing) {
+            this.toEdit.setName(this.getSong().getName());
+            this.toEdit.setKey(this.getSong().getKey());
             SongsModel.get().getDefaultSongList().notifyOfChange();
         } else {
-            SongsModel.get().getDefaultSongList().addSong(AddSongActivity.this.getSong());
+            SongsModel.get().getDefaultSongList().addSong(this.getSong());
         }
-        View feedbackView = AddSongActivity.this.findViewById(R.id.saveSongButton);
+        View feedbackView = this.findViewById(R.id.saveSongButton);
         int feedback = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                 ? HapticFeedbackConstants.CONFIRM
                 : HapticFeedbackConstants.CONTEXT_CLICK;
         feedbackView.performHapticFeedback(feedback);
-        AddSongActivity.this.setResult(1);
+        this.setResult(1);
         PitchPerfectActivity.handlingResult = true;
-        AddSongActivity.this.finish();
+        this.finish();
     }
 
     private void cancelClicked() {
-        AddSongActivity.this.setResult(Activity.RESULT_CANCELED);
+        this.setResult(Activity.RESULT_CANCELED);
         PitchPerfectActivity.handlingResult = true;
-        AddSongActivity.this.finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+        this.finish();
     }
 
     @Override
@@ -152,12 +141,12 @@ public class AddSongActivity extends AppCompatActivity {
 
         menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
                 item -> {
-                    if (AddSongActivity.this.editing) {
-                        SongsModel.get().getDefaultSongList().removeSong(AddSongActivity.this.toEdit);
+                    if (this.editing) {
+                        SongsModel.get().getDefaultSongList().removeSong(this.toEdit);
                     }
-                    AddSongActivity.this.setResult(1);
+                    this.setResult(1);
                     PitchPerfectActivity.handlingResult = true;
-                    AddSongActivity.this.finish();
+                    this.finish();
                     return true;
                 });
 
@@ -171,10 +160,6 @@ public class AddSongActivity extends AppCompatActivity {
         });
 
         return true;
-    }
-
-    public void setAllKeys(TrackableCollection<Key> value) {
-        this.allKeys.set(value);
     }
 
     public void setSong(PitchedSong value) {

@@ -7,174 +7,112 @@
 //
 
 #import "DPSongEditorViewController.h"
-#import "DPNote.h"
 #import "DPKey.h"
-#import "DPAccidental.h"
 #import "GoogleMobileAdsStub.h"
-#import "DPUtils+UIControl.h"
-#import "DPPitchPipeModel.h"
-#import "DPPitchPipeButton.h"
-#import "LayoutManagers.h"
-#import "DPSettingsViewController.h"
 #import "DPAppDelegate.h"
 #import "DPAppDelegate+Ads.h"
-#import "DPGridLayout.h"
-#import "UIView+DPUtils.h"
 #import "pitchperfect-Swift.h"
-
-#define SHARP_STRING @"ì"
-#define FLAT_STRING @"í"
-#define LAYOUT_TAG 1337
 
 @interface DPSongEditorViewController ()
 
 @property (nonatomic, strong) GADBannerView *bannerView;
-@property (nonatomic, strong) UITextField *nameField;
-@property (nonatomic, strong) NSArray *allKeys;
-@property (nonatomic, strong) UIPickerView *keyPicker;
+@property (nonatomic, strong) NSLayoutConstraint *bannerWidth;
+@property (nonatomic, strong) NSLayoutConstraint *bannerHeight;
+@property (nonatomic, strong) DPSongEditor *editor;
 
 @end
 
 @implementation DPSongEditorViewController
 
-@synthesize bannerView, song, nameField, allKeys, keyPicker, completionCallback;
+@synthesize bannerView, bannerWidth, bannerHeight, song, editor, completionCallback;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     UINavigationItem *navigationItem = self.topNavigationItem;
-    
+
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         self.view.frame = CGRectMake(0, 0, 320, 480);
     }
-    
-    DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
-    rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1],
-                                 [DPGridDimension dimension]
-                                 ];
-    
-	// Do any additional setup after loading the view, typically from a nib.
+
     bannerView = [[GADBannerView alloc] init];
     bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
-    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(
-        self.view.frame.size.width
-    );
+    bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
     [self resetBannerViewSize];
-    
     bannerView.rootViewController = self;
     bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
-    
-    NSMutableArray *keys = [NSMutableArray array];
-    [keys addObjectsFromArray:[DPKey majorKeys]];
-    [keys addObjectsFromArray:[DPKey minorKeys]];
-    allKeys = [NSArray arrayWithArray:keys];
-    
+    bannerView.translatesAutoresizingMaskIntoConstraints = NO;
+
     UIScrollView *background = [[UIScrollView alloc] init];
     background.scrollEnabled = NO;
     background.backgroundColor = [DPTheme staffBackgroundColor];
-    [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
+    self.view.backgroundColor = [UIColor systemBackgroundColor];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
     // The glass bars sample this full-bleed scroll surface; without it iOS 26
     // paints an opaque hard edge over non-scrolling content.
     [self setContentScrollView:background forEdge:NSDirectionalRectEdgeAll];
-    // DPToolbarViewController (shared, pre-safe-area) opts out of extended
-    // layout; Pitch Perfect runs its score surface under the glass bars.
     self.edgesForExtendedLayout = UIRectEdgeAll;
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[background]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(background)]];
-    self.view.backgroundColor = [UIColor systemBackgroundColor];
-    
-    nameField = [[UITextField alloc] init];
-    UILabel *nameLabel = [[UILabel alloc] init];
-    nameLabel.text = @" Song Title:";
-    nameLabel.textColor = [UIColor lightGrayColor];
-    [nameLabel sizeToFit];
-    nameField.leftView = nameLabel;
-    nameField.leftViewMode = UITextFieldViewModeAlways;
-    nameField.text = song.name;
-    nameField.contentMode = UIViewContentModeCenter;
-    nameField.borderStyle = UITextBorderStyleRoundedRect;
-    nameField.returnKeyType = UIReturnKeyDone;
-    nameField.autocapitalizationType = UITextAutocapitalizationTypeWords;
-    nameField.delegate = self;
+    [NSLayoutConstraint activateConstraints:@[
+        [background.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [background.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [background.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [background.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+    ]];
 
-    // The key picker sits under the keyboard, so the keyboard must always be
-    // dismissible: Done on the return key, Done above the keyboard, and a tap
-    // anywhere outside the field.
-    UIToolbar *accessoryBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44)];
-    UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
-                                                                                   target:nil
-                                                                                   action:nil];
-    UIBarButtonItem *keyboardDone = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
-                                                                                  target:self
-                                                                                  action:@selector(dismissKeyboard)];
-    accessoryBar.items = @[flexibleSpace, keyboardDone];
-    [accessoryBar sizeToFit];
-    nameField.inputAccessoryView = accessoryBar;
+    editor = [[DPSongEditor alloc] initWithTitle:song.name ?: @"" key:song.key];
+    UIViewController *hosted = [editor makeViewController];
+    [self addChildViewController:hosted];
+    hosted.view.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:hosted.view];
+    [hosted didMoveToParentViewController:self];
 
-    UITapGestureRecognizer *dismissTap = [[UITapGestureRecognizer alloc] initWithTarget:self
-                                                                                 action:@selector(dismissKeyboard)];
-    dismissTap.cancelsTouchesInView = NO;
-    [self.view addGestureRecognizer:dismissTap];
-
-    [nameField sizeToFit];
-    
+    UILayoutGuide *safe = self.view.safeAreaLayoutGuide;
+    NSLayoutYAxisAnchor *bottomAnchor = safe.bottomAnchor;
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
-        [rootLayout addSubview:bannerView row:2 column:0];
-        
-        // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
+        [self.view addSubview:bannerView];
+        // Auto Layout owns the banner's frame, so the ad size becomes constraints.
+        CGSize adSize = CGSizeFromGADAdSize(bannerView.adSize);
+        bannerWidth = [bannerView.widthAnchor constraintEqualToConstant:adSize.width];
+        bannerHeight = [bannerView.heightAnchor constraintEqualToConstant:adSize.height];
+        [NSLayoutConstraint activateConstraints:@[
+            [bannerView.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+            [bannerView.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor],
+            bannerWidth,
+            bannerHeight,
+        ]];
+        bottomAnchor = bannerView.topAnchor;
     }
-    [rootLayout addSubview:[nameField pad:5] row:0 column:0];
-    rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    keyPicker = [[UIPickerView alloc] init];
-    keyPicker.dataSource = self;
-    keyPicker.delegate = self;
-    [keyPicker sizeToFit];
-    [keyPicker selectRow:[allKeys indexOfObject:song.key] inComponent:0 animated:YES];
-    
-    [rootLayout addSubview:[keyPicker alignBottom] row:1 column:0];
-    
-    [self.view addSubview:rootLayout];
-    
-    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
-                                                         target:self
-                                                       selector:@selector(complete)];
-    
-    UIBarButtonItem *cancelItem = [DPCommon barButtonWithSystemName:@"xmark"
-                                                           target:self
-                                                         selector:@selector(cancel)];
-    
+    [NSLayoutConstraint activateConstraints:@[
+        [hosted.view.topAnchor constraintEqualToAnchor:safe.topAnchor],
+        [hosted.view.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],
+        [hosted.view.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],
+        [hosted.view.bottomAnchor constraintEqualToAnchor:bottomAnchor constant:-8],
+    ]];
+
+    UIBarButtonItem *doneItem = [DPCommon barButtonWithSystemName:@"checkmark" target:self selector:@selector(complete)];
+    UIBarButtonItem *cancelItem = [DPCommon barButtonWithSystemName:@"xmark" target:self selector:@selector(cancel)];
     navigationItem.title = song.name.length > 0 ? @"Edit Song" : @"Add Song";
     navigationItem.leftBarButtonItem = cancelItem;
     navigationItem.rightBarButtonItem = doneItem;
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
-    [rootLayout.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
-    [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
-    
 }
 
 - (void)resetBannerViewSize {
     [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
+    CGSize adSize = CGSizeFromGADAdSize(self.bannerView.adSize);
+    bannerWidth.constant = adSize.width;
+    bannerHeight.constant = adSize.height;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [self resetBannerViewSize];
     [super viewDidAppear:animated];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [editor stopPreview];
+    [super viewWillDisappear:animated];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
@@ -184,116 +122,48 @@
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
-- (void)dismissKeyboard {
-    [self.view endEditing:YES];
+#pragma mark - Editing state
+
+- (void)setTitleText:(NSString *)titleText {
+    editor.title = titleText;
 }
 
-- (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    [textField resignFirstResponder];
-    return NO;
+- (void)selectKey:(DPKey *)key {
+    [editor select:key];
+}
+
+- (DPKey *)selectedKey {
+    return editor.selectedKey;
+}
+
+- (BOOL)isMinorKeySelected {
+    return editor.isMinor;
+}
+
+- (BOOL)isTitleErrorVisible {
+    return editor.titleErrorVisible;
 }
 
 - (void)complete {
-    song.name = nameField.text;
-    song.key = [allKeys objectAtIndex:[keyPicker selectedRowInComponent:0]];
+    if (![editor requireTitle]) {
+        UINotificationFeedbackGenerator *feedback = [[UINotificationFeedbackGenerator alloc] init];
+        [feedback notificationOccurred:UINotificationFeedbackTypeError];
+        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, @"Song title is required");
+        return;
+    }
+    song.name = editor.title;
+    song.key = editor.selectedKey;
+    [editor stopPreview];
     UINotificationFeedbackGenerator *feedback = [[UINotificationFeedbackGenerator alloc] init];
     [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
     [self onComplete:NO];
-    [self dismissViewControllerAnimated:YES completion:^{
-        
-    }];
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)cancel {
+    [editor stopPreview];
     [self onComplete:YES];
-    [self dismissViewControllerAnimated:YES completion:^{
-        
-    }];
-}
-
-- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
-    DPKey *key = [allKeys objectAtIndex:row];
-    return [self viewForKey:key withPicker:pickerView];
-}
-
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-    return 1;
-}
-
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-    return allKeys.count;
-}
-
-- (UIView *)keyUi:(DPKey *)k {
-    NSArray *flats = [NSArray arrayWithObjects:@"", @"\u00A8", @"\u00A9", @"\u00AA", @"\u00AB", @"\u00AC", @"\u20AC", @"\u00AE", nil];
-    NSArray *sharps = [NSArray arrayWithObjects:@"", @"\u00A1", @"\u00A2", @"\u00A3", @"\u00A4", @"\u00A5", @"\u00A6", @"\u00A7", nil];
-    UILabel *label = [[UILabel alloc] init];
-    NSMutableString *string = [NSMutableString stringWithString:@"&"];
-    if (k.numAccidentals > 0) {
-        [string appendString:[sharps objectAtIndex:k.numAccidentals]];
-    } else if (k.numAccidentals < 0) {
-        [string appendString:[flats objectAtIndex:-k.numAccidentals]];
-    }
-    label.text = [NSString stringWithString:string];
-    label.font = [UIFont fontWithName:@"MusiQwik" size:30];
-    label.backgroundColor = [UIColor clearColor];
-    [label sizeToFit];
-    return label;
-}
-
-- (UIView *)noteUi:(DPKey *)k {
-    DPNote *n = k.note;
-    HLayoutView *flow = [[HLayoutView alloc] init];
-    UILabel *noteName = [[UILabel alloc] init];
-    noteName.font = [UIFont boldSystemFontOfSize:16];
-    noteName.text = k.friendlyName;
-    noteName.backgroundColor = [UIColor clearColor];
-    [noteName sizeToFit];
-    [flow addSubview:noteName];
-    
-    UILabel *accidental = [[UILabel alloc] init];
-    accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.backgroundColor = [UIColor clearColor];
-    switch (n.accidental.get) {
-        case Sharp:
-            accidental.text = SHARP_STRING;
-            break;
-        case Flat:
-            accidental.text = FLAT_STRING;
-            break;
-        default:
-            break;
-    }
-    [accidental sizeToFit];
-    
-    [flow addSubview:accidental];
-    
-    [flow sizeToFit];
-    return flow;
-}
-
-- (UIView *)viewForKey:(DPKey *)key withPicker:(UIPickerView *)picker {
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, picker.frame.size.width * .9, 44)];
-    HLayoutView *flowRight = [[HLayoutView alloc] init];
-    [flowRight addSubview:[self noteUi:key]];
-    
-    flowRight.frame = CGRectInset(view.frame, 10, 0);
-    flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    
-    HLayoutView *flowLeft = [[HLayoutView alloc] init];
-    [flowLeft addSubview:[self keyUi:key]];
-    
-    flowLeft.frame = CGRectInset(view.frame, 10, 0);
-    flowLeft.hAlignment = UIControlContentHorizontalAlignmentLeft;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    
-    [view addSubview:flowRight];
-    [view addSubview:flowLeft];
-    
-    view.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill;
-    view.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    return view;
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)onComplete:(BOOL)cancelled {

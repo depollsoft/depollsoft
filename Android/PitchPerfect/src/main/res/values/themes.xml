@@ -114,6 +114,24 @@
         <item name="cornerSize">2dp</item>
     </style>
 
+    <style name="TextAppearance.Plate.FieldError" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/plate_ink</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- The one primary action on a plate: filled ink, engraved caps. -->
+    <style name="Widget.Plate.PrimaryButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:fontFamily">@font/oswald_medium</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/plate_on_accent</item>
+        <item name="backgroundTint">@color/plate_accent</item>
+        <item name="cornerRadius">2dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
     <style name="TextAppearance.Plate.SectionHeader" parent="TextAppearance.MaterialComponents.Overline">
         <item name="android:textColor">@color/plate_ink_secondary</item>
         <item name="android:textSize">12sp</item>
