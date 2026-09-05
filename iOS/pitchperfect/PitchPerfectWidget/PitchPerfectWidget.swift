@@ -261,7 +261,7 @@ private struct PitchCell: View {
     var body: some View {
         Toggle(
             isOn: active,
-            intent: PlayWidgetPitchIntent(pitchIndex: pitch.id, frequency: pitch.frequency, playing: !active)
+            intent: PlayWidgetPitchIntent(pitchIndex: pitch.id, frequency: pitch.frequency)
         ) {
             Text(pitch.spoken)
         }
