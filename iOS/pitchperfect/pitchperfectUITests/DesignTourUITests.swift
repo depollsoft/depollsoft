@@ -22,7 +22,7 @@ final class DesignTourUITests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
 
-        let c4 = springboard.buttons["C, octave 4"].firstMatch
+        let c4 = springboard.pitchCell("C, octave 4")
         XCTAssertTrue(c4.waitForExistence(timeout: 8), "The configured widget should expose C4")
         c4.tap()
         XCTAssertTrue(
@@ -30,7 +30,7 @@ final class DesignTourUITests: XCTestCase {
             "Sounding a widget pitch must keep the user on the Home Screen"
         )
         let playing = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value == %@", "Playing"),
+            predicate: NSPredicate(format: "value == %@", "1"),
             object: c4
         )
         XCTAssertEqual(.completed, XCTWaiter.wait(for: [playing], timeout: 3))
@@ -42,7 +42,7 @@ final class DesignTourUITests: XCTestCase {
 
         c4.tap()
         let stopped = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "value != %@", "Playing"),
+            predicate: NSPredicate(format: "value != %@", "1"),
             object: c4
         )
         XCTAssertEqual(.completed, XCTWaiter.wait(for: [stopped], timeout: 3))
@@ -52,7 +52,7 @@ final class DesignTourUITests: XCTestCase {
         XCTAssertTrue(fToF.isHittable, "The F-to-F control should accept taps")
         fToF.tap()
         XCTAssertTrue(
-            springboard.buttons["F, octave 5"].firstMatch.waitForExistence(timeout: 8),
+            springboard.pitchCell("F, octave 5").waitForExistence(timeout: 8),
             "Selecting F to F should replace C4 with F5"
         )
         XCTAssertTrue(springboard.buttons["Octave range F to F"].firstMatch.isSelected)

@@ -208,6 +208,41 @@ private struct RadialLayout: Layout {
     }
 }
 
+private struct PitchCellStyle: ToggleStyle {
+    let pitch: Pitch
+    let diameter: CGFloat
+    let palette: PlatePalette
+
+    func makeBody(configuration: Configuration) -> some View {
+        let active = configuration.isOn
+        let natural = pitch.accidental == "natural"
+        ZStack {
+            if active {
+                Circle()
+                    .fill(palette.lit.opacity(0.22))
+                    .blur(radius: diameter * 0.18)
+                    .scaleEffect(1.45)
+            }
+            Circle().fill(active ? palette.lit : palette.surface)
+            Circle().stroke(active ? palette.lit : palette.hairline, lineWidth: active ? 2 : 1.25)
+            Circle()
+                .stroke(
+                    active ? palette.onLit.opacity(0.45) : palette.secondary.opacity(0.28),
+                    lineWidth: 0.7
+                )
+                .padding(diameter * 0.07)
+            Text(pitch.engraved)
+                .font(.custom("Oswald-Medium", size: diameter * (natural ? 0.44 : 0.29)))
+                .foregroundStyle(active ? palette.onLit : (natural ? palette.ink : palette.secondary))
+        }
+        .frame(width: diameter, height: diameter)
+        .contentShape(Circle())
+    }
+}
+
+/// A Toggle rather than a Button: WidgetKit flips a toggle's appearance the
+/// moment it is tapped, before the intent runs, so the cell lights even if
+/// the timeline reload that follows is delayed on the device.
 private struct PitchCell: View {
     let pitch: Pitch
     let active: Bool
@@ -215,33 +250,14 @@ private struct PitchCell: View {
     let palette: PlatePalette
 
     var body: some View {
-        let natural = pitch.accidental == "natural"
-        Button(intent: PlayWidgetPitchIntent(pitchIndex: pitch.id, frequency: pitch.frequency)) {
-            ZStack {
-                if active {
-                    Circle()
-                        .fill(palette.lit.opacity(0.22))
-                        .blur(radius: diameter * 0.18)
-                        .scaleEffect(1.45)
-                }
-                Circle().fill(active ? palette.lit : palette.surface)
-                Circle().stroke(active ? palette.lit : palette.hairline, lineWidth: active ? 2 : 1.25)
-                Circle()
-                    .stroke(
-                        active ? palette.onLit.opacity(0.45) : palette.secondary.opacity(0.28),
-                        lineWidth: 0.7
-                    )
-                    .padding(diameter * 0.07)
-                Text(pitch.engraved)
-                    .font(.custom("Oswald-Medium", size: diameter * (natural ? 0.44 : 0.29)))
-                    .foregroundStyle(active ? palette.onLit : (natural ? palette.ink : palette.secondary))
-            }
-            .frame(width: diameter, height: diameter)
-            .contentShape(Circle())
+        Toggle(
+            isOn: active,
+            intent: PlayWidgetPitchIntent(pitchIndex: pitch.id, frequency: pitch.frequency, playing: !active)
+        ) {
+            Text(pitch.spoken)
         }
-        .buttonStyle(.plain)
+        .toggleStyle(PitchCellStyle(pitch: pitch, diameter: diameter, palette: palette))
         .accessibilityLabel(pitch.spoken)
-        .accessibilityValue(active ? "Playing" : "")
     }
 }
 

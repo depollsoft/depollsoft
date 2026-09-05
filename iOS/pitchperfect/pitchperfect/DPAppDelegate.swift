@@ -17,7 +17,8 @@ public extension DPAppDelegate {
 
     /// The widget's lit cell mirrors a tone owned by this process. A new
     /// process owns no tone, so any persisted active pitch is stale.
-    @objc func resetWidgetPlaybackState() {
+    @objc func configureWidgetPlayback() {
+        WidgetPlaybackBridge.installStopObserver()
         guard WidgetPitchState.activePitch != nil else { return }
         WidgetPitchState.set(nil)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)

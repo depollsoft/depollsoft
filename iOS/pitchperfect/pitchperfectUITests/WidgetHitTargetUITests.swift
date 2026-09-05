@@ -1,5 +1,16 @@
 import XCTest
 
+extension XCUIApplication {
+    /// A widget cell by its spoken name. Cells are toggles; their value is "1" while sounding.
+    func pitchCell(_ label: String) -> XCUIElement {
+        descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
+    }
+}
+
+extension XCUIElement {
+    var isSounding: Bool { (value as? String) == "1" }
+}
+
 extension XCTestCase {
     /// Adds the Pitch Perfect widget to the Home Screen and leaves it showing C to C.
     func addPitchPipeWidget(to springboard: XCUIApplication) {
@@ -51,7 +62,7 @@ extension XCTestCase {
         XCTAssertTrue(cToC.waitForExistence(timeout: 8), "The widget should expose its range control")
         if !cToC.isSelected {
             cToC.tap()
-            XCTAssertTrue(springboard.buttons["C, octave 4"].firstMatch.waitForExistence(timeout: 8))
+            XCTAssertTrue(springboard.pitchCell("C, octave 4").waitForExistence(timeout: 8))
         }
     }
 }
@@ -73,7 +84,7 @@ final class WidgetHitTargetUITests: XCTestCase {
 
         var centers: [String: CGPoint] = [:]
         for label in noteLabels {
-            let cell = springboard.buttons[label].firstMatch
+            let cell = springboard.pitchCell(label)
             XCTAssertTrue(cell.waitForExistence(timeout: 5), "\(label) should be on the face")
             let frame = cell.frame
             XCTAssertGreaterThanOrEqual(min(frame.width, frame.height), 44, "\(label) is below the 44pt floor")
@@ -88,7 +99,7 @@ final class WidgetHitTargetUITests: XCTestCase {
         }
 
         func playing() -> [String] {
-            noteLabels.filter { springboard.buttons[$0].firstMatch.value as? String == "Playing" }
+            noteLabels.filter { springboard.pitchCell($0).isSounding }
         }
         func waitUntilPlaying(_ expected: [String]) {
             let deadline = Date().addingTimeInterval(4)
@@ -98,11 +109,11 @@ final class WidgetHitTargetUITests: XCTestCase {
             XCTAssertEqual(expected, playing())
         }
 
-        springboard.buttons["D, octave 4"].firstMatch.tap()
+        springboard.pitchCell("D, octave 4").tap()
         waitUntilPlaying(["D, octave 4"])
-        springboard.buttons["A, octave 4"].firstMatch.tap()
+        springboard.pitchCell("A, octave 4").tap()
         waitUntilPlaying(["A, octave 4"])
-        springboard.buttons["A, octave 4"].firstMatch.tap()
+        springboard.pitchCell("A, octave 4").tap()
         waitUntilPlaying([])
     }
 }

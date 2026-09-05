@@ -64,7 +64,40 @@ enum WidgetRangeState {
     }
 }
 
-struct SelectWidgetRangeIntent: AudioPlaybackIntent {
+/// Lets a widget-process intent stop a tone the app process owns.
+enum WidgetPlaybackBridge {
+    static let stopNotificationName = "depollsoft.pitchperfect.widget.stop"
+
+    static func requestStop() {
+        CFNotificationCenterPostNotification(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            CFNotificationName(stopNotificationName as CFString),
+            nil,
+            nil,
+            true
+        )
+    }
+
+    /// Call once from the app process; the observer outlives the app delegate.
+    static func installStopObserver() {
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            nil,
+            { _, _, _, _, _ in
+                Task { @MainActor in
+                    WidgetTonePlayer.shared.stop()
+                }
+            },
+            stopNotificationName as CFString,
+            nil,
+            .deliverImmediately
+        )
+    }
+}
+
+/// Runs in the widget process, so WidgetKit's own post-interaction reload
+/// redraws the face without waiting on the app.
+struct SelectWidgetRangeIntent: AppIntent {
     static let title: LocalizedStringResource = "Select Pitch Pipe Range"
     static let openAppWhenRun = false
 
@@ -78,9 +111,7 @@ struct SelectWidgetRangeIntent: AudioPlaybackIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        await MainActor.run {
-            WidgetTonePlayer.shared.stop()
-        }
+        WidgetPlaybackBridge.requestStop()
         WidgetRangeState.set(rangeRawValue)
         WidgetPitchState.set(nil)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
@@ -99,11 +130,8 @@ private final class WidgetTonePlayer {
     private var player: AVAudioPlayer?
     private var frequency: Double?
 
-    func toggle(frequency: Double) throws -> Bool {
-        if player?.isPlaying == true, self.frequency == frequency {
-            stop()
-            return false
-        }
+    func play(frequency: Double) throws {
+        if player?.isPlaying == true, self.frequency == frequency { return }
 
         let session = AVAudioSession.sharedInstance()
         player?.stop()
@@ -123,7 +151,6 @@ private final class WidgetTonePlayer {
             }
             player = nextPlayer
             self.frequency = frequency
-            return true
         } catch {
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
             throw error
@@ -141,10 +168,14 @@ private final class WidgetTonePlayer {
 /// Runs in the containing app process when a widget cell is pressed. This
 /// source is intentionally compiled into both the app and widget targets so
 /// WidgetKit can discover the intent and the app can execute it.
-struct PlayWidgetPitchIntent: AudioPlaybackIntent {
+struct PlayWidgetPitchIntent: SetValueIntent, AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Sound Pitch"
     static let openAppWhenRun = false
     static let loopDuration = 4.0
+
+    /// WidgetKit writes the toggle's new state here before performing.
+    @Parameter(title: "Playing")
+    var value: Bool
 
     @Parameter(title: "Pitch")
     var pitchIndex: Int
@@ -154,23 +185,30 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
 
     init() {}
 
-    init(pitchIndex: Int, frequency: Double) {
+    init(pitchIndex: Int, frequency: Double, playing: Bool) {
         self.pitchIndex = pitchIndex
         self.frequency = frequency
+        value = playing
     }
 
     func perform() async throws -> some IntentResult {
-        let isPlaying: Bool
-        do {
-            isPlaying = try await MainActor.run {
-                try WidgetTonePlayer.shared.toggle(frequency: frequency)
+        if value {
+            do {
+                try await MainActor.run {
+                    try WidgetTonePlayer.shared.play(frequency: frequency)
+                }
+            } catch {
+                WidgetPitchState.set(nil)
+                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+                throw error
             }
-        } catch {
+            WidgetPitchState.set(pitchIndex)
+        } else {
+            await MainActor.run {
+                WidgetTonePlayer.shared.stop()
+            }
             WidgetPitchState.set(nil)
-            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-            throw error
         }
-        WidgetPitchState.set(isPlaying ? pitchIndex : nil)
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         return .result()
     }
