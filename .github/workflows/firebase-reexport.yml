@@ -1,0 +1,180 @@
+name: Re-export verified Pitch Perfect to Firebase
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_run_id:
+        description: Successful same-repository PR Preview run containing the widget
+        required: true
+        type: string
+      archive_artifact:
+        description: Exact ios-preview artifact name from that run
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: firebase-pitchperfect-reexport
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: [self-hosted, macOS, heavy]
+    timeout-minutes: 35
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - name: Checkout trusted tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Validate source archive provenance
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN: ${{ inputs.preview_run_id }}
+          ARTIFACT: ${{ inputs.archive_artifact }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          [[ "$ARTIFACT" =~ ^ios-preview-[0-9]+-[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source-run.json"
+          python3 - <<'PY'
+          import json, os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'source-run.json')) as source:
+              run = json.load(source)
+          assert run['event'] == 'pull_request'
+          assert run['name'] == 'PR Preview'
+          assert run['conclusion'] == 'success'
+          assert run['head_repository']['full_name'] == os.environ['GITHUB_REPOSITORY']
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write('SOURCE_SHA=' + run['head_sha'] + '\n')
+          PY
+
+      - name: Download existing unsigned widget archive
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ inputs.archive_artifact }}
+          path: preview-artifacts/ios
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.preview_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Expand archive and assign fresh build number
+        shell: bash
+        run: |
+          set -euo pipefail
+          ditto -x -k preview-artifacts/ios/PitchPerfect-private.xcarchive.zip preview-artifacts/ios
+          python3 - <<'PY'
+          import os, plistlib, time
+          from pathlib import Path
+          archive = Path('preview-artifacts/ios/PitchPerfect-private.xcarchive')
+          version = str(int(time.time()) // 10)
+          apps = list((archive / 'Products/Applications').glob('*.app'))
+          assert len(apps) == 1
+          app = apps[0]
+          for bundle in [app, *list((app / 'PlugIns').glob('*.appex'))]:
+              path = bundle / 'Info.plist'
+              with path.open('rb') as source:
+                  info = plistlib.load(source)
+              info['CFBundleVersion'] = version
+              if bundle == app:
+                  info['PrivateBuildNumber'] = version
+              with path.open('wb') as output:
+                  plistlib.dump(info, output)
+          path = archive / 'Info.plist'
+          with path.open('rb') as source:
+              info = plistlib.load(source)
+          info['ApplicationProperties']['CFBundleVersion'] = version
+          with path.open('wb') as output:
+              plistlib.dump(info, output)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write('BUILD_NUMBER=' + version + '\n')
+          print('Recovery build ' + version)
+          PY
+          echo "DEVELOPER_DIR=$(xcode-select -p)" >> "$GITHUB_ENV"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: iOS
+
+      - name: Test export validation
+        working-directory: iOS
+        run: |
+          python3 -B -m unittest discover -s fastlane/tests -v
+          bundle exec ruby fastlane/tests/test_firebase_export.rb
+
+      - name: Restore encrypted signing assets
+        env:
+          MATCH_REPOSITORY_ARCHIVE_PART_1: ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_1 }}
+          MATCH_REPOSITORY_ARCHIVE_PART_2: ${{ secrets.MATCH_REPOSITORY_ARCHIVE_PART_2 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          source="$RUNNER_TEMP/reexport-match-$GITHUB_RUN_ID"
+          mkdir -p "$source"
+          export MATCH_SOURCE="$source"
+          python3 - <<'PY'
+          import base64, os
+          encoded = os.environ['MATCH_REPOSITORY_ARCHIVE_PART_1'] + os.environ['MATCH_REPOSITORY_ARCHIVE_PART_2']
+          with open(os.path.join(os.environ['MATCH_SOURCE'], 'assets.tgz'), 'wb') as output:
+              output.write(base64.b64decode(encoded, validate=True))
+          PY
+          tar -xzf "$source/assets.tgz" -C "$source"
+          rm "$source/assets.tgz"
+          git -C "$source" init -b master
+          git -C "$source" config user.name 'github-actions[bot]'
+          git -C "$source" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$source" add .
+          git -C "$source" commit -m 'Restore encrypted signing assets'
+          git clone --bare "$source" "$source.git"
+          echo "MATCH_GIT_URL=file://$source.git" >> "$GITHUB_ENV"
+
+      - name: Sign and verify app and widget
+        working-directory: iOS
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: >-
+          bundle exec fastlane export_firebase_private app:PitchPerfect
+          archive:"$GITHUB_WORKSPACE/preview-artifacts/ios/PitchPerfect-private.xcarchive"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+
+      - name: Publish verified IPA directly to Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON }}
+          TESTER_GROUPS: ${{ vars.FIREBASE_APP_DISTRIBUTION_GROUPS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/reexport-firebase-$GITHUB_RUN_ID.json"
+          umask 077
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npx --yes firebase-tools@15.28.2 appdistribution:distribute iOS/build/PitchPerfect-private.ipa \
+            --app '1:402153260205:ios:9eb7589d0e3abe5b91f224' \
+            --groups "$TESTER_GROUPS" \
+            --release-notes "Widget signing repair. Build $BUILD_NUMBER. Source $SOURCE_SHA. App and widget signatures and private App Group verified before upload."
+          echo "Published verified widget build $BUILD_NUMBER from $SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary signing and build files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/reexport-match-$GITHUB_RUN_ID" "$RUNNER_TEMP/reexport-match-$GITHUB_RUN_ID.git"
+          rm -f "$RUNNER_TEMP/reexport-firebase-$GITHUB_RUN_ID.json" "$RUNNER_TEMP/source-run.json"
+          rm -rf preview-artifacts iOS/build
