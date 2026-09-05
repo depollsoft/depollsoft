@@ -23,7 +23,9 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  # GitHub exposes draft releases only to tokens with push access.
+  # Checkout does not persist this token; it is passed only to archive retrieval.
+  contents: write
 
 concurrency:
   group: firebase-pitchperfect-reexport
