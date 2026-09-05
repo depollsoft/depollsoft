@@ -34,6 +34,12 @@ final class DesignTourUITests: XCTestCase {
             object: c4
         )
         XCTAssertEqual(.completed, XCTWaiter.wait(for: [playing], timeout: 3))
+        // A momentary optimistic Toggle flash is not persistent playback state.
+        // Observe beyond both the timeline reload and the four-second audio loop.
+        for _ in 0..<6 {
+            Thread.sleep(forTimeInterval: 1)
+            XCTAssertEqual(c4.value as? String, "1", "The sounding note must stay selected after reload")
+        }
 
         let sounding = XCTAttachment(screenshot: springboard.screenshot())
         sounding.name = "widget-sounding-c4-on-home"
@@ -46,6 +52,8 @@ final class DesignTourUITests: XCTestCase {
             object: c4
         )
         XCTAssertEqual(.completed, XCTWaiter.wait(for: [stopped], timeout: 3))
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertNotEqual(c4.value as? String, "1", "The second tap must leave the note off")
 
         let fToF = springboard.buttons["Octave range F to F"].firstMatch
         XCTAssertTrue(fToF.waitForExistence(timeout: 3), "The widget should expose its F-to-F control")
