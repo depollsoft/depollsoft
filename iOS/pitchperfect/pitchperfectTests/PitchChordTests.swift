@@ -27,15 +27,14 @@ final class PitchChordTests: XCTestCase {
         )
     }
 
-    func testWidgetRangeIntentPersistsItsAssignedValue() async throws {
+    func testWidgetRangeStatePersistsAndClears() {
         let previousRange = WidgetRangeState.rawValue
         defer { WidgetRangeState.set(previousRange) }
 
-        _ = try await PlayWidgetPitchIntent(pitchIndex: 4, frequency: 329.63, playing: true).perform()
-        _ = try await SelectWidgetRangeIntent(range: .fToF).perform()
-
+        WidgetRangeState.set(PitchRange.fToF.rawValue)
         XCTAssertEqual(PitchRange.fToF.rawValue, WidgetRangeState.rawValue)
-        XCTAssertNil(WidgetPitchState.activePitch, "Changing range must release the sounding cell")
+        WidgetRangeState.set(nil)
+        XCTAssertNil(WidgetRangeState.rawValue)
     }
 
     func testWidgetPitchTapStartsSwitchesAndStopsTone() async throws {

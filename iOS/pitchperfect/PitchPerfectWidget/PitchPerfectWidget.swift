@@ -14,6 +14,7 @@ private struct PitchEntry: TimelineEntry {
     let date: Date
     let range: PitchRange
     let activePitch: Int?
+    var diagnostics: String?
 }
 
 private struct PitchProvider: AppIntentTimelineProvider {
@@ -32,10 +33,12 @@ private struct PitchProvider: AppIntentTimelineProvider {
     private func entry(for configuration: PitchWidgetConfiguration) -> PitchEntry {
         let selectedRange = WidgetRangeState.rawValue.flatMap(PitchRange.init(rawValue:))
             ?? configuration.range
+        let activePitch = WidgetPitchState.activePitch
         return PitchEntry(
             date: .now,
             range: selectedRange,
-            activePitch: WidgetPitchState.activePitch
+            activePitch: activePitch,
+            diagnostics: WidgetDiagnostics.recordRender(range: selectedRange.rawValue, activePitch: activePitch)
         )
     }
 }
@@ -219,9 +222,15 @@ private struct PitchCellStyle: ToggleStyle {
         ZStack {
             if active {
                 Circle()
-                    .fill(palette.lit.opacity(0.22))
-                    .blur(radius: diameter * 0.18)
-                    .scaleEffect(1.45)
+                    .fill(
+                        RadialGradient(
+                            colors: [palette.lit.opacity(0.28), palette.lit.opacity(0)],
+                            center: .center,
+                            startRadius: diameter * 0.46,
+                            endRadius: diameter * 0.8
+                        )
+                    )
+                    .frame(width: diameter * 1.6, height: diameter * 1.6)
             }
             Circle().fill(active ? palette.lit : palette.surface)
             Circle().stroke(active ? palette.lit : palette.hairline, lineWidth: active ? 2 : 1.25)
@@ -325,12 +334,22 @@ private struct PitchFace: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: faceHeight)
 
-                    Text("DIGITAL PITCH PIPE")
-                        .font(.custom("Oswald-Medium", size: ring * 0.075))
-                        .tracking(ring * 0.025)
-                        .foregroundStyle(palette.secondary.opacity(0.68))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: size.height - faceHeight)
+                    VStack(spacing: 3) {
+                        Text("DIGITAL PITCH PIPE")
+                            .font(.custom("Oswald-Medium", size: ring * 0.075))
+                            .tracking(ring * 0.025)
+                            .foregroundStyle(palette.secondary.opacity(0.68))
+                        if let diagnostics = entry.diagnostics {
+                            Text(diagnostics)
+                                .font(.system(size: 8, design: .monospaced))
+                                .foregroundStyle(palette.secondary.opacity(0.7))
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 12)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: size.height - faceHeight)
                 }
             }
             .clipShape(ContainerRelativeShape())

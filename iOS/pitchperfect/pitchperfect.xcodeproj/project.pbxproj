@@ -122,6 +122,7 @@
 		E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */; };
 		A7D10A020000000000000002 /* PitchWidgetAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A010000000000000001 /* PitchWidgetAudio.swift */; };
 		A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A010000000000000001 /* PitchWidgetAudio.swift */; };
+		A7D10A080000000000000008 /* PitchWidgetRangeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A070000000000000007 /* PitchWidgetRangeIntent.swift */; };
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
 		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
@@ -342,6 +343,7 @@
 		ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchPerfectWidget.swift; sourceTree = "<group>"; };
 		A7D10A010000000000000001 /* PitchWidgetAudio.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetAudio.swift; sourceTree = "<group>"; };
 		A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PitchPerfectWidget.entitlements; sourceTree = "<group>"; };
+		A7D10A070000000000000007 /* PitchWidgetRangeIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetRangeIntent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -421,6 +423,7 @@
 			children = (
 				ED7E70B7C2EF4924D5AA9795 /* PitchPerfectWidget.swift */,
 				A7D10A010000000000000001 /* PitchWidgetAudio.swift */,
+				A7D10A070000000000000007 /* PitchWidgetRangeIntent.swift */,
 				A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */,
 				12D2A66DC1F2CE9D62072F6D /* Info.plist */,
 			);
@@ -981,6 +984,7 @@
 			files = (
 				E404CE6BEB423F101FBD90B9 /* PitchPerfectWidget.swift in Sources */,
 				A7D10A030000000000000003 /* PitchWidgetAudio.swift in Sources */,
+				A7D10A080000000000000008 /* PitchWidgetRangeIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
