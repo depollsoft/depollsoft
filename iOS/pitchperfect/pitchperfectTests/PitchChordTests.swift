@@ -131,6 +131,36 @@ final class PitchChordTests: XCTestCase {
         XCTAssertFalse(PlayWidgetPitchIntent.openAppWhenRun)
     }
 
+    func testWidgetToneMatchesTheAppSynthesizerVoice() {
+        // DPAudioSynthesizer and Android's PitchAudioTrackGenerator both drive
+        // a sine three times past full scale and clip it. A pure, quiet sine
+        // in the widget is the mismatch this guards against.
+        let sampleRate = 44_100.0
+        let frequency = 440.0
+        for frame in 0..<2_000 {
+            let time = Double(frame) / sampleRate
+            let reference = min(1.0, max(-1.0, sin(2 * .pi * frequency * time) * 3)) * Double(Int16.max)
+            XCTAssertEqual(
+                Int(PlayWidgetPitchIntent.pitchPipeSample(frequency: frequency, time: time)),
+                Int(reference),
+                "frame \(frame)"
+            )
+        }
+
+        let tone = PlayWidgetPitchIntent.tone(frequency: frequency, duration: 1, fadeEdges: false)
+        let samples = tone.dropFirst(44).withUnsafeBytes { raw in
+            Array(raw.bindMemory(to: Int16.self))
+        }
+        XCTAssertEqual(Int16.max, samples.max())
+        XCTAssertEqual(-Int16.max, samples.min())
+        let clipped = samples.filter { abs(Int($0)) == Int(Int16.max) }.count
+        XCTAssertGreaterThan(
+            Double(clipped) / Double(samples.count),
+            0.7,
+            "the tripled sine spends most of each cycle clipped, like the app"
+        )
+    }
+
     func testOtherChordsStayCounted() {
         XCTAssertNil(PitchChord.name(cells: [0, 4, 7, 11]), "major seventh")
         XCTAssertNil(PitchChord.name(cells: [0, 3, 7, 10]), "minor seventh")

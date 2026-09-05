@@ -180,9 +180,9 @@ final class WidgetTonePlayer {
     }
 
     private func balanceVolume() {
-        // Keep the summed waveforms below full scale even with all 13 cells on.
-        let volume = 1 / Float(max(1, players.count))
-        players.values.forEach { $0.volume = volume }
+        // The app sums every sounding note at full scale, so chords from the
+        // widget must not be quieter than the same chord in the app.
+        players.values.forEach { $0.volume = 1 }
     }
 
     private func deactivateIfSilent() {
@@ -230,6 +230,15 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         return tone(frequency: seamlessFrequency, duration: loopDuration, fadeEdges: false)
     }
 
+    /// The pitch pipe voice shared by the iOS app (DPAudioSynthesizer) and
+    /// Android (PitchAudioTrackGenerator): a sine driven three times past
+    /// full scale and hard-clipped, which gives the reed-like edge.
+    static func pitchPipeSample(frequency: Double, time: Double) -> Int16 {
+        let driven = sin(2 * .pi * frequency * time) * 3
+        let clipped = min(1.0, max(-1.0, driven))
+        return Int16(clipped * Double(Int16.max))
+    }
+
     static func tone(frequency: Double, duration: Double, fadeEdges: Bool = true) -> Data {
         let sampleRate = 44_100
         let frames = Int(Double(sampleRate) * duration)
@@ -239,8 +248,8 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
             let attack = min(1.0, Double(frame) / Double(fadeFrames))
             let release = min(1.0, Double(frames - frame) / Double(fadeFrames))
             let envelope = fadeEdges ? min(attack, release) : 1.0
-            let sample = sin(2 * .pi * frequency * Double(frame) / Double(sampleRate))
-            var value = Int16(sample * envelope * 9_000).littleEndian
+            let sample = pitchPipeSample(frequency: frequency, time: Double(frame) / Double(sampleRate))
+            var value = Int16((Double(sample) * envelope).rounded()).littleEndian
             withUnsafeBytes(of: &value) { pcm.append(contentsOf: $0) }
         }
 
