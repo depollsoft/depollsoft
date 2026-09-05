@@ -16,6 +16,11 @@ final class PitchChordTests: XCTestCase {
         XCTAssertEqual("BARBERSHOP!", PitchChord.name(cells: [10, 7, 4, 0]))
     }
 
+    func testProductionBuildResolvesProductionGroup() {
+        // Unsigned test hosts hold no group entitlement, so this exercises the fallback.
+        XCTAssertEqual(WidgetSharedDefaults.productionGroup, WidgetSharedDefaults.suiteName)
+    }
+
     func testWidgetAppGroupTracksBuildVariant() {
         XCTAssertEqual(
             "group.depollsoft.pitchperfect",
