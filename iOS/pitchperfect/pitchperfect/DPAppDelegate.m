@@ -92,7 +92,7 @@
 {
     [self configureRootNavigationControllers];
     // A fresh process cannot be sounding a widget pitch; never leave a cell lit.
-    [self resetWidgetPlaybackState];
+    [self configureWidgetPlayback];
 
     if (NSClassFromString(@"XCTestCase") != nil) {
         return YES;
