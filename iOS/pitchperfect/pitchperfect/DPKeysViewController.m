@@ -45,8 +45,9 @@
         [string appendString:[flats objectAtIndex:-k.numAccidentals]];
     }
     label.text = [NSString stringWithString:string];
-    label.font = [UIFont fontWithName:@"MusiQwik" size:30];
-    label.textColor = self.textLabel.textColor;
+    // The signature is the row's subject: engrave it at the Android row's scale.
+    label.font = [UIFont fontWithName:@"MusiQwik" size:44];
+    label.textColor = DPTheme.plateInk;
     label.backgroundColor = [UIColor clearColor];
     label.userInteractionEnabled = NO;
     [label sizeToFit];
@@ -60,17 +61,17 @@
     flow.rowDimensions = @[[DPGridDimension dimension]];
     DPNote *n = k.note;
     UILabel *noteName = [[UILabel alloc] init];
-    noteName.font = [UIFont boldSystemFontOfSize:16];
+    noteName.font = [DPTheme listTitleFontWithSize:22];
     noteName.text = k.friendlyName;
-    noteName.textColor = self.textLabel.textColor;
+    noteName.textColor = DPTheme.plateInk;
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
     [flow addSubview:noteName row:0 column:0];
     
     UILabel *accidental = [[UILabel alloc] init];
-    accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor;
+    accidental.font = [UIFont fontWithName:@"NoteHedz" size:26];
+    accidental.textColor = DPTheme.plateInk;
     accidental.backgroundColor = [UIColor clearColor];
     accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {

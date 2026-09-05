@@ -88,7 +88,7 @@
     
     // Ads removed
     
-    NSString *explanationHtml = @"<style>* {font-family: 'HelveticaNeue'; font-size: 18px;}</style>"
+    NSString *explanationHtml = @"<style>* {font-family: -apple-system; font-size: 17px;}</style>"
     "<p><b>Recommended:</b> Log in to Pitch Perfect and we\'ll save your settings and song list to the cloud.</p>"
     "<p>"
     "When you log in to Pitch Perfect, we\'ll automatically synchronize your settings and song list from device to device. "

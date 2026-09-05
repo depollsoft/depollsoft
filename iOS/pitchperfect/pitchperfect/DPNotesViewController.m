@@ -34,48 +34,47 @@
 
 @synthesize note;
 
+// One label per note: the name in the condensed face, the accidental in
+// NoteHedz, and the octave as a small subscript, as on the Android row.
 - (UIView *)noteUi:(DPNote *)n {
-    HLayoutView *flow = [[HLayoutView alloc] init];
-    UILabel *noteName = [[UILabel alloc] init];
-    noteName.font = [UIFont boldSystemFontOfSize:16];
-    noteName.text = n.friendlyName;
-    noteName.textColor = self.textLabel.textColor;
-    noteName.backgroundColor = [UIColor clearColor];
-    noteName.userInteractionEnabled = NO;
-    [noteName sizeToFit];
-    [flow addSubview:noteName];
-    
-    UILabel *accidental = [[UILabel alloc] init];
-    accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor;
-    accidental.backgroundColor = [UIColor clearColor];
-    accidental.userInteractionEnabled = NO;
+    NSMutableAttributedString *text = [[NSMutableAttributedString alloc]
+        initWithString:n.friendlyName
+            attributes:@{
+                NSFontAttributeName: [DPTheme listTitleFontWithSize:24],
+                NSForegroundColorAttributeName: DPTheme.plateInk,
+            }];
+    NSString *glyph = nil;
     switch (n.accidental.get) {
         case Sharp:
-            accidental.text = SHARP_STRING;
+            glyph = SHARP_STRING;
             break;
         case Flat:
-            accidental.text = FLAT_STRING;
+            glyph = FLAT_STRING;
             break;
         default:
             break;
     }
-    [accidental sizeToFit];
-    
-    [flow addSubview:accidental];
-    
-    UILabel *octave = [[UILabel alloc] init];
-    octave.font = [UIFont systemFontOfSize:10];
-    octave.text = [NSString stringWithFormat:@"%d", n.octave];
-    octave.textColor = self.textLabel.textColor;
-    octave.backgroundColor = [UIColor clearColor];
-    octave.userInteractionEnabled = NO;
-    [octave sizeToFit];
-    [flow addSubview:octave];
-    flow.userInteractionEnabled = NO;
-    
-    [flow sizeToFit];
-    return flow;
+    if (glyph != nil) {
+        [text appendAttributedString:[[NSAttributedString alloc]
+            initWithString:glyph
+                attributes:@{
+                    NSFontAttributeName: [UIFont fontWithName:@"NoteHedz" size:26] ?: [DPTheme listTitleFontWithSize:24],
+                    NSForegroundColorAttributeName: DPTheme.plateInk,
+                }]];
+    }
+    [text appendAttributedString:[[NSAttributedString alloc]
+        initWithString:[NSString stringWithFormat:@"%d", n.octave]
+            attributes:@{
+                NSFontAttributeName: [DPTheme listTitleFontWithSize:14],
+                NSForegroundColorAttributeName: DPTheme.plateInkSecondary,
+                NSBaselineOffsetAttributeName: @(-5),
+            }]];
+    UILabel *label = [[UILabel alloc] init];
+    label.attributedText = text;
+    label.backgroundColor = [UIColor clearColor];
+    label.userInteractionEnabled = NO;
+    [label sizeToFit];
+    return label;
 }
 
 - (void)setNote:(DPNote *)newNote {
@@ -90,8 +89,8 @@
     if (note.alternate) {
         UILabel *slash = [[UILabel alloc] init];
         slash.text = @"/";
-        slash.textColor = self.textLabel.textColor;
-        slash.font = [UIFont systemFontOfSize:24];
+        slash.textColor = DPTheme.plateInkSecondary;
+        slash.font = [DPTheme listTitleFontWithSize:24];
         slash.backgroundColor = [UIColor clearColor];
         [slash sizeToFit];
 
@@ -102,8 +101,14 @@
     
     [self.contentView addSubview:flow];
     
-    self.detailTextLabel.text = [NSString stringWithFormat:@"%1.2f Hz", note.frequency];
-    self.detailTextLabel.textColor = [UIColor systemGrayColor];
+    // The measurement readout, as on the Android row: monospaced, tracked, secondary ink.
+    self.detailTextLabel.attributedText = [[NSAttributedString alloc]
+        initWithString:[NSString stringWithFormat:@"%1.2f Hz", note.frequency]
+            attributes:@{
+                NSFontAttributeName: [DPTheme monospacedFontWithSize:14],
+                NSForegroundColorAttributeName: DPTheme.plateInkSecondary,
+                NSKernAttributeName: @(14 * 0.04),
+            }];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {

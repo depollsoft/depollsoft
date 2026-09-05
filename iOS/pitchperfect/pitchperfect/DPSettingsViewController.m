@@ -363,13 +363,34 @@
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"Settings";
+            return @"Pitch Pipe";
         case 1:
-            return nil;
+            return @"Account";
+        case 2:
+            return @"Private Build";
         default:
             break;
     }
     return nil;
+}
+
+// Section headers are engraved like the Android plate: tracked monospaced
+// capitals in secondary ink.
+- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
+    NSString *title = [self tableView:tableView titleForHeaderInSection:section];
+    if (title == nil || ![view isKindOfClass:[UITableViewHeaderFooterView class]]) {
+        return;
+    }
+    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
+    UIListContentConfiguration *content = header.defaultContentConfiguration;
+    content.attributedText = [[NSAttributedString alloc]
+        initWithString:title.uppercaseString
+            attributes:@{
+                NSFontAttributeName: [DPTheme monospacedFontWithSize:12],
+                NSForegroundColorAttributeName: DPTheme.plateInkSecondary,
+                NSKernAttributeName: @(12 * 0.14),
+            }];
+    header.contentConfiguration = content;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
