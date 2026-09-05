@@ -218,18 +218,6 @@ private struct PitchCellStyle: ToggleStyle {
         let active = configuration.isOn
         let natural = pitch.accidental == "natural"
         ZStack {
-            if active {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [palette.lit.opacity(0.28), palette.lit.opacity(0)],
-                            center: .center,
-                            startRadius: diameter * 0.46,
-                            endRadius: diameter * 0.8
-                        )
-                    )
-                    .frame(width: diameter * 1.6, height: diameter * 1.6)
-            }
             Circle().fill(active ? palette.lit : palette.surface)
             Circle().stroke(active ? palette.lit : palette.hairline, lineWidth: active ? 2 : 1.25)
             Circle()
@@ -244,6 +232,36 @@ private struct PitchCellStyle: ToggleStyle {
         }
         .frame(width: diameter, height: diameter)
         .contentShape(Circle())
+    }
+}
+
+/// The bloom pass the app paints beneath its glass: one soft halo per
+/// sounding cell, drawn under every cell so no halo covers a neighbour.
+private struct BloomLayer: View {
+    let pitches: [Pitch]
+    let activePitches: Set<Int>
+    let ring: CGFloat
+    let cellDiameter: CGFloat
+    let palette: PlatePalette
+
+    var body: some View {
+        let bloomDiameter = cellDiameter * 2.4
+        RadialLayout(radius: ring, cellDiameter: bloomDiameter) {
+            ForEach(pitches) { pitch in
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [palette.lit.opacity(0.5), palette.lit.opacity(0)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: bloomDiameter / 2
+                        )
+                    )
+                    .opacity(activePitches.contains(pitch.id) ? 1 : 0)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -317,6 +335,13 @@ private struct PitchFace: View {
 
                 VStack(spacing: 0) {
                     ZStack {
+                        BloomLayer(
+                            pitches: pitches,
+                            activePitches: entry.activePitches,
+                            ring: ring,
+                            cellDiameter: cellDiameter,
+                            palette: palette
+                        )
                         RadialLayout(radius: ring, cellDiameter: cellDiameter) {
                             ForEach(pitches) { pitch in
                                 PitchCell(
