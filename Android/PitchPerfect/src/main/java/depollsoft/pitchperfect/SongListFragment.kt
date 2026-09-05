@@ -98,16 +98,6 @@ class SongListFragment : Fragment() {
         touchHelper.attachToRecyclerView(recycler)
         songAdapter.onStartDrag = { holder -> touchHelper.startDrag(holder) }
 
-        val fragment = this
-        track({ model.defaultSongList.songs.track() }) {
-            if (fragment.view != null) {
-                if (!songAdapter.dragging) {
-                    fragment.activity?.runOnUiThread { songAdapter.notifyDataSetChanged() }
-                }
-                keepTracking
-            }
-        }
-
         rootView.bindTo(
             R.id.sorryText,
             "Visibility",
@@ -125,6 +115,39 @@ class SongListFragment : Fragment() {
         fab?.show()
 
         return rootView
+    }
+
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+        val songAdapter = adapter ?: return
+
+        // onCreateView runs before Fragment.view is assigned. Subscribing there
+        // caused the one-shot Bindroid tracker to stop before Firestore could
+        // deliver its first change.
+        track({ model.defaultSongList.songs.track() }) {
+            if (this@SongListFragment.view === view && adapter === songAdapter) {
+                if (!songAdapter.dragging) {
+                    activity?.runOnUiThread {
+                        if (this@SongListFragment.view === view &&
+                            adapter === songAdapter &&
+                            !songAdapter.dragging
+                        ) {
+                            songAdapter.notifyDataSetChanged()
+                        }
+                    }
+                }
+                keepTracking
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        adapter = null
+        fab = null
+        super.onDestroyView()
     }
 
     fun isEditingSongs(): Boolean = editing
