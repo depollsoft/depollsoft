@@ -42,20 +42,78 @@ final class PitchChordTests: XCTestCase {
         XCTAssertNil(WidgetRangeState.rawValue)
     }
 
-    func testWidgetPitchTapStartsSwitchesAndStopsTone() async throws {
-        WidgetPitchState.set(nil)
+    @MainActor
+    func testWidgetPitchesKeepPlayingAndToggleIndependently() async throws {
+        let player = WidgetTonePlayer.shared
+        player.stop()
+        defer { player.stop() }
 
         _ = try await PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440).perform()
-        XCTAssertEqual(9, WidgetPitchState.activePitch)
-
+        XCTAssertEqual([9], WidgetPitchState.activePitches)
         _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16).perform()
-        XCTAssertEqual(10, WidgetPitchState.activePitch, "Another note switches the tone")
+        XCTAssertEqual([9, 10], WidgetPitchState.activePitches)
+        XCTAssertEqual([9, 10], player.activePitches, "Both actual audio players must be sounding")
 
         try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.loopDuration + 1))
-        XCTAssertEqual(10, WidgetPitchState.activePitch, "The tone outlives its loop buffer")
+        XCTAssertEqual([9, 10], player.activePitches, "Both tones must outlive the loop buffer")
+        XCTAssertEqual(player.activePitches, WidgetPitchState.activePitches)
 
         _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16).perform()
-        XCTAssertNil(WidgetPitchState.activePitch, "Tapping the sounding note stops it")
+        XCTAssertEqual([9], player.activePitches, "Stopping one note must leave the other sounding")
+        XCTAssertEqual([9], WidgetPitchState.activePitches)
+        _ = try await PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440).perform()
+        XCTAssertTrue(player.activePitches.isEmpty)
+        XCTAssertTrue(WidgetPitchState.activePitches.isEmpty)
+    }
+
+    @MainActor
+    func testWidgetFailedNoteDoesNotStopExistingVoices() async throws {
+        let player = WidgetTonePlayer.shared
+        player.stop()
+        defer { player.stop() }
+        _ = try await PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440).perform()
+        do {
+            _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: .nan).perform()
+            XCTFail("Invalid frequency should fail without disturbing existing voices")
+        } catch {
+            XCTAssertEqual([9], player.activePitches)
+            XCTAssertEqual([9], WidgetPitchState.activePitches)
+        }
+    }
+
+    @MainActor
+    func testWidgetConcurrentNotesPublishCompleteSnapshotAndStopAll() async throws {
+        let player = WidgetTonePlayer.shared
+        player.stop()
+        defer { player.stop() }
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for index in 0..<13 {
+                group.addTask {
+                    let frequency = 261.63 * pow(2, Double(index) / 12)
+                    _ = try await PlayWidgetPitchIntent(pitchIndex: index, frequency: frequency).perform()
+                }
+            }
+            try await group.waitForAll()
+        }
+        XCTAssertEqual(Set(0..<13), player.activePitches)
+        XCTAssertEqual(player.activePitches, WidgetPitchState.activePitches)
+        player.stop()
+        XCTAssertTrue(player.activePitches.isEmpty)
+        XCTAssertTrue(WidgetPitchState.activePitches.isEmpty)
+    }
+
+    func testWidgetPitchSetPersistsAndClearsLegacyState() throws {
+        let defaults = try XCTUnwrap(WidgetSharedDefaults.defaults)
+        let previous = WidgetPitchState.activePitches
+        defer { WidgetPitchState.set(previous) }
+        defaults.removeObject(forKey: "activePitches")
+        defaults.set(9, forKey: "activePitch")
+        XCTAssertEqual([9], WidgetPitchState.activePitches)
+        WidgetPitchState.set([0, 4, 7, -1, 13])
+        XCTAssertEqual([0, 4, 7], WidgetPitchState.activePitches)
+        XCTAssertNil(defaults.object(forKey: "activePitch"))
+        WidgetPitchState.set([])
+        XCTAssertTrue(WidgetPitchState.activePitches.isEmpty)
     }
 
     func testWidgetToneIsValidMonoPCM() {

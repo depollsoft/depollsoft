@@ -13,13 +13,12 @@ struct PitchWidgetConfiguration: WidgetConfigurationIntent {
 private struct PitchEntry: TimelineEntry {
     let date: Date
     let range: PitchRange
-    let activePitch: Int?
-    var diagnostics: String?
+    let activePitches: Set<Int>
 }
 
 private struct PitchProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> PitchEntry {
-        PitchEntry(date: .now, range: .cToC, activePitch: nil)
+        PitchEntry(date: .now, range: .cToC, activePitches: [])
     }
 
     func snapshot(for configuration: PitchWidgetConfiguration, in context: Context) async -> PitchEntry {
@@ -33,12 +32,11 @@ private struct PitchProvider: AppIntentTimelineProvider {
     private func entry(for configuration: PitchWidgetConfiguration) -> PitchEntry {
         let selectedRange = WidgetRangeState.rawValue.flatMap(PitchRange.init(rawValue:))
             ?? configuration.range
-        let activePitch = WidgetPitchState.activePitch
+        let activePitches = WidgetPitchState.activePitches
         return PitchEntry(
             date: .now,
             range: selectedRange,
-            activePitch: activePitch,
-            diagnostics: WidgetDiagnostics.recordRender(range: selectedRange.rawValue, activePitch: activePitch)
+            activePitches: activePitches
         )
     }
 }
@@ -323,7 +321,7 @@ private struct PitchFace: View {
                             ForEach(pitches) { pitch in
                                 PitchCell(
                                     pitch: pitch,
-                                    active: entry.activePitch == pitch.id,
+                                    active: entry.activePitches.contains(pitch.id),
                                     diameter: cellDiameter,
                                     palette: palette
                                 )
@@ -334,22 +332,12 @@ private struct PitchFace: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: faceHeight)
 
-                    VStack(spacing: 3) {
-                        Text("DIGITAL PITCH PIPE")
-                            .font(.custom("Oswald-Medium", size: ring * 0.075))
-                            .tracking(ring * 0.025)
-                            .foregroundStyle(palette.secondary.opacity(0.68))
-                        if let diagnostics = entry.diagnostics {
-                            Text(diagnostics)
-                                .font(.system(size: 8, design: .monospaced))
-                                .foregroundStyle(palette.secondary.opacity(0.7))
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 12)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: size.height - faceHeight)
+                    Text("DIGITAL PITCH PIPE")
+                        .font(.custom("Oswald-Medium", size: ring * 0.075))
+                        .tracking(ring * 0.025)
+                        .foregroundStyle(palette.secondary.opacity(0.68))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: size.height - faceHeight)
                 }
             }
             .clipShape(ContainerRelativeShape())
@@ -390,8 +378,8 @@ private struct PitchFace: View {
 
     @ViewBuilder
     private func readout(pitches: [Pitch], palette: PlatePalette, ring: CGFloat) -> some View {
-        if let index = entry.activePitch, pitches.indices.contains(index) {
-            let pitch = pitches[index]
+        let sounding = pitches.filter { entry.activePitches.contains($0.id) }
+        if sounding.count == 1, let pitch = sounding.first {
             VStack(spacing: ring * 0.02) {
                 Text(pitch.display)
                     .font(.custom("Oswald-Medium", size: ring * 0.24))
@@ -400,6 +388,19 @@ private struct PitchFace: View {
                     .font(.system(size: ring * 0.10, design: .monospaced))
                     .foregroundStyle(palette.ink)
             }
+        } else if !sounding.isEmpty {
+            VStack(spacing: ring * 0.02) {
+                Text(sounding.map(\.display).joined(separator: " "))
+                    .font(.custom("Oswald-Medium", size: ring * 0.17))
+                    .foregroundStyle(palette.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
+                    .multilineTextAlignment(.center)
+                Text("\(sounding.count) NOTES")
+                    .font(.system(size: ring * 0.10, design: .monospaced))
+                    .foregroundStyle(palette.ink)
+            }
+            .frame(maxWidth: ring * 1.4)
         } else {
             Text("\u{2014} Hz")
                 .font(.system(size: ring * 0.13, design: .monospaced))

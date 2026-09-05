@@ -19,8 +19,7 @@ struct SelectWidgetRangeIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         WidgetPlaybackBridge.requestStop()
         WidgetRangeState.set(rangeRawValue)
-        WidgetPitchState.set(nil)
-        WidgetDiagnostics.record("range \(rangeRawValue)")
+        WidgetPitchState.set([])
         return .result()
     }
 }

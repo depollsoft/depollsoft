@@ -40,32 +40,31 @@ enum WidgetSharedDefaults {
         } ?? preferred
     }()
 
-    static var isEntitled: Bool {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName) != nil
-    }
-
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
     }
 
-    static var isPrivateBuild: Bool {
-        Bundle.main.bundleIdentifier?.hasPrefix("depollsoft.pitchperfect.private") == true
-    }
 }
 
 enum WidgetPitchState {
-    private static let key = "activePitch"
+    private static let key = "activePitches"
+    private static let legacyKey = "activePitch"
     private static var defaults: UserDefaults? { WidgetSharedDefaults.defaults }
 
-    static var activePitch: Int? {
-        guard let defaults, defaults.object(forKey: key) != nil else { return nil }
-        let value = defaults.integer(forKey: key)
-        return value >= 0 ? value : nil
+    static var activePitches: Set<Int> {
+        guard let defaults else { return [] }
+        if let values = defaults.array(forKey: key) as? [Int] {
+            return Set(values.filter { (0..<13).contains($0) })
+        }
+        guard defaults.object(forKey: legacyKey) != nil else { return [] }
+        let value = defaults.integer(forKey: legacyKey)
+        return (0..<13).contains(value) ? [value] : []
     }
 
-    static func set(_ value: Int?) {
+    static func set(_ values: Set<Int>) {
         guard let defaults else { return }
-        defaults.set(value ?? -1, forKey: key)
+        defaults.set(values.filter { (0..<13).contains($0) }.sorted(), forKey: key)
+        defaults.removeObject(forKey: legacyKey)
         defaults.synchronize()
     }
 }
@@ -110,6 +109,7 @@ enum WidgetPlaybackBridge {
             { _, _, _, _, _ in
                 Task { @MainActor in
                     WidgetTonePlayer.shared.stop()
+                    WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
                 }
             },
             stopNotificationName as CFString,
@@ -119,94 +119,74 @@ enum WidgetPlaybackBridge {
     }
 }
 
-/// Beta builds print a one-line trace under the nameplate so a static face
-/// on a device can be read: render count, last render time, last intent.
-enum WidgetDiagnostics {
-    private static let eventKey = "diag.lastEvent"
-    private static let rendersKey = "diag.renders"
-
-    static var isEnabled: Bool { WidgetSharedDefaults.isPrivateBuild }
-
-    static var process: String {
-        Bundle.main.bundleURL.pathExtension == "appex" ? "widget" : "app"
-    }
-
-    static func record(_ event: String) {
-        guard isEnabled, let defaults = WidgetSharedDefaults.defaults else { return }
-        defaults.set("\(stamp()) \(event)@\(process)", forKey: eventKey)
-        defaults.synchronize()
-    }
-
-    /// Called by the timeline provider; returns the caption for this render.
-    static func recordRender(range: String, activePitch: Int?) -> String? {
-        guard isEnabled else { return nil }
-        let defaults = WidgetSharedDefaults.defaults
-        let renders = (defaults?.integer(forKey: rendersKey) ?? 0) + 1
-        defaults?.set(renders, forKey: rendersKey)
-        defaults?.synchronize()
-        let group = WidgetSharedDefaults.isEntitled
-            ? WidgetSharedDefaults.suiteName.replacingOccurrences(of: "group.depollsoft.pitchperfect", with: "grp")
-            : "no group"
-        let pitch = activePitch.map(String.init) ?? "-"
-        let last = defaults?.string(forKey: eventKey) ?? "no intent yet"
-        return "r\(renders) \(stamp()) \(group) \(range) pitch \(pitch) | \(last)"
-    }
-
-    private static func stamp() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        return formatter.string(from: Date())
-    }
-}
-
 private enum WidgetToneError: Error {
     case playbackDidNotStart
+    case invalidPitch
 }
 
 @MainActor
-private final class WidgetTonePlayer {
+final class WidgetTonePlayer {
     static let shared = WidgetTonePlayer()
 
-    private var player: AVAudioPlayer?
-    private var frequency: Double?
+    private var players: [Int: AVAudioPlayer] = [:]
 
-    /// Starts the tone, or stops it when this frequency is already sounding.
-    /// Returns whether a tone is sounding afterwards.
-    func toggle(frequency: Double) throws -> Bool {
-        if player?.isPlaying == true, self.frequency == frequency {
-            stop()
-            return false
+    /// Read the actual players, not a persisted or optimistically rendered state.
+    var activePitches: Set<Int> {
+        Set(players.filter { $0.value.isPlaying }.keys)
+    }
+
+    /// Each cell owns its loop. Toggling one never stops another sounding cell.
+    func toggle(pitchIndex: Int, frequency: Double) throws {
+        guard (0..<13).contains(pitchIndex), frequency.isFinite, (20...20_000).contains(frequency) else {
+            throw WidgetToneError.invalidPitch
+        }
+        players = players.filter { $0.value.isPlaying }
+        if let playing = players.removeValue(forKey: pitchIndex) {
+            playing.stop()
+            balanceVolume()
+            deactivateIfSilent()
+            return
         }
 
-        let session = AVAudioSession.sharedInstance()
-        player?.stop()
-        player = nil
-        self.frequency = nil
-
         do {
-            try session.setCategory(.playback, mode: .default)
-            try session.setActive(true)
+            if players.isEmpty {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default)
+                try session.setActive(true)
+            }
             let nextPlayer = try AVAudioPlayer(
                 data: PlayWidgetPitchIntent.loopingTone(frequency: frequency)
             )
             nextPlayer.numberOfLoops = -1
+            players[pitchIndex] = nextPlayer
+            balanceVolume()
             nextPlayer.prepareToPlay()
             guard nextPlayer.play() else {
                 throw WidgetToneError.playbackDidNotStart
             }
-            player = nextPlayer
-            self.frequency = frequency
-            return true
         } catch {
-            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            players.removeValue(forKey: pitchIndex)?.stop()
+            balanceVolume()
+            deactivateIfSilent()
             throw error
         }
     }
 
     func stop() {
-        player?.stop()
-        player = nil
-        frequency = nil
+        players.values.forEach { $0.stop() }
+        players.removeAll()
+        WidgetPitchState.set([])
+        deactivateIfSilent()
+    }
+
+    private func balanceVolume() {
+        // Keep the summed waveforms below full scale even with all 13 cells on.
+        let volume = 1 / Float(max(1, players.count))
+        players.values.forEach { $0.volume = volume }
+    }
+
+    private func deactivateIfSilent() {
+        guard players.isEmpty else { return }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
@@ -232,23 +212,15 @@ struct PlayWidgetPitchIntent: AudioPlaybackIntent {
         self.frequency = frequency
     }
 
-    /// The sounding player, not the widget's last render, decides: a tap on
-    /// the note that is playing stops it, any other tap starts that note.
+    /// Serialize playback and its published snapshot together so rapid taps
+    /// cannot overwrite another note's state after leaving the main actor.
     func perform() async throws -> some IntentResult {
-        let sounding: Bool
-        do {
-            sounding = try await MainActor.run {
-                try WidgetTonePlayer.shared.toggle(frequency: frequency)
-            }
-        } catch {
-            WidgetPitchState.set(nil)
-            WidgetDiagnostics.record("play \(pitchIndex) failed \(error.localizedDescription)")
-            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-            throw error
+        defer { WidgetCenter.shared.reloadTimelines(ofKind: widgetKind) }
+        try await MainActor.run {
+            let player = WidgetTonePlayer.shared
+            defer { WidgetPitchState.set(player.activePitches) }
+            try player.toggle(pitchIndex: pitchIndex, frequency: frequency)
         }
-        WidgetPitchState.set(sounding ? pitchIndex : nil)
-        WidgetDiagnostics.record(sounding ? "play \(pitchIndex)" : "stop \(pitchIndex)")
-        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         return .result()
     }
 

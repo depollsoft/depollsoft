@@ -112,8 +112,10 @@ final class WidgetHitTargetUITests: XCTestCase {
         springboard.pitchCell("D, octave 4").tap()
         waitUntilPlaying(["D, octave 4"])
         springboard.pitchCell("A, octave 4").tap()
-        waitUntilPlaying(["A, octave 4"])
+        waitUntilPlaying(["D, octave 4", "A, octave 4"])
         springboard.pitchCell("A, octave 4").tap()
+        waitUntilPlaying(["D, octave 4"])
+        springboard.pitchCell("D, octave 4").tap()
         waitUntilPlaying([])
     }
 }
