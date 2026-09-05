@@ -236,6 +236,12 @@ jobs:
           bundler-cache: true
           working-directory: iOS
 
+      - name: Test Firebase export validation
+        working-directory: iOS
+        run: |
+          python3 -m unittest discover -s fastlane/tests -v
+          bundle exec ruby fastlane/tests/test_firebase_export.rb
+
       - name: Restore readonly signing repository
         id: signing
         env:
@@ -304,6 +310,7 @@ jobs:
           path: iOS/build/${{ matrix.ipa }}
           if-no-files-found: error
           retention-days: 1
+          overwrite: true
 
       - name: Remove signing material and build artifacts
         if: always()
