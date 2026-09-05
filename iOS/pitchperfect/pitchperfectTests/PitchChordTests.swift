@@ -45,14 +45,17 @@ final class PitchChordTests: XCTestCase {
     func testWidgetPitchTapStartsSwitchesAndStopsTone() async throws {
         WidgetPitchState.set(nil)
 
-        _ = try await PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440, playing: true).perform()
+        _ = try await PlayWidgetPitchIntent(pitchIndex: 9, frequency: 440).perform()
         XCTAssertEqual(9, WidgetPitchState.activePitch)
 
-        _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16, playing: true).perform()
-        XCTAssertEqual(10, WidgetPitchState.activePitch)
+        _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16).perform()
+        XCTAssertEqual(10, WidgetPitchState.activePitch, "Another note switches the tone")
 
-        _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16, playing: false).perform()
-        XCTAssertNil(WidgetPitchState.activePitch)
+        try await Task.sleep(for: .seconds(PlayWidgetPitchIntent.loopDuration + 1))
+        XCTAssertEqual(10, WidgetPitchState.activePitch, "The tone outlives its loop buffer")
+
+        _ = try await PlayWidgetPitchIntent(pitchIndex: 10, frequency: 466.16).perform()
+        XCTAssertNil(WidgetPitchState.activePitch, "Tapping the sounding note stops it")
     }
 
     func testWidgetToneIsValidMonoPCM() {

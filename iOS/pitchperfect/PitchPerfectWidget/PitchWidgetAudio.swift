@@ -170,8 +170,13 @@ private final class WidgetTonePlayer {
     private var player: AVAudioPlayer?
     private var frequency: Double?
 
-    func play(frequency: Double) throws {
-        if player?.isPlaying == true, self.frequency == frequency { return }
+    /// Starts the tone, or stops it when this frequency is already sounding.
+    /// Returns whether a tone is sounding afterwards.
+    func toggle(frequency: Double) throws -> Bool {
+        if player?.isPlaying == true, self.frequency == frequency {
+            stop()
+            return false
+        }
 
         let session = AVAudioSession.sharedInstance()
         player?.stop()
@@ -191,6 +196,7 @@ private final class WidgetTonePlayer {
             }
             player = nextPlayer
             self.frequency = frequency
+            return true
         } catch {
             try? session.setActive(false, options: .notifyOthersOnDeactivation)
             throw error
@@ -208,14 +214,10 @@ private final class WidgetTonePlayer {
 /// Runs in the containing app process when a widget cell is pressed. This
 /// source is intentionally compiled into both the app and widget targets so
 /// WidgetKit can discover the intent and the app can execute it.
-struct PlayWidgetPitchIntent: SetValueIntent, AudioPlaybackIntent {
+struct PlayWidgetPitchIntent: AudioPlaybackIntent {
     static let title: LocalizedStringResource = "Sound Pitch"
     static let openAppWhenRun = false
     static let loopDuration = 4.0
-
-    /// WidgetKit writes the toggle's new state here before performing.
-    @Parameter(title: "Playing")
-    var value: Bool
 
     @Parameter(title: "Pitch")
     var pitchIndex: Int
@@ -225,33 +227,27 @@ struct PlayWidgetPitchIntent: SetValueIntent, AudioPlaybackIntent {
 
     init() {}
 
-    init(pitchIndex: Int, frequency: Double, playing: Bool) {
+    init(pitchIndex: Int, frequency: Double) {
         self.pitchIndex = pitchIndex
         self.frequency = frequency
-        value = playing
     }
 
+    /// The sounding player, not the widget's last render, decides: a tap on
+    /// the note that is playing stops it, any other tap starts that note.
     func perform() async throws -> some IntentResult {
-        if value {
-            do {
-                try await MainActor.run {
-                    try WidgetTonePlayer.shared.play(frequency: frequency)
-                }
-            } catch {
-                WidgetPitchState.set(nil)
-                WidgetDiagnostics.record("play \(pitchIndex) failed \(error.localizedDescription)")
-                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-                throw error
+        let sounding: Bool
+        do {
+            sounding = try await MainActor.run {
+                try WidgetTonePlayer.shared.toggle(frequency: frequency)
             }
-            WidgetPitchState.set(pitchIndex)
-            WidgetDiagnostics.record("play \(pitchIndex)")
-        } else {
-            await MainActor.run {
-                WidgetTonePlayer.shared.stop()
-            }
+        } catch {
             WidgetPitchState.set(nil)
-            WidgetDiagnostics.record("stop \(pitchIndex)")
+            WidgetDiagnostics.record("play \(pitchIndex) failed \(error.localizedDescription)")
+            WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+            throw error
         }
+        WidgetPitchState.set(sounding ? pitchIndex : nil)
+        WidgetDiagnostics.record(sounding ? "play \(pitchIndex)" : "stop \(pitchIndex)")
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         return .result()
     }
