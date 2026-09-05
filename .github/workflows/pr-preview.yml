@@ -349,19 +349,27 @@ jobs:
                   "depollsoft.pitchperfect",
               ),
               (
+                  Path("pitchperfect/PitchPerfectWidget/PitchPerfectWidget.entitlements"),
+                  "depollsoft.pitchperfect",
+              ),
+              (
                   Path("tagmaster/tagmaster/tagmaster.entitlements"),
                   "depollsoft.tagmaster",
               ),
           )
+
+          def privatize(value, bundle_id):
+              if isinstance(value, str):
+                  return value.replace(bundle_id, f"{bundle_id}.private")
+              if isinstance(value, list):
+                  return [privatize(item, bundle_id) for item in value]
+              return value
+
           for path, bundle_id in apps:
               data = plistlib.loads(path.read_bytes())
               data.pop("aps-environment", None)
               for key, value in tuple(data.items()):
-                  if isinstance(value, str):
-                      data[key] = value.replace(
-                          bundle_id,
-                          f"{bundle_id}.private",
-                      )
+                  data[key] = privatize(value, bundle_id)
               path.write_bytes(plistlib.dumps(data))
           PY
 

@@ -17,15 +17,35 @@ enum PitchRange: String, AppEnum {
 }
 
 enum WidgetSharedDefaults {
+    static let productionGroup = "group.depollsoft.pitchperfect"
+    static let privateGroup = "group.depollsoft.pitchperfect.private"
+
+    /// The group a build variant is meant to use.
     static func suiteName(for bundleIdentifier: String?) -> String {
         if bundleIdentifier?.hasPrefix("depollsoft.pitchperfect.private") == true {
-            return "group.depollsoft.pitchperfect.private"
+            return privateGroup
         }
-        return "group.depollsoft.pitchperfect"
+        return productionGroup
+    }
+
+    /// The group this process can actually open. A preview build signed with
+    /// the other variant's entitlement still lands on a container both the
+    /// app and the widget share; `UserDefaults(suiteName:)` alone would fall
+    /// back to a private store in each process and they would never meet.
+    static let suiteName: String = {
+        let preferred = suiteName(for: Bundle.main.bundleIdentifier)
+        let candidates = [preferred, privateGroup, productionGroup]
+        return candidates.first {
+            FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: $0) != nil
+        } ?? preferred
+    }()
+
+    static var isEntitled: Bool {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName) != nil
     }
 
     static var defaults: UserDefaults? {
-        UserDefaults(suiteName: suiteName(for: Bundle.main.bundleIdentifier))
+        UserDefaults(suiteName: suiteName)
     }
 
     static var isPrivateBuild: Bool {
@@ -124,10 +144,9 @@ enum WidgetDiagnostics {
         let renders = (defaults?.integer(forKey: rendersKey) ?? 0) + 1
         defaults?.set(renders, forKey: rendersKey)
         defaults?.synchronize()
-        let container = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: WidgetSharedDefaults.suiteName(for: Bundle.main.bundleIdentifier)
-        )
-        let group = container == nil ? "no group" : "group ok"
+        let group = WidgetSharedDefaults.isEntitled
+            ? WidgetSharedDefaults.suiteName.replacingOccurrences(of: "group.depollsoft.pitchperfect", with: "grp")
+            : "no group"
         let pitch = activePitch.map(String.init) ?? "-"
         let last = defaults?.string(forKey: eventKey) ?? "no intent yet"
         return "r\(renders) \(stamp()) \(group) \(range) pitch \(pitch) | \(last)"

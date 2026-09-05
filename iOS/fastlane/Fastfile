@@ -402,6 +402,7 @@ platform :ios do
       "PitchPerfect" => {
         scheme: "pitchperfect",
         bundle_identifier: "depollsoft.pitchperfect.private",
+        extension_bundle_identifier: "depollsoft.pitchperfect.private.widget",
         output_name: "PitchPerfect-private.ipa",
       },
       "TagMaster" => {
@@ -425,11 +426,12 @@ platform :ios do
       key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
       is_key_content_base64: false,
     )
-    profile = "match AdHoc #{config[:bundle_identifier]}"
+    identifiers = [config[:bundle_identifier], config[:extension_bundle_identifier]].compact
+    profiles = identifiers.to_h { |identifier| [identifier, "match AdHoc #{identifier}"] }
     match(
       type: "adhoc",
       readonly: false,
-      app_identifier: [config[:bundle_identifier]],
+      app_identifier: identifiers,
       api_key: api_key,
     )
     build_app(
@@ -439,9 +441,7 @@ platform :ios do
       export_method: "ad-hoc",
       export_team_id: "43AWMS3YJX",
       export_options: {
-        provisioningProfiles: {
-          config[:bundle_identifier] => profile,
-        },
+        provisioningProfiles: profiles,
       },
       output_directory: File.join(IOS_ROOT, "build"),
       output_name: config[:output_name],
