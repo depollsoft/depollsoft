@@ -15,12 +15,12 @@ import WidgetKit
 public extension DPAppDelegate {
     private static var userDoc: DocumentReference? = nil
 
-    /// The widget's lit cell mirrors a tone owned by this process. A new
-    /// process owns no tone, so any persisted active pitch is stale.
+    /// Lit cells mirror tones owned by this process. A new process owns no
+    /// tones, so any persisted active pitches are stale.
     @objc func configureWidgetPlayback() {
         WidgetPlaybackBridge.installStopObserver()
-        guard WidgetPitchState.activePitch != nil else { return }
-        WidgetPitchState.set(nil)
+        guard !WidgetPitchState.activePitches.isEmpty else { return }
+        WidgetPitchState.set([])
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
     }
 

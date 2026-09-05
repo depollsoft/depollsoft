@@ -46,6 +46,19 @@ final class DesignTourUITests: XCTestCase {
         sounding.lifetime = .keepAlways
         add(sounding)
 
+        let e4 = springboard.pitchCell("E, octave 4")
+        e4.tap()
+        XCTAssertTrue(springboard.staticTexts["2 NOTES"].waitForExistence(timeout: 8))
+        for _ in 0..<6 {
+            Thread.sleep(forTimeInterval: 1)
+            XCTAssertEqual(c4.value as? String, "1", "Adding E must leave C selected")
+            XCTAssertEqual(e4.value as? String, "1", "Both sounding notes must stay selected")
+        }
+        let chord = XCTAttachment(screenshot: springboard.screenshot())
+        chord.name = "widget-c4-e4-sustained-on-home"
+        chord.lifetime = .keepAlways
+        add(chord)
+
         c4.tap()
         let stopped = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "value != %@", "1"),
@@ -54,7 +67,14 @@ final class DesignTourUITests: XCTestCase {
         XCTAssertEqual(.completed, XCTWaiter.wait(for: [stopped], timeout: 3))
         Thread.sleep(forTimeInterval: 2)
         XCTAssertNotEqual(c4.value as? String, "1", "The second tap must leave the note off")
+        XCTAssertEqual(e4.value as? String, "1", "Stopping C must not stop E")
+        e4.tap()
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertNotEqual(e4.value as? String, "1", "Each note must toggle off independently")
 
+        c4.tap()
+        e4.tap()
+        XCTAssertTrue(springboard.staticTexts["2 NOTES"].waitForExistence(timeout: 8))
         let fToF = springboard.buttons["Octave range F to F"].firstMatch
         XCTAssertTrue(fToF.waitForExistence(timeout: 3), "The widget should expose its F-to-F control")
         XCTAssertTrue(fToF.isHittable, "The F-to-F control should accept taps")
@@ -64,6 +84,9 @@ final class DesignTourUITests: XCTestCase {
             "Selecting F to F should replace C4 with F5"
         )
         XCTAssertTrue(springboard.buttons["Octave range F to F"].firstMatch.isSelected)
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertNotEqual(springboard.pitchCell("F, octave 4").value as? String, "1")
+        XCTAssertNotEqual(springboard.pitchCell("A, octave 4").value as? String, "1")
 
         let highRange = XCTAttachment(screenshot: springboard.screenshot())
         highRange.name = "widget-f-to-f-on-home"
