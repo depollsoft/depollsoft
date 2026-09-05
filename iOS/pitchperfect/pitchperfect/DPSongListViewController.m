@@ -14,7 +14,6 @@
 #import "DPKey.h"
 #import "DPAccidental.h"
 #import "DPPitchedSong.h"
-#import "LayoutManagers.h"
 #import "DPUtils+UIControl.h"
 #import "DPUtils+UIColor.h"
 #import "DPSongsModel.h"
@@ -35,67 +34,121 @@
 
 @end
 
-@implementation DPSongCell
+// Mirrors the Android row: condensed title, monospaced key readout, and a
+// lit plate while the note sounds.
+static const CGFloat DPSongRowInset = 20;
+static const CGFloat DPSongRowVerticalPadding = 14;
+static const CGFloat DPSongTitleSize = 20;
+static const CGFloat DPSongKeySize = 18;
+
+@implementation DPSongCell {
+    UILabel *_titleLabel;
+    UILabel *_keyLabel;
+}
 
 @synthesize song;
 
-- (UIView *)noteUi:(DPKey *)k {
-    DPNote *n = k.note;
-    HLayoutView *flow = [[HLayoutView alloc] init];
-    UILabel *noteName = [[UILabel alloc] init];
-    noteName.font = [UIFont boldSystemFontOfSize:16];
-    noteName.text = k.friendlyName;
-    noteName.textColor = self.textLabel.textColor;
-    noteName.backgroundColor = [UIColor clearColor];
-    noteName.userInteractionEnabled = NO;
-    
-    [noteName sizeToFit];
-    [flow addSubview:noteName];
-    
-    UILabel *accidental = [[UILabel alloc] init];
-    accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor;
-    accidental.backgroundColor = [UIColor clearColor];
-    accidental.userInteractionEnabled = NO;
-    switch (n.accidental.get) {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self == nil) {
+        return nil;
+    }
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+
+    _titleLabel = [[UILabel alloc] init];
+    _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    _titleLabel.font = [DPTheme listTitleFontWithSize:DPSongTitleSize];
+    _titleLabel.userInteractionEnabled = NO;
+    [_titleLabel setContentCompressionResistancePriority:UILayoutPriorityDefaultLow
+                                                 forAxis:UILayoutConstraintAxisHorizontal];
+
+    _keyLabel = [[UILabel alloc] init];
+    _keyLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    _keyLabel.userInteractionEnabled = NO;
+    [_keyLabel setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                               forAxis:UILayoutConstraintAxisHorizontal];
+    [_keyLabel setContentHuggingPriority:UILayoutPriorityRequired
+                                 forAxis:UILayoutConstraintAxisHorizontal];
+
+    [self.contentView addSubview:_titleLabel];
+    [self.contentView addSubview:_keyLabel];
+    [NSLayoutConstraint activateConstraints:@[
+        [_titleLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor
+                                                  constant:DPSongRowInset],
+        [_titleLabel.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
+                                              constant:DPSongRowVerticalPadding],
+        [_titleLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor
+                                                 constant:-DPSongRowVerticalPadding],
+        [_keyLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:_titleLabel.trailingAnchor
+                                                              constant:16],
+        [_keyLabel.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor
+                                                 constant:-DPSongRowInset],
+        [_keyLabel.centerYAnchor constraintEqualToAnchor:_titleLabel.centerYAnchor],
+    ]];
+    [self applyLit:NO];
+    return self;
+}
+
+- (NSAttributedString *)keyReadoutFor:(DPKey *)key color:(UIColor *)color {
+    UIFont *mono = [DPTheme monospacedFontWithSize:DPSongKeySize];
+    NSMutableAttributedString *readout =
+        [[NSMutableAttributedString alloc] initWithString:key.friendlyName
+                                               attributes:@{
+                                                   NSFontAttributeName: mono,
+                                                   NSForegroundColorAttributeName: color,
+                                                   NSKernAttributeName: @(DPSongKeySize * 0.06),
+                                               }];
+    NSString *glyph = nil;
+    switch (key.note.accidental.get) {
         case Sharp:
-            accidental.text = SHARP_STRING;
+            glyph = SHARP_STRING;
             break;
         case Flat:
-            accidental.text = FLAT_STRING;
+            glyph = FLAT_STRING;
             break;
         default:
             break;
     }
-    [accidental sizeToFit];
-    
-    [flow addSubview:accidental];
-    flow.userInteractionEnabled = NO;
-    
-    [flow sizeToFit];
-    return flow;
+    if (glyph != nil) {
+        UIFont *noteHedz = [UIFont fontWithName:@"NoteHedz" size:DPSongKeySize * 1.2] ?: mono;
+        [readout appendAttributedString:
+            [[NSAttributedString alloc] initWithString:glyph
+                                            attributes:@{
+                                                NSFontAttributeName: noteHedz,
+                                                NSForegroundColorAttributeName: color,
+                                            }]];
+    }
+    return readout;
+}
+
+- (void)applyLit:(BOOL)lit {
+    self.contentView.backgroundColor = lit ? DPTheme.plateLit : UIColor.clearColor;
+    _titleLabel.textColor = lit ? DPTheme.plateOnLit : DPTheme.plateInk;
+    if (song != nil) {
+        _keyLabel.attributedText = [self keyReadoutFor:song.key
+                                                 color:lit ? DPTheme.plateOnLit : DPTheme.plateInkSecondary];
+    }
+}
+
+- (void)setHighlighted:(BOOL)highlighted animated:(BOOL)animated {
+    [super setHighlighted:highlighted animated:animated];
+    if (!animated) {
+        [self applyLit:highlighted];
+        return;
+    }
+    [UIView transitionWithView:self.contentView
+                      duration:0.12
+                       options:UIViewAnimationOptionTransitionCrossDissolve |
+                               UIViewAnimationOptionBeginFromCurrentState
+                    animations:^{ [self applyLit:highlighted]; }
+                    completion:nil];
 }
 
 - (void)setSong:(DPPitchedSong *)newSong {
     song = newSong;
-    
-    HLayoutView *flowRight = [[HLayoutView alloc] init];
-    [flowRight addSubview:[self noteUi:song.key]];
-    
-    flowRight.frame = CGRectInset(self.frame, 10, 0);
-    flowRight.hAlignment = UIControlContentHorizontalAlignmentRight;
-    flowRight.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    flowRight.userInteractionEnabled = NO;
-    
-    self.textLabel.text = song.name;
-    self.textLabel.textColor = self.textLabel.textColor;
-    self.textLabel.userInteractionEnabled = NO;
-    
-    [self.contentView addSubview:flowRight];
-    [self sizeToFit];
-    
-    self.frame = CGRectInset(self.frame, 0, -20);
-    self.contentMode = UIControlContentVerticalAlignmentCenter | UIControlContentVerticalAlignmentFill;
+    _titleLabel.text = song.name;
+    [self applyLit:self.isHighlighted];
+    self.accessibilityLabel = [NSString stringWithFormat:@"%@, %@", song.name, song.key.friendlyName];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {

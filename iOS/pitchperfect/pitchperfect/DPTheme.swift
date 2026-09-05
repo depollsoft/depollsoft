@@ -35,6 +35,25 @@ import UIKit
     @objc public static let plateLit = dyn(rgb(0x141618), rgb(0xF2EFE6))
     @objc public static let plateOnLit = dyn(rgb(0xF2F3F4), rgb(0x101214))
 
+    /// The engraved display face; falls back to the system condensed width.
+    @objc public static func condensedFont(size: CGFloat) -> UIFont {
+        if let oswald = UIFont(name: "Oswald-Medium", size: size) {
+            return oswald
+        }
+        return UIFont.systemFont(ofSize: size, weight: .regular, width: .condensed)
+    }
+
+    /// The condensed text face for list rows; Android sets these in
+    /// sans-serif-condensed rather than the engraved display face.
+    @objc public static func listTitleFont(size: CGFloat) -> UIFont {
+        UIFont.systemFont(ofSize: size, weight: .regular, width: .condensed)
+    }
+
+    /// The measurement face used for readouts such as keys and frequencies.
+    @objc public static func monospacedFont(size: CGFloat) -> UIFont {
+        UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
+    }
+
     private static func staffTile(dark: Bool) -> UIImage {
         let size = CGSize(width: 430, height: 239)
         let markColor = dark ? rgb(0x898D92) : rgb(0x55585C)
