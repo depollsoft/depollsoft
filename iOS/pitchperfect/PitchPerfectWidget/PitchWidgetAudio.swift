@@ -27,6 +27,10 @@ enum WidgetSharedDefaults {
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: suiteName(for: Bundle.main.bundleIdentifier))
     }
+
+    static var isPrivateBuild: Bool {
+        Bundle.main.bundleIdentifier?.hasPrefix("depollsoft.pitchperfect.private") == true
+    }
 }
 
 enum WidgetPitchState {
@@ -95,27 +99,44 @@ enum WidgetPlaybackBridge {
     }
 }
 
-/// Runs in the widget process, so WidgetKit's own post-interaction reload
-/// redraws the face without waiting on the app.
-struct SelectWidgetRangeIntent: AppIntent {
-    static let title: LocalizedStringResource = "Select Pitch Pipe Range"
-    static let openAppWhenRun = false
+/// Beta builds print a one-line trace under the nameplate so a static face
+/// on a device can be read: render count, last render time, last intent.
+enum WidgetDiagnostics {
+    private static let eventKey = "diag.lastEvent"
+    private static let rendersKey = "diag.renders"
 
-    @Parameter(title: "Range")
-    var rangeRawValue: String
+    static var isEnabled: Bool { WidgetSharedDefaults.isPrivateBuild }
 
-    init() {}
-
-    init(range: PitchRange) {
-        rangeRawValue = range.rawValue
+    static var process: String {
+        Bundle.main.bundleURL.pathExtension == "appex" ? "widget" : "app"
     }
 
-    func perform() async throws -> some IntentResult {
-        WidgetPlaybackBridge.requestStop()
-        WidgetRangeState.set(rangeRawValue)
-        WidgetPitchState.set(nil)
-        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
-        return .result()
+    static func record(_ event: String) {
+        guard isEnabled, let defaults = WidgetSharedDefaults.defaults else { return }
+        defaults.set("\(stamp()) \(event)@\(process)", forKey: eventKey)
+        defaults.synchronize()
+    }
+
+    /// Called by the timeline provider; returns the caption for this render.
+    static func recordRender(range: String, activePitch: Int?) -> String? {
+        guard isEnabled else { return nil }
+        let defaults = WidgetSharedDefaults.defaults
+        let renders = (defaults?.integer(forKey: rendersKey) ?? 0) + 1
+        defaults?.set(renders, forKey: rendersKey)
+        defaults?.synchronize()
+        let container = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: WidgetSharedDefaults.suiteName(for: Bundle.main.bundleIdentifier)
+        )
+        let group = container == nil ? "no group" : "group ok"
+        let pitch = activePitch.map(String.init) ?? "-"
+        let last = defaults?.string(forKey: eventKey) ?? "no intent yet"
+        return "r\(renders) \(stamp()) \(group) \(range) pitch \(pitch) | \(last)"
+    }
+
+    private static func stamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: Date())
     }
 }
 
@@ -199,15 +220,18 @@ struct PlayWidgetPitchIntent: SetValueIntent, AudioPlaybackIntent {
                 }
             } catch {
                 WidgetPitchState.set(nil)
+                WidgetDiagnostics.record("play \(pitchIndex) failed \(error.localizedDescription)")
                 WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
                 throw error
             }
             WidgetPitchState.set(pitchIndex)
+            WidgetDiagnostics.record("play \(pitchIndex)")
         } else {
             await MainActor.run {
                 WidgetTonePlayer.shared.stop()
             }
             WidgetPitchState.set(nil)
+            WidgetDiagnostics.record("stop \(pitchIndex)")
         }
         WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         return .result()
