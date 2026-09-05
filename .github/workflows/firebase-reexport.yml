@@ -23,6 +23,7 @@ on:
 
 permissions:
   actions: read
+  pull-requests: read
   # GitHub exposes draft releases only to tokens with push access.
   # Checkout does not persist this token; it is passed only to archive retrieval.
   contents: write
