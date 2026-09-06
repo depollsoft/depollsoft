@@ -2,12 +2,10 @@
 //  SongEditorView.swift
 //  pitchperfect
 //
-//  The song editor: an engraved title field over the key dial. Thirteen key
-//  cells sit around the instrument ring in circle-of-fifths order, C at
-//  twelve o'clock, sharps clockwise, flats counter-clockwise, the enharmonic
-//  pair meeting at six. The chosen key's signature is engraved in the hole
-//  beside a Major/Minor selector, the machined part the pitch pipe uses for
-//  its octave range.
+//  The song editor: an engraved title field over a key-signature list. The
+//  list is the Keys screen's list, because a singer choosing a key is reading
+//  the signature off sheet music: the engraved signature on the left, the
+//  key's name on the right, and the chosen row lit like a sounding note.
 //
 
 import Combine
@@ -17,7 +15,9 @@ import UIKit
 final class SongEditorModel: ObservableObject {
     @Published var title: String
     @Published private(set) var selectedKey: DPKey
-    @Published private(set) var isMinor: Bool
+    @Published var isMinor: Bool {
+        didSet { if isMinor != oldValue { modeChanged() } }
+    }
     @Published var titleErrorVisible = false
     /// Incremented when the controller wants the title field focused.
     @Published var titleFocusRequest = 0
@@ -27,8 +27,7 @@ final class SongEditorModel: ObservableObject {
 
     private var previewNote: DPNote?
     private var previewStop: DispatchWorkItem?
-    private let cellFeedback = UIImpactFeedbackGenerator(style: .rigid)
-    private let modeFeedback = UISelectionFeedbackGenerator()
+    private let rowFeedback = UIImpactFeedbackGenerator(style: .rigid)
 
     init(title: String, key: DPKey?) {
         self.title = title
@@ -53,18 +52,14 @@ final class SongEditorModel: ObservableObject {
 
     func tap(_ key: DPKey) {
         selectedKey = key
-        cellFeedback.impactOccurred(intensity: 0.55)
-        cellFeedback.prepare()
+        rowFeedback.impactOccurred(intensity: 0.55)
+        rowFeedback.prepare()
         preview(key.note)
     }
 
-    func setMode(minor: Bool) {
-        guard minor != isMinor else { return }
-        modeFeedback.selectionChanged()
-        modeFeedback.prepare()
-        // Keep the same signature when the mode flips: a relative key shares it.
+    /// Keep the same signature when the mode flips: a relative key shares it.
+    private func modeChanged() {
         let accidentals = selectedKey.numAccidentals
-        isMinor = minor
         if let match = keys.first(where: { $0.numAccidentals == accidentals }) {
             selectedKey = match
         }
@@ -169,86 +164,126 @@ struct SongEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            PlateLabel(text: "SONG TITLE")
-            TextField("", text: $model.title, prompt: Text("Untitled").foregroundStyle(Plate.inkSecondary.opacity(0.6)))
-                .font(Plate.text(26))
-                .foregroundStyle(Plate.ink)
-                .tint(Plate.ink)
-                .textInputAutocapitalization(.words)
-                .submitLabel(.done)
-                .focused($titleFocused)
-                .onSubmit { titleFocused = false }
-                .onChange(of: model.title) { _, _ in model.titleChanged() }
-                .accessibilityLabel("Song title")
-                .accessibilityIdentifier("songTitleField")
-                .padding(.top, 6)
-                .padding(.bottom, 8)
-                .frame(minHeight: 44)
-            Rectangle()
-                .fill(titleFocused || model.titleErrorVisible ? Plate.ink : Plate.hairline)
-                .frame(height: titleFocused || model.titleErrorVisible ? 2 : 1)
-            if model.titleErrorVisible {
-                Text("Song title is required")
-                    .font(Plate.mono(12))
+            VStack(alignment: .leading, spacing: 0) {
+                PlateLabel(text: "SONG TITLE")
+                TextField("", text: $model.title, prompt: Text("Untitled").foregroundStyle(Plate.inkSecondary.opacity(0.6)))
+                    .font(Plate.text(26))
                     .foregroundStyle(Plate.ink)
+                    .tint(Plate.ink)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.done)
+                    .focused($titleFocused)
+                    .onSubmit { titleFocused = false }
+                    .onChange(of: model.title) { _, _ in model.titleChanged() }
+                    .accessibilityLabel("Song title")
+                    .accessibilityIdentifier("songTitleField")
                     .padding(.top, 6)
-                    .accessibilityIdentifier("songTitleError")
+                    .padding(.bottom, 8)
+                    .frame(minHeight: 44)
+                Rectangle()
+                    .fill(titleFocused || model.titleErrorVisible ? Plate.ink : Plate.hairline)
+                    .frame(height: titleFocused || model.titleErrorVisible ? 2 : 1)
+                if model.titleErrorVisible {
+                    Text("Song title is required")
+                        .font(Plate.mono(12))
+                        .foregroundStyle(Plate.ink)
+                        .padding(.top, 6)
+                        .accessibilityIdentifier("songTitleError")
+                }
+                HStack(alignment: .center) {
+                    PlateLabel(text: "KEY")
+                    Spacer()
+                    Picker("Key mode", selection: $model.isMinor) {
+                        Text("Major").tag(false)
+                        Text("Minor").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 150)
+                    .accessibilityIdentifier("keyMode")
+                }
+                .padding(.top, 18)
+                .padding(.bottom, 8)
             }
-            PlateLabel(text: "KEY")
-                .padding(.top, 22)
-            KeyDial(model: model)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .contentShape(Rectangle())
+            .onTapGesture { titleFocused = false }
+
+            KeySignatureList(model: model, dismissKeyboard: { titleFocused = false })
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .contentShape(Rectangle())
-        .onTapGesture { titleFocused = false }
         .onChange(of: model.titleFocusRequest) { _, _ in titleFocused = true }
         .animation(.easeOut(duration: 0.15), value: model.titleErrorVisible)
     }
 }
 
-private struct KeyDial: View {
+/// The Keys screen's list: signature left, name right, hairline rules, and
+/// the chosen row lit. Opens scrolled to the chosen key.
+private struct KeySignatureList: View {
     @ObservedObject var model: SongEditorModel
+    let dismissKeyboard: () -> Void
 
     var body: some View {
-        GeometryReader { geometry in
-            let half = min(geometry.size.width, geometry.size.height) / 2
-            let ring = half * 0.80
-            let cell = ring * 0.45
-            let keys = model.keys
-            let selected = keys.firstIndex { $0.isEqual(model.selectedKey) }
-
-            ZStack {
-                // Bloom beneath the chosen key, as under a sounding pitch.
-                RadialLayout(radius: ring, cellDiameter: cell * 2.4, origin: .middleAtTop) {
-                    ForEach(Array(keys.indices), id: \.self) { index in
-                        Circle()
-                            .fill(RadialGradient(colors: [Plate.lit.opacity(0.5), Plate.lit.opacity(0)], center: .center, startRadius: 0, endRadius: cell * 1.2))
-                            .opacity(index == selected ? 1 : 0)
-                    }
-                }
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-
-                RadialLayout(radius: ring, cellDiameter: cell, origin: .middleAtTop) {
-                    ForEach(Array(keys.indices), id: \.self) { index in
-                        KeyCell(key: keys[index], minor: model.isMinor, active: index == selected, diameter: cell) {
-                            model.tap(keys[index])
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    Rectangle().fill(Plate.hairline).frame(height: 1)
+                    ForEach(Array(model.keys.enumerated()), id: \.offset) { index, key in
+                        let selected = key.isEqual(model.selectedKey)
+                        KeySignatureRow(key: key, minor: model.isMinor, selected: selected) {
+                            dismissKeyboard()
+                            model.tap(key)
                         }
+                        .id(index)
+                        Rectangle().fill(Plate.hairline).frame(height: 1)
                     }
                 }
-
-                KeyReadout(model: model, ring: ring)
             }
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("keyDial")
+            .scrollDismissesKeyboard(.immediately)
+            .onAppear { scrollToSelection(proxy, animated: false) }
+            .onChange(of: model.isMinor) { _, _ in scrollToSelection(proxy, animated: true) }
+        }
+        .accessibilityIdentifier("keyList")
+    }
+
+    private func scrollToSelection(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let index = model.keys.firstIndex(where: { $0.isEqual(model.selectedKey) }) else { return }
+        if animated {
+            withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(index, anchor: .center) }
+        } else {
+            proxy.scrollTo(index, anchor: .center)
         }
     }
 }
 
-/// "F" plus its accidental, in the engraved display face.
+private struct KeySignatureRow: View {
+    let key: DPKey
+    let minor: Bool
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .center) {
+                Text(SongEditorSpeech.signatureGlyphs(numAccidentals: Int(key.numAccidentals)))
+                    .font(Plate.music(44))
+                    .accessibilityHidden(true)
+                Spacer(minLength: 16)
+                KeyName(key: key, size: 22, color: selected ? Plate.onLit : Plate.ink)
+            }
+            .foregroundStyle(selected ? Plate.onLit : Plate.ink)
+            .padding(.horizontal, 20)
+            .frame(minHeight: 64)
+            .background(selected ? Plate.lit : Color.clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(SongEditorSpeech.name(for: key, minor: minor))
+        .accessibilityIdentifier("key-\(key.friendlyName() ?? "")\(key.numAccidentals)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// "F" plus its accidental, in the condensed text face with the NoteHedz glyph.
 private struct KeyName: View {
     let key: DPKey
     let size: CGFloat
@@ -257,120 +292,14 @@ private struct KeyName: View {
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             Text(key.friendlyName())
-                .font(Plate.display(size))
+                .font(Plate.text(size))
             if SongEditorSpeech.accidental(of: key) != Int(Natural.rawValue) {
                 Text(SongEditorSpeech.accidental(of: key) == Int(Sharp.rawValue) ? "\u{00EC}" : "\u{00ED}")
-                    .font(Plate.noteHedz(size * 0.9))
+                    .font(Plate.noteHedz(size * 1.2))
             }
         }
         .foregroundStyle(color)
         .lineLimit(1)
-    }
-}
-
-private struct KeyCell: View {
-    let key: DPKey
-    let minor: Bool
-    let active: Bool
-    let diameter: CGFloat
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle().fill(active ? Plate.lit : Plate.surface)
-                Circle().stroke(active ? Plate.lit : Plate.hairline, lineWidth: active ? 2.5 : 1.2)
-                Circle()
-                    .stroke(active ? Plate.onLit.opacity(0.45) : Plate.inkSecondary.opacity(0.3), lineWidth: 0.8)
-                    .padding(diameter * 0.07)
-                KeyName(key: key, size: diameter * 0.41, color: active ? Plate.onLit : Plate.ink)
-            }
-            .frame(width: diameter, height: diameter)
-            .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(SongEditorSpeech.name(for: key, minor: minor))
-        .accessibilityIdentifier("key-\(key.friendlyName() ?? "")\(key.numAccidentals)")
-        .accessibilityAddTraits(active ? .isSelected : [])
-    }
-}
-
-private struct KeyReadout: View {
-    @ObservedObject var model: SongEditorModel
-    let ring: CGFloat
-
-    var body: some View {
-        let key = model.selectedKey
-        // Everything here must fit the ring's hole, so sizes follow the ring.
-        VStack(spacing: 0) {
-            Text(SongEditorSpeech.signatureGlyphs(numAccidentals: Int(key.numAccidentals)))
-                .font(Plate.music(ring * 0.34))
-                .foregroundStyle(Plate.ink)
-                .accessibilityHidden(true)
-            HStack(alignment: .firstTextBaseline, spacing: ring * 0.04) {
-                KeyName(key: key, size: ring * 0.14, color: Plate.ink)
-                Text(model.isMinor ? "MINOR" : "MAJOR")
-                    .font(Plate.display(ring * 0.11))
-                    .tracking(ring * 0.015)
-                    .foregroundStyle(Plate.ink)
-            }
-            Text(SongEditorSpeech.accidentalCount(numAccidentals: Int(key.numAccidentals)))
-                .font(Plate.mono(ring * 0.075))
-                .tracking(ring * 0.011)
-                .foregroundStyle(Plate.inkSecondary)
-                .padding(.top, ring * 0.03)
-            ModeSelector(model: model)
-                .frame(width: ring * 0.72, height: 72)
-                .padding(.top, ring * 0.06)
-        }
-        .frame(maxHeight: (ring * 0.775) * 2)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(SongEditorSpeech.name(for: key, minor: model.isMinor))
-    }
-}
-
-/// One machined frame containing both mode positions, as the pitch pipe's
-/// octave-range selector does.
-private struct ModeSelector: View {
-    @ObservedObject var model: SongEditorModel
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ModeSegment(label: "MAJOR", selected: !model.isMinor, identifier: "keyMode-major") { model.setMode(minor: false) }
-            Rectangle().fill(Plate.hairline.opacity(0.6)).frame(height: 1)
-            ModeSegment(label: "MINOR", selected: model.isMinor, identifier: "keyMode-minor") { model.setMode(minor: true) }
-        }
-        .background(Plate.surface.opacity(0.92))
-        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Plate.hairline, lineWidth: 1.2))
-        .clipShape(RoundedRectangle(cornerRadius: 4))
-    }
-}
-
-private struct ModeSegment: View {
-    let label: String
-    let selected: Bool
-    let identifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(selected ? Plate.lit : .clear)
-                    .frame(width: 5, height: 5)
-                Text(label)
-                    .font(Plate.display(12))
-                    .tracking(1.6)
-                    .foregroundStyle(selected ? Plate.ink : Plate.inkSecondary.opacity(0.75))
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(selected ? Plate.ink.opacity(0.10) : .clear)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label == "MAJOR" ? "Major keys" : "Minor keys")
-        .accessibilityIdentifier(identifier)
-        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -385,11 +314,11 @@ enum SongEditorSpeech {
 
     static func accidentalCount(numAccidentals: Int) -> String {
         switch numAccidentals {
-        case 0: return "NO SHARPS OR FLATS"
-        case 1: return "1 SHARP"
-        case -1: return "1 FLAT"
-        case let n where n > 0: return "\(n) SHARPS"
-        case let n: return "\(-n) FLATS"
+        case 0: return "no sharps or flats"
+        case 1: return "1 sharp"
+        case -1: return "1 flat"
+        case let count where count > 0: return "\(count) sharps"
+        case let count: return "\(-count) flats"
         }
     }
 
@@ -401,6 +330,6 @@ enum SongEditorSpeech {
         let accidental = accidental(of: key)
         let letter = (key.note.friendlyName ?? "").uppercased()
         let spelled = accidental == Int(Sharp.rawValue) ? "\(letter) sharp" : (accidental == Int(Flat.rawValue) ? "\(letter) flat" : letter)
-        return "\(spelled) \(minor ? "minor" : "major"), \(accidentalCount(numAccidentals: Int(key.numAccidentals)).lowercased())"
+        return "\(spelled) \(minor ? "minor" : "major"), \(accidentalCount(numAccidentals: Int(key.numAccidentals)))"
     }
 }

@@ -19,13 +19,13 @@ import org.junit.runner.RunWith
 /**
  * Instrumented UI tests for the Song List functionality.
  * Tests navigation to songs tab, song list display, and add song dialog.
- * 
+ *
  * Uses actual resource IDs from the app:
  * - songListView: ListView showing songs
  * - addSongButton: FloatingActionButton to add songs
  * - sorryText: TextView shown when no songs exist
  * - songTitleEditText: EditText for song title in add dialog
- * - songKeyDial: Key dial for key selection in add dialog
+ * - songKeyList: Key signature list for key selection in add dialog
  * - songTitleTextView: Song title in list item
  * - songKeyTextView: Key signature in list item
  * - songs_item: Bottom nav menu item for songs tab
@@ -33,7 +33,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class SongListFragmentTest {
-
     @get:Rule
     val activityRule = ActivityScenarioRule(PitchPerfectActivity::class.java)
 
@@ -105,7 +104,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testAddSongDialogHasKeyDial() {
+    fun testAddSongDialogHasKeyList() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -114,8 +113,8 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Verify the key dial is displayed
-        onView(withId(R.id.songKeyDial))
+        // Verify the key list is displayed
+        onView(withId(R.id.songKeyList))
             .check(matches(isDisplayed()))
     }
 
@@ -139,7 +138,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testCanTapKeyDial() {
+    fun testCanTapKeyList() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -148,13 +147,13 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Tap the dial; the centre selector and cells absorb the tap without leaving the editor
-        onView(withId(R.id.songKeyDial))
+        // Tap the list; a row selects without leaving the editor
+        onView(withId(R.id.songKeyList))
             .perform(click())
 
         EspressoTestUtils.shortWait()
 
-        onView(withId(R.id.songKeyDial))
+        onView(withId(R.id.songKeyList))
             .check(matches(isDisplayed()))
     }
 
