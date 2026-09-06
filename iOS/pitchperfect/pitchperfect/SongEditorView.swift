@@ -6,6 +6,8 @@
 //  list is the Keys screen's list, because a singer choosing a key is reading
 //  the signature off sheet music: the engraved signature on the left, the
 //  key's name on the right, and the chosen row lit like a sounding note.
+//  Choosing a key is silent; the pitch pipe and Keys screens are where notes
+//  sound.
 //
 
 import Combine
@@ -25,9 +27,7 @@ final class SongEditorModel: ObservableObject {
     let majorKeys = DPKey.majorKeys() as? [DPKey] ?? []
     let minorKeys = DPKey.minorKeys() as? [DPKey] ?? []
 
-    private var previewNote: DPNote?
-    private var previewStop: DispatchWorkItem?
-    private let rowFeedback = UIImpactFeedbackGenerator(style: .rigid)
+    private let rowFeedback = UISelectionFeedbackGenerator()
 
     init(title: String, key: DPKey?) {
         self.title = title
@@ -50,11 +50,12 @@ final class SongEditorModel: ObservableObject {
         isMinor = minorKeys.contains { $0.isEqual(key) }
     }
 
+    /// Choosing a key is silent: the editor records the key, it does not play it.
     func tap(_ key: DPKey) {
+        guard !key.isEqual(selectedKey) else { return }
         selectedKey = key
-        rowFeedback.impactOccurred(intensity: 0.55)
+        rowFeedback.selectionChanged()
         rowFeedback.prepare()
-        preview(key.note)
     }
 
     /// Keep the same signature when the mode flips: a relative key shares it.
@@ -71,25 +72,6 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
-    /// Sound the tonic briefly so a singer can confirm the key by ear.
-    private func preview(_ note: DPNote) {
-        stopPreview()
-        note.play()
-        previewNote = note
-        let stop = DispatchWorkItem { [weak self] in
-            note.stop()
-            if self?.previewNote === note { self?.previewNote = nil }
-        }
-        previewStop = stop
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: stop)
-    }
-
-    func stopPreview() {
-        previewStop?.cancel()
-        previewStop = nil
-        previewNote?.stop()
-        previewNote = nil
-    }
 }
 
 /// The Objective-C face of the editor: owns the model and builds the hosted view.
@@ -119,7 +101,6 @@ final class SongEditorModel: ObservableObject {
     }
 
     @objc public func focusTitle() { model.titleFocusRequest += 1 }
-    @objc public func stopPreview() { model.stopPreview() }
 
     @objc public func makeViewController() -> UIViewController {
         let host = UIHostingController(rootView: SongEditorView(model: model))

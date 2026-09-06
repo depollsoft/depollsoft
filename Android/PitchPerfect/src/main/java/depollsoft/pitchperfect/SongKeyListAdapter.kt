@@ -11,12 +11,11 @@ import depollsoft.pitchperfect.converters.KeySignatureConverter
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.KeyType
-import depollsoft.pitchperfect.lib.Note
 
 /**
  * The song editor's key picker: the Keys screen's signature list, with the
- * chosen row lit. A tap sounds the tonic briefly so a singer can confirm the
- * key by ear.
+ * chosen row lit. Choosing a key is silent; the pitch pipe and Keys screens
+ * are where notes sound.
  */
 class SongKeyListAdapter(
     initialKey: Key,
@@ -31,10 +30,6 @@ class SongKeyListAdapter(
 
     private val signatureConverter = KeySignatureConverter()
     private val nameConverter = KeyNameConverter()
-    private var previewNote: Note? = null
-    private var previewHost: View? = null
-    private val stopPreviewRunnable = Runnable { stopPreview() }
-
     var selectedKey: Key = initialKey
         private set
 
@@ -85,34 +80,14 @@ class SongKeyListAdapter(
         holder.itemView.isSelected = selected
         holder.itemView.contentDescription = spokenName(key)
         holder.itemView.setOnClickListener { view ->
-            if (key != selectedKey) {
-                val previous = selectedIndex
-                selectedKey = key
-                if (previous >= 0) notifyItemChanged(previous)
-                notifyItemChanged(position)
-                onKeyChange(key)
-            }
-            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            preview(view, key.note)
+            if (key == selectedKey) return@setOnClickListener
+            val previous = selectedIndex
+            selectedKey = key
+            if (previous >= 0) notifyItemChanged(previous)
+            notifyItemChanged(position)
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            onKeyChange(key)
         }
-    }
-
-    private fun preview(
-        host: View,
-        note: Note,
-    ) {
-        stopPreview()
-        note.play()
-        previewNote = note
-        previewHost = host
-        host.postDelayed(stopPreviewRunnable, 700)
-    }
-
-    fun stopPreview() {
-        previewHost?.removeCallbacks(stopPreviewRunnable)
-        previewNote?.stop()
-        previewNote = null
-        previewHost = null
     }
 
     companion object {

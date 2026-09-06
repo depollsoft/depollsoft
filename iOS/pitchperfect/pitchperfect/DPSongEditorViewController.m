@@ -110,11 +110,6 @@
     [super viewDidAppear:animated];
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [editor stopPreview];
-    [super viewWillDisappear:animated];
-}
-
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [coordinator notifyWhenInteractionChangesUsingBlock:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
         [self resetBannerViewSize];
@@ -153,7 +148,6 @@
     }
     song.name = editor.title;
     song.key = editor.selectedKey;
-    [editor stopPreview];
     UINotificationFeedbackGenerator *feedback = [[UINotificationFeedbackGenerator alloc] init];
     [feedback notificationOccurred:UINotificationFeedbackTypeSuccess];
     [self onComplete:NO];
@@ -161,7 +155,6 @@
 }
 
 - (void)cancel {
-    [editor stopPreview];
     [self onComplete:YES];
     [self dismissViewControllerAnimated:YES completion:nil];
 }

@@ -127,12 +127,6 @@ public class AddSongActivity extends AppCompatActivity {
         layout.scrollToPositionWithOffset(index, Math.max(0, list.getHeight() / 2 - rowHeight / 2));
     }
 
-    @Override
-    protected void onPause() {
-        keyList.stopPreview();
-        super.onPause();
-    }
-
     private void okClicked() {
         String name = this.getSong().getName();
         if (name == null || name.trim().isEmpty()) {
