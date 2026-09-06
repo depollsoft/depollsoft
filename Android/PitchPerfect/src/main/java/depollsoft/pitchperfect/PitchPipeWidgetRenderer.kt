@@ -1,6 +1,7 @@
 package depollsoft.pitchperfect
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.BitmapShader
@@ -34,16 +35,56 @@ object PitchPipeWidgetRenderer {
         val hairline = ContextCompat.getColor(context, R.color.plate_hairline)
         val lit = ContextCompat.getColor(context, R.color.plate_accent)
         val onLit = ContextCompat.getColor(context, R.color.plate_on_accent)
-        val display: Typeface =
-            runCatching { ResourcesCompat.getFont(context, R.font.oswald_medium) }.getOrNull()
-                ?: Typeface.create("sans-serif-condensed", Typeface.NORMAL)
+        val display: Typeface = displayTypeface(context)
     }
+
+    // Everything that does not change between taps is drawn once and kept:
+    // the font, the score tile, the panel behind the ring, each cell in both
+    // states, and the range selector. A tap then costs a readout and a copy.
+    @Volatile private var cachedTypeface: Typeface? = null
+
+    @Volatile private var cachedScoreTile: Bitmap? = null
+    private val panelCache = HashMap<String, Bitmap>()
+    private val cellCache = HashMap<String, Bitmap>()
+    private val rangeCache = HashMap<String, Bitmap>()
+
+    private fun displayTypeface(context: Context): Typeface =
+        cachedTypeface ?: (
+            runCatching { ResourcesCompat.getFont(context.applicationContext, R.font.oswald_medium) }.getOrNull()
+                ?: Typeface.create("sans-serif-condensed", Typeface.NORMAL)
+        ).also { cachedTypeface = it }
+
+    private fun scoreTile(context: Context): Bitmap? =
+        cachedScoreTile ?: runCatching {
+            BitmapFactory.decodeResource(context.resources, R.drawable.panobackground)
+        }.getOrNull().also { cachedScoreTile = it }
+
+    private fun themeKey(context: Context): String =
+        (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK).toString()
+
+    private fun <T> cached(
+        cache: HashMap<String, T>,
+        key: String,
+        create: () -> T,
+    ): T =
+        synchronized(cache) {
+            cache[key] ?: create().also {
+                if (cache.size > 64) cache.clear()
+                cache[key] = it
+            }
+        }
 
     private fun withAlpha(
         color: Int,
         alpha: Int,
     ): Int = (color and 0x00FFFFFF) or (alpha.coerceIn(0, 255) shl 24)
 
+    /**
+     * @param bloomCellPx When the cells are separate hit-target bitmaps (so a
+     * bloom would be clipped to each cell), the drawn radius of those cells in
+     * pixels; the face then paints the bloom beneath each sounding cell, as the
+     * instrument does. Zero when the face draws its own cells.
+     */
     fun face(
         context: Context,
         notes: List<Note>,
@@ -51,6 +92,7 @@ object PitchPipeWidgetRenderer {
         width: Int,
         height: Int,
         drawControls: Boolean = true,
+        bloomCellPx: Float = 0f,
     ): Bitmap {
         val p = Palette(context)
         val bmp = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
@@ -68,18 +110,46 @@ object PitchPipeWidgetRenderer {
                 typeface = Typeface.MONOSPACE
             }
 
-        canvas.drawColor(p.ground)
-        drawGrain(canvas, p.hairline, width, height)
-        drawScore(context, canvas, p.inkSecondary, width, height)
-
         val cx = width / 2f
         val cy = height * FACE_CENTER_Y_FRACTION
         val ring = min(width.toFloat(), height * 0.82f) * 0.365f
         val radius = ring * 0.225f
 
+        val panel =
+            cached(panelCache, "$width x $height @${themeKey(context)}") {
+                val background = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+                val panelCanvas = Canvas(background)
+                panelCanvas.drawColor(p.ground)
+                drawGrain(panelCanvas, p.hairline, width, height)
+                drawScore(context, panelCanvas, p.inkSecondary, width, height)
+                display.color = withAlpha(p.inkSecondary, 165)
+                display.textSize = ring * 0.08f
+                display.letterSpacing = 0.28f
+                panelCanvas.drawText("DIGITAL PITCH PIPE", cx, height * FOOTER_BASELINE_FRACTION, display)
+                display.letterSpacing = 0f
+                background
+            }
+        canvas.drawBitmap(panel, 0f, 0f, null)
+
         val faceNotes = notes.take(13)
         val step = 360.0 / faceNotes.size.coerceAtLeast(1)
         val start = -90.0 + step / 2.0
+        if (!drawControls && bloomCellPx > 0f) {
+            // The hit targets sit on a ring of 0.365 face widths; bloom there.
+            val targetRing = min(width, height) * 0.365f
+            faceNotes.forEachIndexed { index, note ->
+                if (!note.isPlaying) return@forEachIndexed
+                val angle = Math.toRadians(start + index * step)
+                drawBloom(
+                    canvas,
+                    cx + (cos(angle) * targetRing).toFloat(),
+                    cy + (sin(angle) * targetRing).toFloat(),
+                    bloomCellPx * 2.4f,
+                    p,
+                    fill,
+                )
+            }
+        }
         if (drawControls) {
             faceNotes.forEachIndexed { index, note ->
                 val angle = Math.toRadians(start + index * step)
@@ -93,16 +163,19 @@ object PitchPipeWidgetRenderer {
         if (drawControls) {
             drawRange(canvas, cx, cy + ring * 0.20f, ring * 0.78f, ring * 0.145f, highRange, p, fill, stroke, display)
         }
-
-        display.color = withAlpha(p.inkSecondary, 165)
-        display.textSize = ring * 0.08f
-        display.letterSpacing = 0.28f
-        canvas.drawText("DIGITAL PITCH PIPE", cx, height * FOOTER_BASELINE_FRACTION, display)
-        display.letterSpacing = 0f
         return bmp
     }
 
     fun cell(
+        context: Context,
+        note: Note,
+        size: Int,
+    ): Bitmap =
+        cached(cellCache, "${note.friendlyName}${note.accidental}${note.octave} ${note.isPlaying} $size @${themeKey(context)}") {
+            renderCell(context, note, size)
+        }
+
+    private fun renderCell(
         context: Context,
         note: Note,
         size: Int,
@@ -137,6 +210,16 @@ object PitchPipeWidgetRenderer {
         high: Boolean,
         width: Int,
         height: Int,
+    ): Bitmap =
+        cached(rangeCache, "$high $width x $height @${themeKey(context)}") {
+            renderRangeSelector(context, high, width, height)
+        }
+
+    private fun renderRangeSelector(
+        context: Context,
+        high: Boolean,
+        width: Int,
+        height: Int,
     ): Bitmap {
         val p = Palette(context)
         val bmp = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
@@ -165,19 +248,7 @@ object PitchPipeWidgetRenderer {
         bloomRadius: Float = radius * 2.4f,
     ) {
         val playing = note.isPlaying
-        if (playing) {
-            fill.shader =
-                RadialGradient(
-                    cx,
-                    cy,
-                    bloomRadius,
-                    intArrayOf(withAlpha(p.lit, 150), withAlpha(p.lit, 0)),
-                    null,
-                    Shader.TileMode.CLAMP,
-                )
-            canvas.drawCircle(cx, cy, bloomRadius, fill)
-            fill.shader = null
-        }
+        if (playing) drawBloom(canvas, cx, cy, bloomRadius, p, fill)
         fill.color = if (playing) p.lit else p.surface
         canvas.drawCircle(cx, cy, radius, fill)
         stroke.color = if (playing) p.lit else p.hairline
@@ -197,6 +268,27 @@ object PitchPipeWidgetRenderer {
             }
         text.textSize = if (natural) radius * 0.9f else radius * 0.62f
         canvas.drawText(if (natural) note.friendlyName else "\u266F/\u266D", cx, cy + text.textSize * 0.35f, text)
+    }
+
+    private fun drawBloom(
+        canvas: Canvas,
+        cx: Float,
+        cy: Float,
+        bloomRadius: Float,
+        p: Palette,
+        fill: Paint,
+    ) {
+        fill.shader =
+            RadialGradient(
+                cx,
+                cy,
+                bloomRadius,
+                intArrayOf(withAlpha(p.lit, 150), withAlpha(p.lit, 0)),
+                null,
+                Shader.TileMode.CLAMP,
+            )
+        canvas.drawCircle(cx, cy, bloomRadius, fill)
+        fill.shader = null
     }
 
     private fun drawReadout(
@@ -318,7 +410,7 @@ object PitchPipeWidgetRenderer {
         width: Int,
         height: Int,
     ) {
-        val tile = runCatching { BitmapFactory.decodeResource(context.resources, R.drawable.panobackground) }.getOrNull() ?: return
+        val tile = scoreTile(context) ?: return
         val paint =
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 alpha = 26

@@ -36,12 +36,40 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         context: Context,
         intent: Intent,
     ) {
-        if (intent.action == ACTION_SET_RANGE) {
-            // setIsFromFToF stops nothing itself; sounding notes keep sounding,
-            // matching the instrument, which stops all on a range change.
-            val model = PitchPipeModel()
-            model.notes.forEach { it.stop() }
-            model.isFromFToF = intent.getBooleanExtra(EXTRA_HIGH, false)
+        when (intent.action) {
+            ACTION_SET_RANGE -> {
+                // setIsFromFToF stops nothing itself; sounding notes keep sounding,
+                // matching the instrument, which stops all on a range change.
+                val model = PitchPipeModel()
+                model.notes.forEach { it.stop() }
+                model.isFromFToF = intent.getBooleanExtra(EXTRA_HIGH, false)
+            }
+
+            ACTION_TOGGLE_NOTE -> {
+                // A broadcast, not a service: Android 12+ refuses background
+                // service starts from a widget tap, and a manifest receiver is
+                // always deliverable. Render straight away rather than through
+                // the coalescing handler so the cell lights on this tap.
+                val accidental =
+                    when (intent.getStringExtra(EXTRA_ACCIDENTAL)) {
+                        "#" -> Accidental.Sharp
+                        "b" -> Accidental.Flat
+                        else -> Accidental.Natural
+                    }
+                val note =
+                    Note.findNote(
+                        intent.getStringExtra(EXTRA_NOTE_NAME) ?: "C",
+                        accidental,
+                        intent.getIntExtra(EXTRA_OCTAVE, 4),
+                    )
+                val startedAt = SystemClock.elapsedRealtime()
+                if (note.isPlaying) note.stop() else note.play()
+                PerformanceDiagnostics.logDuration("Widget note toggled", startedAt, "playing=${note.isPlaying}")
+                mainHandler.removeCallbacks(pendingUpdate)
+                val manager = AppWidgetManager.getInstance(context)
+                val ids = manager.getAppWidgetIds(ComponentName(context, PitchPipeAppWidget::class.java))
+                if (ids.isNotEmpty()) renderAsync(context, manager, ids)
+            }
         }
         super.onReceive(context, intent)
     }
@@ -130,6 +158,11 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         val faceDp = min(widthDp, heightDp)
         val facePx = (faceDp * density).roundToInt().coerceAtLeast(1)
         val renderContext = themedContext(context)
+        val face = min(widthDp, heightDp)
+        val ring = face * 0.365f
+        val cellTarget = maxOf(52f, ring * 0.45f)
+        val rangeWidth = maxOf(132f, ring * 0.9f)
+        val rangeHeight = maxOf(56f, ring * 0.32f)
         val views = RemoteViews(context.packageName, R.layout.pitchpipewidgetview)
         views.setInt(
             R.id.widgetRoot,
@@ -145,13 +178,9 @@ class PitchPipeAppWidget : AppWidgetProvider() {
                 facePx,
                 facePx,
                 drawControls = !positionTargets,
+                bloomCellPx = if (positionTargets) cellTarget * density * 0.44f else 0f,
             ),
         )
-        val face = min(widthDp, heightDp)
-        val ring = face * 0.365f
-        val cellTarget = maxOf(52f, ring * 0.45f)
-        val rangeWidth = maxOf(132f, ring * 0.9f)
-        val rangeHeight = maxOf(56f, ring * 0.32f)
         CELL_IDS.forEachIndexed { index, id ->
             val note = notes[index]
             views.setContentDescription(id, spokenName(note))
@@ -260,15 +289,16 @@ class PitchPipeAppWidget : AppWidgetProvider() {
         index: Int,
     ): PendingIntent {
         val intent =
-            Intent(context, PitchPerfectService::class.java)
-                .putExtra("noteName", note.friendlyName)
-                .putExtra("octave", note.octave)
+            Intent(context, PitchPipeAppWidget::class.java)
+                .setAction(ACTION_TOGGLE_NOTE)
+                .putExtra(EXTRA_NOTE_NAME, note.friendlyName)
+                .putExtra(EXTRA_OCTAVE, note.octave)
         when (note.accidental) {
-            Accidental.Flat -> intent.putExtra("accidental", "b")
-            Accidental.Sharp -> intent.putExtra("accidental", "#")
+            Accidental.Flat -> intent.putExtra(EXTRA_ACCIDENTAL, "b")
+            Accidental.Sharp -> intent.putExtra(EXTRA_ACCIDENTAL, "#")
             else -> Unit
         }
-        return PendingIntent.getService(
+        return PendingIntent.getBroadcast(
             context,
             index,
             intent,
@@ -291,7 +321,11 @@ class PitchPipeAppWidget : AppWidgetProvider() {
 
     companion object {
         const val ACTION_SET_RANGE = "depollsoft.pitchperfect.widget.SET_RANGE"
+        const val ACTION_TOGGLE_NOTE = "depollsoft.pitchperfect.widget.TOGGLE_NOTE"
         const val EXTRA_HIGH = "high"
+        const val EXTRA_NOTE_NAME = "noteName"
+        const val EXTRA_ACCIDENTAL = "accidental"
+        const val EXTRA_OCTAVE = "octave"
 
         // Clockwise from C at the top-left, around the grid's perimeter.
         private val CELL_IDS =
