@@ -80,8 +80,8 @@ class SongKeyListAdapter(
         val selected = key == selectedKey
         holder.signature.text = signatureConverter.convertToTarget(key, CharSequence::class.java) as CharSequence
         holder.name.text = nameConverter.convertToTarget(key, CharSequence::class.java) as CharSequence
-        // The row's colour selectors light on pressed; the chosen row stays lit.
-        holder.itemView.isPressed = selected
+        // The row's selectors light on selected, which a tap's press cycle
+        // never clears; a second tap on the chosen row leaves it chosen.
         holder.itemView.isSelected = selected
         holder.itemView.contentDescription = spokenName(key)
         holder.itemView.setOnClickListener { view ->
