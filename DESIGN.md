@@ -1,0 +1,225 @@
+---
+name: Pitch Perfect
+description: A grayscale precision laboratory instrument for pitch — one luminous glow where sound exists.
+colors:
+  plate-ground: "#DADBDC"
+  plate-surface: "#E7E8E9"
+  plate-ink: "#1C1E20"
+  plate-ink-secondary: "#55585C"
+  plate-hairline: "#B7B9BC"
+  plate-lit: "#141618"
+  plate-on-lit: "#F2F3F4"
+  plate-ground-dark: "#0E0F10"
+  plate-surface-dark: "#16181A"
+  plate-ink-dark: "#D9DBDD"
+  plate-ink-secondary-dark: "#898D92"
+  plate-hairline-dark: "#2C2F33"
+  plate-lit-dark: "#F2EFE6"
+  plate-on-lit-dark: "#101214"
+typography:
+  display:
+    fontFamily: "Oswald Medium, sans-serif-condensed"
+    fontWeight: 500
+    letterSpacing: "0.16em"
+  body:
+    fontFamily: "sans-serif-condensed (Android) / system condensed (iOS)"
+    fontSize: "20-24sp"
+  mono:
+    fontFamily: "monospace (Android) / SF Mono system monospaced (iOS)"
+    fontSize: "14-18sp"
+    letterSpacing: "0.04em"
+  label:
+    fontFamily: "monospace"
+    fontSize: "12sp"
+    letterSpacing: "0.14em"
+rounded:
+  plate: "2dp"
+  machined: "5px"
+components:
+  list-row:
+    backgroundColor: "{colors.plate-ground}"
+    textColor: "{colors.plate-ink}"
+  list-row-lit:
+    backgroundColor: "{colors.plate-lit}"
+    textColor: "{colors.plate-on-lit}"
+  fab:
+    backgroundColor: "{colors.plate-surface}"
+    textColor: "{colors.plate-ink}"
+  section-header:
+    textColor: "{colors.plate-ink-secondary}"
+    typography: "{typography.label}"
+---
+
+# Design System: Pitch Perfect
+
+<!-- Scope: the Pitch Perfect app only (Android/PitchPerfect + iOS/pitchperfect). Tag Master is a different world. -->
+<!-- Direction contract: "The Laboratory Instrument", seed 1d4ba7fb, recorded atop Android/PitchPerfect/src/main/res/layout/pitchperfectview.xml. Recorded from the built code (ground truth), not the plan. -->
+
+## Overview
+
+**Creative North Star: "The Laboratory Instrument"**
+
+Pitch Perfect is drawn as a piece of precision lab hardware, not a grid of platform buttons. The light variant is a bench-aluminum plate; the dark variant is blackened steel. Both are grayscale to the bone — PRODUCT.md pins this as a brand commitment ("neutral monochrome surfaces carry the interface, with at most a single luminous emphasis for the sounding note"). Every surface carries machined texture: brushed grain, an etched five-line staff engraved into the panel, hairline anode rings inside each glass cell.
+
+The one moment of light is functional, not decorative: when a note sounds, its cell ignites white-hot with a radial bloom, the note name and live frequency digits appear in the ring's hole, and the glow breathes on a slow 4-second cycle. Release, and the panel goes dark again.
+
+**Key Characteristics:**
+
+- Grayscale only; zero chromatic color anywhere in first-party UI
+- One luminous element maximum, and only while sound exists
+- Engraved condensed caps (Oswald Medium, wide tracking) for labels; monospace for every measurement
+- Hairline strokes (1–1.5px) as the primary structural device; near-square 2dp corners
+- Identical tokens and instrument geometry on both platforms; chrome stays platform-native
+
+## Colors
+
+Seven grayscale roles, each with a light (bench-aluminum) and dark (blackened-steel) value; the frontmatter is normative. Both Android (`plate_*` in `values/colors.xml` + `values-night/colors.xml`) and iOS (`DPTheme.swift` dynamic colors) resolve the same hex pairs.
+
+### Primary
+
+- **Plate Lit** (`plate-lit`, light #141618 / dark #F2EFE6): the sole "accent." In dark mode it is the warm white-hot glow of the sounding cell; in light mode it is near-black ink fill. Paired with **Plate On-Lit** (#F2F3F4 / #101214) for content on a lit surface. Also the pressed state of list rows and the range selector's indicator dot.
+
+### Neutral
+
+- **Plate Ground** (#DADBDC / #0E0F10): window background and the instrument panel itself.
+- **Plate Surface** (#E7E8E9 / #16181A): resting glass cells, the range-selector frame, FABs, Material `colorSurface`.
+- **Plate Ink** (#1C1E20 / #D9DBDD): primary text, natural-note engravings, icons.
+- **Plate Ink Secondary** (#55585C / #898D92): accidental engravings, frequency readouts, section headers, nameplate captions, empty states.
+- **Plate Hairline** (#B7B9BC / #2C2F33): every structural stroke — grain lines, staff etching, cell rims, list dividers, the range selector's frame and split line, and the single edge that separates each bar from the panel.
+
+### Named Rules
+
+**The One-Glow Rule.** The sounding note is the only luminous element on screen. Nothing else blooms, tints, or lights up; all other state is expressed with ink, hairlines, and surface shifts. Silence means a dark (or matte) panel.
+
+**The Grayscale Rule.** No chromatic color, ever, in first-party UI. The seed contract and PRODUCT.md both pin it. Third-party ad creative inside the ad slot is the only place color may appear, and it is quarantined there.
+
+## Typography
+
+**Display Font:** Oswald Medium (bundled: `res/font/oswald_medium.ttf` on Android, `Oswald-Medium.ttf` on iOS; fallback sans-serif-condensed / system condensed)
+**Body Font:** platform condensed sans (`sans-serif-condensed` on Android; system faces on iOS)
+**Mono Font:** platform monospace (`Typeface.MONOSPACE` / `UIFont.monospacedSystemFont`)
+**Glyph Fonts:** NoteHedz (`NoteHedz170.ttf`) for note-head glyphs; MusiQwik / MusiQwikB for key-signature staff glyphs
+
+**Character:** Engraved instrument lettering. Display text is condensed caps with wide tracking, as if milled into the plate; every number that measures something is monospaced.
+
+### Hierarchy
+
+- **Display / engraving** (Oswald Medium): action-bar title (19sp, 0.16 letter-spacing, from `TextAppearance.Plate.ActionBarTitle`); cell engravings and center note readout (sized relative to ring geometry); nameplate caption ("DIGITAL PITCH PIPE", 0.34 tracking, uppercase); range-selector labels (uppercase, 0.16 tracking); empty-state text (15sp, 0.12 tracking).
+- **Body** (condensed sans, 20–24sp): list-row primary text — note names, song titles, key signatures.
+- **Mono / data** (monospace, 14–18sp, 0.04–0.06 tracking): frequencies ("261.6 Hz"), song keys, anything measured.
+- **Label** (monospace, 12sp, 0.14 tracking, secondary ink): section headers (`TextAppearance.Plate.SectionHeader`).
+- **Musical glyphs**: NoteHedz for note heads/accidentals in lists and buttons; MusiQwik for key-signature notation. These are content glyphs, not UI icons.
+
+### Named Rules
+
+**The Mono-Measurement Rule.** Any value with a unit or a key — Hz, octaves, song keys — is set in monospace at secondary weight. Names get the condensed face; numbers get the mono face.
+
+## Layout
+
+The pitch-pipe screen is a single custom-drawn view (`PitchInstrumentView.kt` / `DPPitchInstrumentView.swift`) with identical geometry on both platforms: face center at 44% of height; ring radius = min(w, h × 0.82) × 0.365; 13 cells on a true circle with the inclusive octave endpoints flanking −90° (step = 360° / 13); cell radius = ring radius × 0.225; the range selector seated in the ring's hole (width = ring × 0.72, row height = ring × 0.145, top at center + ring × 0.20). The nameplate caption sits at the panel's bottom edge.
+
+On compact Android widths, screen chrome stacks vertically: action bar (plate surface, hairline bottom edge) → instrument/content panel → "Tired of Ads?" line → fixed bottom ad slot → bottom navigation (plate surface, hairline top edge). At 600dp and wider, the same four destinations move to a plate-surface navigation rail with a hairline trailing edge while the content, remove-ads line, and ad slot remain one vertical instrument bay. Lists use 56–64dp rows with 16–20dp horizontal margins, 1px hairline dividers, and 90dp bottom padding so content clears the FAB.
+
+## Elevation & Depth
+
+No shadows. Depth is conveyed by material: the brushed-metal grain (1px hairlines every 4px at 3–8% alpha), the original score artwork tiled full-bleed at low contrast (treble/bass clefs, key signatures, staff, and notation), the anode ring inset at 86% of each cell's radius, and the one radial bloom (radius = cell × 2.4, lit color fading 60% → 0%) that leaks light across the panel under a sounding cell. Surfaces separate by tone (ground vs. surface vs. ink-bar), never by drop shadow.
+
+**The Etched-Not-Cast Rule.** Depth reads as engraving into one solid plate — hairlines, grain, and inset rings — never as layers floating above it. The only light source is the sounding note.
+
+## Shapes
+
+Machined-part geometry. Circles for cells and indicator dots; near-square 2dp corners on Material components (`ShapeAppearance.Plate`); the range selector is one round-rect frame (5px radius, 1.5px hairline stroke) split by an interior 1px hairline — one machined part with two positions, not two buttons. Strokes are hairline-first: 1px structural, 1.5px frames, 3px only on the lit cell's rim.
+
+## Components
+
+### Instrument Cell (signature)
+
+- **Resting:** surface-filled circle, 1.5px hairline rim, 1px anode ring at 86% radius, engraved label (naturals: full-size letter in ink; accidentals: smaller "♯/♭" glyph in secondary ink).
+- **Sounding:** fills with `plate-lit`, 3px lit rim, bloom underneath, label flips to `plate-on-lit`; opacity breathes with the 4s cycle.
+- **Behavior:** press-and-hold to sound; true multi-touch lets each finger own a cell independently so chords remain sounding as other fingers release. Sliding one finger retunes only that pointer; toggle mode latches. A touch that begins on a cell or the range selector belongs to the instrument and never pages the tabs; a drag on the empty panel still does. Only rendered state changes — no ripple, no platform ink.
+
+### Range Selector (machined)
+
+- One 5px round-rect frame in the ring's hole containing two rows (C TO C / F TO F, uppercase Oswald, 0.16 tracking). Selected row gets a 10%-ink wash, a small `plate-lit` dot at its left, and full-ink text; unselected text is secondary at 75% alpha. Switching range stops all sound.
+
+### Center Readout
+
+- One note sounding: note name + octave in display face, live frequency in mono ("%.1f Hz"). Two-note chords share the display and name the ascending musical interval (for example, "PERFECT 5TH"); larger chords read "<n> NOTES", except a barbershop seventh (the dominant seventh, in any voicing, doubled root included) which reads "BARBERSHOP!" in the same slot, engraved in the display face (a chord has a name, not a measurement) at 0.12em tracking. Idle: a dimmed mono "— Hz". Nothing else occupies the hole besides the range selector.
+
+### List Rows
+
+- 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–18sp secondary. Android song titles keep a 20dp leading inset and song keys use the 18sp ceiling. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
+
+### Song Editing
+
+- Android normal mode keeps rows clean. **Edit Songs** is a title-bar action (pencil) that flips to a Done checkmark, reveals each row's pencil and drag handle, and surfaces Sort beside it; Settings folds into the overflow while on Songs. Dragging uses RecyclerView/ItemTouchHelper and persists once on drop.
+- Add/Edit Song keeps the one-tap app-bar checkmark and also supplies a full-width **Save Song** button. Empty titles are blocked inline.
+- iOS uses its native Edit/Done table mode. In the song editor, Return is Done, a keyboard accessory Done button is always present, and tapping outside dismisses the keyboard so the key picker is never trapped.
+
+### FAB
+
+- Steel, not accent: `plate-surface` background with `plate-ink` icon, 16dp margin, bottom-end.
+
+### Home-Screen Widgets
+
+- Both platforms mount the same inclusive 13-cell circular instrument on the home screen: plate ground, full-bleed score, glass/anode cells, center readout, C–C/F–F selector, and DIGITAL PITCH PIPE nameplate. Android uses `PitchPipeWidgetRenderer`; iOS uses the `PitchPerfectWidget` WidgetKit extension. Both include real system-gallery previews and follow light/dark appearance.
+- Android widgets can sound in place, so cells toggle: tap to sound, tap to stop; the sounding cell lights and the readout shows note/frequency or a two-note interval. Android 12+ receives exact size-specific RemoteViews with 52dp circular cell targets and one 132×56dp range toggle. The center and background are inert—only visible instrument controls respond, so an imprecise tap never opens the app. The widget is a non-stretched square face inside a near-square 4×3 Pixel Launcher host (responsive on other launchers).
+- iOS cells use `AudioPlaybackIntent` with `openAppWhenRun = false`: the widget stays on Home Screen, synthesizes a 1.5-second tone, lights the active cell, and updates the frequency readout before clearing. Each iOS widget chooses C–C or F–F through system Edit Widget configuration. No widget surface or control deep-links into the app.
+
+### Section Headers
+
+- Engraved labels: monospace 12sp, 0.14 tracking, secondary ink (`TextAppearance.Plate.SectionHeader`).
+
+### Settings Controls
+
+- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. Because FirebaseUI Credential Manager is disabled, logout immediately detaches sync, clears Facebook SDK and Firebase Auth state, and refreshes controls instead of waiting several seconds for credential-state clearing. iOS keeps native switches and its segmented theme control. Destructive/account treatment stays grayscale and never spends the sounding-note glow.
+
+### Authentication
+
+- Android presents a concise plate-styled backup/sync explanation before FirebaseUI. The primary action is **Choose sign-in method**; **Not now** preserves local use. Launching disables the action and changes its label to **Opening sign-in…**; cancellation or provider error returns to the same prompt with an accessibility-live recovery message and enabled retry.
+- The app-owned prompt explains optional backup/sync and hands off through one clear action to FirebaseUI 9.1.1’s own method picker. FirebaseUI renders and manages Email, Google, and Facebook; Facebook uses its `FacebookBuilder` with Facebook SDK 18.3. A dedicated `AuthTheme` keeps FirebaseUI fields, controls, progress, and actions visible in light and dark. The explanatory dialog clears stale progress/status whenever it is shown, so logout followed by login always starts enabled. The account label tolerates a missing Facebook email.
+- FirebaseUI Credential Manager saving is disabled for all providers. A scoped AGP instrumentation patch removes only FirebaseUI 9.1.1’s generated non-null check on `CredentialSaveActivity.createIntent(email)`: its next API already accepts `String?` and returns success immediately when credential saving is disabled. The build fails closed if that exact upstream bytecode boundary changes. FirebaseUI’s picker, provider handling, Firebase Auth, Firestore attachment, and account sync remain intact.
+- **Single Attachment Rule.** The application auth-state listener owns normal Firestore attachment and transitions only when the authenticated UID changes. Repeated same-user callbacks no longer tear down listeners or replay snapshots; callbacks queued for a previous UID are discarded after logout/switch, and the former no-op user-document listener is removed. Song restoration raises its write-suppression guard before changing any trackable field, so a remote snapshot cannot write itself back; map persistence is batched once per snapshot rather than once per document. The result callback only requests the one-time new-user local-song upload. Settings refreshes login-bound controls explicitly on success and `onResume`.
+
+### Navigation
+
+- **The Continuous-Plate Rule.** Bars are part of the plate, never a cast bezel: every bar sits on `plate-surface`, separated from the panel by one 1px `plate-hairline` edge, with type and icons in `plate-ink`. Bars therefore follow the theme like everything else; the only near-black in light mode is a sounding note.
+- Android uses Material `BottomNavigationView` on compact widths and `NavigationRailView` at 600dp+; selected items are `plate-ink`, unselected `plate-ink-secondary`; app-bar icons tint through `colorControlNormal`. All labels remain visible and compact items never shift, so label geometry cannot animate after the page. The four lightweight pages remain resident, ViewPager↔navigation updates are equality-guarded, and one standard page transition coordinates the switch. One opaque ground/grain/score bitmap is shared, cached by size, and held in GPU memory behind transparent page content, avoiding stacked full-screen layers. Toolbar actions inflate once and toggle only after a page settles. Home-screen widget renders run off the main thread and coalesce, firing only when a note starts or stops sounding. System bars match `plate-surface`; the app bar carries “Pitch Perfect” and an always-visible Settings gear.
+- iPhone keeps the floating iOS 26 Liquid Glass tab bar; iPad uses the native floating top tab strip, which suppresses child titles by system design. Tab icons remain grayscale templates so glass never morphs or flickers them. The score surface extends beneath the bars and system glass samples it directly; only title typography and tint are overridden. iOS navigation titles name the screen — Pitch Pipe, Notes, Keys, Songs, Settings, Add Song / Edit Song — and Keys carries its Major/Minor control in the leading bar slot.
+
+### Ad Slot
+
+- A fixed full-width container above the bottom nav, preceded by the small italic "Tired of Ads?" link. Android reserves its height immediately but runs Mobile Ads/WebView creation only while Main is foreground and five seconds after the latest touch/navigation input; pending work is canceled when Settings or another Activity covers Main, and licensed users skip initialization. On iOS, the banner loads only after the actual view width is known so no side gaps or background seams appear. Third-party creative lives only here.
+
+### Haptics
+
+**The Instrument Answers You.** Starting a note produces one crisp system detent; sliding to another cell produces the next detent; changing octave range produces a selection tick. A successful song save produces one quiet confirmation pulse. Releasing notes, idle states, and ordinary navigation stay silent. Platform haptic settings remain authoritative.
+
+### Motion
+
+- One motion: the 4-second sinusoidal breath (phase 0→2π, linear) modulating bloom alpha (0.82 + 0.18·sin) and lit-cell fill (0.9 + 0.1·sin) while any note sounds. Android drops it when animator duration scale is 0 and cancels the infinite animator immediately when the pitch page stops, so an attached off-screen page never invalidates frames. iOS honors Reduce Motion. No other animation beyond platform defaults.
+
+### Accessibility
+
+- The instrument exposes virtualized elements: Android `ExploreByTouchHelper` (13 cells + 2 range rows as virtual Buttons with bounds), iOS `UIAccessibilityElement` containers. Spoken names carry full note names ("C sharp, D flat, octave 4") even where the engraving shows only "♯/♭"; range rows report selection; a screen-reader tap sounds the note for 1.5s.
+
+## Do's and Don'ts
+
+### Do
+
+- **Do** keep every first-party pixel grayscale, drawing from the seven `plate-*` role pairs.
+- **Do** reserve `plate-lit` for the sounding note, its bloom, the pressed row, and the range dot — light means "this is live."
+- **Do** set measured values (Hz, keys, octaves) in monospace and labels in condensed caps with wide tracking.
+- **Do** build structure from 1–1.5px hairlines and tone shifts; keep corners at 2dp (5px for machined frames).
+- **Do** mirror instrument tokens and geometry exactly across platforms while keeping nav/tab/bar chrome native.
+- **Do** preserve the saved range booleans exactly: false means inclusive C4–C5 and true means inclusive F4–F5; old C–B/F–E presentation is treated as the same full octave.
+- **Do** tile the original score artwork edge-to-edge, including beneath iOS navigation and tab bars. Keep list rows transparent so the score remains continuous without competing with text.
+- **Do** honor reduce-motion settings by stopping the breath entirely, keep haptics to note starts, real range changes, and successful song saves, and give every custom-drawn control a virtualized accessibility element with a full spoken note name.
+
+### Don't
+
+- **Don't** introduce chromatic color, saturated themes, or a second glow — one luminous element, only while sound exists.
+- **Don't** use drop shadows or elevation overlays; depth is etched (grain, staff, anode rings), never cast.
+- **Don't** replace the engraved "♯/♭" cell glyphs with full note names on the face; full names belong to the center readout and accessibility tree.
+- **Don't** style the FAB or any control with an accent fill; steel surface + ink icon is the ceiling.
+- **Don't** let anything but third-party ad creative occupy the ad slot's color exemption, and don't move the slot from its fixed position above the nav.

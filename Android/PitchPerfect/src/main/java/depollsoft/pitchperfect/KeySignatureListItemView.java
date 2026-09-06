@@ -42,7 +42,7 @@ public class KeySignatureListItemView extends LinearLayout implements BoundUi<Ke
 
   protected void init() {
     View.inflate(this.getContext(), R.layout.keysignatureitemview, this);
-    this.setBackgroundDrawable(new ListView(this.getContext()).getSelector());
+    this.setBackgroundDrawable(this.getContext().getDrawable(R.drawable.row_lit));
   }
 
   @Override

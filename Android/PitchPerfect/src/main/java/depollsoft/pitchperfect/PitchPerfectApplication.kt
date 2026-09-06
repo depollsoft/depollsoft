@@ -1,14 +1,11 @@
 package depollsoft.pitchperfect
 
-import android.util.Log
+import android.content.res.Configuration
+import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
@@ -17,22 +14,11 @@ import depollsoft.pitchperfect.lib.*
 
 class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
+        val startedAt = SystemClock.elapsedRealtime()
         super.onCreate()
+        PerformanceDiagnostics.startMainThreadMonitor()
         val isDebugSigned = false
-        Note.setPlayer(
-            object : Note.NotePlayer {
-                override fun play(n: Note) {
-                    Note.DEFAULT_PLAYER.play(n)
-                    PitchPipeAppWidget.updateWidgets()
-                }
-
-                override fun stop(n: Note) {
-                    Note.DEFAULT_PLAYER.stop(n)
-                    PitchPipeAppWidget.updateWidgets()
-                }
-            },
-        )
-        MobileAds.initialize(this)
+        Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
         JsonSerializer.registerAlias(java.lang.Integer::class.java, "Integer")
         JsonSerializer.registerAlias(java.lang.Integer.TYPE, "int")
         JsonSerializer.registerAlias(Key::class.java, "Key")
@@ -50,31 +36,27 @@ class PitchPerfectApplication : RichApplication() {
         JsonSerializer.registerAlias(TrackableCollection::class.java, "List")
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
+        PerformanceDiagnostics.logDuration(
+            "Application initialized",
+            startedAt,
+            "authenticated=${Firebase.auth.currentUser != null}",
+        )
     }
 
-    private var userDoc: DocumentReference? = null
+    private val authAttachment = AuthAttachmentState()
 
     private fun extraInit() {
-        var registration: ListenerRegistration? = null
         Firebase.auth.addAuthStateListener { auth ->
             val user = auth.currentUser
-            if (registration != null) {
-                registration!!.remove()
-                SongsModel.get().detachFromFirestore()
-                SettingsModel.detachFromFirestore()
+            if (!authAttachment.transitionTo(user?.uid)) {
+                return@addAuthStateListener
             }
+
+            SongsModel.get().detachFromFirestore()
+            SettingsModel.detachFromFirestore()
             if (user != null) {
                 SongsModel.get().attachToFirestore()
                 SettingsModel.attachToFirestore()
-                userDoc = Firebase.firestore.document("users/${user.uid}")
-                registration =
-                    userDoc!!.addSnapshotListener { snapshot, error ->
-                        if (error != null) {
-                            Log.e("depollsoft.pitchperfect", "Failed to listen to user document", error)
-                        }
-                    }
-            } else {
-                userDoc = null
             }
         }
         val tags: MutableSet<String> = mutableSetOf()
@@ -82,6 +64,12 @@ class PitchPerfectApplication : RichApplication() {
             tags.add("logged_in")
         }
         Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Widget cells are pre-rendered bitmaps; redraw them in the new theme.
+        PitchPipeAppWidget.updateWidgets()
     }
 
     override fun onTerminate() {
@@ -101,6 +89,7 @@ class PitchPerfectApplication : RichApplication() {
             set(value) {
                 AppCompatDelegate.setDefaultNightMode(value)
                 Preferences.set("pitchperfect.theme", value)
+                PitchPipeAppWidget.updateWidgets()
             }
     }
 }

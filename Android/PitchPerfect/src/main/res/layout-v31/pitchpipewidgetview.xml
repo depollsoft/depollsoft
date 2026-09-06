@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_panel">
+
+    <ImageView
+        android:id="@+id/widgetFace"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter" />
+
+    <ImageView android:id="@+id/pitchButton0" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton1" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton2" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton3" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton4" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton5" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton6" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton7" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton8" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton9" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton10" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton11" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/pitchButton12" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+    <ImageView android:id="@+id/rangeToggle" style="@style/Widget.Plate.WidgetAbsoluteHit" />
+</FrameLayout>

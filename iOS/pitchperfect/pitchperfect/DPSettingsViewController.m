@@ -8,6 +8,7 @@
 
 #if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsViewController.h"
+#import "pitchperfect-Swift.h"
 #import "GoogleMobileAdsStub.h"
 #import "DPNote.h"
 #import "DPKey.h"
@@ -60,9 +61,8 @@
     // Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
     // Do any additional setup after loading the view, typically from a nib.
@@ -76,11 +76,18 @@
     bannerView.rootViewController = self;
     bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
-    UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    UIScrollView *background = [[UIScrollView alloc] init];
+    background.scrollEnabled = NO;
+    background.backgroundColor = [DPTheme staffBackgroundColor];
     [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    // The glass bars sample this full-bleed scroll surface; without it iOS 26
+    // paints an opaque hard edge over non-scrolling content.
+    [self setContentScrollView:background forEdge:NSDirectionalRectEdgeAll];
+    // DPToolbarViewController (shared, pre-safe-area) opts out of extended
+    // layout; Pitch Perfect runs its score surface under the glass bars.
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
                                                                       options:0
                                                                       metrics:nil
@@ -95,16 +102,19 @@
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         [rootLayout addSubview:bannerView row:1 column:0];
         
-        [bannerView loadRequest:[DPAppDelegate adRequest]];
+        // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     }
     
     tableView = [[UITableView alloc] initWithFrame:CGRectInfinite style:UITableViewStyleGrouped];
     tableView.dataSource = self;
     tableView.delegate = self;
     tableView.allowsSelection = NO;
-    tableView.backgroundColor = [UIColor clearColor];
+    tableView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.backgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+    tableView.backgroundView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.opaque = NO;
     tableView.backgroundView = nil;
-    [rootLayout addSubview:tableView row:2 column:0];
+    [rootLayout addSubview:tableView row:0 column:0];
     
     navigationItem.title = @"Settings";
     navigationItem.rightBarButtonItem =
@@ -116,12 +126,9 @@
     
     [self.view addSubview:rootLayout];
         
-    self.edgesForExtendedLayout = UIRectEdgeNone;
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+    // Full-bleed: the score background runs under the glass bars; content
+    // starts at the safe area so nothing hides beneath them.
+    [rootLayout.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -139,21 +146,7 @@
 }
 
 - (void)resetBannerViewSize {
-    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        return;
-    }
-    switch (self.view.window.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
+    [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
@@ -187,7 +180,7 @@
                 {
                     cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
                     cell.textLabel.text = @"Toggle Notes";
-                    cell.detailTextLabel.text = @"Play until pressed again";
+                    cell.detailTextLabel.text = @"Notes play until pressed again";
                     UISwitch *switchView = [[UISwitch alloc] initWithFrame:CGRectZero];
                     __weak UISwitch *weakSwitchView = switchView;
                     [switchView setOn:[DPSettingsModel sharedInstance].toggleNotes];
@@ -209,6 +202,19 @@
                     [switchView addBlock:^{
                         [DPSettingsModel sharedInstance].wakeLock = weakSwitchView.isOn;
                     } forControlEvents:UIControlEventValueChanged];
+                    break;
+                }
+                case 2:
+                {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"ThemeCell"];
+                    cell.textLabel.text = @"Theme";
+                    UISegmentedControl *themeControl = [[UISegmentedControl alloc] initWithItems:@[@"Default", @"Light", @"Dark"]];
+                    themeControl.selectedSegmentIndex = DPTheme.storedTheme;
+                    __weak UISegmentedControl *weakThemeControl = themeControl;
+                    [themeControl addBlock:^{
+                        DPTheme.storedTheme = weakThemeControl.selectedSegmentIndex;
+                    } forControlEvents:UIControlEventValueChanged];
+                    cell.accessoryView = themeControl;
                     break;
                 }
                 default:
@@ -271,6 +277,7 @@
     if (!cell) {
         cell = [[UITableViewCell alloc] init];
     }
+    [DPTheme styleListCell:cell];
     return cell;
 }
 
@@ -294,10 +301,19 @@
         [[DPSettingsModel sharedInstance] detachFromFirestore];
         FIRHTTPSCallable *callable = [[FIRFunctions functions] HTTPSCallableWithName:@"deleteUser"];
         [callable callWithCompletion:^(FIRHTTPSCallableResult * _Nullable result, NSError * _Nullable error) {
+            [activity stopAnimating];
             if (!error) {
                 [[FIRAuth auth] signOut:nil];
                 [self->tableView reloadData];
-                [activity stopAnimating];
+            } else {
+                UIAlertController *errorAlert =
+                    [UIAlertController alertControllerWithTitle:@"Couldn't Delete Account"
+                                                        message:[NSString stringWithFormat:@"Something went wrong and your account was not deleted. Please try again. (%@)", error.localizedDescription]
+                                                 preferredStyle:UIAlertControllerStyleAlert];
+                [errorAlert addAction:[UIAlertAction actionWithTitle:@"OK"
+                                                               style:UIAlertActionStyleDefault
+                                                             handler:nil]];
+                [self presentViewController:errorAlert animated:YES completion:nil];
             }
         }];
     }]];
@@ -329,7 +345,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return 2;
+            return 3;
         case 1:
             return [FIRAuth auth].currentUser ? 2 : 1;
         case 2:
@@ -347,13 +363,34 @@
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"Settings";
+            return @"Pitch Pipe";
         case 1:
-            return nil;
+            return @"Account";
+        case 2:
+            return @"Private Build";
         default:
             break;
     }
     return nil;
+}
+
+// Section headers are engraved like the Android plate: tracked monospaced
+// capitals in secondary ink.
+- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
+    NSString *title = [self tableView:tableView titleForHeaderInSection:section];
+    if (title == nil || ![view isKindOfClass:[UITableViewHeaderFooterView class]]) {
+        return;
+    }
+    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
+    UIListContentConfiguration *content = header.defaultContentConfiguration;
+    content.attributedText = [[NSAttributedString alloc]
+        initWithString:title.uppercaseString
+            attributes:@{
+                NSFontAttributeName: [DPTheme monospacedFontWithSize:12],
+                NSForegroundColorAttributeName: DPTheme.plateInkSecondary,
+                NSKernAttributeName: @(12 * 0.14),
+            }];
+    header.contentConfiguration = content;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {

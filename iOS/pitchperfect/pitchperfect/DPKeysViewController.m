@@ -45,8 +45,9 @@
         [string appendString:[flats objectAtIndex:-k.numAccidentals]];
     }
     label.text = [NSString stringWithString:string];
-    label.font = [UIFont fontWithName:@"MusiQwik" size:30];
-    label.textColor = self.textLabel.textColor;
+    // The signature is the row's subject: engrave it at the Android row's scale.
+    label.font = [UIFont fontWithName:@"MusiQwik" size:44];
+    label.textColor = DPTheme.plateInk;
     label.backgroundColor = [UIColor clearColor];
     label.userInteractionEnabled = NO;
     [label sizeToFit];
@@ -60,17 +61,17 @@
     flow.rowDimensions = @[[DPGridDimension dimension]];
     DPNote *n = k.note;
     UILabel *noteName = [[UILabel alloc] init];
-    noteName.font = [UIFont boldSystemFontOfSize:16];
+    noteName.font = [DPTheme listTitleFontWithSize:22];
     noteName.text = k.friendlyName;
-    noteName.textColor = self.textLabel.textColor;
+    noteName.textColor = DPTheme.plateInk;
     noteName.backgroundColor = [UIColor clearColor];
     noteName.userInteractionEnabled = NO;
     [noteName sizeToFit];
     [flow addSubview:noteName row:0 column:0];
     
     UILabel *accidental = [[UILabel alloc] init];
-    accidental.font = [UIFont fontWithName:@"NoteHedz" size:24];
-    accidental.textColor = self.textLabel.textColor;
+    accidental.font = [UIFont fontWithName:@"NoteHedz" size:26];
+    accidental.textColor = DPTheme.plateInk;
     accidental.backgroundColor = [UIColor clearColor];
     accidental.userInteractionEnabled = NO;
     switch (n.accidental.get) {
@@ -160,9 +161,8 @@
     
 	DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     
     keys = [DPKey majorKeys];
@@ -179,11 +179,18 @@
     
     [rootLayout addSubview:bannerView row:1 column:0];
     
-    UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
+    UIScrollView *background = [[UIScrollView alloc] init];
+    background.scrollEnabled = NO;
+    background.backgroundColor = [DPTheme staffBackgroundColor];
     [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    // The glass bars sample this full-bleed scroll surface; without it iOS 26
+    // paints an opaque hard edge over non-scrolling content.
+    [self setContentScrollView:background forEdge:NSDirectionalRectEdgeAll];
+    // DPToolbarViewController (shared, pre-safe-area) opts out of extended
+    // layout; Pitch Perfect runs its score surface under the glass bars.
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
                                                                       options:0
                                                                       metrics:nil
@@ -193,7 +200,7 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
     
-    [bannerView loadRequest:[DPAppDelegate adRequest]];
+    // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     
     UISegmentedControl *majorMinorChooser = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Major", @"Minor", nil]];
     majorMinorChooser.selectedSegmentIndex = 0;
@@ -219,12 +226,16 @@
     tableView = [[UITableView alloc] init];
     tableView.dataSource = self;
     tableView.allowsSelection = NO;
-    tableView.backgroundColor = [UIColor clearColor];
-    [rootLayout addSubview:tableView row:2 column:0];
+    tableView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.backgroundView = [[UIView alloc] initWithFrame:CGRectZero];
+    tableView.backgroundView.backgroundColor = [DPTheme staffBackgroundColor];
+    tableView.opaque = NO;
+    [rootLayout addSubview:tableView row:0 column:0];
     
     [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(keys.count / 2) inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
     
-    navigationItem.titleView = majorMinorChooser;
+    navigationItem.title = @"Keys";
+    navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:majorMinorChooser];
     settingsButton = [DPCommon getSettingsButtonWithTarget:self
                                                   selector:@selector(openSettings)];
     navigationItem.rightBarButtonItem = settingsButton;
@@ -233,12 +244,9 @@
     
     [self.view addSubview:rootLayout];
         
-    self.edgesForExtendedLayout = UIRectEdgeNone;
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+    // Full-bleed: the score background runs under the glass bars; content
+    // starts at the safe area so nothing hides beneath them.
+    [rootLayout.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[rootLayout]|"
                                                                       options:0
@@ -247,18 +255,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch (self.view.window.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
+    [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -293,7 +290,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPKey *key = [keys objectAtIndex:indexPath.row];
     DPKeyCell *cell = [[DPKeyCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
-    cell.backgroundColor = [UIColor clearColor];
+    [DPTheme styleListCell:cell];
     cell.key = key;
     return cell;
 }

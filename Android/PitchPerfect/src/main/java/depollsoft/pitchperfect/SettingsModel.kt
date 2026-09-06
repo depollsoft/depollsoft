@@ -19,6 +19,7 @@ object SettingsModel {
 
     private var userRef: DocumentReference? = null
     private var listenerRegistration: ListenerRegistration? = null
+    private val attachment = AuthAttachmentState()
     private var restoring = false
 
     val appStore: String
@@ -41,17 +42,21 @@ object SettingsModel {
         get() = LicenseChecker.isLicensed()
 
     fun attachToFirestore() {
-        val user = Firebase.auth.currentUser!!
+        val user = Firebase.auth.currentUser ?: return
+        if (attachment.isConnectedTo(user.uid, listenerRegistration != null)) return
+        detachFromFirestore()
+        attachment.connect(user.uid)
         userRef = Firebase.firestore.document("users/${user.uid}")
         listenerRegistration =
             userRef!!.addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
+                val data = snapshot ?: return@addSnapshotListener
                 restoring = true
                 try {
-                    wakeLock = snapshot!!.getBoolean("wakeLock") ?: wakeLock
-                    toggleNotes = snapshot!!.getBoolean("toggleNotes") ?: toggleNotes
+                    wakeLock = data.getBoolean("wakeLock") ?: wakeLock
+                    toggleNotes = data.getBoolean("toggleNotes") ?: toggleNotes
                 } finally {
                     restoring = false
                 }
@@ -62,5 +67,6 @@ object SettingsModel {
         listenerRegistration?.remove()
         listenerRegistration = null
         userRef = null
+        attachment.clear()
     }
 }

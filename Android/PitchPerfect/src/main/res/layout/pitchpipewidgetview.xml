@@ -1,162 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:padding="@dimen/widget_margin">
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_panel">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/launchIcon"
-        app:srcCompat="@mipmap/ic_launcher"
-        android:layout_gravity="center"/>
+        android:id="@+id/widgetFace"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter" />
 
+    <!-- Transparent hit regions follow the twelve circular cell positions. -->
     <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="6dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="60dp">
 
-        <LinearLayout
-            android:id="@+id/tableRow1"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal" >
-
-            <ImageButton
-                android:id="@+id/pitchButton0"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton1"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton2"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton3"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <ImageView android:id="@+id/pitchButton12" style="@style/Widget.Plate.WidgetHit" />
+            <ImageView android:id="@+id/pitchButton0" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/tableRow2"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal" >
-
-            <ImageButton
-                android:id="@+id/pitchButton11"
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
+            <ImageView android:id="@+id/pitchButton11" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <ImageView android:id="@+id/pitchButton1" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
+        </LinearLayout>
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <ImageView android:id="@+id/pitchButton10" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="2" />
+            <ImageView android:id="@+id/pitchButton2" style="@style/Widget.Plate.WidgetHit" />
+        </LinearLayout>
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <ImageView android:id="@+id/pitchButton9" style="@style/Widget.Plate.WidgetHit" />
+            <ImageView android:id="@+id/readout" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="2" />
+            <ImageView android:id="@+id/pitchButton3" style="@style/Widget.Plate.WidgetHit" />
+        </LinearLayout>
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <ImageView android:id="@+id/pitchButton8" style="@style/Widget.Plate.WidgetHit" />
+            <ImageView
+                android:id="@+id/rangeToggle"
                 android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <FrameLayout
-                android:id="@+id/cToCButton"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="match_parent"
                 android:layout_weight="2" />
-
-            <ImageButton
-                android:id="@+id/pitchButton4"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
+            <ImageView android:id="@+id/pitchButton4" style="@style/Widget.Plate.WidgetHit" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/tableRow3"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal" >
-
-            <ImageButton
-                android:id="@+id/pitchButton10"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <FrameLayout
-                android:id="@+id/fToFButton"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="2" />
-
-            <ImageButton
-                android:id="@+id/pitchButton5"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
+            <ImageView android:id="@+id/pitchButton7" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <ImageView android:id="@+id/pitchButton5" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/tableRow4"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal" >
-
-            <ImageButton
-                android:id="@+id/pitchButton9"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton8"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton7"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
-
-            <ImageButton
-                android:id="@+id/pitchButton6"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:background="@drawable/button_background"
-                android:textSize="18sp" />
+        <LinearLayout style="@style/Widget.Plate.WidgetHitRow">
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" />
+            <ImageView android:id="@+id/pitchButton6" style="@style/Widget.Plate.WidgetHit" />
+            <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.5" />
         </LinearLayout>
     </LinearLayout>
-
 </FrameLayout>

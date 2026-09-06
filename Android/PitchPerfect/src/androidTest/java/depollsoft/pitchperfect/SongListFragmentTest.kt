@@ -1,6 +1,5 @@
 package depollsoft.pitchperfect
 
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -12,7 +11,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import org.hamcrest.Matchers.anything
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -21,13 +19,13 @@ import org.junit.runner.RunWith
 /**
  * Instrumented UI tests for the Song List functionality.
  * Tests navigation to songs tab, song list display, and add song dialog.
- * 
+ *
  * Uses actual resource IDs from the app:
  * - songListView: ListView showing songs
  * - addSongButton: FloatingActionButton to add songs
  * - sorryText: TextView shown when no songs exist
  * - songTitleEditText: EditText for song title in add dialog
- * - songKeySpinner: Spinner for key selection in add dialog
+ * - songKeyList: Key signature list for key selection in add dialog
  * - songTitleTextView: Song title in list item
  * - songKeyTextView: Key signature in list item
  * - songs_item: Bottom nav menu item for songs tab
@@ -35,7 +33,6 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class SongListFragmentTest {
-
     @get:Rule
     val activityRule = ActivityScenarioRule(PitchPerfectActivity::class.java)
 
@@ -107,7 +104,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testAddSongDialogHasKeySpinner() {
+    fun testAddSongDialogHasKeyList() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -116,8 +113,8 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Verify the key spinner is displayed
-        onView(withId(R.id.songKeySpinner))
+        // Verify the key list is displayed
+        onView(withId(R.id.songKeyList))
             .check(matches(isDisplayed()))
     }
 
@@ -141,7 +138,7 @@ class SongListFragmentTest {
     }
 
     @Test
-    fun testCanSelectKeyFromSpinner() {
+    fun testCanTapKeyList() {
         navigateToSongsTab()
 
         // Click the FAB to open add song dialog
@@ -150,19 +147,13 @@ class SongListFragmentTest {
 
         EspressoTestUtils.shortWait()
 
-        // Click on the key spinner to open it
-        onView(withId(R.id.songKeySpinner))
+        // Tap the list; a row selects without leaving the editor
+        onView(withId(R.id.songKeyList))
             .perform(click())
 
         EspressoTestUtils.shortWait()
 
-        // Select an item from the spinner (first item after "Select Key")
-        onData(anything())
-            .atPosition(1)
-            .perform(click())
-
-        // Verify spinner is still displayed (selection completed)
-        onView(withId(R.id.songKeySpinner))
+        onView(withId(R.id.songKeyList))
             .check(matches(isDisplayed()))
     }
 

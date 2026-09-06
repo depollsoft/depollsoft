@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import android.os.SystemClock
 import com.bindroid.trackable.TrackableCollection
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -11,11 +12,6 @@ import depollsoft.lib.util.Preferences
 import depollsoft.lib.util.preference
 import depollsoft.lib.util.writeThroughPreference
 import depollsoft.pitchperfect.lib.PitchedSong
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class SongsModel private constructor() {
     var songLists: Map<String, SongList> by writeThroughPreference(
@@ -29,51 +25,75 @@ class SongsModel private constructor() {
     val allListeners: MutableList<ListenerRegistration> = mutableListOf()
 
     private var userDoc: DocumentReference? = null
+    private val attachment = AuthAttachmentState()
 
     fun attachToFirestore(store: Boolean = false) {
-        userDoc = Firebase.firestore.document("/users/${Firebase.auth.currentUser!!.uid}")
+        val user = Firebase.auth.currentUser ?: return
+        if (attachment.isConnectedTo(user.uid, allListeners.isNotEmpty())) {
+            if (store) storeAll()
+            return
+        }
+        detachFromFirestore()
+        attachment.connect(user.uid)
+        userDoc = Firebase.firestore.document("/users/${user.uid}")
         songLists.values.forEach { it.setParent(userDoc!!) }
         if (store) {
             storeAll()
         }
-        listenForSongLists()
+        listenForSongLists(user.uid)
     }
 
-    private fun listenForSongLists() {
+    private fun listenForSongLists(userId: String) {
         val listener =
             userDoc?.collection("songLists")?.addSnapshotListener { snapshot, error ->
-                if (error != null) {
+                if (error != null || Firebase.auth.currentUser?.uid != userId) {
                     return@addSnapshotListener
                 }
-                snapshot!!.documentChanges.forEach {
-                    when (it.type) {
+                val changes = snapshot?.documentChanges ?: return@addSnapshotListener
+                val startedAt = SystemClock.elapsedRealtime()
+                var updatedLists = songLists
+                var mapChanged = false
+
+                changes.forEach { change ->
+                    val id = change.document.id
+                    when (change.type) {
                         DocumentChange.Type.ADDED -> {
-                            if (songLists.containsKey(it.document.id)) {
-                                songLists[it.document.id]?.restore(it.document)
+                            val existing = updatedLists[id]
+                            if (existing != null) {
+                                existing.restore(change.document)
                             } else {
-                                songLists = songLists + (it.document.id to SongList(it.document))
+                                updatedLists = updatedLists + (id to SongList(change.document))
+                                mapChanged = true
                             }
                         }
 
                         DocumentChange.Type.MODIFIED -> {
-                            songLists[it.document.id]?.restore(it.document)
+                            updatedLists[id]?.restore(change.document)
                         }
 
                         DocumentChange.Type.REMOVED -> {
-                            removeSongList(it.document.id)
+                            updatedLists = updatedLists - id
+                            mapChanged = true
                         }
                     }
                 }
+                // Persist the map once per snapshot, not once per added/removed
+                // document. This avoids quadratic JSON serialization at login.
+                if (mapChanged) songLists = updatedLists
+                PerformanceDiagnostics.logDuration(
+                    "Firestore song snapshot applied",
+                    startedAt,
+                    "changes=${changes.size}; lists=${updatedLists.size}; mapChanged=$mapChanged",
+                )
             }
-        if (listener != null) {
-            allListeners.add(listener)
-        }
+        if (listener != null) allListeners.add(listener)
     }
 
     fun detachFromFirestore() {
         allListeners.forEach { it.remove() }
         allListeners.clear()
         userDoc = null
+        attachment.clear()
     }
 
     fun removeSongList(key: String) {

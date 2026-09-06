@@ -35,6 +35,7 @@
 @property (nonatomic, strong) NSMutableArray *noteButtons;
 @property (nonatomic, strong) DPPitchPipeModel *model;
 @property (nonatomic, strong) UIBarButtonItem *settingsButton;
+@property (nonatomic, strong) DPPitchInstrumentView *instrumentView;
 
 - (void)stopNotes;
 
@@ -64,11 +65,18 @@
     bannerView.rootViewController = self;
     bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
-    UIView *background = [[UIView alloc] init];
-    background.backgroundColor = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"panobackground.png"]] colorWithAlphaComponent:0.5];
-    [self.view setBackgroundColor:[UIColor systemBackgroundColor]];
+    UIScrollView *background = [[UIScrollView alloc] init];
+    background.scrollEnabled = NO;
+    background.backgroundColor = [DPTheme staffBackgroundColor];
+    [self.view setBackgroundColor:DPTheme.plateGround];
     background.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:background];
+    // The glass bars sample this full-bleed scroll surface; without it iOS 26
+    // paints an opaque hard edge over non-scrolling content.
+    [self setContentScrollView:background forEdge:NSDirectionalRectEdgeAll];
+    // DPToolbarViewController (shared, pre-safe-area) opts out of extended
+    // layout; Pitch Perfect runs its score surface under the glass bars.
+    self.edgesForExtendedLayout = UIRectEdgeAll;
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[background]|"
                                                                       options:0
                                                                       metrics:nil
@@ -78,70 +86,40 @@
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(background)]];
     
-    [bannerView loadRequest:[DPAppDelegate adRequest]];
+    // Loaded after layout in resetBannerViewSize so the creative uses the full screen width.
     
-    DPGridLayout *buttonLayout = [[DPGridLayout alloc] init];
-    buttonLayout.rowDimensions = @[
-                                   [DPGridDimension dimensionWithStars:1],
-                                   [DPGridDimension dimensionWithStars:1],
-                                   [DPGridDimension dimensionWithStars:1],
-                                   [DPGridDimension dimensionWithStars:1]
-                                   ];
-    buttonLayout.columnDimensions = @[
-                                      [DPGridDimension dimensionWithStars:1],
-                                      [DPGridDimension dimensionWithStars:1],
-                                      [DPGridDimension dimensionWithStars:1],
-                                      [DPGridDimension dimensionWithStars:1]
-                                      ];
+    DPPitchInstrumentView *instrument = [[DPPitchInstrumentView alloc] initWithFrame:self.view.bounds];
+    self.instrumentView = instrument;
+    __weak DPPitchPipeViewController *weakSelf = self;
+    instrument.onRangeChange = ^(BOOL high) {
+        weakSelf.model.isFromFToF = high;
+        [weakSelf refreshButtons];
+    };
     
-    int rowMap[12] = { 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 2, 1 };
-    int colMap[12] = { 0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0, 0 };
-    
-    for (int buttonNumber = 0; buttonNumber < 12; buttonNumber++) {
-        id button = [[DPPitchPipeButton alloc] initWithFrame:self.view.bounds];
-        [noteButtons addObject:button];
-        [buttonLayout addSubview:button row:rowMap[buttonNumber] column:colMap[buttonNumber]];
-    }
-    
-    UISegmentedControl *typeSwitcher = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"C to B", @"F to E", nil]];
-    typeSwitcher.tintColor = [UIColor systemGrayColor];
-    typeSwitcher.alpha = 0.75;
-    __weak UISegmentedControl *weakTypeSwitcher = typeSwitcher;
-    [typeSwitcher addBlock:^{
-        [self stopNotes];
-        self.model.isFromFToF = weakTypeSwitcher.selectedSegmentIndex == 1;
-        [self refreshButtons];
-    } forControlEvents:UIControlEventValueChanged];
-    typeSwitcher.selectedSegmentIndex = self.model.isFromFToF ? 1 : 0;
-    [buttonLayout addSubview:[typeSwitcher centered] row:1 column:1 rowSpan:2 colSpan:2];
-    
-    navigationItem.title = @"Pitch Perfect";
+    navigationItem.title = @"Pitch Pipe";
     settingsButton = [DPCommon getSettingsButtonWithTarget:self
                                                   selector:@selector(openSettings)];
     navigationItem.rightBarButtonItem = settingsButton;
     
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:8],
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimensionWithStars:1]
+                                 [DPGridDimension dimensionWithStars:1],
+                                 [DPGridDimension dimension]
                                  ];
     rootLayout.columnDimensions = @[
                                     [DPGridDimension dimensionWithStars:1]
                                     ];
     
-    [rootLayout addSubview:bannerView  row:1 column:0];
-    [rootLayout addSubview:buttonLayout row:2 column:0];
+    // The instrument owns the page; the ad slot docks at the case edge below it.
+    [rootLayout addSubview:instrument row:0 column:0];
+    [rootLayout addSubview:bannerView row:1 column:0];
     
     [self.view addSubview:rootLayout];
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
         
-    self.edgesForExtendedLayout = UIRectEdgeNone;
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[rootLayout]"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(rootLayout)]];
+    // Full-bleed: the score background runs under the glass bars; content
+    // starts at the safe area so nothing hides beneath them.
+    [rootLayout.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
     [rootLayout.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
     [rootLayout.leftAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leftAnchor].active = YES;
     [rootLayout.rightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.rightAnchor].active = YES;
@@ -153,18 +131,7 @@
 }
 
 - (void)resetBannerViewSize {
-    switch (self.view.window.windowScene.interfaceOrientation) {
-        case UIInterfaceOrientationLandscapeLeft:
-        case UIInterfaceOrientationLandscapeRight:
-            self.bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-            self.bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(self.view.frame.size.width);
-            break;
-        default:
-            break;
-    }
+    [DPAppDelegate resizeAndReloadBannerView:self.bannerView forViewController:self];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
@@ -181,11 +148,7 @@
 }
 
 - (void)stopNotes {
-    for (int x = 0; x < noteButtons.count; x++) {
-        DPPitchPipeButton *button = [noteButtons objectAtIndex:x];
-        [button.note stop];
-        button.button.highlighted = NO;
-    }
+    [self.instrumentView stopAll];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -194,68 +157,13 @@
 }
 
 - (void)refreshButtons {
-    for (int x = 0; x < noteButtons.count; x++) {
-        DPPitchPipeButton *button = [noteButtons objectAtIndex:x];
-        button.alpha = 0.75;
-        button.toggle = [DPSettingsModel sharedInstance].toggleNotes;
-        button.note = [model.notes objectAtIndex:x];
-        for (UIView *subview in button.button.subviews) {
-            if ([subview isKindOfClass:[HLayoutView class]]) {
-                [subview removeFromSuperview];
-            }
-        }
-        
-        switch(button.note.accidental.get == Natural) {
-            case Natural:
-                [button.button setAttributedTitle:[[NSAttributedString alloc] initWithString:button.note.friendlyName] forState:UIControlStateNormal];
-                break;
-            default:
-            {
-                [button.button setAttributedTitle:self.sharpFlatString forState:UIControlStateNormal];
-                /*[button.button setTitle:@"" forState:UIControlStateNormal];
-                UILabel *sharpLabel = [[UILabel alloc] initWithFrame:CGRectInset(button.button.frame, 4, 4)];
-                sharpLabel.text = SHARP_STRING;
-                sharpLabel.font = [UIFont fontWithName:@"NoteHedz" size:40];
-                sharpLabel.backgroundColor = [UIColor clearColor];
-                sharpLabel.userInteractionEnabled = NO;
-                sharpLabel.textColor = button.button.currentTitleColor;
-                [sharpLabel sizeToFit];
-                UILabel *slashLabel = [[UILabel alloc] initWithFrame:button.frame];
-                slashLabel.text = @"/";
-                slashLabel.backgroundColor = [UIColor clearColor];
-                slashLabel.userInteractionEnabled = NO;
-                slashLabel.textColor = button.button.currentTitleColor;
-                [slashLabel sizeToFit];
-                UILabel *flatLabel = [[UILabel alloc] init];
-                flatLabel.text = FLAT_STRING;
-                flatLabel.font = [UIFont fontWithName:@"NoteHedz" size:40];
-                flatLabel.backgroundColor = [UIColor clearColor];
-                flatLabel.userInteractionEnabled = NO;
-                flatLabel.textColor = button.button.currentTitleColor;
-                [flatLabel sizeToFit];
-                HLayoutView *layout = [[HLayoutView alloc] initWithFrame:button.frame spacing:4];
-                layout.userInteractionEnabled = NO;
-                [layout addSubview:sharpLabel];
-                [layout addSubview:slashLabel];
-                [layout addSubview:flatLabel];
-                [layout sizeToFit];
-                layout.translatesAutoresizingMaskIntoConstraints = NO;
-                
-                [button.button addSubview:layout];
-                [button.button bringSubviewToFront:layout];
-                
-                [button addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[layout]|"
-                                                                               options:0
-                                                                               metrics:nil
-                                                                                 views:NSDictionaryOfVariableBindings(layout)]];
-                [button addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[layout]|"
-                                                                               options:0
-                                                                               metrics:nil
-                                                                                 views:NSDictionaryOfVariableBindings(layout)]];*/
-                break;
-            }
-        }
+    NSMutableArray<NSNumber *> *naturals = [NSMutableArray arrayWithCapacity:model.notes.count];
+    for (DPNote *note in model.notes) {
+        [naturals addObject:@(note.accidental.get == Natural)];
     }
+    self.instrumentView.toggleMode = [DPSettingsModel sharedInstance].toggleNotes;
+    self.instrumentView.isHighRange = self.model.isFromFToF;
+    [self.instrumentView setNotes:model.notes naturals:naturals];
 }
 
 - (void)openSettings {
