@@ -13,11 +13,16 @@ import android.view.Window;
 import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
 
 import com.bindroid.BindingMode;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
 import depollsoft.lib.compat.ui.ActionBars;
@@ -29,7 +34,7 @@ public class AddSongActivity extends AppCompatActivity {
     private boolean editing;
     private PitchedSong toEdit;
     private TrackableField<PitchedSong> song = new TrackableField<PitchedSong>();
-    private KeyDialView keyDial;
+    private SongKeyListAdapter keyList;
     private TextInputLayout titleLayout;
 
     public PitchedSong getSong() {
@@ -85,16 +90,46 @@ public class AddSongActivity extends AppCompatActivity {
             }
         });
 
-        keyDial = this.findViewById(R.id.songKeyDial);
-        keyDial.select(this.getSong().getKey());
-        keyDial.setOnKeyChange(key -> this.getSong().setKey(key));
+        RecyclerView list = this.findViewById(R.id.songKeyList);
+        keyList = new SongKeyListAdapter(this.getSong().getKey(), key -> {
+            this.getSong().setKey(key);
+            return null;
+        });
+        LinearLayoutManager layout = new LinearLayoutManager(this);
+        list.setLayoutManager(layout);
+        list.setAdapter(keyList);
+        DividerItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        divider.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider_hairline));
+        list.addItemDecoration(divider);
+        list.post(() -> centerSelection(list, layout));
+
+        MaterialButtonToggleGroup modeGroup = this.findViewById(R.id.keyModeGroup);
+        modeGroup.check(keyList.isMinor() ? R.id.keyModeMinor : R.id.keyModeMajor);
+        modeGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) {
+                return;
+            }
+            keyList.setMinor(checkedId == R.id.keyModeMinor);
+            list.post(() -> centerSelection(list, layout));
+        });
 
         this.findViewById(R.id.saveSongButton).setOnClickListener(v -> okClicked());
     }
 
+    private void centerSelection(RecyclerView list, LinearLayoutManager layout) {
+        int index = keyList.getSelectedIndex();
+        if (index < 0) {
+            return;
+        }
+        int rowHeight = getResources().getDisplayMetrics().density > 0
+                ? (int) (64 * getResources().getDisplayMetrics().density)
+                : 0;
+        layout.scrollToPositionWithOffset(index, Math.max(0, list.getHeight() / 2 - rowHeight / 2));
+    }
+
     @Override
     protected void onPause() {
-        keyDial.stopPreview();
+        keyList.stopPreview();
         super.onPause();
     }
 
@@ -102,7 +137,6 @@ public class AddSongActivity extends AppCompatActivity {
         String name = this.getSong().getName();
         if (name == null || name.trim().isEmpty()) {
             titleLayout.setError(this.getString(R.string.SongTitleRequired));
-            titleLayout.requestFocus();
             View titleField = this.findViewById(R.id.songTitleEditText);
             titleField.requestFocus();
             titleField.performHapticFeedback(HapticFeedbackConstants.REJECT);
