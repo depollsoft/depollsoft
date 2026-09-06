@@ -1,30 +1,31 @@
 package depollsoft.pitchperfect;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.HapticFeedbackConstants;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
-import android.widget.Spinner;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
 
 import com.bindroid.BindingMode;
-import com.bindroid.converters.AdapterConverter;
-import com.bindroid.trackable.TrackableCollection;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.EditTextTextProperty;
 import com.bindroid.ui.UiBinder;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.textfield.TextInputLayout;
 
 import depollsoft.lib.compat.ui.ActionBars;
-import depollsoft.lib.compat.ui.MenuItems;
 import depollsoft.pitchperfect.lib.Key;
 import depollsoft.pitchperfect.lib.PitchedSong;
 
@@ -33,18 +34,8 @@ public class AddSongActivity extends AppCompatActivity {
     private boolean editing;
     private PitchedSong toEdit;
     private TrackableField<PitchedSong> song = new TrackableField<PitchedSong>();
-
-    private TrackableField<TrackableCollection<Key>> allKeys = new TrackableField<TrackableCollection<Key>>();
-
-    public AddSongActivity() {
-        this.setAllKeys(new TrackableCollection<Key>());
-        this.getAllKeys().addAll(Key.getMajorKeys());
-        this.getAllKeys().addAll(Key.getMinorKeys());
-    }
-
-    public TrackableCollection<Key> getAllKeys() {
-        return this.allKeys.get();
-    }
+    private SongKeyListAdapter keyList;
+    private TextInputLayout titleLayout;
 
     public PitchedSong getSong() {
         return this.song.get();
@@ -53,8 +44,6 @@ public class AddSongActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.setTitle("Edit Song");
 
         if (!ActionBars.hasActionBar(this)) {
             requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -79,69 +68,113 @@ public class AddSongActivity extends AppCompatActivity {
             this.setSong(new PitchedSong());
             this.getSong().setKey(Key.getMajorKeys().get(Key.getMajorKeys().size() / 2));
         }
+        this.setTitle(this.editing ? R.string.EditSong : R.string.AddSong);
 
-        UiBinder.bind(this,
-                new EditTextTextProperty((EditText) this.findViewById(R.id.songTitleEditText)),
-                "Song.Name", BindingMode.TWO_WAY);
-
-        UiBinder.bind(this, R.id.songKeySpinner, "Adapter", "AllKeys", new AdapterConverter(
-                SongKeySignatureSelectedItemView.class, true, false, SongKeySignatureListItemView.class));
-
-        int keyIndex = this.getAllKeys().indexOf(this.getSong().getKey());
-
-        final Spinner spinner = (Spinner) this.findViewById(R.id.songKeySpinner);
-        spinner.setSelection(keyIndex);
-        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+        EditText titleField = this.findViewById(R.id.songTitleEditText);
+        UiBinder.bind(this, new EditTextTextProperty(titleField), "Song.Name", BindingMode.TWO_WAY);
+        titleLayout = this.findViewById(R.id.songTitleLayout);
+        titleField.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                AddSongActivity.this.getSong().setKey((Key) spinner.getSelectedItem());
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> arg0) {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (titleLayout.getError() != null && s.toString().trim().length() > 0) {
+                    titleLayout.setError(null);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
+
+        RecyclerView list = this.findViewById(R.id.songKeyList);
+        keyList = new SongKeyListAdapter(this.getSong().getKey(), key -> {
+            this.getSong().setKey(key);
+            return null;
+        });
+        LinearLayoutManager layout = new LinearLayoutManager(this);
+        list.setLayoutManager(layout);
+        list.setAdapter(keyList);
+        DividerItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        divider.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider_hairline));
+        list.addItemDecoration(divider);
+        list.post(() -> centerSelection(list, layout));
+
+        MaterialButtonToggleGroup modeGroup = this.findViewById(R.id.keyModeGroup);
+        modeGroup.check(keyList.isMinor() ? R.id.keyModeMinor : R.id.keyModeMajor);
+        modeGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) {
+                return;
+            }
+            keyList.setMinor(checkedId == R.id.keyModeMinor);
+            list.post(() -> centerSelection(list, layout));
+        });
+
+        this.findViewById(R.id.saveSongButton).setOnClickListener(v -> okClicked());
+    }
+
+    private void centerSelection(RecyclerView list, LinearLayoutManager layout) {
+        int index = keyList.getSelectedIndex();
+        if (index < 0) {
+            return;
+        }
+        int rowHeight = getResources().getDisplayMetrics().density > 0
+                ? (int) (64 * getResources().getDisplayMetrics().density)
+                : 0;
+        layout.scrollToPositionWithOffset(index, Math.max(0, list.getHeight() / 2 - rowHeight / 2));
     }
 
     private void okClicked() {
-        if (AddSongActivity.this.editing) {
-            AddSongActivity.this.toEdit.setName(AddSongActivity.this.getSong().getName());
-            AddSongActivity.this.toEdit.setKey(AddSongActivity.this.getSong().getKey());
+        String name = this.getSong().getName();
+        if (name == null || name.trim().isEmpty()) {
+            titleLayout.setError(this.getString(R.string.SongTitleRequired));
+            View titleField = this.findViewById(R.id.songTitleEditText);
+            titleField.requestFocus();
+            titleField.performHapticFeedback(HapticFeedbackConstants.REJECT);
+            return;
+        }
+        this.getSong().setName(name.trim());
+        if (this.editing) {
+            this.toEdit.setName(this.getSong().getName());
+            this.toEdit.setKey(this.getSong().getKey());
             SongsModel.get().getDefaultSongList().notifyOfChange();
         } else {
-            SongsModel.get().getDefaultSongList().addSong(AddSongActivity.this.getSong());
+            SongsModel.get().getDefaultSongList().addSong(this.getSong());
         }
-        AddSongActivity.this.setResult(1);
+        View feedbackView = this.findViewById(R.id.saveSongButton);
+        int feedback = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                ? HapticFeedbackConstants.CONFIRM
+                : HapticFeedbackConstants.CONTEXT_CLICK;
+        feedbackView.performHapticFeedback(feedback);
+        this.setResult(1);
         PitchPerfectActivity.handlingResult = true;
-        AddSongActivity.this.finish();
+        this.finish();
     }
 
     private void cancelClicked() {
-        AddSongActivity.this.setResult(Activity.RESULT_CANCELED);
+        this.setResult(Activity.RESULT_CANCELED);
         PitchPerfectActivity.handlingResult = true;
-        AddSongActivity.this.finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+        this.finish();
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         super.onPrepareOptionsMenu(menu);
-        MenuInflater mi = new MenuInflater(this);
+        MenuInflater mi = getMenuInflater();
         mi.inflate(R.menu.songeditmenu, menu);
 
         menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
                 item -> {
-                    if (AddSongActivity.this.editing) {
-                        SongsModel.get().getDefaultSongList().removeSong(AddSongActivity.this.toEdit);
+                    if (this.editing) {
+                        SongsModel.get().getDefaultSongList().removeSong(this.toEdit);
                     }
-                    AddSongActivity.this.setResult(1);
+                    this.setResult(1);
                     PitchPerfectActivity.handlingResult = true;
-                    AddSongActivity.this.finish();
+                    this.finish();
                     return true;
                 });
 
@@ -155,10 +188,6 @@ public class AddSongActivity extends AppCompatActivity {
         });
 
         return true;
-    }
-
-    public void setAllKeys(TrackableCollection<Key> value) {
-        this.allKeys.set(value);
     }
 
     public void setSong(PitchedSong value) {

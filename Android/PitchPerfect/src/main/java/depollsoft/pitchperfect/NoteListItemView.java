@@ -42,7 +42,7 @@ public class NoteListItemView extends LinearLayout implements BoundUi<Note> {
 
   private void init() {
     View.inflate(this.getContext(), R.layout.notelistitemview, this);
-    this.setBackgroundDrawable(new ListView(this.getContext()).getSelector());
+    this.setBackgroundDrawable(this.getContext().getDrawable(R.drawable.row_lit));
   }
 
   @Override

@@ -165,9 +165,13 @@ def build_private_app(
   display_name:,
   icon_name:,
   output_name:,
-  build_number:
+  build_number:,
+  extension_target: nil,
+  extension_bundle_identifier: nil,
+  extension_entitlements_path: nil
 )
   provisioning_profile = "match AppStore #{bundle_identifier}"
+  extension_profile = extension_bundle_identifier && "match AppStore #{extension_bundle_identifier}"
   entitlements_file = File.join(IOS_ROOT, entitlements_path)
   info_plist_file = File.join(IOS_ROOT, info_plist_path)
   project_file = File.join(IOS_ROOT, scheme, "#{scheme}.xcodeproj")
@@ -191,26 +195,52 @@ def build_private_app(
             provisioning_profile: provisioning_profile,
             entitlements_path: private_entitlements_path,
           ) do
-            build_app(
-              workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
-              scheme: scheme,
-              export_method: "app-store",
-              export_team_id: "43AWMS3YJX",
-              export_options: {
-                provisioningProfiles: {
-                  bundle_identifier => provisioning_profile,
-                },
-              },
-              xcargs: [
-                "APP_ICON_NAME=#{icon_name}",
-                "CURRENT_PROJECT_VERSION=#{build_number}",
-              ].join(" "),
-              cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
-              skip_package_dependencies_resolution: true,
-              output_directory: File.join(IOS_ROOT, "build"),
-              output_name: output_name,
-              clean: true,
-            )
+            profiles = { bundle_identifier => provisioning_profile }
+            build = proc do
+              build_app(
+                workspace: File.join(IOS_ROOT, "iOS.xcworkspace"),
+                scheme: scheme,
+                export_method: "app-store",
+                export_team_id: "43AWMS3YJX",
+                export_options: { provisioningProfiles: profiles },
+                xcargs: [
+                  "APP_ICON_NAME=#{icon_name}",
+                  "CURRENT_PROJECT_VERSION=#{build_number}",
+                ].join(" "),
+                cloned_source_packages_path: File.join(IOS_ROOT, "SourcePackages"),
+                skip_package_dependencies_resolution: true,
+                output_directory: File.join(IOS_ROOT, "build"),
+                output_name: output_name,
+                clean: true,
+              )
+            end
+
+            if extension_target && extension_bundle_identifier
+              profiles[extension_bundle_identifier] = extension_profile
+              sign_extension = proc do |private_extension_entitlements_path|
+                with_private_signing(
+                  project_path: project_file,
+                  target: extension_target,
+                  bundle_identifier: extension_bundle_identifier,
+                  provisioning_profile: extension_profile,
+                  entitlements_path: private_extension_entitlements_path,
+                  &build
+                )
+              end
+
+              if extension_entitlements_path
+                with_private_entitlements(
+                  File.join(IOS_ROOT, extension_entitlements_path),
+                  production_bundle_identifier: production_bundle_identifier,
+                  bundle_identifier: bundle_identifier,
+                  &sign_extension
+                )
+              else
+                sign_extension.call(nil)
+              end
+            else
+              build.call
+            end
           end
         end
       end
@@ -287,14 +317,23 @@ platform :ios do
       tester_email: tester_email,
     )
 
+    signing_identifiers = [
+      "depollsoft.pitchperfect.private",
+      "depollsoft.pitchperfect.private.widget",
+      "depollsoft.tagmaster.private",
+    ]
+    if refresh_signing
+      signing_identifiers.unshift(
+        "depollsoft.pitchperfect",
+        "depollsoft.pitchperfect.widget",
+      )
+    end
+
     match(
       type: "appstore",
       readonly: !refresh_signing,
       force: refresh_signing,
-      app_identifier: [
-        "depollsoft.pitchperfect.private",
-        "depollsoft.tagmaster.private",
-      ],
+      app_identifier: signing_identifiers,
     )
 
     build_private_app(
@@ -308,6 +347,9 @@ platform :ios do
       icon_name: "AppIcon-Private",
       output_name: "PitchPerfect-private.ipa",
       build_number: build_number,
+      extension_target: "PitchPerfectWidget",
+      extension_bundle_identifier: "depollsoft.pitchperfect.private.widget",
+      extension_entitlements_path: "pitchperfect/PitchPerfectWidget/PitchPerfectWidget.entitlements",
     )
 
     build_private_app(

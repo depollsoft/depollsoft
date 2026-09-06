@@ -6,15 +6,17 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
-import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
@@ -22,8 +24,7 @@ import com.bindroid.trackable.track
 import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.facebook.login.LoginManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
@@ -32,8 +33,6 @@ import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -70,6 +69,16 @@ class SettingsActivity : AppCompatActivity() {
             SettingsModel.wakeLock = value
         }
 
+    private fun signOutImmediately() {
+        val startedAt = SystemClock.elapsedRealtime()
+        SongsModel.get().detachFromFirestore()
+        SettingsModel.detachFromFirestore()
+        LoginManager.getInstance().logOut()
+        Firebase.auth.signOut()
+        loginTrackable.updateTrackers()
+        PerformanceDiagnostics.logDuration("Logout completed", startedAt)
+    }
+
     var areAdsRemoved: Boolean
         get() = SettingsModel.areAdsRemoved
         set(value) {
@@ -78,19 +87,21 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        logInDialog = LoginPrompt.buildDialog(this, false)
-        logInDialog.setOnDismissListener { loginTrackable.updateTrackers() }
-        this.title = "Pitch Perfect Settings"
+        logInDialog =
+            LoginPrompt.buildDialog(this, false) {
+                loginTrackable.updateTrackers()
+            }
+        this.title = getString(R.string.Settings)
         this.setContentView(R.layout.settingsview)
         UiBinder.bind(
             this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CheckBox),
+            CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CompoundButton),
             "ToggleNotes",
             BindingMode.TWO_WAY,
         )
         UiBinder.bind(
             this,
-            CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CheckBox),
+            CompoundButtonCheckedProperty(findViewById<View>(R.id.wakeLockCheckBox) as CompoundButton),
             "WakeLock",
             BindingMode.TWO_WAY,
         )
@@ -145,10 +156,7 @@ class SettingsActivity : AppCompatActivity() {
             logInDialog.show()
         }
         findViewById<View>(R.id.logoutButton).setOnClickListener {
-            GlobalScope.launch(Dispatchers.Main) {
-                AuthUI.getInstance().signOut(it.context).await()
-                loginTrackable.updateTrackers()
-            }
+            signOutImmediately()
         }
         findViewById<View>(R.id.deleteAccountButton).setOnClickListener {
             AlertDialog
@@ -156,15 +164,14 @@ class SettingsActivity : AppCompatActivity() {
                 .setMessage(R.string.DeleteAccountConfirmation)
                 .setTitle("Delete account ($userString)")
                 .setPositiveButton(R.string.Yes) { dlg, which ->
-                    GlobalScope.launch(Dispatchers.IO) {
+                    lifecycleScope.launch {
                         SongsModel.get().detachFromFirestore()
                         SettingsModel.detachFromFirestore()
                         Firebase.functions
                             .getHttpsCallable("deleteUser")
                             .call()
                             .await()
-                        AuthUI.getInstance().signOut(it.context).await()
-                        loginTrackable.updateTrackers()
+                        signOutImmediately()
                     }
                 }.setNegativeButton(R.string.No) { dlg, which ->
                     // Do nothing
@@ -226,6 +233,11 @@ class SettingsActivity : AppCompatActivity() {
         setupPrivateBuildDiagnostics()
     }
 
+    override fun onResume() {
+        super.onResume()
+        loginTrackable.updateTrackers()
+    }
+
     private fun setupPrivateBuildDiagnostics() {
         val build = BuildConfig.PRIVATE_BUILD_NUMBER
         if (build.isBlank()) return
@@ -252,10 +264,21 @@ class SettingsActivity : AppCompatActivity() {
             if (curUser.providerData.size > 0) {
                 val providerData = curUser.providerData.first()
                 return when (providerData.providerId) {
-                    FacebookAuthProvider.PROVIDER_ID -> "Facebook: ${providerData.email}"
-                    GoogleAuthProvider.PROVIDER_ID -> "Google: ${providerData.email}"
-                    PhoneAuthProvider.PROVIDER_ID -> providerData.phoneNumber!!
-                    else -> providerData.email ?: "Current User: (${curUser.uid})"
+                    FacebookAuthProvider.PROVIDER_ID -> {
+                        providerData.email?.let { "Facebook: $it" } ?: "Facebook account"
+                    }
+
+                    GoogleAuthProvider.PROVIDER_ID -> {
+                        providerData.email?.let { "Google: $it" } ?: "Google account"
+                    }
+
+                    PhoneAuthProvider.PROVIDER_ID -> {
+                        providerData.phoneNumber!!
+                    }
+
+                    else -> {
+                        providerData.email ?: "Current User: (${curUser.uid})"
+                    }
                 }
             }
             return "Current User: (${curUser.uid})"

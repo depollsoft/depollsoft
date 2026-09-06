@@ -1,54 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
-             android:layout_width="fill_parent"
-             android:layout_height="fill_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <depollsoft.pitchperfect.CropFillImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_panobackground"/>
+        app:srcCompat="@color/plate_ground" />
+
+    <depollsoft.pitchperfect.HeritageScoreView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/songTitleEditText"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:hint="@string/SongTitle"
-            android:inputType="textCapWords|textAutoCorrect">
-        </EditText>
-
         <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            >
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="20dp">
 
             <TextView
-                android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/SongKey">
-            </TextView>
+                android:text="@string/SongTitle"
+                android:textAllCaps="true"
+                android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
 
-            <Spinner
-                android:id="@+id/songKeySpinner"
-                android:layout_width="fill_parent"
-                android:layout_height="75dp">
-            </Spinner>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/songTitleLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                app:boxBackgroundColor="@android:color/transparent"
+                app:boxStrokeColor="@color/plate_ink"
+                app:boxStrokeErrorColor="@color/plate_ink"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="2dp"
+                app:errorEnabled="true"
+                app:errorIconDrawable="@null"
+                app:errorTextAppearance="@style/TextAppearance.Plate.FieldError"
+                app:errorTextColor="@color/plate_ink"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/songTitleEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/SongTitle"
+                    android:fontFamily="sans-serif-condensed"
+                    android:hint="@string/SongTitleHint"
+                    android:imeOptions="actionDone"
+                    android:inputType="textCapWords|textAutoCorrect"
+                    android:paddingStart="0dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="0dp"
+                    android:paddingBottom="10dp"
+                    android:singleLine="true"
+                    android:textColor="@color/plate_ink"
+                    android:textColorHint="@color/plate_ink_secondary"
+                    android:textSize="24sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/SongKey"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/keyModeGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:checkedButton="@id/keyModeMajor"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/keyModeMajor"
+                        style="@style/Widget.Plate.ModeButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/KeyModeMajor"
+                        android:text="@string/major" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/keyModeMinor"
+                        style="@style/Widget.Plate.ModeButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/KeyModeMinor"
+                        android:text="@string/minor" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </LinearLayout>
         </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/songKeyList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveSongButton"
+            style="@style/Widget.Plate.PrimaryButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/SaveSong" />
     </LinearLayout>
 
 </FrameLayout>

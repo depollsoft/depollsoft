@@ -223,21 +223,49 @@ jobs:
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            iOS/SourcePackages
-            ~/Library/Caches/org.swift.swiftpm
+          path: ~/Library/Caches/org.swift.swiftpm
           key: >-
-            preview-spm-v2-${{ runner.os }}-${{
+            preview-spm-v3-${{ runner.os }}-${{
               hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
             }}
 
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          xcodebuild -resolvePackageDependencies \
-            -workspace iOS.xcworkspace \
-            -scheme pitchperfect \
-            -clonedSourcePackagesDirPath SourcePackages
+          # SourcePackages/workspace-state.json embeds absolute paths. Never
+          # reuse it across self-hosted runners with different work roots.
+          rm -rf SourcePackages
+          for attempt in 1 2; do
+            xcodebuild -resolvePackageDependencies \
+              -workspace iOS.xcworkspace \
+              -scheme pitchperfect \
+              -clonedSourcePackagesDirPath SourcePackages
+            missing=0
+            for artifact in \
+              facebook-ios-sdk/FBSDKCoreKit/FBSDKCoreKit.xcframework \
+              facebook-ios-sdk/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.xcframework \
+              facebook-ios-sdk/FBAEMKit/FBAEMKit.xcframework \
+              facebook-ios-sdk/FBSDKLoginKit/FBSDKLoginKit.xcframework \
+              firebase-ios-sdk/FirebaseFirestoreInternal/FirebaseFirestoreInternal.xcframework \
+              swift-package-manager-google-mobile-ads/GoogleMobileAds/GoogleMobileAds.xcframework \
+              swift-package-manager-google-user-messaging-platform/UserMessagingPlatform/UserMessagingPlatform.xcframework \
+              grpc-binary/grpc/grpc.xcframework \
+              grpc-binary/grpcpp/grpcpp.xcframework \
+              grpc-binary/openssl_grpc/openssl_grpc.xcframework \
+              abseil-cpp-binary/absl/absl.xcframework; do
+              if [ ! -f "SourcePackages/artifacts/$artifact/Info.plist" ]; then
+                echo "Missing SPM binary artifact: $artifact"
+                missing=1
+              fi
+            done
+            if [ "$missing" -eq 0 ]; then
+              exit 0
+            fi
+            echo "SPM binary artifacts are incomplete; resolving cleanly."
+            rm -rf SourcePackages
+          done
+          echo "SPM binary artifacts are still missing after a clean resolve." >&2
+          exit 1
 
       - name: Build unsigned private archives
         working-directory: iOS
@@ -296,6 +324,17 @@ jobs:
                 "PRIVATE_BUILD_NUMBER",
               )
             end
+            if target_name == "pitchperfect"
+              widget = project.targets.find { |item| item.name == "PitchPerfectWidget" }
+              abort("Missing PitchPerfectWidget target") unless widget
+              widget.build_configurations.each do |configuration|
+                next unless configuration.name == "Release"
+                configuration.build_settings["PRODUCT_BUNDLE_IDENTIFIER"] =
+                  "depollsoft.pitchperfect.private.widget"
+                configuration.build_settings["CURRENT_PROJECT_VERSION"] =
+                  ENV.fetch("PRIVATE_BUILD_NUMBER")
+              end
+            end
             project.save
           end
           RUBY
@@ -310,19 +349,27 @@ jobs:
                   "depollsoft.pitchperfect",
               ),
               (
+                  Path("pitchperfect/PitchPerfectWidget/PitchPerfectWidget.entitlements"),
+                  "depollsoft.pitchperfect",
+              ),
+              (
                   Path("tagmaster/tagmaster/tagmaster.entitlements"),
                   "depollsoft.tagmaster",
               ),
           )
+
+          def privatize(value, bundle_id):
+              if isinstance(value, str):
+                  return value.replace(bundle_id, f"{bundle_id}.private")
+              if isinstance(value, list):
+                  return [privatize(item, bundle_id) for item in value]
+              return value
+
           for path, bundle_id in apps:
               data = plistlib.loads(path.read_bytes())
               data.pop("aps-environment", None)
               for key, value in tuple(data.items()):
-                  if isinstance(value, str):
-                      data[key] = value.replace(
-                          bundle_id,
-                          f"{bundle_id}.private",
-                      )
+                  data[key] = privatize(value, bundle_id)
               path.write_bytes(plistlib.dumps(data))
           PY
 

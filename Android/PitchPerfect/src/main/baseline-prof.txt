@@ -1,0 +1,4 @@
+HSPLdepollsoft/**->**(**)**
+HSPLcom/bindroid/**->**(**)**
+Ldepollsoft/**;
+Lcom/bindroid/**;

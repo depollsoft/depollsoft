@@ -64,11 +64,35 @@
         [controllers addObject:navigationController];
     }
     tabBarController.viewControllers = controllers;
+
+    // Liquid Glass owns the bars untouched: no appearance overrides. The tab
+    // icons ship as template images so the glass treatment never morphs or
+    // flickers them, and the Oswald title rides on the legacy attributes,
+    // which leave the glass background alone.
+    UIFont *titleFont = [UIFont fontWithName:@"Oswald-Medium" size:19] ?: [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+    NSDictionary *titleAttributes = @{
+        NSForegroundColorAttributeName: UIColor.labelColor,
+        NSFontAttributeName: titleFont
+    };
+
+    tabBarController.tabBar.tintColor = UIColor.labelColor;
+
+    for (UINavigationController *navigationController in controllers) {
+        UITabBarItem *item = navigationController.tabBarItem;
+        UIImage *templateImage = [item.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+        item.image = templateImage;
+        item.selectedImage = templateImage;
+
+        navigationController.navigationBar.titleTextAttributes = titleAttributes;
+        navigationController.navigationBar.tintColor = UIColor.labelColor;
+    }
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [self configureRootNavigationControllers];
+    // A fresh process cannot be sounding a widget pitch; never leave a cell lit.
+    [self configureWidgetPlayback];
 
     if (NSClassFromString(@"XCTestCase") != nil) {
         return YES;
@@ -98,7 +122,15 @@
     [DPJsonSerializer registerAlias:@"Boolean" forObjCType:[NSString stringWithUTF8String:@encode(BOOL)]];
     [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
     
+    [DPTheme applyStoredAppearance];
+
     dispatch_async(dispatch_get_main_queue(), ^{
+        // First launch belongs to the first pitch: the login prompt waits for the next session.
+        BOOL firstLaunchEver = ![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.FirstLaunchSeen"];
+        if (firstLaunchEver) {
+            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.FirstLaunchSeen"];
+            return;
+        }
         if (![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.LoginShown"] && ![FIRAuth auth].currentUser) {
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"depollsoft.pitchperfect.LoginShown"];
             DPLoginViewController *loginViewController = [[DPLoginViewController alloc] init];

@@ -12,5 +12,7 @@
 
 + (GADRequest *)adRequest;
 + (NSString *)bannerAdUnitID;
++ (void)resizeAndReloadBannerView:(GADBannerView *)bannerView
+                forViewController:(UIViewController *)viewController;
 
 @end

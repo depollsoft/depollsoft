@@ -47,7 +47,8 @@ public class SongListItemView extends LinearLayout implements
 
   private void init() {
     View.inflate(this.getContext(), R.layout.songlistitemview, this);
-    this.setBackgroundDrawable(new ListView(this.getContext()).getSelector());
+    this.setEditing(false);
+    this.setBackgroundDrawable(this.getContext().getDrawable(R.drawable.row_lit));
   }
 
   @Override
@@ -177,6 +178,30 @@ public class SongListItemView extends LinearLayout implements
     for (PitchedSong song : SongsModel.get().getDefaultSongList().getSongs())
       song.stop();
     this.getSong().play();
+  }
+
+  public void setEditing(boolean editing) {
+    View editButton = this.findViewById(R.id.editButton);
+    View dragHandle = this.findViewById(R.id.dragHandle);
+    int visibility = editing ? View.VISIBLE : View.GONE;
+    editButton.setVisibility(visibility);
+    dragHandle.setVisibility(visibility);
+    dragHandle.setImportantForAccessibility(
+        editing ? View.IMPORTANT_FOR_ACCESSIBILITY_YES : View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+  }
+
+  public void setDragHandleTouchListener(final Runnable onStartDrag) {
+    View handle = this.findViewById(R.id.dragHandle);
+    if (handle == null) {
+      return;
+    }
+    handle.setOnTouchListener((view, event) -> {
+      if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+        onStartDrag.run();
+        return true;
+      }
+      return false;
+    });
   }
 
   public void setSong(PitchedSong value) {

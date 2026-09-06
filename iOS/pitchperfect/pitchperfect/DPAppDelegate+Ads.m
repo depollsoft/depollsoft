@@ -17,6 +17,28 @@
           error.localizedDescription);
 }
 
++ (void)resizeAndReloadBannerView:(GADBannerView *)bannerView
+                forViewController:(UIViewController *)viewController {
+    if (!bannerView || !bannerView.superview || !viewController.view.window) {
+        return;
+    }
+
+    CGFloat width = CGRectGetWidth(viewController.view.bounds);
+    if (width <= 0) {
+        return;
+    }
+
+    UIInterfaceOrientation orientation = viewController.view.window.windowScene.interfaceOrientation;
+    if (UIInterfaceOrientationIsLandscape(orientation)) {
+        bannerView.adSize = GADLandscapeAnchoredAdaptiveBannerAdSizeWithWidth(width);
+    } else {
+        bannerView.adSize = GADPortraitAnchoredAdaptiveBannerAdSizeWithWidth(width);
+    }
+    bannerView.backgroundColor = UIColor.clearColor;
+    bannerView.clipsToBounds = YES;
+    [bannerView loadRequest:[self adRequest]];
+}
+
 + (NSString *)bannerAdUnitID {
 #if DEBUG
     return @"ca-app-pub-3940256099942544/2934735716";
