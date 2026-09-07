@@ -1,202 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  A tag in a list: the title carries the row, and the facts a singer scans for —
+  id, rating, when it was posted, how often it has been taken, and whether sheet
+  music and learning tracks exist — sit under it in one quiet line.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_marginStart="16dp"
-    android:layout_marginLeft="16dp"
-    android:layout_marginEnd="16dp"
-    android:layout_marginRight="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/tm_touch_target"
     android:orientation="vertical"
-    android:paddingTop="2dp"
-    android:paddingBottom="4dp">
+    android:paddingStart="@dimen/tm_gutter"
+    android:paddingEnd="@dimen/tm_gutter"
+    android:paddingTop="@dimen/tm_space_m"
+    android:paddingBottom="@dimen/tm_space_m">
 
+    <TextView
+        android:id="@+id/titleTextView"
+        style="@style/TextAppearance.Material3.TitleMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:linksClickable="false"
+        android:longClickable="false"
+        android:textColor="?attr/colorOnSurface"
+        tools:text="Who'll Take My Place When I'm Gone?" />
+
+    <TextView
+        android:id="@+id/akaTextView"
+        style="@style/TextAppearance.TagMaster.FieldValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:linksClickable="false"
+        android:longClickable="false"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <!-- Two short rows rather than one long one: at a large system font size a
+         single line of facts would run off the edge. -->
     <LinearLayout
-        android:id="@+id/linearLayout4"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:id="@+id/titleTextView"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:clickable="false"
-            android:focusable="false"
-            android:linksClickable="false"
-            android:longClickable="false"
-            android:text="Who&apos;ll Take My Place When I&apos;m Gone?"
-            tools:ignore="HardcodedText" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_marginLeft="20dp"
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tm_space_xs"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/akaTextView"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusable="false"
-            android:linksClickable="false"
-            android:longClickable="false"
-            android:textSize="12sp" />
-
         <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <LinearLayout
                 android:id="@+id/idContainer"
                 android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_marginRight="10dp">
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/tm_space_m">
 
                 <TextView
                     android:id="@+id/textView1"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="@string/IdColon"
-                    android:textSize="12sp" />
+                    android:text="@string/IdColon" />
 
                 <TextView
                     android:id="@+id/idTextView"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/tm_space_xs"
                     android:clickable="false"
                     android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="123"
-                    android:textSize="12sp" />
+                    tools:text="123" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/ratingContainer"
                 android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_marginRight="10dp">
+                android:layout_height="wrap_content">
 
                 <TextView
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="@string/RatingColon"
-                    android:textSize="12sp" />
+                    android:text="@string/RatingColon" />
 
                 <TextView
                     android:id="@+id/ratingTextView"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="3.26"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:clickable="false"
-                android:focusable="false"
-                android:linksClickable="false"
-                android:longClickable="false"
-                android:text="@string/PostedColon"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/postedTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:clickable="false"
-                android:focusable="false"
-                android:linksClickable="false"
-                android:longClickable="false"
-                android:text="12/7/2008"
-                android:textSize="12sp" />
-
-            <LinearLayout
-                android:id="@+id/downloadsContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent">
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="@string/DLs"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/downloadsTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:linksClickable="false"
-                    android:longClickable="false"
-                    android:text="4633"
-                    android:textSize="12sp" />
+                    tools:text="3.26" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout3"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <CheckBox
-                android:id="@+id/sheetMusicCheckBox"
+            <TextView
+                android:id="@+id/textView3"
+                style="@style/TextAppearance.TagMaster.FieldLabel"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:button="@drawable/ic_yesnocheck"
-                android:buttonTint="@android:color/transparent"
-                android:buttonTintMode="add"
+                android:layout_height="wrap_content"
                 android:clickable="false"
                 android:focusable="false"
-                android:text="@string/SheetMusicCheck"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="12sp"
-                tools:targetApi="lollipop" />
+                android:text="@string/PostedColon" />
 
-            <CheckBox
-                android:id="@+id/learningTracksCheckBox"
+            <TextView
+                android:id="@+id/postedTextView"
+                style="@style/TextAppearance.TagMaster.FieldLabel"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:button="@drawable/ic_yesnocheck"
-                android:buttonTint="@android:color/transparent"
-                android:buttonTintMode="add"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/tm_space_m"
                 android:clickable="false"
                 android:focusable="false"
-                android:text="@string/LearningTracks"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="12sp"
-                tools:targetApi="lollipop" />
+                tools:text="12/7/2008" />
+
+            <LinearLayout
+                android:id="@+id/downloadsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:text="@string/DLs" />
+
+                <TextView
+                    android:id="@+id/downloadsTextView"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    tools:text="4633" />
+            </LinearLayout>
         </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tm_space_xs">
+
+        <CheckBox
+            android:id="@+id/sheetMusicCheckBox"
+            style="@style/TextAppearance.TagMaster.FieldLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:button="@drawable/ic_yesnocheck"
+            android:buttonTint="@android:color/transparent"
+            android:buttonTintMode="add"
+            android:clickable="false"
+            android:focusable="false"
+            android:text="@string/SheetMusicCheck"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <CheckBox
+            android:id="@+id/learningTracksCheckBox"
+            style="@style/TextAppearance.TagMaster.FieldLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:button="@drawable/ic_yesnocheck"
+            android:buttonTint="@android:color/transparent"
+            android:buttonTintMode="add"
+            android:clickable="false"
+            android:focusable="false"
+            android:text="@string/LearningTracks"
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
 </LinearLayout>

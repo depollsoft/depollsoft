@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-07T03:13:50.004Z",
+  "title": "Design System: Tag Master iOS",
+  "extensions": {
+    "platform": "ios",
+    "source": "../DESIGN.md; tagmaster/TMTheme.swift, TMRootController.swift, DPTagViewController.m, DPTagPageControllerBase.m",
+    "nativeColors": {
+      "primaryText": "UIColor.label",
+      "secondaryText": "UIColor.secondaryLabel",
+      "canvas": "UIColor.systemGroupedBackground",
+      "surface": "UIColor.secondarySystemGroupedBackground",
+      "separator": "UIColor.separator",
+      "searchButtonForeground": "UIColor.systemBackground",
+      "customAppearance": "Ink, tint and affirmative resolve light/dark only; no increased-contrast branch."
+    },
+    "typographyMeta": {
+      "wordmark": {
+        "displayName": "Handwriting identity",
+        "purpose": "24pt base scaled by UIFontMetrics for headline; system semibold fallback."
+      }
+    },
+    "nativeTypography": {
+      "screenTitle": "UIFont preferred title1 descriptor, bold",
+      "groupTitle": "UIFont preferred title3 descriptor, semibold",
+      "fieldLabel": "UIFont preferred subheadline descriptor, semibold",
+      "body": "UIFont.preferredFont(forTextStyle: .body)",
+      "metadata": "UIFont.preferredFont(forTextStyle: .footnote)",
+      "navigationTitle": "UIFont preferred headline descriptor, semibold",
+      "largeNavigationTitle": "UIFont preferred largeTitle descriptor, bold"
+    },
+    "breakpoints": [
+      {
+        "name": "detail-split",
+        "value": "760pt minimum view width, regular horizontal size class, non-accessibility text category"
+      },
+      {
+        "name": "tiled-sidebar",
+        "value": "1000pt minimum root width, regular horizontal size class, iOS 18+"
+      }
+    ],
+    "nativeLayout": {
+      "detailSummaryFraction": 0.42,
+      "detailContentCap": "700pt outer padded width; full-width preference priority 999",
+      "emptyStateCap": "420pt",
+      "minimumTarget": "44pt",
+      "fieldLabelColumn": "132pt at non-accessibility categories",
+      "largeText": "Field rows stack, segments become menu buttons, rating stacks above Rate; split detail disabled."
+    },
+    "motion": [
+      {
+        "name": "saved-feedback",
+        "value": "UINotificationFeedbackGenerator.notificationOccurred(.success)",
+        "purpose": "Native saved-state feedback; no custom duration."
+      },
+      {
+        "name": "selection-feedback",
+        "value": "UISelectionFeedbackGenerator.selectionChanged()",
+        "purpose": "Native selection feedback; no custom duration."
+      }
+    ],
+    "nativeAssets": "Reuse unchanged shipping handwriting font and screenbackground.png as a label-tinted template at 0.10 alpha; no new raster asset or licensing claim.",
+    "rendering": "Native descriptions only. No web component previews or synthesized tonal ramps."
+  },
+  "components": [
+    {
+      "name": "Home action row",
+      "kind": "custom",
+      "description": "Inset-grouped automatic-height UITableView row with body semibold title, footnote supporting text and SF Symbol."
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "description": "Minimal UISearchBar with title-or-lyrics accessibility label and Search return key."
+    },
+    {
+      "name": "Search action",
+      "kind": "button",
+      "description": "Filled UIButton.Configuration with 12pt vertical and 16pt horizontal insets, 44pt minimum target."
+    },
+    {
+      "name": "Adaptive choice",
+      "kind": "custom",
+      "description": "TMAdaptiveChoiceView changes UISegmentedControl to bordered UIMenu button at accessibility text categories."
+    },
+    {
+      "name": "Root navigation",
+      "kind": "nav",
+      "description": "Home, Browse and Search in separate UINavigationController stacks; native tabs and iOS 18+ width-gated tiled sidebar."
+    },
+    {
+      "name": "Tag sections",
+      "kind": "nav",
+      "description": "Summary, Details, Tracks and Videos; regular wide non-accessibility layout keeps Summary beside another section."
+    },
+    {
+      "name": "Empty state",
+      "kind": "custom",
+      "description": "TMEmptyStateView combines symbol, multiline title and message with an optional native recovery button."
+    }
+  ],
+  "narrative": {
+    "northStar": "The singing desk",
+    "overview": "Charcoal ink, blue actions and the handwriting wordmark preserve Tag Master's identity. UIKit supplies readable text, grouped lists and native navigation. The barber pole is a quiet identity mark rather than a page-filling backdrop.",
+    "keyCharacteristics": [
+      "",
+      "Handwriting for identity, native semantic type for reading and controls.",
+      "Blue actions on appearance-aware grouped surfaces.",
+      "Readable panes and explicit large-text alternatives."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Surface Rule",
+        "body": "Resolve native semantic colors at use time; do not replace them with sampled light-mode hex values.",
+        "section": "neutral"
+      },
+      {
+        "name": "The Native Reading Rule",
+        "body": "Keep handwriting in identity and use preferred UIKit text styles for reading and controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The Readable Pane Rule",
+        "body": "Use available window width and text category, not device identity, to choose detail layout.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do preserve Home, Browse, Search, Favorites, Teachable Tags, Summary, Details, Tracks and Videos terminology alongside BarbershopTags.com attribution.",
+      "Do preserve semantic text colors and large-text menu, field-row and rating alternatives."
+    ],
+    "donts": [
+      "Don't import Pitch Perfect's visual rules into Tag Master.",
+      "Don't force a sidebar or split detail into a narrow or accessibility-size window.",
+      "Don't canonize isolated legacy styling or unsampled shared-library internals as reusable system rules."
+    ]
+  }
+}

@@ -168,4 +168,39 @@
     <string name="keep_screen_on">Keep Screen On</string>
     <string name="while_viewing_sheet_music">While Viewing Sheet Music</string>
 
+    <!-- The singing desk: three destinations plus Settings as a utility. -->
+    <string name="Home">Home</string>
+    <string name="FindATag">Find a tag</string>
+    <string name="OpenTagId">Open tag ID</string>
+    <string name="SeeAll">See all</string>
+    <string name="NoFavorites">Tags you favorite are kept here, ready to sing.</string>
+    <string name="FavoritesReorderHint">Press and hold a tag to reorder or remove it.</string>
+    <string name="EnterTagId">Enter tag ID</string>
+    <string name="Open">Open</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Loading">Loading…</string>
+    <string name="Retry">Try again</string>
+    <string name="SearchResults">Results</string>
+    <string name="NoResults">No tags matched that search.</string>
+    <string name="RandomTagFailed">Could not load a random tag.</string>
+    <string name="RandomTagNoMatches">No tags match your Random Tag filters. Adjust them in Settings.</string>
+    <string name="LoadTagFailed">Unable to load that tag.</string>
+    <string name="TeachingVideoNone">No teaching video has been posted for this tag.</string>
+    <string name="AboutTagMaster">About</string>
+    <string name="ChooseATrack">Choose a part to hear</string>
+    <string name="TrackPlayback">Playback</string>
+    <string name="PlayPause">Play or pause the selected part</string>
+    <string name="StopPlayback">Stop playback</string>
+    <string name="PlaybackPosition">Playback position</string>
+    <string name="BalanceControl">Left and right balance</string>
+    <string name="RateThisTag">Rate this tag</string>
+    <string name="SheetMusicOpen">Open sheet music</string>
+    <string name="VideoThumbnail">Video thumbnail</string>
+    <string name="Details">Details</string>
+    <string name="PrivateBuild">Private build</string>
+    <string name="CopyLogs">Copy logs</string>
+    <string name="TrackLoadFailed">Could not load that part. Check your connection and try again.</string>
+
+    <string name="TeachableDeskEmpty">Mark tags you can teach to keep them here.</string>
+    <string name="InvalidTagId">Enter a tag ID greater than zero.</string>
 </resources>

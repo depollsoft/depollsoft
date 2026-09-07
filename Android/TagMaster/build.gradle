@@ -90,7 +90,13 @@ android {
     testOptions {
         // Disable animations for faster/more reliable UI tests in CI
         animationsDisabled = true
-        
+
+        // Robolectric needs the merged resources to inflate real layouts, which
+        // is how the adaptive navigation and large-text behaviour are tested.
+        unitTests {
+            includeAndroidResources = true
+        }
+
         managedDevices {
             localDevices {
                 // ATD (Automated Test Device) - optimized for testing, no bloatware

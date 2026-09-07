@@ -1,333 +1,340 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<!--
+  Settings, grouped by what the singer is actually deciding: their account, the
+  lists they keep, what Random Tag is allowed to pick, and how the app looks and
+  behaves while they sing from it. Rows stack label over control so a large
+  system font wraps instead of squeezing the control off the edge.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/settingsRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/tm_space_xxl"
+    android:paddingTop="@dimen/tm_space_l">
 
-    <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:scaleType="centerInside"
-        app:srcCompat="@drawable/ic_barberpole">
-    </ImageView>
-
-    <ScrollView
-        android:id="@+id/scrollView1"
+    <depollsoft.tagmaster.ReadableWidthLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="16dp">
+        android:layout_height="wrap_content">
 
-        <TableLayout
+        <LinearLayout
             android:id="@+id/tableLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/cacheTitleTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/cache"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
-
-
-            <TableRow
-                android:id="@+id/tableRow4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="8dp"
-                    android:text="@string/CurrentCacheSize"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
-
-                <TextView
-                    android:id="@+id/cacheSizeDisplay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp">
-                </TextView>
-            </TableRow>
-
-            <Button
-                android:id="@+id/clearCacheButton"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/ClearCache">
-            </Button>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/tm_gutter"
+            android:paddingEnd="@dimen/tm_gutter">
 
             <TextView
                 android:id="@+id/logInTitleTextView"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/LogInTitle"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:text="@string/LogInTitle" />
 
             <TextView
                 android:id="@+id/loginTextView"
-                android:layout_width="fill_parent"
+                style="@style/TextAppearance.TagMaster.FieldValue"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/LogInInfo"/>
+                android:layout_marginTop="@dimen/tm_space_xs"
+                android:text="@string/LogInInfo"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/loginButton"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/LogIn"/>
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/LogIn" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/logoutButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/LogOut"/>
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/LogOut" />
 
             <TextView
                 android:id="@+id/TextView02"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/Favorites"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/Favorites" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/clearFavoritesButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/ClearFavorites">
-            </Button>
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/ClearFavorites" />
 
             <TextView
                 android:id="@+id/TextView03"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/TeachableTags"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/TeachableTags" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/clearTeachableTags"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/ClearTeachableTags">
-            </Button>
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/ClearTeachableTags" />
 
             <TextView
                 android:id="@+id/textView3"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/RandomTagSettings"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/RandomTagSettings" />
 
-            <TableRow
+            <LinearLayout
                 android:id="@+id/TableRow01"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/TextView01"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
-                    android:text="@string/MinimumRating"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
+                    android:labelFor="@+id/minimumRatingSpinner"
+                    android:text="@string/MinimumRating" />
 
                 <Spinner
                     android:id="@+id/minimumRatingSpinner"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:entries="@array/MinRatingChoices">
-                </Spinner>
-            </TableRow>
+                    android:entries="@array/MinRatingChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:id="@+id/tableRow1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_m"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/textView2"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
-                    android:text="@string/MinimumDownloads"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
+                    android:labelFor="@+id/minimumDownloadSpinner"
+                    android:text="@string/MinimumDownloads" />
 
                 <Spinner
                     android:id="@+id/minimumDownloadSpinner"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:entries="@array/MinDownloadChoices">
-                </Spinner>
-            </TableRow>
+                    android:entries="@array/MinDownloadChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:id="@+id/tableRow2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_m"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/sheetMusicCheckText"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
-                    android:text="@string/SheetMusicCheck"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
+                    android:labelFor="@+id/sheetMusicSpinner"
+                    android:text="@string/SheetMusicCheck" />
 
                 <Spinner
                     android:id="@+id/sheetMusicSpinner"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:entries="@array/SheetMusicChoices">
-                </Spinner>
-            </TableRow>
+                    android:entries="@array/SheetMusicChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:id="@+id/tableRow3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_m"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/textView4"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginRight="8dp"
-                    android:text="@string/LearningTracks"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
+                    android:labelFor="@+id/learningTracksSpinner"
+                    android:text="@string/LearningTracks" />
 
                 <Spinner
                     android:id="@+id/learningTracksSpinner"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:entries="@array/LearningTracksChoices">
-                </Spinner>
-            </TableRow>
+                    android:entries="@array/LearningTracksChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/wakeLockTextView"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/keep_screen_on"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/keep_screen_on" />
 
-            <CheckBox
+            <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/sheetMusicWakeLockCheckBox"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/while_viewing_sheet_music">
-            </CheckBox>
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/while_viewing_sheet_music" />
 
             <TextView
                 android:id="@+id/themeTitleTextView"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="5dp"
-                android:text="@string/themeTitle"
-                android:textSize="20sp"
-                android:textStyle="bold">
-            </TextView>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/themeTitle" />
 
             <RadioGroup
-                android:layout_width="wrap_content"
+                android:id="@+id/themeRadioGroup"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:orientation="horizontal">
-                <RadioButton android:id="@+id/radio_system"
-                    android:layout_width="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:orientation="vertical">
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/radio_system"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/theme_system"/>
-                <RadioButton android:id="@+id/radio_light"
-                    android:layout_width="wrap_content"
+                    android:minHeight="@dimen/tm_touch_target"
+                    android:text="@string/theme_system" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/radio_light"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/theme_light"/>
-                <RadioButton android:id="@+id/radio_dark"
-                    android:layout_width="wrap_content"
+                    android:minHeight="@dimen/tm_touch_target"
+                    android:text="@string/theme_light" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/radio_dark"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/theme_dark"/>
+                    android:minHeight="@dimen/tm_touch_target"
+                    android:text="@string/theme_dark" />
             </RadioGroup>
 
-            <Button
-                android:id="@+id/changelogButton"
-                android:layout_width="fill_parent"
+            <TextView
+                android:id="@+id/cacheTitleTextView"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/ViewChangelog"/>
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/cache" />
+
+            <LinearLayout
+                android:id="@+id/tableRow4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/CurrentCacheSize" />
+
+                <TextView
+                    android:id="@+id/cacheSizeDisplay"
+                    style="@style/TextAppearance.TagMaster.FieldValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearCacheButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/ClearCache" />
+
+            <TextView
+                android:id="@+id/aboutTitleTextView"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/AboutTagMaster" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/changelogButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:gravity="start|center_vertical"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/ViewChangelog" />
+
             <LinearLayout
                 android:id="@+id/privateBuildDiagnostics"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="@dimen/tm_space_xl"
                 android:orientation="vertical"
                 android:visibility="gone">
 
                 <TextView
+                    style="@style/TextAppearance.TagMaster.SectionHeading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Private Build"
-                    android:textStyle="bold" />
+                    android:text="@string/PrivateBuild" />
 
                 <TextView
                     android:id="@+id/privateBuildMetadata"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:alpha="0.7"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="@dimen/tm_space_xs" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/copyLogsButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Copy Logs" />
+                    android:layout_marginTop="@dimen/tm_space_s"
+                    android:minHeight="@dimen/tm_touch_target"
+                    android:text="@string/CopyLogs" />
             </LinearLayout>
-        </TableLayout>
-    </ScrollView>
+        </LinearLayout>
+    </depollsoft.tagmaster.ReadableWidthLayout>
 
-</FrameLayout>
+</androidx.core.widget.NestedScrollView>

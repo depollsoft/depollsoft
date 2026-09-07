@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-07T03:13:52.535Z",
+  "title": "Design System: Tag Master Android",
+  "extensions": {
+    "platform": "android",
+    "source": "../DESIGN.md; src/main/res/values, values-night, values-w600dp, layout-w600dp; DeskUi.kt and ReadableWidthLayout.kt",
+    "nativeColors": {
+      "resolution": "Theme.Material3.DayNight maps tm_* resources from values/colors.xml and values-night/colors.xml through Material roles. Frontmatter -night suffix describes the resource qualifier, not a separate resource name.",
+      "contrast": "Explicit custom light/dark schemes; no increased-contrast palette or dynamic wallpaper color implementation."
+    },
+    "typographyMeta": {
+      "wordmark": {
+        "displayName": "Handwriting identity",
+        "purpose": "Existing assets/fonts/wickhop-handwriting.ttf through CustomTypefaceSpan in Utilities.makeTitleString."
+      }
+    },
+    "nativeTypography": {
+      "actionBarTitle": "TextAppearance.Material3.TitleLarge, white",
+      "sectionHeading": "TextAppearance.Material3.TitleMedium, colorOnSurface",
+      "fieldLabel": "TextAppearance.Material3.LabelMedium, colorOnSurfaceVariant",
+      "fieldValue": "TextAppearance.Material3.BodyMedium, colorOnSurface",
+      "homeAction": "TextAppearance.Material3.TitleMedium"
+    },
+    "breakpoints": [
+      {
+        "name": "expanded-available-width",
+        "value": "w600dp: 600dp minimum available width; values-w600dp and layout-w600dp"
+      }
+    ],
+    "nativeLayout": {
+      "defaultGutter": "16dp",
+      "expandedGutter": "24dp",
+      "defaultContentCap": "600dp",
+      "expandedContentCap": "640dp",
+      "minimumTarget": "48dp",
+      "detail": "Bottom navigation becomes leading rail; one page at a time, no pinned Summary pane.",
+      "largeText": "Native font scaling, scrolling and wrap-content rows; Search label/spinner rows stay horizontal with 2:3 weights.",
+      "insets": "System-bar/cutout left and right padding; optional bottom max(system bars, IME)."
+    },
+    "shadows": [
+      {
+        "name": "action-bar",
+        "value": "0dp elevation",
+        "purpose": "Widget.TagMaster.ActionBar remains flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "confirmation-feedback",
+        "value": "HapticFeedbackConstants.CONFIRM on API 30+, VIRTUAL_KEY earlier",
+        "purpose": "DeskUi.confirmHaptic requests platform feedback; no custom timing."
+      }
+    ],
+    "nativeAssets": "New drawable XML: ic_barberpole_mark, ic_play, ic_pause, ic_stop and ic_play_pause selector. Existing shipping rasters and handwriting font unchanged; barber-pole mark reuses established identity, not stock art.",
+    "rendering": "Native descriptions only. No web component previews or synthesized tonal ramps."
+  },
+  "components": [
+    {
+      "name": "Home action",
+      "kind": "button",
+      "description": "Material3 tonal MaterialButton, TitleMedium, start alignment, 48dp minimum height, 16dp horizontal padding, 12dp icon padding; Find a tag overrides primary/on-primary colors."
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "description": "Outlined Material3 TextInputLayout and TextInputEditText with search icon and IME actionSearch."
+    },
+    {
+      "name": "Search filters",
+      "kind": "custom",
+      "description": "Native Spinners alongside LabelMedium field labels in horizontal 2:3 weighted rows."
+    },
+    {
+      "name": "Tag ID dialog",
+      "kind": "input",
+      "description": "Native alert with outlined numeric input; inline validation leaves invalid input open."
+    },
+    {
+      "name": "Desk navigation",
+      "kind": "nav",
+      "description": "Labeled Material bottom bar or leading rail, synchronized with ViewPager2 through shared menu IDs."
+    },
+    {
+      "name": "Part player",
+      "kind": "custom",
+      "description": "48dp Play/Pause and Stop icon buttons, loading indicator and position/balance SeekBars; checked-state XML selects Pause."
+    },
+    {
+      "name": "Readable content",
+      "kind": "custom",
+      "description": "ReadableWidthLayout centers children within width-qualified caps while preserving exact outer parent width."
+    }
+  ],
+  "narrative": {
+    "northStar": "The singing desk",
+    "overview": "A charcoal action bar and handwriting title preserve Tag Master's identity. Blue marks actions; Material 3 supplies native fields, buttons and navigation. The barber pole becomes an icon-scale mark rather than a full-screen watermark.",
+    "keyCharacteristics": [
+      "",
+      "Charcoal identity chrome with blue Material actions.",
+      "Readable-width content beside labeled native navigation.",
+      "Handwriting titles paired with native reading and control typography."
+    ],
+    "rules": [
+      {
+        "name": "The Native Role Rule",
+        "body": "Request theme attributes such as `colorPrimary`, `colorSurface` and `colorOnSurface`; let the single `Theme.Material3.DayNight` mapping select resource values.",
+        "section": "neutral"
+      },
+      {
+        "name": "The Native Reading Rule",
+        "body": "Keep handwriting in identity and use Material text appearances for reading and controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The Available Width Rule",
+        "body": "Select native bar or rail through width-qualified resources and cap the reading area independently.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do preserve Home, Browse, Search, Favorites, Teachable Tags, Summary, Details, Tracks and Videos terminology alongside BarbershopTags.com attribution.",
+      "Do use DayNight theme roles, readable-width wrappers and native labeled controls."
+    ],
+    "donts": [
+      "Don't import Pitch Perfect's visual rules into Tag Master.",
+      "Don't describe the tablet rail as an iOS-style split Summary workspace.",
+      "Don't canonize isolated legacy styling or unsampled shared-library internals as reusable system rules."
+    ]
+  }
+}

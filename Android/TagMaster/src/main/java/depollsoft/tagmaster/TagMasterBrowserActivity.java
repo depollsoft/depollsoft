@@ -13,11 +13,27 @@ public class TagMasterBrowserActivity extends BrowserActivity {
   }
 
   @Override
+  protected void onCreate(android.os.Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    // The shared browser is a platform Activity without the desk action bar.
+    // It therefore owns the top inset as well as the sides, navigation and IME.
+    android.view.View content = findViewById(android.R.id.content);
+    androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(content, (view, insets) -> {
+      androidx.core.graphics.Insets safe = insets.getInsets(
+          androidx.core.view.WindowInsetsCompat.Type.systemBars()
+          | androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+          | androidx.core.view.WindowInsetsCompat.Type.ime());
+      view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+      return androidx.core.view.WindowInsetsCompat.CONSUMED;
+    });
+    androidx.core.view.ViewCompat.requestApplyInsets(content);
+    if (getActionBar() != null) getActionBar().setDisplayHomeAsUpEnabled(true);
+  }
+
+  @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     if (item.getItemId() == ActionBars.HOME_MENU_ITEM_ID) {
-      Intent intent = new Intent(this, MeActivity.class);
-      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-      this.startActivity(intent);
+      finish();
       return true;
     }
     return super.onOptionsItemSelected(item);

@@ -1,12 +1,10 @@
 package depollsoft.tagmaster
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
@@ -17,47 +15,57 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.compat.ui.MenuItems
-import depollsoft.lib.kotlin.ui.attachToViewPager
-import depollsoft.lib.kotlin.ui.safeDismiss
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.util.*
+import java.util.ArrayList
 
 class TagDetailActivity : AppCompatActivity() {
     var tag: Tag? by trackable()
-    private var progress: ProgressDialog? = null
 
     private val shareIntent: Intent
         get() {
-            return ShareCompat.IntentBuilder(this)
+            return ShareCompat
+                .IntentBuilder(this)
                 .setChooserTitle("Share a Tag")
                 .setType("text/plain")
                 .setSubject("${this.tag!!.title} - Tag Master")
                 .setText(
                     """
-                        Tag Title: ${tag!!.title}
-                        ${tag!!.tagUri}
-                        
-                        Sent from Tag Master
-                        http://www.davidpoll.com/applications/tag-master
-                    """.trimIndent()
-                )
-                .createChooserIntent()
+                    Tag Title: ${tag!!.title}
+                    ${tag!!.tagUri}
+
+                    Sent from Tag Master
+                    http://www.davidpoll.com/applications/tag-master
+                    """.trimIndent(),
+                ).createChooserIntent()
         }
 
     val tagId: Int
         get() = this.intent.getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1)
 
+    private var loading = false
+
+    private fun setLoading(value: Boolean) {
+        loading = value
+        findViewById<LinearProgressIndicator>(R.id.detailProgress).visibility =
+            if (value) View.VISIBLE else View.GONE
+        if (value) {
+            findViewById<View>(R.id.detailError).visibility = View.GONE
+        }
+    }
 
     private fun loadQueryItem(refresh: Boolean) {
+        if (tagId <= 0) {
+            setLoading(false)
+            findViewById<View>(R.id.detailError).visibility = View.VISIBLE
+            findViewById<View>(R.id.detailRetryButton).visibility = View.GONE
+            return
+        }
         val original = this.tag
         if (original != null) {
             val cache = ContentCache(this)
@@ -80,37 +88,26 @@ class TagDetailActivity : AppCompatActivity() {
                 }
             }
         }
-        if (this.progress!!.isShowing)
-            return
-        this.progress!!.isIndeterminate = true
-        this.progress!!.setMessage("Loading...")
-        this.progress!!.show()
+        if (loading) return
+        setLoading(true)
 
-        val tagId = this.intent.extras!!.getInt(TagDetailActivity.TAG_ID_EXTRA)
+        val tagId = this.tagId
 
         Tag.loadTagById(tagId, refresh).continueWith { task ->
-            try {
-                progress!!.safeDismiss()
-            } catch (e: Exception) {
-                // Sometimes this throws.
-            }
-
-            if (!task.isFaulted) {
-                this@TagDetailActivity.tag = task.result
-                Activities.invalidateOptionsMenu(this@TagDetailActivity)
-            } else {
-                this.tag = null
-                CoroutineScope(Dispatchers.Main + Job()).launch {
-                    try {
-                        Toast.makeText(
-                            this@TagDetailActivity.applicationContext,
-                            "Unable to load tag or tag not found",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        finish()
-                    } catch (e: java.lang.Exception) {
-                        Log.e("depollsoft.tagmaster", "Showing toast failed", e)
-                    }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                setLoading(false)
+                if (!task.isFaulted && !task.isCancelled && task.result != null) {
+                    this@TagDetailActivity.tag = task.result
+                    findViewById<View>(R.id.detailError).visibility = View.GONE
+                    Activities.invalidateOptionsMenu(this@TagDetailActivity)
+                } else {
+                    // Stay on the screen and say what happened: a failed fetch in a
+                    // rehearsal room is usually the room's wifi, and the singer
+                    // wants to try again rather than start over.
+                    this@TagDetailActivity.tag = null
+                    findViewById<View>(R.id.detailError).visibility = View.VISIBLE
+                    Activities.invalidateOptionsMenu(this@TagDetailActivity)
                 }
             }
             null
@@ -120,33 +117,37 @@ class TagDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.tagdetailview)
-
-        this.progress = ProgressDialog(this)
+        enableDeskBack()
 
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        val navigation = findViewById<NavigationBarView>(R.id.bottomNavigation)
 
-        viewPager.adapter = object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
-            override fun getItemCount(): Int {
-                return 4
+        viewPager.adapter =
+            object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
+                override fun getItemCount(): Int = 4
+
+                override fun createFragment(position: Int): Fragment =
+                    when (position) {
+                        0 -> TagSummaryFragment()
+                        1 -> TagMiscFragment()
+                        2 -> TagTracksFragment()
+                        3 -> TagVideosFragment()
+                        else -> Fragment()
+                    }
             }
 
-            override fun createFragment(position: Int): Fragment {
-                return when (position) {
-                    0 -> TagSummaryFragment()
-                    1 -> TagMiscFragment()
-                    2 -> TagTracksFragment()
-                    3 -> TagVideosFragment()
-                    else -> Fragment()
-                }
-            }
+        navigation.attachToPager(viewPager)
+
+        findViewById<View>(R.id.detailRoot).applyDeskInsets()
+
+        findViewById<View>(R.id.detailRetryButton).setOnClickListener {
+            loadQueryItem(true)
         }
 
-        bottomNavigation.attachToViewPager(viewPager)
-
         UiBinder.bind(
-            ReflectedProperty(this, "Title"), ReflectedProperty(this, "Tag.Title"),
-            BindingMode.ONE_WAY
+            ReflectedProperty(this, "Title"),
+            ReflectedProperty(this, "Tag.Title"),
+            BindingMode.ONE_WAY,
         )
 
         UiBinder.bind(this, R.id.bottomNavigation, "Visibility", "Tag", BoolConverter.get())
@@ -155,20 +156,21 @@ class TagDetailActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (this.tag == null)
+        if (this.tag == null) {
             return false
+        }
         this.menuInflater.inflate(R.menu.tagdetailmenu, menu)
         MenuItems.setShowAsAction(
             menu.findItem(R.id.addFavoriteMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         MenuItems.setShowAsAction(
             menu.findItem(R.id.removeFavoriteMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         MenuItems.setShowAsAction(
             menu.findItem(R.id.shareMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         return true
     }
@@ -178,14 +180,33 @@ class TagDetailActivity : AppCompatActivity() {
         try {
             if (tag != null) {
                 when (item.itemId) {
-                    R.id.addFavoriteMenuItem -> FavoritesModel.addFavorite(tag.id)
-                    R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(tag.id)
-                    R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(tag.id)
-                    R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(tag.id)
+                    // Adding to a list is a save the singer needs to trust while
+                    // looking at the room rather than the screen.
+                    R.id.addFavoriteMenuItem -> {
+                        FavoritesModel.addFavorite(tag.id)
+                        confirmSave()
+                    }
+
+                    R.id.removeFavoriteMenuItem -> {
+                        FavoritesModel.removeFavorite(tag.id)
+                        confirmSave()
+                    }
+
+                    R.id.addTeachableTagMenuItem -> {
+                        TeachableTagsModel.addTeachableTag(tag.id)
+                        confirmSave()
+                    }
+
+                    R.id.removeTeachableTagMenuItem -> {
+                        TeachableTagsModel.removeTeachableTag(tag.id)
+                        confirmSave()
+                    }
+
                     R.id.shareMenuItem -> {
                         val i = this.shareIntent
                         this.startActivity(i)
                     }
+
                     R.id.refreshMenuItem -> {
                         this.loadQueryItem(true)
                         return true
@@ -196,6 +217,10 @@ class TagDetailActivity : AppCompatActivity() {
             Activities.invalidateOptionsMenu(this)
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun confirmSave() {
+        findViewById<View>(R.id.detailRoot)?.confirmHaptic()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {

@@ -25,5 +25,8 @@
 @property (nonatomic) NSArray *tags;
 @property (nonatomic, retain) NSNumber *minRating;
 @property (nonatomic, retain) NSNumber *minDownloads;
+/// YES when this list is a child of another screen (Browse) and should not
+/// inset itself from the safe area a second time.
+@property (nonatomic) BOOL embedded;
 
 @end

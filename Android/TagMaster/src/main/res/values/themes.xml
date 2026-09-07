@@ -1,18 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <item name="colorPrimary">@color/dark</item>
-        <item name="colorPrimaryVariant">@color/darker</item>
-        <item name="colorPrimaryDark">@color/darker</item>
-        <item name="colorOnPrimary">@android:color/primary_text_dark</item>
-        <item name="colorSecondary">@color/darker</item>
-        <item name="colorOnSecondary">@android:color/primary_text_dark</item>
-        <item name="colorAccent">@color/accent</item>
-        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/darker</item>
-        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    <!--
+      One DayNight theme. Night used to be a separate theme file with its own
+      colour wiring, which is how the two schemes drifted; now both resolve from
+      values/colors.xml and values-night/colors.xml through the same roles.
+    -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/tm_primary</item>
+        <item name="colorOnPrimary">@color/tm_on_primary</item>
+        <item name="colorPrimaryContainer">@color/tm_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/tm_on_primary_container</item>
+        <item name="colorSecondary">@color/tm_secondary</item>
+        <item name="colorOnSecondary">@color/tm_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/tm_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/tm_on_secondary_container</item>
+        <item name="android:colorBackground">@color/tm_background</item>
+        <item name="colorOnBackground">@color/tm_on_background</item>
+        <item name="colorSurface">@color/tm_surface</item>
+        <item name="colorOnSurface">@color/tm_on_surface</item>
+        <item name="colorSurfaceVariant">@color/tm_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/tm_on_surface_variant</item>
+        <item name="colorSurfaceContainer">@color/tm_surface_container</item>
+        <item name="colorOutline">@color/tm_outline</item>
+        <item name="colorOutlineVariant">@color/tm_outline_variant</item>
+        <item name="colorError">@color/tm_error</item>
+        <item name="colorOnError">@color/tm_on_error</item>
+        <item name="colorErrorContainer">@color/tm_error_container</item>
+        <item name="colorOnErrorContainer">@color/tm_on_error_container</item>
+
+        <!-- The action bar keeps the charcoal identity in both schemes. -->
+        <item name="actionBarTheme">@style/ThemeOverlay.TagMaster.ActionBar</item>
+        <item name="actionBarStyle">@style/Widget.TagMaster.ActionBar</item>
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.Material3</item>
+
+        <item name="bottomNavigationStyle">@style/Widget.TagMaster.NavigationBar</item>
+        <item name="navigationRailStyle">@style/Widget.TagMaster.NavigationRail</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.TagMaster.Dialog</item>
+
+        <!-- Edge to edge is enforced at this target; screens apply the insets
+             themselves rather than opting out of the platform behaviour. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
-        <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.PrimarySurface</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">@bool/tm_light_navigation_bar</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <style name="Widget.TagMaster.ActionBar" parent="Widget.Material3.ActionBar.Solid">
+        <item name="background">@color/darker</item>
+        <item name="titleTextStyle">@style/TextAppearance.TagMaster.ActionBarTitle</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="TextAppearance.TagMaster.ActionBarTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="ThemeOverlay.TagMaster.ActionBar" parent="ThemeOverlay.Material3.Dark.ActionBar">
+        <item name="colorControlNormal">#F2F2F2</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#D8D8D8</item>
+    </style>
+
+    <style name="Widget.TagMaster.NavigationBar" parent="Widget.Material3.BottomNavigationView">
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+
+    <style name="Widget.TagMaster.NavigationRail" parent="Widget.Material3.NavigationRailView">
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+
+    <style name="ThemeOverlay.TagMaster.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog" />
+
+    <!-- Section headings across the app: one step, one weight, one place to change. -->
+    <style name="TextAppearance.TagMaster.SectionHeading" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!-- Field labels in the detail and search tables. -->
+    <style name="TextAppearance.TagMaster.FieldLabel" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="TextAppearance.TagMaster.FieldValue" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.TagMaster.HomeAction" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:minHeight">@dimen/tm_touch_target</item>
+        <item name="android:layout_marginTop">@dimen/tm_space_s</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/tm_space_m</item>
+        <item name="android:paddingStart">@dimen/tm_space_l</item>
+        <item name="android:paddingEnd">@dimen/tm_space_l</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.TitleMedium</item>
     </style>
 </resources>

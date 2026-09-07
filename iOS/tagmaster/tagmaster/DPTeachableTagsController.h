@@ -10,4 +10,6 @@
 
 @interface DPTeachableTagsController : UITableViewController
 
+- (void)updateEmptyState;
+
 @end

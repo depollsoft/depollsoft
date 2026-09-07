@@ -26,7 +26,7 @@ import kotlinx.coroutines.sync.withLock
 
 class SheetMusicActivity : AppCompatActivity() {
     var tag: Tag? by trackable()
-    var drawable: Drawable? by trackable() {
+    var drawable: Drawable? by trackable {
         CoroutineScope(Dispatchers.Main + Job()).launch {
             photoView?.setImageDrawable(it)
         }
@@ -41,7 +41,13 @@ class SheetMusicActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sheetmusicview)
+        enableDeskBack()
+        findViewById<android.view.View>(R.id.sheetMusicRoot).applyDeskInsets()
         val tagId = intent.getIntExtra("tagId", -1)
+        if (tagId <= 0) {
+            finish()
+            return
+        }
         Tag.loadTagById(tagId).onSuccess {
             tag = it.result
         }
@@ -55,13 +61,21 @@ class SheetMusicActivity : AppCompatActivity() {
             R.id.keyButton,
             "Visibility",
             compiledProp { tag!!::keyNote },
-            converter = BoolConverter.get()
+            converter = BoolConverter.get(),
         )
         uibind(R.id.keyButton, "Text", { tag!!::writtenKey })
-        keyButton.setOnTouchListener { v, event ->
+        // Press and hold sounds the key; lifting, cancelling, or the gesture
+        // being taken over by a scroll all stop it, so a note can never be left
+        // sounding under the sheet music.
+        keyButton.setOnTouchListener { _, event ->
+            val note = tag?.keyNote
             when (event.action) {
-                MotionEvent.ACTION_DOWN -> tag!!.keyNote!!.play()
-                MotionEvent.ACTION_UP -> tag!!.keyNote!!.stop()
+                MotionEvent.ACTION_DOWN -> note?.play()
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL,
+                MotionEvent.ACTION_OUTSIDE,
+                -> note?.stop()
             }
             false
         }
@@ -76,22 +90,35 @@ class SheetMusicActivity : AppCompatActivity() {
         tag?.keyNote?.stop()
     }
 
+    override fun onPause() {
+        super.onPause()
+        tag?.keyNote?.stop()
+    }
+
     private fun rotate() {
         rotation = (rotation + 90f) % 360f
     }
 
-    private fun appendBitmap(first: Bitmap, second: Bitmap): Bitmap {
-        val result = Bitmap.createBitmap(
-            Math.max(first.width, second.width),
-            first.height + second.height, Bitmap.Config.ARGB_8888
-        )
+    private fun appendBitmap(
+        first: Bitmap,
+        second: Bitmap,
+    ): Bitmap {
+        val result =
+            Bitmap.createBitmap(
+                Math.max(first.width, second.width),
+                first.height + second.height,
+                Bitmap.Config.ARGB_8888,
+            )
         val c = Canvas(result)
         c.drawBitmap(first, ((c.width - first.width) / 2).toFloat(), 0f, null)
         c.drawBitmap(second, ((c.width - second.width) / 2).toFloat(), first.height.toFloat(), null)
         return result
     }
 
-    private fun rotateBitmap(bmp: Bitmap, rotation: Float): Bitmap {
+    private fun rotateBitmap(
+        bmp: Bitmap,
+        rotation: Float,
+    ): Bitmap {
         if (rotation == 0f) {
             return bmp
         }
@@ -101,6 +128,7 @@ class SheetMusicActivity : AppCompatActivity() {
     }
 
     private val loadMutex = Mutex()
+
     private fun loadImage() {
         CoroutineScope(Dispatchers.IO + Job()).launch {
             loadMutex.withLock {
@@ -111,8 +139,8 @@ class SheetMusicActivity : AppCompatActivity() {
                         val fd = contentResolver.openFileDescriptor(intent.data!!, "r")
                         val renderer = PdfRenderer(fd!!)
                         val dpi = Math.min(resources.displayMetrics.densityDpi, 200)
-                        for (page in 0 until renderer.pageCount) {
-                            val page = renderer.openPage(0)
+                        for (pageIndex in 0 until renderer.pageCount) {
+                            val page = renderer.openPage(pageIndex)
                             val width = dpi * page.width / 72
                             val height = dpi * page.height / 72
                             var pageBitmap =
@@ -122,7 +150,7 @@ class SheetMusicActivity : AppCompatActivity() {
                                 pageBitmap,
                                 null,
                                 null,
-                                PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY
+                                PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY,
                             )
                             page.close()
                             pageBitmap = rotateBitmap(pageBitmap, rotation)
@@ -143,11 +171,12 @@ class SheetMusicActivity : AppCompatActivity() {
                 }
                 if (failed || bitmap!!.byteCount > MAX_BITMAP_SIZE) {
                     launch(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@SheetMusicActivity,
-                            "Sheet music could not open in Tag Master -- opening in external app",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast
+                            .makeText(
+                                this@SheetMusicActivity,
+                                "Sheet music could not open in Tag Master -- opening in external app",
+                                Toast.LENGTH_LONG,
+                            ).show()
                     }
                     // The image is too big!  Bail out to an app that might have better luck
                     val toLaunch = Intent(intent)
@@ -176,6 +205,7 @@ class SheetMusicActivity : AppCompatActivity() {
         }
         return super.onCreateOptionsMenu(menu)
     }
+
     companion object {
         const val MAX_BITMAP_SIZE = 1024 * 1024 * 100 // 100MiB
     }

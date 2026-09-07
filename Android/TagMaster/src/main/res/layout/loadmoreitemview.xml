@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/loadMoreItemsLayout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/tm_gutter"
+    android:paddingEnd="@dimen/tm_gutter"
+    android:paddingTop="@dimen/tm_space_s"
+    android:paddingBottom="@dimen/tm_space_s">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/loadMoreItemsButton"
-        android:layout_width="fill_parent"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/LoadMoreTags"
-        android:textSize="12sp" >
-    </Button>
+        android:minHeight="@dimen/tm_touch_target"
+        android:text="@string/LoadMoreTags" />
 
 </LinearLayout>

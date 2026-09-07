@@ -5,6 +5,10 @@
 //  Created by David Poll on 9/27/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  The singing view of a tag: what it is, what key it starts in, where the
+//  chart is, and the words — in that order, because that is the order a group
+//  needs them in.
+//
 
 #import "DPTagSummaryController.h"
 #import "DPGridLayout.h"
@@ -12,6 +16,7 @@
 #import "DPTextView.h"
 #import "DPFileCache.h"
 #import "DPPitchPipeButton.h"
+#import "tagmaster-Swift.h"
 #import <QuickLook/QuickLook.h>
 
 @interface DPSheetMusicPreview : NSObject <QLPreviewItem>
@@ -25,12 +30,12 @@
 
 @end
 
-@interface DPTagSummaryController () <QLPreviewControllerDataSource, UIActionSheetDelegate>
+@interface DPTagSummaryController () <QLPreviewControllerDataSource>
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *akaLabel;
-@property (nonatomic, strong) UIProgressView *ratingBar;
 @property (nonatomic, strong) UILabel *ratingLabel;
+@property (nonatomic, strong) UILabel *ratingStars;
 @property (nonatomic, strong) UIButton *ratingButton;
 @property (nonatomic, strong) UILabel *partsLabel;
 @property (nonatomic, strong) UILabel *typeLabel;
@@ -39,21 +44,22 @@
 @property (nonatomic, strong) UIButton *sheetMusicButton;
 @property (nonatomic, strong) UILabel *lyricsLabel;
 @property (nonatomic, strong) UILabel *notesLabel;
-@property (nonatomic, strong) UILabel *ratingHeader;
-@property (nonatomic, strong) UILabel *partsHeader;
-@property (nonatomic, strong) UILabel *typeHeader;
-@property (nonatomic, strong) UILabel *keyHeader;
-@property (nonatomic, strong) UILabel *notesHeader;
-@property (nonatomic, strong) UILabel *lyricsHeader;
-@property (nonatomic, strong) UILabel *classicTagNumberHeader;
 
-@property (nonatomic, strong) DPGridLayout *grid;
+@property (nonatomic, strong) UIView *keyRow;
+@property (nonatomic, strong) UIStackView *ratingRow;
+@property (nonatomic, strong) UIView *partsRow;
+@property (nonatomic, strong) UIView *typeRow;
+@property (nonatomic, strong) UIView *classicTagRow;
+@property (nonatomic, strong) UIView *lyricsBlock;
+@property (nonatomic, strong) UIView *notesBlock;
+
+@property (nonatomic, strong) UIStackView *stack;
 
 @end
 
 @implementation DPTagSummaryController
 
-@synthesize titleLabel, akaLabel, ratingBar, ratingLabel, partsLabel, typeLabel, keyButton, classicTagNumberLabel, sheetMusicButton, ratingButton, lyricsLabel, notesLabel, ratingHeader, partsHeader, typeHeader, keyHeader, notesHeader, lyricsHeader, classicTagNumberHeader, grid;
+@synthesize titleLabel, akaLabel, ratingLabel, partsLabel, typeLabel, keyButton, classicTagNumberLabel, sheetMusicButton, ratingButton, lyricsLabel, notesLabel;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -65,154 +71,218 @@
 }
 
 - (void)refreshView {
-    titleLabel.text = self.tag.title;
-    
-    akaLabel.text = [NSString stringWithFormat:@"a.k.a. %@", self.tag.alternativeTitle];
-    [grid setView:akaLabel hidden:!self.tag.alternativeTitle];
-    
-    ratingLabel.text = [NSString stringWithFormat:@"%1.2f", self.tag.rating];
-    ratingBar.progress = self.tag.rating / 5;
-    
-    partsLabel.text = [NSString stringWithFormat:@"%d", self.tag.parts];
-    
+    titleLabel.text = self.tag.title ?: @"Tag";
+
+    akaLabel.text = self.tag.alternativeTitle
+        ? [NSString stringWithFormat:@"a.k.a. %@", self.tag.alternativeTitle]
+        : nil;
+    akaLabel.hidden = !self.tag.alternativeTitle;
+
+    if (self.tag.rating > 0) {
+        ratingLabel.text = [NSString stringWithFormat:@"%1.2f out of 5", self.tag.rating];
+        self.ratingStars.text = [DPTagSummaryController starsForRating:self.tag.rating];
+        self.ratingStars.accessibilityLabel =
+            [NSString stringWithFormat:@"Rated %1.2f out of 5", self.tag.rating];
+    } else {
+        ratingLabel.text = @"Not rated yet";
+        self.ratingStars.text = @"☆☆☆☆☆";
+        self.ratingStars.accessibilityLabel = @"Not rated yet";
+    }
+
+    partsLabel.text = self.tag.parts > 0 ? [NSString stringWithFormat:@"%d", self.tag.parts] : @"—";
+    self.partsRow.hidden = self.tag.parts == 0;
+
     typeLabel.text = self.tag.tagType;
-    
+    self.typeRow.hidden = self.tag.tagType.length == 0;
+
     keyButton.note = [self.tag keyNote];
-    [keyButton.button setTitle:self.tag.writtenKey forState:UIControlStateNormal];
-    [grid setView:keyButton hidden:!self.tag.writtenKey];
-    [grid setView:keyHeader hidden:!self.tag.writtenKey];
-    
+    NSString *keyTitle = self.tag.writtenKey
+        ? [NSString stringWithFormat:@"Sound the key of %@", self.tag.writtenKey]
+        : @"Sound the key";
+    [keyButton.button setTitle:keyTitle forState:UIControlStateNormal];
+    keyButton.button.accessibilityLabel = keyTitle;
+    keyButton.button.accessibilityHint = @"Plays the starting pitch";
+    self.keyRow.hidden = !self.tag.writtenKey;
+
     classicTagNumberLabel.text = [NSString stringWithFormat:@"%d", self.tag.classicTagNumber];
-    [grid setView:classicTagNumberLabel hidden:self.tag.classicTagNumber == 0];
-    [grid setView:classicTagNumberHeader hidden:self.tag.classicTagNumber == 0];
-    
-    [grid setView:sheetMusicButton hidden:!self.tag.sheetMusicUri];
-    
+    self.classicTagRow.hidden = self.tag.classicTagNumber == 0;
+
+    sheetMusicButton.hidden = !self.tag.sheetMusicUri;
+
     lyricsLabel.text = self.tag.lyrics;
-    [grid setView:lyricsLabel hidden:!self.tag.lyrics];
-    [grid setView:lyricsHeader hidden:!self.tag.lyrics];
-    
+    self.lyricsBlock.hidden = !self.tag.lyrics;
+
     notesLabel.text = self.tag.notes;
-    [grid setView:notesLabel hidden:!self.tag.notes];
-    [grid setView:notesHeader hidden:!self.tag.notes];
-    
+    self.notesBlock.hidden = !self.tag.notes;
+
     [self.ratingButton setEnabled:YES];
+}
+
++ (NSString *)starsForRating:(float)rating {
+    NSMutableString *stars = [NSMutableString string];
+    for (int index = 1; index <= 5; index++) {
+        [stars appendString:rating >= index - 0.25 ? @"★" : @"☆"];
+    }
+    return stars;
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pitchTouchUp)
+        name:UIApplicationWillResignActiveNotification object:nil];
+
     UIScrollView *scroller = [[UIScrollView alloc] init];
-    
+
     titleLabel = [self makeTitleLabel];
+    titleLabel.accessibilityTraits = UIAccessibilityTraitHeader;
+
     akaLabel = [[UILabel alloc] init];
-    akaLabel.font = [akaLabel.font fontWithSize:18];
+    akaLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+    akaLabel.adjustsFontForContentSizeCategory = YES;
+    akaLabel.textColor = [TMTheme secondaryText];
     akaLabel.numberOfLines = 0;
-    ratingBar = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleBar];
-    ratingBar.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
-    ratingButton = [[UIButton alloc] init];
-    [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
-    ratingLabel = [self makeBodyLabel];
-    ratingButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
+
+    // The pitch comes first: it is the one control a group reaches for while
+    // standing in a circle.
+    keyButton = [[DPPitchPipeButton alloc] init];
+    keyButton.button.titleLabel.font = [TMTheme fontWithStyle:UIFontTextStyleBody
+                                                        weight:UIFontWeightSemibold];
+    keyButton.button.titleLabel.adjustsFontForContentSizeCategory = YES;
+    UIButtonConfiguration *keyConfig = [UIButtonConfiguration filledButtonConfiguration];
+    keyConfig.contentInsets = NSDirectionalEdgeInsetsMake(TMTheme.spaceM, TMTheme.spaceL,
+                                                          TMTheme.spaceM, TMTheme.spaceL);
+    keyConfig.baseForegroundColor = [UIColor systemBackgroundColor];
+    keyConfig.image = [UIImage systemImageNamed:@"tuningfork"];
+    keyConfig.imagePadding = TMTheme.spaceS;
+    keyButton.button.configuration = keyConfig;
+    [keyButton.button.heightAnchor
+        constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+    self.keyRow = keyButton;
+
+    sheetMusicButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButtonConfiguration *sheetConfig = [UIButtonConfiguration tintedButtonConfiguration];
+    sheetConfig.title = @"Sheet Music";
+    sheetConfig.image = [UIImage systemImageNamed:@"doc.text"];
+    sheetConfig.imagePadding = TMTheme.spaceS;
+    sheetConfig.contentInsets = NSDirectionalEdgeInsetsMake(TMTheme.spaceM, TMTheme.spaceL,
+                                                            TMTheme.spaceM, TMTheme.spaceL);
+    sheetMusicButton.configuration = sheetConfig;
+    sheetMusicButton.titleLabel.adjustsFontForContentSizeCategory = YES;
+    sheetMusicButton.accessibilityHint = @"Opens the chart for this tag";
+    [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
+    [sheetMusicButton.heightAnchor
+        constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+
+    self.ratingStars = [[UILabel alloc] init];
+    self.ratingStars.font = [TMTheme fontWithStyle:UIFontTextStyleTitle3 weight:UIFontWeightRegular];
+    self.ratingStars.adjustsFontForContentSizeCategory = YES;
+    self.ratingStars.textColor = [TMTheme ink];
+
+    ratingLabel = [[UILabel alloc] init];
+    ratingLabel.adjustsFontForContentSizeCategory = YES;
+    ratingLabel.textColor = [TMTheme secondaryText];
+    ratingLabel.font = [TMTheme metadataFont];
+    ratingLabel.numberOfLines = 0;
+
+    ratingButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButtonConfiguration *rateConfig = [UIButtonConfiguration borderedButtonConfiguration];
+    rateConfig.title = @"Rate";
+    rateConfig.contentInsets = NSDirectionalEdgeInsetsMake(TMTheme.spaceS, TMTheme.spaceL,
+                                                           TMTheme.spaceS, TMTheme.spaceL);
+    ratingButton.configuration = rateConfig;
+    ratingButton.accessibilityHint = @"Rate this tag from one to five stars";
+    [ratingButton.heightAnchor
+        constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+    [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
+    [ratingButton setContentHuggingPriority:UILayoutPriorityRequired
+                                    forAxis:UILayoutConstraintAxisHorizontal];
+
+    UIStackView *ratingText =
+        [[UIStackView alloc] initWithArrangedSubviews:@[self.ratingStars, ratingLabel]];
+    ratingText.axis = UILayoutConstraintAxisVertical;
+    ratingText.spacing = TMTheme.spaceXS;
+    UIStackView *ratingGroup = [[UIStackView alloc] initWithArrangedSubviews:@[ratingText, ratingButton]];
+    ratingGroup.axis = UILayoutConstraintAxisHorizontal;
+    ratingGroup.alignment = UIStackViewAlignmentCenter;
+    ratingGroup.spacing = TMTheme.spaceL;
+    self.ratingRow = ratingGroup;
+
     partsLabel = [self makeBodyLabel];
     typeLabel = [self makeBodyLabel];
-    keyButton = [[DPPitchPipeButton alloc] init];
-    keyButton.button.titleLabel.font = [UIFont systemFontOfSize:12];
-    UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
-    config.contentInsets = NSDirectionalEdgeInsetsMake(4, 0, 4, 0);
-    keyButton.button.configuration = config;
+    typeLabel.numberOfLines = 0;
     classicTagNumberLabel = [self makeBodyLabel];
-    sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
-    [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
+
+    self.partsRow = [TMFieldRow fieldRowWithTitle:@"Parts" value:partsLabel];
+    self.typeRow = [TMFieldRow fieldRowWithTitle:@"Type" value:typeLabel];
+    self.classicTagRow = [TMFieldRow fieldRowWithTitle:@"Classic Tag" value:classicTagNumberLabel];
+
     lyricsLabel = [self makeBodyLabel];
     lyricsLabel.numberOfLines = 0;
     notesLabel = [self makeBodyLabel];
     notesLabel.numberOfLines = 0;
-    
-    ratingHeader = [self makeHeader:@"Rating"];
-    partsHeader = [self makeHeader:@"Parts"];
-    typeHeader = [self makeHeader:@"Type"];
-    keyHeader = [self makeHeader:@"Key"];
-    notesHeader = [self makeHeader:@"Notes"];
-    lyricsHeader = [self makeHeader:@"Lyrics"];
-    classicTagNumberHeader = [self makeHeader:@"Classic Tag"];
-    
-    grid = [[DPGridLayout alloc] init];
-    grid.columnDimensions = @[
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1],
-                              ];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension]
-                           ];
-    
-    // Add titles
-    [grid addSubview:titleLabel row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[akaLabel padLeft:20 top:0 right:0 bottom:8]
-                 row:1
-              column:0
-             rowSpan:1
-             colSpan:3];
-    
-    // Add headers
-    [grid addSubview:[ratingHeader centeredVertically] row:2 column:0];
-    [grid addSubview:partsHeader row:3 column:0];
-    [grid addSubview:typeHeader row:4 column:0];
-    [grid addSubview:keyHeader row:5 column:0];
-    [grid addSubview:classicTagNumberHeader row:6 column:0];
-    [grid addSubview:sheetMusicButton row:7 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[lyricsHeader alignTop] row:8 column:0];
-    [grid addSubview:[notesHeader alignTop] row:9 column:0];
-    
-    // Add content
-    [grid addSubview:partsLabel row:3 column:2];
-    [grid addSubview:typeLabel row:4 column:2];
-    [grid addSubview:keyButton row:5 column:2];
-    [grid addSubview:classicTagNumberLabel row:6 column:2];
-    [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:8 column:2];
-    [grid addSubview:notesLabel row:9 column:2];
-    
-    // Build rating UI
-    DPGridLayout *ratingGrid = [[DPGridLayout alloc] init];
-    ratingGrid.columnDimensions = @[
-                                    [DPGridDimension dimensionWithStars:1],
-                                    [DPGridDimension dimension]
-                                    ];
-    ratingGrid.rowDimensions = @[
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimension]
-                                 ];
-    
-    [ratingGrid addSubview:[ratingLabel centeredHorizontally] row:0 column:0];
-    [ratingGrid addSubview:[ratingBar alignTop] row:1 column:0];
-    [ratingGrid addSubview:[ratingButton padHorizontal:8 vertical:0] row:0 column:1 rowSpan:2 colSpan:1];
-    [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:2];
-    
-    [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
-    
-    [self setUpRootView:grid withScroller:scroller];
-    
+
+    self.lyricsBlock = [self makeBlockWithTitle:@"Lyrics" body:lyricsLabel];
+    self.notesBlock = [self makeBlockWithTitle:@"Notes" body:notesLabel];
+
+    self.stack = [[UIStackView alloc] initWithArrangedSubviews:@[
+        titleLabel, akaLabel, keyButton, sheetMusicButton, ratingGroup,
+        self.partsRow, self.typeRow, self.classicTagRow,
+        self.lyricsBlock, self.notesBlock
+    ]];
+    self.stack.axis = UILayoutConstraintAxisVertical;
+    self.stack.alignment = UIStackViewAlignmentFill;
+    self.stack.spacing = TMTheme.spaceM;
+    [self.stack setCustomSpacing:TMTheme.spaceXS afterView:titleLabel];
+    [self.stack setCustomSpacing:TMTheme.spaceL afterView:akaLabel];
+    [self.stack setCustomSpacing:TMTheme.spaceXL afterView:ratingGroup];
+    [self.stack setCustomSpacing:TMTheme.spaceXL afterView:self.classicTagRow];
+    [self.stack setCustomSpacing:TMTheme.spaceXL afterView:self.lyricsBlock];
+
+    [self setUpRootView:self.stack withScroller:scroller];
+
     [self refreshView];
+}
+
+- (void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    // Give the rating its own width at accessibility sizes. Keep Rate in the
+    // same scrolling group, below the complete rating rather than beside it.
+    BOOL stacked = UIContentSizeCategoryIsAccessibilityCategory(self.traitCollection.preferredContentSizeCategory);
+    self.ratingRow.axis = stacked ? UILayoutConstraintAxisVertical : UILayoutConstraintAxisHorizontal;
+    self.ratingRow.alignment = stacked ? UIStackViewAlignmentFill : UIStackViewAlignmentCenter;
+    // In a filled vertical stack, required hugging on Rate would force the
+    // entire Summary to the button's intrinsic width.
+    [self.ratingButton setContentHuggingPriority:stacked ? UILayoutPriorityDefaultLow : UILayoutPriorityRequired
+                                        forAxis:UILayoutConstraintAxisHorizontal];
+    self.ratingStars.font = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle3
+                              compatibleWithTraitCollection:self.traitCollection];
+    self.ratingLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote
+                              compatibleWithTraitCollection:self.traitCollection];
+}
+
+/// A heading with more space above it than below, and its body beneath.
+- (UIView *)makeBlockWithTitle:(NSString *)title body:(UILabel *)body {
+    UILabel *heading = [[UILabel alloc] init];
+    heading.text = title;
+    heading.font = [TMTheme groupTitleFont];
+    heading.adjustsFontForContentSizeCategory = YES;
+    heading.textColor = [TMTheme ink];
+    heading.accessibilityTraits = UIAccessibilityTraitHeader;
+
+    UIStackView *block = [[UIStackView alloc] initWithArrangedSubviews:@[heading, body]];
+    block.axis = UILayoutConstraintAxisVertical;
+    block.spacing = TMTheme.spaceS;
+    return block;
 }
 
 - (void)rate {
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Rating"
                                                                              message:@"Rate the tag on a scale of 1-5 stars"
                                                                       preferredStyle:UIAlertControllerStyleActionSheet];
+    // iPad presents this as a popover and needs both an anchor view and a rect.
     alertController.popoverPresentationController.sourceView = ratingButton;
+    alertController.popoverPresentationController.sourceRect = ratingButton.bounds;
     [alertController addAction:[UIAlertAction actionWithTitle:@"★★★★★" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:5];
     }]];
@@ -228,11 +298,11 @@
     [alertController addAction:[UIAlertAction actionWithTitle:@"★☆☆☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:1];
     }]];
-    
+
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleCancel
                                                       handler:nil]];
-    
+
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
@@ -244,14 +314,29 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
                 [self.ratingButton setEnabled:NO];
+                UIButtonConfiguration *rated = self.ratingButton.configuration;
+                rated.title = @"Rated";
+                self.ratingButton.configuration = rated;
+                [TMTheme saved];
             });
         }
         @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self reportProblem:@"Your rating could not be sent."];
             });
         }
     });
+}
+
+- (void)reportProblem:(NSString *)message {
+    UIAlertController *alert =
+        [UIAlertController alertControllerWithTitle:@"Tag Master"
+                                            message:[message stringByAppendingString:
+                                                     @" Check your connection and try again."]
+                                     preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)openSheetMusic {
@@ -267,10 +352,18 @@
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
                 if (self.tag.keyNote) {
-                    UIButton *toucher = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-                    [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
+                    // Keep the pitch within reach while the chart is open.
+                    UIButton *toucher = [UIButton buttonWithType:UIButtonTypeSystem];
+                    [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote]
+                             forState:UIControlStateNormal];
+                    toucher.titleLabel.font = [TMTheme fontWithStyle:UIFontTextStyleBody
+                                                               weight:UIFontWeightSemibold];
+                    [toucher.heightAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+                    [toucher.widthAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+                    toucher.accessibilityLabel =
+                        [NSString stringWithFormat:@"Sound the key of %@", self.tag.keyNote];
                     [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
-                    [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+                    [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
                     previewer.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:toucher];
                 }
                 [self presentViewController:previewer animated:YES completion:NULL];
@@ -278,9 +371,15 @@
         } @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self reportProblem:@"That chart could not be downloaded."];
             });
         }
     });
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [self pitchTouchUp];
 }
 
 - (void)pitchTouchDown {

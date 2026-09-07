@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Home is the desk itself: the three ways in, then the repertoire the singer
+  brought with them. Both lists work without an account.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollView1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/tm_space_xl">
+
+    <depollsoft.tagmaster.ReadableWidthLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <depollsoft.tagmaster.MeHeaderView
+                android:id="@+id/meHeaderView1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/favoritesHeading"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:paddingStart="@dimen/tm_gutter"
+                android:paddingEnd="@dimen/tm_gutter"
+                android:text="@string/Favorites" />
+
+            <TextView
+                android:id="@+id/favoritesEmptyTextView"
+                style="@style/TextAppearance.TagMaster.FieldValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:paddingStart="@dimen/tm_gutter"
+                android:paddingEnd="@dimen/tm_gutter"
+                android:text="@string/NoFavorites"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <depollsoft.lib.ui.ItemsControl
+                android:id="@+id/favoritesItemsControl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:animateLayoutChanges="true"
+                android:divider="?attr/colorOutlineVariant"
+                android:dividerHeight="1dp"
+                android:showDividers="middle" />
+
+            <LinearLayout
+                android:id="@+id/teachableSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/tm_space_xxl"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:paddingStart="@dimen/tm_gutter"
+                    android:paddingEnd="@dimen/tm_space_s">
+
+                    <TextView
+                        android:id="@+id/teachableHeading"
+                        style="@style/TextAppearance.TagMaster.SectionHeading"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/TeachableTags" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/teachableButton"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/tm_touch_target"
+                        android:text="@string/SeeAll" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/teachableEmptyTextView"
+                    style="@style/TextAppearance.TagMaster.FieldValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/tm_gutter"
+                    android:paddingEnd="@dimen/tm_gutter"
+                    android:text="@string/TeachableDeskEmpty"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <depollsoft.lib.ui.ItemsControl
+                    android:id="@+id/homeTeachableItemsControl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/tm_space_s"
+                    android:animateLayoutChanges="true"
+                    android:divider="?attr/colorOutlineVariant"
+                    android:dividerHeight="1dp"
+                    android:showDividers="middle" />
+            </LinearLayout>
+
+            <include layout="@layout/meviewfooter" />
+        </LinearLayout>
+    </depollsoft.tagmaster.ReadableWidthLayout>
+
+</androidx.core.widget.NestedScrollView>

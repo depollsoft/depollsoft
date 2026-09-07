@@ -5,14 +5,19 @@
 //  Created by David Poll on 10/5/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  Teaching video first, then what other quartets have posted. Thumbnails are
+//  16:9 with a play badge so a row reads as a video, not as a grey box.
+//
 
 #import "DPTagVideoController.h"
 #import "UIView+DPUtils.h"
 #import "DPFileCache.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagVideoController () <UITableViewDelegate, UITableViewDataSource>
 
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) TMEmptyStateView *emptyState;
 
 @end
 
@@ -30,23 +35,41 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	self.tableView = [[UITableView alloc] initWithFrame:CGRectNull style:UITableViewStyleGrouped];
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectZero
+                                                  style:UITableViewStyleInsetGrouped];
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
     self.tableView.backgroundColor = [UIColor clearColor];
-    
+    self.tableView.cellLayoutMarginsFollowReadableWidth = YES;
+    self.tableView.estimatedRowHeight = 88;
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.accessibilityIdentifier = @"tagVideos";
+
+    self.emptyState = [[TMEmptyStateView alloc] initWithFrame:CGRectZero];
+    self.emptyState.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.emptyState configureWithSymbolName:@"play.rectangle"
+                                       title:@"No videos yet"
+                                     message:@"Nobody has posted a teaching video or a performance "
+                                              "of this tag on BarbershopTags.com."
+                                 actionTitle:nil
+                                      action:nil];
+
     [self.view addSubview:self.tableView];
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_tableView]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_tableView)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_tableView]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_tableView)]];
-    
+    [self.view addSubview:self.emptyState];
+
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tableView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+
+        [self.emptyState.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor],
+        [self.emptyState.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.emptyState.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.emptyState.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor]
+    ]];
+
     [self refreshView];
 }
 
@@ -58,6 +81,9 @@
 
 - (void)refreshView {
     [self.tableView reloadData];
+    BOOL hasAny = self.tag.teachingVideo != nil || self.tag.videos.count > 0;
+    self.emptyState.hidden = hasAny;
+    self.tableView.hidden = !hasAny;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
@@ -74,7 +100,7 @@
     if (self.tag.videos.count > 0) {
         return nil;
     }
-    return @"Sorry, this tag does not have any videos associated with it.";
+    return @"No quartet recordings have been posted for this tag yet.";
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -92,106 +118,146 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPGridLayout *grid = [[DPGridLayout alloc] init];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimensionWithStars:1],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimensionWithStars:1]
-                           ];
-    grid.columnDimensions = @[
-                              [DPGridDimension dimensionWithSize:88],
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1]
-                              ];
-    grid.translatesAutoresizingMaskIntoConstraints = NO;
-    
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                                   reuseIdentifier:nil];
+    cell.backgroundColor = [TMTheme surface];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+
     UIImageView *thumb = [[UIImageView alloc] init];
-    thumb.backgroundColor = [UIColor darkGrayColor];
-    [grid addSubview:[thumb pad:4] row:0 column:0 rowSpan:6 colSpan:1];
-    
+    thumb.translatesAutoresizingMaskIntoConstraints = NO;
+    thumb.backgroundColor = [UIColor secondarySystemFillColor];
+    thumb.contentMode = UIViewContentModeScaleAspectFill;
+    thumb.clipsToBounds = YES;
+    thumb.layer.cornerRadius = 6;
+    thumb.layer.cornerCurve = kCACornerCurveContinuous;
+    thumb.isAccessibilityElement = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [thumb.widthAnchor constraintEqualToConstant:96],
+        [thumb.heightAnchor constraintEqualToAnchor:thumb.widthAnchor multiplier:9.0 / 16.0]
+    ]];
+
+    UIImageView *playBadge = [[UIImageView alloc]
+        initWithImage:[UIImage systemImageNamed:@"play.circle.fill"]];
+    playBadge.translatesAutoresizingMaskIntoConstraints = NO;
+    playBadge.tintColor = [UIColor whiteColor];
+    playBadge.preferredSymbolConfiguration =
+        [UIImageSymbolConfiguration configurationWithPointSize:24];
+    [thumb addSubview:playBadge];
+    [NSLayoutConstraint activateConstraints:@[
+        [playBadge.centerXAnchor constraintEqualToAnchor:thumb.centerXAnchor],
+        [playBadge.centerYAnchor constraintEqualToAnchor:thumb.centerYAnchor]
+    ]];
+
+    UIStackView *facts = [[UIStackView alloc] init];
+    facts.axis = UILayoutConstraintAxisVertical;
+    facts.spacing = TMTheme.spaceXS;
+
     NSURL *thumbnail = nil;
-    
+    NSMutableArray<NSString *> *spoken = [NSMutableArray array];
+
     if (self.tag.teachingVideo && indexPath.section == 0) {
-        [grid addSubview:[self makeHeader:@"Teacher"] row:1 column:1];
-        UILabel *teacherLabel = [self makeBodyLabel];
-        teacherLabel.text = self.tag.teacher;
-        [grid addSubview:teacherLabel row:1 column:3];
+        UILabel *heading = [[UILabel alloc] init];
+        heading.text = @"Teaching video";
+        heading.font = [TMTheme fontWithStyle:UIFontTextStyleBody weight:UIFontWeightSemibold];
+        heading.adjustsFontForContentSizeCategory = YES;
+        heading.textColor = [TMTheme primaryText];
+        heading.numberOfLines = 0;
+        [facts addArrangedSubview:heading];
+        [spoken addObject:@"Teaching video"];
+
+        if (self.tag.teacher.length > 0) {
+            [facts addArrangedSubview:[self makeFactLabel:
+                [NSString stringWithFormat:@"Taught by %@", self.tag.teacher]]];
+            [spoken addObject:[NSString stringWithFormat:@"taught by %@", self.tag.teacher]];
+        }
         thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", self.tag.teachingVideo]];
     } else {
         DPVideo *video = self.tag.videos[indexPath.row];
         thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", video.youTubeCode]];
-        
-        if (video.sungBy) {
-            [grid addSubview:[self makeHeader:@"Sung By"] row:1 column:1];
-            UILabel *sungByLabel = [self makeBodyLabel];
-            sungByLabel.text = video.sungBy;
-            [grid addSubview:sungByLabel row:1 column:3];
+
+        UILabel *heading = [[UILabel alloc] init];
+        heading.text = video.sungBy.length > 0 ? video.sungBy : @"Performance";
+        heading.font = [TMTheme fontWithStyle:UIFontTextStyleBody weight:UIFontWeightSemibold];
+        heading.adjustsFontForContentSizeCategory = YES;
+        heading.textColor = [TMTheme primaryText];
+        heading.numberOfLines = 0;
+        [facts addArrangedSubview:heading];
+        [spoken addObject:heading.text];
+
+        NSMutableArray<NSString *> *details = [NSMutableArray array];
+        if (video.sungKey.length > 0) {
+            [details addObject:[NSString stringWithFormat:@"Key of %@", video.sungKey]];
         }
-        
-        if (video.sungKey) {
-            [grid addSubview:[self makeHeader:@"Key"] row:2 column:1];
-            UILabel *keyLabel = [self makeBodyLabel];
-            keyLabel.text = video.sungKey;
-            [grid addSubview:keyLabel row:2 column:3];
+        if (video.posted) {
+            NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+            formatter.dateStyle = NSDateFormatterMediumStyle;
+            formatter.timeStyle = NSDateFormatterNoStyle;
+            [details addObject:[formatter stringFromDate:video.posted]];
         }
-        
-        [grid addSubview:[self makeHeader:@"Posted"] row:3 column:1];
-        UILabel *postedLabel = [self makeBodyLabel];
-        NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
-        otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
-        otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
-        postedLabel.text = [otherDateFormatter stringFromDate:video.posted];
-        [grid addSubview:postedLabel row:3 column:3];
-        
-        DPGridLayout *multitrackGrid = [[DPGridLayout alloc] init];
-        multitrackGrid.columnDimensions = @[
-                                            [DPGridDimension dimension],
-                                            [DPGridDimension dimensionWithSize:8],
-                                            [DPGridDimension dimension]
-                                            ];
-        UILabel *multitrackLabel = [self makeBodyLabel];
-        multitrackLabel.text = @"Multitrack";
-        [multitrackGrid addSubview:multitrackLabel row:0 column:2];
-        UIImageView *multitrackImage = [[UIImageView alloc] initWithImage:video.isMultitrack ? [DPTagVideoController onImage] : [DPTagVideoController offImage]];
-        [multitrackGrid addSubview:multitrackImage row:0 column:0];
-        
-        [grid addSubview:[multitrackGrid centeredHorizontally] row:4 column:1 rowSpan:1 colSpan:3];
+        if (video.isMultitrack) {
+            [details addObject:@"Multitrack"];
+        }
+        if (details.count > 0) {
+            NSString *line = [details componentsJoinedByString:@" · "];
+            [facts addArrangedSubview:[self makeFactLabel:line]];
+            [spoken addObject:line];
+        }
     }
-    
-    NSString *thumbnailKey = [DPFileCache keyForURL:thumbnail];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:thumbnailKey]]) {
-        thumb.image = [UIImage imageWithData:[DPFileCache readDataForKey:thumbnailKey]];
-    } else {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSData *data = [NSData dataWithContentsOfURL:thumbnail];
-            [DPFileCache writeData:data forKey:thumbnailKey];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                thumb.image = [UIImage imageWithData:data];
-            });
-        });
-    }
-    
-    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    cell.backgroundColor = [UIColor clearColor];
-    [cell.contentView addSubview:grid];
-    [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[grid]|"
-                                                                             options:0
-                                                                             metrics:nil
-                                                                               views:NSDictionaryOfVariableBindings(grid)]];
-    [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[grid]|"
-                                                                             options:0
-                                                                             metrics:nil
-                                                                               views:NSDictionaryOfVariableBindings(grid)]];
+
+    UIStackView *row = [[UIStackView alloc] initWithArrangedSubviews:@[thumb, facts]];
+    row.axis = UILayoutConstraintAxisHorizontal;
+    row.alignment = UIStackViewAlignmentCenter;
+    row.spacing = TMTheme.spaceM;
+    row.translatesAutoresizingMaskIntoConstraints = NO;
+
+    [cell.contentView addSubview:row];
+    [NSLayoutConstraint activateConstraints:@[
+        [row.leadingAnchor constraintEqualToAnchor:cell.contentView.layoutMarginsGuide.leadingAnchor],
+        [row.trailingAnchor constraintEqualToAnchor:cell.contentView.layoutMarginsGuide.trailingAnchor],
+        [row.topAnchor constraintEqualToAnchor:cell.contentView.topAnchor constant:TMTheme.spaceM],
+        [row.bottomAnchor constraintEqualToAnchor:cell.contentView.bottomAnchor
+                                         constant:-TMTheme.spaceM]
+    ]];
+
+    cell.isAccessibilityElement = YES;
+    cell.accessibilityLabel = [spoken componentsJoinedByString:@", "];
+    cell.accessibilityHint = @"Opens the video on YouTube";
+    cell.accessibilityTraits = UIAccessibilityTraitButton;
+
+    [self loadThumbnail:thumbnail into:thumb];
 
     return cell;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 68;
+- (UILabel *)makeFactLabel:(NSString *)text {
+    UILabel *label = [[UILabel alloc] init];
+    label.text = text;
+    label.font = [TMTheme metadataFont];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.textColor = [TMTheme secondaryText];
+    label.numberOfLines = 0;
+    return label;
+}
+
+- (void)loadThumbnail:(NSURL *)thumbnail into:(UIImageView *)thumb {
+    if (!thumbnail) {
+        return;
+    }
+    NSString *thumbnailKey = [DPFileCache keyForURL:thumbnail];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:thumbnailKey]]) {
+        thumb.image = [UIImage imageWithData:[DPFileCache readDataForKey:thumbnailKey]];
+        return;
+    }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *data = [NSData dataWithContentsOfURL:thumbnail];
+        if (!data) {
+            return;
+        }
+        [DPFileCache writeData:data forKey:thumbnailKey];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            thumb.image = [UIImage imageWithData:data];
+        });
+    });
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -211,7 +277,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_yes.png"];
+        image = [UIImage systemImageNamed:@"checkmark.circle.fill"];
     });
     return image;
 }
@@ -220,7 +286,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_no.png"];
+        image = [UIImage systemImageNamed:@"circle"];
     });
     return image;
 }

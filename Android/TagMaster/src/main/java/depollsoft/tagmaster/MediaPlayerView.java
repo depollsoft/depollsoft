@@ -3,28 +3,26 @@ package depollsoft.tagmaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
+import android.os.Handler;
+import android.os.Looper;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnPreparedListener;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.Toast;
-import android.widget.ToggleButton;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.bindroid.utils.Action;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -33,15 +31,32 @@ import depollsoft.tagmaster.barbershop.RemoteLocation;
 
 public class MediaPlayerView extends LinearLayout {
   private MediaPlayer player;
-  private Timer timer;
-  private TimerTask timerTask;
+  private final Handler playbackHandler = new Handler(Looper.getMainLooper());
+  private long playbackRequest;
+  private boolean loading;
+  private final Runnable updatePosition = new Runnable() {
+    @Override
+    public void run() {
+      if (player == null || !getIsPlaying()) return;
+      refreshing = true;
+      try {
+        setAudioPosition(player.getCurrentPosition());
+      } catch (IllegalStateException e) {
+        failPlayback();
+        return;
+      } finally {
+        refreshing = false;
+      }
+      playbackHandler.postDelayed(this, 25);
+    }
+  };
   private TrackableField<RemoteLocation> remoteLocation = new TrackableField<RemoteLocation>();
   private SeekBar balanceBar;
   private SeekBar playbackBar;
-  private ToggleButton playPauseButton;
-  private Button stopButton;
+  private MaterialButton playPauseButton;
+  private MaterialButton stopButton;
   private ContentCache cache;
-  private boolean rlChangedSinceLastPlay;
+  private boolean rlChangedSinceLastPlay = true;
   private boolean refreshing;
   private TrackableField<Boolean> isPlaying = new TrackableField<Boolean>(false);
 
@@ -96,41 +111,19 @@ public class MediaPlayerView extends LinearLayout {
             Context.LAYOUT_INFLATER_SERVICE);
     inflater.inflate(R.layout.mediaplayerview, this, true);
 
-    this.player = new MediaPlayer();
     this.cache = new ContentCache(this.getContext());
     this.setBalance(500);
 
     this.balanceBar = (SeekBar) this.findViewById(R.id.balanceSeekBar);
     this.playbackBar = (SeekBar) this.findViewById(R.id.counterSeekBar);
-    this.playPauseButton = (ToggleButton) this.findViewById(R.id.playPauseButton);
-    this.stopButton = (Button) this.findViewById(R.id.stopButton);
-
-    this.timer = new Timer();
-
-    this.player.setOnPreparedListener(new OnPreparedListener() {
-      public void onPrepared(MediaPlayer mp) {
-        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player.getDuration());
-      }
-    });
-    this.player.setOnCompletionListener(new OnCompletionListener() {
-
-      public void onCompletion(MediaPlayer mp) {
-        MediaPlayerView.this.setIsPlaying(false);
-      }
-    });
-    this.player.setOnErrorListener(new OnErrorListener() {
-
-      public boolean onError(MediaPlayer mp, int what, int extra) {
-        Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                Toast.LENGTH_SHORT).show();
-        MediaPlayerView.this.setIsPlaying(false);
-        return true;
-      }
-    });
+    this.playPauseButton = (MaterialButton) this.findViewById(R.id.playPauseButton);
+    this.stopButton = (MaterialButton) this.findViewById(R.id.stopButton);
 
     this.playbackBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
       public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser && !MediaPlayerView.this.refreshing)
+        if (fromUser && !MediaPlayerView.this.refreshing
+                && MediaPlayerView.this.player != null
+                && !MediaPlayerView.this.rlChangedSinceLastPlay)
           MediaPlayerView.this.player.seekTo(progress);
       }
 
@@ -158,63 +151,7 @@ public class MediaPlayerView extends LinearLayout {
     this.playPauseButton.setOnClickListener(new OnClickListener() {
 
       public void onClick(View v) {
-        if (MediaPlayerView.this.getIsPlaying()) {
-          MediaPlayerView.this.pause();
-        } else if (!MediaPlayerView.this.rlChangedSinceLastPlay) {
-          MediaPlayerView.this.player.start();
-          MediaPlayerView.this.setIsPlaying(true);
-        } else {
-          MediaPlayerView.this.rlChangedSinceLastPlay = false;
-          final ProgressDialog dialog = new ProgressDialog(
-                  MediaPlayerView.this.getContext());
-          dialog.setMessage("Loading track...");
-          dialog.show();
-          MediaPlayerView.this.cache.loadContentPublic(
-                  MediaPlayerView.this.getRemoteLocation().getUri(),
-                  MediaPlayerView.this.getRemoteLocation().getType(), false).continueWith(new Continuation<File, Void>() {
-            @Override
-            public Void then(final Task<File> task) throws Exception {
-              if (task.isFaulted()) {
-                MediaPlayerView.this.post(new Runnable() {
-
-                  public void run() {
-                    if (dialog.isShowing()) {
-                      dialog.dismiss();
-                    }
-                    Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                            Toast.LENGTH_SHORT).show();
-                  }
-                });
-              } else {
-                MediaPlayerView.this.post(new Runnable() {
-
-                  public void run() {
-                    try {
-                      FileInputStream fis = new FileInputStream(task.getResult());
-                      MediaPlayerView.this.player.reset();
-                      MediaPlayerView.this.player.setDataSource(fis.getFD());
-                      MediaPlayerView.this.player.prepare();
-                      MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
-                              .getDuration());
-                      fis.close();
-                      MediaPlayerView.this.player.start();
-                      MediaPlayerView.this.setIsPlaying(true);
-                    } catch (Exception e) {
-                      Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                              Toast.LENGTH_SHORT).show();
-                      MediaPlayerView.this.setIsPlaying(false);
-                    } finally {
-                      if (dialog.isShowing()) {
-                        dialog.dismiss();
-                      }
-                    }
-                  }
-                });
-              }
-              return null;
-            }
-          });
-        }
+        MediaPlayerView.this.playOrPause();
       }
     });
 
@@ -223,6 +160,88 @@ public class MediaPlayerView extends LinearLayout {
         MediaPlayerView.this.stop();
       }
     });
+  }
+
+  private void createPlayer() {
+    this.player = new MediaPlayer();
+    this.setBalance(this.getBalance());
+    this.player.setOnCompletionListener(new OnCompletionListener() {
+      public void onCompletion(MediaPlayer mp) {
+        if (mp != MediaPlayerView.this.player) return;
+        MediaPlayerView.this.setIsPlaying(false);
+        MediaPlayerView.this.setAudioPosition(MediaPlayerView.this.getAudioLength());
+      }
+    });
+    this.player.setOnErrorListener(new OnErrorListener() {
+      public boolean onError(MediaPlayer mp, int what, int extra) {
+        if (mp == MediaPlayerView.this.player) MediaPlayerView.this.failPlayback();
+        return true;
+      }
+    });
+  }
+
+  private void playOrPause() {
+    if (!this.isEnabled() || this.loading || this.getRemoteLocation() == null) return;
+    if (this.getIsPlaying()) {
+      this.pause();
+      return;
+    }
+    if (!this.rlChangedSinceLastPlay && this.player != null) {
+      try {
+        this.player.start();
+        this.setIsPlaying(true);
+      } catch (IllegalStateException e) {
+        this.failPlayback();
+      }
+      return;
+    }
+
+    final long request = ++this.playbackRequest;
+    final RemoteLocation location = this.getRemoteLocation();
+    // Keep the existing URL/type cache key and inline loading control.
+    this.setLoading(true);
+    try {
+      this.cache.loadContentPublic(location.getUri(), location.getType(), false)
+              .continueWith(new Continuation<File, Void>() {
+        @Override
+        public Void then(final Task<File> task) {
+          // Use the main handler rather than View.post, which queues work until reattach.
+          playbackHandler.post(new Runnable() {
+            public void run() {
+              if (request != playbackRequest) return;
+              if (task.isCancelled()) {
+                stop();
+                return;
+              }
+              if (task.isFaulted() || task.getResult() == null) {
+                failPlayback();
+                return;
+              }
+              try (FileInputStream fis = new FileInputStream(task.getResult())) {
+                createPlayer();
+                player.setDataSource(fis.getFD());
+                player.prepare();
+                setAudioLength(player.getDuration());
+                player.start();
+                rlChangedSinceLastPlay = false;
+                setIsPlaying(true);
+                setLoading(false);
+              } catch (java.io.IOException | IllegalStateException e) {
+                failPlayback();
+              }
+            }
+          });
+          return null;
+        }
+      });
+    } catch (RuntimeException e) {
+      this.failPlayback();
+    }
+  }
+
+  private void failPlayback() {
+    this.stop();
+    this.reportTrackFailure();
   }
 
   @Override
@@ -242,15 +261,30 @@ public class MediaPlayerView extends LinearLayout {
 
   @Override
   protected void onDetachedFromWindow() {
-    super.onDetachedFromWindow();
-
     this.stop();
+    super.onDetachedFromWindow();
+  }
+
+  /** The track could not be fetched or decoded; say so where the control is. */
+  private void reportTrackFailure() {
+    Snackbar.make(this, R.string.TrackLoadFailed, Snackbar.LENGTH_SHORT).show();
+  }
+
+  private void setLoading(boolean value) {
+    this.loading = value;
+    CircularProgressIndicator indicator = this.findViewById(R.id.trackLoading);
+    if (indicator != null) {
+      indicator.setVisibility(value ? VISIBLE : GONE);
+    }
+    this.playPauseButton.setVisibility(value ? GONE : VISIBLE);
   }
 
   private void pause() {
-    if (this.player.isPlaying()) {
-      this.player.pause();
+    try {
+      if (this.player != null && this.getIsPlaying()) this.player.pause();
       this.setIsPlaying(false);
+    } catch (IllegalStateException e) {
+      this.failPlayback();
     }
   }
 
@@ -269,7 +303,7 @@ public class MediaPlayerView extends LinearLayout {
     float max = Math.max(leftPercentage, rightPercentage);
     leftPercentage /= max;
     rightPercentage /= max;
-    this.player.setVolume(leftPercentage, rightPercentage);
+    if (this.player != null) this.player.setVolume(leftPercentage, rightPercentage);
   }
 
   @Override
@@ -282,37 +316,28 @@ public class MediaPlayerView extends LinearLayout {
   }
 
   private void setIsPlaying(boolean value) {
+    this.playbackHandler.removeCallbacks(this.updatePosition);
     this.isPlaying.set(value);
-    if (value) {
-      this.timerTask = new TimerTask() {
-
-        @Override
-        public void run() {
-          MediaPlayerView.this.post(new Runnable() {
-            public void run() {
-              MediaPlayerView.this.refreshing = true;
-              MediaPlayerView.this.setAudioPosition(MediaPlayerView.this.player
-                      .getCurrentPosition());
-              MediaPlayerView.this.refreshing = false;
-            }
-          });
-        }
-      };
-      this.timer.scheduleAtFixedRate(this.timerTask, 0, 25);
-    } else if (this.timerTask != null)
-      this.timerTask.cancel();
+    if (value) this.playbackHandler.post(this.updatePosition);
   }
 
   public void setRemoteLocation(RemoteLocation value) {
-    this.remoteLocation.set(value);
-    this.rlChangedSinceLastPlay = true;
     this.stop();
+    this.remoteLocation.set(value);
   }
 
   public void stop() {
-    if (this.player.isPlaying())
-      this.player.stop();
+    ++this.playbackRequest;
     this.setIsPlaying(false);
+    this.setLoading(false);
     this.rlChangedSinceLastPlay = true;
+    if (this.player != null) {
+      MediaPlayer previous = this.player;
+      this.player = null;
+      // release is valid even after a decode error or before preparation.
+      previous.release();
+    }
+    this.setAudioPosition(0);
+    this.setAudioLength(0);
   }
 }

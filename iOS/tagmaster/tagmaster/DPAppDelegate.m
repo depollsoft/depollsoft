@@ -72,14 +72,13 @@
     } forClass:[[NSDate date] class]];
     
     // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor systemBackgroundColor];
-    [self.window makeKeyAndVisible];
-    
-    UINavigationController *navController = [[UINavigationController alloc] init];
-    self.window.rootViewController = navController;
-    [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
-    
-    navigationController = navController;
+    self.window.backgroundColor = [UIColor systemGroupedBackgroundColor];
+    [TMTheme applyTo:self.window];
+
+    TMRootController *root = [TMRootController make];
+    self.window.rootViewController = root;
+    self.rootController = root;
+    navigationController = root.homeNavigationController;
     [self.window makeKeyAndVisible];
     
     [self extraInit];
@@ -109,7 +108,17 @@
             int tagId = tagNumberString.intValue;
             DPTagViewController *controller = [[DPTagViewController alloc] init];
             controller.tagId = tagId;
-            [self.navigationController pushViewController:controller animated:YES];
+            // Deep links always land in the Home stack, and bring it forward so
+            // the pushed tag is the screen the singer is looking at.
+            TMRootController *root = (TMRootController *)self.rootController;
+            UINavigationController *stack = root ? [root focusHome] : self.navigationController;
+            UIViewController *presenter = root ?: stack;
+            void (^openTag)(void) = ^{ [stack pushViewController:controller animated:YES]; };
+            if (presenter.presentedViewController) {
+                [presenter dismissViewControllerAnimated:NO completion:openTag];
+            } else {
+                openTag();
+            }
         }
         @catch (NSException *exception) {
         }
@@ -215,28 +224,18 @@
                                            action:action];
 }
 
+/// The barber pole used to fill every screen edge to edge behind the content.
+/// It is now a quiet mark at the foot of Home; every other screen simply takes
+/// the grouped canvas so text sits on a surface that adapts to appearance and
+/// increased-contrast settings.
 + (void)setUpBackground:(UIView *)view {
-    view.backgroundColor = [UIColor systemBackgroundColor];
-    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
-    backgroundImage.userInteractionEnabled = NO;
-    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
-    backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
-
     if ([view isKindOfClass:[UITableView class]]) {
         UITableView *tableView = (UITableView *)view;
-        view = tableView.backgroundView = [[UIView alloc] init];
+        tableView.backgroundView = nil;
+        tableView.backgroundColor = [TMTheme canvas];
+        return;
     }
-
-    [view addSubview:backgroundImage];
-    [view sendSubviewToBack:backgroundImage];
-    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
-                                                                 options:0
-                                                                 metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
-    [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-60-[backgroundImage]-44-|"
-                                                                 options:0
-                                                                 metrics:nil
-                                                                   views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    view.backgroundColor = [TMTheme canvas];
 }
 
 

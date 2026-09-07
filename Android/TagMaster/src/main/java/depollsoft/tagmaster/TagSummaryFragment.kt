@@ -31,6 +31,11 @@ class TagSummaryFragment : Fragment() {
     val canRate: Boolean
         get() = _canRate.get() && this.parent.tag != null && !RatingsModel.isRated(this.parent.tag!!.id)
 
+    override fun onPause() {
+        parent.tag?.keyNote?.stop()
+        super.onPause()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

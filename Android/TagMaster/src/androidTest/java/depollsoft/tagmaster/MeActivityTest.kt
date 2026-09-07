@@ -1,290 +1,108 @@
 package depollsoft.tagmaster
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import org.hamcrest.Matchers.*
-import org.junit.Rule
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.navigationrail.NavigationRailView
+import org.hamcrest.Matchers.allOf
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Instrumented UI tests for the MeActivity (main launcher activity).
- * Tests the main screen display, ViewPager2, BottomNavigationView, and settings.
- */
+/** Local shell checks: catalog responses are deliberately not part of these assertions. */
 @RunWith(AndroidJUnit4::class)
-@LargeTest
-class MeActivityTest {
-
-    @get:Rule
-    val activityRule = ActivityScenarioRule(MeActivity::class.java)
-
-    // ==================== Launch Tests ====================
-
+class MeActivityTest : SingingDeskTest() {
     @Test
-    fun testActivityLaunches() {
-        activityRule.scenario.onActivity { activity ->
-            assert(activity != null)
+    fun homeActionsAreLabeledAndEnabled() {
+        listOf(
+            R.id.findTagButton to R.string.FindATag,
+            R.id.randomTagButton to R.string.RandomTag,
+            R.id.openByIdButton to R.string.OpenTagId,
+        ).forEach { (id, label) ->
+            onView(withId(id))
+                .perform(scrollTo())
+                .check(matches(allOf(isDisplayed(), isEnabled(), isClickable(), withText(label))))
         }
     }
 
     @Test
-    fun testViewPagerIsDisplayed() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+    fun findTagSelectsNativeSearch() {
+        onView(withId(R.id.findTagButton)).perform(scrollTo(), click())
+        onView(withId(R.id.searchTextBox)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.SEARCH, R.id.search)
     }
 
     @Test
-    fun testBottomNavigationIsDisplayed() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Bottom Navigation Tests ====================
-
-    @Test
-    fun testBottomNavigationIsClickable() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isClickable()))
-    }
-
-    @Test
-    fun testSwipeViewPager() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+    fun nativeDestinationsSwitchAndReturnHome() {
+        onView(withId(R.id.browse)).perform(click())
+        onView(withId(R.id.browseTabs)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.BROWSE, R.id.browse)
+        onView(withId(R.id.search)).perform(click())
+        onView(withId(R.id.searchTextBox)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.SEARCH, R.id.search)
+        onView(withId(R.id.home)).perform(click())
+        onView(withId(R.id.findTagButton)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.HOME, R.id.home)
     }
 
     @Test
-    fun testSwipeViewPagerBack() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .perform(swipeRight())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+    fun onlyTheVisibleBrowsePageContributesRefresh() {
+        onView(withId(R.id.browse)).perform(click())
+        EspressoTestUtils.waitForPagerIdle(R.id.viewPager)
+        onView(withId(R.id.browseTabs)).check(matches(isDisplayed()))
+        EspressoTestUtils.waitForView(withId(R.id.refreshMenuItem))
+        onView(withId(R.id.search)).perform(click())
+        EspressoTestUtils.waitForPagerIdle(R.id.viewPager)
+        onView(withId(R.id.searchTextBox)).check(matches(isDisplayed()))
+        onView(withId(R.id.refreshMenuItem)).check(
+            androidx.test.espresso.assertion.ViewAssertions
+                .doesNotExist(),
+        )
     }
 
-    // ==================== Favorites List Tests ====================
+    @Test
+    fun searchSelectionSurvivesRecreation() {
+        onView(withId(R.id.search)).perform(click())
+        assertDestination(MeActivity.SEARCH, R.id.search)
+        scenario.recreate()
+        onView(withId(R.id.searchTextBox)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.SEARCH, R.id.search)
+    }
 
     @Test
-    fun testFavoritesItemsControlExists() {
-        // Check if favorites list exists (may be in a fragment)
-        try {
-            onView(withId(R.id.favoritesItemsControl))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Favorites view may not be visible on this page
+    fun navigationTypeMatchesCurrentWindowWidth() {
+        scenario.onActivity { activity ->
+            val navigation = activity.findViewById<NavigationBarView>(R.id.bottomNavigation)
+            // w600dp follows available width, not smallestScreenWidthDp or device identity.
+            if (activity.resources.configuration.screenWidthDp >= 600) {
+                assertTrue("Expanded windows require a navigation rail", navigation is NavigationRailView)
+            } else {
+                assertTrue("Compact windows require bottom navigation", navigation is BottomNavigationView)
+            }
+            assertEquals(3, navigation.menu.size())
+            assertEquals(
+                listOf(R.id.home, R.id.browse, R.id.search),
+                (0 until navigation.menu.size()).map { navigation.menu.getItem(it).itemId },
+            )
         }
     }
 
     @Test
-    fun testTeachableTagsItemsControlExists() {
-        // Navigate to teachable tags section first
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        try {
-            onView(withId(R.id.teachableTagsItemsControl))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Teachable tags view may not be visible
-        }
-    }
-
-    // ==================== Settings Section Tests ====================
-
-    @Test
-    fun testClearCacheButtonExists() {
-        // Navigate to settings section
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.clearCacheButton))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Settings may require more navigation
-        }
-    }
-
-    @Test
-    fun testClearFavoritesButtonExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.clearFavoritesButton))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Settings may require more navigation
-        }
-    }
-
-    @Test
-    fun testChangelogButtonExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.changelogButton))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Settings may require more navigation
-        }
-    }
-
-    @Test
-    fun testAppVersionTextViewExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.appVersionTextView))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // About info may require more navigation
-        }
-    }
-
-    @Test
-    fun testAppNameTextViewExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.appNameTextView))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // About info may require more navigation
-        }
-    }
-
-    @Test
-    fun testCopyrightTextViewExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.copyrightTextView))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // About info may require more navigation
-        }
-    }
-
-    @Test
-    fun testThemeTitleTextViewExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.themeTitleTextView))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Theme settings may require more navigation
-        }
-    }
-
-    @Test
-    fun testLearningTracksCheckBoxExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.learningTracksCheckBox))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Learning tracks settings may require more navigation
-        }
-    }
-
-    @Test
-    fun testLearningTracksSpinnerExists() {
-        navigateToSettings()
-
-        try {
-            onView(withId(R.id.learningTracksSpinner))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Learning tracks spinner may require more navigation
-        }
-    }
-
-    // ==================== Helper Functions ====================
-
-    private fun navigateToSettings() {
-        // Swipe through ViewPager to reach settings, or use bottom navigation
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(200)
-        }
-    }
-
-    // ==================== ViewPager Navigation Tests ====================
-
-    @Test
-    fun testViewPagerMultipleSwipes() {
-        // Swipe through all pages
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        // Swipe back to start
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Configuration Change Tests ====================
-
-    @Test
-    fun testActivitySurvivesRotation() {
-        activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testBottomNavigationPreservedAfterRotation() {
-        activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Accessibility Tests ====================
-
-    @Test
-    fun testViewPagerIsEnabled() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isEnabled()))
-    }
-
-    @Test
-    fun testBottomNavigationIsEnabled() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isEnabled()))
+    fun settingsUtilityOpensAndBackReturnsToSelectedDestination() {
+        onView(withId(R.id.search)).perform(click())
+        onView(withId(R.id.settingsMenuItem)).perform(click())
+        onView(withId(R.id.settingsRoot)).check(matches(isDisplayed()))
+        onView(withId(R.id.radio_system)).perform(scrollTo()).check(matches(isDisplayed()))
+        onView(withId(R.id.clearCacheButton))
+            .perform(scrollTo())
+            .check(matches(allOf(isDisplayed(), isEnabled())))
+        pressBack()
+        onView(withId(R.id.searchTextBox)).check(matches(isDisplayed()))
+        assertDestination(MeActivity.SEARCH, R.id.search)
     }
 }

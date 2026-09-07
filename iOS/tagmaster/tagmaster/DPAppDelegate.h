@@ -19,6 +19,8 @@
 @property (readonly, strong, nonatomic) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
 @property (readonly, strong, nonatomic) UINavigationController *navigationController;
+/// The tab/sidebar root. Typed loosely so the header stays Swift-free.
+@property (strong, nonatomic) id rootController;
 
 + (BOOL)containsFavorite:(int)tagId;
 + (void)moveFavoriteAt:(NSUInteger)fromIndex to:(NSUInteger)toIndex;
