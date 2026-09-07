@@ -5,6 +5,9 @@
 //  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  The teaching list: the tags this singer is ready to teach, in the order they
+//  want to teach them.
+//
 
 #import "DPTeachableTagsController.h"
 #import "DPAppDelegate.h"
@@ -15,13 +18,15 @@
 
 @interface DPTeachableTagsController ()
 
+@property (nonatomic, strong) TMEmptyStateView *emptyState;
+
 @end
 
 @implementation DPTeachableTagsController
 
 
 - (id)init {
-    return [self initWithStyle:UITableViewStylePlain];
+    return [self initWithStyle:UITableViewStyleInsetGrouped];
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -35,24 +40,42 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [DPAppDelegate setUpBackground:self.view];
+    [DPAppDelegate setUpBackground:self.tableView];
 
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
-    
+    self.tableView.cellLayoutMarginsFollowReadableWidth = YES;
+    self.tableView.estimatedRowHeight = 88;
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.accessibilityIdentifier = @"teachableTags";
+
+    self.emptyState = [[TMEmptyStateView alloc] initWithFrame:CGRectZero];
+    [self.emptyState configureWithSymbolName:@"person.2.wave.2"
+                                       title:@"No teachable tags yet"
+                                     message:@"Mark a tag as teachable from its tag menu and it "
+                                              "will wait here for the next time you teach."
+                                 actionTitle:nil
+                                      action:nil];
+
     self.navigationItem.title = @"Teachable Tags";
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Teachable";
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
-    
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
+
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    self.editButtonItem.accessibilityLabel = @"Edit teachable tags";
     [self viewDidLoadExtension];
+    [self updateEmptyState];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
+    [self updateEmptyState];
+}
+
+- (void)updateEmptyState {
+    BOOL empty = [DPAppDelegate teachable].count == 0;
+    self.tableView.backgroundView = empty ? self.emptyState : nil;
+    self.editButtonItem.enabled = !empty;
 }
 
 - (void)didReceiveMemoryWarning
@@ -89,18 +112,24 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [DPAppDelegate removeTeachable:[[DPAppDelegate teachable][indexPath.row] intValue]];
+        [TMTheme saved];
         [self.tableView reloadData];
+        [self updateEmptyState];
     }
 }
 
+- (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return @"Remove";
+}
+
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPTag *tag = [DPTag loadFromCache:[[DPAppDelegate teachable][indexPath.row] intValue]];
-    return [DPTagCell tagHeight:tag];
+    return UITableViewAutomaticDimension;
 }
 
 // Override to support rearranging the table view.
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
     [DPAppDelegate moveTeachableAt:fromIndexPath.row to:toIndexPath.row];
+    [TMTheme saved];
 }
 
 // Override to support conditional rearranging of the table view.

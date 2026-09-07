@@ -5,36 +5,42 @@
 //  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  Provenance: who posted, arranged, and sang this tag, and where it lives on
+//  BarbershopTags.com. Attribution is part of the product, so it reads as
+//  content rather than as small print.
+//
 
 #import "DPTagDetailController.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagDetailController ()
 
 @property (nonatomic, strong) UILabel *titleLabel;
-@property (nonatomic, strong) UILabel *tagIdHeader;
 @property (nonatomic, strong) UILabel *tagIdLabel;
-@property (nonatomic, strong) UILabel *lastRefreshedHeader;
 @property (nonatomic, strong) UILabel *lastRefreshedLabel;
-@property (nonatomic, strong) UILabel *downloadsHeader;
 @property (nonatomic, strong) UILabel *downloadsLabel;
-@property (nonatomic, strong) UILabel *linkHeader;
 @property (nonatomic, strong) UIButton *linkButton;
-@property (nonatomic, strong) UILabel *postedByHeader;
-@property (nonatomic, strong) UIButton *postedByButton;
-@property (nonatomic, strong) UILabel *postedHeader;
+@property (nonatomic, strong) UIStackView *postedByValue;
 @property (nonatomic, strong) UILabel *postedLabel;
-@property (nonatomic, strong) UILabel *arrangedByHeader;
-@property (nonatomic, strong) UIButton *arrangedByButton;
-@property (nonatomic, strong) UILabel *yearArrangedHeader;
+@property (nonatomic, strong) UIStackView *arrangedByValue;
 @property (nonatomic, strong) UILabel *yearArrangedLabel;
-@property (nonatomic, strong) UILabel *sungByHeader;
-@property (nonatomic, strong) UIButton *sungByButton;
-@property (nonatomic, strong) UILabel *yearSungHeader;
+@property (nonatomic, strong) UIStackView *sungByValue;
 @property (nonatomic, strong) UILabel *yearSungLabel;
 
-@property (nonatomic, strong) DPGridLayout *grid;
+@property (nonatomic, strong) UIView *tagIdRow;
+@property (nonatomic, strong) UIView *lastRefreshedRow;
+@property (nonatomic, strong) UIView *downloadsRow;
+@property (nonatomic, strong) UIView *linkRow;
+@property (nonatomic, strong) UIView *postedByRow;
+@property (nonatomic, strong) UIView *postedRow;
+@property (nonatomic, strong) UIView *arrangedByRow;
+@property (nonatomic, strong) UIView *yearArrangedRow;
+@property (nonatomic, strong) UIView *sungByRow;
+@property (nonatomic, strong) UIView *yearSungRow;
+
+@property (nonatomic, strong) UIStackView *stack;
 
 @end
 
@@ -52,127 +58,132 @@
 - (void)refreshView {
     // Update UI
     self.titleLabel.text = self.tag.title;
-    
+
     self.tagIdLabel.text = [NSString stringWithFormat:@"%d", self.tag.tagId];
-    
+
     NSDateFormatter *lastRefreshedFormatter = [[NSDateFormatter alloc] init];
-    lastRefreshedFormatter.dateFormat = @"MM/dd/yy hh:mm:ss a";
-    lastRefreshedFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
-    self.lastRefreshedLabel.text = [lastRefreshedFormatter stringFromDate:self.tag.lastRefreshed];
-    
+    lastRefreshedFormatter.dateStyle = NSDateFormatterMediumStyle;
+    lastRefreshedFormatter.timeStyle = NSDateFormatterShortStyle;
+    self.lastRefreshedLabel.text = self.tag.lastRefreshed
+        ? [lastRefreshedFormatter stringFromDate:self.tag.lastRefreshed]
+        : @"Not cached yet";
+
     NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
-    otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
-    otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
-    
+    otherDateFormatter.dateStyle = NSDateFormatterLongStyle;
+    otherDateFormatter.timeStyle = NSDateFormatterNoStyle;
+
     self.downloadsLabel.text = [NSString stringWithFormat:@"%d", self.tag.downloadCount];
-    
+
     self.linkButton.url = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.barbershoptags.com/dbpage.php?pg=view&dbase=tags&id=%d", self.tag.tagId]];
-    
-    [self.postedByButton setTitle:self.tag.provider forState:UIControlStateNormal];
-    self.postedByButton.url = self.tag.providerWebsite;
-    [self.postedByButton setEnabled:!!self.tag.providerWebsite];
-    [self.grid setView:self.postedByHeader hidden:!self.tag.provider];
-    [self.grid setView:self.postedByButton hidden:!self.tag.provider];
-    
-    self.postedLabel.text = [otherDateFormatter stringFromDate:self.tag.posted];
-    
-    [self.arrangedByButton setTitle:self.tag.arranger forState:UIControlStateNormal];
-    self.arrangedByButton.url = self.tag.arrangerWebsite;
-    [self.arrangedByButton setEnabled:!!self.tag.arrangerWebsite];
-    [self.grid setView:self.arrangedByHeader hidden:!self.tag.arranger];
-    [self.grid setView:self.arrangedByButton hidden:!self.tag.arranger];
-    
+
+    [self updateAttribution:self.postedByValue name:self.tag.provider website:self.tag.providerWebsite];
+    self.postedByRow.hidden = !self.tag.provider;
+
+    self.postedLabel.text = self.tag.posted ? [otherDateFormatter stringFromDate:self.tag.posted] : @"Unknown";
+
+    [self updateAttribution:self.arrangedByValue name:self.tag.arranger website:self.tag.arrangerWebsite];
+    self.arrangedByRow.hidden = !self.tag.arranger;
+
     self.yearArrangedLabel.text = [NSString stringWithFormat:@"%d", self.tag.yearArranged];
-    [self.grid setView:self.yearArrangedHeader hidden:self.tag.yearArranged == 0];
-    [self.grid setView:self.yearArrangedLabel hidden:self.tag.yearArranged == 0];
-    
-    [self.sungByButton setTitle:self.tag.sungBy forState:UIControlStateNormal];
-    self.sungByButton.url = self.tag.sungByWebsite;
-    [self.sungByButton setEnabled:!!self.tag.sungByWebsite];
-    [self.grid setView:self.sungByHeader hidden:!self.tag.sungBy];
-    [self.grid setView:self.sungByButton hidden:!self.tag.sungBy];
-    
+    self.yearArrangedRow.hidden = self.tag.yearArranged == 0;
+
+    [self updateAttribution:self.sungByValue name:self.tag.sungBy website:self.tag.sungByWebsite];
+    self.sungByRow.hidden = !self.tag.sungBy;
+
     self.yearSungLabel.text = [NSString stringWithFormat:@"%d", self.tag.sungYear];
-    [self.grid setView:self.yearSungHeader hidden:self.tag.sungYear == 0];
-    [self.grid setView:self.yearSungLabel hidden:self.tag.sungYear == 0];
+    self.yearSungRow.hidden = self.tag.sungYear == 0;
+}
+
+// Only websites are controls. Replace the value on refresh so a removed URL
+// also removes its action and accessibility traits from the hierarchy.
+- (void)updateAttribution:(UIStackView *)value name:(NSString *)name website:(NSURL *)website {
+    if (!value) return;
+    for (UIView *child in value.arrangedSubviews) {
+        [value removeArrangedSubview:child];
+        [child removeFromSuperview];
+    }
+    if (website) {
+        UIButton *button = [self makeLinkButton];
+        [button setTitle:name forState:UIControlStateNormal];
+        button.url = website;
+        [value addArrangedSubview:button];
+    } else {
+        // Use UILabel directly. DPLabel removes intrinsic width for multiline
+        // text, which collapses a leading-aligned value at accessibility sizes.
+        UILabel *label = [[UILabel alloc] init];
+        label.font = [TMTheme bodyFont];
+        label.adjustsFontForContentSizeCategory = YES;
+        label.textColor = [TMTheme primaryText];
+        label.text = name;
+        label.numberOfLines = 0;
+        label.isAccessibilityElement = YES;
+        label.accessibilityTraits = UIAccessibilityTraitStaticText;
+        [value addArrangedSubview:label];
+    }
+}
+
+- (UIButton *)makeLinkButton {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    button.titleLabel.font = [TMTheme bodyFont];
+    button.titleLabel.adjustsFontForContentSizeCategory = YES;
+    button.titleLabel.numberOfLines = 0;
+    button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeading;
+    [button.heightAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+    return button;
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     self.titleLabel = [self makeTitleLabel];
-    self.tagIdHeader = [self makeHeader:@"Tag ID"];
+    self.titleLabel.accessibilityTraits = UIAccessibilityTraitHeader;
     self.tagIdLabel = [self makeBodyLabel];
-    self.lastRefreshedHeader = [self makeHeader:@"Last Refreshed"];
     self.lastRefreshedLabel = [self makeBodyLabel];
-    self.downloadsHeader = [self makeHeader:@"Downloads"];
+    self.lastRefreshedLabel.numberOfLines = 0;
     self.downloadsLabel = [self makeBodyLabel];
-    self.linkHeader = [self makeHeader:@"Link"];
-    self.linkButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.linkButton = [self makeLinkButton];
     [self.linkButton setTitle:@"BarbershopTags.com" forState:UIControlStateNormal];
-    self.postedByHeader = [self makeHeader:@"Posted By"];
-    self.postedByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    self.postedHeader = [self makeHeader:@"Posted"];
+    self.postedByValue = [[UIStackView alloc] init];
+    self.postedByValue.axis = UILayoutConstraintAxisVertical;
     self.postedLabel = [self makeBodyLabel];
-    self.arrangedByHeader = [self makeHeader:@"Arranged By"];
-    self.arrangedByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    self.yearArrangedHeader = [self makeHeader:@"Year Arranged"];
+    self.postedLabel.numberOfLines = 0;
+    self.arrangedByValue = [[UIStackView alloc] init];
+    self.arrangedByValue.axis = UILayoutConstraintAxisVertical;
     self.yearArrangedLabel = [self makeBodyLabel];
-    self.sungByHeader = [self makeHeader:@"Sung By"];
-    self.sungByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    self.yearSungHeader = [self makeHeader:@"Year Sung"];
+    self.sungByValue = [[UIStackView alloc] init];
+    self.sungByValue.axis = UILayoutConstraintAxisVertical;
     self.yearSungLabel = [self makeBodyLabel];
-    
-    self.grid = [[DPGridLayout alloc] init];
-    self.grid.rowDimensions = @[
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension]
-                                ];
-    self.grid.columnDimensions = @[
-                                   [DPGridDimension dimension],
-                                   [DPGridDimension dimensionWithSize:8],
-                                   [DPGridDimension dimensionWithStars:1]
-                                   ];
-    
-    // Set up headers
-    [self.grid addSubview:self.titleLabel row:0 column:0 rowSpan:1 colSpan:3];
-    [self.grid addSubview:self.tagIdHeader row:1 column:0];
-    [self.grid addSubview:self.lastRefreshedHeader row:2 column:0];
-    [self.grid addSubview:self.downloadsHeader row:3 column:0];
-    [self.grid addSubview:self.linkHeader row:4 column:0];
-    [self.grid addSubview:self.postedByHeader row:5 column:0];
-    [self.grid addSubview:self.postedHeader row:6 column:0];
-    [self.grid addSubview:self.arrangedByHeader row:7 column:0];
-    [self.grid addSubview:self.yearArrangedHeader row:8 column:0];
-    [self.grid addSubview:self.sungByHeader row:9 column:0];
-    [self.grid addSubview:self.yearSungHeader row:10 column:0];
-    
-    // Set up bodies
-    [self.grid addSubview:self.tagIdLabel row:1 column:2];
-    [self.grid addSubview:self.lastRefreshedLabel row:2 column:2];
-    [self.grid addSubview:self.downloadsLabel row:3 column:2];
-    [self.grid addSubview:[self.linkButton alignLeft] row:4 column:2];
-    [self.grid addSubview:[self.postedByButton alignLeft] row:5 column:2];
-    [self.grid addSubview:self.postedLabel row:6 column:2];
-    [self.grid addSubview:[self.arrangedByButton alignLeft] row:7 column:2];
-    [self.grid addSubview:self.yearArrangedLabel row:8 column:2];
-    [self.grid addSubview:[self.sungByButton alignLeft] row:9 column:2];
-    [self.grid addSubview:self.yearSungLabel row:10 column:2];
-    
+
+    self.tagIdRow = [TMFieldRow fieldRowWithTitle:@"Tag ID" value:self.tagIdLabel];
+    self.lastRefreshedRow = [TMFieldRow fieldRowWithTitle:@"Last Refreshed" value:self.lastRefreshedLabel];
+    self.downloadsRow = [TMFieldRow fieldRowWithTitle:@"Downloads" value:self.downloadsLabel];
+    self.linkRow = [TMFieldRow fieldRowWithTitle:@"Link" value:self.linkButton];
+    self.postedByRow = [TMFieldRow fieldRowWithTitle:@"Posted By" value:self.postedByValue];
+    self.postedRow = [TMFieldRow fieldRowWithTitle:@"Posted" value:self.postedLabel];
+    self.arrangedByRow = [TMFieldRow fieldRowWithTitle:@"Arranged By" value:self.arrangedByValue];
+    self.yearArrangedRow = [TMFieldRow fieldRowWithTitle:@"Year Arranged" value:self.yearArrangedLabel];
+    self.sungByRow = [TMFieldRow fieldRowWithTitle:@"Sung By" value:self.sungByValue];
+    self.yearSungRow = [TMFieldRow fieldRowWithTitle:@"Year Sung" value:self.yearSungLabel];
+
+    self.stack = [[UIStackView alloc] initWithArrangedSubviews:@[
+        self.titleLabel,
+        self.postedByRow, self.postedRow,
+        self.arrangedByRow, self.yearArrangedRow,
+        self.sungByRow, self.yearSungRow,
+        self.downloadsRow, self.tagIdRow, self.lastRefreshedRow,
+        self.linkRow
+    ]];
+    self.stack.axis = UILayoutConstraintAxisVertical;
+    self.stack.alignment = UIStackViewAlignmentFill;
+    self.stack.spacing = TMTheme.spaceM;
+    [self.stack setCustomSpacing:TMTheme.spaceL afterView:self.titleLabel];
+    [self.stack setCustomSpacing:TMTheme.spaceL afterView:self.yearSungRow];
+
     UIScrollView *scroller = [[UIScrollView alloc] init];
-    
-    [self setUpRootView:self.grid withScroller:scroller];
-    
+
+    [self setUpRootView:self.stack withScroller:scroller];
+
     [self refreshView];
 }
 

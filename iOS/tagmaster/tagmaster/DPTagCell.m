@@ -5,6 +5,9 @@
 //  Created by David Poll on 8/15/12.
 //  Copyright (c) 2012 DepollSoft. All rights reserved.
 //
+//  One tag as a singer scans it: what it's called, what it's known as, and
+//  whether there is sheet music and a learning track to work from.
+//
 
 #import "DPTagCell.h"
 #import "DPBusyIndicator.h"
@@ -18,6 +21,8 @@
 @property (nonatomic, strong) UILabel *details;
 @property (nonatomic, strong) UIImageView *hasSheetMusic;
 @property (nonatomic, strong) UIImageView *hasLearningTracks;
+@property (nonatomic, strong) UILabel *sheetMusicLabel;
+@property (nonatomic, strong) UILabel *learningTracksLabel;
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
 @end
@@ -31,77 +36,98 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         self.backgroundColor = [UIColor clearColor];
-        self.rootView = [[UIView alloc] init];
-        self.rootView.translatesAutoresizingMaskIntoConstraints = NO;
-        
+        self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+
+        self.title = [[UILabel alloc] init];
+        self.title.font = [TMTheme fontWithStyle:UIFontTextStyleHeadline weight:UIFontWeightSemibold];
+        self.title.adjustsFontForContentSizeCategory = YES;
+        self.title.textColor = [TMTheme primaryText];
+        self.title.numberOfLines = 0;
+
+        self.aka = [[UILabel alloc] init];
+        self.aka.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+        self.aka.adjustsFontForContentSizeCategory = YES;
+        self.aka.textColor = [TMTheme secondaryText];
+        self.aka.numberOfLines = 0;
+
+        self.details = [[UILabel alloc] init];
+        self.details.font = [TMTheme metadataFont];
+        self.details.adjustsFontForContentSizeCategory = YES;
+        self.details.textColor = [TMTheme secondaryText];
+        self.details.numberOfLines = 0;
+
+        self.sheetMusicLabel = [DPTagCell makeMarkerLabel:@"Sheet music"];
+        self.learningTracksLabel = [DPTagCell makeMarkerLabel:@"Learning tracks"];
+        self.hasSheetMusic = [DPTagCell makeMarkerImageView];
+        self.hasLearningTracks = [DPTagCell makeMarkerImageView];
+
+        UIStackView *sheetMusicGroup =
+            [DPTagCell makeMarkerGroup:self.hasSheetMusic label:self.sheetMusicLabel];
+        UIStackView *tracksGroup =
+            [DPTagCell makeMarkerGroup:self.hasLearningTracks label:self.learningTracksLabel];
+
+        UIStackView *markers =
+            [[UIStackView alloc] initWithArrangedSubviews:@[sheetMusicGroup, tracksGroup]];
+        markers.axis = UILayoutConstraintAxisHorizontal;
+        markers.spacing = TMTheme.spaceL;
+        markers.alignment = UIStackViewAlignmentFirstBaseline;
+
+        self.rootView = [[UIStackView alloc] initWithArrangedSubviews:@[
+            self.title, self.aka, self.details, markers
+        ]];
+        UIStackView *stack = (UIStackView *)self.rootView;
+        stack.axis = UILayoutConstraintAxisVertical;
+        stack.spacing = TMTheme.spaceXS;
+        [stack setCustomSpacing:TMTheme.spaceS afterView:self.details];
+        stack.translatesAutoresizingMaskIntoConstraints = NO;
+
         self.busyIndicator = [[DPBusyIndicator alloc] init];
         self.busyIndicator.child = self.rootView;
         self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
-        
+
         [self.contentView addSubview:self.busyIndicator];
-        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[busyIndicator]|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:NSDictionaryOfVariableBindings(busyIndicator)]];
-        [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[busyIndicator]|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:NSDictionaryOfVariableBindings(busyIndicator)]];
-        
-        UILabel *hasSheetMusicLabel = [[UILabel alloc] init];
-        hasSheetMusicLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        hasSheetMusicLabel.text = @"Sheet Music";
-        hasSheetMusicLabel.font = [hasSheetMusicLabel.font fontWithSize:10];
-        UILabel *hasLearningTracksLabel = [[UILabel alloc] init];
-        hasLearningTracksLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        hasLearningTracksLabel.text = @"Learning Tracks";
-        hasLearningTracksLabel.font = [hasLearningTracksLabel.font fontWithSize:10];
-        self.title = [[UILabel alloc] init];
-        self.title.translatesAutoresizingMaskIntoConstraints = NO;
-        self.title.font = [self.title.font fontWithSize:15];
-        self.aka = [[UILabel alloc] init];
-        self.aka.translatesAutoresizingMaskIntoConstraints = NO;
-        self.aka.font = [self.aka.font fontWithSize:12];
-        self.details = [[UILabel alloc] init];
-        self.details.translatesAutoresizingMaskIntoConstraints = NO;
-        self.details.font = [self.aka.font fontWithSize:12];
-        self.hasSheetMusic = [[UIImageView alloc] initWithImage:[DPTagCell offImage]];
-        self.hasSheetMusic.translatesAutoresizingMaskIntoConstraints = NO;
-        self.hasLearningTracks = [[UIImageView alloc] initWithImage:[DPTagCell offImage]];
-        self.hasLearningTracks.translatesAutoresizingMaskIntoConstraints = NO;
-        
-        [self.rootView addSubview:self.title];
-        [self.rootView addSubview:self.aka];
-        [self.rootView addSubview:self.details];
-        [self.rootView addSubview:self.hasSheetMusic];
-        [self.rootView addSubview:self.hasLearningTracks];
-        [self.rootView addSubview:hasLearningTracksLabel];
-        [self.rootView addSubview:hasSheetMusicLabel];
-        
-        NSDictionary *bindings = NSDictionaryOfVariableBindings(title, aka, details, hasSheetMusic, hasLearningTracks, hasLearningTracksLabel, hasSheetMusicLabel);
-        
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-15-[title][aka][details][hasSheetMusic]-15-|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:bindings]];
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-4-[title]|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:bindings]];
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[aka]|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:bindings]];
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[details]|"
-                                                                                 options:0
-                                                                                 metrics:nil
-                                                                                   views:bindings]];
-        [self.rootView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[hasSheetMusic]-[hasSheetMusicLabel]->=40-[hasLearningTracks]-[hasLearningTracksLabel]->=0-|"
-                                                                                 options:NSLayoutFormatAlignAllCenterY
-                                                                                 metrics:nil
-                                                                                   views:bindings]];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.busyIndicator.leadingAnchor
+                constraintEqualToAnchor:self.contentView.layoutMarginsGuide.leadingAnchor],
+            [self.busyIndicator.trailingAnchor
+                constraintEqualToAnchor:self.contentView.layoutMarginsGuide.trailingAnchor],
+            [self.busyIndicator.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
+                                                         constant:TMTheme.spaceM],
+            [self.busyIndicator.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor
+                                                            constant:-TMTheme.spaceM],
+            [self.contentView.heightAnchor
+                constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget]
+        ]];
     }
     return self;
+}
+
++ (UILabel *)makeMarkerLabel:(NSString *)text {
+    UILabel *label = [[UILabel alloc] init];
+    label.text = text;
+    label.font = [TMTheme metadataFont];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.numberOfLines = 0;
+    return label;
+}
+
++ (UIImageView *)makeMarkerImageView {
+    UIImageView *view = [[UIImageView alloc] init];
+    view.contentMode = UIViewContentModeScaleAspectFit;
+    view.preferredSymbolConfiguration =
+        [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleFootnote];
+    [view setContentHuggingPriority:UILayoutPriorityRequired
+                            forAxis:UILayoutConstraintAxisHorizontal];
+    return view;
+}
+
++ (UIStackView *)makeMarkerGroup:(UIImageView *)image label:(UILabel *)label {
+    UIStackView *group = [[UIStackView alloc] initWithArrangedSubviews:@[image, label]];
+    group.axis = UILayoutConstraintAxisHorizontal;
+    group.spacing = TMTheme.spaceXS;
+    group.alignment = UIStackViewAlignmentCenter;
+    group.isAccessibilityElement = NO;
+    return group;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
@@ -162,8 +188,8 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         formatter = [[NSDateFormatter alloc] init];
-        formatter.dateFormat = @"MM/dd/yy";
-        formatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
+        formatter.dateStyle = NSDateFormatterMediumStyle;
+        formatter.timeStyle = NSDateFormatterNoStyle;
     });
     return formatter;
 }
@@ -172,7 +198,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_yes.png"];
+        image = [UIImage systemImageNamed:@"checkmark.circle.fill"];
     });
     return image;
 }
@@ -181,7 +207,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_no.png"];
+        image = [UIImage systemImageNamed:@"circle"];
     });
     return image;
 }
@@ -190,66 +216,66 @@
     NSDateFormatter *formatter = [DPTagCell dateFormatter];
     tagInstance = newTag;
     self.title.text = self.tagInstance.title ?: @"Tag";
-    self.aka.text = self.tagInstance.alternativeTitle ? [@"a.k.a. " stringByAppendingString:self.tagInstance.alternativeTitle] : nil;
-    NSString *detailsString = nil;
+
+    self.aka.text = self.tagInstance.alternativeTitle
+        ? [@"a.k.a. " stringByAppendingString:self.tagInstance.alternativeTitle]
+        : nil;
+    self.aka.hidden = self.tagInstance.alternativeTitle == nil;
+
+    NSMutableArray<NSString *> *facts = [NSMutableArray array];
     if (tagInstance) {
-        detailsString = [@"Posted: " stringByAppendingString:[formatter stringFromDate:tagInstance.posted] ?: @"Unknown"];
+        [facts addObject:[NSString stringWithFormat:@"ID %d", tagInstance.tagId]];
         if (tagInstance.rating != 0) {
-            detailsString = [[NSString stringWithFormat:@"Rating: %1.2f ", tagInstance.rating] stringByAppendingString:detailsString];
+            [facts addObject:[NSString stringWithFormat:@"★ %1.2f", tagInstance.rating]];
         }
         if (tagInstance.downloadCount != 0) {
-            detailsString = [detailsString stringByAppendingFormat:@" DLs: %d", tagInstance.downloadCount];
+            [facts addObject:[NSString stringWithFormat:@"%d downloads", tagInstance.downloadCount]];
         }
-        detailsString = [[NSString stringWithFormat:@"ID: %d ", tagInstance.tagId] stringByAppendingString:detailsString];
+        NSString *posted = tagInstance.posted ? [formatter stringFromDate:tagInstance.posted] : nil;
+        [facts addObject:posted ? [@"Posted " stringByAppendingString:posted] : @"Posted date unknown"];
     }
-    self.details.text = detailsString ?: @"Posted: Rating: DLs:";
-    self.hasLearningTracks.image = self.tagInstance.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
-    self.hasSheetMusic.image = self.tagInstance.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
+    self.details.text = facts.count > 0 ? [facts componentsJoinedByString:@" · "] : @"Loading…";
+
+    BOOL tracks = self.tagInstance.tracks.count > 0;
+    BOOL sheets = self.tagInstance.sheetMusicUri != nil;
+    [self applyMarker:self.hasLearningTracks label:self.learningTracksLabel present:tracks];
+    [self applyMarker:self.hasSheetMusic label:self.sheetMusicLabel present:sheets];
+
+    self.isAccessibilityElement = YES;
+    self.accessibilityLabel = [@[
+        self.title.text ?: @"",
+        self.aka.text ?: @"",
+        self.details.text ?: @"",
+        sheets ? @"Has sheet music" : @"No sheet music",
+        tracks ? @"Has learning tracks" : @"No learning tracks"
+    ] componentsJoinedByString:@". "];
+    self.accessibilityTraits = UIAccessibilityTraitButton;
+}
+
+/// Presence is carried by the symbol shape and the wording, not by colour
+/// alone.
+- (void)applyMarker:(UIImageView *)view label:(UILabel *)label present:(BOOL)present {
+    view.image = present ? [DPTagCell onImage] : [DPTagCell offImage];
+    view.tintColor = present ? [TMTheme affirmative] : [TMTheme secondaryText];
+    label.textColor = present ? [TMTheme primaryText] : [TMTheme secondaryText];
 }
 
 - (CGFloat)calculatedHeight {
-    if (tagInstance.alternativeTitle) {
-        return [DPTagCell withAkaHeight];
-    } else {
-        return [DPTagCell withoutAkaHeight];
-    }
+    return UITableViewAutomaticDimension;
 }
 
 + (CGFloat)withAkaHeight {
-    static CGFloat height;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        DPTag *tag = [[DPTag alloc] init];
-        tag.title = @"A";
-        tag.alternativeTitle = @"A";
-        tag.posted = [NSDate date];
-        DPTagCell *cell = [[DPTagCell alloc] init];
-        cell.tagInstance = tag;
-        height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;
-    });
-    return height;
+    return UITableViewAutomaticDimension;
 }
 
 + (CGFloat)withoutAkaHeight {
-    static CGFloat height;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        DPTag *tag = [[DPTag alloc] init];
-        tag.title = @"A";
-        tag.posted = [NSDate date];
-        DPTagCell *cell = [[DPTagCell alloc] init];
-        cell.tagInstance = tag;
-        height = [cell.rootView systemLayoutSizeFittingSize:CGSizeZero].height;
-    });
-    return height;
+    return UITableViewAutomaticDimension;
 }
 
+/// Rows size themselves from their content now, so every caller gets the
+/// automatic dimension regardless of the tag passed in.
 + (CGFloat)tagHeight:(DPTag *)tag {
-    if (tag.alternativeTitle) {
-        return [self withAkaHeight];
-    } else {
-        return [self withoutAkaHeight];
-    }
+    return UITableViewAutomaticDimension;
 }
 
 @end

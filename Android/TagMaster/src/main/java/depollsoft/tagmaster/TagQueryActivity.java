@@ -8,5 +8,7 @@ public class TagQueryActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.tagqueryactivity);
+    DeskUiKt.enableDeskBack(this);
+    DeskUiKt.applyDeskInsets(findViewById(R.id.resultsRoot), true);
   }
 }

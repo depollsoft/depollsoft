@@ -2,4 +2,21 @@
 <resources>
     <dimen name="widget_margin">8dp</dimen>
     <dimen name="widget_font_size">18sp</dimen>
+
+    <!-- Spacing scale. Tight inside a group, generous between groups. -->
+    <dimen name="tm_space_xs">4dp</dimen>
+    <dimen name="tm_space_s">8dp</dimen>
+    <dimen name="tm_space_m">12dp</dimen>
+    <dimen name="tm_space_l">16dp</dimen>
+    <dimen name="tm_space_xl">24dp</dimen>
+    <dimen name="tm_space_xxl">32dp</dimen>
+
+    <!-- Screen gutter; widens on larger screens (values-w600dp). -->
+    <dimen name="tm_gutter">16dp</dimen>
+
+    <!-- A line of lyrics or notes stays readable rather than running the full
+         width of a tablet. -->
+    <dimen name="tm_content_max_width">600dp</dimen>
+
+    <dimen name="tm_touch_target">48dp</dimen>
 </resources>

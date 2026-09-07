@@ -1,213 +1,203 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<!--
+  Search: the field first, because most of the time the singer already knows the
+  title or a line of the lyrics. The filters below narrow it when they do not.
+-->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/searchScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="@dimen/tm_space_xl">
 
-    <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:scaleType="centerInside"
-        app:srcCompat="@drawable/ic_barberpole">
-    </ImageView>
-
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical">
+    <depollsoft.tagmaster.ReadableWidthLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <LinearLayout
-            android:id="@+id/linearLayout1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_marginTop="16dp">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/tm_gutter"
+            android:paddingEnd="@dimen/tm_gutter"
+            android:paddingTop="@dimen/tm_space_l">
 
-            <EditText
-                android:id="@+id/searchTextBox"
-                android:layout_width="0dip"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/searchField"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:hint="@string/SearchBoxHint"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:maxLines="1">
-            </EditText>
+                app:startIconContentDescription="@string/Search"
+                app:startIconDrawable="@drawable/ic_search">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/searchTextBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/searchButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_m"
+                android:minHeight="@dimen/tm_touch_target"
+                android:text="@string/Search"
+                app:icon="@drawable/ic_search" />
+
+            <TextView
+                android:id="@+id/textView2"
+                style="@style/TextAppearance.TagMaster.SectionHeading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_xxl"
+                android:text="@string/SearchOptions" />
+
+            <LinearLayout
+                android:id="@+id/tableRow1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_m"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/tm_touch_target">
+
+                <TextView
+                    android:id="@+id/textView1"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/tm_space_m"
+                    android:layout_weight="2"
+                    android:labelFor="@+id/sortBySpinner"
+                    android:text="@string/SortBy" />
+
+                <Spinner
+                    android:id="@+id/sortBySpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:entries="@array/SortByChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/TableRow04"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/tm_touch_target">
+
+                <TextView
+                    android:id="@+id/TextView04"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/tm_space_m"
+                    android:layout_weight="2"
+                    android:labelFor="@+id/sheetMusicSpinner"
+                    android:text="@string/SheetMusicSentence" />
+
+                <Spinner
+                    android:id="@+id/sheetMusicSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:entries="@array/SheetMusicChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/TableRow03"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/tm_touch_target">
+
+                <TextView
+                    android:id="@+id/TextView03"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/tm_space_m"
+                    android:layout_weight="2"
+                    android:labelFor="@+id/learningTracksSpinner"
+                    android:text="@string/LearningTracks" />
+
+                <Spinner
+                    android:id="@+id/learningTracksSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:entries="@array/LearningTracksChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/TableRow02"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/tm_touch_target">
+
+                <TextView
+                    android:id="@+id/TextView02"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/tm_space_m"
+                    android:layout_weight="2"
+                    android:labelFor="@+id/partsSpinner"
+                    android:text="@string/Parts" />
+
+                <Spinner
+                    android:id="@+id/partsSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:entries="@array/PartsChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/TableRow01"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/tm_space_s"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/tm_touch_target">
+
+                <TextView
+                    android:id="@+id/TextView01"
+                    style="@style/TextAppearance.TagMaster.FieldLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/tm_space_m"
+                    android:layout_weight="2"
+                    android:labelFor="@+id/tagCollectionSpinner"
+                    android:text="@string/TagCollectionSentence" />
+
+                <Spinner
+                    android:id="@+id/tagCollectionSpinner"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:entries="@array/TagCollectionChoices"
+                    android:minHeight="@dimen/tm_touch_target" />
+            </LinearLayout>
         </LinearLayout>
+    </depollsoft.tagmaster.ReadableWidthLayout>
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_marginTop="10dp"
-            android:text="@string/SearchOptions"
-            android:textSize="24sp"
-            android:textStyle="bold">
-        </TextView>
-
-        <ScrollView
-            android:id="@+id/scrollView1"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:paddingBottom="16dp"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp">
-
-            <TableLayout
-                android:id="@+id/tableLayout1"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TableRow
-                    android:id="@+id/tableRow1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/textView1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="@string/SortBy"
-                        android:textSize="12sp"
-                        android:textStyle="bold">
-                    </TextView>
-
-                    <Spinner
-                        android:id="@+id/sortBySpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:entries="@array/SortByChoices">
-                    </Spinner>
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/TableRow04"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/TextView04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="@string/SheetMusicSentence"
-                        android:textSize="12sp"
-                        android:textStyle="bold">
-                    </TextView>
-
-                    <Spinner
-                        android:id="@+id/sheetMusicSpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:entries="@array/SheetMusicChoices">
-                    </Spinner>
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/TableRow03"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/TextView03"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="@string/LearningTracks"
-                        android:textSize="12sp"
-                        android:textStyle="bold">
-                    </TextView>
-
-                    <Spinner
-                        android:id="@+id/learningTracksSpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:entries="@array/LearningTracksChoices">
-                    </Spinner>
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/TableRow02"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/TextView02"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="@string/Parts"
-                        android:textSize="12sp"
-                        android:textStyle="bold">
-                    </TextView>
-
-                    <Spinner
-                        android:id="@+id/partsSpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:entries="@array/PartsChoices">
-                    </Spinner>
-                </TableRow>
-
-                <TableRow
-                    android:id="@+id/TableRow01"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/TextView01"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="@string/TagCollectionSentence"
-                        android:textSize="12sp"
-                        android:textStyle="bold">
-                    </TextView>
-
-                    <Spinner
-                        android:id="@+id/tagCollectionSpinner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:entries="@array/TagCollectionChoices">
-                    </Spinner>
-                </TableRow>
-            </TableLayout>
-        </ScrollView>
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/searchButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:tint="#FFFFFF"
-        app:fabSize="normal"
-        app:srcCompat="@drawable/ic_search"/>
-
-</FrameLayout>
+</androidx.core.widget.NestedScrollView>

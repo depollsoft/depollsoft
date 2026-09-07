@@ -1,49 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  A saved tag id resolves to a tag over the network, so the row has three states:
+  loading, loaded, and could-not-load. The failed row stays tappable and opens
+  the tag on BarbershopTags.com.
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:minHeight="@dimen/tm_touch_target">
 
-    <ProgressBar
+    <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/loadingBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:indeterminate="true">
-    </ProgressBar>
+        android:indeterminate="true"
+        app:indicatorSize="24dp"
+        app:trackThickness="3dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
 
     <LinearLayout
         android:id="@+id/failedToLoad"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/tm_touch_target"
+        android:paddingStart="@dimen/tm_gutter"
+        android:paddingEnd="@dimen/tm_gutter"
         android:visibility="gone">
 
         <TextView
+            style="@style/TextAppearance.TagMaster.FieldValue"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="@string/failed_to_load_tag"/>
+            android:layout_height="wrap_content"
+            android:text="@string/failed_to_load_tag"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <TextView
             android:id="@+id/tagId"
-            android:layout_marginLeft="4dp"
+            style="@style/TextAppearance.TagMaster.FieldValue"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"/>
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/tm_space_xs"
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
-
 
     <depollsoft.tagmaster.TagItemView
         android:id="@+id/tagItemView"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-    <!-- Just to hold vertical space -->
+    <!-- Holds the row's height steady while the tag is still loading. -->
     <depollsoft.tagmaster.TagItemView
         android:id="@+id/dummyTagItemView"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="invisible"/>
+        android:visibility="invisible" />
 
 </FrameLayout>

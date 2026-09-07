@@ -11,14 +11,18 @@
 #import "DPUtils+Subscripts.h"
 #import "DPTagViewController.h"
 #import "DPAppDelegate.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (atomic, retain) DPTagQueryResult *mostRecentResult;
 @property (nonatomic, retain) UIActivityIndicatorView *activity;
-@property (nonatomic, retain) UITextView *statusLabel;
+@property (nonatomic, retain) UIView *loadingFooter;
+@property (nonatomic, retain) TMEmptyStateView *stateView;
 @property (nonatomic, retain) UITableView *tagTable;
 @property (nonatomic, retain) UIRefreshControl *refreshControl;
+/// YES when the last fetch failed rather than simply returning nothing.
+@property (nonatomic) BOOL lastFetchFailed;
 
 @end
 
@@ -58,63 +62,86 @@
     self.resultSetSize = 20;
     self.maxResults = 1000;
     self.tags = [NSMutableArray array];
-    
-    //self.query = @"lover come back";
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
-    if (![self.parentViewController isKindOfClass:[DPTabBarController class]]) {
-        [DPAppDelegate setUpBackground:self.view];
-    }
-    
-	// Do any additional setup after loading the view.
-    
-    self.tagTable = [[UITableView alloc] init];
+    [DPAppDelegate setUpBackground:self.view];
+
+    self.tagTable = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
     self.tagTable.translatesAutoresizingMaskIntoConstraints = NO;
     self.tagTable.delegate = self;
     self.tagTable.dataSource = self;
     self.tagTable.backgroundColor = [UIColor clearColor];
+    self.tagTable.cellLayoutMarginsFollowReadableWidth = YES;
+    self.tagTable.estimatedRowHeight = 88;
+    self.tagTable.rowHeight = UITableViewAutomaticDimension;
+    self.tagTable.accessibilityIdentifier = @"tagResults";
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
-    
+
     self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-    self.activity.hidesWhenStopped = YES;
-    
-    self.statusLabel = [[UITextView alloc] init];
-    
-    self.tagTable.tableFooterView = self.activity;
-    
+    self.activity.hidesWhenStopped = NO;
+    self.loadingFooter = [self makeLoadingFooter];
+
+    self.stateView = [[TMEmptyStateView alloc] initWithFrame:CGRectZero];
+    self.stateView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.stateView.hidden = YES;
+
     self.refreshControl = [[UIRefreshControl alloc] init];
     [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
-    [self.tagTable addSubview:self.refreshControl];
-    
+    self.tagTable.refreshControl = self.refreshControl;
+
     [self.view addSubview:self.tagTable];
-    
-    NSMutableDictionary *bindings = [NSMutableDictionary dictionaryWithDictionary:NSDictionaryOfVariableBindings(tagTable)];
-    
-    if (![self.parentViewController isKindOfClass:[DPTabBarController class]]) {
-        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[tagTable]|"
-                                                                          options:0
-                                                                          metrics:nil
-                                                                            views:bindings]];
-        [tagTable.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
-    } else {
-        [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[tagTable]|"
-                                                                          options:0
-                                                                          metrics:nil
-                                                                            views:bindings]];
-    }
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[tagTable]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:bindings]];
-    
+    [self.view addSubview:self.stateView];
+
+    // Embedded in Browse the container already sits below the collection
+    // picker; standing alone the list starts at the safe area.
+    NSLayoutYAxisAnchor *topAnchor =
+        self.embedded ? self.view.topAnchor : self.view.safeAreaLayoutGuide.topAnchor;
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tagTable.topAnchor constraintEqualToAnchor:topAnchor],
+        [self.tagTable.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.tagTable.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.tagTable.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+
+        [self.stateView.topAnchor constraintEqualToAnchor:self.tagTable.topAnchor],
+        [self.stateView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.stateView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.stateView.bottomAnchor constraintEqualToAnchor:self.tagTable.bottomAnchor]
+    ]];
+
     [self fetchResults];
-    
+
     self.navigationItem.title = !self.query || self.query.length == 0 ? @"Search Results" : self.query;
+}
+
+- (UIView *)makeLoadingFooter {
+    UILabel *label = [[UILabel alloc] init];
+    label.text = @"Loading more tags…";
+    label.font = [TMTheme metadataFont];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.textColor = [TMTheme secondaryText];
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[self.activity, label]];
+    stack.axis = UILayoutConstraintAxisHorizontal;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = TMTheme.spaceS;
+    stack.layoutMargins = UIEdgeInsetsMake(TMTheme.spaceL, TMTheme.spaceL,
+                                           TMTheme.spaceL, TMTheme.spaceL);
+    stack.layoutMarginsRelativeArrangement = YES;
+
+    UIView *footer = [[UIView alloc] init];
+    [footer addSubview:stack];
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.centerXAnchor constraintEqualToAnchor:footer.centerXAnchor],
+        [stack.topAnchor constraintEqualToAnchor:footer.topAnchor],
+        [stack.bottomAnchor constraintEqualToAnchor:footer.bottomAnchor]
+    ]];
+    CGSize size = [stack systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    footer.frame = CGRectMake(0, 0, size.width, size.height);
+    return footer;
 }
 
 - (void)refresh {
@@ -122,39 +149,84 @@
     self.mostRecentResult.start = 0;
     self.mostRecentResult.count = 0;
     self.tags = [NSMutableArray array];
+    self.hasMoreResults = YES;
+    self.lastFetchFailed = NO;
     [self fetchResults];
 }
 
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    return UIInterfaceOrientationMaskPortrait;
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    return UIInterfaceOrientationPortrait;
-}
-
 - (void)refreshViews {
-    if (self.isLoading) {
-        self.tagTable.tableFooterView = self.activity;
+    BOOL showingResults = self.tags.count > 0;
+
+    if (self.isLoading && showingResults) {
+        self.tagTable.tableFooterView = self.loadingFooter;
         [self.activity startAnimating];
+    } else if (self.lastFetchFailed && showingResults) {
+        [self.activity stopAnimating];
+        UIButton *retry = [UIButton buttonWithType:UIButtonTypeSystem];
+        [retry setTitle:@"Couldn't load more tags. Try Again" forState:UIControlStateNormal];
+        retry.titleLabel.font = [TMTheme bodyFont];
+        retry.titleLabel.adjustsFontForContentSizeCategory = YES;
+        retry.titleLabel.numberOfLines = 0;
+        retry.titleLabel.textAlignment = NSTextAlignmentCenter;
+        [retry addTarget:self action:@selector(retryPage) forControlEvents:UIControlEventTouchUpInside];
+        CGSize size = [retry sizeThatFits:CGSizeMake(self.tagTable.bounds.size.width - 32, CGFLOAT_MAX)];
+        retry.frame = CGRectMake(0, 0, self.tagTable.bounds.size.width, MAX(64, size.height + 24));
+        self.tagTable.tableFooterView = retry;
     } else {
         [self.activity stopAnimating];
-        self.tagTable.tableFooterView = nil;
+        self.tagTable.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     }
-    
-    if (self.statusText) {
-        self.statusLabel.text = self.statusText;
-        self.tagTable.tableHeaderView = self.statusLabel;
-    } else {
-        self.tagTable.tableHeaderView = nil;
-    }
-    [self.statusLabel sizeToFit];
-    [self.activity sizeToFit];
+
+    [self updateStateView];
+
     if ([self.refreshControl isRefreshing]) {
         [self.refreshControl endRefreshing];
     }
-    
+
     [self.tagTable reloadData];
+}
+
+/// Empty, error, and first-load states share one surface; each names what
+/// happened and, where the singer can act, offers the way forward.
+- (void)updateStateView {
+    __weak typeof(self) weakSelf = self;
+    if (self.tags.count > 0) {
+        self.stateView.hidden = YES;
+        self.tagTable.hidden = NO;
+        return;
+    }
+
+    self.tagTable.hidden = NO;
+    if (self.isLoading) {
+        [self.stateView configureWithSymbolName:@"music.note.list"
+                                          title:@"Finding tags…"
+                                        message:@"Fetching from BarbershopTags.com."
+                                    actionTitle:nil
+                                         action:nil];
+    } else if (self.lastFetchFailed) {
+        [self.stateView configureWithSymbolName:@"wifi.exclamationmark"
+                                          title:@"Couldn't reach BarbershopTags.com"
+                                        message:self.statusText ?: @"The request did not complete."
+                                    actionTitle:@"Try Again"
+                                         action:^{
+            [weakSelf refresh];
+        }];
+    } else {
+        [self.stateView configureWithSymbolName:@"magnifyingglass"
+                                          title:@"No tags matched"
+                                        message:@"Try fewer filters, or a shorter search."
+                                    actionTitle:@"Try Again"
+                                         action:^{
+            [weakSelf refresh];
+        }];
+    }
+    self.stateView.hidden = NO;
+}
+
+- (void)retryPage {
+    self.lastFetchFailed = NO;
+    self.hasMoreResults = YES;
+    [self fetchResults];
 }
 
 - (void)fetchResults {
@@ -180,6 +252,7 @@
                 [NSException raise:NSInternalInconsistencyException format:@"Result should be non-nil"];
             };
             self.statusText = nil;
+            self.lastFetchFailed = NO;
             self.mostRecentResult = result;
             [(NSMutableArray *)self.tags addObjectsFromArray:result.tags];
             self.hasMoreResults = result.start + result.count < MIN(result.available, self.maxResults);
@@ -188,7 +261,9 @@
             }
         }
         @catch (NSException *exception) {
-            self.statusText = [NSString stringWithFormat:@"An error has occurred: %@", exception.reason];
+            self.lastFetchFailed = YES;
+            self.hasMoreResults = NO;
+            self.statusText = [NSString stringWithFormat:@"%@", exception.reason ?: @"The request failed."];
         }
         @finally {
             self.isLoading = NO;
@@ -215,7 +290,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [DPTagCell tagHeight:self.tags[indexPath.row]];
+    return UITableViewAutomaticDimension;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {

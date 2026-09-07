@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown in place of the tag when it could not be fetched. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/detailError"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/tm_space_xxl"
+    android:paddingEnd="@dimen/tm_space_xxl"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/detailErrorText"
+        style="@style/TextAppearance.TagMaster.FieldValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/LoadTagFailed"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/detailRetryButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tm_space_l"
+        android:minHeight="@dimen/tm_touch_target"
+        android:text="@string/Retry" />
+
+</LinearLayout>

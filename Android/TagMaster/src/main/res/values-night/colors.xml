@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Dark is the afterglow scheme: charcoal, not black, so a lit room at
+         midnight does not glare and the blue still reads as the live control. -->
     <color name="barberpole">#11DDDDDD</color>
+
+    <color name="tm_primary">#5FD4F4</color>
+    <color name="tm_on_primary">#003544</color>
+    <color name="tm_primary_container">#004D61</color>
+    <color name="tm_on_primary_container">#B6EAFF</color>
+    <color name="tm_secondary">#C4C7C8</color>
+    <color name="tm_on_secondary">#2D3132</color>
+    <color name="tm_secondary_container">#474747</color>
+    <color name="tm_on_secondary_container">#E1E3E4</color>
+    <color name="tm_background">#191C1D</color>
+    <color name="tm_on_background">#E1E3E4</color>
+    <color name="tm_surface">#191C1D</color>
+    <color name="tm_on_surface">#E1E3E4</color>
+    <color name="tm_surface_variant">#3F484B</color>
+    <color name="tm_on_surface_variant">#BFC8CB</color>
+    <color name="tm_surface_container">#252829</color>
+    <color name="tm_outline">#899295</color>
+    <color name="tm_outline_variant">#3F484B</color>
+    <color name="tm_error">#FFB4AB</color>
+    <color name="tm_on_error">#690005</color>
+    <color name="tm_error_container">#93000A</color>
+    <color name="tm_on_error_container">#FFDAD6</color>
 </resources>

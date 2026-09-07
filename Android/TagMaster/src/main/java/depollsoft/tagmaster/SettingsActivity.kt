@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.MenuItem
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.*
@@ -26,7 +25,6 @@ import com.bindroid.utils.uibind
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import depollsoft.lib.compat.ui.ActionBars
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
 import java.util.*
@@ -63,6 +61,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableDeskBack()
         this.setContentView(R.layout.settingsview)
 
         this.minDownloadSpinner = this.findViewById(R.id.minimumDownloadSpinner) as Spinner
@@ -318,6 +317,8 @@ class SettingsActivity : AppCompatActivity() {
             BindingMode.TWO_WAY,
         )
 
+        findViewById<View>(R.id.settingsRoot).applyDeskInsets()
+
         supportActionBar?.title = "Tag Master".makeTitleString(this)
         setupPrivateBuildDiagnostics()
     }
@@ -345,16 +346,6 @@ class SettingsActivity : AppCompatActivity() {
         keyCode: Int,
         event: KeyEvent,
     ): Boolean = keyCode == KeyEvent.KEYCODE_BACK && this.loggingIn || super.onKeyDown(keyCode, event)
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
-            val intent = Intent(this, MeActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            this.startActivity(intent)
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
 
     override fun onResume() {
         super.onResume()

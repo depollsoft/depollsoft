@@ -5,6 +5,9 @@
 //  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  The singing desk. Four actions a group reaches for — find, random, open by
+//  ID, teachable — and then the favorites themselves, ready to sing from.
+//
 
 #import "DPHomeViewController.h"
 
@@ -27,7 +30,7 @@
 @implementation DPHomeViewController
 
 - (id)init {
-    return [self initWithStyle:UITableViewStyleGrouped];
+    return [self initWithStyle:UITableViewStyleInsetGrouped];
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -40,78 +43,101 @@
 }
 
 - (void)viewDidLoad {
-    UIFont *font = [UIFont fontWithName:@"wickhop handwriting" size:20];
-    
     [super viewDidLoad];
-    [DPAppDelegate setUpBackground:self.view];
-    
+    [DPAppDelegate setUpBackground:self.tableView];
+
     self.busyIndicator = [[DPBusyIndicator alloc] init];
     self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
-    
+
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
-    self.tableView.backgroundColor = [UIColor clearColor];
-    
-    DPGridLayout *aboutFooter = [[DPGridLayout alloc] init];
-    aboutFooter.rowDimensions = @[
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5]
-                                  ];
-    UIButton *copyrightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    NSString *copyright = [NSString stringWithFormat:@"Depollsoft © %@", [@__DATE__ substringFromIndex:11-4]];
-    [copyrightButton setTitle:copyright forState:UIControlStateNormal];
-    copyrightButton.url = [NSURL URLWithString:@"http://apps.depoll.com"];
-    copyrightButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
-    UIButton *bbsTagsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [bbsTagsButton setTitle:@"Content provided by BarbershopTags.com" forState:UIControlStateNormal];
-    bbsTagsButton.url = [NSURL URLWithString:@"http://www.barbershoptags.com"];
-    bbsTagsButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
-    UIButton *touButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [touButton setTitle:@"Terms of Use" forState:UIControlStateNormal];
-    touButton.url = [NSURL URLWithString:@"http://apps.depoll.com/terms-of-use"];
-    touButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
-    UIButton *donateButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [donateButton setTitle:@"Donate" forState:UIControlStateNormal];
-    donateButton.url = [NSURL URLWithString:@"http://www.davidpoll.com/applications/tag-master/donate"];
-    donateButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
-    [aboutFooter addSubview:copyrightButton row:0 column:0];
-    [aboutFooter addSubview:bbsTagsButton row:1 column:0];
-    [aboutFooter addSubview:touButton row:2 column:0];
-    [aboutFooter addSubview:donateButton row:3 column:0];
-    CGSize aboutFooterSize = [aboutFooter systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
-    aboutFooter.frame = CGRectMake(0, 0, aboutFooterSize.width, aboutFooterSize.height);
-    self.tableView.tableFooterView = aboutFooter;
-    
-    UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.font = font;
-    titleLabel.text = @"Tag Master";
-    [titleLabel sizeToFit];
-    titleLabel.frame = CGRectMake(titleLabel.frame.origin.x, titleLabel.frame.origin.y, titleLabel.frame.size.width, titleLabel.frame.size.height * 2);
-    self.navigationItem.titleView = titleLabel;
+    self.tableView.estimatedRowHeight = 72;
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.cellLayoutMarginsFollowReadableWidth = YES;
+
+    self.tableView.tableFooterView = [self makeDeskFooter];
+
+    self.navigationItem.title = @"Home";
+    self.navigationItem.titleView = [TMTheme wordmarkLabel:@"Tag Master"];
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
-    
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
+
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    
-    self.navigationItem.rightBarButtonItem =
-        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
-                                             target:self
-                                             action:@selector(search)];
+    self.editButtonItem.accessibilityLabel = @"Edit favorites";
+
+    UIBarButtonItem *settings = [DPAppDelegate barButtonItemWithSystemName:@"gearshape"
+                                                                    target:self
+                                                                    action:@selector(openSettings)];
+    settings.accessibilityLabel = @"Settings";
+    self.navigationItem.rightBarButtonItem = settings;
+
     [self viewDidLoadExtension];
 }
 
+/// Attribution and the app's own quiet identity mark, at the foot of the desk.
+- (UIView *)makeDeskFooter {
+    UIStackView *links = [[UIStackView alloc] init];
+    links.axis = UILayoutConstraintAxisVertical;
+    links.alignment = UIStackViewAlignmentCenter;
+    links.spacing = TMTheme.spaceS;
+
+    NSArray<NSArray *> *entries = @[
+        @[@"Content provided by BarbershopTags.com", @"http://www.barbershoptags.com"],
+        @[@"Terms of Use", @"http://apps.depoll.com/terms-of-use"],
+        @[@"Donate", @"http://www.davidpoll.com/applications/tag-master/donate"],
+        @[[NSString stringWithFormat:@"Depollsoft © %@", [@__DATE__ substringFromIndex:11-4]],
+          @"http://apps.depoll.com"]
+    ];
+    for (NSArray *entry in entries) {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+        [button setTitle:entry[0] forState:UIControlStateNormal];
+        button.url = [NSURL URLWithString:entry[1]];
+        button.titleLabel.font = [TMTheme metadataFont];
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        button.titleLabel.numberOfLines = 0;
+        button.titleLabel.textAlignment = NSTextAlignmentCenter;
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+        [links addArrangedSubview:button];
+    }
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[
+        [TMTheme identityMarkWithHeight:64], links
+    ]];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = TMTheme.spaceL;
+    stack.layoutMargins = UIEdgeInsetsMake(TMTheme.spaceXL, TMTheme.spaceL,
+                                           TMTheme.spaceXL, TMTheme.spaceL);
+    stack.layoutMarginsRelativeArrangement = YES;
+
+    CGSize size = [stack systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    stack.frame = CGRectMake(0, 0, size.width, size.height);
+    return stack;
+}
+
+- (void)openSettings {
+    [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
+}
+
 - (void)search {
+    // Search is a destination of its own; bring it forward rather than stacking
+    // a second copy of it on top of Home.
+    UITabBarController *root = self.tabBarController;
+    if ([root isKindOfClass:[TMRootController class]]) {
+        [(TMRootController *)root focusSearch];
+        return;
+    }
     [self.navigationController pushViewController:[[DPSearchViewController alloc] init] animated:YES];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.tableView reloadData];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
-    
+
     UIView *navView = self.navigationController.view;
     [navView addSubview:self.busyIndicator];
     [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_busyIndicator]|"
@@ -138,99 +164,137 @@
 
 - (NSArray *)navigationItems {
     NSMutableArray *arr = [NSMutableArray array];
+
     [arr addObject:@{
-                     @"title": @"Browse",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
-    }
-                     }];
-    if ([DPAppDelegate teachable].count > 0) {
-        [arr addObject:@{
-                         @"title": @"Teachable Tags",
-                         @"action": ^() {
-            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init] animated:YES];
+        @"title": @"Find a tag",
+        @"detail": @"Search titles and lyrics, filter by parts and materials",
+        @"symbol": @"magnifyingglass",
+        @"action": ^() {
+            [self search];
         }
-                         }];
-    }
+    }];
+
     [arr addObject:@{
-                     @"title": @"Random Tag",
-                     @"action": ^() {
-        [self.busyIndicator incrementBusyCount];
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            @try {
-                DPTagQueryResult *result = [DPTag query:nil
-                                        numberOfResults:0
-                                                  start:0
-                                                  parts:nil
-                                         learningTracks:[DPSettingsController learningTracks]
-                                             sheetMusic:[DPSettingsController sheetMusic]
-                                             collection:DPTagCollectionNone
-                                                 sortBy:DPTagSortNone
-                                          minimumRating:[DPSettingsController minRating]
-                                       minimumDownloads:[DPSettingsController minDownloads]
-                                                  cache:NO
-                                              fieldList:@"id"];
-                if (result.available <= 0) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.busyIndicator decrementBusyCount];
-                    });
-                    return;
-                }
+        @"title": @"Random Tag",
+        @"detail": @"Something new to sing, inside your filters",
+        @"symbol": @"shuffle",
+        @"action": ^() {
+            [self openRandomTag];
+        }
+    }];
 
-                int chosenResult = arc4random_uniform((uint32_t)result.available);
-
-                result = [DPTag query:nil
-                      numberOfResults:1
-                                start:chosenResult
-                                parts:nil
-                       learningTracks:[DPSettingsController learningTracks]
-                           sheetMusic:[DPSettingsController sheetMusic]
-                           collection:DPTagCollectionNone
-                               sortBy:DPTagSortNone
-                        minimumRating:[DPSettingsController minRating]
-                     minimumDownloads:[DPSettingsController minDownloads]
-                                cache:NO
-                            fieldList:@"id"];
-                DPTag *tag = result.tags.firstObject;
-
-                if (!tag) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.busyIndicator decrementBusyCount];
-                    });
-                    return;
-                }
-
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    if (tag) {
-                        DPTagViewController *tagController = [[DPTagViewController alloc] init];
-                        tagController.tagId = tag.tagId;
-                        [self.navigationController pushViewController:tagController animated:YES];
-                    }
-                    [self.busyIndicator decrementBusyCount];
-                });
-            }
-            @catch (NSException *exception) {
-                [self.busyIndicator decrementBusyCount];
-            }
-        });
-    }
-                     }];
-    
     [arr addObject:@{
-                     @"title": @"Open Tag",
-                     @"action": ^() {
-        [self openTag];
-    }
-                     }];
-    
+        @"title": @"Open Tag ID",
+        @"detail": @"Jump straight to a number someone called out",
+        @"symbol": @"number",
+        @"action": ^() {
+            [self openTag];
+        }
+    }];
+
     [arr addObject:@{
-                     @"title": @"Settings",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
-    }
-                     }];
-    
+        @"title": @"Teachable Tags",
+        @"detail": [self teachableDetailText],
+        @"symbol": @"person.2.wave.2",
+        @"action": ^() {
+            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init]
+                                                 animated:YES];
+        }
+    }];
+
     return arr;
+}
+
+- (NSString *)teachableDetailText {
+    NSUInteger count = [DPAppDelegate teachable].count;
+    if (count == 0) {
+        return @"The tags you are ready to teach";
+    }
+    if (count == 1) {
+        return @"1 tag you are ready to teach";
+    }
+    return [NSString stringWithFormat:@"%lu tags you are ready to teach", (unsigned long)count];
+}
+
+- (void)openRandomTag {
+    [self.busyIndicator incrementBusyCount];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @try {
+            DPTagQueryResult *result = [DPTag query:nil
+                                    numberOfResults:0
+                                              start:0
+                                              parts:nil
+                                     learningTracks:[DPSettingsController learningTracks]
+                                         sheetMusic:[DPSettingsController sheetMusic]
+                                         collection:DPTagCollectionNone
+                                             sortBy:DPTagSortNone
+                                      minimumRating:[DPSettingsController minRating]
+                                   minimumDownloads:[DPSettingsController minDownloads]
+                                              cache:NO
+                                          fieldList:@"id"];
+            if (result.available <= 0) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.busyIndicator decrementBusyCount];
+                    [self reportRandomTagProblem:@"No tags match your random-tag filters."
+                                        recovery:@"Loosen the minimum rating or downloads in Settings."];
+                });
+                return;
+            }
+
+            int chosenResult = arc4random_uniform((uint32_t)result.available);
+
+            result = [DPTag query:nil
+                  numberOfResults:1
+                            start:chosenResult
+                            parts:nil
+                   learningTracks:[DPSettingsController learningTracks]
+                       sheetMusic:[DPSettingsController sheetMusic]
+                       collection:DPTagCollectionNone
+                           sortBy:DPTagSortNone
+                    minimumRating:[DPSettingsController minRating]
+                 minimumDownloads:[DPSettingsController minDownloads]
+                            cache:NO
+                        fieldList:@"id"];
+            DPTag *tag = result.tags.firstObject;
+
+            if (!tag) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.busyIndicator decrementBusyCount];
+                    [self reportRandomTagProblem:@"That tag could not be loaded."
+                                        recovery:@"Try again in a moment."];
+                });
+                return;
+            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                DPTagViewController *tagController = [[DPTagViewController alloc] init];
+                tagController.tagId = tag.tagId;
+                [self.navigationController pushViewController:tagController animated:YES];
+                [self.busyIndicator decrementBusyCount];
+            });
+        }
+        @catch (NSException *exception) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.busyIndicator decrementBusyCount];
+                [self reportRandomTagProblem:@"Tag Master could not reach BarbershopTags.com."
+                                    recovery:@"Check your connection and try again."];
+            });
+        }
+    });
+}
+
+- (void)reportRandomTagProblem:(NSString *)problem recovery:(NSString *)recovery {
+    UIAlertController *alert =
+        [UIAlertController alertControllerWithTitle:@"Random Tag"
+                                            message:[NSString stringWithFormat:@"%@ %@", problem, recovery]
+                                     preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Try Again"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction * _Nonnull action) {
+        [self openRandomTag];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -247,12 +311,32 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == 0) {
-        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
+                                                      reuseIdentifier:nil];
         NSArray *items = [self navigationItems];
         if (indexPath.row < items.count) {
-            cell.textLabel.text = items[indexPath.row][@"title"];
+            NSDictionary *item = items[indexPath.row];
+            UIListContentConfiguration *content = [UIListContentConfiguration subtitleCellConfiguration];
+            content.text = item[@"title"];
+            content.textProperties.font = [TMTheme fontWithStyle:UIFontTextStyleBody
+                                                          weight:UIFontWeightSemibold];
+            content.textProperties.color = [TMTheme primaryText];
+            content.secondaryText = item[@"detail"];
+            content.secondaryTextProperties.font = [TMTheme metadataFont];
+            content.secondaryTextProperties.color = [TMTheme secondaryText];
+            content.secondaryTextProperties.numberOfLines = 0;
+            content.image = [UIImage systemImageNamed:item[@"symbol"]];
+            content.imageProperties.tintColor = [TMTheme tint];
+            content.imageProperties.preferredSymbolConfiguration =
+                [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleTitle3];
+            content.imageToTextPadding = TMTheme.spaceM;
+            content.directionalLayoutMargins =
+                NSDirectionalEdgeInsetsMake(TMTheme.spaceM, 0, TMTheme.spaceM, 0);
+            cell.contentConfiguration = content;
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.accessibilityLabel = item[@"title"];
+            cell.accessibilityHint = item[@"detail"];
         }
-        cell.backgroundColor = [UIColor clearColor];
         return cell;
     }
 
@@ -267,11 +351,19 @@
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
         case 0:
-            return @"Main";
+            return nil;
         case 1:
             return @"Favorites";
         default:
             break;
+    }
+    return nil;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    if (section == 1 && [DPAppDelegate favorites].count == 0) {
+        return @"Tags you favorite land here, ready for the next afterglow. "
+               @"Open any tag and use the tag menu to add it.";
     }
     return nil;
 }
@@ -306,21 +398,17 @@
         NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
         if (indexPath.row < favorites.count) {
             [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
+            [TMTheme saved];
         }
     }
 }
 
+- (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return @"Remove";
+}
+
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
-        return [super tableView:tableView heightForRowAtIndexPath:indexPath];
-    } else {
-        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-        if (indexPath.row >= favorites.count) {
-            return tableView.rowHeight;
-        }
-        DPTag *tag = [DPTag loadFromCache:favorites[indexPath.row].intValue];
-        return [DPTagCell tagHeight:tag];
-    }
+    return UITableViewAutomaticDimension;
 }
 
 - (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
@@ -334,6 +422,7 @@
 // Override to support rearranging the table view.
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
     [DPAppDelegate moveFavoriteAt:fromIndexPath.row to:toIndexPath.row];
+    [TMTheme saved];
 }
 
 // Override to support conditional rearranging of the table view.

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7AA1000000000000000B0001 /* TMTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1000000000000000A0001 /* TMTheme.swift */; };
+		7AA1000000000000000B0002 /* TMRootController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1000000000000000A0002 /* TMRootController.swift */; };
+		7AA1000000000000000B0003 /* TMRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1000000000000000A0003 /* TMRefreshTests.swift */; };
+		7AA1000000000000000B0004 /* TMDeskUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1000000000000000A0004 /* TMDeskUITests.swift */; };
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
@@ -152,6 +156,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7AA1000000000000000A0001 /* TMTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTheme.swift; sourceTree = "<group>"; };
+		7AA1000000000000000A0002 /* TMRootController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRootController.swift; sourceTree = "<group>"; };
+		7AA1000000000000000A0003 /* TMRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRefreshTests.swift; sourceTree = "<group>"; };
+		7AA1000000000000000A0004 /* TMDeskUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDeskUITests.swift; sourceTree = "<group>"; };
 		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -350,6 +358,7 @@
 				7C2841862AFC447839A50EF4 /* SearchUITests.swift */,
 				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
 				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
+				7AA1000000000000000A0004 /* TMDeskUITests.swift */,
 				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
 			);
 			name = tagmasterUITests;
@@ -454,6 +463,8 @@
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
 				638E73A017F7E21A000FFE53 /* DPHomeViewController.m */,
 				1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */,
+				7AA1000000000000000A0002 /* TMRootController.swift */,
+				7AA1000000000000000A0001 /* TMTheme.swift */,
 				639F292417F94E9300517583 /* DPSearchViewController.h */,
 				639F292517F94E9300517583 /* DPSearchViewController.m */,
 				639F292717FA643700517583 /* DPSettingsController.h */,
@@ -513,6 +524,7 @@
 				991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
 				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
+				7AA1000000000000000A0003 /* TMRefreshTests.swift */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -781,6 +793,8 @@
 				63336A4A17F63E7700BC1EE2 /* DPTagSummaryController.m in Sources */,
 				638E73A117F7E21A000FFE53 /* DPHomeViewController.m in Sources */,
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
+				7AA1000000000000000B0002 /* TMRootController.swift in Sources */,
+				7AA1000000000000000B0001 /* TMTheme.swift in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
@@ -822,6 +836,7 @@
 				C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
 				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
+				7AA1000000000000000B0003 /* TMRefreshTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -834,6 +849,7 @@
 				594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */,
 				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
 				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
+				7AA1000000000000000B0004 /* TMDeskUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

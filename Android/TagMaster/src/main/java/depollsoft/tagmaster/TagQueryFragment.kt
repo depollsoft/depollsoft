@@ -2,7 +2,15 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.AbsListView
 import android.widget.AbsListView.OnScrollListener
 import android.widget.ListView
@@ -22,37 +30,45 @@ class TagQueryFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.setHasOptionsMenu(true)
-        this.retainInstance = true
-
+        savedInstanceState?.getString(QUERY_MODEL)?.let { serialized ->
+            model = JsonSerializer.deserialize(serialized) as? QueryModel
+        }
         this.refresh()
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val rootView = inflater.inflate(R.layout.tagqueryview, container, false)
 
         try {
             (rootView.findViewById(R.id.queryResultListView) as ListView)
-                .setOnScrollListener(object : OnScrollListener {
-
-                    override fun onScroll(
-                        view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int,
-                        totalItemCount: Int
-                    ) {
-                        if (this@TagQueryFragment.model != null && Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2) {
-                            this@TagQueryFragment.model!!.fetchResults(
-                                ThreadSwitchContext(this@TagQueryFragment.activity)
-                            )
+                .setOnScrollListener(
+                    object : OnScrollListener {
+                        override fun onScroll(
+                            view: AbsListView,
+                            firstVisibleItem: Int,
+                            visibleItemCount: Int,
+                            totalItemCount: Int,
+                        ) {
+                            if (this@TagQueryFragment.model != null &&
+                                Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2
+                            ) {
+                                this@TagQueryFragment.model!!.fetchResults(
+                                    ThreadSwitchContext(this@TagQueryFragment.activity),
+                                )
+                            }
                         }
-                    }
 
-                    override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {}
-                })
+                        override fun onScrollStateChanged(
+                            view: AbsListView,
+                            scrollState: Int,
+                        ) {
+                        }
+                    },
+                )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -61,48 +77,57 @@ class TagQueryFragment : Fragment() {
             R.id.queryResultListView,
             "Adapter",
             { model?.tags },
-            AdapterConverter<TagItemView>()
+            AdapterConverter<TagItemView>(),
         )
 
         rootView.bindTo(
             R.id.loadingProgressBar,
             "Visibility",
             { model?.isLoading },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
         rootView.bindTo(
             R.id.loadingProgressBar,
             "Indeterminate",
             { model?.isLoading },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.statusTextView, "Text", { model?.statusText })
+        // The empty and error states are the same block: a sentence and a way back.
         rootView.bindTo(
-            R.id.statusTextView,
+            R.id.statusContainer,
             "Visibility",
             { model?.statusText },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
+
+        rootView.findViewById<View>(R.id.retryButton).setOnClickListener {
+            this@TagQueryFragment.refresh()
+        }
 
         return rootView
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Only the visible query owns Refresh, including nested Browse pages.
+        (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.mainmenu, menu)
+            }
 
-        if (menu == null || inflater == null) {
-            return
-        }
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                if (menuItem.itemId != R.id.refreshMenuItem) return false
+                refresh()
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
 
-        inflater.inflate(R.menu.mainmenu, menu)
-
-        menu.findItem(R.id.refreshMenuItem).setOnMenuItemClickListener {
-            this@TagQueryFragment.refresh()
-            true
-        }
-
-        return
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        model?.let { outState.putString(QUERY_MODEL, JsonSerializer.serialize(it).toString()) }
     }
 
     fun onSearchRequested(): Boolean {
@@ -120,6 +145,8 @@ class TagQueryFragment : Fragment() {
                 this.model = QueryModel()
             }
         }
+        // A retry after a failed fetch has to be allowed to start again.
+        this.model!!.hasMoreResults = true
         this.model!!.refresh(ThreadSwitchContext(this.activity))
     }
 
@@ -127,5 +154,4 @@ class TagQueryFragment : Fragment() {
         @JvmField
         val QUERY_MODEL = "QueryModel"
     }
-
 }

@@ -9,6 +9,7 @@
 #import "DPTagPageControllerBase.h"
 #import "DPLabel.h"
 #import "UIView+DPUtils.h"
+#import "tagmaster-Swift.h"
 
 @interface DPTagPageControllerBase ()
 
@@ -39,23 +40,32 @@
     // Dispose of any resources that can be recreated.
 }
 
+/// Field labels, body copy, and screen titles all ride Dynamic Type: the old
+/// frozen 12pt and 24pt sizes ignored the reader's setting entirely.
 - (UILabel *)makeHeader:(NSString *)name {
     UILabel *label = [[UILabel alloc] init];
     label.text = name;
-    label.font = [UIFont boldSystemFontOfSize:12];
+    label.font = [TMTheme fieldLabelFont];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.textColor = [TMTheme secondaryText];
+    label.numberOfLines = 0;
     [label setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     return label;
 }
 
 - (UILabel *)makeBodyLabel {
     UILabel *label = [[DPLabel alloc] init];
-    label.font = [UIFont systemFontOfSize:12];
+    label.font = [TMTheme bodyFont];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.textColor = [TMTheme primaryText];
     return label;
 }
 
 - (UILabel *)makeTitleLabel {
     UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.font = [UIFont boldSystemFontOfSize:24];
+    titleLabel.font = [TMTheme screenTitleFont];
+    titleLabel.adjustsFontForContentSizeCategory = YES;
+    titleLabel.textColor = [TMTheme ink];
     titleLabel.numberOfLines = 0;
     return titleLabel;
 }
@@ -70,7 +80,7 @@
 }
 
 - (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller {
-    view = [view padHorizontal:8 vertical:0];
+    view = [view padHorizontal:TMTheme.spaceL vertical:TMTheme.spaceS];
     view.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
     NSDictionary *bindings = NSDictionaryOfVariableBindings(view);
@@ -80,17 +90,16 @@
                                                                      metrics:nil
                                                                        views:bindings]];
     
-    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[view]|"
-                                                                     options:0
-                                                                     metrics:nil
-                                                                       views:bindings]];
-    [scroller addConstraint:[NSLayoutConstraint constraintWithItem:view
-                                                         attribute:NSLayoutAttributeWidth
-                                                         relatedBy:NSLayoutRelationEqual
-                                                            toItem:scroller
-                                                         attribute:NSLayoutAttributeWidth
-                                                        multiplier:1
-                                                          constant:0]];
+    // Content stays within a readable measure and centres itself on wide
+    // screens instead of stretching a lyric across a full iPad.
+    NSLayoutConstraint *fullWidth = [view.widthAnchor constraintEqualToAnchor:scroller.widthAnchor];
+    fullWidth.priority = UILayoutPriorityRequired - 1;
+    [NSLayoutConstraint activateConstraints:@[
+        [view.centerXAnchor constraintEqualToAnchor:scroller.centerXAnchor],
+        [view.widthAnchor constraintLessThanOrEqualToAnchor:scroller.widthAnchor],
+        [view.widthAnchor constraintLessThanOrEqualToConstant:700],
+        fullWidth
+    ]];
     
     id leftGuide = self.view.leftSafeAreaLayoutGuide;
     id rightGuide = self.view.rightSafeAreaLayoutGuide;

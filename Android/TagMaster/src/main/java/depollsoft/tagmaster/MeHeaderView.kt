@@ -1,30 +1,30 @@
 package depollsoft.tagmaster
 
-import android.app.ProgressDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
-import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
 import bolts.Continuation
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import depollsoft.tagmaster.barbershop.Tag
-import depollsoft.tagmaster.TeachableTagsModel.teachableTagIds
 import depollsoft.tagmaster.barbershop.TagQueryResult
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.ReflectedProperty
-import com.bindroid.BindingMode
-import com.bindroid.converters.BoolConverter
-import com.bindroid.utils.Property
-import depollsoft.lib.kotlin.ui.safeDismiss
-import java.util.*
+import java.util.Random
 
+/**
+ * The three ways into a tag.
+ *
+ * "Find a tag" moves the desk to its Search destination when the view is hosted
+ * by the shell, and opens the search screen on its own when it is not — the same
+ * action either way.
+ */
 class MeHeaderView : LinearLayout {
     constructor(context: Context?) : super(context) {
         init()
@@ -34,19 +34,92 @@ class MeHeaderView : LinearLayout {
         init()
     }
 
+    private val progress: LinearProgressIndicator?
+        get() = findViewById(R.id.homeProgress)
+
     private fun init() {
         inflate(this.context, R.layout.meviewheader, this)
-        if (!this.isInEditMode) {
-            val randomTagButton = findViewById<View>(R.id.randomTagButton)
-            randomTagButton.setOnClickListener {
-                val progress = ProgressDialog(this@MeHeaderView.context)
-                progress.setMessage("Loading...")
-                progress.isIndeterminate = true
-                progress.show()
+        if (this.isInEditMode) return
+
+        findViewById<View>(R.id.findTagButton).setOnClickListener {
+            val host = deskHost()
+            if (host != null) {
+                host.showDestination(MeActivity.SEARCH)
+            } else {
+                context.startActivity(Intent(context, TagSearchActivity::class.java))
+            }
+        }
+
+        findViewById<View>(R.id.randomTagButton).setOnClickListener { loadRandomTag() }
+
+        findViewById<View>(R.id.openByIdButton).setOnClickListener { promptForTagId() }
+    }
+
+    private fun deskHost(): MeActivity? {
+        var ctx: Context? = this.context
+        while (ctx is android.content.ContextWrapper) {
+            if (ctx is MeActivity) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
+    }
+
+    private fun setBusy(busy: Boolean) {
+        progress?.visibility = if (busy) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.randomTagButton).isEnabled = !busy
+    }
+
+    private fun report(
+        message: String,
+        retry: (() -> Unit)? = null,
+    ) {
+        val bar = Snackbar.make(this, message, Snackbar.LENGTH_LONG)
+        if (retry != null) {
+            bar.setAction(R.string.Retry) { retry() }
+        }
+        bar.show()
+    }
+
+    /**
+     * Picks a tag uniformly from everything that passes the singer's Random Tag
+     * filters: one query for the count, one for the tag at that offset.
+     */
+    private fun loadRandomTag() {
+        setBusy(true)
+        Tag.query(
+            null,
+            0,
+            0,
+            null,
+            SettingsModel.randomLearningTracksFilter,
+            SettingsModel.randomSheetMusicFilter,
+            null,
+            null,
+            SettingsModel.minimumRandomTagRating,
+            SettingsModel.minimumRandomDownloads,
+            false,
+            "id",
+        ).continueWith(
+            Continuation<TagQueryResult, Void?> { task ->
+                if (task.isFaulted) {
+                    post {
+                        setBusy(false)
+                        report(context.getString(R.string.RandomTagFailed)) { loadRandomTag() }
+                    }
+                    return@Continuation null
+                }
+                if (task.result.available == 0) {
+                    post {
+                        setBusy(false)
+                        report(context.getString(R.string.RandomTagNoMatches))
+                    }
+                    return@Continuation null
+                }
+                val chosenNumber = Random().nextInt(task.result.available)
                 Tag.query(
                     null,
-                    0,
-                    0,
+                    1,
+                    chosenNumber,
                     null,
                     SettingsModel.randomLearningTracksFilter,
                     SettingsModel.randomSheetMusicFilter,
@@ -55,136 +128,69 @@ class MeHeaderView : LinearLayout {
                     SettingsModel.minimumRandomTagRating,
                     SettingsModel.minimumRandomDownloads,
                     false,
-                    "id"
-                ).continueWith(Continuation<TagQueryResult, Void?> { task ->
-                    if (task.isFaulted) {
-                        post {
-                            progress.safeDismiss()
-                            Toast.makeText(
-                                this@MeHeaderView.context, "Could not load a random tag.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } else {
-                        if (task.result.available == 0) {
-                            post {
-                                progress.safeDismiss()
-                                Toast
-                                    .makeText(
-                                        this@MeHeaderView.context,
-                                        "No tags that match your filters could be found.  Please adjust your filters using the Settings menu.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                            }
-                            return@Continuation null
-                        }
-                        val r = Random()
-                        val chosenNumber = r.nextInt(task.result.available)
-                        Tag.query(
-                            null,
-                            1,
-                            chosenNumber,
-                            null,
-                            SettingsModel.randomLearningTracksFilter,
-                            SettingsModel.randomSheetMusicFilter,
-                            null,
-                            null,
-                            SettingsModel.minimumRandomTagRating,
-                            SettingsModel.minimumRandomDownloads,
-                            false,
-                            "id"
-                        ).continueWith<Void> { task ->
-                            if (task.isFaulted) {
-                                post {
-                                    progress.safeDismiss()
-                                    Toast.makeText(
-                                        this@MeHeaderView.context,
-                                        "Could not load a random tag.", Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            } else {
-                                post {
-                                    val i = Intent(
-                                        this@MeHeaderView.context,
-                                        TagDetailActivity::class.java
-                                    )
-                                    i.putExtra(
-                                        TagDetailActivity.TAG_ID_EXTRA, task.result.tags[0]
-                                            .id
-                                    )
-                                    this@MeHeaderView.context.startActivity(i)
-                                    progress.safeDismiss()
-                                }
-                            }
-                            null
+                    "id",
+                ).continueWith<Void> { inner ->
+                    post {
+                        setBusy(false)
+                        if (inner.isFaulted || inner.result.tags.isEmpty()) {
+                            report(context.getString(R.string.RandomTagFailed)) { loadRandomTag() }
+                        } else {
+                            openTag(inner.result.tags[0].id)
                         }
                     }
                     null
-                })
-            }
-            val browseButton = findViewById<View>(R.id.browseButton)
-            browseButton.setOnClickListener {
-                val i = Intent(this@MeHeaderView.context, TagBrowserActivity::class.java)
-                this@MeHeaderView.context.startActivity(i)
-            }
-            val teachableButton = findViewById<View>(R.id.teachableButton)
-            teachableButton.setOnClickListener {
-                val i = Intent(this@MeHeaderView.context, TeachableTagsActivity::class.java)
-                this@MeHeaderView.context.startActivity(i)
-            }
-            val openTagByIdButton = findViewById<View>(R.id.openByIdButton)
-            openTagByIdButton.setOnClickListener { v ->
-                val editText = EditText(v.context)
-                editText.inputType = InputType.TYPE_CLASS_NUMBER
-                editText.setImeActionLabel("Open", KeyEvent.KEYCODE_ENTER)
-                val dlg = AlertDialog.Builder(context)
-                    .setCancelable(true)
-                    .setNegativeButton("Cancel", null)
-                    .setTitle("Enter Tag ID")
-                    .setPositiveButton("Open") { dialog: DialogInterface?, which: Int ->
-                        if (editText.text.toString().isEmpty()) {
-                            return@setPositiveButton
-                        }
-                        openTag(editText.text.toString().toInt())
-                    }
-                    .setView(editText)
-                    .create()
-                editText.setOnEditorActionListener { v1: TextView?, actionId: Int, event: KeyEvent? ->
-                    if (event == null || event?.action == KeyEvent.ACTION_UP) {
-                        if (editText.text.toString().isEmpty()) {
-                            return@setOnEditorActionListener false
-                        }
-                        openTag(editText.text.toString().toInt())
-                        dlg.safeDismiss()
-                    }
-                    true
                 }
-                dlg.show()
-                editText.requestFocus()
+                null
+            },
+        )
+    }
+
+    private fun promptForTagId() {
+        val field = TextInputLayout(context, null, com.google.android.material.R.attr.textInputOutlinedStyle)
+        val editText = TextInputEditText(field.context)
+        editText.inputType = InputType.TYPE_CLASS_NUMBER
+        editText.imeOptions = EditorInfo.IME_ACTION_GO
+        field.hint = context.getString(R.string.TagId)
+        field.addView(editText)
+        val padding = resources.getDimensionPixelSize(R.dimen.tm_space_xl)
+        field.setPadding(padding, padding / 2, padding, 0)
+
+        val dlg =
+            AlertDialog
+                .Builder(context)
+                .setCancelable(true)
+                .setNegativeButton(R.string.Cancel, null)
+                .setTitle(R.string.EnterTagId)
+                .setPositiveButton(R.string.Open, null)
+                .setView(field)
+                .create()
+        fun submit() {
+            val id = editText.text?.toString()?.trim()?.toIntOrNull()
+            if (id == null || id <= 0) {
+                field.error = context.getString(R.string.InvalidTagId)
+                return
+            }
+            openTag(id)
+            dlg.dismiss()
+        }
+        editText.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_GO ||
+                event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP
+            ) {
+                submit()
+                true
+            } else {
+                false
             }
         }
+        dlg.show()
+        dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { submit() }
+        editText.requestFocus()
     }
 
     private fun openTag(id: Int) {
-        val i = Intent(
-            this@MeHeaderView.context,
-            TagDetailActivity::class.java
-        )
-        i.putExtra(
-            TagDetailActivity.TAG_ID_EXTRA,
-            id
-        )
+        val i = Intent(this.context, TagDetailActivity::class.java)
+        i.putExtra(TagDetailActivity.TAG_ID_EXTRA, id)
         this.context.startActivity(i)
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        if (!this.isInEditMode) {
-            UiBinder.bind(ReflectedProperty(findViewById(R.id.teachableButton), "Visibility"),
-                Property({ teachableTagIds.size > 0 }, null, Boolean::class.java),
-                BindingMode.ONE_WAY,
-                BoolConverter.get()
-            )
-        }
     }
 }

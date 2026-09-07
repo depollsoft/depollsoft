@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The barber pole, drawn at icon scale. The full pole art (ic_barberpole) was
+  stretched across every screen as a watermark; this is the same object reduced
+  to a mark that can sit in a navigation slot at one stroke weight.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,2h6v2h-6z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,20h6v2h-6z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.5,4.75h5v14.5h-5z"
+        android:fillAlpha="0.25" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.5,7.9L14.5,4.75v2.2L9.5,10.1z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.5,12.6L14.5,9.45v2.2L9.5,14.8z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9.5,17.3L14.5,14.15v2.2L9.5,19.5z" />
+</vector>

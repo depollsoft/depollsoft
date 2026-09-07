@@ -5,6 +5,9 @@
 //  Created by David Poll on 9/30/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
+//  A utility screen: the account that backs up lists, the two list-clearing
+//  actions, and the filters that shape Random Tag.
+//
 
 #if __has_include(<UIKit/UIKit.h>)
 #import "DPSettingsController.h"
@@ -13,11 +16,12 @@
 #import "DPAppDelegate.h"
 #import "tagmaster-Swift.h"
 
-@interface DPSettingsController () <UIAlertViewDelegate>
+@interface DPSettingsController ()
 
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
 @property (nonatomic, strong) UIButton *logInButton;
+@property (nonatomic, strong) UILabel *accountStatusLabel;
 @property (nonatomic, strong) UIButton *clearFavoritesButton;
 @property (nonatomic, strong) UIButton *clearTeachableButton;
 @property (nonatomic, strong) UISegmentedControl *minRating;
@@ -42,100 +46,91 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     [DPAppDelegate setUpBackground:self.view];
-    
+
     self.busyIndicator = [[DPBusyIndicator alloc] init];
-    
+
     self.title = @"Settings";
-    
-    DPGridLayout *grid = [[DPGridLayout alloc] init];
-    NSMutableArray *rows = [NSMutableArray array];
-    for (NSInteger index = 0; index < 12; index++) {
-        [rows addObject:[DPGridDimension dimension]];
-    }
-    if ([self isPrivateBuild]) {
-        [rows addObject:[DPGridDimension dimension]];
-        [rows addObject:[DPGridDimension dimension]];
-        [rows addObject:[DPGridDimension dimension]];
-    }
-    grid.rowDimensions = rows;
-    grid.columnDimensions = @[
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1]
-                              ];
-    UIScrollView *scroller = [[UIScrollView alloc] init];
-    
-    self.logInButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    self.clearFavoritesButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [self.clearFavoritesButton setTitle:@"Clear Favorites" forState:UIControlStateNormal];
+    self.navigationItem.title = @"Settings";
+
+    self.logInButton = [self makeActionButton:@"Log In" destructive:NO];
+    [self.logInButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
+
+    self.accountStatusLabel = [self makeBodyLabel];
+    self.accountStatusLabel.numberOfLines = 0;
+    self.accountStatusLabel.textColor = [TMTheme secondaryText];
+    self.accountStatusLabel.font = [TMTheme metadataFont];
+
+    self.clearFavoritesButton = [self makeActionButton:@"Clear Favorites" destructive:YES];
     [self.clearFavoritesButton addTarget:self action:@selector(clearFavorites) forControlEvents:UIControlEventTouchUpInside];
-    self.clearTeachableButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [self.clearTeachableButton setTitle:@"Clear Teachable Tags" forState:UIControlStateNormal];
+    self.clearTeachableButton = [self makeActionButton:@"Clear Teachable Tags" destructive:YES];
     [self.clearTeachableButton addTarget:self action:@selector(clearTeachable) forControlEvents:UIControlEventTouchUpInside];
+
     self.minRating = [[UISegmentedControl alloc] initWithItems:@[@"Any", @"1", @"2", @"3", @"4"]];
     self.minRating.apportionsSegmentWidthsByContent = YES;
     self.minRating.selectedSegmentIndex = [DPSettingsController minRatingValue];
+    self.minRating.accessibilityLabel = @"Minimum rating";
     self.minDownloads = [[UISegmentedControl alloc] initWithItems:@[@"Any", @"50", @"100", @"500", @"1000"]];
     self.minDownloads.apportionsSegmentWidthsByContent = YES;
     self.minDownloads.selectedSegmentIndex = [DPSettingsController minDownloadsValue];
+    self.minDownloads.accessibilityLabel = @"Minimum downloads";
     self.sheetMusic = [[UISegmentedControl alloc] initWithItems:@[@"Not Important", @"Yes", @"No"]];
     self.sheetMusic.apportionsSegmentWidthsByContent = YES;
     self.sheetMusic.selectedSegmentIndex = [DPSettingsController sheetMusicValue];
+    self.sheetMusic.accessibilityLabel = @"Sheet music";
     self.learningTracks = [[UISegmentedControl alloc] initWithItems:@[@"Not Important", @"Yes", @"No"]];
     self.learningTracks.apportionsSegmentWidthsByContent = YES;
     self.learningTracks.selectedSegmentIndex = [DPSettingsController learningTracksValue];
-    
-    UILabel *logInHeader = [self makeTitleLabel];
-    logInHeader.text = @"Log In";
+    self.learningTracks.accessibilityLabel = @"Learning tracks";
+
     UILabel *logInText = [self makeBodyLabel];
     logInText.text = @"Log in to back up and synchronize your tag lists.";
     logInText.numberOfLines = 0;
-    UILabel *favoritesHeader = [self makeTitleLabel];
-    favoritesHeader.text = @"Favorites";
-    UILabel *teachableHeader = [self makeTitleLabel];
-    teachableHeader.text = @"Teachable Tags";
-    UILabel *randomTagsHeader = [self makeTitleLabel];
-    randomTagsHeader.text = @"Random Tag Filters";
-    UILabel *minRatingHeader = [self makeHeader:@"Minimum Rating"];
-    UILabel *minDownloadHeader = [self makeHeader:@"Minimum Downloads"];
-    UILabel *sheetMusicHeader = [self makeHeader:@"Sheet Music"];
-    UILabel *learningTracksHeader = [self makeHeader:@"Learning Tracks"];
-    
-    [grid addSubview:logInHeader row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:logInText row:1 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.logInButton row:2 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:favoritesHeader row:3 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.clearFavoritesButton row:4 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:teachableHeader row:5 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.clearTeachableButton row:6 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:randomTagsHeader row:7 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:minRatingHeader row:8 column:0];
-    [grid addSubview:[self.minRating padHorizontal:0 vertical:8] row:8 column:2];
-    [grid addSubview:minDownloadHeader row:9 column:0];
-    [grid addSubview:[self.minDownloads padHorizontal:0 vertical:8] row:9 column:2];
-    [grid addSubview:sheetMusicHeader row:10 column:0];
-    [grid addSubview:[self.sheetMusic padHorizontal:0 vertical:8] row:10 column:2];
-    [grid addSubview:learningTracksHeader row:11 column:0];
-    [grid addSubview:[self.learningTracks padHorizontal:0 vertical:8] row:11 column:2];
+
+    UILabel *listsText = [self makeBodyLabel];
+    listsText.text = @"Clearing a list removes it on this device and, if you are logged in, "
+                      "everywhere else it is synchronized.";
+    listsText.numberOfLines = 0;
+    listsText.font = [TMTheme metadataFont];
+    listsText.textColor = [TMTheme secondaryText];
+
+    UILabel *randomText = [self makeBodyLabel];
+    randomText.text = @"Random Tag only picks tags that clear these thresholds.";
+    randomText.numberOfLines = 0;
+    randomText.font = [TMTheme metadataFont];
+    randomText.textColor = [TMTheme secondaryText];
+
+    NSMutableArray<UIView *> *sections = [NSMutableArray arrayWithArray:@[
+        [self sectionWithTitle:@"Account" views:@[logInText, self.logInButton, self.accountStatusLabel]],
+        [self sectionWithTitle:@"Your Lists"
+                         views:@[listsText, self.clearFavoritesButton, self.clearTeachableButton]],
+        [self sectionWithTitle:@"Random Tag Filters"
+                         views:@[randomText,
+                                 [self groupWithTitle:@"Minimum Rating" control:self.minRating],
+                                 [self groupWithTitle:@"Minimum Downloads" control:self.minDownloads],
+                                 [self groupWithTitle:@"Sheet Music" control:self.sheetMusic],
+                                 [self groupWithTitle:@"Learning Tracks" control:self.learningTracks]]]
+    ]];
+
     if ([self isPrivateBuild]) {
-        UILabel *buildHeader = [self makeTitleLabel];
-        buildHeader.text = @"Private Build";
         UILabel *metadata = [self makeBodyLabel];
-        metadata.text = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
-        UIButton *copyLogs = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-        [copyLogs setTitle:@"Copy Logs" forState:UIControlStateNormal];
+        metadata.text = [NSString stringWithFormat:@"Build %@ · PR #%@",
+                         [self privateBuildNumber], [self privatePRNumber]];
+        metadata.numberOfLines = 0;
+        UIButton *copyLogs = [self makeActionButton:@"Copy Logs" destructive:NO];
         [copyLogs addTarget:self action:@selector(copyLogs) forControlEvents:UIControlEventTouchUpInside];
-        [grid addSubview:buildHeader row:12 column:0 rowSpan:1 colSpan:3];
-        [grid addSubview:metadata row:13 column:0 rowSpan:1 colSpan:3];
-        [grid addSubview:copyLogs row:14 column:0 rowSpan:1 colSpan:3];
+        [sections addObject:[self sectionWithTitle:@"Private Build" views:@[metadata, copyLogs]]];
     }
-    
-    [self.logInButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
-    
-    [self setUpRootView:grid withScroller:scroller];
-    
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:sections];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.alignment = UIStackViewAlignmentFill;
+    stack.spacing = TMTheme.spaceXL;
+
+    UIScrollView *scroller = [[UIScrollView alloc] init];
+    [self setUpRootView:stack withScroller:scroller];
+
     self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:self.busyIndicator];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[busyIndicator]|"
@@ -146,15 +141,73 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(busyIndicator)]];
-    
+
     [self refreshLoginButton];
 }
 
+- (UIButton *)makeActionButton:(NSString *)title destructive:(BOOL)destructive {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButtonConfiguration *config = destructive
+        ? [UIButtonConfiguration grayButtonConfiguration]
+        : [UIButtonConfiguration tintedButtonConfiguration];
+    config.title = title;
+    config.contentInsets = NSDirectionalEdgeInsetsMake(TMTheme.spaceM, TMTheme.spaceL,
+                                                       TMTheme.spaceM, TMTheme.spaceL);
+    if (destructive) {
+        config.baseForegroundColor = [UIColor systemRedColor];
+    }
+    button.configuration = config;
+    button.titleLabel.adjustsFontForContentSizeCategory = YES;
+    [button.heightAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+    return button;
+}
+
+/// A heading with its content beneath, more space above than below.
+- (UIView *)sectionWithTitle:(NSString *)title views:(NSArray<UIView *> *)views {
+    UILabel *heading = [[UILabel alloc] init];
+    heading.text = title;
+    heading.font = [TMTheme groupTitleFont];
+    heading.adjustsFontForContentSizeCategory = YES;
+    heading.textColor = [TMTheme ink];
+    heading.numberOfLines = 0;
+    heading.accessibilityTraits = UIAccessibilityTraitHeader;
+
+    NSMutableArray<UIView *> *children = [NSMutableArray arrayWithObject:heading];
+    [children addObjectsFromArray:views];
+
+    UIStackView *section = [[UIStackView alloc] initWithArrangedSubviews:children];
+    section.axis = UILayoutConstraintAxisVertical;
+    section.alignment = UIStackViewAlignmentFill;
+    section.spacing = TMTheme.spaceM;
+    [section setCustomSpacing:TMTheme.spaceS afterView:heading];
+    return section;
+}
+
+- (UIView *)groupWithTitle:(NSString *)title control:(UIControl *)control {
+    UILabel *caption = [self makeHeader:title];
+    UIView *choice = [control isKindOfClass:[UISegmentedControl class]]
+        ? [[TMAdaptiveChoiceView alloc] initWithSegments:(UISegmentedControl *)control] : control;
+    UIStackView *group = [[UIStackView alloc] initWithArrangedSubviews:@[caption, choice]];
+    group.axis = UILayoutConstraintAxisVertical;
+    group.spacing = TMTheme.spaceS;
+    group.alignment = UIStackViewAlignmentFill;
+    [choice.heightAnchor constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget].active = YES;
+    return group;
+}
+
 - (void)refreshLoginButton {
-    if (![FIRAuth auth].currentUser) {
-        [self.logInButton setTitle:@"Log In" forState:UIControlStateNormal];
+    FIRUser *user = [FIRAuth auth].currentUser;
+    UIButtonConfiguration *config = self.logInButton.configuration;
+    if (!user) {
+        config.title = @"Log In";
+        self.logInButton.configuration = config;
+        self.accountStatusLabel.text = @"Not logged in. Your lists stay on this device.";
     } else {
-        [self.logInButton setTitle:@"Log Out" forState:UIControlStateNormal];
+        config.title = @"Log Out";
+        self.logInButton.configuration = config;
+        NSString *identity = user.email.length > 0 ? user.email : (user.displayName ?: @"your account");
+        self.accountStatusLabel.text =
+            [NSString stringWithFormat:@"Logged in as %@. Lists back up to your account.", identity];
     }
 }
 
@@ -266,6 +319,7 @@
     NSString *metadata = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
     [DPAppLog log:@"Settings: copied app logs"];
     [UIPasteboard generalPasteboard].string = [NSString stringWithFormat:@"%@\n\n%@", metadata, [DPAppLog contents]];
+    [TMTheme saved];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -276,30 +330,32 @@
 }
 
 - (void)clearFavorites {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Favorite Tags"
-                                                                             message:@"Are you sure you want to clear your favorites?"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Clear favorites?"
+                                                                             message:@"This removes every tag from your favorites list."
                                                                       preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Clear Favorites"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction * _Nonnull action) {
         [DPAppDelegate setFavorites:@[]];
+        [TMTheme saved];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleCancel
                                                       handler:nil]];
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)clearTeachable {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Teachable Tags"
-                                                                             message:@"Are you sure you want to clear your teachable tags list?"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Clear teachable tags?"
+                                                                             message:@"This removes every tag from your teachable list."
                                                                       preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Clear Teachable Tags"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction * _Nonnull action) {
         [DPAppDelegate setTeachable:@[]];
+        [TMTheme saved];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleCancel
                                                       handler:nil]];
     [self presentViewController:alertController animated:YES completion:nil];

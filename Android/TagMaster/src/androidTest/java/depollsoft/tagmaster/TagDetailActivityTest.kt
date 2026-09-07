@@ -1,359 +1,116 @@
 package depollsoft.tagmaster
 
-import androidx.test.core.app.ActivityScenario
+import android.app.Activity
+import android.app.Instrumentation.ActivityResult
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers.*
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.*
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import org.hamcrest.Matchers.*
-import org.junit.Rule
+import com.google.android.material.textfield.TextInputEditText
+import org.hamcrest.Matchers.allOf
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Instrumented UI tests for Tag Detail functionality.
- * Tests tag detail display, part buttons, video list, and audio controls.
- * Uses actual resource IDs from TagMaster app.
- */
+/** Tests the Home-to-detail intent boundary without fetching a live tag or playing audio. */
 @RunWith(AndroidJUnit4::class)
-@LargeTest
-class TagDetailActivityTest {
+class TagDetailActivityTest : SingingDeskTest() {
+    @Before
+    fun interceptDetailLaunches() {
+        Intents.init()
+        Intents
+            .intending(hasComponent(TagDetailActivity::class.java.name))
+            .respondWith(ActivityResult(Activity.RESULT_CANCELED, null))
+    }
 
-    @get:Rule
-    val activityRule = ActivityScenarioRule(MeActivity::class.java)
-
-    // ==================== Launch Tests ====================
-
-    @Test
-    fun testActivityLaunches() {
-        activityRule.scenario.onActivity { activity ->
-            assert(activity != null)
-        }
+    @After
+    fun releaseIntents() {
+        Intents.release()
     }
 
     @Test
-    fun testViewPagerIsDisplayed() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+    fun validTagIdIsPassedToDetail() {
+        openIdDialog()
+        enterId("123")
+        onView(withId(android.R.id.button1)).inRoot(isDialog()).perform(click())
+        Intents.intended(
+            allOf(
+                hasComponent(TagDetailActivity::class.java.name),
+                hasExtra(TagDetailActivity.TAG_ID_EXTRA, 123),
+            ),
+        )
+        Intents.assertNoUnverifiedIntents()
+        assertDestination(MeActivity.HOME, R.id.home)
     }
 
     @Test
-    fun testBottomNavigationIsDisplayed() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Tag Detail Elements Tests ====================
-
-    @Test
-    fun testKeyButtonExists() {
-        try {
-            onView(withId(R.id.keyButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Key button may not be visible in current view
-        }
+    fun blankTagIdDoesNotLaunchDetail() {
+        openIdDialog()
+        onView(withId(android.R.id.button1)).inRoot(isDialog()).perform(click())
+        assertInvalidIdIsStillEditable()
     }
 
     @Test
-    fun testKeyButtonIsClickable() {
-        try {
-            onView(withId(R.id.keyButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Key button may not be accessible
-        }
+    fun overflowingTagIdDoesNotLaunchDetail() {
+        openIdDialog()
+        enterId("999999999999999999999999")
+        onView(withId(android.R.id.button1)).inRoot(isDialog()).perform(click())
+        assertInvalidIdIsStillEditable()
     }
 
     @Test
-    fun testTitleTextViewExists() {
-        try {
-            onView(withId(R.id.titleTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Title may not be visible in current view
-        }
+    fun zeroTagIdDoesNotLaunchDetail() {
+        openIdDialog()
+        enterId("0")
+        onView(withId(android.R.id.button1)).inRoot(isDialog()).perform(click())
+        assertInvalidIdIsStillEditable()
+    }
+
+    private fun assertInvalidIdIsStillEditable() {
+        onView(withText(R.string.InvalidTagId)).inRoot(isDialog()).check(matches(isDisplayed()))
+        Intents.assertNoUnverifiedIntents()
+        onView(withId(android.R.id.button2)).inRoot(isDialog()).perform(click())
+        assertDestination(MeActivity.HOME, R.id.home)
     }
 
     @Test
-    fun testArrangedByTextViewExists() {
-        try {
-            onView(withId(R.id.arrangedByTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Arranger info may not be visible
-        }
+    fun cancelDoesNotOpenEnteredTag() {
+        openIdDialog()
+        enterId("123")
+        onView(withId(android.R.id.button2)).inRoot(isDialog()).perform(click())
+        assertDialogDismissedWithoutLaunch()
     }
 
     @Test
-    fun testYearArrangedTextViewExists() {
-        try {
-            onView(withId(R.id.yearArrangedTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Year arranged may not be visible
-        }
+    fun backDismissesIdDialogWithoutLeavingHome() {
+        openIdDialog()
+        enterId("123")
+        pressBack()
+        assertDialogDismissedWithoutLaunch()
     }
 
-    @Test
-    fun testClassicTagTextViewExists() {
-        try {
-            onView(withId(R.id.classicTagTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Classic tag indicator may not be visible
-        }
+    private fun openIdDialog() {
+        onView(withId(R.id.openByIdButton)).perform(scrollTo(), click())
+        onView(withText(R.string.EnterTagId)).inRoot(isDialog()).check(matches(isDisplayed()))
     }
 
-    // ==================== Video Section Tests ====================
-
-    @Test
-    fun testVideoListExists() {
-        try {
-            onView(withId(R.id.videoList))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Video list may not be visible in current view
-        }
+    private fun enterId(value: String) {
+        onView(isAssignableFrom(TextInputEditText::class.java))
+            .inRoot(isDialog())
+            .perform(replaceText(value), closeSoftKeyboard())
     }
 
-    @Test
-    fun testVideoPreviewExists() {
-        try {
-            onView(withId(R.id.videoPreview))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Video preview may not be visible
-        }
-    }
-
-    // ==================== Audio Controls Tests ====================
-
-    @Test
-    fun testBalanceSeekBarExists() {
-        try {
-            onView(withId(R.id.balanceSeekBar))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Balance control may not be visible
-        }
-    }
-
-    @Test
-    fun testTrackNotesTextViewExists() {
-        try {
-            onView(withId(R.id.trackNotesTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Track notes may not be visible
-        }
-    }
-
-    // ==================== Part Buttons Tests ====================
-
-    @Test
-    fun testAllPartsButtonExists() {
-        try {
-            onView(withId(R.id.allPartsButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Part button may not be visible
-        }
-    }
-
-    @Test
-    fun testAllPartsButtonIsClickable() {
-        try {
-            onView(withId(R.id.allPartsButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Part button may not be accessible
-        }
-    }
-
-    @Test
-    fun testLeadButtonExists() {
-        try {
-            onView(withId(R.id.leadButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Lead button may not be visible
-        }
-    }
-
-    @Test
-    fun testLeadButtonIsClickable() {
-        try {
-            onView(withId(R.id.leadButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Lead button may not be accessible
-        }
-    }
-
-    @Test
-    fun testTenorButtonExists() {
-        try {
-            onView(withId(R.id.tenorButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Tenor button may not be visible
-        }
-    }
-
-    @Test
-    fun testTenorButtonIsClickable() {
-        try {
-            onView(withId(R.id.tenorButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Tenor button may not be accessible
-        }
-    }
-
-    @Test
-    fun testBariButtonExists() {
-        try {
-            onView(withId(R.id.bariButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Bari button may not be visible
-        }
-    }
-
-    @Test
-    fun testBariButtonIsClickable() {
-        try {
-            onView(withId(R.id.bariButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Bari button may not be accessible
-        }
-    }
-
-    @Test
-    fun testBassButtonExists() {
-        try {
-            onView(withId(R.id.bassButton))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Bass button may not be visible
-        }
-    }
-
-    @Test
-    fun testBassButtonIsClickable() {
-        try {
-            onView(withId(R.id.bassButton))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Bass button may not be accessible
-        }
-    }
-
-    // ==================== ViewPager Navigation Tests ====================
-
-    @Test
-    fun testSwipeViewPagerLeft() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSwipeViewPagerRight() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .perform(swipeRight())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testMultipleViewPagerSwipes() {
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Configuration Change Tests ====================
-
-    @Test
-    fun testActivitySurvivesRotation() {
-        activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testBottomNavigationPreservedAfterRotation() {
-        activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Accessibility Tests ====================
-
-    @Test
-    fun testViewPagerIsEnabled() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isEnabled()))
-    }
-
-    @Test
-    fun testBottomNavigationIsEnabled() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isEnabled()))
-    }
-
-    // ==================== Edge Cases ====================
-
-    @Test
-    fun testRapidViewPagerSwipes() {
-        repeat(5) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(100)
-        }
-
-        repeat(5) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
-            EspressoTestUtils.shortWait(100)
-        }
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+    private fun assertDialogDismissedWithoutLaunch() {
+        onView(withText(R.string.EnterTagId)).check(doesNotExist())
+        onView(withId(R.id.openByIdButton)).check(matches(isDisplayed()))
+        Intents.assertNoUnverifiedIntents()
+        assertDestination(MeActivity.HOME, R.id.home)
     }
 }

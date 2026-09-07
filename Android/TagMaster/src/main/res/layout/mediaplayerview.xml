@@ -1,79 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The part player. Two controls and two sliders: play or pause, stop, where you
+  are in the track, and the left/right balance that lets a singer put their own
+  part in one ear. Every control is a labelled 48dp target.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
 
-    <ToggleButton
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/trackLoading"
+        android:layout_width="@dimen/tm_touch_target"
+        android:layout_height="@dimen/tm_touch_target"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:indicatorSize="24dp"
+        app:trackThickness="3dp" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/playPauseButton"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_gravity="center_vertical"
-        android:textOff="@string/Play"
-        android:textOn="@string/Pause" >
-    </ToggleButton>
+        style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+        android:layout_width="@dimen/tm_touch_target"
+        android:layout_height="@dimen/tm_touch_target"
+        android:checkable="true"
+        android:contentDescription="@string/PlayPause"
+        app:icon="@drawable/ic_play_pause" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/stopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_gravity="center_vertical"
-        android:text="@string/Stop" >
-    </Button>
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="@dimen/tm_touch_target"
+        android:layout_height="@dimen/tm_touch_target"
+        android:layout_marginStart="@dimen/tm_space_xs"
+        android:contentDescription="@string/StopPlayback"
+        app:icon="@drawable/ic_stop" />
 
-    <TableLayout
+    <LinearLayout
         android:id="@+id/tableLayout1"
-        android:layout_width="0dip"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1" >
+        android:layout_marginStart="@dimen/tm_space_s"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <TableRow
+        <LinearLayout
             android:id="@+id/tableRow1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
 
             <SeekBar
                 android:id="@+id/counterSeekBar"
-                android:layout_width="fill_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" >
-            </SeekBar>
+                android:layout_weight="1"
+                android:contentDescription="@string/PlaybackPosition"
+                android:minHeight="@dimen/tm_touch_target" />
 
             <TextView
                 android:id="@+id/counterTextView"
+                style="@style/TextAppearance.TagMaster.FieldLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_marginLeft="4dp"
-                android:minWidth="60dp"
-                android:textSize="12sp" >
-            </TextView>
-        </TableRow>
+                android:layout_marginStart="@dimen/tm_space_xs"
+                android:minWidth="72dp" />
+        </LinearLayout>
 
-        <TableRow
+        <LinearLayout
             android:id="@+id/tableRow2"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
 
             <SeekBar
                 android:id="@+id/balanceSeekBar"
-                android:layout_width="fill_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:max="1000" >
-            </SeekBar>
+                android:contentDescription="@string/BalanceControl"
+                android:max="1000"
+                android:minHeight="@dimen/tm_touch_target" />
 
             <TextView
                 android:id="@+id/textView2"
+                style="@style/TextAppearance.TagMaster.FieldLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_marginLeft="4dp"
-                android:text="@string/Balance"
-                android:textSize="12sp" >
-            </TextView>
-        </TableRow>
-    </TableLayout>
+                android:layout_marginStart="@dimen/tm_space_xs"
+                android:minWidth="72dp"
+                android:text="@string/Balance" />
+        </LinearLayout>
+    </LinearLayout>
 
 </LinearLayout>
