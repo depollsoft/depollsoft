@@ -30,3 +30,8 @@ DerivedData/
 .swiftpm/xcode/
 SourcePackages/
 # Note: Package.resolved is committed for reproducible builds
+
+# Generated reports and Python bytecode
+fastlane/report.xml
+__pycache__/
+*.py[cod]
