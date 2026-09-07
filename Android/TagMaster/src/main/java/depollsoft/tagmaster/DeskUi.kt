@@ -94,7 +94,7 @@ fun NavigationBarView.attachToPager(
  * field stays visible while it is being typed into.
  */
 fun View.applyDeskInsets(applyBottom: Boolean = true) {
-    if (id in setOf(R.id.deskRoot, R.id.pageContainer, R.id.detailRoot, R.id.resultsRoot, R.id.settingsRoot, R.id.teachableRoot)) {
+    if (id in setOf(R.id.deskRoot, R.id.pageContainer, R.id.detailRoot, R.id.resultsRoot, R.id.settingsRoot, R.id.teachableRoot, R.id.favoritesRoot)) {
         background = PoleBackground(context)
     }
     ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->

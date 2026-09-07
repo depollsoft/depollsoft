@@ -98,4 +98,20 @@
         <item name="android:paddingEnd">@dimen/tm_space_l</item>
         <item name="android:textAppearance">@style/TextAppearance.Material3.TitleMedium</item>
     </style>
+    <!-- Repeated disclosure row for the two built-ins, not a custom-list model. -->
+    <style name="Widget.TagMaster.ListEntry" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.Material3.TitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:minHeight">@dimen/tm_touch_target</item>
+        <item name="android:paddingTop">@dimen/tm_space_s</item>
+        <item name="android:paddingBottom">@dimen/tm_space_s</item>
+        <item name="android:paddingStart">@dimen/tm_gutter</item>
+        <item name="android:paddingEnd">@dimen/tm_gutter</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawableEnd">@drawable/ic_chevron_right</item>
+        <item name="android:drawablePadding">@dimen/tm_space_s</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
 </resources>

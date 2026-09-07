@@ -19,17 +19,13 @@
 @property (nonatomic, strong) UILabel *title;
 @property (nonatomic, strong) UILabel *aka;
 @property (nonatomic, strong) UILabel *details;
-@property (nonatomic, strong) UIImageView *hasSheetMusic;
-@property (nonatomic, strong) UIImageView *hasLearningTracks;
-@property (nonatomic, strong) UILabel *sheetMusicLabel;
-@property (nonatomic, strong) UILabel *learningTracksLabel;
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
 @end
 
 @implementation DPTagCell
 
-@synthesize tagInstance, title, aka, details, hasLearningTracks, hasSheetMusic, rootView, busyIndicator;
+@synthesize tagInstance, title, aka, details, rootView, busyIndicator;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
@@ -56,29 +52,12 @@
         self.details.textColor = [TMTheme secondaryText];
         self.details.numberOfLines = 0;
 
-        self.sheetMusicLabel = [DPTagCell makeMarkerLabel:@"Sheet music"];
-        self.learningTracksLabel = [DPTagCell makeMarkerLabel:@"Learning tracks"];
-        self.hasSheetMusic = [DPTagCell makeMarkerImageView];
-        self.hasLearningTracks = [DPTagCell makeMarkerImageView];
-
-        UIStackView *sheetMusicGroup =
-            [DPTagCell makeMarkerGroup:self.hasSheetMusic label:self.sheetMusicLabel];
-        UIStackView *tracksGroup =
-            [DPTagCell makeMarkerGroup:self.hasLearningTracks label:self.learningTracksLabel];
-
-        UIStackView *markers =
-            [[UIStackView alloc] initWithArrangedSubviews:@[sheetMusicGroup, tracksGroup]];
-        markers.axis = UILayoutConstraintAxisHorizontal;
-        markers.spacing = TMTheme.spaceL;
-        markers.alignment = UIStackViewAlignmentFirstBaseline;
-
         self.rootView = [[UIStackView alloc] initWithArrangedSubviews:@[
-            self.title, self.aka, self.details, markers
+            self.title, self.aka, self.details
         ]];
         UIStackView *stack = (UIStackView *)self.rootView;
         stack.axis = UILayoutConstraintAxisVertical;
         stack.spacing = TMTheme.spaceXS;
-        [stack setCustomSpacing:TMTheme.spaceS afterView:self.details];
         stack.translatesAutoresizingMaskIntoConstraints = NO;
 
         self.busyIndicator = [[DPBusyIndicator alloc] init];
@@ -106,42 +85,14 @@
             [self.busyIndicator.trailingAnchor
                 constraintEqualToAnchor:self.contentView.layoutMarginsGuide.trailingAnchor],
             [self.busyIndicator.topAnchor constraintEqualToAnchor:self.contentView.topAnchor
-                                                         constant:TMTheme.spaceM],
+                                                         constant:TMTheme.spaceS],
             [self.busyIndicator.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor
-                                                            constant:-TMTheme.spaceM],
+                                                            constant:-TMTheme.spaceS],
             [self.contentView.heightAnchor
-                constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget]
+                constraintGreaterThanOrEqualToConstant:60]
         ]];
     }
     return self;
-}
-
-+ (UILabel *)makeMarkerLabel:(NSString *)text {
-    UILabel *label = [[UILabel alloc] init];
-    label.text = text;
-    label.font = [TMTheme metadataFont];
-    label.adjustsFontForContentSizeCategory = YES;
-    label.numberOfLines = 0;
-    return label;
-}
-
-+ (UIImageView *)makeMarkerImageView {
-    UIImageView *view = [[UIImageView alloc] init];
-    view.contentMode = UIViewContentModeScaleAspectFit;
-    view.preferredSymbolConfiguration =
-        [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleFootnote];
-    [view setContentHuggingPriority:UILayoutPriorityRequired
-                            forAxis:UILayoutConstraintAxisHorizontal];
-    return view;
-}
-
-+ (UIStackView *)makeMarkerGroup:(UIImageView *)image label:(UILabel *)label {
-    UIStackView *group = [[UIStackView alloc] initWithArrangedSubviews:@[image, label]];
-    group.axis = UILayoutConstraintAxisHorizontal;
-    group.spacing = TMTheme.spaceXS;
-    group.alignment = UIStackViewAlignmentCenter;
-    group.isAccessibilityElement = NO;
-    return group;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
@@ -158,120 +109,74 @@
 }
 
 - (void)loadTag:(BOOL)refresh {
-    int tagId = self.tagId;
+    int requestedId = self.tagId;
     if (!refresh) {
-        DPTag *t = [DPTag loadFromCache:tagId];
-        if (t) {
-            self.tagInstance = t;
+        DPTag *cached = [DPTag loadFromCache:requestedId];
+        if (cached) {
+            self.tagInstance = cached;
             return;
         }
     }
     self.tagInstance = nil;
     [self.busyIndicator incrementBusyCount];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        @try {
-            DPTag *t = [DPTag loadTagById:tagId refresh:refresh];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (t.tagId == self.tagId) {
-                    self.tagInstance = t;
-                    UITableView *tableView = (UITableView *)self.superview;
-                    while (tableView && ![tableView isKindOfClass:[UITableView class]]) {
-                        tableView = (UITableView *)tableView.superview;
-                    }
-                    NSIndexPath *indexPath = [tableView indexPathForCell:self];
-                    if (indexPath) {
-                        [tableView reloadRowsAtIndexPaths:@[indexPath]
-                                         withRowAnimation:UITableViewRowAnimationAutomatic];
-                    }
-                    if (self.busyIndicator.busyCount > 0) {
-                        [self.busyIndicator decrementBusyCount];
-                    }
-                }
-            });
-        }
-        @catch (NSException *exception) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.busyIndicator decrementBusyCount];
-            });
-        }
+        DPTag *loaded = nil;
+        @try { loaded = [DPTag loadTagById:requestedId refresh:refresh]; }
+        @catch (NSException *exception) { /* The row offers recovery through its tag page. */ }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.tagId != requestedId) { return; }
+            [self.busyIndicator clearBusyCount];
+            if (loaded) {
+                self.tagInstance = loaded;
+            } else {
+                self.title.text = [NSString stringWithFormat:@"Tag %d", requestedId];
+                self.details.text = @"Couldn't load tag. Open to retry.";
+                self.accessibilityLabel = [NSString stringWithFormat:@"%@. %@", self.title.text, self.details.text];
+            }
+            UITableView *table = (UITableView *)self.superview;
+            while (table && ![table isKindOfClass:[UITableView class]]) {
+                table = (UITableView *)table.superview;
+            }
+            // Recalculate without dequeuing a failed row and starting another request.
+            if ([table indexPathForCell:self]) {
+                [table beginUpdates];
+                [table endUpdates];
+            }
+        });
     });
-}
-
-+ (NSDateFormatter *)dateFormatter {
-    static NSDateFormatter *formatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        formatter = [[NSDateFormatter alloc] init];
-        formatter.dateStyle = NSDateFormatterMediumStyle;
-        formatter.timeStyle = NSDateFormatterNoStyle;
-    });
-    return formatter;
-}
-
-+ (UIImage *)onImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"checkmark.circle.fill"];
-    });
-    return image;
-}
-
-+ (UIImage *)offImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"circle"];
-    });
-    return image;
 }
 
 - (void)setTagInstance:(DPTag *)newTag {
-    NSDateFormatter *formatter = [DPTagCell dateFormatter];
     tagInstance = newTag;
-    self.title.text = self.tagInstance.title ?: @"Tag";
+    if (newTag) { _tagId = newTag.tagId; }
+    self.title.text = newTag.title ?: [NSString stringWithFormat:@"Tag %d", self.tagId];
+    NSString *alternate = [newTag.alternativeTitle stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    NSString *primary = [newTag.title stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    BOOL showAlternate = alternate.length > 0 && [alternate caseInsensitiveCompare:primary ?: @""] != NSOrderedSame;
+    self.aka.text = showAlternate ? [@"a.k.a. " stringByAppendingString:alternate] : nil;
+    self.aka.hidden = !showAlternate;
 
-    self.aka.text = self.tagInstance.alternativeTitle
-        ? [@"a.k.a. " stringByAppendingString:self.tagInstance.alternativeTitle]
-        : nil;
-    self.aka.hidden = self.tagInstance.alternativeTitle == nil;
-
-    NSMutableArray<NSString *> *facts = [NSMutableArray array];
-    if (tagInstance) {
-        [facts addObject:[NSString stringWithFormat:@"ID %d", tagInstance.tagId]];
-        if (tagInstance.rating != 0) {
-            [facts addObject:[NSString stringWithFormat:@"★ %1.2f", tagInstance.rating]];
-        }
-        if (tagInstance.downloadCount != 0) {
-            [facts addObject:[NSString stringWithFormat:@"%d downloads", tagInstance.downloadCount]];
-        }
-        NSString *posted = tagInstance.posted ? [formatter stringFromDate:tagInstance.posted] : nil;
-        [facts addObject:posted ? [@"Posted " stringByAppendingString:posted] : @"Posted date unknown"];
+    BOOL sheets = newTag.sheetMusicUri != nil;
+    BOOL tracks = newTag.tracks.count > 0;
+    NSMutableArray<NSString *> *support = [NSMutableArray arrayWithObject:
+        [NSString stringWithFormat:@"ID %d", self.tagId]];
+    if (newTag) {
+        if (sheets) { [support addObject:@"Sheet music"]; }
+        if (tracks) { [support addObject:@"Learning tracks"]; }
+        if (!sheets && !tracks) { [support addObject:@"No materials"]; }
+    } else {
+        [support addObject:@"Loading…"];
     }
-    self.details.text = facts.count > 0 ? [facts componentsJoinedByString:@" · "] : @"Loading…";
-
-    BOOL tracks = self.tagInstance.tracks.count > 0;
-    BOOL sheets = self.tagInstance.sheetMusicUri != nil;
-    [self applyMarker:self.hasLearningTracks label:self.learningTracksLabel present:tracks];
-    [self applyMarker:self.hasSheetMusic label:self.sheetMusicLabel present:sheets];
-
+    self.details.text = [support componentsJoinedByString:@" · "];
+    self.accessibilityIdentifier = [NSString stringWithFormat:@"tag.%d", self.tagId];
     self.isAccessibilityElement = YES;
-    self.accessibilityLabel = [@[
-        self.title.text ?: @"",
-        self.aka.text ?: @"",
-        self.details.text ?: @"",
-        sheets ? @"Has sheet music" : @"No sheet music",
-        tracks ? @"Has learning tracks" : @"No learning tracks"
-    ] componentsJoinedByString:@". "];
+    self.accessibilityLabel = [[@[
+        self.title.text ?: @"", self.aka.text ?: @"",
+        [NSString stringWithFormat:@"ID %d", self.tagId],
+        newTag ? (sheets ? @"Has sheet music" : @"No sheet music") : @"Loading",
+        newTag ? (tracks ? @"Has learning tracks" : @"No learning tracks") : @""
+    ] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]] componentsJoinedByString:@". "];
     self.accessibilityTraits = UIAccessibilityTraitButton;
-}
-
-/// Presence is carried by the symbol shape and the wording, not by colour
-/// alone.
-- (void)applyMarker:(UIImageView *)view label:(UILabel *)label present:(BOOL)present {
-    view.image = present ? [DPTagCell onImage] : [DPTagCell offImage];
-    view.tintColor = present ? [TMTheme affirmative] : [TMTheme secondaryText];
-    label.textColor = present ? [TMTheme primaryText] : [TMTheme secondaryText];
 }
 
 - (CGFloat)calculatedHeight {

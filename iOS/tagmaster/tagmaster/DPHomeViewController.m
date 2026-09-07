@@ -5,15 +5,14 @@
 //  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
-//  The singing desk. Four actions a group reaches for — find, random, open by
-//  ID, teachable — and then the favorites themselves, ready to sing from.
+//  Discovery actions followed by two peer built-in list destinations.
 //
 
 #import "DPHomeViewController.h"
 
 
 #import "DPAppDelegate.h"
-#import "DPTagCell.h"
+#import "DPFavoritesViewController.h"
 #import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
 #import "DPTeachableTagsController.h"
@@ -49,7 +48,6 @@
     self.busyIndicator = [[DPBusyIndicator alloc] init];
     self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
 
-    [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     self.tableView.estimatedRowHeight = 72;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.cellLayoutMarginsFollowReadableWidth = YES;
@@ -62,8 +60,6 @@
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";
 
-    self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    self.editButtonItem.accessibilityLabel = @"Edit favorites";
 
     UIBarButtonItem *settings = [DPAppDelegate barButtonItemWithSystemName:@"gearshape"
                                                                     target:self
@@ -195,28 +191,22 @@
         }
     }];
 
-    [arr addObject:@{
-        @"title": @"Teachable Tags",
-        @"detail": [self teachableDetailText],
-        @"symbol": @"person.2.wave.2",
-        @"action": ^() {
-            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init]
-                                                 animated:YES];
-        }
-    }];
-
     return arr;
 }
 
-- (NSString *)teachableDetailText {
-    NSUInteger count = [DPAppDelegate teachable].count;
-    if (count == 0) {
-        return @"The tags you are ready to teach";
-    }
-    if (count == 1) {
-        return @"1 tag you are ready to teach";
-    }
-    return [NSString stringWithFormat:@"%lu tags you are ready to teach", (unsigned long)count];
+- (NSArray *)listItems {
+    return @[
+        @{@"title": @"Favorites", @"count": @([DPAppDelegate favorites].count),
+          @"identifier": @"home.favorites", @"symbol": @"star",
+          @"detail": @"Open your favorites", @"action": ^{
+            [self.navigationController pushViewController:[[DPFavoritesViewController alloc] init] animated:YES];
+          }},
+        @{@"title": @"Teachable Tags", @"count": @([DPAppDelegate teachable].count),
+          @"identifier": @"home.teachable", @"symbol": @"person.2.wave.2",
+          @"detail": @"Open the tags you are ready to teach", @"action": ^{
+            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init] animated:YES];
+          }}
+    ];
 }
 
 - (void)openRandomTag {
@@ -301,148 +291,59 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 3;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (section == 0) {
-        return [self navigationItems].count - 1;
-    } else if (section == 2) {
-        return 1;
-    } else {
-        return [DPAppDelegate favorites].count;
-    }
+    return section == 0 ? [self navigationItems].count : [self listItems].count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section != 1) {
-        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
-                                                      reuseIdentifier:nil];
-        NSArray *items = [self navigationItems];
-        if (indexPath.row < items.count) {
-            NSDictionary *item = items[indexPath.section == 2 ? items.count - 1 : indexPath.row];
-            UIListContentConfiguration *content = [UIListContentConfiguration subtitleCellConfiguration];
-            content.text = item[@"title"];
-            content.textProperties.font = [TMTheme fontWithStyle:UIFontTextStyleBody
-                                                          weight:UIFontWeightSemibold];
-            content.textProperties.color = indexPath.section == 0 && indexPath.row == 0 ? [TMTheme tint] : [TMTheme primaryText];
-            content.secondaryText = indexPath.section == 0 && indexPath.row == 0 ? item[@"detail"] : nil;
-            content.secondaryTextProperties.font = [TMTheme metadataFont];
-            content.secondaryTextProperties.color = [TMTheme secondaryText];
-            content.secondaryTextProperties.numberOfLines = 0;
-            content.image = [UIImage systemImageNamed:item[@"symbol"]];
-            content.imageProperties.tintColor = [TMTheme tint];
-            content.imageProperties.preferredSymbolConfiguration =
-                [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleTitle3];
-            content.imageToTextPadding = TMTheme.spaceM;
-            content.directionalLayoutMargins =
-                NSDirectionalEdgeInsetsMake(TMTheme.spaceM, 0, TMTheme.spaceM, 0);
-            cell.contentConfiguration = content;
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-            cell.accessibilityLabel = item[@"title"];
-            cell.accessibilityHint = item[@"detail"];
-        }
-        cell.backgroundColor = UIColor.clearColor;
-        return cell;
+    BOOL list = indexPath.section == 1;
+    NSDictionary *item = (list ? [self listItems] : [self navigationItems])[indexPath.row];
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
+    UIListContentConfiguration *content = list ? [UIListContentConfiguration valueCellConfiguration]
+                                              : [UIListContentConfiguration subtitleCellConfiguration];
+    content.text = item[@"title"];
+    content.textProperties.font = [TMTheme fontWithStyle:UIFontTextStyleBody weight:UIFontWeightSemibold];
+    content.textProperties.numberOfLines = 0;
+    content.textProperties.color = !list && indexPath.row == 0 ? [TMTheme tint] : [TMTheme primaryText];
+    content.secondaryText = list ? [item[@"count"] stringValue] : (indexPath.row == 0 ? item[@"detail"] : nil);
+    content.secondaryTextProperties.font = [TMTheme metadataFont];
+    content.secondaryTextProperties.color = [TMTheme secondaryText];
+    content.secondaryTextProperties.numberOfLines = 0;
+    content.image = [UIImage systemImageNamed:item[@"symbol"]];
+    content.imageProperties.tintColor = [TMTheme tint];
+    content.imageProperties.preferredSymbolConfiguration =
+        [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleTitle3];
+    content.imageToTextPadding = TMTheme.spaceM;
+    content.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(8, 0, 8, 0);
+    cell.contentConfiguration = content;
+    [cell.contentView.heightAnchor constraintGreaterThanOrEqualToConstant:48].active = YES;
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    cell.accessibilityLabel = item[@"title"];
+    cell.accessibilityHint = item[@"detail"];
+    if (list) {
+        cell.accessibilityIdentifier = item[@"identifier"];
+        cell.accessibilityValue = [NSString stringWithFormat:@"%@ tags", item[@"count"]];
     }
-
-    DPTagCell *tagCell = [self.tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
-    NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-    if (indexPath.row < favorites.count) {
-        tagCell.tagId = favorites[indexPath.row].intValue;
-    }
-    return tagCell;
+    cell.backgroundColor = UIColor.clearColor;
+    return cell;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    switch (section) {
-        case 0:
-            return nil;
-        case 1:
-            return @"Favorites";
-        default:
-            break;
-    }
-    return nil;
-}
-
-- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    if (section == 1 && [DPAppDelegate favorites].count == 0) {
-        return @"Save favorites from any tag’s list menu.";
-    }
-    return nil;
-}
-
-- (void)tableView:(UITableView *)tableView willDisplayFooterView:(UIView *)view forSection:(NSInteger)section {
-    UITableViewHeaderFooterView *footer = (UITableViewHeaderFooterView *)view;
-    footer.textLabel.numberOfLines = 0;
-    footer.textLabel.textColor = [TMTheme secondaryText];
-    footer.textLabel.adjustsFontForContentSizeCategory = YES;
+    return section == 1 ? @"Your lists" : nil;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    if (indexPath.section != 1) {
-        NSArray *items = [self navigationItems];
-        if (indexPath.row < items.count) {
-            void (^block)(void) = items[indexPath.section == 2 ? items.count - 1 : indexPath.row][@"action"];
-            block();
-        }
-    } else {
-        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-        if (indexPath.row < favorites.count) {
-            DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
-            tagViewController.tagId = favorites[indexPath.row].intValue;
-            [self.navigationController pushViewController:tagViewController animated:YES];
-        }
-    }
+    NSDictionary *item = (indexPath.section == 1 ? [self listItems] : [self navigationItems])[indexPath.row];
+    void (^action)(void) = item[@"action"];
+    action();
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section != 1) {
-        return NO;
-    }
-    return YES;
-}
-
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-        if (indexPath.row < favorites.count) {
-            [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
-            [TMTheme saved];
-        }
-    }
-}
-
-- (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return @"Remove";
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return UITableViewAutomaticDimension;
-}
-
-- (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
-    if (proposedDestinationIndexPath.section != 1) {
-        return [NSIndexPath indexPathForRow:0 inSection:1];
-    }
-    return proposedDestinationIndexPath;
-}
-
-
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-    [DPAppDelegate moveFavoriteAt:fromIndexPath.row to:toIndexPath.row];
-    [TMTheme saved];
-}
-
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section != 1) {
-        return NO;
-    }
-    return YES;
+    return NO;
 }
 
 @end

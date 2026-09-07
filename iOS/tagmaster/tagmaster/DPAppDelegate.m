@@ -26,6 +26,7 @@
 #endif
 
 #import "DPBarbershop.h"
+#import "TMDensityFixture.h"
 #import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
@@ -48,6 +49,10 @@
         self.window.hidden = YES;
         return YES;
     }
+
+#if DEBUG
+    if ([TMDensityFixture launchIfRequested:self]) { return YES; }
+#endif
 
     [DPAppLog start];
     [FIRApp configure];

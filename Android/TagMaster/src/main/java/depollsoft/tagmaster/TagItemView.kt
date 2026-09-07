@@ -15,7 +15,9 @@ import com.bindroid.utils.bindTo
 import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.barbershop.Tag
 
-class TagItemView : LinearLayout, BoundUi<Tag?> {
+class TagItemView :
+    LinearLayout,
+    BoundUi<Tag?> {
     var tag: Tag? by trackable()
 
     constructor(context: Context?) : super(context) {
@@ -31,9 +33,10 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
     }
 
     private fun init() {
-        val inflater = this.context.getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE
-        ) as LayoutInflater
+        val inflater =
+            this.context.getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE,
+            ) as LayoutInflater
         inflater.inflate(R.layout.tagitemview, this, true)
         this.isClickable = true
         this.isLongClickable = false
@@ -52,40 +55,19 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         bindTo(R.id.titleTextView, "Text", { tag?.title })
-        bindTo(
-            R.id.akaTextView,
-            "Text",
-            { tag?.alternativeTitle },
-            ToStringConverter("a.k.a. %s")
-        )
-        bindTo(
-            R.id.akaTextView,
-            "Visibility",
-            { tag?.alternativeTitle },
-            BoolConverter.get()
-        )
-        bindTo(R.id.idTextView, "Text", { tag?.id }, ToStringConverter())
-        bindTo(
-            R.id.ratingTextView,
-            "Text",
-            { tag?.rating },
-            ToStringConverter("%3.2f")
-        )
-        bindTo(
-            R.id.ratingContainer,
-            "Visibility",
-            { tag?.rating },
-            BoolConverter.get()
-        )
-        bindTo(R.id.postedTextView, "Text", { tag?.posted }, ToStringConverter(" %tD"))
-        bindTo(R.id.downloadsTextView, "Text", { tag?.downloadCount }, ToStringConverter("%d"))
-        bindTo(R.id.downloadsContainer, "Visibility", { tag?.downloadCount }, BoolConverter.get())
-        bindTo(R.id.sheetMusicCheckBox, "Checked", { tag?.sheetMusicUri }, BoolConverter.get())
-        bindTo(
-            R.id.learningTracksCheckBox,
-            "Checked",
-            { tag?.tracks },
-            BoolConverter.get(false, true)
-        )
+        bindTo(R.id.akaTextView, "Text", { tag?.alternativeTitle }, ToStringConverter("a.k.a. %s"))
+        bindTo(R.id.akaTextView, "Visibility", {
+            val alternate = tag?.alternativeTitle?.trim()
+            !alternate.isNullOrEmpty() && alternate != tag?.title?.trim()
+        }, BoolConverter.get())
+        bindTo(R.id.materialStatusTextView, "Text", {
+            tag?.let { current ->
+                val materials = mutableListOf<String>()
+                if (current.sheetMusicUri != null) materials.add(context.getString(R.string.SheetMusicCheck))
+                if (!current.tracks.isNullOrEmpty()) materials.add(context.getString(R.string.LearningTracks))
+                if (materials.isEmpty()) materials.add(context.getString(R.string.NoMaterials))
+                context.getString(R.string.TagScanStatus, current.id, materials.joinToString(" · "))
+            }
+        })
     }
 }

@@ -18,6 +18,10 @@ extension DPHomeViewController: UITextFieldDelegate {
     }
     
     @objc func onUserDataChanged() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in self?.onUserDataChanged() }
+            return
+        }
         self.tableView.reloadData()
     }
     

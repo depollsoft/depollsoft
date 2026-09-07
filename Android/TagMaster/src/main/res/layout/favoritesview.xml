@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Favorites, in the order they put it in. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/favoritesRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <TextView
+        android:id="@+id/noFavoritesTextView"
+        style="@style/TextAppearance.TagMaster.FieldValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingStart="@dimen/tm_space_xxl"
+        android:paddingEnd="@dimen/tm_space_xxl"
+        android:text="@string/NoFavorites"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/tm_space_xl">
+
+        <depollsoft.tagmaster.ReadableWidthLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <depollsoft.lib.ui.ItemsControl
+                android:id="@+id/favoritesItemsControl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:divider="?attr/colorOutlineVariant"
+                android:dividerHeight="1dp"
+                android:paddingTop="@dimen/tm_space_s"
+                android:showDividers="middle" />
+        </depollsoft.tagmaster.ReadableWidthLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</FrameLayout>

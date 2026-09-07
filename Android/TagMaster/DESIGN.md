@@ -60,7 +60,7 @@ This record covers `Android/TagMaster` only. See the [iOS counterpart](../../iOS
 
 Evidence comes from `src/main/res/values/{colors,themes,dimens}.xml`, night and width qualifiers, layouts, and `src/main/java/depollsoft/tagmaster/{ReadableWidthLayout,DeskUi,Utilities,MeHeaderView}.kt`.
 
-Historical refresh evidence, superseded for visual/navigation direction by [the Android character correction](../../.impeccable/review/character-correction/android-report.md). The [final Android verdict](../../.impeccable/review/tagmaster-android-verdict.md) records ship only for the PDF page-continuity fix, not the whole app. Its synthetic pages prove order, not engraving quality. Active-player, video and tablet-detail final captures remain absent; tablet evidence used an 800dp API36 emulator simulation, not tablet hardware. Authentication, sync, physical audio, TalkBack, haptics, motion and complete posture/state coverage remain unverified. This documentation pass ran no builds, tests or reviews.
+Historical refresh evidence, superseded for visual/navigation direction by [the Android character correction](../../.impeccable/review/character-correction/android-report.md). The [final Android verdict](../../.impeccable/review/tagmaster-android-verdict.md) records ship only for the PDF page-continuity fix, not the whole app. Its synthetic pages prove order, not engraving quality. Active-player, video and tablet-detail final captures remain absent; tablet evidence used an 800dp API36 emulator simulation, not tablet hardware. Authentication, sync, physical audio, TalkBack, haptics, motion and complete posture/state coverage remain unverified. The current separate-list and compact-row changes are covered by the [Android density report](../../.impeccable/review/density/android-report.md). That report distinguishes passing test evidence from the unresolved preference-content restoration check.
 
 ## Colors
 
@@ -132,3 +132,13 @@ The workspace uses the original `ic_barberpole.xml`, 299dp by 513dp, with origin
 - Don't import Pitch Perfect's visual rules into Tag Master.
 - Don't restore global tabs/rails, collection tabs, detail tabs, or a tiny-footer pole.
 - Don't canonize isolated legacy styling or unsampled shared-library internals as reusable system rules.
+
+## Saved lists and scan density
+
+Home keeps discovery actions, Settings and attribution. Your lists contains two equal, full-width disclosures with inline counts: Favorites and Teachable Tags. There are no inline saved-tag feeds or Home editing controls. Both entries work when empty. FavoritesActivity reuses FavoriteTagItemView and its existing long-press move up, move down and removal operations. TeachableTagsActivity retains its own operations and now titles the page Teachable Tags. Each activity keeps its scroll when returning from Tag. The pole remains behind loaded, loading and empty lists.
+
+Catalog and saved rows use a TitleMedium title, an optional nonblank alternate that differs from the title, and one BodyMedium ID/material-status line. Availability is read-only text, not checkbox-shaped controls. The baseline is 8dp top/bottom padding and a 4dp line gap, targeting 60–72dp for two lines at default type. Heights wrap, titles are not ellipsized, and interactive rows retain a 48dp minimum. Read-only markers have no independent touch target. Rating remains in Summary; posted date and downloads remain in Details. Filters, sorts, global spacing tokens, footer hit areas, player and PDF flows are unchanged.
+
+Multiple labels per tag and many named lists are future intent only. The repeated disclosure style can accommodate future entries, but this change implements only the two existing built-ins. No custom labels, list-management placeholders, model, migration or sync changes.
+
+Density verification and measured results: [Android density report](../../.impeccable/review/density/android-report.md).

@@ -47,7 +47,7 @@ class TeachableTagsActivity : AppCompatActivity() {
 
         findViewById<android.view.View>(R.id.teachableRoot).applyDeskInsets()
 
-        supportActionBar?.title = "Tag Master".makeTitleString(this)
+        supportActionBar?.title = getString(R.string.TeachableTags).makeTitleString(this)
     }
 
     override fun onSearchRequested(): Boolean {

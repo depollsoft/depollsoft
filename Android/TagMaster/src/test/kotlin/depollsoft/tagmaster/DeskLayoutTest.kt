@@ -78,9 +78,9 @@ class DeskLayoutTest {
         assertNotNull("Find a tag", home.findViewById<View>(R.id.findTagButton))
         assertNotNull("Random tag", home.findViewById<View>(R.id.randomTagButton))
         assertNotNull("Open tag ID", home.findViewById<View>(R.id.openByIdButton))
-        assertNotNull("Favorites list", home.findViewById<View>(R.id.favoritesItemsControl))
-        assertNotNull("Favorites empty state", home.findViewById<View>(R.id.favoritesEmptyTextView))
-        assertNotNull("Teachable tags", home.findViewById<View>(R.id.homeTeachableItemsControl))
+        assertNotNull("Favorites destination", home.findViewById<View>(R.id.favoritesButton))
+        assertNotNull("Teachable destination", home.findViewById<View>(R.id.teachableButton))
+        assertEquals(2, home.findViewById<ViewGroup>(R.id.yourListsEntries).childCount)
         // Attribution ships on every install.
         assertNotNull("BarbershopTags.com credit", home.findViewById<View>(R.id.textView4))
         assertNotNull("Terms of use", home.findViewById<View>(R.id.termsHyperlink))

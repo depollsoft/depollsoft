@@ -1,6 +1,6 @@
 ---
 name: Tag Master iOS
-description: Native Tag Master character correction.
+description: Native Tag Master character, compact rows and separate saved lists.
 colors:
   ink-light: "color(srgb 0.216 0.216 0.216)"
   ink-dark: "color(srgb 0.96 0.96 0.96)"
@@ -98,7 +98,9 @@ Plain tables, native menus and configured buttons own their shapes. No app-wide 
 
 ## Components
 
-- Home exposes native action rows, Favorites editing and a Settings utility in the navigation bar. Find and Browse are visible Home rows, followed by compact Random and ID actions, Favorites, then Teachable Tags.
+- Home exposes Find a tag, Browse, Random Tag and Open Tag ID, then Your lists with exactly two peer disclosure rows, Favorites and Teachable Tags. Each carries a live count, even when empty. Home has no inline saved-tag feed or Edit action; Settings stays in the navigation bar.
+- Favorites and Teachable Tags each push a titled plain table using the existing independent membership and order. Edit/Done, reorder, removal and empty states belong to each destination. Removing a favorite does not remove its teachable membership. Native Back returns to Home or to the saved list after a tag.
+- `DPTagCell` is shared by catalog and saved lists. Its hierarchy is unlimited-line headline, distinct alternate title when present, then footnote ID and available Sheet music / Learning tracks text, or No materials. Availability is read-only status with explicit spoken labels. Rating remains on Summary; downloads and posted date remain on Details. Rows have 8pt vertical padding, 4pt stack spacing, a 60pt minimum and automatic height. The 64pt table estimate is not a height cap.
 - Search uses a minimal `UISearchBar`, a filled Search Tags button and grouped filters. Button insets are `spaceM` vertically and `spaceL` horizontally.
 - `TMAdaptiveChoiceView` presents a labeled native menu button at all text sizes. Choices retain their labels and selected state; menu insets match the Search button.
 - Summary keeps all five rating stars and numeric text together. At accessibility sizes, Rate moves below them and relaxes horizontal hugging so the pane does not collapse.
@@ -107,6 +109,12 @@ Plain tables, native menus and configured buttons own their shapes. No app-wide 
 - `TMTheme.saved()` requests native success feedback; `selected()` requests selection feedback. No custom animation duration is defined by these helpers. Native navigation and presentation own their transitions.
 
 The original `screenbackground.png` is used untouched in light mode, aspect-fit at page scale over systemBackground. Dark mode uses a white template at full view alpha, retaining the raster’s original alpha. No second fade, footer mark or opaque pane covers it. The shipped handwriting font and rasters remain unchanged. This refresh documents reuse, not a new image license or a replacement asset set.
+
+## Density evidence and planned organization
+
+The [iOS density report](../../.impeccable/review/density/ios-report.md) records incremental test results and synthetic local-data captures. On the iPhone 17 Pro simulator, a short saved row measures 61pt at default text and 303pt at accessibility XXXL. The long-title row grows to 561pt with its full title and material status visible. These are examples, not fixed sizing rules. Landscape iPad retains one readable-width column over the full pole. At XXXL, Home requires scrolling to reach Your lists.
+
+Additional named lists and multiple labels per tag are future work only. The repeated disclosure-row presentation can accept more names later; this change adds no labels UI, generic list model, storage-key migration or sync field.
 
 ## Do's and Don'ts
 
