@@ -50,12 +50,21 @@ abstract class SingingDeskTest {
         page: Int,
         menuId: Int,
     ) {
-        onView(withId(R.id.bottomNavigation)).check(matches(isDisplayed()))
-        scenario.onActivity { activity ->
-            assertEquals(page, activity.findViewById<ViewPager2>(R.id.viewPager).currentItem)
-            val navigation = activity.findViewById<NavigationBarView>(R.id.bottomNavigation)
-            assertEquals(menuId, navigation.selectedItemId)
-            assertTrue(navigation.menu.findItem(menuId).isChecked)
+        val rootId =
+            when (page) {
+                MeActivity.HOME -> R.id.deskRoot
+                MeActivity.BROWSE -> R.id.browseCollectionSpinner
+                MeActivity.SEARCH -> R.id.searchTextBox
+                else -> error("Unknown route $page")
+            }
+        onView(withId(rootId)).check(matches(isDisplayed()))
+        onView(isRoot()).check { root, missing ->
+            assertNull(missing)
+            assertFalse(
+                TreeIterables.breadthFirstViewTraversal(root).any {
+                    it is NavigationBarView || it is ViewPager2
+                },
+            )
         }
     }
 }

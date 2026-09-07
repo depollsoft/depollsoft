@@ -31,7 +31,11 @@ fun androidx.appcompat.app.AppCompatActivity.enableDeskBack() {
 
             override fun onMenuItemSelected(item: android.view.MenuItem): Boolean {
                 if (item.itemId != android.R.id.home) return false
-                if (isTaskRoot) {
+                if (supportFragmentManager.backStackEntryCount > 0 ||
+                    this@enableDeskBack is TagDetailActivity && this@enableDeskBack.hasOpenMaterial
+                ) {
+                    onBackPressedDispatcher.onBackPressed()
+                } else if (isTaskRoot) {
                     startActivity(android.content.Intent(this@enableDeskBack, MeActivity::class.java))
                     finish()
                 } else {
@@ -90,6 +94,9 @@ fun NavigationBarView.attachToPager(
  * field stays visible while it is being typed into.
  */
 fun View.applyDeskInsets(applyBottom: Boolean = true) {
+    if (id in setOf(R.id.deskRoot, R.id.pageContainer, R.id.detailRoot, R.id.resultsRoot, R.id.settingsRoot, R.id.teachableRoot)) {
+        background = PoleBackground(context)
+    }
     ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->
         val bars =
             windowInsets.getInsets(

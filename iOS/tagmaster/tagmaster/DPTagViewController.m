@@ -28,8 +28,6 @@
 
 @property (nonatomic, strong) UIBarButtonItem *actionBarButton;
 @property (nonatomic, strong) UIBarButtonItem *shareBarButton;
-@property (nonatomic, strong) UISegmentedControl *sectionPicker;
-@property (nonatomic, strong) TMAdaptiveChoiceView *sectionChoice;
 @property (nonatomic, strong) UIView *summaryPane;
 @property (nonatomic, strong) UIView *sectionPane;
 @property (nonatomic, strong) UIView *paneDivider;
@@ -37,6 +35,7 @@
 @property (nonatomic, strong) DPTagPageControllerBase *visibleSectionController;
 @property (nonatomic, readwrite) NSInteger selectedSectionIndex;
 @property (nonatomic) BOOL usesSplitLayout;
+@property (nonatomic) BOOL applyingLayout;
 
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 
@@ -129,6 +128,7 @@
 }
 
 - (void)setTag:(DPTag *)t {
+    BOOL firstLoad = tag == nil;
     tag = t;
 
     self.title = t.title;
@@ -136,6 +136,7 @@
         page.tag = t;
     }
     [self refreshActionMenu];
+    if (firstLoad && t && self.usesSplitLayout) { [self selectSectionAtIndex:t.tracks.count > 0 ? 2 : 1]; }
 }
 
 - (void)viewDidLoad {
@@ -153,14 +154,8 @@
     ];
     for (DPTagPageControllerBase *page in self.viewControllers) {
         page.busyIndicator = self.busyIndicator;
+        page.workspace = self;
     }
-
-    self.sectionPicker = [[UISegmentedControl alloc] init];
-    self.sectionPicker.translatesAutoresizingMaskIntoConstraints = NO;
-    self.sectionPicker.accessibilityLabel = @"Tag section";
-    [self.sectionPicker addTarget:self
-                           action:@selector(sectionPickerChanged)
-                 forControlEvents:UIControlEventValueChanged];
 
     self.summaryPane = [[UIView alloc] init];
     self.summaryPane.translatesAutoresizingMaskIntoConstraints = NO;
@@ -170,9 +165,6 @@
     self.paneDivider.translatesAutoresizingMaskIntoConstraints = NO;
     self.paneDivider.backgroundColor = [TMTheme separator];
 
-    self.sectionChoice = [[TMAdaptiveChoiceView alloc] initWithSegments:self.sectionPicker];
-    self.sectionChoice.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:self.sectionChoice];
     [self.view addSubview:self.summaryPane];
     [self.view addSubview:self.paneDivider];
     [self.view addSubview:self.sectionPane];
@@ -219,103 +211,58 @@
 
 #pragma mark - Layout
 
-/// Compact width: one pane, four segments. Regular width: the summary keeps its
-/// place on the left while details, tracks, or videos sit beside it — the tag
-/// stays readable while a teacher digs into the material.
+/// Summary is the workspace. Material is pushed on phones and adjacent on wide windows.
 - (void)applyLayoutForTraits {
+    if (self.applyingLayout) { return; }
+    self.applyingLayout = YES;
     BOOL split = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular
         && self.view.bounds.size.width >= 760
         && !UIContentSizeCategoryIsAccessibilityCategory(self.traitCollection.preferredContentSizeCategory);
+    BOOL wasSplit = self.usesSplitLayout;
     self.usesSplitLayout = split;
-
-    NSArray<NSString *> *titles = [DPTagViewController sectionTitles];
-    [self.sectionPicker removeAllSegments];
-    NSArray<NSString *> *pickerTitles = split
-        ? [titles subarrayWithRange:NSMakeRange(1, titles.count - 1)]
-        : titles;
-    [pickerTitles enumerateObjectsUsingBlock:^(NSString *title, NSUInteger idx, BOOL *stop) {
-        [self.sectionPicker insertSegmentWithTitle:title atIndex:idx animated:NO];
-    }];
-
     NSInteger desired = self.selectedSectionIndex;
-    if (split && desired < 1) {
-        desired = 1;
-    }
-    self.sectionPicker.selectedSegmentIndex = split ? desired - 1 : desired;
-
-    if (self.paneConstraints) {
-        [NSLayoutConstraint deactivateConstraints:self.paneConstraints];
-    }
-
+    if (split && desired == 0) { desired = self.tag.tracks.count > 0 ? 2 : 1; }
+    if (self.paneConstraints) { [NSLayoutConstraint deactivateConstraints:self.paneConstraints]; }
     UILayoutGuide *safe = self.view.safeAreaLayoutGuide;
-    UILayoutGuide *readable = self.view.readableContentGuide;
-    NSMutableArray<NSLayoutConstraint *> *constraints = [NSMutableArray array];
-
-    [constraints addObjectsFromArray:@[
-        [self.sectionChoice.topAnchor constraintEqualToAnchor:safe.topAnchor constant:TMTheme.spaceS],
-        [self.sectionChoice.heightAnchor
-            constraintGreaterThanOrEqualToConstant:TMTheme.minimumTarget]
-    ]];
-
     self.summaryPane.hidden = NO;
+    self.sectionPane.hidden = !split;
     self.paneDivider.hidden = !split;
-
+    NSMutableArray *constraints = [NSMutableArray arrayWithArray:@[
+        [self.summaryPane.topAnchor constraintEqualToAnchor:safe.topAnchor],
+        [self.summaryPane.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],
+        [self.summaryPane.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor]
+    ]];
     if (split) {
         [constraints addObjectsFromArray:@[
-            [self.summaryPane.topAnchor constraintEqualToAnchor:safe.topAnchor],
-            [self.summaryPane.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [self.summaryPane.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-            [self.summaryPane.widthAnchor constraintEqualToAnchor:self.view.widthAnchor
-                                                       multiplier:0.42],
-
+            [self.summaryPane.widthAnchor constraintEqualToAnchor:safe.widthAnchor multiplier:0.46],
             [self.paneDivider.leadingAnchor constraintEqualToAnchor:self.summaryPane.trailingAnchor],
             [self.paneDivider.widthAnchor constraintEqualToConstant:1.0 / UIScreen.mainScreen.scale],
             [self.paneDivider.topAnchor constraintEqualToAnchor:safe.topAnchor],
-            [self.paneDivider.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-
-            [self.sectionChoice.leadingAnchor constraintEqualToAnchor:self.paneDivider.trailingAnchor
-                                                            constant:TMTheme.spaceL],
-            [self.sectionChoice.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor
-                                                              constant:-TMTheme.spaceL],
-
-            [self.sectionPane.topAnchor constraintEqualToAnchor:self.sectionChoice.bottomAnchor
-                                                       constant:TMTheme.spaceS],
+            [self.paneDivider.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor],
             [self.sectionPane.leadingAnchor constraintEqualToAnchor:self.paneDivider.trailingAnchor],
-            [self.sectionPane.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
-            [self.sectionPane.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor]
+            [self.sectionPane.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],
+            [self.sectionPane.topAnchor constraintEqualToAnchor:safe.topAnchor],
+            [self.sectionPane.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor]
         ]];
     } else {
-        [constraints addObjectsFromArray:@[
-            [self.sectionChoice.leadingAnchor constraintEqualToAnchor:readable.leadingAnchor],
-            [self.sectionChoice.trailingAnchor constraintEqualToAnchor:readable.trailingAnchor],
-
-            [self.sectionPane.topAnchor constraintEqualToAnchor:self.sectionChoice.bottomAnchor
-                                                       constant:TMTheme.spaceS],
-            [self.sectionPane.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
-            [self.sectionPane.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
-            [self.sectionPane.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
-
-            [self.summaryPane.topAnchor constraintEqualToAnchor:self.sectionPane.topAnchor],
-            [self.summaryPane.leadingAnchor constraintEqualToAnchor:self.sectionPane.leadingAnchor],
-            [self.summaryPane.trailingAnchor constraintEqualToAnchor:self.sectionPane.trailingAnchor],
-            [self.summaryPane.bottomAnchor constraintEqualToAnchor:self.sectionPane.bottomAnchor]
-        ]];
+        [constraints addObject:[self.summaryPane.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor]];
     }
-
     self.paneConstraints = constraints;
     [NSLayoutConstraint activateConstraints:constraints];
-
-    // Reseat the children for the new arrangement.
-    for (DPTagPageControllerBase *page in self.viewControllers) {
-        [self detachChild:page];
+    if (split && [self.viewControllers containsObject:self.navigationController.topViewController]) {
+        [self.navigationController popToViewController:self animated:NO];
+        // UINavigationController finishes removing the popped parent after its
+        // appearance callbacks. Do not attach that page to a pane mid-removal.
+        dispatch_async(dispatch_get_main_queue(), ^{ [self applyLayoutForTraits]; });
+        self.applyingLayout = NO;
+        return;
     }
+    for (DPTagPageControllerBase *page in self.viewControllers) { [self detachChild:page]; }
+    [self attachChild:self.summaryController toPane:self.summaryPane];
     self.visibleSectionController = nil;
-    if (split) {
-        [self attachChild:self.summaryController toPane:self.summaryPane];
-        self.summaryPane.hidden = NO;
-    }
-    _selectedSectionIndex = -1;
-    [self selectSectionAtIndex:desired];
+    if (split) { [self selectSectionAtIndex:desired]; }
+    else if (wasSplit && desired > 0) { [self selectSectionAtIndex:desired]; }
+    self.applyingLayout = NO;
 }
 
 - (void)detachChild:(UIViewController *)child {
@@ -328,6 +275,7 @@
 }
 
 - (void)attachChild:(UIViewController *)child toPane:(UIView *)pane {
+    [TMTheme removeBackgroundFrom:child.view];
     [self addChildViewController:child];
     child.view.translatesAutoresizingMaskIntoConstraints = NO;
     [pane addSubview:child.view];
@@ -340,36 +288,28 @@
     [child didMoveToParentViewController:self];
 }
 
-- (void)sectionPickerChanged {
-    [TMTheme selected];
-    NSInteger index = self.sectionPicker.selectedSegmentIndex;
-    [self selectSectionAtIndex:self.usesSplitLayout ? index + 1 : index];
-}
-
 - (void)selectSectionAtIndex:(NSInteger)index {
-    NSArray<DPTagPageControllerBase *> *pages = self.viewControllers;
-    if (index < 0 || index >= (NSInteger)pages.count) {
-        return;
-    }
-    if (self.usesSplitLayout && index == 0) {
-        index = 1;
-    }
-    if (index == self.selectedSectionIndex && self.visibleSectionController) {
-        return;
-    }
+    if (index < 0 || index >= (NSInteger)self.viewControllers.count) { return; }
     _selectedSectionIndex = index;
-    self.sectionPicker.selectedSegmentIndex = self.usesSplitLayout ? index - 1 : index;
-
-    DPTagPageControllerBase *next = pages[index];
-    if (next == self.visibleSectionController) {
+    DPTagPageControllerBase *next = self.viewControllers[index];
+    if (index == 0) {
+        [self.navigationController popToViewController:self animated:NO];
         return;
     }
-    if (self.visibleSectionController) {
+    next.title = index == 2 ? @"Learning Tracks" : [DPTagViewController sectionTitles][index];
+    if (self.usesSplitLayout) {
+        if (next == self.visibleSectionController) { return; }
         [self detachChild:self.visibleSectionController];
+        [self attachChild:next toPane:self.sectionPane];
+        self.visibleSectionController = next;
+    } else {
+        [self detachChild:next];
+        UINavigationController *navigation = self.navigationController;
+        if (navigation.topViewController == next) { return; }
+        if (navigation.topViewController != self) { [navigation popToViewController:self animated:NO]; }
+        next.view.translatesAutoresizingMaskIntoConstraints = YES;
+        [navigation pushViewController:next animated:YES];
     }
-    [self attachChild:next toPane:self.sectionPane];
-    self.visibleSectionController = next;
-    self.summaryPane.hidden = !self.usesSplitLayout;
 }
 
 #pragma mark - Lists, sharing, refresh

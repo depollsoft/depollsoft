@@ -15,7 +15,9 @@ Singers choosing and singing tags together, including afterglows. Preparation an
 
 ## Chosen structure
 
-The singing desk, selected by the user from three structural previews. Surface seed a858fb14, candidate 6. Home exposes Find a tag, Random Tag and Open Tag ID above saved repertoire. Home, Browse and Search are native destinations; Settings is a utility. Tablet navigation stays beside a readable working area. Preserve the established charcoal/blue, handwriting wordmark and barber-pole identity. Body text and controls follow each OS.
+The singing desk established task priority, seed a858fb14, candidate 6. The user rejected the first refresh's faded footer artwork and layered tabs. The approved correction restores the original page-scale barber-pole background and familiar Home -> Browse/Search -> Tag -> material pushes. No global tabs, sidebar or navigation bar whose meaning changes on detail. Tablets can show Summary beside selected material; narrow windows and accessibility text use one column. Preserve charcoal/blue, the handwriting wordmark and native body text.
+
+Next refinement: increase useful information density and keep Favorites and Teachable Tags as separate list experiences. Future user-defined labels and additional named lists are planned but explicitly not implemented in this work; do not change the storage model or add a label-management interface.
 
 ## States and continuity
 

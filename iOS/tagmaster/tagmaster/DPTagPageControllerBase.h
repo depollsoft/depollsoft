@@ -14,6 +14,7 @@
 
 @interface DPTagPageControllerBase : UIViewController
 
+@property (nonatomic, weak) UIViewController *workspace;
 @property (nonatomic, strong) DPBusyIndicator *busyIndicator;
 @property (nonatomic, strong) DPTag *tag;
 - (UILabel *)makeHeader:(NSString *)name;

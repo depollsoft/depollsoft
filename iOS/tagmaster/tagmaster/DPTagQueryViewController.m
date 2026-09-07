@@ -67,7 +67,8 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [DPAppDelegate setUpBackground:self.view];
+    if (!self.embedded) { [DPAppDelegate setUpBackground:self.view]; }
+    else { self.view.backgroundColor = UIColor.clearColor; }
 
     self.tagTable = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
     self.tagTable.translatesAutoresizingMaskIntoConstraints = NO;

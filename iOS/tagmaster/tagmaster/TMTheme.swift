@@ -1,29 +1,3 @@
-//
-//  TMTheme.swift
-//  tagmaster
-//
-//  ── Tag Master refresh contract ───────────────────────────────────────────────
-//  Thesis:  Tag Master is a singing desk, not a catalog. Everything a group needs
-//           to pick a tag and sing it together is one reach away; study material
-//           sits behind that, never in front of it.
-//  World:   Charcoal ink and barbershop blue, the wickhop handwriting wordmark,
-//           and the barber pole shrunk from a page-filling watermark to a quiet
-//           mark at the foot of the desk. Body copy is San Francisco through
-//           semantic tokens so light, dark, and large text all hold. This is Tag
-//           Master's own character; Pitch Perfect's instrument aesthetic is not
-//           imported here.
-//  Home:    Find a tag · Random Tag · Open Tag ID · Teachable Tags, then the
-//           Favorites list itself. Settings is a utility in the navigation bar,
-//           never a desk action. Home / Browse / Search are the destinations.
-//  Tablet:  Persistent native tabs, a tiled sidebar in wide windows,
-//           readable content widths everywhere, and a split tag detail that keeps
-//           the summary on screen while details, tracks, or videos sit beside it.
-//  Seed:    a858fb14 candidate 6 — established identity, refined not replaced.
-//  Finish: listed native review fixes resolved; app-scoped DESIGN.md records
-//  the shipped UI. Hardware and account verification remain separate.
-//  ─────────────────────────────────────────────────────────────────────────────
-//
-
 import UIKit
 
 /// Semantic design tokens for Tag Master. Every colour resolves per trait
@@ -52,9 +26,11 @@ final class TMTheme: NSObject {
     /// Body text.
     @objc static let primaryText = UIColor.label
     /// Supporting text: metadata rows, footnotes, empty-state prose.
-    @objc static let secondaryText = UIColor.secondaryLabel
+    @objc static let secondaryText = UIColor { traits in
+        UIColor(white: traits.userInterfaceStyle == .dark ? 0.80 : 0.28, alpha: 1)
+    }
     /// Page canvas behind grouped content.
-    @objc static let canvas = UIColor.systemGroupedBackground
+    @objc static let canvas = UIColor.systemBackground
     /// Raised content — list rows, cards, panes.
     @objc static let surface = UIColor.secondarySystemGroupedBackground
     /// Hairlines.
@@ -151,20 +127,31 @@ final class TMTheme: NSObject {
         return label
     }
 
-    /// The barber pole, shrunk to a quiet mark: template-tinted so it reads in
-    /// both appearances, sized in points, and never in the way of content.
-    @objc(identityMarkWithHeight:)
-    static func identityMark(height: CGFloat) -> UIImageView {
-        let image = UIImage(named: "screenbackground.png")?
-            .withRenderingMode(.alwaysTemplate)
-        let view = UIImageView(image: image)
-        view.contentMode = .scaleAspectFit
-        view.tintColor = UIColor.label.withAlphaComponent(0.10)
-        view.isUserInteractionEnabled = false
-        view.isAccessibilityElement = false
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.heightAnchor.constraint(equalToConstant: height).isActive = true
-        return view
+    /// The original raster already contains its translucency. Never fade it again.
+    @objc(installBackgroundIn:)
+    static func installBackground(in view: UIView) {
+        removeBackground(from: view)
+        view.backgroundColor = .systemBackground
+        let background = TMPageBackground()
+        if let table = view as? UITableView {
+            table.backgroundView = background
+        } else {
+            background.translatesAutoresizingMaskIntoConstraints = false
+            view.insertSubview(background, at: 0)
+            NSLayoutConstraint.activate([
+                background.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                background.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                background.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                background.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            ])
+        }
+    }
+
+    @objc(removeBackgroundFrom:)
+    static func removeBackground(from view: UIView) {
+        view.subviews.filter { $0 is TMPageBackground }.forEach { $0.removeFromSuperview() }
+        if let table = view as? UITableView { table.backgroundView = nil }
+        view.backgroundColor = .clear
     }
 
     // MARK: - Feedback
@@ -219,16 +206,17 @@ final class TMAdaptiveChoiceView: UIStackView {
     }
 
     @objc private func refreshChoice() {
-        let accessible = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        let accessible = true
         let titles = (0..<segments.numberOfSegments).map { segments.titleForSegment(at: $0) ?? "" }
         let signature = "\(accessible)-\(segments.selectedSegmentIndex)-\(titles)"
         guard signature != lastSignature else { return }
         lastSignature = signature
         segments.isHidden = accessible
         choice.isHidden = !accessible
-        var config = UIButton.Configuration.bordered()
+        var config = UIButton.Configuration.plain()
         config.title = titles.indices.contains(segments.selectedSegmentIndex)
             ? titles[segments.selectedSegmentIndex] : segments.accessibilityLabel
+        config.title = [segments.accessibilityLabel, config.title].compactMap { $0 }.joined(separator: ": ")
         config.image = UIImage(systemName: "chevron.up.chevron.down")
         config.imagePlacement = .trailing
         config.imagePadding = 12
@@ -239,7 +227,7 @@ final class TMAdaptiveChoiceView: UIStackView {
             return attributes
         }
         choice.configuration = config
-        choice.accessibilityLabel = [segments.accessibilityLabel, config.title].compactMap { $0 }.joined(separator: ", ")
+        choice.accessibilityLabel = config.title
         choice.menu = UIMenu(children: titles.enumerated().map { index, title in
             UIAction(title: title, state: index == segments.selectedSegmentIndex ? .on : .off) { [weak self] _ in
                 guard let self else { return }
@@ -395,5 +383,35 @@ final class TMEmptyStateView: UIView {
 
     @objc private func runAction() {
         action?()
+    }
+}
+
+/// One page-scale pole, including a single shared backdrop for tablet panes.
+private final class TMPageBackground: UIView {
+    private let pole = UIImageView()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        isAccessibilityElement = false
+        accessibilityIdentifier = "barberPoleBackground"
+        pole.contentMode = .scaleAspectFit
+        pole.isAccessibilityElement = false
+        addSubview(pole)
+        updateImage()
+    }
+    required init?(coder: NSCoder) { fatalError("Use init(frame:)") }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        pole.frame = bounds.insetBy(dx: 0, dy: 16)
+    }
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        updateImage()
+    }
+    private func updateImage() {
+        let original = UIImage(named: "screenbackground.png")
+        pole.image = traitCollection.userInterfaceStyle == .dark
+            ? original?.withRenderingMode(.alwaysTemplate) : original?.withRenderingMode(.alwaysOriginal)
+        pole.tintColor = .white
     }
 }

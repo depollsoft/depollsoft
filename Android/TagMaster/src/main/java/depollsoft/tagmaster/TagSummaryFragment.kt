@@ -43,6 +43,10 @@ class TagSummaryFragment : Fragment() {
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
 
+        rootView.findViewById<View>(R.id.openTracksButton).setOnClickListener { parent.openMaterial("tracks") }
+        rootView.findViewById<View>(R.id.openDetailsButton).setOnClickListener { parent.openMaterial("details") }
+        rootView.findViewById<View>(R.id.openVideosButton).setOnClickListener { parent.openMaterial("videos") }
+
         rootView.bindTo(R.id.titleTextView, "Text", { "${parent.tag?.title}" })
         rootView.bindTo(
             R.id.titleTextView,

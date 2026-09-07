@@ -30,7 +30,7 @@
 @implementation DPHomeViewController
 
 - (id)init {
-    return [self initWithStyle:UITableViewStyleInsetGrouped];
+    return [self initWithStyle:UITableViewStylePlain];
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -57,6 +57,7 @@
     self.tableView.tableFooterView = [self makeDeskFooter];
 
     self.navigationItem.title = @"Home";
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     self.navigationItem.titleView = [TMTheme wordmarkLabel:@"Tag Master"];
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";
@@ -73,7 +74,7 @@
     [self viewDidLoadExtension];
 }
 
-/// Attribution and the app's own quiet identity mark, at the foot of the desk.
+/// Attribution remains reachable below the repertoire.
 - (UIView *)makeDeskFooter {
     UIStackView *links = [[UIStackView alloc] init];
     links.axis = UILayoutConstraintAxisVertical;
@@ -100,7 +101,7 @@
     }
 
     UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[
-        [TMTheme identityMarkWithHeight:64], links
+        links
     ]];
     stack.axis = UILayoutConstraintAxisVertical;
     stack.alignment = UIStackViewAlignmentCenter;
@@ -119,13 +120,6 @@
 }
 
 - (void)search {
-    // Search is a destination of its own; bring it forward rather than stacking
-    // a second copy of it on top of Home.
-    UITabBarController *root = self.tabBarController;
-    if ([root isKindOfClass:[TMRootController class]]) {
-        [(TMRootController *)root focusSearch];
-        return;
-    }
     [self.navigationController pushViewController:[[DPSearchViewController alloc] init] animated:YES];
 }
 
@@ -171,6 +165,15 @@
         @"symbol": @"magnifyingglass",
         @"action": ^() {
             [self search];
+        }
+    }];
+
+    [arr addObject:@{
+        @"title": @"Browse",
+        @"detail": @"Latest, top rated, downloads and classic tags",
+        @"symbol": @"list.bullet",
+        @"action": ^() {
+            [self.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
         }
     }];
 
@@ -298,30 +301,32 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
+    return 3;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (section == 0) {
-        return [self navigationItems].count;
+        return [self navigationItems].count - 1;
+    } else if (section == 2) {
+        return 1;
     } else {
         return [DPAppDelegate favorites].count;
     }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
+    if (indexPath.section != 1) {
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
                                                       reuseIdentifier:nil];
         NSArray *items = [self navigationItems];
         if (indexPath.row < items.count) {
-            NSDictionary *item = items[indexPath.row];
+            NSDictionary *item = items[indexPath.section == 2 ? items.count - 1 : indexPath.row];
             UIListContentConfiguration *content = [UIListContentConfiguration subtitleCellConfiguration];
             content.text = item[@"title"];
             content.textProperties.font = [TMTheme fontWithStyle:UIFontTextStyleBody
                                                           weight:UIFontWeightSemibold];
-            content.textProperties.color = [TMTheme primaryText];
-            content.secondaryText = item[@"detail"];
+            content.textProperties.color = indexPath.section == 0 && indexPath.row == 0 ? [TMTheme tint] : [TMTheme primaryText];
+            content.secondaryText = indexPath.section == 0 && indexPath.row == 0 ? item[@"detail"] : nil;
             content.secondaryTextProperties.font = [TMTheme metadataFont];
             content.secondaryTextProperties.color = [TMTheme secondaryText];
             content.secondaryTextProperties.numberOfLines = 0;
@@ -337,6 +342,7 @@
             cell.accessibilityLabel = item[@"title"];
             cell.accessibilityHint = item[@"detail"];
         }
+        cell.backgroundColor = UIColor.clearColor;
         return cell;
     }
 
@@ -362,18 +368,24 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if (section == 1 && [DPAppDelegate favorites].count == 0) {
-        return @"Tags you favorite land here, ready for the next afterglow. "
-               @"Open any tag and use the tag menu to add it.";
+        return @"Save favorites from any tag’s list menu.";
     }
     return nil;
 }
 
+- (void)tableView:(UITableView *)tableView willDisplayFooterView:(UIView *)view forSection:(NSInteger)section {
+    UITableViewHeaderFooterView *footer = (UITableViewHeaderFooterView *)view;
+    footer.textLabel.numberOfLines = 0;
+    footer.textLabel.textColor = [TMTheme secondaryText];
+    footer.textLabel.adjustsFontForContentSizeCategory = YES;
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    if (indexPath.section == 0) {
+    if (indexPath.section != 1) {
         NSArray *items = [self navigationItems];
         if (indexPath.row < items.count) {
-            void (^block)(void) = items[indexPath.row][@"action"];
+            void (^block)(void) = items[indexPath.section == 2 ? items.count - 1 : indexPath.row][@"action"];
             block();
         }
     } else {
@@ -387,7 +399,7 @@
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
+    if (indexPath.section != 1) {
         return NO;
     }
     return YES;
@@ -412,7 +424,7 @@
 }
 
 - (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
-    if (proposedDestinationIndexPath.section == 0) {
+    if (proposedDestinationIndexPath.section != 1) {
         return [NSIndexPath indexPathForRow:0 inSection:1];
     }
     return proposedDestinationIndexPath;
@@ -427,7 +439,7 @@
 
 // Override to support conditional rearranging of the table view.
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
+    if (indexPath.section != 1) {
         return NO;
     }
     return YES;

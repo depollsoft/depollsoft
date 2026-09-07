@@ -10,6 +10,7 @@
 #import "DPLabel.h"
 #import "UIView+DPUtils.h"
 #import "tagmaster-Swift.h"
+#import "DPAppDelegate.h"
 
 @interface DPTagPageControllerBase ()
 
@@ -31,7 +32,46 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    self.view.backgroundColor = UIColor.clearColor;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    if (self.parentViewController == self.navigationController) {
+        [DPAppDelegate setUpBackground:self.view];
+        self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    if (self.parentViewController == self.navigationController && self.busyIndicator) {
+        UIView *host = self.navigationController.view;
+        [host addSubview:self.busyIndicator];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.busyIndicator.leadingAnchor constraintEqualToAnchor:host.leadingAnchor],
+            [self.busyIndicator.trailingAnchor constraintEqualToAnchor:host.trailingAnchor],
+            [self.busyIndicator.topAnchor constraintEqualToAnchor:host.topAnchor],
+            [self.busyIndicator.bottomAnchor constraintEqualToAnchor:host.bottomAnchor]
+        ]];
+    }
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    if (self.busyIndicator.superview && self.parentViewController != self.workspace) {
+        [self.busyIndicator removeFromSuperview];
+    }
+}
+
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    [coordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        if (size.width >= 760 && self.workspace && self.parentViewController == self.navigationController) {
+            self.workspace.view.frame = self.navigationController.view.bounds;
+            [self.workspace performSelector:@selector(applyLayoutForTraits)];
+        }
+    }];
 }
 
 - (void)didReceiveMemoryWarning

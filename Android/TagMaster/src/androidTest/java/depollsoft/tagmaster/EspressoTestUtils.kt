@@ -19,6 +19,7 @@ object EspressoTestUtils {
         timeout: Long = 5000,
     ): ViewInteraction {
         require(timeout >= 0)
+        var matchedRoot: View? = null
         onView(isRoot()).perform(
             object : ViewAction {
                 override fun getConstraints(): Matcher<View> = isRoot()
@@ -31,20 +32,50 @@ object EspressoTestUtils {
                 ) {
                     val deadline = SystemClock.uptimeMillis() + timeout
                     do {
+                        // A dismissed dialog can remain the original Espresso root during
+                        // its exit animation. Search current attached windows each iteration.
+                        val roots =
+                            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                                android.view.inspector.WindowInspector
+                                    .getGlobalWindowViews()
+                                    .filter { it.isAttachedToWindow && it.windowVisibility == View.VISIBLE && it.hasWindowFocus() }
+                            } else {
+                                listOf(view)
+                            }
                         val found =
-                            TreeIterables.breadthFirstViewTraversal(view).any {
-                                viewMatcher.matches(it) && isDisplayed().matches(it)
+                            roots.any { root ->
+                                TreeIterables.breadthFirstViewTraversal(root).any {
+                                    (viewMatcher.matches(it) && isDisplayed().matches(it)).also { matches ->
+                                        if (matches) matchedRoot = root
+                                    }
+                                }
                             }
                         if (found) return
                         if (SystemClock.uptimeMillis() >= deadline) {
-                            throw AssertionError("Timed out waiting for visible view: $viewMatcher")
+                            throw AssertionError(
+                                "Timed out waiting for visible view: $viewMatcher; " +
+                                    TreeIterables
+                                        .breadthFirstViewTraversal(view)
+                                        .filterIsInstance<android.widget.TextView>()
+                                        .joinToString {
+                                            "${it.resources.getResourceEntryName(
+                                                it.id.takeIf { id ->
+                                                    id > 0
+                                                } ?: android.R.id.text1,
+                                            )}=${it.text}"
+                                        },
+                            )
                         }
                         uiController.loopMainThreadForAtLeast(16)
                     } while (true)
                 }
             },
         )
-        return onView(viewMatcher).check(matches(isDisplayed()))
+        return onView(viewMatcher)
+            .inRoot(
+                androidx.test.espresso.matcher.RootMatchers
+                    .withDecorView(org.hamcrest.Matchers.sameInstance(matchedRoot)),
+            ).check(matches(isDisplayed()))
     }
 
     fun waitForPagerIdle(pagerId: Int) {
