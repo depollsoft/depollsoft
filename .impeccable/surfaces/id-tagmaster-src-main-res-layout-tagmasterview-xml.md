@@ -17,7 +17,9 @@ Singers choosing and singing tags together, including afterglows. Preparation an
 
 The singing desk established task priority, seed a858fb14, candidate 6. The user rejected the first refresh's faded footer artwork and layered tabs. The approved correction restores the original page-scale barber-pole background and familiar Home -> Browse/Search -> Tag -> material pushes. No global tabs, sidebar or navigation bar whose meaning changes on detail. Tablets can show Summary beside selected material; narrow windows and accessibility text use one column. Preserve charcoal/blue, the handwriting wordmark and native body text.
 
-Next refinement: increase useful information density and keep Favorites and Teachable Tags as separate list experiences. Future user-defined labels and additional named lists are planned but explicitly not implemented in this work; do not change the storage model or add a label-management interface.
+Home now keeps discovery actions above two peer Your lists entries, Favorites and Teachable Tags, with counts. Each opens its own titled list; Home contains no inline tag feeds and stays bounded regardless of membership count. Catalog and saved rows prioritize title, ID and material availability; full metadata remains on the tag page. Memberships remain independent when the same tag belongs to both.
+
+Future user-defined labels and additional named lists are planned but explicitly not implemented. The peer-entry layout can accommodate more names later; there are no label-management controls, new storage types, migrations or sync fields.
 
 ## States and continuity
 

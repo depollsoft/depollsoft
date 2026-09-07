@@ -1,10 +1,10 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-07T03:13:50.004Z",
+  "generatedAt": "2026-09-07T07:06:00.000Z",
   "title": "Design System: Tag Master iOS",
   "extensions": {
     "platform": "ios",
-    "source": "../DESIGN.md; tagmaster/TMTheme.swift, TMRootController.swift, DPTagViewController.m, DPTagPageControllerBase.m",
+    "source": "../DESIGN.md; tagmaster/TMTheme.swift, TMRootController.swift, DPTagViewController.m, DPTagPageControllerBase.m, DPHomeViewController.m, DPFavoritesViewController.m, DPTeachableTagsController.m, DPTagCell.m",
     "nativeColors": {
       "primaryText": "UIColor.label",
       "secondaryText": "Opaque charcoal 0.28 light / gray 0.80 dark",
@@ -40,6 +40,8 @@
       "detailContentCap": "700pt outer padded width; full-width preference priority 999",
       "emptyStateCap": "420pt",
       "minimumTarget": "44pt",
+      "tagRow": "Automatic height; 60pt minimum, 8pt top/bottom, 4pt stack spacing; table estimate 64pt. Native iPhone example 61pt default / 303pt accessibility XXXL, long-title example 561pt.",
+      "savedLists": "One readable-width column. Home has two peer disclosure rows with counts regardless of 0/1/100 memberships; each pushes its own list.",
       "fieldLabelColumn": "132pt at non-accessibility categories",
       "largeText": "Field rows and rating stack; material pushes in one column. Labeled native collection menus at all sizes."
     },
@@ -56,13 +58,25 @@
       }
     ],
     "nativeAssets": "Original screenbackground.png untouched in light, white template in dark; original raster alpha only. Page-scale aspectFit, one pole per workspace.",
+    "plannedOrganization": "Future only: multiple labels per tag and more named lists. Current code adds no labels UI, generic model, migrations, storage keys or sync fields.",
+    "densityEvidence": "../../../.impeccable/review/density/ios-report.md; synthetic native simulator captures, not live catalog or account data.",
     "rendering": "Native descriptions only. No web component previews or synthesized tonal ramps."
   },
   "components": [
     {
       "name": "Home action row",
       "kind": "custom",
-      "description": "Plain automatic-height Home rows, Find then Browse, compact Random/ID, Favorites, Teachable."
+      "description": "Plain automatic-height discovery rows, then Your lists with exactly two peer disclosure entries, Favorites and Teachable Tags, each with a live count. No inline feeds or Home Edit."
+    },
+    {
+      "name": "Saved list destination",
+      "kind": "custom",
+      "description": "Separate Favorites and Teachable Tags plain tables with native Edit/Done, reorder, removal and empty states. Memberships and ordering remain independent. Full pole and native Back remain."
+    },
+    {
+      "name": "Compact tag row",
+      "kind": "custom",
+      "description": "DPTagCell shared by Browse/search and saved lists. Unlimited-line headline, distinct alternate title, footnote ID/material availability. Read-only status, not toggles. Rating stays on Summary; downloads and posted date stay on Details."
     },
     {
       "name": "Search field",
@@ -101,7 +115,7 @@
     "keyCharacteristics": [
       "",
       "Handwriting for identity, native semantic type for reading and controls.",
-      "Blue actions on appearance-aware grouped surfaces.",
+      "Blue actions over the original page-scale pole.",
       "Readable panes and explicit large-text alternatives."
     ],
     "rules": [

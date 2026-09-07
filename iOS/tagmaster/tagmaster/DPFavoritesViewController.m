@@ -1,28 +1,27 @@
 //
-//  DPTeachableTagsController.m
+//  DPFavoritesViewController.m
 //  tagmaster
 //
 //  Created by David Poll on 9/28/13.
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
-//  The teaching list: the tags this singer is ready to teach, in the order they
-//  want to teach them.
+//  Favorites, in the singer's saved order.
 //
 
-#import "DPTeachableTagsController.h"
+#import "DPFavoritesViewController.h"
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"
 #import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
 
-@interface DPTeachableTagsController ()
+@interface DPFavoritesViewController ()
 
 @property (nonatomic, strong) TMEmptyStateView *emptyState;
 
 @end
 
-@implementation DPTeachableTagsController
+@implementation DPFavoritesViewController
 
 
 - (id)init {
@@ -46,22 +45,22 @@
     self.tableView.cellLayoutMarginsFollowReadableWidth = YES;
     self.tableView.estimatedRowHeight = 64;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
-    self.tableView.accessibilityIdentifier = @"teachableTags";
+    self.tableView.accessibilityIdentifier = @"favorites";
 
     self.emptyState = [[TMEmptyStateView alloc] initWithFrame:CGRectZero];
-    [self.emptyState configureWithSymbolName:@"person.2.wave.2"
-                                       title:@"No teachable tags yet"
-                                     message:@"Mark a tag as teachable from its tag menu and it "
-                                              "will wait here for the next time you teach."
+    [self.emptyState configureWithSymbolName:@"star"
+                                       title:@"No favorites yet"
+                                     message:@"Save favorites from any tag’s list menu."
                                  actionTitle:nil
                                       action:nil];
 
-    self.title = @"Teachable Tags";
+    self.title = @"Favorites";
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
-    self.navigationItem.backBarButtonItem.title = @"Teachable";
+    self.navigationItem.backBarButtonItem.title = @"Favorites";
 
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
-    self.editButtonItem.accessibilityLabel = @"Edit teachable tags";
+    self.editButtonItem.accessibilityIdentifier = @"favorites.edit";
+    self.editButtonItem.accessibilityLabel = @"Edit favorites";
     // Keep the page background installed in every list state.
     UIView *background = self.tableView.backgroundView;
     self.emptyState.translatesAutoresizingMaskIntoConstraints = NO;
@@ -72,7 +71,8 @@
         [self.emptyState.topAnchor constraintEqualToAnchor:background.safeAreaLayoutGuide.topAnchor],
         [self.emptyState.bottomAnchor constraintEqualToAnchor:background.safeAreaLayoutGuide.bottomAnchor]
     ]];
-    [self viewDidLoadExtension];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUserDataChanged)
+        name:@"tagmaster.userDataChanged" object:nil];
     [self updateEmptyState];
 }
 
@@ -83,13 +83,25 @@
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing:editing animated:animated];
-    self.editButtonItem.accessibilityLabel = editing ? @"Done editing teachable tags" : @"Edit teachable tags";
+    self.editButtonItem.accessibilityLabel = editing ? @"Done editing favorites" : @"Edit favorites";
 }
 
 - (void)updateEmptyState {
-    BOOL empty = [DPAppDelegate teachable].count == 0;
+    BOOL empty = [DPAppDelegate favorites].count == 0;
     self.emptyState.hidden = !empty;
     self.editButtonItem.enabled = !empty;
+}
+
+- (void)onUserDataChanged {
+    if (![NSThread isMainThread]) {
+        [self performSelectorOnMainThread:@selector(onUserDataChanged) withObject:nil waitUntilDone:NO];
+        return;
+    }
+    CGPoint offset = self.tableView.contentOffset;
+    [self.tableView reloadData];
+    [self.tableView layoutIfNeeded];
+    [self.tableView setContentOffset:offset animated:NO];
+    [self updateEmptyState];
 }
 
 - (void)didReceiveMemoryWarning
@@ -101,11 +113,11 @@
 #pragma mark - Table view data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [DPAppDelegate teachable].count;
+    return [DPAppDelegate favorites].count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    int tagId = [[DPAppDelegate teachable][indexPath.row] intValue];
+    int tagId = [[DPAppDelegate favorites][indexPath.row] intValue];
     DPTagCell *tagCell = [self.tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
     tagCell.tagId = tagId;
     return tagCell;
@@ -113,7 +125,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    int tagId = [[DPAppDelegate teachable][indexPath.row] intValue];
+    int tagId = [[DPAppDelegate favorites][indexPath.row] intValue];
     DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
     tagViewController.tagId = tagId;
     [self.navigationController pushViewController:tagViewController animated:YES];
@@ -125,7 +137,7 @@
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        [DPAppDelegate removeTeachable:[[DPAppDelegate teachable][indexPath.row] intValue]];
+        [DPAppDelegate removeFavorite:[[DPAppDelegate favorites][indexPath.row] intValue]];
         [TMTheme saved];
         [self.tableView reloadData];
         [self updateEmptyState];
@@ -142,7 +154,7 @@
 
 // Override to support rearranging the table view.
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-    [DPAppDelegate moveTeachableAt:fromIndexPath.row to:toIndexPath.row];
+    [DPAppDelegate moveFavoriteAt:fromIndexPath.row to:toIndexPath.row];
     [TMTheme saved];
 }
 

@@ -65,7 +65,7 @@ final class TMRefreshTests: XCTestCase {
     func testHomeOffersTheApprovedDeskActionsInOrder() {
         let items = deskActions(of: loadedHome())
         let titles = items.map { $0["title"] as? String ?? "" }
-        XCTAssertEqual(titles, ["Find a tag", "Browse", "Random Tag", "Open Tag ID", "Teachable Tags"],
+        XCTAssertEqual(titles, ["Find a tag", "Browse", "Random Tag", "Open Tag ID"],
                        "Home must present the approved singing-desk actions in order")
 
         for item in items {
@@ -76,24 +76,17 @@ final class TMRefreshTests: XCTestCase {
         }
     }
 
-    func testHomeKeepsFavoritesAsItsSecondSectionWithAnEmptyState() {
-        DPAppDelegate.setFavorites([])
-        let home = loadedHome()
-        let table = home.tableView!
-
-        XCTAssertEqual(home.numberOfSections(in: table), 3)
-        XCTAssertEqual(home.tableView(table, titleForHeaderInSection: 1), "Favorites")
-        XCTAssertEqual(home.tableView(table, numberOfRowsInSection: 1), 0)
-
-        let emptyFooter = home.tableView(table, titleForFooterInSection: 1)
-        XCTAssertNotNil(emptyFooter, "An empty favorites list must explain itself")
-        XCTAssertTrue(emptyFooter?.contains("favorite") == true)
-
-        DPAppDelegate.setFavorites([42])
-        XCTAssertEqual(home.tableView(table, numberOfRowsInSection: 1), 1)
-        XCTAssertNil(home.tableView(table, titleForFooterInSection: 1),
-                     "The empty-state footer disappears once there are favorites")
-        DPAppDelegate.setFavorites([])
+    func testHomeKeepsTwoPeerListEntriesWhenEmptyOrPopulated() {
+        for count in [0, 1, 100] {
+            DPAppDelegate.setFavorites(Array(1...100).prefix(count).map { $0 }, doSave: false)
+            DPAppDelegate.setTeachable(DPAppDelegate.favorites(), doSave: false)
+            let home = loadedHome()
+            let table = home.tableView!
+            XCTAssertEqual(home.numberOfSections(in: table), 2)
+            XCTAssertEqual(home.tableView(table, titleForHeaderInSection: 1), "Your lists")
+            XCTAssertEqual(home.tableView(table, numberOfRowsInSection: 1), 2)
+            XCTAssertNil(home.navigationItem.leftBarButtonItem)
+        }
     }
 
     func testHomeShowsTheWordmarkAndKeepsSettingsAsAUtility() {
@@ -104,7 +97,7 @@ final class TMRefreshTests: XCTestCase {
 
         XCTAssertEqual(home.navigationItem.rightBarButtonItem?.accessibilityLabel, "Settings",
                        "Settings lives in the navigation bar as a utility")
-        XCTAssertTrue(home.navigationItem.leftBarButtonItem === home.editButtonItem)
+        XCTAssertNil(home.navigationItem.leftBarButtonItem)
 
         let titles = deskActions(of: home).map { $0["title"] as? String ?? "" }
         XCTAssertFalse(titles.contains("Settings"), "Settings is not a desk action")
@@ -696,8 +689,8 @@ extension TMRefreshTests {
             cell.layoutIfNeeded()
             let size = cell.contentView.systemLayoutSizeFitting(CGSize(width: width, height: 0),
                 withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
-            XCTAssertGreaterThanOrEqual(size.height, 80, "Title, metadata and materials each need their full line height")
-            XCTAssertLessThan(size.height, 200, "A normal catalog row must not fill the page at width \(width)")
+            XCTAssertGreaterThanOrEqual(size.height, 54, "Title and ID/material support need their full line height")
+            XCTAssertLessThanOrEqual(size.height, 72, "Two-line default rows stay compact at width \(width)")
         }
     }
 

@@ -17,7 +17,14 @@ public extension DPTeachableTagsController {
     }
     
     @objc func onUserDataChanged() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in self?.onUserDataChanged() }
+            return
+        }
+        let offset = self.tableView.contentOffset
         self.tableView.reloadData()
+        self.tableView.layoutIfNeeded()
+        self.tableView.setContentOffset(offset, animated: false)
         self.updateEmptyState()
     }
 }

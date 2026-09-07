@@ -104,6 +104,10 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name" />
         <activity
+            android:name=".FavoritesActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/Favorites" />
+        <activity
             android:name=".TeachableTagsActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/TeachableTags" />

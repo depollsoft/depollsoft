@@ -203,4 +203,8 @@
 
     <string name="TeachableDeskEmpty">Mark tags you can teach to keep them here.</string>
     <string name="InvalidTagId">Enter a tag ID greater than zero.</string>
+    <string name="YourLists">Your lists</string>
+    <string name="BuiltInListCount">%1$s · %2$d</string>
+    <string name="NoMaterials">No materials</string>
+    <string name="TagScanStatus">ID %1$d · %2$s</string>
 </resources>

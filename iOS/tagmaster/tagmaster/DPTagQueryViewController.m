@@ -76,7 +76,7 @@
     self.tagTable.dataSource = self;
     self.tagTable.backgroundColor = [UIColor clearColor];
     self.tagTable.cellLayoutMarginsFollowReadableWidth = YES;
-    self.tagTable.estimatedRowHeight = 88;
+    self.tagTable.estimatedRowHeight = 64;
     self.tagTable.rowHeight = UITableViewAutomaticDimension;
     self.tagTable.accessibilityIdentifier = @"tagResults";
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];

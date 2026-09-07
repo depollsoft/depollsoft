@@ -52,11 +52,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!-- Holds the row's height steady while the tag is still loading. -->
-    <depollsoft.tagmaster.TagItemView
-        android:id="@+id/dummyTagItemView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="invisible" />
 
 </FrameLayout>

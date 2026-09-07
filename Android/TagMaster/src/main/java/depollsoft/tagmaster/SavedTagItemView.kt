@@ -51,6 +51,7 @@ abstract class SavedTagItemView : FrameLayout, BoundUi<Int> {
         if (dataSource == tagId)
             return
         tagId = dataSource
+        failedToLoad = false
         this.tag = null
         CoroutineScope(Dispatchers.Main + Job()).launch {
             try {

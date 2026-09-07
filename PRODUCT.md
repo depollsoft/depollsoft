@@ -49,6 +49,12 @@ Accounts are optional. Local use remains possible, while signed-in users can bac
 - Preserve current cloud-sync and privacy commitments. Do not broaden claims about personal-data collection without verified product and legal review.
 - Current code spans Swift, Objective-C, Java, Kotlin, Firebase, and shared backend services. Modernization must preserve working data, account, deep-link, and content contracts.
 
+## Planned Tag Master organization
+
+The owner plans to allow multiple labels per tag and additional named lists, with Favorites and Teachable Tags remaining built-in lists. This is future work, not a shipped capability or authorization to implement label management, a new data model, migrations, or sync fields now.
+
+Current interface work should keep list memberships independent and present each list as a separate destination. A tag may belong to both built-ins; do not merge their feeds or remove one membership to avoid duplicate presentation. Use a list-entry pattern that can accommodate more names later instead of a fixed two-way switch or adjacent unbounded feeds.
+
 ## Brand Commitments
 
 Pitch Perfect, Tag Master, DepollSoft, and BarbershopTags.com are established names in the product experience. The products use specific music-community language rather than generic media or education terminology.
@@ -56,6 +62,8 @@ Pitch Perfect, Tag Master, DepollSoft, and BarbershopTags.com are established na
 Pitch Perfect keeps its long-standing grayscale-first aesthetic: neutral monochrome surfaces carry the interface, with at most a single luminous emphasis for the sounding note. Saturated multi-color themes are off-brand for this app.
 
 Tag Master must respect barbershop culture as a participatory social practice. Copy and product decisions should recognize singers, teachers, voice parts, tags, and afterglows without flattening them into generic lesson content.
+
+Tag Master keeps its recognizable page-scale barber-pole background, handwriting wordmark, and charcoal/blue character. Replacing the background with a tiny footer mark or hiding it behind opaque cards does not preserve this identity.
 
 ## Evidence on Hand
 

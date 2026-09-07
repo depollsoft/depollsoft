@@ -5,6 +5,8 @@
 #import "DPAppDelegate.h"
 #import "DPHomeViewController.h"
 #import "DPTeachableTagsController.h"
+#import "DPFavoritesViewController.h"
+#import "TMDensityFixture.h"
 #import "DPSettingsController.h"
 #import "DPTagTracksController.h"
 #import "DPTagViewController.h"

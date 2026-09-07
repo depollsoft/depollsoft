@@ -36,7 +36,9 @@
       "minimumTarget": "48dp",
       "detail": "Summary plus selected material at >=720dp and fontScale <1.5; one-column material push otherwise. Native Back returns to Summary and caller.",
       "largeText": "Native font scaling, scrolling and wrap-content rows; Search label/spinner rows stay horizontal with 2:3 weights.",
-      "insets": "System-bar/cutout left and right padding; optional bottom max(system bars, IME)."
+      "insets": "System-bar/cutout left and right padding; optional bottom max(system bars, IME).",
+      "savedLists": "Home has Your lists with count-bound Favorites and Teachable Tags peer disclosures. Separate titled activities own the existing order, long-press removal/reordering and scroll position. Both entries remain visible when empty.",
+      "rowDensity": "TitleMedium title, optional distinct alternate, BodyMedium ID/material status. 8dp vertical padding, 4dp gap, wrap_content and 48dp minimum target. Two-line target 60–72dp; long titles and font scale grow without ellipsis. No rating/date/downloads in scan rows; retained in Summary/Details."
     },
     "shadows": [
       {
@@ -53,7 +55,8 @@
       }
     ],
     "nativeAssets": "Original ic_barberpole.xml, 299dp by 513dp, aspect-fit through PoleBackground with original light/night tint behind entire workspace. Player icon selectors and handwriting font remain unchanged. ic_barberpole_mark is not used as background.",
-    "rendering": "Native descriptions only. No web component previews or synthesized tonal ramps."
+    "rendering": "Native descriptions only. No web component previews or synthesized tonal ramps.",
+    "futureLists": "Multiple labels and named lists are future intent only. No label model, custom-list UI, migration or sync changes. Repeatable disclosure styling does not implement that feature."
   },
   "components": [
     {
