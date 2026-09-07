@@ -48,7 +48,7 @@ spacing:
 
 **Creative North Star: "The singing desk"**
 
-A charcoal action bar and handwriting title preserve Tag Master's identity. Blue marks actions; Material 3 supplies native fields, buttons and navigation. The barber pole becomes an icon-scale mark rather than a full-screen watermark.
+A charcoal action bar and handwriting title preserve Tag Master's identity. Blue marks actions; Material 3 supplies native fields, buttons and navigation. The original full-page barber-pole vector sits behind the workspace, at its original light/night tints. The user rejected icon-scale substitution and global tabs.
 
 This record covers `Android/TagMaster` only. See the [iOS counterpart](../../iOS/tagmaster/DESIGN.md), [product context](../../PRODUCT.md) and [confirmed surface brief](../../.impeccable/surfaces/id-tagmaster-src-main-res-layout-tagmasterview-xml.md). The brief owns singing-first Home/Browse/Search strategy and seed `a858fb14`, candidate 6. Root design documents belong to Pitch Perfect.
 
@@ -60,7 +60,7 @@ This record covers `Android/TagMaster` only. See the [iOS counterpart](../../iOS
 
 Evidence comes from `src/main/res/values/{colors,themes,dimens}.xml`, night and width qualifiers, layouts, and `src/main/java/depollsoft/tagmaster/{ReadableWidthLayout,DeskUi,Utilities,MeHeaderView}.kt`.
 
-The [final Android verdict](../../.impeccable/review/tagmaster-android-verdict.md) records ship only for the PDF page-continuity fix, not the whole app. Its synthetic pages prove order, not engraving quality. Active-player, video and tablet-detail final captures remain absent; tablet evidence used an 800dp API36 emulator simulation, not tablet hardware. Authentication, sync, physical audio, TalkBack, haptics, motion and complete posture/state coverage remain unverified. This documentation pass ran no builds, tests or reviews.
+Historical refresh evidence, superseded for visual/navigation direction by [the Android character correction](../../.impeccable/review/character-correction/android-report.md). The [final Android verdict](../../.impeccable/review/tagmaster-android-verdict.md) records ship only for the PDF page-continuity fix, not the whole app. Its synthetic pages prove order, not engraving quality. Active-player, video and tablet-detail final captures remain absent; tablet evidence used an 800dp API36 emulator simulation, not tablet hardware. Authentication, sync, physical audio, TalkBack, haptics, motion and complete posture/state coverage remain unverified. This documentation pass ran no builds, tests or reviews.
 
 ## Colors
 
@@ -100,9 +100,9 @@ Spacing tokens are density-independent Android dp. Default `tm_gutter` is 16dp a
 
 `ReadableWidthLayout` measures content against the cap, retains the parent's exact outer width and centers visible children within the capped measure. Home, Search and reading layouts use this wrapper rather than stretching prose across a tablet.
 
-At `layout-w600dp`, Home/Browse/Search navigation changes from a bottom bar to a leading rail. Tag detail likewise changes its four-section bar to a rail beside one pager. Unlike iOS, Android does not pin Summary beside another detail section.
+Home hosts only HomeFragment. Find and Browse push their existing activities. Catalog collections use a labeled native Spinner. Tag Summary opens Learning tracks, Details, or Videos as a local content push. At 720dp available width with font scale below 1.5, Summary stays beside the selected material. Accessibility text uses one column. Native Back returns from material to Summary, then to the caller.
 
-**The Available Width Rule.** Select native bar or rail through width-qualified resources and cap the reading area independently.
+**The Available Width Rule.** Cap Home's reading column; use width for Summary plus material, never a global rail. PoleBackground draws one aspect-fit original asset behind both panes.
 
 `DeskUi.applyDeskInsets` pads left/right for system bars and cutouts, and bottom for the larger of system-bar or IME insets when enabled. The action bar handles its own top inset. Child Up follows the existing stack; a task-root child returns to `MeActivity`.
 
@@ -112,23 +112,23 @@ The charcoal action bar explicitly has 0dp elevation. Material tonal surfaces an
 
 ## Shapes
 
-Home actions inherit Material 3 tonal-button geometry; Find a tag overrides the fill/on-color pair. Search uses the Material 3 outlined text-field shape. Navigation and icon buttons retain their native style shapes. No app-wide custom numeric radius scale is defined.
+Find a tag uses primary fill. Browse, Random Tag and Open tag ID use quiet native text actions. Search uses the Material 3 outlined text-field shape. Navigation and icon buttons retain their native style shapes. No app-wide custom numeric radius scale is defined.
 
 ## Components
 
 - Home actions use full-width `MaterialButton` controls with 48dp minimum height, `tm-space-s` top margin, `tm-space-l` horizontal padding and `tm-space-m` icon padding. Random Tag reports inline progress, disables itself while loading and offers Snackbar retry after failure.
 - Open Tag ID uses an outlined numeric `TextInputEditText` in a native alert. Invalid or nonpositive input keeps the dialog open and sets the field error.
 - Search combines outlined text input, a full-width Search button and native Spinners for sorting, sheet music, learning tracks, parts and collection.
-- Labeled `BottomNavigationView` and `NavigationRailView` share menu IDs through `attachToPager`. Root destinations are Home, Browse and Search; detail destinations are Summary, Details, Tracks and Videos. Settings remains a utility.
+- No global or detail navigation bar/rail. Home pushes Browse/Search, then Tag. Summary contains labeled material actions; Settings remains a Home toolbar utility.
 - The part player has checkable Play/Pause and Stop icon buttons, a loading indicator, and labeled position/balance SeekBars. Play/Pause selects `ic_pause` when checked and `ic_play` otherwise; targets use `tm_touch_target`.
 - `confirmHaptic` requests `CONFIRM` on API 30+ and `VIRTUAL_KEY` earlier. Pager and widget transitions use native behavior; these helpers define no custom timing curve or duration.
 
-New drawable assets are native XML: `ic_barberpole_mark.xml`, `ic_play.xml`, `ic_pause.xml`, `ic_stop.xml`, plus the `ic_play_pause.xml` state selector. The barber-pole vector is authored at 24dp with a 24-unit viewport and theme tint. It reinterprets the existing identity at icon scale, not an external stock asset. Existing shipping rasters and the handwriting font remain unchanged; no new license provenance is claimed for legacy files.
+The workspace uses the original `ic_barberpole.xml`, 299dp by 513dp, with original `#11333333` light and `#11DDDDDD` night tint. `PoleBackground` aspect-fits it behind Home, catalog/search/results, tag content, Settings and Teachable Tags. The rejected refresh's 24dp `ic_barberpole_mark.xml` is not the workspace background. Player icon selectors and the handwriting font remain unchanged.
 
 ## Do's and Don'ts
 
 - Do preserve Home, Browse, Search, Favorites, Teachable Tags, Summary, Details, Tracks and Videos terminology alongside BarbershopTags.com attribution.
 - Do use DayNight theme roles, readable-width wrappers and native labeled controls.
 - Don't import Pitch Perfect's visual rules into Tag Master.
-- Don't describe the tablet rail as an iOS-style split Summary workspace.
+- Don't restore global tabs/rails, collection tabs, detail tabs, or a tiny-footer pole.
 - Don't canonize isolated legacy styling or unsampled shared-library internals as reusable system rules.

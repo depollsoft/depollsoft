@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 class TagSearchActivityTest : SingingDeskTest() {
     @Test
     fun searchFieldAcceptsTitleOrLyrics() {
-        onView(withId(R.id.search)).perform(click())
+        onView(withId(R.id.findTagButton)).perform(scrollTo(), click())
         onView(withId(R.id.searchTextBox))
             .perform(replaceText("ring a chord"), closeSoftKeyboard())
             .check(matches(withText("ring a chord")))
@@ -24,7 +24,7 @@ class TagSearchActivityTest : SingingDeskTest() {
 
     @Test
     fun submitOpensResultsAndBackKeepsTheQuery() {
-        onView(withId(R.id.search)).perform(click())
+        onView(withId(R.id.findTagButton)).perform(scrollTo(), click())
         onView(withId(R.id.searchTextBox)).perform(replaceText("ring a chord"), closeSoftKeyboard())
         onView(withId(R.id.searchButton)).perform(click())
         onView(withId(R.id.resultsRoot)).check(matches(isDisplayed()))
@@ -36,9 +36,8 @@ class TagSearchActivityTest : SingingDeskTest() {
 
     @Test
     fun searchFiltersRemainReachableByScrolling() {
-        onView(withId(R.id.search)).perform(click())
+        onView(withId(R.id.findTagButton)).perform(scrollTo(), click())
         // ViewPager can still be settling after Espresso's click action returns.
-        EspressoTestUtils.waitForPagerIdle(R.id.viewPager)
         EspressoTestUtils.waitForView(allOf(withId(R.id.searchTextBox), isCompletelyDisplayed()))
         listOf(
             R.id.sortBySpinner,

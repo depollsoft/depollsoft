@@ -224,19 +224,8 @@
                                            action:action];
 }
 
-/// The barber pole used to fill every screen edge to edge behind the content.
-/// It is now a quiet mark at the foot of Home; every other screen simply takes
-/// the grouped canvas so text sits on a surface that adapts to appearance and
-/// increased-contrast settings.
 + (void)setUpBackground:(UIView *)view {
-    if ([view isKindOfClass:[UITableView class]]) {
-        UITableView *tableView = (UITableView *)view;
-        tableView.backgroundView = nil;
-        tableView.backgroundColor = [TMTheme canvas];
-        return;
-    }
-    view.backgroundColor = [TMTheme canvas];
+    [TMTheme installBackgroundIn:view];
 }
-
 
 @end

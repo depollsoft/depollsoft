@@ -153,6 +153,19 @@
                     android:textAllCaps="false" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/openTracksButton" style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="48dp" android:gravity="start|center_vertical" android:text="@string/LearningTracks" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/openDetailsButton" style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="48dp" android:gravity="start|center_vertical" android:text="@string/Details" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/openVideosButton" style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="48dp" android:gravity="start|center_vertical" android:text="@string/videos" />
+
             <LinearLayout
                 android:id="@+id/ratingRow"
                 android:layout_width="match_parent"

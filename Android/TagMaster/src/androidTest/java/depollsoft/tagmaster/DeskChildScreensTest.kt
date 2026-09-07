@@ -24,11 +24,10 @@ class DeskChildScreensTest : SingingDeskTest() {
 
     @Test
     fun settingsUpPreservesSearchSelection() {
-        onView(withId(R.id.search)).perform(click())
         onView(withId(R.id.settingsMenuItem)).perform(click())
         onView(withId(R.id.settingsRoot)).check(matches(isDisplayed()))
         onView(withContentDescription(androidx.appcompat.R.string.abc_action_bar_up_description)).perform(click())
-        assertDestination(MeActivity.SEARCH, R.id.search)
+        assertDestination(MeActivity.HOME, R.id.home)
     }
 
     @Test
@@ -36,7 +35,7 @@ class DeskChildScreensTest : SingingDeskTest() {
         val screens =
             listOf(
                 TagSearchActivity::class.java to R.id.pageContainer,
-                TagBrowserActivity::class.java to R.id.browseTabs,
+                TagBrowserActivity::class.java to R.id.browseCollectionSpinner,
                 TagSearchResultsActivity::class.java to R.id.resultsRoot,
                 TagQueryActivity::class.java to R.id.resultsRoot,
                 TagDetailActivity::class.java to R.id.detailError,

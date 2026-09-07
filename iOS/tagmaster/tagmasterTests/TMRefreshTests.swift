@@ -65,7 +65,7 @@ final class TMRefreshTests: XCTestCase {
     func testHomeOffersTheApprovedDeskActionsInOrder() {
         let items = deskActions(of: loadedHome())
         let titles = items.map { $0["title"] as? String ?? "" }
-        XCTAssertEqual(titles, ["Find a tag", "Random Tag", "Open Tag ID", "Teachable Tags"],
+        XCTAssertEqual(titles, ["Find a tag", "Browse", "Random Tag", "Open Tag ID", "Teachable Tags"],
                        "Home must present the approved singing-desk actions in order")
 
         for item in items {
@@ -81,7 +81,7 @@ final class TMRefreshTests: XCTestCase {
         let home = loadedHome()
         let table = home.tableView!
 
-        XCTAssertEqual(home.numberOfSections(in: table), 2)
+        XCTAssertEqual(home.numberOfSections(in: table), 3)
         XCTAssertEqual(home.tableView(table, titleForHeaderInSection: 1), "Favorites")
         XCTAssertEqual(home.tableView(table, numberOfRowsInSection: 1), 0)
 
@@ -108,7 +108,7 @@ final class TMRefreshTests: XCTestCase {
 
         let titles = deskActions(of: home).map { $0["title"] as? String ?? "" }
         XCTAssertFalse(titles.contains("Settings"), "Settings is not a desk action")
-        XCTAssertFalse(titles.contains("Browse"), "Browse is a destination, not a home row")
+        XCTAssertTrue(titles.contains("Browse"), "Browse is visible on Home")
     }
 
     func testHomeRowsAreDescribedForVoiceOver() {
@@ -184,7 +184,8 @@ final class TMRefreshTests: XCTestCase {
 
         detail.selectSection(at: 2)
         XCTAssertEqual(detail.selectedSectionIndex, 2)
-        XCTAssertTrue(detail.children.contains(detail.viewControllers[2]))
+        XCTAssertTrue(detail.navigationController?.topViewController === detail.viewControllers[2])
+        detail.navigationController?.popViewController(animated: false)
 
         detail.selectSection(at: 3)
         XCTAssertEqual(detail.selectedSectionIndex, 3)
@@ -243,28 +244,32 @@ final class TMRefreshTests: XCTestCase {
         if FirebaseApp.app() == nil { FirebaseApp.configure() }
         let delegate = DPAppDelegate()
         delegate.rootController = root
-        root.selectedIndex = 2
+        root.focusSearch()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
 
         let url = URL(string: "tagmaster:///tag/1234")!
         XCTAssertTrue(delegate.application(UIApplication.shared, open: url, options: [:]))
 
         let home = root.homeNavigationController!
-        XCTAssertEqual(root.selectedIndex, 0, "Deep links bring Home forward")
+        XCTAssertTrue(root.viewControllers.first is DPHomeViewController)
         let top = home.topViewController as? DPTagViewController
         XCTAssertNotNil(top, "A tagmaster:// tag link opens the tag")
         XCTAssertEqual(top?.tagId, 1234)
     }
 
-    func testRootOffersExactlyTheThreeDestinations() {
+    func testRootIsOneStackWithHomeAndNativeBack() {
         let root = TMRootController.make()
-        _ = root.view
-        XCTAssertEqual(root.viewControllers?.count, 3)
-        let titles = (root.viewControllers ?? []).map { $0.tabBarItem.title ?? "" }
-        XCTAssertEqual(titles, ["Home", "Browse", "Search"])
-        for destination in root.viewControllers ?? [] {
-            XCTAssertTrue(destination is UINavigationController,
-                          "Each destination keeps its own navigation stack")
-        }
+        present(root)
+        XCTAssertEqual(root.viewControllers.count, 1)
+        XCTAssertTrue(root.topViewController is DPHomeViewController)
+        XCTAssertNil(root.tabBarController)
+        root.focusSearch()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        XCTAssertEqual(root.viewControllers.count, 2)
+        XCTAssertTrue(root.topViewController is DPSearchViewController)
+        root.popViewController(animated: false)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        XCTAssertTrue(root.topViewController is DPHomeViewController)
     }
 
     // MARK: - Cells and states
@@ -340,13 +345,13 @@ final class TMRefreshTests: XCTestCase {
     func testFindActionReturnsToSearchForm() throws {
         let root = TMRootController.make()
         present(root)
-        let search = try XCTUnwrap(root.viewControllers?[2] as? UINavigationController)
-        search.pushViewController(UIViewController(), animated: false)
-        root.selectedIndex = 0
         root.focusSearch()
-        XCTAssertEqual(root.selectedIndex, 2)
-        XCTAssertEqual(search.viewControllers.count, 1)
-        XCTAssertTrue(search.topViewController is DPSearchViewController)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        XCTAssertEqual(root.viewControllers.count, 2)
+        XCTAssertTrue(root.topViewController is DPSearchViewController)
+        root.popViewController(animated: false)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        XCTAssertTrue(root.topViewController is DPHomeViewController)
     }
 
     func testListNotificationUpdatesTeachableEmptyStateImmediately() {
@@ -372,14 +377,13 @@ final class TMRefreshTests: XCTestCase {
         detail.view.setNeedsLayout()
         detail.view.layoutIfNeeded()
         XCTAssertEqual(detail.value(forKey: "usesSplitLayout") as? Bool, false)
-        let picker = try XCTUnwrap(detail.value(forKey: "sectionPicker") as? UISegmentedControl)
-        XCTAssertEqual(picker.numberOfSegments, 4)
-        XCTAssertGreaterThanOrEqual(picker.frame.height, 44)
+        XCTAssertEqual(detail.children.count, 1)
+        XCTAssertTrue(detail.children.first is DPTagSummaryController)
         detail.view.frame.size.width = 1000
         detail.view.setNeedsLayout()
         detail.view.layoutIfNeeded()
         XCTAssertEqual(detail.value(forKey: "usesSplitLayout") as? Bool, true)
-        XCTAssertEqual(picker.numberOfSegments, 3)
+        XCTAssertEqual(detail.children.count, 2)
         let summary = try XCTUnwrap(detail.viewControllers.first as? DPTagSummaryController)
         summary.view.layoutIfNeeded()
         let stack = try XCTUnwrap(summary.value(forKey: "stack") as? UIStackView)
@@ -674,5 +678,55 @@ extension TMRefreshTests {
             value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
         }
         return 0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue)
+    }
+}
+
+extension TMRefreshTests {
+    func testCatalogRowsHaveBoundedReadableHeight() {
+        let tag = DPTag()
+        tag.tagId = 2
+        tag.title = "I Love to Sing 'Em"
+        tag.rating = 3.35
+        tag.downloadCount = 70255
+        tag.posted = Date()
+        let cell = DPTagCell(style: .default, reuseIdentifier: "Tag")
+        cell.tagInstance = tag
+        for width: CGFloat in [320, 402, 1000] {
+            cell.frame = CGRect(x: 0, y: 0, width: width, height: 100)
+            cell.layoutIfNeeded()
+            let size = cell.contentView.systemLayoutSizeFitting(CGSize(width: width, height: 0),
+                withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
+            XCTAssertGreaterThanOrEqual(size.height, 80, "Title, metadata and materials each need their full line height")
+            XCTAssertLessThan(size.height, 200, "A normal catalog row must not fill the page at width \(width)")
+        }
+    }
+
+    func testMaterialSelectionSurvivesCollapseAndExpansion() throws {
+        let detail = DPTagViewController()
+        let nav = UINavigationController(rootViewController: detail)
+        present(nav)
+        nav.setOverrideTraitCollection(UITraitCollection(horizontalSizeClass: .regular), forChild: detail)
+        window.frame = CGRect(x: 0, y: 0, width: 1000, height: 800)
+        nav.view.frame = window.bounds
+        detail.view.frame = nav.view.bounds
+        detail.perform(Selector(("applyLayoutForTraits")))
+        detail.selectSection(at: 3)
+        XCTAssertTrue(detail.children.contains(detail.viewControllers[3]))
+        window.frame.size.width = 600
+        nav.view.frame = window.bounds
+        detail.view.frame = nav.view.bounds
+        detail.perform(Selector(("applyLayoutForTraits")))
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        XCTAssertTrue(nav.topViewController === detail.viewControllers[3])
+        XCTAssertEqual(detail.selectedSectionIndex, 3)
+        window.frame.size.width = 1000
+        nav.view.frame = window.bounds
+        detail.view.frame = nav.view.bounds
+        detail.perform(Selector(("applyLayoutForTraits")))
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        XCTAssertTrue(nav.topViewController === detail)
+        XCTAssertEqual(detail.selectedSectionIndex, 3)
+        XCTAssertTrue(detail.children.contains(detail.viewControllers[3]))
+        XCTAssertEqual(detail.children.count, 2)
     }
 }

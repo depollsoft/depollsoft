@@ -27,12 +27,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestDeskApplication::class, sdk = [35])
 class DeskLayoutTest {
+    private fun themed(): Context = ContextThemeWrapper(RuntimeEnvironment.getApplication(), R.style.AppTheme)
 
-    private fun themed(): Context =
-        ContextThemeWrapper(RuntimeEnvironment.getApplication(), R.style.AppTheme)
-
-    private fun inflate(layout: Int): View =
-        LayoutInflater.from(themed()).inflate(layout, null, false)
+    private fun inflate(layout: Int): View = LayoutInflater.from(themed()).inflate(layout, null, false)
 
     private fun View.measureAt(widthDp: Int): View {
         val density = resources.displayMetrics.density
@@ -45,7 +42,10 @@ class DeskLayoutTest {
         return this
     }
 
-    private fun walk(view: View, visit: (View) -> Unit) {
+    private fun walk(
+        view: View,
+        visit: (View) -> Unit,
+    ) {
         // A hidden branch is never laid out, so it has nothing to clip.
         if (view.visibility == View.GONE) return
         visit(view)
@@ -55,7 +55,10 @@ class DeskLayoutTest {
     }
 
     /** Every laid-out text view must have room for the lines it actually drew. */
-    private fun assertNoClippedText(root: View, screen: String) {
+    private fun assertNoClippedText(
+        root: View,
+        screen: String,
+    ) {
         walk(root) { view ->
             if (view is TextView && view.visibility != View.GONE && view.text.isNotEmpty()) {
                 val textHeight = view.layout?.height ?: 0
@@ -107,30 +110,15 @@ class DeskLayoutTest {
     }
 
     @Test
-    fun tag_detail_keeps_the_four_sections_in_the_shared_order() {
+    fun tagWorkspaceHasSummaryMaterialAndRetry() {
         val detail = inflate(R.layout.tagdetailview)
-        val nav = detail.findViewById<BottomNavigationView>(R.id.bottomNavigation)
-
-        assertEquals(4, nav.menu.size())
-        assertEquals(R.id.summary, nav.menu.getItem(0).itemId)
-        assertEquals(R.id.details, nav.menu.getItem(1).itemId)
-        assertEquals(R.id.tracks, nav.menu.getItem(2).itemId)
-        assertEquals(R.id.videos, nav.menu.getItem(3).itemId)
-        assertNotNull(detail.findViewById<View>(R.id.detailError))
+        assertNotNull(detail.findViewById<View>(R.id.summaryContainer))
+        assertNotNull(detail.findViewById<View>(R.id.materialContainer))
         assertNotNull(detail.findViewById<View>(R.id.detailRetryButton))
-    }
-
-    @Test
-    @Config(qualifiers = "w840dp-h1024dp")
-    fun tag_detail_moves_its_sections_to_a_rail_on_a_tablet() {
-        val detail = inflate(R.layout.tagdetailview)
-        val nav = detail.findViewById<View>(R.id.bottomNavigation)
-
-        assertTrue(
-            "expected a navigation rail, was ${nav.javaClass.simpleName}",
-            nav is NavigationRailView,
-        )
-        assertNotNull(detail.findViewById<View>(R.id.viewPager))
+        val summary = inflate(R.layout.tagsummaryview)
+        assertNotNull(summary.findViewById<View>(R.id.openTracksButton))
+        assertNotNull(summary.findViewById<View>(R.id.openDetailsButton))
+        assertNotNull(summary.findViewById<View>(R.id.openVideosButton))
     }
 
     @Test

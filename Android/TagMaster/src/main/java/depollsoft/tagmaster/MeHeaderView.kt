@@ -6,8 +6,8 @@ import android.text.InputType
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
-import android.widget.LinearLayout
 import android.view.inputmethod.EditorInfo
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import bolts.Continuation
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -50,6 +50,10 @@ class MeHeaderView : LinearLayout {
             }
         }
 
+        findViewById<View>(R.id.browseTagButton).setOnClickListener {
+            context.startActivity(Intent(context, TagBrowserActivity::class.java))
+        }
+
         findViewById<View>(R.id.randomTagButton).setOnClickListener { loadRandomTag() }
 
         findViewById<View>(R.id.openByIdButton).setOnClickListener { promptForTagId() }
@@ -86,63 +90,65 @@ class MeHeaderView : LinearLayout {
      */
     private fun loadRandomTag() {
         setBusy(true)
-        Tag.query(
-            null,
-            0,
-            0,
-            null,
-            SettingsModel.randomLearningTracksFilter,
-            SettingsModel.randomSheetMusicFilter,
-            null,
-            null,
-            SettingsModel.minimumRandomTagRating,
-            SettingsModel.minimumRandomDownloads,
-            false,
-            "id",
-        ).continueWith(
-            Continuation<TagQueryResult, Void?> { task ->
-                if (task.isFaulted) {
-                    post {
-                        setBusy(false)
-                        report(context.getString(R.string.RandomTagFailed)) { loadRandomTag() }
-                    }
-                    return@Continuation null
-                }
-                if (task.result.available == 0) {
-                    post {
-                        setBusy(false)
-                        report(context.getString(R.string.RandomTagNoMatches))
-                    }
-                    return@Continuation null
-                }
-                val chosenNumber = Random().nextInt(task.result.available)
-                Tag.query(
-                    null,
-                    1,
-                    chosenNumber,
-                    null,
-                    SettingsModel.randomLearningTracksFilter,
-                    SettingsModel.randomSheetMusicFilter,
-                    null,
-                    null,
-                    SettingsModel.minimumRandomTagRating,
-                    SettingsModel.minimumRandomDownloads,
-                    false,
-                    "id",
-                ).continueWith<Void> { inner ->
-                    post {
-                        setBusy(false)
-                        if (inner.isFaulted || inner.result.tags.isEmpty()) {
+        Tag
+            .query(
+                null,
+                0,
+                0,
+                null,
+                SettingsModel.randomLearningTracksFilter,
+                SettingsModel.randomSheetMusicFilter,
+                null,
+                null,
+                SettingsModel.minimumRandomTagRating,
+                SettingsModel.minimumRandomDownloads,
+                false,
+                "id",
+            ).continueWith(
+                Continuation<TagQueryResult, Void?> { task ->
+                    if (task.isFaulted) {
+                        post {
+                            setBusy(false)
                             report(context.getString(R.string.RandomTagFailed)) { loadRandomTag() }
-                        } else {
-                            openTag(inner.result.tags[0].id)
                         }
+                        return@Continuation null
                     }
+                    if (task.result.available == 0) {
+                        post {
+                            setBusy(false)
+                            report(context.getString(R.string.RandomTagNoMatches))
+                        }
+                        return@Continuation null
+                    }
+                    val chosenNumber = Random().nextInt(task.result.available)
+                    Tag
+                        .query(
+                            null,
+                            1,
+                            chosenNumber,
+                            null,
+                            SettingsModel.randomLearningTracksFilter,
+                            SettingsModel.randomSheetMusicFilter,
+                            null,
+                            null,
+                            SettingsModel.minimumRandomTagRating,
+                            SettingsModel.minimumRandomDownloads,
+                            false,
+                            "id",
+                        ).continueWith<Void> { inner ->
+                            post {
+                                setBusy(false)
+                                if (inner.isFaulted || inner.result.tags.isEmpty()) {
+                                    report(context.getString(R.string.RandomTagFailed)) { loadRandomTag() }
+                                } else {
+                                    openTag(inner.result.tags[0].id)
+                                }
+                            }
+                            null
+                        }
                     null
-                }
-                null
-            },
-        )
+                },
+            )
     }
 
     private fun promptForTagId() {
@@ -164,8 +170,13 @@ class MeHeaderView : LinearLayout {
                 .setPositiveButton(R.string.Open, null)
                 .setView(field)
                 .create()
+
         fun submit() {
-            val id = editText.text?.toString()?.trim()?.toIntOrNull()
+            val id =
+                editText.text
+                    ?.toString()
+                    ?.trim()
+                    ?.toIntOrNull()
             if (id == null || id <= 0) {
                 field.error = context.getString(R.string.InvalidTagId)
                 return

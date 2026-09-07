@@ -1,40 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  One tag, four sections in the order the singer needs them: Summary, Details,
-  Tracks, Videos — the same order as iOS. Loading and failure are states of this
-  screen, not dialogs stacked on top of it.
--->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/detailRoot"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
+    android:id="@+id/detailRoot" android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
         <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/detailProgress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:indeterminate="true" />
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewPager"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:menu="@menu/tagdetailnavigation" />
+            android:id="@+id/detailProgress" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:indeterminate="true" />
+        <LinearLayout android:id="@+id/tagWorkspace" android:layout_width="match_parent"
+            android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
+            <androidx.fragment.app.FragmentContainerView android:id="@+id/summaryContainer"
+                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <androidx.fragment.app.FragmentContainerView android:id="@+id/materialContainer"
+                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        </LinearLayout>
     </LinearLayout>
-
     <include layout="@layout/tagdetailerror" />
-
 </FrameLayout>

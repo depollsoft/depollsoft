@@ -64,7 +64,7 @@
     self.recordingNotes = notes;
 
     self.partsTable = [[UITableView alloc] initWithFrame:CGRectZero
-                                                   style:UITableViewStyleInsetGrouped];
+                                                   style:UITableViewStylePlain];
     self.partsTable.delegate = self;
     self.partsTable.dataSource = self;
     self.partsTable.backgroundColor = [UIColor clearColor];
@@ -74,17 +74,14 @@
     self.partsTable.rowHeight = UITableViewAutomaticDimension;
     self.partsTable.accessibilityIdentifier = @"learningTracks";
 
-    [self.view addSubview:self.recordingNotes];
+    self.recordingNotes.translatesAutoresizingMaskIntoConstraints = YES;
+    self.partsTable.tableHeaderView = self.recordingNotes;
     [self.view addSubview:self.partsTable];
     [self.view addSubview:self.emptyState];
 
     UILayoutGuide *safe = self.view.safeAreaLayoutGuide;
     [NSLayoutConstraint activateConstraints:@[
-        [self.recordingNotes.topAnchor constraintEqualToAnchor:self.view.topAnchor],
-        [self.recordingNotes.leadingAnchor constraintEqualToAnchor:self.view.readableContentGuide.leadingAnchor],
-        [self.recordingNotes.trailingAnchor constraintEqualToAnchor:self.view.readableContentGuide.trailingAnchor],
-
-        [self.partsTable.topAnchor constraintEqualToAnchor:self.recordingNotes.bottomAnchor],
+        [self.partsTable.topAnchor constraintEqualToAnchor:safe.topAnchor],
         [self.partsTable.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [self.partsTable.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
         [self.partsTable.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
@@ -107,6 +104,18 @@
     [self.partsTable reloadData];
     self.partsTable.hidden = !hasTracks;
     self.emptyState.hidden = hasTracks;
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    CGFloat width = self.partsTable.bounds.size.width;
+    CGSize size = [self.recordingNotes systemLayoutSizeFittingSize:CGSizeMake(width, 0)
+        withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel];
+    CGFloat height = self.recordingNotes.hidden ? 0 : size.height;
+    if (self.recordingNotes.frame.size.width != width || self.recordingNotes.frame.size.height != height) {
+        self.recordingNotes.frame = CGRectMake(0, 0, width, height);
+        self.partsTable.tableHeaderView = self.recordingNotes;
+    }
 }
 
 - (void)didReceiveMemoryWarning
@@ -132,7 +141,7 @@
     content.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(TMTheme.spaceM, 0,
                                                                    TMTheme.spaceM, 0);
     cell.contentConfiguration = content;
-    cell.backgroundColor = [TMTheme surface];
+    cell.backgroundColor = UIColor.clearColor;
     cell.accessibilityLabel = [NSString stringWithFormat:@"Play %@", title];
     cell.accessibilityTraits = UIAccessibilityTraitButton;
     return cell;
@@ -143,7 +152,7 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    return @"Learning Tracks";
+    return nil;
 }
 
 @end

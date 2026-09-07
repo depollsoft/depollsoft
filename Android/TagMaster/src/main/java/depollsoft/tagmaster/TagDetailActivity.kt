@@ -99,6 +99,10 @@ class TagDetailActivity : AppCompatActivity() {
                 setLoading(false)
                 if (!task.isFaulted && !task.isCancelled && task.result != null) {
                     this@TagDetailActivity.tag = task.result
+                    if (chooseInitialMaterial) {
+                        chooseInitialMaterial = false
+                        if (task.result.tracks.isNullOrEmpty()) openMaterial("details")
+                    }
                     findViewById<View>(R.id.detailError).visibility = View.GONE
                     Activities.invalidateOptionsMenu(this@TagDetailActivity)
                 } else {
@@ -119,24 +123,27 @@ class TagDetailActivity : AppCompatActivity() {
         this.setContentView(R.layout.tagdetailview)
         enableDeskBack()
 
-        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
-        val navigation = findViewById<NavigationBarView>(R.id.bottomNavigation)
-
-        viewPager.adapter =
-            object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
-                override fun getItemCount(): Int = 4
-
-                override fun createFragment(position: Int): Fragment =
-                    when (position) {
-                        0 -> TagSummaryFragment()
-                        1 -> TagMiscFragment()
-                        2 -> TagTracksFragment()
-                        3 -> TagVideosFragment()
-                        else -> Fragment()
-                    }
+        selectedMaterial = savedInstanceState?.getString("material")
+        wideWorkspace = resources.configuration.screenWidthDp >= 720 && resources.configuration.fontScale < 1.5f
+        if (savedInstanceState == null) {
+            supportFragmentManager
+                .beginTransaction()
+                .add(R.id.summaryContainer, TagSummaryFragment(), "summary")
+                .commitNow()
+        }
+        materialBack =
+            object : androidx.activity.OnBackPressedCallback(false) {
+                override fun handleOnBackPressed() {
+                    selectedMaterial = null
+                    updateWorkspace()
+                }
             }
-
-        navigation.attachToPager(viewPager)
+        onBackPressedDispatcher.addCallback(this, materialBack)
+        if (wideWorkspace && savedInstanceState == null) {
+            selectedMaterial = "tracks"
+            chooseInitialMaterial = true
+        }
+        updateWorkspace()
 
         findViewById<View>(R.id.detailRoot).applyDeskInsets()
 
@@ -150,9 +157,73 @@ class TagDetailActivity : AppCompatActivity() {
             BindingMode.ONE_WAY,
         )
 
-        UiBinder.bind(this, R.id.bottomNavigation, "Visibility", "Tag", BoolConverter.get())
-
         this.loadQueryItem(false)
+    }
+
+    private var selectedMaterial: String? = null
+    private var wideWorkspace = false
+    private var chooseInitialMaterial = false
+    private lateinit var materialBack: androidx.activity.OnBackPressedCallback
+    val hasOpenMaterial: Boolean get() = selectedMaterial != null
+
+    fun openMaterial(material: String) {
+        require(material in setOf("tracks", "details", "videos"))
+        tag?.keyNote?.stop()
+        selectedMaterial = material
+        updateWorkspace()
+    }
+
+    private fun updateWorkspace() {
+        val selected = selectedMaterial
+        val summaryVisible = wideWorkspace || selected == null
+        findViewById<View>(R.id.summaryContainer).visibility = if (summaryVisible) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.materialContainer).visibility = if (selected != null) View.VISIBLE else View.GONE
+        val transaction = supportFragmentManager.beginTransaction()
+        supportFragmentManager.findFragmentByTag("summary")?.let {
+            if (summaryVisible) transaction.show(it) else transaction.hide(it)
+            transaction.setMaxLifecycle(
+                it,
+                if (summaryVisible) androidx.lifecycle.Lifecycle.State.RESUMED else androidx.lifecycle.Lifecycle.State.STARTED,
+            )
+        }
+        for (name in listOf("tracks", "details", "videos")) {
+            var fragment = supportFragmentManager.findFragmentByTag(name)
+            if (name == selected && fragment == null) {
+                fragment =
+                    when (name) {
+                        "tracks" -> TagTracksFragment()
+                        "details" -> TagMiscFragment()
+                        else -> TagVideosFragment()
+                    }
+                transaction.add(R.id.materialContainer, fragment, name)
+            }
+            fragment?.let {
+                if (name == selected) transaction.show(it) else transaction.hide(it)
+                transaction.setMaxLifecycle(
+                    it,
+                    if (name ==
+                        selected
+                    ) {
+                        androidx.lifecycle.Lifecycle.State.RESUMED
+                    } else {
+                        androidx.lifecycle.Lifecycle.State.STARTED
+                    },
+                )
+            }
+        }
+        transaction.commitNow()
+        materialBack.isEnabled = selected != null
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        wideWorkspace = newConfig.screenWidthDp >= 720 && newConfig.fontScale < 1.5f
+        updateWorkspace()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("material", selectedMaterial)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

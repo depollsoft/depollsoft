@@ -36,7 +36,7 @@
 {
     [super viewDidLoad];
     self.tableView = [[UITableView alloc] initWithFrame:CGRectZero
-                                                  style:UITableViewStyleInsetGrouped];
+                                                  style:UITableViewStylePlain];
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -59,7 +59,7 @@
     [self.view addSubview:self.emptyState];
 
     [NSLayoutConstraint activateConstraints:@[
-        [self.tableView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [self.tableView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor],
         [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
         [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
@@ -120,7 +120,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
                                                    reuseIdentifier:nil];
-    cell.backgroundColor = [TMTheme surface];
+    cell.backgroundColor = UIColor.clearColor;
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 
     UIImageView *thumb = [[UIImageView alloc] init];

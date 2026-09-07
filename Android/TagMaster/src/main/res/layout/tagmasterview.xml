@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Browse: the catalogue by the four orders singers actually ask for — newest,
-  best rated, most sung, and the classics. Tabs rather than a second navigation
-  bar, because these are views of one destination, not destinations.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/browseTabs"
-        style="@style/Widget.Material3.TabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabMode="scrollable" />
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/browseViewPager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <com.google.android.material.button.MaterialButton android:id="@+id/catalogSearchButton"
+        style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/FindATag" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:paddingStart="@dimen/tm_gutter" android:paddingEnd="@dimen/tm_gutter"
+        android:labelFor="@id/browseCollectionSpinner" android:text="Collection"
+        style="@style/TextAppearance.TagMaster.FieldLabel" />
+    <Spinner android:id="@+id/browseCollectionSpinner" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="48dp" />
+    <androidx.fragment.app.FragmentContainerView android:id="@+id/browseResultsContainer"
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 </LinearLayout>

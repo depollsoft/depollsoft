@@ -24,7 +24,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/findTagButton"
-        style="@style/Widget.TagMaster.HomeAction"
+        style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/FindATag"
@@ -34,18 +34,27 @@
         app:icon="@drawable/ic_search" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/browseTagButton"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="48dp" android:gravity="start|center_vertical"
+        android:text="@string/BrowseTags" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/randomTagButton"
-        style="@style/Widget.TagMaster.HomeAction"
+        style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="48dp" android:gravity="start|center_vertical"
         android:text="@string/RandomTag"
         app:icon="@drawable/ic_rotate" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/openByIdButton"
-        style="@style/Widget.TagMaster.HomeAction"
+        style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="48dp" android:gravity="start|center_vertical"
         android:text="@string/OpenTagId"
         app:icon="@drawable/ic_launch" />
 

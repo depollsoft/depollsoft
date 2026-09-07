@@ -12,6 +12,7 @@
 
 #import "DPTagSummaryController.h"
 #import "DPGridLayout.h"
+#import "DPTagViewController.h"
 #import "UIView+DPUtils.h"
 #import "DPTextView.h"
 #import "DPFileCache.h"
@@ -161,7 +162,7 @@
     self.keyRow = keyButton;
 
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    UIButtonConfiguration *sheetConfig = [UIButtonConfiguration tintedButtonConfiguration];
+    UIButtonConfiguration *sheetConfig = [UIButtonConfiguration plainButtonConfiguration];
     sheetConfig.title = @"Sheet Music";
     sheetConfig.image = [UIImage systemImageNamed:@"doc.text"];
     sheetConfig.imagePadding = TMTheme.spaceS;
@@ -226,7 +227,10 @@
     self.notesBlock = [self makeBlockWithTitle:@"Notes" body:notesLabel];
 
     self.stack = [[UIStackView alloc] initWithArrangedSubviews:@[
-        titleLabel, akaLabel, keyButton, sheetMusicButton, ratingGroup,
+        titleLabel, akaLabel, keyButton, sheetMusicButton,
+        [self materialRow:@"Learning Tracks" index:2],
+        [self materialRow:@"Details" index:1],
+        [self materialRow:@"Videos" index:3], ratingGroup,
         self.partsRow, self.typeRow, self.classicTagRow,
         self.lyricsBlock, self.notesBlock
     ]];
@@ -242,6 +246,38 @@
     [self setUpRootView:self.stack withScroller:scroller];
 
     [self refreshView];
+}
+
+- (UIView *)materialRow:(NSString *)title index:(NSInteger)index {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
+    config.title = title;
+    config.image = [UIImage systemImageNamed:@"chevron.right"];
+    config.imagePlacement = NSDirectionalRectEdgeTrailing;
+    config.imagePadding = TMTheme.spaceM;
+    config.contentInsets = NSDirectionalEdgeInsetsMake(8, 0, 8, 0);
+    config.titleTextAttributesTransformer = ^NSDictionary *(NSDictionary *incoming) {
+        NSMutableDictionary *attributes = [incoming mutableCopy];
+        attributes[NSFontAttributeName] = [TMTheme bodyFont];
+        return attributes;
+    };
+    button.configuration = config;
+    button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeading;
+    button.titleLabel.adjustsFontForContentSizeCategory = YES;
+    button.accessibilityLabel = title;
+    button.tag = index;
+    [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+    [button addTarget:self action:@selector(openMaterial:) forControlEvents:UIControlEventTouchUpInside];
+    UIView *line = [[UIView alloc] init];
+    line.backgroundColor = [TMTheme separator];
+    [line.heightAnchor constraintEqualToConstant:1.0 / UIScreen.mainScreen.scale].active = YES;
+    UIStackView *row = [[UIStackView alloc] initWithArrangedSubviews:@[button, line]];
+    row.axis = UILayoutConstraintAxisVertical;
+    return row;
+}
+
+- (void)openMaterial:(UIButton *)sender {
+    [(DPTagViewController *)self.workspace selectSectionAtIndex:sender.tag];
 }
 
 - (void)viewWillLayoutSubviews {

@@ -82,6 +82,20 @@
         stack.translatesAutoresizingMaskIntoConstraints = NO;
 
         self.busyIndicator = [[DPBusyIndicator alloc] init];
+        // The legacy grid overlay requests enormous star-row heights even when
+        // hidden. A native spinner must not dictate the self-sizing row height.
+        UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        spinner.color = [TMTheme tint];
+        [spinner startAnimating];
+        UIView *loadingOverlay = [[UIView alloc] init];
+        spinner.translatesAutoresizingMaskIntoConstraints = NO;
+        [loadingOverlay addSubview:spinner];
+        [NSLayoutConstraint activateConstraints:@[
+            [spinner.centerXAnchor constraintEqualToAnchor:loadingOverlay.centerXAnchor],
+            [spinner.centerYAnchor constraintEqualToAnchor:loadingOverlay.centerYAnchor]
+        ]];
+        self.busyIndicator.overlay = loadingOverlay;
         self.busyIndicator.child = self.rootView;
         self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
 
