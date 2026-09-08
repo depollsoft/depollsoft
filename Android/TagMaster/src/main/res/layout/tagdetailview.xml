@@ -7,20 +7,6 @@
 
     <include layout="@layout/app_toolbar" />
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:background="@color/brand_chrome"
-        app:tabTextColor="@color/brand_tab_tint"
-        app:tabSelectedTextColor="@color/brand_on_chrome"
-        app:tabIconTint="@color/brand_tab_tint"
-        app:tabIndicatorColor="@color/brand_chrome_accent"
-        app:tabRippleColor="@color/brand_tab_tint"
-        app:tabMode="scrollable"
-        app:tabGravity="start" />
-
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress"
         android:layout_width="match_parent"
@@ -76,4 +62,20 @@
                 app:icon="@drawable/ic_refresh" />
         </LinearLayout>
     </FrameLayout>
+
+    <!-- Keep page switching within thumb reach, below the content and above system bars. -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@color/brand_chrome"
+        app:tabTextColor="@color/brand_tab_tint"
+        app:tabSelectedTextColor="@color/brand_on_chrome"
+        app:tabIconTint="@color/brand_tab_tint"
+        app:tabIndicatorColor="@color/brand_chrome_accent"
+        app:tabRippleColor="@color/brand_tab_tint"
+        app:tabIndicatorGravity="top"
+        app:tabMode="auto"
+        app:tabGravity="fill" />
 </LinearLayout>
