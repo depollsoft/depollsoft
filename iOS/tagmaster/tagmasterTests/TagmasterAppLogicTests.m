@@ -472,6 +472,62 @@ TM_CAPTURE_IMPL
     XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:5], XCTWaiterResultCompleted);
 }
 
+- (void)testSummaryBrandButtonsAndTintChanges {
+    TMTestSummary *summary = [TMTestSummary new];
+    [summary loadViewIfNeeded];
+    DPTag *tag = [self tag];
+    tag.sheetMusicUri = [DPRemoteLocation new];
+    summary.tag = tag;
+    summary.view.frame = CGRectMake(0, 0, 393, 800);
+    [summary.view layoutIfNeeded];
+    UIButton *sheet = [summary valueForKey:@"sheetMusicButton"];
+    UIButton *rate = [summary valueForKey:@"ratingButton"];
+    DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+    XCTAssertEqualObjects(sheet.configuration.baseForegroundColor, [UIColor whiteColor]);
+    XCTAssertEqualObjects(sheet.configuration.image, [UIImage systemImageNamed:@"doc.richtext"]);
+    XCTAssertEqual(sheet.configuration.cornerStyle, UIButtonConfigurationCornerStyleMedium);
+    XCTAssertEqualObjects(rate.configuration.image, [UIImage systemImageNamed:@"star"]);
+    XCTAssertEqualObjects(rate.accessibilityLabel, @"Rate tag");
+    XCTAssertEqualWithAccuracy(sheet.bounds.size.height, pitch.button.bounds.size.height, 1);
+    XCTAssertEqualWithAccuracy(rate.bounds.size.height, pitch.button.bounds.size.height, 1);
+    XCTAssertGreaterThanOrEqual(sheet.bounds.size.height, 44);
+    for (NSNumber *style in @[@(UIUserInterfaceStyleLight), @(UIUserInterfaceStyleDark)]) {
+        pitch.overrideUserInterfaceStyle = style.integerValue;
+        pitch.tintColor = [UIColor systemBlueColor];
+        [pitch updateTraitsIfNeeded];
+        [pitch updateConstraints];
+        XCTAssertNil([pitch.button backgroundImageForState:UIControlStateNormal]);
+        XCTAssertNil([pitch.button backgroundImageForState:UIControlStateHighlighted]);
+        XCTAssertEqualObjects(pitch.button.backgroundColor, [UIColor clearColor]);
+        XCTAssertEqualWithAccuracy(pitch.button.layer.borderWidth, 1.5, 0.01);
+        XCTAssertEqualWithAccuracy(pitch.button.layer.cornerRadius, 8, 0.01);
+        XCTAssertTrue(CGColorEqualToColor(pitch.button.layer.borderColor,
+            [pitch.button.tintColor resolvedColorWithTraitCollection:pitch.traitCollection].CGColor));
+    }
+}
+
+- (void)testAvailabilityUsesGreenWithoutChangingSpokenLabels {
+    DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    DPTag *tag = [self tag];
+    cell.tagInstance = tag;
+    UIImageView *sheet = [cell valueForKey:@"hasSheetMusic"];
+    UIImageView *tracks = [cell valueForKey:@"hasLearningTracks"];
+    XCTAssertEqualObjects(sheet.tintColor, [UIColor secondaryLabelColor]);
+    XCTAssertEqualObjects(tracks.tintColor, [UIColor secondaryLabelColor]);
+    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music unavailable"]);
+    // DPTag caches its derived tracks; reuse the cell with a newly loaded tag.
+    tag = [self tag];
+    tag.sheetMusicUri = [DPRemoteLocation new];
+    tag.tenorTrackUri = [DPRemoteLocation new];
+    cell.tagInstance = tag;
+    XCTAssertEqualObjects(sheet.image, [UIImage systemImageNamed:@"checkmark.circle.fill"]);
+    XCTAssertEqualObjects(tracks.image, [UIImage systemImageNamed:@"checkmark.circle.fill"]);
+    XCTAssertEqualObjects(sheet.tintColor, [UIColor systemGreenColor]);
+    XCTAssertEqualObjects(tracks.tintColor, [UIColor systemGreenColor]);
+    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music available"]);
+    XCTAssertTrue([cell.accessibilityLabel containsString:@"Learning tracks available"]);
+}
+
 - (void)testRecoveryAlertHasRetryAndCancel {
     TMAlertHost *host = [TMAlertHost new];
     [host tm_showError:@"Check your connection and try again." retry:^{}];

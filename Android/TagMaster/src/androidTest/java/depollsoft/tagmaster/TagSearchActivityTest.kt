@@ -69,6 +69,8 @@ class TagSearchActivityTest {
     @Test fun testSearchButtonSubmitsQuery() { submit(); assertQuery("navigation fixture") }
     @Test fun testImeSearchSubmitsQuery() {
         onView(withId(R.id.searchTextBox)).perform(replaceText("keyboard query"), pressImeActionButton())
+        // IME dispatch can return while the Search activity is still RESUMED.
+        EspressoTestUtils.waitForView(withId(R.id.tagQueryFragment))
         assertQuery("keyboard query")
     }
     @Test fun testBackFromResultsRetainsQuery() {

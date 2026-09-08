@@ -58,7 +58,7 @@
             android:tag="http://apps.depoll.com"
             android:text="@string/DepollSoft"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
+            android:textColor="?attr/colorPrimary">
         </depollsoft.lib.ui.Hyperlink>
 
         <TextView
@@ -111,7 +111,7 @@
             android:tag="http://www.barbershoptags.com"
             android:text="@string/BarbershopTagsCom"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
+            android:textColor="?attr/colorPrimary">
         </depollsoft.lib.ui.Hyperlink>
     </LinearLayout>
 
@@ -127,7 +127,7 @@
         android:tag="https://market.android.com/details?id=depollsoft.pitchperfect"
         android:text="@string/FreePitchPipe"
         android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="?attr/colorPrimary"
         android:visibility="gone">
     </depollsoft.lib.ui.Hyperlink>
 
@@ -143,7 +143,7 @@
         android:tag="http://apps.depoll.com/terms-of-use"
         android:text="@string/TermsOfUse"
         android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant">
+        android:textColor="?attr/colorPrimary">
     </depollsoft.lib.ui.Hyperlink>
 
     <depollsoft.lib.ui.Hyperlink
@@ -158,7 +158,7 @@
         android:tag="http://www.davidpoll.com/applications/tag-master/donate"
         android:text="@string/Donate"
         android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant">
+        android:textColor="?attr/colorPrimary">
     </depollsoft.lib.ui.Hyperlink>
 
 </LinearLayout>

@@ -1,0 +1,12 @@
+IDB Companion Built at Sep 1 2026 08:51:20
+IDB Companion architecture arm64
+Invoked with args=[/opt/homebrew/bin/idb_companion, --udid, 55A9555A-9714-4FE0-8F0D-1035652526F9, --grpc-domain-sock, /tmp/idb/55A9555A-9714-4FE0-8F0D-1035652526F9_companion.sock, --only, simulator]
+'--only' set for Simulators
+CoreSimulator: Already loaded, skipping
+CoreSimulator: SimDevice has correct path of /Library/Developer
+Loaded All Private Frameworks [CoreSimulator]
+Cleaning up UDS if exists
+Starting swift server on unix socket /tmp/idb/55A9555A-9714-4FE0-8F0D-1035652526F9_companion.sock
+Swift server started on [UDS]/tmp/idb/55A9555A-9714-4FE0-8F0D-1035652526F9_companion.sock
+{"grpc_path":"\/tmp\/idb\/55A9555A-9714-4FE0-8F0D-1035652526F9_companion.sock"}
+Companion will stay alive if target goes offline

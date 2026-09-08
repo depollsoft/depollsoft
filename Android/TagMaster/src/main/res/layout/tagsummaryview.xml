@@ -181,6 +181,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:importantForAccessibility="no"
+                            android:progressTint="?attr/colorPrimary"
                             android:isIndicator="true"
                             android:numStars="5"
                             android:stepSize="0.1" />
@@ -215,7 +216,7 @@
                         android:layout_marginStart="8dp"
                         android:contentDescription="@string/Rate"
                         app:tooltipText="@string/Rate"
-                        app:tint="?attr/colorOnSurface"
+                        app:tint="?attr/colorPrimary"
                         app:srcCompat="@drawable/ic_rate" />
                 </LinearLayout>
             </TableRow>
@@ -302,19 +303,20 @@
                     <depollsoft.pitchperfect.lib.ui.PitchPipeButton
                         android:id="@+id/playKeyNoteButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:minWidth="64dp"
                         android:minHeight="48dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="24dp"
                         android:background="@drawable/key_button_background"
+                        android:backgroundTint="@null"
                         android:drawableStart="@drawable/ic_key"
                         android:drawablePadding="8dp"
-                        android:drawableTint="?attr/colorOnSecondaryContainer"
+                        android:drawableTint="?attr/colorPrimary"
                         android:text="@string/Play"
                         android:textAllCaps="false"
                         android:textAppearance="?attr/textAppearanceLabelLarge"
-                        android:textColor="?attr/colorOnSecondaryContainer" />
+                        android:textColor="?attr/colorPrimary" />
                 </LinearLayout>
             </TableRow>
 
@@ -363,10 +365,12 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/sheetMusicLink"
-                        style="?attr/materialButtonTonalStyle"
+                        style="?attr/materialButtonStyle"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:minHeight="48dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
                         android:text="@string/SheetMusic"
                         app:icon="@drawable/ic_sheet_music" />
 

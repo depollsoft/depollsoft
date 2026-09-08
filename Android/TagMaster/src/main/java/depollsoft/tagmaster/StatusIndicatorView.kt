@@ -5,6 +5,8 @@ import android.util.AttributeSet
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.color.MaterialColors
 
 /** Read-only availability metadata, deliberately not a checkable control. */
 class StatusIndicatorView
@@ -28,7 +30,13 @@ class StatusIndicatorView
         fun setIsAvailable(value: Boolean) {
             available = value
             val icon = AppCompatResources.getDrawable(context, if (value) R.drawable.ic_check else R.drawable.ic_clear)?.mutate()
-            icon?.let { DrawableCompat.setTintList(it, textColors) }
+            val tint = if (value) {
+                ContextCompat.getColor(context, R.color.status_available)
+            } else {
+                MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurfaceVariant)
+            }
+            icon?.let { DrawableCompat.setTint(it, tint) }
+            setTextColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface))
             setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
             contentDescription =
                 context.getString(

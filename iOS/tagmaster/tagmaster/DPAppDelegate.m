@@ -92,9 +92,25 @@
     
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
+    self.window.tintColor = [UIColor systemBlueColor];
+    UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
+    [navigationAppearance configureWithOpaqueBackground];
+    navigationAppearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
+    navigationAppearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    navigationAppearance.largeTitleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    UINavigationController *navController = [[UINavigationController alloc] init];
+    UINavigationBar *navigationBar = navController.navigationBar;
+    navigationBar.standardAppearance = navigationAppearance;
+    navigationBar.scrollEdgeAppearance = navigationAppearance;
+    navigationBar.compactAppearance = navigationAppearance;
+    navigationBar.compactScrollEdgeAppearance = navigationAppearance;
+    navigationBar.tintColor = [UIColor whiteColor];
+    navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    navigationBar.barStyle = UIBarStyleBlack;
+    // With opaque chrome, keep UIKit's large-title host above the bar background.
+    navigationBar.translucent = NO;
     [self.window makeKeyAndVisible];
     
-    UINavigationController *navController = [[UINavigationController alloc] init];
     navController.navigationBar.prefersLargeTitles = YES;
     [navController pushViewController:[[DPHomeViewController alloc] init] animated:NO];
     navigationController = navController;
@@ -106,8 +122,16 @@
         split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
         split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
         [split setViewController:navController forColumn:UISplitViewControllerColumnPrimary];
-        [split setViewController:[[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]]
-                       forColumn:UISplitViewControllerColumnSecondary];
+        UINavigationController *detailNavigation = [[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]];
+        detailNavigation.navigationBar.standardAppearance = navigationAppearance;
+        detailNavigation.navigationBar.scrollEdgeAppearance = navigationAppearance;
+        detailNavigation.navigationBar.compactAppearance = navigationAppearance;
+        detailNavigation.navigationBar.compactScrollEdgeAppearance = navigationAppearance;
+        detailNavigation.navigationBar.tintColor = [UIColor whiteColor];
+        detailNavigation.navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+        detailNavigation.navigationBar.barStyle = UIBarStyleBlack;
+        detailNavigation.navigationBar.translucent = NO;
+        [split setViewController:detailNavigation forColumn:UISplitViewControllerColumnSecondary];
         self.window.rootViewController = split;
     } else {
         self.window.rootViewController = navController;

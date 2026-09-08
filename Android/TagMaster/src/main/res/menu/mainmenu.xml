@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/refreshMenuItem"
-        app:iconTint="?attr/colorOnSurface"
+        app:iconTint="@color/brand_on_chrome"
         android:icon="@drawable/ic_refresh"
         android:title="@string/Refresh"
         app:showAsAction="ifRoom">

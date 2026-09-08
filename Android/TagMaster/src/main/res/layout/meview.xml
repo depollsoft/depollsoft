@@ -41,7 +41,9 @@
         android:layout_marginBottom="16dp"
         android:layout_marginEnd="16dp"
         android:contentDescription="@string/Search"
-        app:fabSize="normal"
+        app:backgroundTint="?attr/colorPrimary"
+            app:tint="?attr/colorOnPrimary"
+            app:fabSize="normal"
         app:srcCompat="@drawable/ic_search"/>
 
 </FrameLayout>

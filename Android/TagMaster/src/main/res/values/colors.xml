@@ -3,17 +3,20 @@
     <!-- Watermark tint for the barber-pole background (ic_barberpole). -->
     <color name="barberpole">#11333333</color>
 
-    <!-- Material 3 roles, light. Charcoal brand (#373737) as primary; a muted barber-pole red
-         as the single accent (secondary). -->
-    <color name="md_primary">#373737</color>
+    <!-- Charcoal chrome and one blue interaction accent. -->
+    <color name="brand_chrome">#373737</color>
+    <color name="brand_on_chrome">#FFFFFF</color>
+    <color name="brand_chrome_accent">#5AC8FA</color>
+    <color name="status_available">#2E7D32</color>
+    <color name="md_primary">#007AA3</color>
     <color name="md_on_primary">#FFFFFF</color>
-    <color name="md_primary_container">#474747</color>
-    <color name="md_on_primary_container">#FFFFFF</color>
-    <color name="md_primary_inverse">#E6E6E6</color>
-    <color name="md_secondary">#8E2F2F</color>
+    <color name="md_primary_container">#CDE9F7</color>
+    <color name="md_on_primary_container">#003549</color>
+    <color name="md_primary_inverse">#5AC8FA</color>
+    <color name="md_secondary">@color/md_primary</color>
     <color name="md_on_secondary">#FFFFFF</color>
-    <color name="md_secondary_container">#F7DBDB</color>
-    <color name="md_on_secondary_container">#3F0A0A</color>
+    <color name="md_secondary_container">@color/md_primary_container</color>
+    <color name="md_on_secondary_container">@color/md_on_primary_container</color>
     <color name="md_tertiary">#5C5C5C</color>
     <color name="md_on_tertiary">#FFFFFF</color>
     <color name="md_tertiary_container">#E2E2E2</color>

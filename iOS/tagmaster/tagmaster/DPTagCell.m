@@ -72,6 +72,7 @@
         hasLearningTracksLabel.text = @"Learning Tracks";
         for (UILabel *label in @[hasSheetMusicLabel, hasLearningTracksLabel]) {
             label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1];
+            label.textColor = [UIColor labelColor];
         }
         for (UILabel *label in @[self.title, self.aka, self.details, hasSheetMusicLabel, hasLearningTracksLabel]) {
             label.adjustsFontForContentSizeCategory = YES;
@@ -214,8 +215,8 @@
     NSDateFormatter *spokenDate = [[NSDateFormatter alloc] init];
     spokenDate.dateStyle = NSDateFormatterMediumStyle;
     self.accessibilityLabel = tagInstance ? [NSString stringWithFormat:@"%@. %@. Tag ID %d. Rating %.2f out of 5. Posted %@. %d downloads. Sheet music %@. Learning tracks %@.", self.title.text, self.aka.text ?: @"", tagInstance.tagId, tagInstance.rating, tagInstance.posted ? [spokenDate stringFromDate:tagInstance.posted] : @"unknown", tagInstance.downloadCount, tagInstance.sheetMusicUri ? @"available" : @"unavailable", tagInstance.tracks.count ? @"available" : @"unavailable"] : [NSString stringWithFormat:@"Tag %d. Open to load details.", self.tagId];
-    self.hasSheetMusic.tintColor = self.tagInstance.sheetMusicUri ? self.tintColor : [UIColor secondaryLabelColor];
-    self.hasLearningTracks.tintColor = self.tagInstance.tracks.count ? self.tintColor : [UIColor secondaryLabelColor];
+    self.hasSheetMusic.tintColor = self.tagInstance.sheetMusicUri ? [UIColor systemGreenColor] : [UIColor secondaryLabelColor];
+    self.hasLearningTracks.tintColor = self.tagInstance.tracks.count ? [UIColor systemGreenColor] : [UIColor secondaryLabelColor];
     self.hasLearningTracks.image = self.tagInstance.tracks.count > 0 ? [DPTagCell onImage] : [DPTagCell offImage];
     self.hasSheetMusic.image = self.tagInstance.sheetMusicUri ? [DPTagCell onImage] : [DPTagCell offImage];
 }

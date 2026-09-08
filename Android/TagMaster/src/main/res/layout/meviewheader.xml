@@ -26,14 +26,15 @@
             android:layout_marginEnd="16dp"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_library_music"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/BrowseTags"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:fontFamily="sans-serif-medium"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
     </LinearLayout>
 
@@ -58,14 +59,15 @@
             android:layout_marginEnd="16dp"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_people"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/TeachableTags"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:fontFamily="sans-serif-medium"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
     </LinearLayout>
 
@@ -90,14 +92,15 @@
             android:layout_marginEnd="16dp"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_shuffle"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/RandomTag"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:fontFamily="sans-serif-medium"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/randomTagProgress"
@@ -133,14 +136,15 @@
             android:layout_marginEnd="16dp"
             android:importantForAccessibility="no"
             app:srcCompat="@drawable/ic_tag"
-            app:tint="?attr/colorOnSurfaceVariant" />
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/open_tag"
-            android:textAppearance="?attr/textAppearanceTitleMedium" />
+            android:fontFamily="sans-serif-medium"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
 
     </LinearLayout>
 

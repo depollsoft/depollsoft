@@ -14,7 +14,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/playPauseButton"
-            style="?attr/materialButtonTonalStyle"
+            style="?attr/materialIconButtonFilledStyle"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:minWidth="48dp"
@@ -29,7 +29,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/stopButton"
-            style="?attr/materialButtonTonalStyle"
+            style="?attr/materialIconButtonOutlinedStyle"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"

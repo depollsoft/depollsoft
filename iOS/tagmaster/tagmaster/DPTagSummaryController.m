@@ -35,9 +35,22 @@
     [super updateConstraints];
     [self.button setBackgroundImage:nil forState:UIControlStateNormal];
     [self.button setBackgroundImage:nil forState:UIControlStateHighlighted];
-    self.button.backgroundColor = [UIColor secondarySystemFillColor];
-    [self.button setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
-    self.button.layer.borderColor = [UIColor separatorColor].CGColor;
+    [self applyOutline];
+}
+- (void)applyOutline {
+    self.button.backgroundColor = [UIColor clearColor];
+    [self.button setTitleColor:self.button.tintColor forState:UIControlStateNormal];
+    self.button.layer.borderColor = [self.button.tintColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+    self.button.layer.borderWidth = 1.5;
+    self.button.layer.cornerRadius = 8;
+}
+- (void)tintColorDidChange {
+    [super tintColorDidChange];
+    [self applyOutline];
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self applyOutline];
 }
 @end
 
@@ -162,20 +175,29 @@
     keyButton.button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
     keyButton.button.titleLabel.adjustsFontForContentSizeCategory = YES;
     UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
-    config.contentInsets = NSDirectionalEdgeInsetsMake(4, 0, 4, 0);
+    config.contentInsets = NSDirectionalEdgeInsetsMake(4, 8, 4, 8);
+    config.image = [UIImage systemImageNamed:@"key"];
+    config.imagePadding = 8;
     keyButton.button.configuration = config;
     classicTagNumberLabel = [self makeBodyLabel];
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
     [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
-    // Sheet music is the primary action on this page: a tinted, iconed button.
-    UIButtonConfiguration *sheetConfiguration = [UIButtonConfiguration tintedButtonConfiguration];
+    // Sheet music is the primary action; key is outlined and rating stays plain.
+    UIButtonConfiguration *sheetConfiguration = [UIButtonConfiguration filledButtonConfiguration];
+    sheetConfiguration.baseForegroundColor = [UIColor whiteColor];
+    sheetConfiguration.cornerStyle = UIButtonConfigurationCornerStyleMedium;
     sheetConfiguration.image = [UIImage systemImageNamed:@"doc.richtext"];
     sheetConfiguration.imagePadding = 8;
     sheetConfiguration.titleLineBreakMode = NSLineBreakByWordWrapping;
-    sheetConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(10, 16, 10, 16);
+    sheetConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 16, 4, 16);
     sheetMusicButton.configuration = sheetConfiguration;
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
+    UIButtonConfiguration *rateConfiguration = [UIButtonConfiguration plainButtonConfiguration];
+    rateConfiguration.image = [UIImage systemImageNamed:@"star"];
+    rateConfiguration.imagePadding = 8;
+    rateConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 8, 4, 8);
+    ratingButton.configuration = rateConfiguration;
     for (UIButton *button in @[ratingButton, sheetMusicButton, keyButton.button]) {
         button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
         button.titleLabel.adjustsFontForContentSizeCategory = YES;
@@ -257,6 +279,8 @@
     [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
     
     [self setUpRootView:grid withScroller:scroller];
+    [sheetMusicButton.heightAnchor constraintEqualToAnchor:keyButton.button.heightAnchor].active = YES;
+    [ratingButton.heightAnchor constraintEqualToAnchor:keyButton.button.heightAnchor].active = YES;
     
     [self refreshView];
 }

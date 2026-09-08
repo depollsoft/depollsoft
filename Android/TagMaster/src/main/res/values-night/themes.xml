@@ -6,4 +6,11 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
+    <style name="ThemeOverlay.TagMaster.Popup" parent="ThemeOverlay.Material3.Dark">
+        <item name="colorSurface">@color/md_surface</item>
+        <item name="colorOnSurface">@color/md_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
+        <item name="colorControlNormal">@color/md_on_surface</item>
+        <item name="android:textColorPrimary">@color/md_on_surface</item>
+    </style>
 </resources>

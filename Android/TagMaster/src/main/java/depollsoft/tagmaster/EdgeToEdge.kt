@@ -1,6 +1,8 @@
 package depollsoft.tagmaster
 
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.DimenRes
@@ -24,6 +26,18 @@ import com.google.android.material.appbar.MaterialToolbar
  */
 fun AppCompatActivity.setUpToolbar(showUp: Boolean = true): MaterialToolbar {
     WindowCompat.setDecorFitsSystemWindows(window, false)
+    WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+    // RichApplication pads android.R.id.content and consumes the system-bar insets before
+    // AppBarLayout sees them. Paint only that top padding; keep its inset/navigation behavior.
+    val content = findViewById<View>(android.R.id.content)
+    content.background = object : ColorDrawable(getColor(R.color.brand_chrome)) {
+        override fun draw(canvas: Canvas) {
+            val save = canvas.save()
+            canvas.clipRect(0, 0, bounds.right, content.paddingTop)
+            super.draw(canvas)
+            canvas.restoreToCount(save)
+        }
+    }
     val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
     setSupportActionBar(toolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(showUp)

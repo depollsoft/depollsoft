@@ -11,6 +11,12 @@
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/brand_chrome"
+        app:tabTextColor="@color/brand_tab_tint"
+        app:tabSelectedTextColor="@color/brand_on_chrome"
+        app:tabIconTint="@color/brand_tab_tint"
+        app:tabIndicatorColor="@color/brand_chrome_accent"
+        app:tabRippleColor="@color/brand_tab_tint"
         app:tabMode="scrollable"
         app:tabGravity="start" />
 
@@ -40,6 +46,8 @@
             android:layout_marginBottom="16dp"
             android:layout_marginEnd="16dp"
             android:contentDescription="@string/Search"
+            app:backgroundTint="?attr/colorPrimary"
+            app:tint="?attr/colorOnPrimary"
             app:fabSize="normal"
             app:srcCompat="@drawable/ic_search" />
     </FrameLayout>

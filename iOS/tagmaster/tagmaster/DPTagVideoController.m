@@ -134,7 +134,21 @@
         label.text = line;
         label.font = [UIFont preferredFontForTextStyle:index == 0 ? UIFontTextStyleHeadline : UIFontTextStyleSubheadline];
         label.textColor = index == 0 ? [UIColor labelColor] : [UIColor secondaryLabelColor];
-        [metadata addArrangedSubview:label];
+        if ([line hasPrefix:@"Multitrack:"]) {
+            BOOL available = [line isEqualToString:@"Multitrack: Yes"];
+            UIImageView *mark = [[UIImageView alloc] initWithImage:[UIImage systemImageNamed:available ? @"checkmark.circle.fill" : @"circle"]];
+            mark.tintColor = available ? [UIColor systemGreenColor] : [UIColor secondaryLabelColor];
+            mark.contentMode = UIViewContentModeScaleAspectFit;
+            [mark.widthAnchor constraintEqualToConstant:20].active = YES;
+            [mark.heightAnchor constraintEqualToConstant:20].active = YES;
+            label.textColor = [UIColor labelColor];
+            UIStackView *availability = [[UIStackView alloc] initWithArrangedSubviews:@[mark, label]];
+            availability.spacing = 8;
+            availability.alignment = UIStackViewAlignmentCenter;
+            [metadata addArrangedSubview:availability];
+        } else {
+            [metadata addArrangedSubview:label];
+        }
     }];
     UIStackView *grid = [[UIStackView alloc] initWithArrangedSubviews:@[thumb, metadata]];
     grid.alignment = UIStackViewAlignmentTop;

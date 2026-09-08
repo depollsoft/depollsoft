@@ -116,23 +116,60 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     // The handwriting face belongs to Home only; pushed screens use the system title.
     UINavigationBar *bar = self.navigationController.navigationBar;
     bar.prefersLargeTitles = YES;
-    bar.largeTitleTextAttributes = @{
-        NSFontAttributeName: [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleLargeTitle size:36 maximum:52],
-        NSForegroundColorAttributeName: [UIColor labelColor]
+    UIFont *largeFont = [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleLargeTitle size:34 maximum:44];
+    UIFont *inlineFont = [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleHeadline size:22 maximum:26];
+    // Wickhop's descender extends below UIKit's title box. Lift the glyphs, not the bar.
+    UINavigationBarAppearance *appearance = [bar.standardAppearance copy];
+    appearance.largeTitleTextAttributes = @{
+        NSFontAttributeName: largeFont,
+        NSBaselineOffsetAttributeName: @(8 * largeFont.pointSize / 34),
+        NSForegroundColorAttributeName: [UIColor whiteColor]
     };
-    bar.titleTextAttributes = @{
-        NSFontAttributeName: [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleHeadline size:22 maximum:30],
-        NSForegroundColorAttributeName: [UIColor labelColor]
+    appearance.titleTextAttributes = @{
+        NSFontAttributeName: inlineFont,
+        NSBaselineOffsetAttributeName: @(6 * inlineFont.pointSize / 22),
+        NSForegroundColorAttributeName: [UIColor whiteColor]
     };
+    bar.standardAppearance = appearance;
+    bar.scrollEdgeAppearance = appearance;
+    bar.compactAppearance = appearance;
+    bar.compactScrollEdgeAppearance = appearance;
+    // Give the inline face a full-height text box; the standard title label clips Wickhop.
+    UILabel *inlineTitle = [[UILabel alloc] init];
+    inlineTitle.attributedText = [[NSAttributedString alloc] initWithString:@"Tag Master" attributes:appearance.titleTextAttributes];
+    inlineTitle.textAlignment = NSTextAlignmentCenter;
+    inlineTitle.accessibilityTraits = UIAccessibilityTraitHeader;
+    [inlineTitle sizeToFit];
+    inlineTitle.frame = CGRectMake(0, 0, CGRectGetWidth(inlineTitle.bounds), 44);
+    self.navigationItem.titleView = inlineTitle;
+    [self updateInlineTitleVisibility];
+}
+
+- (void)updateInlineTitleVisibility {
+    // UIKit does not fade custom titleViews with its large title. Show ours only
+    // once the bar has collapsed to its standard height (44 to 54 points on iOS).
+    self.navigationItem.titleView.hidden = CGRectGetHeight(self.navigationController.navigationBar.bounds) > 64;
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self updateInlineTitleVisibility];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    self.navigationController.navigationBar.titleTextAttributes = nil;
+    UINavigationBar *bar = self.navigationController.navigationBar;
+    UINavigationBarAppearance *appearance = [bar.standardAppearance copy];
+    appearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    appearance.largeTitleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    bar.standardAppearance = appearance;
+    bar.scrollEdgeAppearance = appearance;
+    bar.compactAppearance = appearance;
+    bar.compactScrollEdgeAppearance = appearance;
 }
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    [self updateInlineTitleVisibility];
     UIView *footer = self.tableView.tableFooterView;
     CGFloat width = self.tableView.bounds.size.width;
     CGFloat height = [footer systemLayoutSizeFittingSize:CGSizeMake(width, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;

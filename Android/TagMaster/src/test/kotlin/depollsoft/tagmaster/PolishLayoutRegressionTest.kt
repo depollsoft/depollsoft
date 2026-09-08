@@ -52,6 +52,8 @@ class PolishLayoutRegressionTest {
                 for (index in 0 until popup.menu.size()) {
                     val item = popup.menu.getItem(index)
                     assertNotNull(item.title.toString(), MenuItemCompat.getIconTintList(item))
+                    assertEquals(item.title.toString(), activity.getColor(R.color.brand_on_chrome),
+                        MenuItemCompat.getIconTintList(item)!!.defaultColor)
                 }
             }
         } finally { controller.pause().stop().destroy() }

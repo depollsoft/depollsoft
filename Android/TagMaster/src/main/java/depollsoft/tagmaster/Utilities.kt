@@ -3,6 +3,7 @@ package depollsoft.tagmaster
 import android.content.Context
 import android.graphics.Typeface
 import android.text.SpannableString
+import android.text.TextPaint
 import com.bindroid.converters.ToStringConverter
 import depollsoft.lib.ui.CustomTypefaceSpan
 import depollsoft.lib.ui.SpannableUtilities
@@ -47,7 +48,26 @@ private object TitleTypeface {
 }
 
 fun CharSequence.makeTitleString(ctx: Context): CharSequence {
-    val span = CustomTypefaceSpan("Wickhop Handwriting", TitleTypeface.get(ctx))
+    // Keep Wickhop's full font bounds inside the toolbar, including at large font scales.
+    // Body text continues to scale normally; only this display face has a height ceiling.
+    val maxHeight = 40f * ctx.resources.displayMetrics.density
+    val span = object : CustomTypefaceSpan("Wickhop Handwriting", TitleTypeface.get(ctx)) {
+        private fun fit(paint: TextPaint) {
+            val metrics = paint.fontMetrics
+            val height = metrics.bottom - metrics.top
+            if (height > maxHeight) paint.textSize *= maxHeight / height
+        }
+
+        override fun updateMeasureState(paint: TextPaint) {
+            super.updateMeasureState(paint)
+            fit(paint)
+        }
+
+        override fun updateDrawState(paint: TextPaint) {
+            super.updateDrawState(paint)
+            fit(paint)
+        }
+    }
     val title = SpannableString(this)
     SpannableUtilities.applyToAll(title, span)
     return title

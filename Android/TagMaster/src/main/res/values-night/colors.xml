@@ -2,17 +2,17 @@
 <resources>
     <color name="barberpole">#11DDDDDD</color>
 
-    <!-- Material 3 roles, dark. Light charcoal as primary; FAB (primaryContainer) is a mid gray
-         that clears 3:1 against the #131313 surface with a white icon on top. -->
-    <color name="md_primary">#E2E2E2</color>
-    <color name="md_on_primary">#1F1F1F</color>
-    <color name="md_primary_container">#6B6B6B</color>
-    <color name="md_on_primary_container">#FFFFFF</color>
-    <color name="md_primary_inverse">#373737</color>
-    <color name="md_secondary">#F2B8B5</color>
-    <color name="md_on_secondary">#4A1010</color>
-    <color name="md_secondary_container">#6E2424</color>
-    <color name="md_on_secondary_container">#FFDAD6</color>
+    <!-- Chrome stays charcoal; interactive controls use the brighter blue. -->
+    <color name="status_available">#81C784</color>
+    <color name="md_primary">#5AC8FA</color>
+    <color name="md_on_primary">#00344A</color>
+    <color name="md_primary_container">#004D6B</color>
+    <color name="md_on_primary_container">#CDE9F7</color>
+    <color name="md_primary_inverse">#007AA3</color>
+    <color name="md_secondary">@color/md_primary</color>
+    <color name="md_on_secondary">@color/md_on_primary</color>
+    <color name="md_secondary_container">@color/md_primary_container</color>
+    <color name="md_on_secondary_container">@color/md_on_primary_container</color>
     <color name="md_tertiary">#C8C8C8</color>
     <color name="md_on_tertiary">#2E2E2E</color>
     <color name="md_tertiary_container">#454545</color>
