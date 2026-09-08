@@ -16,11 +16,14 @@
 #import "DPTeachableTagsController.h"
 #import "DPSearchViewController.h"
 #import "DPSettingsController.h"
+#import "DPTagPageControllerBase.h"
 #import "tagmaster-Swift.h"
+
+static NSString *const TMRandomTagTitle = @"Random Tag";
 
 @interface DPHomeViewController ()
 
-@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
+@property (nonatomic, strong) TMBusyIndicator *busyIndicator;
 
 @end
 
@@ -39,69 +42,108 @@
     return self;
 }
 
++ (UIFont *)handwritingFontForTextStyle:(UIFontTextStyle)style size:(CGFloat)size maximum:(CGFloat)maximum {
+    UIFont *base = [UIFont fontWithName:@"wickhop handwriting" size:size] ?: [UIFont preferredFontForTextStyle:style];
+    return [[UIFontMetrics metricsForTextStyle:style] scaledFontForFont:base maximumPointSize:maximum];
+}
+
 - (void)viewDidLoad {
-    UIFont *font = [UIFont fontWithName:@"wickhop handwriting" size:20];
-    
     [super viewDidLoad];
     [DPAppDelegate setUpBackground:self.view];
     
-    self.busyIndicator = [[DPBusyIndicator alloc] init];
-    self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
+    // Random Tag shows its progress on its own row; nothing covers the screen.
+    self.busyIndicator = [[TMBusyIndicator alloc] init];
+    __weak DPHomeViewController *weakSelf = self;
+    self.busyIndicator.onBusyCountChanged = ^(NSUInteger busyCount) {
+        [weakSelf reloadRandomTagRow];
+    };
     
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 100;
     
-    DPGridLayout *aboutFooter = [[DPGridLayout alloc] init];
-    aboutFooter.rowDimensions = @[
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5],
-                                  [DPGridDimension dimensionWithSize:[UIFont smallSystemFontSize] * 1.5]
-                                  ];
+    UIStackView *aboutFooter = [[UIStackView alloc] init];
+    aboutFooter.axis = UILayoutConstraintAxisVertical;
+    aboutFooter.layoutMarginsRelativeArrangement = YES;
+    aboutFooter.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(8, 16, 16, 16);
+    NSInteger year = [[NSCalendar currentCalendar] component:NSCalendarUnitYear fromDate:[NSDate date]];
     UIButton *copyrightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    NSString *copyright = [NSString stringWithFormat:@"Depollsoft © %@", [@__DATE__ substringFromIndex:11-4]];
-    [copyrightButton setTitle:copyright forState:UIControlStateNormal];
-    copyrightButton.url = [NSURL URLWithString:@"http://apps.depoll.com"];
-    copyrightButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    [copyrightButton setTitle:[NSString stringWithFormat:@"DepollSoft © %ld", (long)year] forState:UIControlStateNormal];
+    copyrightButton.url = [NSURL URLWithString:@"https://apps.depoll.com"];
     UIButton *bbsTagsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [bbsTagsButton setTitle:@"Content provided by BarbershopTags.com" forState:UIControlStateNormal];
-    bbsTagsButton.url = [NSURL URLWithString:@"http://www.barbershoptags.com"];
-    bbsTagsButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    bbsTagsButton.url = [NSURL URLWithString:@"https://www.barbershoptags.com"];
     UIButton *touButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [touButton setTitle:@"Terms of Use" forState:UIControlStateNormal];
-    touButton.url = [NSURL URLWithString:@"http://apps.depoll.com/terms-of-use"];
-    touButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    touButton.url = [NSURL URLWithString:@"https://apps.depoll.com/terms-of-use"];
     UIButton *donateButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [donateButton setTitle:@"Donate" forState:UIControlStateNormal];
-    donateButton.url = [NSURL URLWithString:@"http://www.davidpoll.com/applications/tag-master/donate"];
-    donateButton.titleLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
-    [aboutFooter addSubview:copyrightButton row:0 column:0];
-    [aboutFooter addSubview:bbsTagsButton row:1 column:0];
-    [aboutFooter addSubview:touButton row:2 column:0];
-    [aboutFooter addSubview:donateButton row:3 column:0];
+    donateButton.url = [NSURL URLWithString:@"https://www.davidpoll.com/applications/tag-master/donate"];
+    for (UIButton *button in @[copyrightButton, bbsTagsButton, touButton, donateButton]) {
+        button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        button.titleLabel.numberOfLines = 0;
+        button.titleLabel.textAlignment = NSTextAlignmentCenter;
+        UIButtonConfiguration *linkConfiguration = [UIButtonConfiguration plainButtonConfiguration];
+        // The iPad sidebar column resolves tint to the label color; links keep the link color.
+        linkConfiguration.baseForegroundColor = [UIColor systemBlueColor];
+        button.configuration = linkConfiguration;
+        button.accessibilityTraits |= UIAccessibilityTraitLink;
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [aboutFooter addArrangedSubview:button];
+    }
     CGSize aboutFooterSize = [aboutFooter systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
     aboutFooter.frame = CGRectMake(0, 0, aboutFooterSize.width, aboutFooterSize.height);
     self.tableView.tableFooterView = aboutFooter;
     
-    UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.font = font;
-    titleLabel.text = @"Tag Master";
-    [titleLabel sizeToFit];
-    titleLabel.frame = CGRectMake(titleLabel.frame.origin.x, titleLabel.frame.origin.y, titleLabel.frame.size.width, titleLabel.frame.size.height * 2);
-    self.navigationItem.titleView = titleLabel;
+    // Large handwriting title at the top of the app; the same face collapses inline on scroll.
+    self.navigationItem.title = @"Tag Master";
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeAlways;
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Home";
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
     
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    
     self.navigationItem.rightBarButtonItem =
         [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
                                              target:self
                                              action:@selector(search)];
     [self viewDidLoadExtension];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    // The handwriting face belongs to Home only; pushed screens use the system title.
+    UINavigationBar *bar = self.navigationController.navigationBar;
+    bar.prefersLargeTitles = YES;
+    bar.largeTitleTextAttributes = @{
+        NSFontAttributeName: [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleLargeTitle size:36 maximum:52],
+        NSForegroundColorAttributeName: [UIColor labelColor]
+    };
+    bar.titleTextAttributes = @{
+        NSFontAttributeName: [DPHomeViewController handwritingFontForTextStyle:UIFontTextStyleHeadline size:22 maximum:30],
+        NSForegroundColorAttributeName: [UIColor labelColor]
+    };
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    self.navigationController.navigationBar.titleTextAttributes = nil;
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    UIView *footer = self.tableView.tableFooterView;
+    CGFloat width = self.tableView.bounds.size.width;
+    CGFloat height = [footer systemLayoutSizeFittingSize:CGSizeMake(width, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    if (footer.frame.size.height != height || footer.frame.size.width != width) {
+        footer.frame = CGRectMake(0, 0, width, height);
+        self.tableView.tableFooterView = footer;
+    }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    return section == 1 && [DPAppDelegate favorites].count == 0 ? @"No favorites yet. Open a tag and use Favorite and Teachable options to add a favorite." : nil;
 }
 
 - (void)search {
@@ -111,21 +153,16 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
-    
-    UIView *navView = self.navigationController.view;
-    [navView addSubview:self.busyIndicator];
-    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_busyIndicator]|"
-                                                                    options:0
-                                                                    metrics:nil
-                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
-    [navView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_busyIndicator]|"
-                                                                    options:0
-                                                                    metrics:nil
-                                                                      views:NSDictionaryOfVariableBindings(_busyIndicator)]];
+    [self updateEditButton];
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
-    [self.busyIndicator removeFromSuperview];
+// Edit only has work to do when there are favorites to reorder or remove.
+- (void)updateEditButton {
+    BOOL hasFavorites = [DPAppDelegate favorites].count > 0;
+    self.editButtonItem.enabled = hasFavorites;
+    if (!hasFavorites && self.isEditing) {
+        [self setEditing:NO animated:YES];
+    }
 }
 
 - (void)didReceiveMemoryWarning
@@ -144,17 +181,53 @@
         [self.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
     }
                      }];
-    if ([DPAppDelegate teachable].count > 0) {
-        [arr addObject:@{
+    [arr addObject:@{
                          @"title": @"Teachable Tags",
                          @"action": ^() {
             [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init] animated:YES];
         }
                          }];
-    }
     [arr addObject:@{
-                     @"title": @"Random Tag",
+                     @"title": TMRandomTagTitle,
                      @"action": ^() {
+        [self randomTag];
+    }
+                     }];
+
+    [arr addObject:@{
+                     @"title": @"Open Tag",
+                     @"action": ^() {
+        [self openTag];
+    }
+                     }];
+
+    [arr addObject:@{
+                     @"title": @"Settings",
+                     @"action": ^() {
+        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
+    }
+                     }];
+
+    return arr;
+}
+
+- (NSIndexPath *)randomTagIndexPath {
+    NSArray *items = [self navigationItems];
+    NSUInteger row = [items indexOfObjectPassingTest:^BOOL(NSDictionary *item, NSUInteger idx, BOOL *stop) {
+        return [item[@"title"] isEqualToString:TMRandomTagTitle];
+    }];
+    return row == NSNotFound ? nil : [NSIndexPath indexPathForRow:row inSection:0];
+}
+
+- (void)reloadRandomTagRow {
+    NSIndexPath *indexPath = [self randomTagIndexPath];
+    if (!self.isViewLoaded || !indexPath || self.tableView.numberOfSections == 0) return;
+    if ([self.tableView numberOfRowsInSection:0] <= indexPath.row) return;
+    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+
+- (void)randomTag {
+        if (self.busyIndicator.busyCount > 0) return;
         [self.busyIndicator incrementBusyCount];
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             @try {
@@ -170,9 +243,11 @@
                                        minimumDownloads:[DPSettingsController minDownloads]
                                                   cache:NO
                                               fieldList:@"id"];
+                if (!result) { [NSException raise:@"RandomTagUnavailable" format:@"Missing results"]; }
                 if (result.available <= 0) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.busyIndicator decrementBusyCount];
+                        [self tm_showError:@"No tag could be selected. Check your connection or adjust Random Tag Filters in Settings, then try again." retry:^{ [self randomTag]; }];
                     });
                     return;
                 }
@@ -196,41 +271,23 @@
                 if (!tag) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.busyIndicator decrementBusyCount];
+                        [self tm_showError:@"No tag could be selected. Check your connection or adjust Random Tag Filters in Settings, then try again." retry:^{ [self randomTag]; }];
                     });
                     return;
                 }
 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    if (tag) {
-                        DPTagViewController *tagController = [[DPTagViewController alloc] init];
-                        tagController.tagId = tag.tagId;
-                        [self.navigationController pushViewController:tagController animated:YES];
-                    }
                     [self.busyIndicator decrementBusyCount];
+                    [DPAppDelegate showTagWithId:tag.tagId from:self];
                 });
             }
             @catch (NSException *exception) {
-                [self.busyIndicator decrementBusyCount];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.busyIndicator decrementBusyCount];
+                    [self tm_showError:@"A random tag couldn't be loaded. Check your connection and try again." retry:^{ [self randomTag]; }];
+                });
             }
         });
-    }
-                     }];
-    
-    [arr addObject:@{
-                     @"title": @"Open Tag",
-                     @"action": ^() {
-        [self openTag];
-    }
-                     }];
-    
-    [arr addObject:@{
-                     @"title": @"Settings",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
-    }
-                     }];
-    
-    return arr;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -249,10 +306,22 @@
     if (indexPath.section == 0) {
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
         NSArray *items = [self navigationItems];
-        if (indexPath.row < items.count) {
-            cell.textLabel.text = items[indexPath.row][@"title"];
-        }
+        NSString *title = indexPath.row < items.count ? items[indexPath.row][@"title"] : nil;
+        cell.textLabel.text = title;
+        cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        cell.textLabel.adjustsFontForContentSizeCategory = YES;
+        cell.textLabel.numberOfLines = 0;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.backgroundColor = [UIColor clearColor];
+        BOOL loadingRandom = [title isEqualToString:TMRandomTagTitle] && self.busyIndicator.busyCount > 0;
+        if (loadingRandom) {
+            UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+            [spinner startAnimating];
+            cell.accessoryView = spinner;
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.textLabel.textColor = [UIColor secondaryLabelColor];
+            cell.accessibilityLabel = @"Random Tag, loading";
+        }
         return cell;
     }
 
@@ -265,15 +334,7 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    switch (section) {
-        case 0:
-            return @"Main";
-        case 1:
-            return @"Favorites";
-        default:
-            break;
-    }
-    return nil;
+    return section == 1 ? @"Favorites" : nil;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -287,9 +348,7 @@
     } else {
         NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
         if (indexPath.row < favorites.count) {
-            DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
-            tagViewController.tagId = favorites[indexPath.row].intValue;
-            [self.navigationController pushViewController:tagViewController animated:YES];
+            [DPAppDelegate showTagWithId:favorites[indexPath.row].intValue from:self];
         }
     }
 }
@@ -307,20 +366,12 @@
         if (indexPath.row < favorites.count) {
             [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
         }
+        [self updateEditButton];
     }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
-        return [super tableView:tableView heightForRowAtIndexPath:indexPath];
-    } else {
-        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-        if (indexPath.row >= favorites.count) {
-            return tableView.rowHeight;
-        }
-        DPTag *tag = [DPTag loadFromCache:favorites[indexPath.row].intValue];
-        return [DPTagCell tagHeight:tag];
-    }
+    return UITableViewAutomaticDimension;
 }
 
 - (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {

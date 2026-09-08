@@ -101,7 +101,7 @@ class ListModel private constructor(
         }
 
         private fun storeValue(toFirestore: Boolean) {
-            Preferences.set(LISTS_KEY, preferences)
+            Preferences.setAsync(LISTS_KEY, preferences)
             if (toFirestore) {
                 toFirestore()
             }

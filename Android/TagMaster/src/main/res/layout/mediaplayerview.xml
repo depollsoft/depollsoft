@@ -1,79 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:orientation="vertical">
 
-    <ToggleButton
-        android:id="@+id/playPauseButton"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_gravity="center_vertical"
-        android:textOff="@string/Play"
-        android:textOn="@string/Pause" >
-    </ToggleButton>
-
-    <Button
-        android:id="@+id/stopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_gravity="center_vertical"
-        android:text="@string/Stop" >
-    </Button>
-
-    <TableLayout
-        android:id="@+id/tableLayout1"
-        android:layout_width="0dip"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1" >
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <TableRow
-            android:id="@+id/tableRow1"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/playPauseButton"
+            style="?attr/materialButtonTonalStyle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="12dp"
+            android:contentDescription="@string/Play"
+            app:icon="@drawable/ic_play"
+            app:iconPadding="0dp"
+            app:iconSize="24dp" />
 
-            <SeekBar
-                android:id="@+id/counterSeekBar"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" >
-            </SeekBar>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/stopButton"
+            style="?attr/materialButtonTonalStyle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="12dp"
+            android:enabled="false"
+            android:contentDescription="@string/Stop"
+            app:icon="@drawable/ic_stop"
+            app:iconPadding="0dp"
+            app:iconSize="24dp" />
 
-            <TextView
-                android:id="@+id/counterTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_marginLeft="4dp"
-                android:minWidth="60dp"
-                android:textSize="12sp" >
-            </TextView>
-        </TableRow>
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/trackLoadingIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:indeterminate="true"
+            android:visibility="gone"
+            android:contentDescription="@string/detail_track_loading"
+            app:indicatorSize="24dp"
+            app:trackThickness="2dp" />
 
-        <TableRow
-            android:id="@+id/tableRow2"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+        <TextView
+            android:id="@+id/counterTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:gravity="end"
+            android:minWidth="96dp"
+            android:textAppearance="?attr/textAppearanceLabelMedium" />
+    </LinearLayout>
 
-            <SeekBar
-                android:id="@+id/balanceSeekBar"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="1000" >
-            </SeekBar>
+    <com.google.android.material.slider.Slider
+        android:id="@+id/counterSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:valueFrom="0"
+        android:valueTo="1"
+        android:value="0"
+        android:contentDescription="@string/detail_playback_position"
+        app:labelBehavior="gone" />
 
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_marginLeft="4dp"
-                android:text="@string/Balance"
-                android:textSize="12sp" >
-            </TextView>
-        </TableRow>
-    </TableLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="@string/Balance"
+            android:textAppearance="?attr/textAppearanceLabelMedium" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/balanceSeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:valueFrom="0"
+            android:valueTo="1000"
+            android:value="500"
+            android:contentDescription="@string/Balance"
+            app:labelBehavior="gone" />
+    </LinearLayout>
 </LinearLayout>

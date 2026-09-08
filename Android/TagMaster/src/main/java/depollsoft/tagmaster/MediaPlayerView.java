@@ -1,318 +1,310 @@
 package depollsoft.tagmaster;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import android.app.ProgressDialog;
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnPreparedListener;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.Toast;
-import android.widget.ToggleButton;
 
+import com.bindroid.converters.BoolConverter;
+import com.bindroid.trackable.TrackableBoolean;
 import com.bindroid.trackable.TrackableField;
 import com.bindroid.ui.UiBinder;
-import com.bindroid.utils.Action;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.slider.Slider;
+import com.google.android.material.snackbar.Snackbar;
 
-import bolts.Continuation;
-import bolts.Task;
 import depollsoft.lib.util.ContentCache;
 import depollsoft.tagmaster.barbershop.RemoteLocation;
 
 public class MediaPlayerView extends LinearLayout {
   private MediaPlayer player;
-  private Timer timer;
-  private TimerTask timerTask;
-  private TrackableField<RemoteLocation> remoteLocation = new TrackableField<RemoteLocation>();
-  private SeekBar balanceBar;
-  private SeekBar playbackBar;
-  private ToggleButton playPauseButton;
-  private Button stopButton;
+  private final Handler handler = new Handler(Looper.getMainLooper());
+  private final TrackableField<RemoteLocation> remoteLocation = new TrackableField<>();
+  private Slider balanceBar;
+  private Slider playbackBar;
+  private MaterialButton playPauseButton;
+  private MaterialButton stopButton;
   private ContentCache cache;
-  private boolean rlChangedSinceLastPlay;
+  private boolean rlChangedSinceLastPlay = true;
   private boolean refreshing;
-  private TrackableField<Boolean> isPlaying = new TrackableField<Boolean>(false);
+  private boolean prepared;
+  // Invalidates downloads when the part changes, playback stops, or the view detaches.
+  private int loadGeneration;
+  private final TrackableField<Boolean> isPlaying = new TrackableField<>(false);
+  private final TrackableBoolean isLoading = new TrackableBoolean(false);
+  private final TrackableField<Integer> audioPosition = new TrackableField<>(0);
+  private final TrackableField<Integer> audioLength = new TrackableField<>(0);
+  private final TrackableField<Integer> balance = new TrackableField<>(500);
 
-  private TrackableField<Integer> audioPosition = new TrackableField<Integer>(0);
-
-  private TrackableField<Integer> audioLength = new TrackableField<Integer>(0);
-
-  private TrackableField<Integer> balance = new TrackableField<Integer>();
+  private final Runnable updatePosition = new Runnable() {
+    @Override
+    public void run() {
+      if (!isUsable() || player == null || !prepared || !getIsPlaying()) return;
+      setAudioPosition(player.getCurrentPosition());
+      handler.postDelayed(this, 250);
+    }
+  };
 
   public MediaPlayerView(Context context) {
     super(context);
-    this.init();
+    init();
   }
 
   public MediaPlayerView(Context context, AttributeSet attrs) {
     super(context, attrs);
-    this.init();
+    init();
   }
 
   public int getAudioLength() {
-    return this.audioLength.get();
+    return audioLength.get();
   }
 
   public int getAudioPosition() {
-    return this.audioPosition.get();
+    return audioPosition.get();
   }
 
   public int getBalance() {
-    return this.balance.get();
+    return balance.get();
   }
 
   public boolean getIsPlaying() {
-    return this.isPlaying.get();
+    return isPlaying.get();
+  }
+
+  public boolean getIsLoading() {
+    return isLoading.get();
   }
 
   public String getPositionString() {
-    int position = this.getAudioPosition();
-    int length = this.getAudioLength();
-
-    double posSec = position / 1000d;
-    double lenSec = length / 1000d;
-
+    double posSec = getAudioPosition() / 1000d;
+    double lenSec = getAudioLength() / 1000d;
     return String.format(Locale.US, "%1.1f/%1.1fs", posSec, lenSec);
   }
 
   public RemoteLocation getRemoteLocation() {
-    return this.remoteLocation.get();
+    return remoteLocation.get();
   }
 
   private void init() {
-    LayoutInflater inflater = (LayoutInflater) this.getContext().getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE);
-    inflater.inflate(R.layout.mediaplayerview, this, true);
+    LayoutInflater.from(getContext()).inflate(R.layout.mediaplayerview, this, true);
+    cache = new ContentCache(getContext());
+    balanceBar = findViewById(R.id.balanceSeekBar);
+    playbackBar = findViewById(R.id.counterSeekBar);
+    playPauseButton = findViewById(R.id.playPauseButton);
+    stopButton = findViewById(R.id.stopButton);
+    createPlayer();
 
-    this.player = new MediaPlayer();
-    this.cache = new ContentCache(this.getContext());
-    this.setBalance(500);
-
-    this.balanceBar = (SeekBar) this.findViewById(R.id.balanceSeekBar);
-    this.playbackBar = (SeekBar) this.findViewById(R.id.counterSeekBar);
-    this.playPauseButton = (ToggleButton) this.findViewById(R.id.playPauseButton);
-    this.stopButton = (Button) this.findViewById(R.id.stopButton);
-
-    this.timer = new Timer();
-
-    this.player.setOnPreparedListener(new OnPreparedListener() {
-      public void onPrepared(MediaPlayer mp) {
-        MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player.getDuration());
+    playbackBar.addOnChangeListener((slider, value, fromUser) -> {
+      if (fromUser && !refreshing && prepared && player != null) {
+        player.seekTo(Math.round(value));
+        setAudioPosition(Math.round(value));
       }
     });
-    this.player.setOnCompletionListener(new OnCompletionListener() {
-
-      public void onCompletion(MediaPlayer mp) {
-        MediaPlayerView.this.setIsPlaying(false);
-      }
+    balanceBar.addOnChangeListener((slider, value, fromUser) -> {
+      if (fromUser && !refreshing) setBalance(Math.round(value));
     });
-    this.player.setOnErrorListener(new OnErrorListener() {
-
-      public boolean onError(MediaPlayer mp, int what, int extra) {
-        Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                Toast.LENGTH_SHORT).show();
-        MediaPlayerView.this.setIsPlaying(false);
-        return true;
-      }
+    playPauseButton.setOnClickListener(v -> {
+      if (getIsPlaying()) pause();
+      else play();
     });
+    stopButton.setOnClickListener(v -> stop());
+    updateControls();
+  }
 
-    this.playbackBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser && !MediaPlayerView.this.refreshing)
-          MediaPlayerView.this.player.seekTo(progress);
-      }
-
-      public void onStartTrackingTouch(SeekBar seekBar) {
-      }
-
-      public void onStopTrackingTouch(SeekBar seekBar) {
-      }
+  private void createPlayer() {
+    player = new MediaPlayer();
+    player.setOnPreparedListener(mp -> {
+      if (mp != player || !getIsLoading() || !isUsable()) return;
+      prepared = true;
+      rlChangedSinceLastPlay = false;
+      setAudioLength(mp.getDuration());
+      setBalance(getBalance());
+      setIsLoading(false);
+      mp.start();
+      setIsPlaying(true);
     });
-
-    this.balanceBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-
-      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        MediaPlayerView.this.setBalance(progress);
-      }
-
-      public void onStartTrackingTouch(SeekBar seekBar) {
-      }
-
-      public void onStopTrackingTouch(SeekBar seekBar) {
-      }
-
+    player.setOnCompletionListener(mp -> {
+      if (mp != player || !prepared) return;
+      setAudioPosition(mp.getDuration());
+      setIsPlaying(false);
     });
+    player.setOnErrorListener((mp, what, extra) -> {
+      if (mp == player) loadFailed();
+      return true;
+    });
+    setBalance(getBalance());
+  }
 
-    this.playPauseButton.setOnClickListener(new OnClickListener() {
+  private boolean isUsable() {
+    if (!isAttachedToWindow()) return false;
+    Context context = getContext();
+    while (context instanceof ContextWrapper) {
+      if (context instanceof Activity) {
+        Activity activity = (Activity) context;
+        return !activity.isFinishing() && !activity.isDestroyed();
+      }
+      context = ((ContextWrapper) context).getBaseContext();
+    }
+    return true;
+  }
 
-      public void onClick(View v) {
-        if (MediaPlayerView.this.getIsPlaying()) {
-          MediaPlayerView.this.pause();
-        } else if (!MediaPlayerView.this.rlChangedSinceLastPlay) {
-          MediaPlayerView.this.player.start();
-          MediaPlayerView.this.setIsPlaying(true);
-        } else {
-          MediaPlayerView.this.rlChangedSinceLastPlay = false;
-          final ProgressDialog dialog = new ProgressDialog(
-                  MediaPlayerView.this.getContext());
-          dialog.setMessage("Loading track...");
-          dialog.show();
-          MediaPlayerView.this.cache.loadContentPublic(
-                  MediaPlayerView.this.getRemoteLocation().getUri(),
-                  MediaPlayerView.this.getRemoteLocation().getType(), false).continueWith(new Continuation<File, Void>() {
-            @Override
-            public Void then(final Task<File> task) throws Exception {
-              if (task.isFaulted()) {
-                MediaPlayerView.this.post(new Runnable() {
-
-                  public void run() {
-                    if (dialog.isShowing()) {
-                      dialog.dismiss();
-                    }
-                    Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                            Toast.LENGTH_SHORT).show();
-                  }
-                });
-              } else {
-                MediaPlayerView.this.post(new Runnable() {
-
-                  public void run() {
-                    try {
-                      FileInputStream fis = new FileInputStream(task.getResult());
-                      MediaPlayerView.this.player.reset();
-                      MediaPlayerView.this.player.setDataSource(fis.getFD());
-                      MediaPlayerView.this.player.prepare();
-                      MediaPlayerView.this.setAudioLength(MediaPlayerView.this.player
-                              .getDuration());
-                      fis.close();
-                      MediaPlayerView.this.player.start();
-                      MediaPlayerView.this.setIsPlaying(true);
-                    } catch (Exception e) {
-                      Toast.makeText(MediaPlayerView.this.getContext(), "Failed to load track.",
-                              Toast.LENGTH_SHORT).show();
-                      MediaPlayerView.this.setIsPlaying(false);
-                    } finally {
-                      if (dialog.isShowing()) {
-                        dialog.dismiss();
-                      }
-                    }
-                  }
-                });
-              }
-              return null;
-            }
-          });
+  private void play() {
+    if (!isUsable() || !isEnabled() || getIsLoading() || getRemoteLocation() == null) return;
+    if (player == null) createPlayer();
+    if (!rlChangedSinceLastPlay && prepared) {
+      player.start();
+      setIsPlaying(true);
+      return;
+    }
+    final int generation = ++loadGeneration;
+    final RemoteLocation location = getRemoteLocation();
+    prepared = false;
+    setIsLoading(true);
+    cache.loadContentPublic(location.getUri(), location.getType(), false).continueWith(task -> {
+      handler.post(() -> {
+        if (generation != loadGeneration || !isUsable() || player == null) return;
+        if (task.isFaulted() || task.isCancelled() || task.getResult() == null) {
+          loadFailed();
+          return;
         }
-      }
+        try (FileInputStream stream = new FileInputStream(task.getResult())) {
+          player.reset();
+          player.setDataSource(stream.getFD());
+          // Playback begins only in OnPreparedListener, never on the UI thread's prepare path.
+          player.prepareAsync();
+        } catch (Exception e) {
+          loadFailed();
+        }
+      });
+      return null;
     });
+  }
 
-    this.stopButton.setOnClickListener(new OnClickListener() {
-      public void onClick(View v) {
-        MediaPlayerView.this.stop();
-      }
-    });
+  private void loadFailed() {
+    stop();
+    if (!isUsable()) return;
+    Snackbar.make(this, R.string.detail_track_failed, Snackbar.LENGTH_LONG)
+        .setAction(R.string.detail_retry, v -> play())
+        .show();
   }
 
   @Override
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
-
-    UiBinder.bind(this, R.id.stopButton, "Enabled", "IsPlaying");
-    UiBinder.bind(this, R.id.playPauseButton, "Checked", "IsPlaying");
-
-    UiBinder.bind(this, R.id.counterSeekBar, "Progress", "AudioPosition");
-    UiBinder.bind(this, R.id.counterSeekBar, "Max", "AudioLength");
-
-    UiBinder.bind(this, R.id.balanceSeekBar, "Progress", "Balance");
+    if (player == null) createPlayer();
 
     UiBinder.bind(this, R.id.counterTextView, "Text", "PositionString");
+    UiBinder.bind(this, R.id.trackLoadingIndicator, "Visibility", "IsLoading", BoolConverter.get());
+    updateSliderValues();
+    updateControls();
   }
 
   @Override
   protected void onDetachedFromWindow() {
+    stop();
+    handler.removeCallbacksAndMessages(null);
+    if (player != null) {
+      player.release();
+      player = null;
+    }
     super.onDetachedFromWindow();
-
-    this.stop();
   }
 
   private void pause() {
-    if (this.player.isPlaying()) {
-      this.player.pause();
-      this.setIsPlaying(false);
+    if (player != null && prepared && getIsPlaying()) {
+      player.pause();
+      setAudioPosition(player.getCurrentPosition());
     }
+    setIsPlaying(false);
   }
 
   public void setAudioLength(int value) {
-    this.audioLength.set(value);
+    audioLength.set(Math.max(0, value));
+    updateSliderValues();
   }
 
   public void setAudioPosition(int value) {
-    this.audioPosition.set(value);
+    audioPosition.set(Math.max(0, value));
+    updateSliderValues();
+  }
+
+  // Slider ranges must be nonempty floats, including before a track has loaded.
+  private void updateSliderValues() {
+    if (playbackBar == null) return;
+    refreshing = true;
+    try {
+      float max = Math.max(1, getAudioLength());
+      float position = Math.min(max, getAudioPosition());
+      // Clamp before shrinking ValueTo, so Slider never observes an invalid value.
+      if (playbackBar.getValue() > max) playbackBar.setValue(max);
+      playbackBar.setValueTo(max);
+      playbackBar.setValue(position);
+    } finally {
+      refreshing = false;
+    }
   }
 
   public void setBalance(int value) {
-    this.balance.set(value);
+    balance.set(value);
     float rightPercentage = 1.0f * value / 1000;
     float leftPercentage = 1.0f * (1000 - value) / 1000;
     float max = Math.max(leftPercentage, rightPercentage);
     leftPercentage /= max;
     rightPercentage /= max;
-    this.player.setVolume(leftPercentage, rightPercentage);
+    if (player != null) player.setVolume(leftPercentage, rightPercentage);
+    if (balanceBar != null) balanceBar.setValue(value);
   }
 
   @Override
   public void setEnabled(boolean value) {
-    this.balanceBar.setEnabled(value);
-    this.playbackBar.setEnabled(value);
-    this.playPauseButton.setEnabled(value);
-    this.stopButton.setEnabled(value);
     super.setEnabled(value);
+    if (!value && player != null) stop();
+    updateControls();
+  }
+
+  private void updateControls() {
+    if (playPauseButton == null) return;
+    playPauseButton.setEnabled(isEnabled() && getRemoteLocation() != null && !getIsLoading());
+    playPauseButton.setIconResource(getIsPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+    playPauseButton.setContentDescription(getContext().getString(getIsPlaying() ? R.string.Pause : R.string.Play));
+    stopButton.setEnabled(isEnabled() && (prepared || getIsLoading()));
+    playbackBar.setEnabled(isEnabled() && prepared);
+    balanceBar.setEnabled(isEnabled());
+  }
+
+  private void setIsLoading(boolean value) {
+    isLoading.set(value);
+    updateControls();
   }
 
   private void setIsPlaying(boolean value) {
-    this.isPlaying.set(value);
-    if (value) {
-      this.timerTask = new TimerTask() {
-
-        @Override
-        public void run() {
-          MediaPlayerView.this.post(new Runnable() {
-            public void run() {
-              MediaPlayerView.this.refreshing = true;
-              MediaPlayerView.this.setAudioPosition(MediaPlayerView.this.player
-                      .getCurrentPosition());
-              MediaPlayerView.this.refreshing = false;
-            }
-          });
-        }
-      };
-      this.timer.scheduleAtFixedRate(this.timerTask, 0, 25);
-    } else if (this.timerTask != null)
-      this.timerTask.cancel();
+    isPlaying.set(value);
+    handler.removeCallbacks(updatePosition);
+    if (value) handler.post(updatePosition);
+    updateControls();
   }
 
   public void setRemoteLocation(RemoteLocation value) {
-    this.remoteLocation.set(value);
-    this.rlChangedSinceLastPlay = true;
-    this.stop();
+    remoteLocation.set(value);
+    stop();
   }
 
   public void stop() {
-    if (this.player.isPlaying())
-      this.player.stop();
-    this.setIsPlaying(false);
-    this.rlChangedSinceLastPlay = true;
+    ++loadGeneration;
+    handler.removeCallbacks(updatePosition);
+    prepared = false;
+    rlChangedSinceLastPlay = true;
+    if (player != null) player.reset();
+    setIsLoading(false);
+    setIsPlaying(false);
+    setAudioPosition(0);
   }
 }

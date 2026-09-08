@@ -2,32 +2,48 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import com.bindroid.converters.AdapterConverter
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.trackable.TrackableCollection
-import com.bindroid.ui.UiBinder
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.ui.ChangelogViewer
 
 class MeActivity : AppCompatActivity() {
-
     val favoriteIds: TrackableCollection<Int>
         get() = FavoritesModel.favoriteIds
+
+    /** Recycled favorites rows, keyed by tag id; exposed for tests. */
+    lateinit var favoritesAdapter: SavedTagListAdapter
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.meview)
+        setUpToolbar(showUp = false)
+        findViewById<View>(R.id.searchButton).applyBottomInsetsAsMargin()
 
-        UiBinder.bind(this, R.id.favoritesItemsControl, "Adapter", "FavoriteIds", AdapterConverter(
-                FavoriteTagItemView::class.java, true, true))
+        favoritesAdapter = SavedTagListAdapter({ FavoritesModel.favoriteIds }) { FavoriteTagItemView(it) }
+        val header = layoutInflater.inflate(R.layout.meviewheader_item, null)
+        val list = findViewById<RecyclerView>(R.id.homeList)
+        list.applyContentInsets()
+        list.layoutManager = LinearLayoutManager(this)
+        list.adapter =
+            ConcatAdapter(
+                StaticViewAdapter(view = header),
+                favoritesAdapter,
+                StaticViewAdapter(R.layout.meviewfooter),
+            )
+        list.addItemDecoration(SavedTagListAdapter.RowDivider(this))
 
-        this.supportActionBar?.title = "Tag Master".makeTitleString(this)
+        this.supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
 
         val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
-        viewer.setTitle("Tag Master Changelog")
+        viewer.setTitle(getString(R.string.home_changelog_title))
         viewer.setIcon(R.mipmap.ic_launcher)
         viewer.showIfAppropriate()
 
@@ -41,7 +57,7 @@ class MeActivity : AppCompatActivity() {
         this.menuInflater.inflate(R.menu.memenu, menu)
 
         MenuItems
-                .setShowAsAction(menu.findItem(R.id.settingsMenuItem), MenuItems.SHOW_AS_ACTION_ALWAYS)
+            .setShowAsAction(menu.findItem(R.id.settingsMenuItem), MenuItems.SHOW_AS_ACTION_ALWAYS)
         return true
     }
 

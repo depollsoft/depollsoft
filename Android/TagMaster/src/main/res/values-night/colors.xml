@@ -1,4 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="barberpole">#11DDDDDD</color>
+
+    <!-- Material 3 roles, dark. Light charcoal as primary; FAB (primaryContainer) is a mid gray
+         that clears 3:1 against the #131313 surface with a white icon on top. -->
+    <color name="md_primary">#E2E2E2</color>
+    <color name="md_on_primary">#1F1F1F</color>
+    <color name="md_primary_container">#6B6B6B</color>
+    <color name="md_on_primary_container">#FFFFFF</color>
+    <color name="md_primary_inverse">#373737</color>
+    <color name="md_secondary">#F2B8B5</color>
+    <color name="md_on_secondary">#4A1010</color>
+    <color name="md_secondary_container">#6E2424</color>
+    <color name="md_on_secondary_container">#FFDAD6</color>
+    <color name="md_tertiary">#C8C8C8</color>
+    <color name="md_on_tertiary">#2E2E2E</color>
+    <color name="md_tertiary_container">#454545</color>
+    <color name="md_on_tertiary_container">#E6E6E6</color>
+    <color name="md_background">#131313</color>
+    <color name="md_on_background">#E5E5E5</color>
+    <color name="md_surface">#131313</color>
+    <color name="md_on_surface">#E5E5E5</color>
+    <color name="md_surface_variant">#474747</color>
+    <color name="md_on_surface_variant">#CACACA</color>
+    <color name="md_surface_inverse">#E5E5E5</color>
+    <color name="md_on_surface_inverse">#303030</color>
+    <color name="md_surface_container_lowest">#0E0E0E</color>
+    <color name="md_surface_container_low">#1B1B1B</color>
+    <color name="md_surface_container">#1F1F1F</color>
+    <color name="md_surface_container_high">#2A2A2A</color>
+    <color name="md_surface_container_highest">#353535</color>
+    <color name="md_outline">#919191</color>
+    <color name="md_outline_variant">#474747</color>
 </resources>

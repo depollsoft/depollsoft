@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_available">%1$s available</string>
+    <string name="status_unavailable">No %1$s</string>
+    <string name="play_key_note">Play key note %1$s</string>
+    <string name="alternative_title_format">a.k.a. %1$s</string>
+    <string name="sheet_music_external_fallback">Sheet music could not open in Tag Master -- opening in external app</string>
+    <string name="sheet_music_no_external_app">No app is available to open this sheet music.</string>
+</resources>

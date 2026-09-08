@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_random_error">Could not load a random tag.</string>
+    <string name="home_random_no_matches">"No tags that match your filters could be found.  Please adjust your filters using the Settings menu."</string>
+    <string name="home_retry">Retry</string>
+    <string name="home_loading_random">Loading...</string>
+    <string name="home_enter_tag_id">Enter Tag ID</string>
+    <string name="home_open">Open</string>
+    <string name="home_cancel">Cancel</string>
+    <string name="home_teachable_hint">Open a tag and choose Mark as Teachable to add it here.</string>
+    <string name="home_more_options">More options</string>
+    <string name="home_version_separator">" - "</string>
+    <string name="home_space">" "</string>
+    <string name="home_title">Tag Master</string>
+    <string name="home_changelog_title">Tag Master Changelog</string>
+    <string name="home_favorites_empty">No favorites yet. Open a tag and tap the heart to keep it here.</string>
+    <string name="home_loading_tag">Loading tag</string>
+    <string name="home_invalid_tag_id">Enter a tag ID between 1 and 2147483647.</string>
+</resources>

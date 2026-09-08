@@ -4,6 +4,7 @@
 
     <item
         android:id="@+id/addFavoriteMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_favorite_border"
         android:title="@string/AddFavorite"
         app:showAsAction="ifRoom">
@@ -11,6 +12,7 @@
 
     <item
         android:id="@+id/removeFavoriteMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_favorite"
         android:title="@string/RemoveFavorite"
         app:showAsAction="ifRoom">
@@ -18,6 +20,7 @@
 
     <item
         android:id="@+id/addTeachableTagMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_people_border"
         android:title="@string/AddTeachableTag"
         app:showAsAction="ifRoom">
@@ -25,6 +28,7 @@
 
     <item
         android:id="@+id/removeTeachableTagMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_people"
         android:title="@string/RemoveTeachableTag"
         app:showAsAction="ifRoom">
@@ -32,6 +36,7 @@
 
     <item
         android:id="@+id/refreshMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_refresh"
         android:title="@string/RefreshTag"
         app:showAsAction="ifRoom">
@@ -39,6 +44,7 @@
 
     <item
         android:id="@+id/shareMenuItem"
+        app:iconTint="?attr/colorOnSurface"
         android:icon="@drawable/ic_share"
         android:title="@string/share"
         app:showAsAction="ifRoom">

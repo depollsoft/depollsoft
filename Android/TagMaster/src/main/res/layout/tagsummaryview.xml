@@ -1,52 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:app="http://schemas.android.com/apk/res-auto"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:orientation="vertical">
 
     <ScrollView
         android:id="@+id/scrollView1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="16dp"
         android:paddingTop="16dp">
 
         <TableLayout
             android:id="@+id/tableLayout1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:shrinkColumns="1"
             android:stretchColumns="1">
 
             <LinearLayout
                 android:id="@+id/linearLayout1"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/favoriteMarkerTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:text="@string/FavoriteIndicator"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
-
-                <TextView
-                    android:id="@+id/teachableMarkerTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:text="@string/TeachableIndicator"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
-                </TextView>
 
                 <TextView
                     android:id="@+id/titleTextView"
@@ -54,14 +34,14 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="24sp">
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall">
                 </TextView>
 
                 <LinearLayout
                     android:id="@+id/akaLayout"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp">
+                    android:layout_marginStart="20dp">
 
                     <TextView
                         android:id="@+id/textView7"
@@ -70,26 +50,26 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:text="@string/aka"
-                        android:textSize="12sp">
+                        android:textAppearance="?attr/textAppearanceBodyMedium">
                     </TextView>
 
                     <TextView
                         android:id="@+id/akaTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="5dp"
+                        android:layout_marginStart="5dp"
                         android:clickable="false"
                         android:longClickable="false"
                         android:singleLine="false"
-                        android:textSize="12sp">
+                        android:textAppearance="?attr/textAppearanceBodyMedium">
                     </TextView>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/versionLayout"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp">
+                    android:layout_marginStart="20dp">
 
                     <TextView
                         android:id="@+id/textView8"
@@ -98,167 +78,201 @@
                         android:clickable="false"
                         android:longClickable="false"
                         android:text="@string/Version"
-                        android:textSize="12sp">
+                        android:textAppearance="?attr/textAppearanceBodyMedium">
                     </TextView>
 
                     <TextView
                         android:id="@+id/versionTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="5dp"
+                        android:layout_marginStart="5dp"
                         android:clickable="false"
                         android:longClickable="false"
-                        android:textSize="12sp">
+                        android:textAppearance="?attr/textAppearanceBodyMedium">
                     </TextView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/savedStatusLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/favoriteMarkerTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:text="@string/FavoriteIndicator"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+                    <TextView
+                        android:id="@+id/teachableMarkerTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/TeachableIndicator"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textAppearance="?attr/textAppearanceLabelLarge" />
                 </LinearLayout>
             </LinearLayout>
 
             <TableRow
                 android:id="@+id/tagIdRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp">
 
                 <TextView
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:text="@string/TagId"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
                     android:id="@+id/tagIdTextView"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/ratingRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView2"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Rating"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <LinearLayout
                     android:id="@+id/linearLayout2"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="8dp">
 
                     <LinearLayout
                         android:id="@+id/linearLayout4"
-                        android:layout_width="0dip"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <RatingBar
+                            android:id="@+id/ratingProgressBar"
+                            style="?android:attr/ratingBarStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:importantForAccessibility="no"
+                            android:isIndicator="true"
+                            android:numStars="5"
+                            android:stepSize="0.1" />
 
                         <TextView
                             android:id="@+id/ratingTextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:clickable="false"
-                            android:longClickable="false"
-                            android:textSize="12sp">
-                        </TextView>
-
-                        <ProgressBar
-                            android:id="@+id/ratingProgressBar"
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="fill_parent"
-                            android:layout_height="15dp"
-                            android:indeterminate="false"
-                            android:max="5000">
-                        </ProgressBar>
+                            android:layout_marginStart="8dp"
+                            android:textAppearance="?attr/textAppearanceBodyMedium" />
                     </LinearLayout>
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/ratingSubmitProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        android:contentDescription="@string/detail_submitting_rating"
+                        app:indicatorSize="24dp"
+                        app:trackThickness="2dp" />
 
                     <ImageButton
                         android:id="@+id/rateButton"
                         style="@style/Base.Widget.AppCompat.Button.Borderless"
-                        android:layout_width="50dp"
-                        android:layout_height="40dp"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:minWidth="48dp"
+                        android:minHeight="48dp"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="5dip"
-                        android:layout_marginRight="5dip"
-                        android:textSize="12sp"
-                        app:tint="?attr/colorOnBackground"
-                        app:srcCompat="@drawable/ic_rate">
-                    </ImageButton>
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="@string/Rate"
+                        app:tooltipText="@string/Rate"
+                        app:tint="?attr/colorOnSurface"
+                        app:srcCompat="@drawable/ic_rate" />
                 </LinearLayout>
             </TableRow>
 
             <TableRow
                 android:id="@+id/partsRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView3"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Parts"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
                     android:id="@+id/partsTextView"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/tagTypeRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Type"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
                     android:id="@+id/tagTypeTextView"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
             </TableRow>
 
@@ -271,25 +285,37 @@
                     android:id="@+id/textView4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Key"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
-                <depollsoft.pitchperfect.lib.ui.PitchPipeButton
-                    android:id="@+id/playKeyNoteButton"
-                    android:layout_width="50dp"
-                    android:layout_height="40dp"
-                    android:layout_marginLeft="-5dp"
-                    android:layout_marginRight="5dp"
-                    android:text="@string/Play"
-                    android:textAllCaps="false"
-                    android:textSize="12sp">
-                </depollsoft.pitchperfect.lib.ui.PitchPipeButton>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start|center_vertical"
+                    android:orientation="horizontal">
+
+                    <depollsoft.pitchperfect.lib.ui.PitchPipeButton
+                        android:id="@+id/playKeyNoteButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="64dp"
+                        android:minHeight="48dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="24dp"
+                        android:background="@drawable/key_button_background"
+                        android:drawableStart="@drawable/ic_key"
+                        android:drawablePadding="8dp"
+                        android:drawableTint="?attr/colorOnSecondaryContainer"
+                        android:text="@string/Play"
+                        android:textAllCaps="false"
+                        android:textAppearance="?attr/textAppearanceLabelLarge"
+                        android:textColor="?attr/colorOnSecondaryContainer" />
+                </LinearLayout>
             </TableRow>
 
             <TableRow
@@ -301,13 +327,12 @@
                     android:id="@+id/textView5"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/ClassicTag"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
@@ -316,84 +341,101 @@
                     android:layout_height="wrap_content"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
             </TableRow>
 
             <LinearLayout
                 android:id="@+id/linearLayout3"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill"
                 android:orientation="vertical">
 
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/sheetMusicLink"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_margin="5dip"
-                    android:text="@string/SheetMusic"
-                    android:textSize="20sp"
-                    android:textStyle="bold">
-                </depollsoft.lib.ui.Hyperlink>
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/sheetMusicLink"
+                        style="?attr/materialButtonTonalStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:text="@string/SheetMusic"
+                        app:icon="@drawable/ic_sheet_music" />
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/sheetMusicProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:indeterminate="true"
+                        android:visibility="gone"
+                        android:contentDescription="@string/detail_loading"
+                        app:indicatorSize="24dp"
+                        app:trackThickness="2dp" />
+                </LinearLayout>
             </LinearLayout>
 
             <TableRow
                 android:id="@+id/lyricsRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/lyticsTitleTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Lyrics"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
                     android:id="@+id/lyricsTextView"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyLarge">
                 </TextView>
             </TableRow>
 
             <TableRow
                 android:id="@+id/notesRow"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/textView6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
+                    android:layout_gravity="start"
+                    android:layout_marginEnd="5dp"
                     android:clickable="false"
                     android:longClickable="false"
                     android:text="@string/Notes"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+                    android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
 
                 <TextView
                     android:id="@+id/notesTextView"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="fill"
                     android:clickable="false"
                     android:longClickable="false"
-                    android:textSize="12sp">
+                    android:textAppearance="?attr/textAppearanceBodyLarge">
                 </TextView>
             </TableRow>
         </TableLayout>

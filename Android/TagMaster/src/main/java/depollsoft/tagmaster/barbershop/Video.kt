@@ -13,7 +13,7 @@ class Video {
     var youTubeCode by TrackableField<String?>()
     var sungBy by TrackableField<String?>()
     var sungWebsite by TrackableField<String?>()
-    var posted by TrackableField<Date>()
+    var posted by TrackableField<Date?>()
 
     fun parseFromXml(elem: XmlElement) {
         for (property in elem.elements) {

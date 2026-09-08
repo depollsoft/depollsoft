@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_brand_title" translatable="false">Tag Master</string>
+    <string name="detail_loading">Loading...</string>
+    <string name="detail_tag_load_failed">Couldn\'t load tag %1$d. Check your connection, then try again.</string>
+    <string name="detail_share_title">Share a Tag</string>
+    <string name="detail_share_subject">%1$s - Tag Master</string>
+    <string name="detail_share_text">Tag Title: %1$s\n%2$s\n\nSent from Tag Master\nhttp://www.davidpoll.com/applications/tag-master</string>
+    <string name="detail_sheet_music_failed">Unable to load sheet music.  Please try again later.</string>
+    <string name="detail_sheet_music_no_app">No application available to view this sheet music (%1$s).</string>
+    <string name="detail_rating_failed">Failed to submit rating.  Please try again later.</string>
+    <string name="detail_submitting_rating">Submitting rating...</string>
+    <string name="detail_track_loading">Loading track...</string>
+    <string name="detail_track_failed">Failed to load track.</string>
+    <string name="detail_retry">Retry</string>
+    <string name="detail_submit">Submit</string>
+    <string name="detail_rating_hint">Choose one to five stars, then submit your rating.</string>
+    <string name="detail_playback_position">Playback position</string>
+</resources>

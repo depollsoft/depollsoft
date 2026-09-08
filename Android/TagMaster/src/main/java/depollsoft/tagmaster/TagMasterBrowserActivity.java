@@ -28,7 +28,7 @@ public class TagMasterBrowserActivity extends BrowserActivity {
     try {
       Uri uri = Uri.parse(url);
       if (UrlHandlerActivity.canHandleUri(uri)) {
-        Intent i = new Intent(Intent.ACTION_VIEW, uri);
+        Intent i = new Intent(Intent.ACTION_VIEW, uri, this, UrlHandlerActivity.class);
         this.startActivity(i);
         return true;
       }

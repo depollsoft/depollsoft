@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
@@ -11,15 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.TrackableBoolean
-import com.bindroid.ui.UiBinder
 import com.bindroid.utils.*
-import depollsoft.lib.kotlin.ui.safeDismiss
-import depollsoft.lib.ui.Hyperlink
+import com.google.android.material.snackbar.Snackbar
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.lib.RatingConverter
 import java.util.*
@@ -28,8 +24,11 @@ class TagSummaryFragment : Fragment() {
     val parent: TagDetailActivity
         get() = this.activity as TagDetailActivity
     private val _canRate = TrackableBoolean(true)
+    private val sheetMusicLoading = TrackableBoolean(false)
+    private val ratingSubmitting = TrackableBoolean(false)
+    private var ratingsPopup: RatingsPopup? = null
     val canRate: Boolean
-        get() = _canRate.get() && this.parent.tag != null && !RatingsModel.isRated(this.parent.tag!!.id)
+        get() = _canRate.get() && !ratingSubmitting.get() && this.parent.tag != null && !RatingsModel.isRated(this.parent.tag!!.id)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,6 +36,10 @@ class TagSummaryFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
+        rootView.findViewById<View>(R.id.scrollView1).applyContentInsets(maxWidthRes = R.dimen.two_column_max_width)
+        rootView.bindTo(R.id.sheetMusicProgress, "Visibility", { sheetMusicLoading.get() }, BoolConverter.get())
+        rootView.bindTo(R.id.sheetMusicLink, "Enabled", { !sheetMusicLoading.get() })
+        rootView.bindTo(R.id.ratingSubmitProgress, "Visibility", { ratingSubmitting.get() }, BoolConverter.get())
 
         rootView.bindTo(R.id.titleTextView, "Text", { "${parent.tag?.title}" })
         rootView.bindTo(
@@ -79,7 +82,7 @@ class TagSummaryFragment : Fragment() {
 
         rootView.bindTo(
             R.id.ratingProgressBar,
-            "Progress",
+            "Rating",
             { parent.tag?.rating },
             RatingConverter(),
         )
@@ -138,7 +141,6 @@ class TagSummaryFragment : Fragment() {
         rootView.bindTo(R.id.lyricsTextView, "Text", { parent.tag?.lyrics })
         rootView.bindTo(R.id.lyricsRow, "Visibility", { parent.tag?.lyrics }, BoolConverter.get())
 
-        rootView.bindTo(R.id.sheetMusicLink, "HyperlinkUri", { parent.tag?.sheetMusicUri?.uri })
         rootView.bindTo(
             R.id.sheetMusicLink,
             "Visibility",
@@ -149,125 +151,129 @@ class TagSummaryFragment : Fragment() {
         rootView.bindTo(
             R.id.favoriteMarkerTextView,
             "Visibility",
-            { FavoritesModel.getIsFavorite(parent.tag!!.id) },
+            { parent.tag?.let { FavoritesModel.getIsFavorite(it.id) } ?: false },
             BoolConverter.get(),
         )
         rootView.bindTo(
             R.id.teachableMarkerTextView,
             "Visibility",
-            { TeachableTagsModel.getIsTeachableTag(parent.tag!!.id) },
+            { parent.tag?.let { TeachableTagsModel.getIsTeachableTag(it.id) } ?: false },
             BoolConverter.get(),
         )
 
-        val link = rootView.findViewById(R.id.sheetMusicLink) as Hyperlink
-        link.setOnClickListener {
-            val tag = parent.tag
-            val sheetMusicType = tag!!.sheetMusicUri!!.type
-            val sheetMusicUri = tag.sheetMusicUri!!.uri
-            val progress = ProgressDialog(parent)
-            progress.isIndeterminate = true
-            progress.setMessage("Loading...")
-            progress.show()
-
-            val cache = ContentCache(parent)
-            cache.loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith { task ->
-                if (task.isFaulted) {
-                    parent.runOnUiThread {
-                        Toast
-                            .makeText(
-                                parent,
-                                "Unable to load sheet music.  Please try again later.",
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        progress.safeDismiss()
-                    }
-                } else {
-                    try {
-                        val contentPath = (
-                            "content://${parent.packageName}/" + sheetMusicType + "/" +
-                                Base64.encodeToString(
-                                    sheetMusicUri.toByteArray(),
-                                    Base64.URL_SAFE,
-                                ) +
-                                "/" + tag.id + "." + sheetMusicType
-                        )
-                        val path = Uri.parse(contentPath)
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.putExtra("tagId", tag.id)
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        intent.setClass(requireContext(), SheetMusicActivity::class.java)
-
-                        if (sheetMusicType.lowercase(Locale.US) == "pdf") {
-                            intent.setDataAndType(path, "application/pdf")
-                        } else {
-                            val map = MimeTypeMap.getSingleton()
-                            val mimeType =
-                                map.getMimeTypeFromExtension(
-                                    sheetMusicType
-                                        .lowercase(Locale.US),
-                                )
-                            intent.setDataAndType(path, mimeType)
-                        }
-                        try {
-                            parent.startActivity(intent)
-                        } catch (e: ActivityNotFoundException) {
-                            parent.runOnUiThread {
-                                Toast
-                                    .makeText(
-                                        parent,
-                                        "No application available to view this sheet music (" + sheetMusicType +
-                                            ").",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    } finally {
-                        progress.safeDismiss()
-                    }
-                }
-                null
-            }
+        rootView.findViewById<View>(R.id.sheetMusicLink).setOnClickListener {
+            loadSheetMusic(rootView)
         }
 
-        val rateButton = rootView.findViewById<View>(R.id.rateButton)
-        rateButton.setOnClickListener {
-            if (!canRate) return@setOnClickListener
+        rootView.findViewById<View>(R.id.rateButton).setOnClickListener {
+            if (!canRate || !isUsable(rootView)) return@setOnClickListener
             val popup = RatingsPopup(parent)
+            ratingsPopup = popup
             popup.setOnDismissListener(
                 OnDismissListener {
-                    if (popup.rating == null) {
-                        return@OnDismissListener
-                    }
-                    val tag = parent.tag
-                    val pd = ProgressDialog(parent)
-                    pd.isIndeterminate = true
-                    pd.setMessage("Submitting rating...")
-                    pd.show()
-                    tag!!.rate(popup.rating!!).continueWith { task ->
-                        if (task.isFaulted) {
-                            parent.runOnUiThread {
-                                Toast
-                                    .makeText(
-                                        parent,
-                                        "Failed to submit rating.  Please try again later.",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                pd.safeDismiss()
-                            }
-                        } else {
-                            RatingsModel.addRating(tag.id)
-                            _canRate.set(false)
-                            pd.safeDismiss()
-                        }
-                        null
-                    }
+                    ratingsPopup = null
+                    val rating = popup.rating ?: return@OnDismissListener
+                    if (isUsable(rootView)) submitRating(rootView, rating)
                 },
             )
             popup.show()
         }
 
         return rootView
+    }
+
+    private fun isUsable(rootView: View): Boolean {
+        val host = activity ?: return false
+        return view === rootView && rootView.isAttachedToWindow && !host.isFinishing && !host.isDestroyed
+    }
+
+    private fun loadSheetMusic(rootView: View) {
+        if (!isUsable(rootView) || sheetMusicLoading.get()) return
+        val host = parent
+        val tag = host.tag ?: return
+        val location = tag.sheetMusicUri ?: return
+        val sheetMusicType = location.type
+        val sheetMusicUri = location.uri
+        sheetMusicLoading.set(true)
+
+        ContentCache(host).loadContentPublic(sheetMusicUri, sheetMusicType, false).continueWith { task ->
+            host.runOnUiThread {
+                if (!isUsable(rootView)) return@runOnUiThread
+                sheetMusicLoading.set(false)
+                if (task.isFaulted || task.isCancelled) {
+                    showSheetMusicError(rootView)
+                    return@runOnUiThread
+                }
+                try {
+                    val contentPath = (
+                        "content://${host.packageName}/" + sheetMusicType + "/" +
+                            Base64.encodeToString(sheetMusicUri.toByteArray(), Base64.URL_SAFE) +
+                            "/" + tag.id + "." + sheetMusicType
+                    )
+                    val path = Uri.parse(contentPath)
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.putExtra("tagId", tag.id)
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.setClass(host, SheetMusicActivity::class.java)
+                    val mimeType =
+                        if (sheetMusicType.lowercase(Locale.US) == "pdf") {
+                            "application/pdf"
+                        } else {
+                            MimeTypeMap.getSingleton().getMimeTypeFromExtension(sheetMusicType.lowercase(Locale.US))
+                        }
+                    intent.setDataAndType(path, mimeType)
+                    host.startActivity(intent)
+                } catch (e: ActivityNotFoundException) {
+                    Snackbar.make(rootView, getString(R.string.detail_sheet_music_no_app, sheetMusicType), Snackbar.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    showSheetMusicError(rootView)
+                }
+            }
+            null
+        }
+    }
+
+    private fun showSheetMusicError(rootView: View) {
+        if (!isUsable(rootView)) return
+        Snackbar
+            .make(rootView, R.string.detail_sheet_music_failed, Snackbar.LENGTH_LONG)
+            .setAction(R.string.detail_retry) { loadSheetMusic(rootView) }
+            .show()
+    }
+
+    private fun submitRating(
+        rootView: View,
+        rating: Int,
+    ) {
+        if (!isUsable(rootView) || !canRate) return
+        val host = parent
+        val tag = host.tag ?: return
+        ratingSubmitting.set(true)
+        tag.rate(rating).continueWith { task ->
+            host.runOnUiThread {
+                // Persist a successful submission even if the user has left this view.
+                if (!task.isFaulted && !task.isCancelled) RatingsModel.addRating(tag.id)
+                if (!isUsable(rootView)) return@runOnUiThread
+                ratingSubmitting.set(false)
+                if (task.isFaulted || task.isCancelled) {
+                    Snackbar
+                        .make(rootView, R.string.detail_rating_failed, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.detail_retry) { submitRating(rootView, rating) }
+                        .show()
+                } else {
+                    _canRate.set(false)
+                }
+            }
+            null
+        }
+    }
+
+    override fun onDestroyView() {
+        ratingsPopup?.setOnDismissListener(null)
+        ratingsPopup?.dismiss()
+        ratingsPopup = null
+        sheetMusicLoading.set(false)
+        ratingSubmitting.set(false)
+        super.onDestroyView()
     }
 }

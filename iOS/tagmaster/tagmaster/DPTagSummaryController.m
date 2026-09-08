@@ -14,6 +14,33 @@
 #import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
 
+// Keep pitch accessibility local to Tag Master; shared pitch-pipe behavior is unchanged.
+// Width-aware wrapping comes from TMWrappingButton (configured buttons cache
+// multiline heights across tab reattachment; it measures at the actual column width).
+@interface TMKeyButton : TMWrappingButton
+@property (nonatomic, copy) void (^playNote)(void);
+@end
+@implementation TMKeyButton
+- (BOOL)accessibilityActivate {
+    if (!self.playNote) return NO;
+    self.playNote();
+    return YES;
+}
+@end
+
+@interface TMKeyPitchButton : DPPitchPipeButton
+@end
+@implementation TMKeyPitchButton
+- (void)updateConstraints {
+    [super updateConstraints];
+    [self.button setBackgroundImage:nil forState:UIControlStateNormal];
+    [self.button setBackgroundImage:nil forState:UIControlStateHighlighted];
+    self.button.backgroundColor = [UIColor secondarySystemFillColor];
+    [self.button setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
+    self.button.layer.borderColor = [UIColor separatorColor].CGColor;
+}
+@end
+
 @interface DPSheetMusicPreview : NSObject <QLPreviewItem>
 
 @property (nonatomic, strong) NSURL *previewItemURL;
@@ -71,6 +98,7 @@
     [grid setView:akaLabel hidden:!self.tag.alternativeTitle];
     
     ratingLabel.text = [NSString stringWithFormat:@"%1.2f", self.tag.rating];
+    ratingLabel.accessibilityValue = ratingLabel.text;
     ratingBar.progress = self.tag.rating / 5;
     
     partsLabel.text = [NSString stringWithFormat:@"%d", self.tag.parts];
@@ -78,6 +106,8 @@
     typeLabel.text = self.tag.tagType;
     
     keyButton.note = [self.tag keyNote];
+    keyButton.button.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
+    keyButton.button.accessibilityHint = @"Plays for one and a half seconds";
     [keyButton.button setTitle:self.tag.writtenKey forState:UIControlStateNormal];
     [grid setView:keyButton hidden:!self.tag.writtenKey];
     [grid setView:keyHeader hidden:!self.tag.writtenKey];
@@ -96,7 +126,9 @@
     [grid setView:notesLabel hidden:!self.tag.notes];
     [grid setView:notesHeader hidden:!self.tag.notes];
     
-    [self.ratingButton setEnabled:YES];
+    [self.ratingButton setEnabled:self.tag != nil];
+    [self.ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
+    self.ratingButton.accessibilityLabel = @"Rate tag";
 }
 
 - (void)viewDidLoad
@@ -107,10 +139,13 @@
     
     titleLabel = [self makeTitleLabel];
     akaLabel = [[UILabel alloc] init];
-    akaLabel.font = [akaLabel.font fontWithSize:18];
+    akaLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle3];
+    akaLabel.textColor = [UIColor secondaryLabelColor];
+    akaLabel.adjustsFontForContentSizeCategory = YES;
     akaLabel.numberOfLines = 0;
     ratingBar = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleBar];
-    ratingBar.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
+    ratingBar.trackTintColor = [UIColor tertiarySystemFillColor];
+    ratingBar.isAccessibilityElement = NO;
     ratingButton = [[UIButton alloc] init];
     [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
     ratingLabel = [self makeBodyLabel];
@@ -118,8 +153,14 @@
     [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
     partsLabel = [self makeBodyLabel];
     typeLabel = [self makeBodyLabel];
-    keyButton = [[DPPitchPipeButton alloc] init];
-    keyButton.button.titleLabel.font = [UIFont systemFontOfSize:12];
+    keyButton = [[TMKeyPitchButton alloc] init];
+    TMKeyButton *accessibleKey = [TMKeyButton buttonWithType:UIButtonTypeCustom];
+    __weak DPTagSummaryController *weakSelf = self;
+    accessibleKey.playNote = ^{ [weakSelf playKeyNote]; };
+    keyButton.button = accessibleKey;
+    [accessibleKey addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchCancel];
+    keyButton.button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    keyButton.button.titleLabel.adjustsFontForContentSizeCategory = YES;
     UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
     config.contentInsets = NSDirectionalEdgeInsetsMake(4, 0, 4, 0);
     keyButton.button.configuration = config;
@@ -127,6 +168,21 @@
     sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
     [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
+    // Sheet music is the primary action on this page: a tinted, iconed button.
+    UIButtonConfiguration *sheetConfiguration = [UIButtonConfiguration tintedButtonConfiguration];
+    sheetConfiguration.image = [UIImage systemImageNamed:@"doc.richtext"];
+    sheetConfiguration.imagePadding = 8;
+    sheetConfiguration.titleLineBreakMode = NSLineBreakByWordWrapping;
+    sheetConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(10, 16, 10, 16);
+    sheetMusicButton.configuration = sheetConfiguration;
+    [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
+    for (UIButton *button in @[ratingButton, sheetMusicButton, keyButton.button]) {
+        button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [button.widthAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+    }
+    ratingButton.accessibilityLabel = @"Rate tag";
     lyricsLabel = [self makeBodyLabel];
     lyricsLabel.numberOfLines = 0;
     notesLabel = [self makeBodyLabel];
@@ -161,7 +217,7 @@
     
     // Add titles
     [grid addSubview:titleLabel row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[akaLabel padLeft:20 top:0 right:0 bottom:8]
+    [grid addSubview:[akaLabel padLeft:0 top:0 right:0 bottom:8]
                  row:1
               column:0
              rowSpan:1
@@ -186,19 +242,16 @@
     [grid addSubview:notesLabel row:9 column:2];
     
     // Build rating UI
-    DPGridLayout *ratingGrid = [[DPGridLayout alloc] init];
-    ratingGrid.columnDimensions = @[
-                                    [DPGridDimension dimensionWithStars:1],
-                                    [DPGridDimension dimension]
-                                    ];
-    ratingGrid.rowDimensions = @[
-                                 [DPGridDimension dimension],
-                                 [DPGridDimension dimension]
-                                 ];
-    
-    [ratingGrid addSubview:[ratingLabel centeredHorizontally] row:0 column:0];
-    [ratingGrid addSubview:[ratingBar alignTop] row:1 column:0];
-    [ratingGrid addSubview:[ratingButton padHorizontal:8 vertical:0] row:0 column:1 rowSpan:2 colSpan:1];
+    UIStackView *ratingValue = [[UIStackView alloc] initWithArrangedSubviews:@[ratingLabel, ratingBar]];
+    ratingValue.axis = UILayoutConstraintAxisVertical;
+    ratingValue.spacing = 4;
+    ratingLabel.textAlignment = NSTextAlignmentCenter;
+    ratingLabel.accessibilityLabel = @"Rating out of 5";
+    UIStackView *ratingGrid = [[UIStackView alloc] initWithArrangedSubviews:@[ratingValue, ratingButton]];
+    ratingGrid.axis = UILayoutConstraintAxisHorizontal;
+    ratingGrid.alignment = UIStackViewAlignmentCenter;
+    ratingGrid.spacing = 8;
+    [ratingButton setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:2];
     
     [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
@@ -208,24 +261,40 @@
     [self refreshView];
 }
 
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    // DPLabel deliberately has no intrinsic width. When the tab host detaches and
+    // reattaches this page, automatic multiline measurement can retain a height
+    // from a transient column width. Measure against the resolved width instead;
+    // the existing hugging/compression priorities can then size each auto row.
+    for (UILabel *label in @[partsLabel, typeLabel, classicTagNumberLabel,
+                             ratingLabel, lyricsLabel, notesLabel]) {
+        CGFloat width = CGRectGetWidth(label.bounds);
+        if ([label isDescendantOfView:grid] && width > 0 && label.preferredMaxLayoutWidth != width) {
+            label.preferredMaxLayoutWidth = width;
+        }
+    }
+}
+
 - (void)rate {
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Rating"
                                                                              message:@"Rate the tag on a scale of 1-5 stars"
                                                                       preferredStyle:UIAlertControllerStyleActionSheet];
     alertController.popoverPresentationController.sourceView = ratingButton;
-    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★★★" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    alertController.popoverPresentationController.sourceRect = ratingButton.bounds;
+    [alertController addAction:[UIAlertAction actionWithTitle:@"5 stars" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:5];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★★☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [alertController addAction:[UIAlertAction actionWithTitle:@"4 stars" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:4];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"★★★☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [alertController addAction:[UIAlertAction actionWithTitle:@"3 stars" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:3];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"★★☆☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [alertController addAction:[UIAlertAction actionWithTitle:@"2 stars" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:2];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"★☆☆☆☆" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    [alertController addAction:[UIAlertAction actionWithTitle:@"1 star" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self rateTag:1];
     }]];
     
@@ -236,48 +305,91 @@
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
+/// Shows progress on the control that started the request and blocks only that control.
+- (void)setButton:(UIButton *)button busy:(BOOL)busy {
+    UIButtonConfiguration *configuration = button.configuration;
+    if (configuration) {
+        configuration.showsActivityIndicator = busy;
+        button.configuration = configuration;
+    } else if (button == self.ratingButton) {
+        [button setTitle:busy ? @"Sending…" : @"Rate" forState:UIControlStateNormal];
+    }
+    button.enabled = !busy;
+}
+
 - (void)rateTag:(NSInteger)rating {
     [self.busyIndicator incrementBusyCount];
+    [self setButton:self.ratingButton busy:YES];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
             [self.tag rate:rating];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self setButton:self.ratingButton busy:NO];
                 [self.ratingButton setEnabled:NO];
+                [self.ratingButton setTitle:@"Rated" forState:UIControlStateNormal];
+                self.ratingButton.accessibilityLabel = @"Rating submitted";
             });
         }
         @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self setButton:self.ratingButton busy:NO];
+                [self tm_showError:@"Your rating couldn't be sent. Check your connection and try again." retry:^{ [self rateTag:rating]; }];
             });
         }
     });
 }
 
 - (void)openSheetMusic {
+    if (self.busyIndicator.busyCount > 0 && !self.sheetMusicButton.enabled) return;
     [self.busyIndicator incrementBusyCount];
+    [self setButton:self.sheetMusicButton busy:YES];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @try {
             NSString *key = self.tag.sheetMusicUri.cacheKey;
             if (![[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:key]]) {
-                [DPFileCache writeData:[NSData dataWithContentsOfURL:self.tag.sheetMusicUri.uri] forKey:key];
+                NSData *data = [DPRemoteLocation dataWithContentsOfURL:self.tag.sheetMusicUri.uri error:nil];
+                if (data.length == 0) {
+                    [NSException raise:@"SheetMusicUnavailable" format:@"No sheet music data"];
+                }
+                [DPFileCache writeData:data forKey:key];
+                if (![[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:key]]) {
+                    [NSException raise:@"SheetMusicUnavailable" format:@"Unable to save sheet music"];
+                }
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self setButton:self.sheetMusicButton busy:NO];
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
                 if (self.tag.keyNote) {
-                    UIButton *toucher = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+                    TMKeyButton *toucher = [TMKeyButton buttonWithType:UIButtonTypeSystem];
+                    __weak DPTagSummaryController *weakSelf = self;
+                    toucher.playNote = ^{ [weakSelf playKeyNote]; };
+                    toucher.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
+                    toucher.accessibilityHint = @"Plays for one and a half seconds";
+                    [toucher.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+                    [toucher.widthAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
                     [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
                     [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
-                    [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+                    [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
                     previewer.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:toucher];
                 }
-                [self presentViewController:previewer animated:YES completion:NULL];
+                // Pushed previews keep the navigation bar (Back and the key note) on screen
+                // from the first frame; a modal preview opened with its chrome hidden.
+                previewer.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
+                if (self.navigationController) {
+                    [self.navigationController pushViewController:previewer animated:YES];
+                } else {
+                    [self presentViewController:previewer animated:YES completion:NULL];
+                }
             });
         } @catch (NSException *exception) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.busyIndicator decrementBusyCount];
+                [self setButton:self.sheetMusicButton busy:NO];
+                [self tm_showError:@"Sheet music couldn't be opened. Check your connection and try again." retry:^{ [self openSheetMusic]; }];
             });
         }
     });

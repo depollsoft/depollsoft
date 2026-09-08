@@ -32,6 +32,25 @@
 #import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
 
+/// Shown in the secondary column before a tag is chosen on iPad.
+@interface TMTagPlaceholderController : UIViewController
+@end
+
+@implementation TMTagPlaceholderController
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [DPAppDelegate setUpBackground:self.view];
+    UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
+    state.image = [UIImage systemImageNamed:@"tag"];
+    state.text = @"No tag selected";
+    state.secondaryText = @"Choose a tag from Browse, Search, Favorites, or Teachable Tags to see its summary, tracks, and videos.";
+    self.contentUnavailableConfiguration = state;
+}
+@end
+
+@interface DPAppDelegate () <UISplitViewControllerDelegate>
+@end
+
 @implementation DPAppDelegate
 
 @synthesize window = _window;
@@ -76,10 +95,23 @@
     [self.window makeKeyAndVisible];
     
     UINavigationController *navController = [[UINavigationController alloc] init];
-    self.window.rootViewController = navController;
-    [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
-    
+    navController.navigationBar.prefersLargeTitles = YES;
+    [navController pushViewController:[[DPHomeViewController alloc] init] animated:NO];
     navigationController = navController;
+
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+        // List and detail side by side on iPad; the Home stack stays the primary column.
+        UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
+        split.delegate = self;
+        split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
+        split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+        [split setViewController:navController forColumn:UISplitViewControllerColumnPrimary];
+        [split setViewController:[[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]]
+                       forColumn:UISplitViewControllerColumnSecondary];
+        self.window.rootViewController = split;
+    } else {
+        self.window.rootViewController = navController;
+    }
     [self.window makeKeyAndVisible];
     
     [self extraInit];
@@ -103,19 +135,41 @@
     if ([[FIRAuth auth] canHandleURL:url]) {
         return YES;
     }
-    if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
-        NSString *tagNumberString = url.pathComponents[2];
-        @try {
-            int tagId = tagNumberString.intValue;
-            DPTagViewController *controller = [[DPTagViewController alloc] init];
-            controller.tagId = tagId;
-            [self.navigationController pushViewController:controller animated:YES];
-        }
-        @catch (NSException *exception) {
+    // Accept tagmaster://open/tag/N (the original form), tagmaster://tag/N and tagmaster:///tag/N.
+    NSArray<NSString *> *components = url.pathComponents;
+    BOOL hostIsTag = [url.host isEqualToString:@"tag"] && components.count == 2;
+    BOOL pathHasTag = components.count >= 2 && [components[components.count - 2] isEqualToString:@"tag"];
+    if (hostIsTag || pathHasTag) {
+        int tagId = components.lastObject.intValue;
+        if (tagId > 0) {
+            [DPAppDelegate showTagWithId:tagId from:self.navigationController.topViewController];
         }
         return YES;
     }
     return NO;
+}
+
++ (void)showTagWithId:(int)tagId from:(UIViewController *)sender {
+    DPTagViewController *controller = [[DPTagViewController alloc] init];
+    controller.tagId = tagId;
+    UISplitViewController *split = sender.splitViewController;
+    if (split && !split.isCollapsed) {
+        [split setViewController:[[UINavigationController alloc] initWithRootViewController:controller]
+                       forColumn:UISplitViewControllerColumnSecondary];
+        if (split.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
+            [split hideColumn:UISplitViewControllerColumnPrimary];
+        }
+        return;
+    }
+    UINavigationController *navigation = sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
+    [navigation pushViewController:controller animated:YES];
+}
+
+- (UISplitViewControllerColumn)splitViewController:(UISplitViewController *)svc topColumnForCollapsingToProposedTopColumn:(UISplitViewControllerColumn)proposedTopColumn {
+    // Keep a chosen tag on top when the window narrows; never surface the placeholder.
+    UINavigationController *secondary = (UINavigationController *)[svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UIViewController *detail = [secondary isKindOfClass:[UINavigationController class]] ? secondary.topViewController : secondary;
+    return [detail isKindOfClass:[DPTagViewController class]] ? UISplitViewControllerColumnSecondary : UISplitViewControllerColumnPrimary;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -209,10 +263,15 @@
                                                          scale:UIImageSymbolScaleMedium];
     UIImage *image = [UIImage systemImageNamed:systemName
                              withConfiguration:configuration];
-    return [[UIBarButtonItem alloc] initWithImage:image
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:image
                                             style:UIBarButtonItemStylePlain
                                            target:target
                                            action:action];
+    item.accessibilityLabel = @{@"magnifyingglass": @"Search",
+                                @"square.and.arrow.up": @"Share",
+                                @"tag": @"Favorite and Teachable options",
+                                @"arrow.clockwise": @"Refresh"}[systemName];
+    return item;
 }
 
 + (void)setUpBackground:(UIView *)view {

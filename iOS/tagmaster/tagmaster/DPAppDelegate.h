@@ -30,6 +30,9 @@
 + (void)removeTeachable:(int)tagId;
 
 + (void)setUpBackground:(UIView *)view;
+/// Opens a tag from any screen: the secondary column on a regular-width iPad,
+/// a push on the current navigation stack everywhere else.
++ (void)showTagWithId:(int)tagId from:(UIViewController *)sender;
 + (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
                                           target:(id)target
                                           action:(SEL)action;

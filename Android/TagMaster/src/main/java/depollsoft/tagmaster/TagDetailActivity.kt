@@ -1,174 +1,171 @@
 package depollsoft.tagmaster
 
-import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.app.ShareCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import bolts.Task
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import depollsoft.lib.compat.ui.Activities
 import depollsoft.lib.compat.ui.MenuItems
-import depollsoft.lib.kotlin.ui.attachToViewPager
-import depollsoft.lib.kotlin.ui.safeDismiss
 import depollsoft.lib.util.ContentCache
-import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.util.*
 
 class TagDetailActivity : AppCompatActivity() {
     var tag: Tag? by trackable()
-    private var progress: ProgressDialog? = null
+    var isLoading: Boolean by trackable(false)
+    var loadFailed: Boolean by trackable(false)
+
+    /** Toolbar title: the tag once loaded, the app name while loading or after a failure. */
+    val displayTitle: CharSequence
+        get() = tag?.title ?: getString(R.string.detail_brand_title).makeTitleString(this)
 
     private val shareIntent: Intent
         get() {
-            return ShareCompat.IntentBuilder(this)
-                .setChooserTitle("Share a Tag")
+            return ShareCompat
+                .IntentBuilder(this)
+                .setChooserTitle(R.string.detail_share_title)
                 .setType("text/plain")
-                .setSubject("${this.tag!!.title} - Tag Master")
-                .setText(
-                    """
-                        Tag Title: ${tag!!.title}
-                        ${tag!!.tagUri}
-                        
-                        Sent from Tag Master
-                        http://www.davidpoll.com/applications/tag-master
-                    """.trimIndent()
-                )
+                .setSubject(getString(R.string.detail_share_subject, tag!!.title))
+                .setText(getString(R.string.detail_share_text, tag!!.title, tag!!.tagUri))
                 .createChooserIntent()
         }
 
     val tagId: Int
         get() = this.intent.getIntExtra(TagDetailActivity.TAG_ID_EXTRA, -1)
 
-
     private fun loadQueryItem(refresh: Boolean) {
+        if (isLoading || isFinishing || isDestroyed) return
         val original = this.tag
-        if (original != null) {
-            val cache = ContentCache(this)
-            val contentToDelete = ArrayList<RemoteLocation?>()
-            contentToDelete.add(original.allPartsTrackUri)
-            contentToDelete.add(original.baritoneTrackUri)
-            contentToDelete.add(original.bassTrackUri)
-            contentToDelete.add(original.leadTrackUri)
-            contentToDelete.add(original.notationUri)
-            contentToDelete.add(original.other1TrackUri)
-            contentToDelete.add(original.other2TrackUri)
-            contentToDelete.add(original.other3TrackUri)
-            contentToDelete.add(original.other4TrackUri)
-            contentToDelete.add(original.tenorTrackUri)
-            contentToDelete.add(original.sheetMusicUri)
-            for (loc in contentToDelete) {
-                if (loc != null) {
+        val contentToDelete =
+            if (original == null) {
+                emptyList()
+            } else {
+                listOfNotNull(
+                    original.allPartsTrackUri,
+                    original.baritoneTrackUri,
+                    original.bassTrackUri,
+                    original.leadTrackUri,
+                    original.notationUri,
+                    original.other1TrackUri,
+                    original.other2TrackUri,
+                    original.other3TrackUri,
+                    original.other4TrackUri,
+                    original.tenorTrackUri,
+                    original.sheetMusicUri,
+                )
+            }
+        isLoading = true
+        loadFailed = false
+        invalidateOptionsMenu()
+
+        val cache = ContentCache(this)
+        Task
+            .callInBackground<Void> {
+                // Refresh drops the tag's cached media before reloading; keep the file I/O off the UI thread.
+                for (loc in contentToDelete) {
                     cache.deletePrivateContent(loc.uri, loc.type)
                     cache.deletePublicContent(loc.uri, loc.type)
                 }
-            }
-        }
-        if (this.progress!!.isShowing)
-            return
-        this.progress!!.isIndeterminate = true
-        this.progress!!.setMessage("Loading...")
-        this.progress!!.show()
-
-        val tagId = this.intent.extras!!.getInt(TagDetailActivity.TAG_ID_EXTRA)
-
-        Tag.loadTagById(tagId, refresh).continueWith { task ->
-            try {
-                progress!!.safeDismiss()
-            } catch (e: Exception) {
-                // Sometimes this throws.
-            }
-
-            if (!task.isFaulted) {
-                this@TagDetailActivity.tag = task.result
-                Activities.invalidateOptionsMenu(this@TagDetailActivity)
-            } else {
-                this.tag = null
-                CoroutineScope(Dispatchers.Main + Job()).launch {
-                    try {
-                        Toast.makeText(
-                            this@TagDetailActivity.applicationContext,
-                            "Unable to load tag or tag not found",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        finish()
-                    } catch (e: java.lang.Exception) {
-                        Log.e("depollsoft.tagmaster", "Showing toast failed", e)
+                null
+            }.continueWithTask { Tag.loadTagById(tagId, refresh) }
+            .continueWith { task ->
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    isLoading = false
+                    if (!task.isFaulted && !task.isCancelled && task.result != null) {
+                        tag = task.result
+                    } else {
+                        tag = null
+                        loadFailed = true
+                        findViewById<TextView>(R.id.detailErrorText).text =
+                            getString(R.string.detail_tag_load_failed, tagId)
                     }
+                    Activities.invalidateOptionsMenu(this)
                 }
+                null
             }
-            null
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(R.layout.tagdetailview)
 
-        this.progress = ProgressDialog(this)
+        setUpToolbar(true)
 
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
 
-        viewPager.adapter = object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
-            override fun getItemCount(): Int {
-                return 4
+        viewPager.adapter =
+            object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
+                override fun getItemCount(): Int = 4
+
+                override fun createFragment(position: Int): Fragment =
+                    when (position) {
+                        0 -> TagSummaryFragment()
+                        1 -> TagMiscFragment()
+                        2 -> TagTracksFragment()
+                        3 -> TagVideosFragment()
+                        else -> Fragment()
+                    }
             }
 
-            override fun createFragment(position: Int): Fragment {
-                return when (position) {
-                    0 -> TagSummaryFragment()
-                    1 -> TagMiscFragment()
-                    2 -> TagTracksFragment()
-                    3 -> TagVideosFragment()
-                    else -> Fragment()
-                }
-            }
-        }
-
-        bottomNavigation.attachToViewPager(viewPager)
+        val tabs = PopupMenu(this, tabLayout).apply { inflate(R.menu.tagdetailnavigation) }.menu
+        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+            val item = tabs.getItem(position)
+            tab.text = item.title
+            tab.icon = item.icon
+            tab.id = item.itemId
+        }.attach()
 
         UiBinder.bind(
-            ReflectedProperty(this, "Title"), ReflectedProperty(this, "Tag.Title"),
-            BindingMode.ONE_WAY
+            ReflectedProperty(this, "Title"),
+            ReflectedProperty(this, "DisplayTitle"),
+            BindingMode.ONE_WAY,
         )
 
-        UiBinder.bind(this, R.id.bottomNavigation, "Visibility", "Tag", BoolConverter.get())
+        tabLayout.applyContentInsets(bottom = false)
+        UiBinder.bind(this, R.id.tabLayout, "Visibility", "Tag", BoolConverter.get())
+        UiBinder.bind(this, R.id.progress, "Visibility", "IsLoading", BoolConverter.get())
+        UiBinder.bind(this, R.id.viewPager, "Visibility", "LoadFailed", BoolConverter.get(true))
+        UiBinder.bind(this, R.id.detailErrorState, "Visibility", "LoadFailed", BoolConverter.get())
+        findViewById<View>(R.id.detailRetryButton).setOnClickListener { loadQueryItem(false) }
 
         this.loadQueryItem(false)
     }
 
+    override fun onSupportNavigateUp() = navigateUpOrHome()
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (this.tag == null)
+        if (this.tag == null) {
             return false
+        }
         this.menuInflater.inflate(R.menu.tagdetailmenu, menu)
         MenuItems.setShowAsAction(
             menu.findItem(R.id.addFavoriteMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         MenuItems.setShowAsAction(
             menu.findItem(R.id.removeFavoriteMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         MenuItems.setShowAsAction(
             menu.findItem(R.id.shareMenuItem),
-            MenuItems.SHOW_AS_ACTION_IF_ROOM
+            MenuItems.SHOW_AS_ACTION_IF_ROOM,
         )
         return true
     }
@@ -178,14 +175,27 @@ class TagDetailActivity : AppCompatActivity() {
         try {
             if (tag != null) {
                 when (item.itemId) {
-                    R.id.addFavoriteMenuItem -> FavoritesModel.addFavorite(tag.id)
-                    R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(tag.id)
-                    R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(tag.id)
-                    R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(tag.id)
+                    R.id.addFavoriteMenuItem -> {
+                        FavoritesModel.addFavorite(tag.id)
+                    }
+
+                    R.id.removeFavoriteMenuItem -> {
+                        FavoritesModel.removeFavorite(tag.id)
+                    }
+
+                    R.id.addTeachableTagMenuItem -> {
+                        TeachableTagsModel.addTeachableTag(tag.id)
+                    }
+
+                    R.id.removeTeachableTagMenuItem -> {
+                        TeachableTagsModel.removeTeachableTag(tag.id)
+                    }
+
                     R.id.shareMenuItem -> {
                         val i = this.shareIntent
                         this.startActivity(i)
                     }
+
                     R.id.refreshMenuItem -> {
                         this.loadQueryItem(true)
                         return true
@@ -201,6 +211,7 @@ class TagDetailActivity : AppCompatActivity() {
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val tag = this.tag
         if (tag != null) {
+            menu.findItem(R.id.refreshMenuItem)?.isEnabled = !isLoading
             menu.findItem(R.id.addFavoriteMenuItem).isVisible =
                 !FavoritesModel.getIsFavorite(tag.id)
             menu.findItem(R.id.removeFavoriteMenuItem).isVisible =

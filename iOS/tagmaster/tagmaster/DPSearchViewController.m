@@ -11,14 +11,18 @@
 #import "UIView+DPUtils.h"
 #import "DPAppDelegate.h"
 
-@interface DPSearchViewController () <UISearchBarDelegate>
+@interface DPSearchViewController () <UISearchBarDelegate, UITableViewDataSource, UITableViewDelegate>
 
+@property (nonatomic, strong) UISearchController *searchController;
 @property (nonatomic, strong) UISearchBar *searchBar;
+@property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISegmentedControl *sortBy;
 @property (nonatomic, strong) UISegmentedControl *sheetMusic;
 @property (nonatomic, strong) UISegmentedControl *learningTracks;
 @property (nonatomic, strong) UISegmentedControl *parts;
 @property (nonatomic, strong) UISegmentedControl *collection;
+@property (nonatomic, strong) NSArray<NSString *> *filterTitles;
+@property (nonatomic, strong) NSArray<UIView *> *filterControls;
 
 @end
 
@@ -36,27 +40,21 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-	DPGridLayout *grid = [[DPGridLayout alloc] init];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension]
-                           ];
-    grid.columnDimensions = @[
-                              [DPGridDimension dimensionWithSize:75],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1]
-                              ];
-    
-    self.searchBar = [[UISearchBar alloc] init];
+    // The search field lives in the navigation bar, where iOS users expect it.
+    self.searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
+    self.searchController.obscuresBackgroundDuringPresentation = NO;
+    self.searchController.hidesNavigationBarDuringPresentation = NO;
+    self.searchController.automaticallyShowsCancelButton = YES;
+    self.searchBar = self.searchController.searchBar;
     self.searchBar.placeholder = @"Search";
-    self.searchBar.barTintColor = [UIColor clearColor];
-    self.searchBar.backgroundImage = [[UIImage alloc] init];
     self.searchBar.delegate = self;
+    self.searchBar.returnKeyType = UIReturnKeySearch;
+    self.searchBar.enablesReturnKeyAutomatically = NO;
+    self.navigationItem.searchController = self.searchController;
+    self.navigationItem.hidesSearchBarWhenScrolling = NO;
+    self.navigationItem.preferredSearchBarPlacement = UINavigationItemSearchBarPlacementStacked;
+    self.definesPresentationContext = YES;
+
     self.sortBy = [[UISegmentedControl alloc] initWithItems:@[@"Title", @"Downloads", @"Recent", @"Rating"]];
     self.sortBy.apportionsSegmentWidthsByContent = YES;
     self.sortBy.selectedSegmentIndex = self.sortByValue;
@@ -72,45 +70,73 @@
     self.collection.apportionsSegmentWidthsByContent = YES;
     self.collection.selectedSegmentIndex = self.collectionValue;
     
-    UILabel *searchOptionsHeader = [self makeTitleLabel];
-    searchOptionsHeader.text = @"Search Options";
+    self.filterTitles = @[@"Sort By", @"Sheet Music", @"Learning Tracks", @"Parts", @"Collection"];
+    NSArray *controls = @[self.sortBy, self.sheetMusic, self.learningTracks, self.parts, self.collection];
+    NSMutableArray *filterControls = [NSMutableArray array];
+    for (NSUInteger index = 0; index < controls.count; index++) {
+        UISegmentedControl *control = controls[index];
+        control.accessibilityLabel = self.filterTitles[index];
+        [control.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [filterControls addObject:[self makeFilterControl:control label:self.filterTitles[index]]];
+    }
+    self.filterControls = filterControls;
     
-    [grid addSubview:self.searchBar row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[searchOptionsHeader padLeft:0 top:0 right:0 bottom:8] row:1 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[self makeHeader:@"Sort By"] row:2 column:0];
-    [grid addSubview:[self.sortBy padHorizontal:0 vertical:8] row:2 column:2];
-    [grid addSubview:[self makeHeader:@"Sheet Music"] row:3 column:0];
-    [grid addSubview:[self.sheetMusic padHorizontal:0 vertical:8] row:3 column:2];
-    [grid addSubview:[self makeHeader:@"Tracks"] row:4 column:0];
-    [grid addSubview:[self.learningTracks padHorizontal:0 vertical:8] row:4 column:2];
-    [grid addSubview:[self makeHeader:@"Parts"] row:5 column:0];
-    [grid addSubview:[self.parts padHorizontal:0 vertical:8] row:5 column:2];
-    [grid addSubview:[self makeHeader:@"Collection"] row:6 column:0];
-    [grid addSubview:[self.collection padHorizontal:0 vertical:8] row:6 column:2];
-    
-    UIScrollView *scroller = [[UIScrollView alloc] init];
-    
-    [self setUpRootView:grid withScroller:scroller];
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleInsetGrouped];
+    self.tableView.dataSource = self;
+    self.tableView.delegate = self;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 80;
+    self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
+    self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:self.tableView];
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.tableView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.keyboardLayoutGuide.topAnchor]
+    ]];
     [DPAppDelegate setUpBackground:self.view];
-    //[self.view bringSubviewToFront:scroller];
+    // Inset groups need the grouped page color behind them to read as groups in light mode.
+    self.view.backgroundColor = [UIColor systemGroupedBackgroundColor];
     
+    // Runs the search with the current text and filters; also the way to search by filters alone.
     self.navigationItem.rightBarButtonItem =
         [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
                                              target:self
                                              action:@selector(search)];
     
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
-                                   initWithTarget:self
-                                   action:@selector(dismissKeyboard)];
-    
-    [self.view addGestureRecognizer:tap];
-    
     self.navigationItem.title = @"Search";
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
     [self saveSettings];
 }
+
+#pragma mark - Table view
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.filterTitles.count;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    return @"Search Options";
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    return @"Searches match titles and lyrics. Leave the field empty to list every tag that matches the options.";
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return [self makeFormCellWithHeader:self.filterTitles[indexPath.row] control:self.filterControls[indexPath.row]];
+}
+
+#pragma mark - Settings
 
 - (NSInteger)sortByValue {
     return [[NSUserDefaults standardUserDefaults] integerForKey:@"search.sortBy"];
@@ -228,6 +254,11 @@
             break;
     }
     
+    // Keep the search controller inactive so the pushed results are not covered,
+    // and keep the typed query for when the user comes back.
+    NSString *query = self.searchBar.text;
+    self.searchController.active = NO;
+    self.searchBar.text = query;
     [self.navigationController pushViewController:queryController animated:YES];
 }
 

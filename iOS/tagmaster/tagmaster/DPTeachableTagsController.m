@@ -38,8 +38,11 @@
     [DPAppDelegate setUpBackground:self.view];
 
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 100;
     
     self.navigationItem.title = @"Teachable Tags";
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Teachable";
     // Uncomment the following line to preserve selection between presentations.
@@ -64,6 +67,21 @@
 #pragma mark - Table view data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    BOOL empty = [DPAppDelegate teachable].count == 0;
+    if (empty) {
+        UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
+        state.text = @"No teachable tags yet";
+        state.secondaryText = @"Open a tag, choose Favorite and Teachable options, then Mark as Teachable. Your teaching list will appear here.";
+        state.button.title = @"Browse Tags";
+        __weak DPTeachableTagsController *weakSelf = self;
+        state.buttonProperties.primaryAction = [UIAction actionWithHandler:^(UIAction *action) {
+            [weakSelf.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
+        }];
+        self.contentUnavailableConfiguration = state;
+    } else {
+        self.contentUnavailableConfiguration = nil;
+    }
+    self.editButtonItem.enabled = !empty;
     return [DPAppDelegate teachable].count;
 }
 
@@ -77,9 +95,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     int tagId = [[DPAppDelegate teachable][indexPath.row] intValue];
-    DPTagViewController *tagViewController = [[DPTagViewController alloc] init];
-    tagViewController.tagId = tagId;
-    [self.navigationController pushViewController:tagViewController animated:YES];
+    [DPAppDelegate showTagWithId:tagId from:self];
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -94,8 +110,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPTag *tag = [DPTag loadFromCache:[[DPAppDelegate teachable][indexPath.row] intValue]];
-    return [DPTagCell tagHeight:tag];
+    return UITableViewAutomaticDimension;
 }
 
 // Override to support rearranging the table view.

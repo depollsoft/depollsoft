@@ -10,12 +10,12 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.BoundUi
-import com.bindroid.ui.UiBinder
 import com.bindroid.utils.bindTo
-import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.barbershop.Tag
 
-class TagItemView : LinearLayout, BoundUi<Tag?> {
+class TagItemView :
+    LinearLayout,
+    BoundUi<Tag?> {
     var tag: Tag? by trackable()
 
     constructor(context: Context?) : super(context) {
@@ -31,10 +31,15 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
     }
 
     private fun init() {
-        val inflater = this.context.getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE
-        ) as LayoutInflater
+        val inflater =
+            this.context.getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE,
+            ) as LayoutInflater
         inflater.inflate(R.layout.tagitemview, this, true)
+        val background = android.util.TypedValue()
+        context.theme.resolveAttribute(android.R.attr.selectableItemBackground, background, true)
+        setBackgroundResource(background.resourceId)
+        this.isFocusable = true
         this.isClickable = true
         this.isLongClickable = false
         setOnClickListener {
@@ -56,36 +61,37 @@ class TagItemView : LinearLayout, BoundUi<Tag?> {
             R.id.akaTextView,
             "Text",
             { tag?.alternativeTitle },
-            ToStringConverter("a.k.a. %s")
+            ToStringConverter(context.getString(R.string.alternative_title_format)),
         )
         bindTo(
             R.id.akaTextView,
             "Visibility",
             { tag?.alternativeTitle },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
         bindTo(R.id.idTextView, "Text", { tag?.id }, ToStringConverter())
         bindTo(
             R.id.ratingTextView,
             "Text",
             { tag?.rating },
-            ToStringConverter("%3.2f")
+            ToStringConverter("%3.2f"),
         )
         bindTo(
             R.id.ratingContainer,
             "Visibility",
             { tag?.rating },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
-        bindTo(R.id.postedTextView, "Text", { tag?.posted }, ToStringConverter(" %tD"))
+        bindTo(R.id.postedTextView, "Text", { tag?.posted }, NullableDateConverter(" %tD"))
+        bindTo(R.id.postedContainer, "Visibility", { tag?.posted }, BoolConverter.get())
         bindTo(R.id.downloadsTextView, "Text", { tag?.downloadCount }, ToStringConverter("%d"))
         bindTo(R.id.downloadsContainer, "Visibility", { tag?.downloadCount }, BoolConverter.get())
-        bindTo(R.id.sheetMusicCheckBox, "Checked", { tag?.sheetMusicUri }, BoolConverter.get())
+        bindTo(R.id.sheetMusicCheckBox, "IsAvailable", { tag?.sheetMusicUri }, BoolConverter.get())
         bindTo(
             R.id.learningTracksCheckBox,
-            "Checked",
+            "IsAvailable",
             { tag?.tracks },
-            BoolConverter.get(false, true)
+            BoolConverter.get(false, true),
         )
     }
 }

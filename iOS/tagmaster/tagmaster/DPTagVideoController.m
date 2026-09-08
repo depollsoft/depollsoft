@@ -9,6 +9,7 @@
 #import "DPTagVideoController.h"
 #import "UIView+DPUtils.h"
 #import "DPFileCache.h"
+#import <SafariServices/SafariServices.h>
 
 @interface DPTagVideoController () <UITableViewDelegate, UITableViewDataSource>
 
@@ -72,7 +73,7 @@
         return  nil;
     }
     if (self.tag.videos.count > 0) {
-        return nil;
+        return @"Videos open on YouTube inside Tag Master.";
     }
     return @"Sorry, this tag does not have any videos associated with it.";
 }
@@ -92,83 +93,63 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPGridLayout *grid = [[DPGridLayout alloc] init];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimensionWithStars:1],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimensionWithStars:1]
-                           ];
-    grid.columnDimensions = @[
-                              [DPGridDimension dimensionWithSize:88],
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1]
-                              ];
-    grid.translatesAutoresizingMaskIntoConstraints = NO;
-    
     UIImageView *thumb = [[UIImageView alloc] init];
-    thumb.backgroundColor = [UIColor darkGrayColor];
-    [grid addSubview:[thumb pad:4] row:0 column:0 rowSpan:6 colSpan:1];
-    
+    thumb.backgroundColor = [UIColor secondarySystemFillColor];
+    thumb.contentMode = UIViewContentModeScaleAspectFill;
+    thumb.clipsToBounds = YES;
+    thumb.layer.cornerRadius = 6;
+    thumb.layer.cornerCurve = kCACornerCurveContinuous;
+    thumb.isAccessibilityElement = NO;
+    [thumb.widthAnchor constraintEqualToConstant:80].active = YES;
+    [thumb.heightAnchor constraintEqualToConstant:60].active = YES;
+    UIStackView *metadata = [[UIStackView alloc] init];
+    metadata.axis = UILayoutConstraintAxisVertical;
+    metadata.spacing = 4;
+    NSMutableArray<NSString *> *lines = [NSMutableArray array];
     NSURL *thumbnail = nil;
-    
+    NSString *spoken = nil;
     if (self.tag.teachingVideo && indexPath.section == 0) {
-        [grid addSubview:[self makeHeader:@"Teacher"] row:1 column:1];
-        UILabel *teacherLabel = [self makeBodyLabel];
-        teacherLabel.text = self.tag.teacher;
-        [grid addSubview:teacherLabel row:1 column:3];
+        [lines addObject:[NSString stringWithFormat:@"Teacher: %@", self.tag.teacher ?: @"Unknown"]];
         thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", self.tag.teachingVideo]];
+        spoken = [NSString stringWithFormat:@"Teaching video by %@", self.tag.teacher ?: @"an unknown teacher"];
     } else {
         DPVideo *video = self.tag.videos[indexPath.row];
         thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", video.youTubeCode]];
-        
-        if (video.sungBy) {
-            [grid addSubview:[self makeHeader:@"Sung By"] row:1 column:1];
-            UILabel *sungByLabel = [self makeBodyLabel];
-            sungByLabel.text = video.sungBy;
-            [grid addSubview:sungByLabel row:1 column:3];
-        }
-        
-        if (video.sungKey) {
-            [grid addSubview:[self makeHeader:@"Key"] row:2 column:1];
-            UILabel *keyLabel = [self makeBodyLabel];
-            keyLabel.text = video.sungKey;
-            [grid addSubview:keyLabel row:2 column:3];
-        }
-        
-        [grid addSubview:[self makeHeader:@"Posted"] row:3 column:1];
-        UILabel *postedLabel = [self makeBodyLabel];
-        NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
-        otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
-        otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
-        postedLabel.text = [otherDateFormatter stringFromDate:video.posted];
-        [grid addSubview:postedLabel row:3 column:3];
-        
-        DPGridLayout *multitrackGrid = [[DPGridLayout alloc] init];
-        multitrackGrid.columnDimensions = @[
-                                            [DPGridDimension dimension],
-                                            [DPGridDimension dimensionWithSize:8],
-                                            [DPGridDimension dimension]
-                                            ];
-        UILabel *multitrackLabel = [self makeBodyLabel];
-        multitrackLabel.text = @"Multitrack";
-        [multitrackGrid addSubview:multitrackLabel row:0 column:2];
-        UIImageView *multitrackImage = [[UIImageView alloc] initWithImage:video.isMultitrack ? [DPTagVideoController onImage] : [DPTagVideoController offImage]];
-        [multitrackGrid addSubview:multitrackImage row:0 column:0];
-        
-        [grid addSubview:[multitrackGrid centeredHorizontally] row:4 column:1 rowSpan:1 colSpan:3];
+        if (video.sungBy) [lines addObject:[NSString stringWithFormat:@"Sung By: %@", video.sungBy]];
+        if (video.sungKey) [lines addObject:[NSString stringWithFormat:@"Key: %@", video.sungKey]];
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        formatter.dateStyle = NSDateFormatterLongStyle;
+        NSString *posted = video.posted ? [formatter stringFromDate:video.posted] : @"Unknown";
+        [lines addObject:[NSString stringWithFormat:@"Posted: %@", posted]];
+        [lines addObject:[NSString stringWithFormat:@"Multitrack: %@", video.isMultitrack ? @"Yes" : @"No"]];
+        spoken = [NSString stringWithFormat:@"Video sung by %@%@. Posted %@. %@.",
+                  video.sungBy ?: @"an unknown group",
+                  video.sungKey ? [NSString stringWithFormat:@" in %@", video.sungKey] : @"",
+                  posted,
+                  video.isMultitrack ? @"Multitrack" : @"Single track"];
     }
-    
+    // Who sang it is the row's title; key, date and multitrack are supporting metadata.
+    [lines enumerateObjectsUsingBlock:^(NSString *line, NSUInteger index, BOOL *stop) {
+        UILabel *label = [self makeBodyLabel];
+        label.text = line;
+        label.font = [UIFont preferredFontForTextStyle:index == 0 ? UIFontTextStyleHeadline : UIFontTextStyleSubheadline];
+        label.textColor = index == 0 ? [UIColor labelColor] : [UIColor secondaryLabelColor];
+        [metadata addArrangedSubview:label];
+    }];
+    UIStackView *grid = [[UIStackView alloc] initWithArrangedSubviews:@[thumb, metadata]];
+    grid.alignment = UIStackViewAlignmentTop;
+    grid.spacing = 12;
+    grid.layoutMarginsRelativeArrangement = YES;
+    grid.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(12, 16, 12, 16);
+    grid.translatesAutoresizingMaskIntoConstraints = NO;
+
     NSString *thumbnailKey = [DPFileCache keyForURL:thumbnail];
     if ([[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:thumbnailKey]]) {
         thumb.image = [UIImage imageWithData:[DPFileCache readDataForKey:thumbnailKey]];
     } else {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSData *data = [NSData dataWithContentsOfURL:thumbnail];
-            [DPFileCache writeData:data forKey:thumbnailKey];
+            NSData *data = [DPRemoteLocation dataWithContentsOfURL:thumbnail error:nil];
+            if (data.length > 0) [DPFileCache writeData:data forKey:thumbnailKey];
             dispatch_async(dispatch_get_main_queue(), ^{
                 thumb.image = [UIImage imageWithData:data];
             });
@@ -177,6 +158,11 @@
     
     UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     cell.backgroundColor = [UIColor clearColor];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    cell.isAccessibilityElement = YES;
+    cell.accessibilityLabel = spoken;
+    cell.accessibilityHint = @"Opens the video";
+    cell.accessibilityTraits = UIAccessibilityTraitButton;
     [cell.contentView addSubview:grid];
     [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[grid]|"
                                                                              options:0
@@ -191,7 +177,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 68;
+    return UITableViewAutomaticDimension;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -204,25 +190,10 @@
         youTubeCode = video.youTubeCode;
     }
     NSURL *youTubeURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.youtube.com/watch?v=%@", youTubeCode]];
-    [[UIApplication sharedApplication] openURL:youTubeURL options:@{} completionHandler:nil];
-}
-
-+ (UIImage *)onImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_yes.png"];
-    });
-    return image;
-}
-
-+ (UIImage *)offImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage imageNamed:@"ic_check_no.png"];
-    });
-    return image;
+    // Stay in the app; the in-app browser still hands off to the YouTube app when installed.
+    SFSafariViewController *browser = [[SFSafariViewController alloc] initWithURL:youTubeURL];
+    browser.preferredControlTintColor = self.view.tintColor;
+    [self presentViewController:browser animated:YES completion:nil];
 }
 
 @end

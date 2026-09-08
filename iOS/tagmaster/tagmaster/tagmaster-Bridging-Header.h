@@ -8,3 +8,5 @@
 #import "DPSettingsController.h"
 #import "DPTagTracksController.h"
 #import "DPTagViewController.h"
+#import "DPFileCache.h"
+#import "DPRemoteLocation.h"

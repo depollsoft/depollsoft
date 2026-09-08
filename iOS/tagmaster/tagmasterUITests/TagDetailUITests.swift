@@ -137,8 +137,8 @@ final class TagDetailUITests: XCTestCase {
             let segmentCount = segmentedControl.buttons.count
             
             // Tap each segment
-            for i in 0..<segmentCount {
-                segmentedControl.buttons.element(boundBy: i).tap()
+            for index in 0..<segmentCount {
+                segmentedControl.buttons.element(boundBy: index).tap()
                 Thread.sleep(forTimeInterval: 0.3)
             }
         }
@@ -248,5 +248,143 @@ final class TagDetailUITests: XCTestCase {
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should handle rapid navigation")
+    }
+}
+
+// Strict regressions: no conditional passes when the requested screen is missing.
+final class TagMasterPolishUITests: XCTestCase {
+    private var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments = ["--uitesting"]
+        app.launch()
+    }
+
+    private func capture(_ screen: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = "tagmaster-ios-after-\(screen)"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func home() {
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
+    }
+
+    private func openTag() {
+        let row = app.tables.staticTexts["Open Tag"]
+        if !row.isHittable { app.tables.firstMatch.swipeUp() }
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.tap()
+        let alert = app.alerts["Open Tag"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 3))
+        alert.textFields.firstMatch.tap()
+        alert.textFields.firstMatch.typeText("1809")
+        alert.buttons["Open"].tap()
+        let share = app.navigationBars.buttons["Share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 20))
+        let enabled = NSPredicate(format: "enabled == true")
+        expectation(for: enabled, evaluatedWith: share)
+        waitForExpectations(timeout: 30)
+        XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 5))
+    }
+
+    func testSummaryLyricsRemainReachableAfterChangingPages() throws {
+        openTag()
+        app.tabBars.buttons["Details"].tap()
+        app.tabBars.buttons["Summary"].tap()
+        let lyrics = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'And I will wait to face the skies'")).firstMatch
+        XCTAssertTrue(lyrics.exists)
+        for _ in 0..<6 {
+            if lyrics.isHittable { break }
+            app.scrollViews.firstMatch.swipeUp()
+        }
+        XCTAssertTrue(lyrics.isHittable, "Lyrics must remain reachable even if the legacy grid leaves excess spacing")
+    }
+
+    func testPolishScreensAndShareDismissal() throws {
+        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.tables.staticTexts["Teachable Tags"].exists)
+        capture("home")
+        app.navigationBars.buttons["Search"].tap()
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
+        let sheetFilter = app.segmentedControls["Sheet Music"].exists ? app.segmentedControls["Sheet Music"] : app.buttons["Sheet Music"]
+        XCTAssertTrue(sheetFilter.exists)
+        XCTAssertGreaterThanOrEqual(sheetFilter.frame.height, 44)
+        capture("search")
+        app.searchFields.firstMatch.tap()
+        app.searchFields.firstMatch.typeText("love")
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
+        capture("search-keyboard")
+        home()
+        let settings = app.tables.staticTexts["Settings"]
+        if !settings.isHittable { app.tables.firstMatch.swipeUp() }
+        settings.tap()
+        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].waitForExistence(timeout: 5))
+        capture("settings")
+        app.swipeUp()
+        let minimumRating = app.segmentedControls["Minimum Rating"].exists ? app.segmentedControls["Minimum Rating"] : app.buttons["Minimum Rating"]
+        XCTAssertTrue(minimumRating.waitForExistence(timeout: 5))
+        capture("settings-filters")
+        home()
+        openTag()
+        XCTAssertTrue(app.navigationBars.buttons["Favorite and Teachable options"].exists)
+        XCTAssertTrue(app.navigationBars.buttons["Refresh"].exists)
+        let pitch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Play key note'")).firstMatch
+        XCTAssertTrue(pitch.exists)
+        XCTAssertGreaterThanOrEqual(pitch.frame.height, 44)
+        for title in ["Summary", "Details", "Tracks", "Videos"] {
+            let tab = app.tabBars.buttons[title]
+            XCTAssertTrue(tab.exists)
+            XCTAssertGreaterThanOrEqual(tab.frame.height, 44)
+            XCTAssertTrue(tab.isHittable)
+        }
+        app.tabBars.buttons["Details"].tap()
+        XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Tracks"].tap()
+        let emptyTracks = app.staticTexts["Sorry, no tracks could be found for this tag."]
+        XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.waitForExistence(timeout: 5))
+        capture("tracks")
+        app.tabBars.buttons["Videos"].tap()
+        XCTAssertTrue(app.tables.firstMatch.waitForExistence(timeout: 5))
+        capture("videos")
+        app.tabBars.buttons["Summary"].tap()
+        capture("detail")
+        app.navigationBars.buttons["Share"].tap()
+        XCTAssertTrue(app.collectionViews["activityCollectionView"].waitForExistence(timeout: 10))
+        capture("share")
+        if app.buttons["Close"].exists {
+            app.buttons["Close"].tap()
+        } else if app.buttons["Dismiss"].exists {
+            app.buttons["Dismiss"].tap()
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.75)).tap()
+        }
+        let dismissed = NSPredicate(format: "exists == false")
+        expectation(for: dismissed, evaluatedWith: app.collectionViews["activityCollectionView"])
+        waitForExpectations(timeout: 5)
+        XCTAssertTrue(app.buttons["Rate tag"].isHittable)
+        app.buttons["Rate tag"].tap()
+        XCTAssertTrue(app.buttons["5 stars"].waitForExistence(timeout: 5))
+        capture("rating")
+        if app.buttons["Cancel"].exists {
+            app.buttons["Cancel"].tap()
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.75)).tap()
+        }
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.navigationBars.buttons["Share"].isHittable)
+        home()
+        app.tables.staticTexts["Browse"].tap()
+        let cell = app.tables.cells.firstMatch
+        XCTAssertTrue(cell.waitForExistence(timeout: 30))
+        XCTAssertGreaterThan(cell.frame.height, 100)
+        XCTAssertLessThan(cell.frame.height, 2000)
+        XCTAssertTrue(cell.label.contains("Sheet music"))
+        capture("browse-rows")
     }
 }

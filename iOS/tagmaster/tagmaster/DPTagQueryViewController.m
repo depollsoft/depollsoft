@@ -11,12 +11,15 @@
 #import "DPUtils+Subscripts.h"
 #import "DPTagViewController.h"
 #import "DPAppDelegate.h"
+#import "DPTagPageControllerBase.h"
 
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (atomic, retain) DPTagQueryResult *mostRecentResult;
 @property (nonatomic, retain) UIActivityIndicatorView *activity;
-@property (nonatomic, retain) UITextView *statusLabel;
+@property (nonatomic, retain) UILabel *statusLabel;
+@property (nonatomic, retain) UIButton *retryButton;
+@property (nonatomic) BOOL failed;
 @property (nonatomic, retain) UITableView *tagTable;
 @property (nonatomic, retain) UIRefreshControl *refreshControl;
 
@@ -77,12 +80,23 @@
     self.tagTable.delegate = self;
     self.tagTable.dataSource = self;
     self.tagTable.backgroundColor = [UIColor clearColor];
+    self.tagTable.rowHeight = UITableViewAutomaticDimension;
+    self.tagTable.estimatedRowHeight = 100;
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
     self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
     self.activity.hidesWhenStopped = YES;
     
-    self.statusLabel = [[UITextView alloc] init];
+    self.statusLabel = [[UILabel alloc] init];
+    self.statusLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    self.statusLabel.adjustsFontForContentSizeCategory = YES;
+    self.statusLabel.numberOfLines = 0;
+    self.statusLabel.textAlignment = NSTextAlignmentCenter;
+    self.statusLabel.textColor = [UIColor secondaryLabelColor];
+    self.retryButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.retryButton setTitle:@"Retry" forState:UIControlStateNormal];
+    [self.retryButton.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+    [self.retryButton addTarget:self action:@selector(refresh) forControlEvents:UIControlEventTouchUpInside];
     
     self.tagTable.tableFooterView = self.activity;
     
@@ -114,23 +128,20 @@
     
     [self fetchResults];
     
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     self.navigationItem.title = !self.query || self.query.length == 0 ? @"Search Results" : self.query;
 }
 
 - (void)refresh {
+    if (self.isLoading) return;
+    self.hasMoreResults = YES;
+    self.failed = NO;
+    self.statusText = nil;
     self.mostRecentResult = [[DPTagQueryResult alloc] init];
     self.mostRecentResult.start = 0;
     self.mostRecentResult.count = 0;
     self.tags = [NSMutableArray array];
     [self fetchResults];
-}
-
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    return UIInterfaceOrientationMaskPortrait;
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    return UIInterfaceOrientationPortrait;
 }
 
 - (void)refreshViews {
@@ -144,17 +155,47 @@
     
     if (self.statusText) {
         self.statusLabel.text = self.statusText;
-        self.tagTable.tableHeaderView = self.statusLabel;
+        // Centered symbol, message and recovery, the way system empty states read.
+        UIImageView *symbol = [[UIImageView alloc] initWithImage:[UIImage systemImageNamed:self.failed ? @"wifi.exclamationmark" : @"magnifyingglass"
+                                                                            withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:44 weight:UIImageSymbolWeightLight]]];
+        symbol.tintColor = [UIColor secondaryLabelColor];
+        symbol.contentMode = UIViewContentModeScaleAspectFit;
+        symbol.isAccessibilityElement = NO;
+        UIStackView *header = [[UIStackView alloc] initWithArrangedSubviews:@[symbol, self.statusLabel, self.retryButton]];
+        header.axis = UILayoutConstraintAxisVertical;
+        header.alignment = UIStackViewAlignmentCenter;
+        header.spacing = 12;
+        header.layoutMarginsRelativeArrangement = YES;
+        header.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(48, 32, 24, 32);
+        self.retryButton.hidden = !self.failed;
+        self.tagTable.tableHeaderView = header;
+        [self sizeStatusHeader];
     } else {
         self.tagTable.tableHeaderView = nil;
     }
-    [self.statusLabel sizeToFit];
+    [self sizeStatusHeader];
     [self.activity sizeToFit];
     if ([self.refreshControl isRefreshing]) {
         [self.refreshControl endRefreshing];
     }
     
     [self.tagTable reloadData];
+}
+
+- (void)sizeStatusHeader {
+    UIView *header = self.tagTable.tableHeaderView;
+    if (!header) return;
+    CGFloat width = self.tagTable.bounds.size.width;
+    CGFloat height = [header systemLayoutSizeFittingSize:CGSizeMake(width, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    if (header.frame.size.height != height || header.frame.size.width != width) {
+        header.frame = CGRectMake(0, 0, width, height);
+        self.tagTable.tableHeaderView = header;
+    }
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [self sizeStatusHeader];
 }
 
 - (void)fetchResults {
@@ -188,7 +229,9 @@
             }
         }
         @catch (NSException *exception) {
-            self.statusText = [NSString stringWithFormat:@"An error has occurred: %@", exception.reason];
+            self.statusText = @"Tags couldn't be loaded. Check your connection and try again.";
+            self.failed = YES;
+            self.hasMoreResults = NO;
         }
         @finally {
             self.isLoading = NO;
@@ -203,9 +246,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    DPTagViewController *controller = [[DPTagViewController alloc] init];
-    controller.tagId = [self.tags[indexPath.row] tagId];
-    [self.navigationController pushViewController:controller animated:YES];
+    [DPAppDelegate showTagWithId:[self.tags[indexPath.row] tagId] from:self];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -215,7 +256,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [DPTagCell tagHeight:self.tags[indexPath.row]];
+    return UITableViewAutomaticDimension;
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {

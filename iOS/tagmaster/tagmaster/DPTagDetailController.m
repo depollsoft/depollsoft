@@ -9,6 +9,7 @@
 #import "DPTagDetailController.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
+#import "DPTagPageControllerBase.h"
 
 @interface DPTagDetailController ()
 
@@ -56,21 +57,20 @@
     self.tagIdLabel.text = [NSString stringWithFormat:@"%d", self.tag.tagId];
     
     NSDateFormatter *lastRefreshedFormatter = [[NSDateFormatter alloc] init];
-    lastRefreshedFormatter.dateFormat = @"MM/dd/yy hh:mm:ss a";
-    lastRefreshedFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
+    lastRefreshedFormatter.dateStyle = NSDateFormatterMediumStyle;
+    lastRefreshedFormatter.timeStyle = NSDateFormatterShortStyle;
     self.lastRefreshedLabel.text = [lastRefreshedFormatter stringFromDate:self.tag.lastRefreshed];
     
     NSDateFormatter *otherDateFormatter = [[NSDateFormatter alloc] init];
-    otherDateFormatter.dateFormat = @"EEEE, LLLL d, yyyy";
-    otherDateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US"];
+    otherDateFormatter.dateStyle = NSDateFormatterFullStyle;
     
     self.downloadsLabel.text = [NSString stringWithFormat:@"%d", self.tag.downloadCount];
     
-    self.linkButton.url = [NSURL URLWithString:[NSString stringWithFormat:@"http://www.barbershoptags.com/dbpage.php?pg=view&dbase=tags&id=%d", self.tag.tagId]];
+    self.linkButton.url = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.barbershoptags.com/dbpage.php?pg=view&dbase=tags&id=%d", self.tag.tagId]];
     
     [self.postedByButton setTitle:self.tag.provider forState:UIControlStateNormal];
     self.postedByButton.url = self.tag.providerWebsite;
-    [self.postedByButton setEnabled:!!self.tag.providerWebsite];
+    [self setButton:self.postedByButton linked:!!self.tag.providerWebsite];
     [self.grid setView:self.postedByHeader hidden:!self.tag.provider];
     [self.grid setView:self.postedByButton hidden:!self.tag.provider];
     
@@ -78,7 +78,7 @@
     
     [self.arrangedByButton setTitle:self.tag.arranger forState:UIControlStateNormal];
     self.arrangedByButton.url = self.tag.arrangerWebsite;
-    [self.arrangedByButton setEnabled:!!self.tag.arrangerWebsite];
+    [self setButton:self.arrangedByButton linked:!!self.tag.arrangerWebsite];
     [self.grid setView:self.arrangedByHeader hidden:!self.tag.arranger];
     [self.grid setView:self.arrangedByButton hidden:!self.tag.arranger];
     
@@ -88,13 +88,23 @@
     
     [self.sungByButton setTitle:self.tag.sungBy forState:UIControlStateNormal];
     self.sungByButton.url = self.tag.sungByWebsite;
-    [self.sungByButton setEnabled:!!self.tag.sungByWebsite];
+    [self setButton:self.sungByButton linked:!!self.tag.sungByWebsite];
     [self.grid setView:self.sungByHeader hidden:!self.tag.sungBy];
     [self.grid setView:self.sungByButton hidden:!self.tag.sungBy];
     
     self.yearSungLabel.text = [NSString stringWithFormat:@"%d", self.tag.sungYear];
     [self.grid setView:self.yearSungHeader hidden:self.tag.sungYear == 0];
     [self.grid setView:self.yearSungLabel hidden:self.tag.sungYear == 0];
+}
+
+/// A name without a website is plain information, not a disabled control.
+- (void)setButton:(UIButton *)button linked:(BOOL)linked {
+    UIButtonConfiguration *configuration = button.configuration;
+    configuration.baseForegroundColor = linked ? nil : [UIColor labelColor];
+    button.configuration = configuration;
+    button.enabled = YES;
+    button.userInteractionEnabled = linked;
+    button.accessibilityTraits = linked ? UIAccessibilityTraitLink : UIAccessibilityTraitStaticText;
 }
 
 - (void)viewDidLoad
@@ -109,21 +119,45 @@
     self.downloadsHeader = [self makeHeader:@"Downloads"];
     self.downloadsLabel = [self makeBodyLabel];
     self.linkHeader = [self makeHeader:@"Link"];
-    self.linkButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.linkButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [self.linkButton setTitle:@"BarbershopTags.com" forState:UIControlStateNormal];
     self.postedByHeader = [self makeHeader:@"Posted By"];
-    self.postedByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.postedByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     self.postedHeader = [self makeHeader:@"Posted"];
     self.postedLabel = [self makeBodyLabel];
     self.arrangedByHeader = [self makeHeader:@"Arranged By"];
-    self.arrangedByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.arrangedByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     self.yearArrangedHeader = [self makeHeader:@"Year Arranged"];
     self.yearArrangedLabel = [self makeBodyLabel];
     self.sungByHeader = [self makeHeader:@"Sung By"];
-    self.sungByButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.sungByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     self.yearSungHeader = [self makeHeader:@"Year Sung"];
     self.yearSungLabel = [self makeBodyLabel];
+    // Headings keep a single-line intrinsic width so the heading column is sized from them;
+    // a multi-line heading reports no width and the value column swallows it.
+    for (UILabel *header in @[self.tagIdHeader, self.lastRefreshedHeader, self.downloadsHeader, self.linkHeader, self.postedByHeader,
+                              self.postedHeader, self.arrangedByHeader, self.yearArrangedHeader, self.sungByHeader, self.yearSungHeader]) {
+        header.numberOfLines = 1;
+        [header setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+    }
     
+    for (UIButton *button in @[self.linkButton, self.postedByButton, self.arrangedByButton, self.sungByButton]) {
+        // Let the configuration own wrapping; a multi-line titleLabel inside a configured
+        // button collapses to its minimum width and wraps one character per line.
+        UIButtonConfiguration *configuration = [UIButtonConfiguration plainButtonConfiguration];
+        configuration.titleLineBreakMode = NSLineBreakByWordWrapping;
+        // A hair of leading inset keeps the first glyph of a wrapped title from clipping.
+        configuration.contentInsets = NSDirectionalEdgeInsetsMake(0, 2, 0, 2);
+        configuration.titleTextAttributesTransformer = ^NSDictionary<NSAttributedStringKey, id> *(NSDictionary<NSAttributedStringKey, id> *attributes) {
+            NSMutableDictionary *updated = [attributes mutableCopy];
+            updated[NSFontAttributeName] = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+            return updated;
+        };
+        button.configuration = configuration;
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeading;
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+    }
     self.grid = [[DPGridLayout alloc] init];
     self.grid.rowDimensions = @[
                                 [DPGridDimension dimension],
@@ -161,12 +195,13 @@
     [self.grid addSubview:self.tagIdLabel row:1 column:2];
     [self.grid addSubview:self.lastRefreshedLabel row:2 column:2];
     [self.grid addSubview:self.downloadsLabel row:3 column:2];
-    [self.grid addSubview:[self.linkButton alignLeft] row:4 column:2];
-    [self.grid addSubview:[self.postedByButton alignLeft] row:5 column:2];
+    // Buttons span the value column and lead-align their titles, so they wrap like the labels.
+    [self.grid addSubview:self.linkButton row:4 column:2];
+    [self.grid addSubview:self.postedByButton row:5 column:2];
     [self.grid addSubview:self.postedLabel row:6 column:2];
-    [self.grid addSubview:[self.arrangedByButton alignLeft] row:7 column:2];
+    [self.grid addSubview:self.arrangedByButton row:7 column:2];
     [self.grid addSubview:self.yearArrangedLabel row:8 column:2];
-    [self.grid addSubview:[self.sungByButton alignLeft] row:9 column:2];
+    [self.grid addSubview:self.sungByButton row:9 column:2];
     [self.grid addSubview:self.yearSungLabel row:10 column:2];
     
     UIScrollView *scroller = [[UIScrollView alloc] init];

@@ -1,49 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="56dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:background="?attr/selectableItemBackground">
 
-    <ProgressBar
-        android:id="@+id/loadingBar"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:indeterminate="true">
-    </ProgressBar>
+        android:layout_weight="1">
 
-    <LinearLayout
-        android:id="@+id/failedToLoad"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <TextView
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/loadingBar"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="@string/failed_to_load_tag"/>
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/home_loading_tag"
+            android:indeterminate="true" />
 
-        <TextView
-            android:id="@+id/tagId"
-            android:layout_marginLeft="4dp"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"/>
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/failedToLoad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/failed_to_load_tag"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-    <depollsoft.tagmaster.TagItemView
-        android:id="@+id/tagItemView"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tagId"
+                android:layout_marginStart="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+        </LinearLayout>
 
-    <!-- Just to hold vertical space -->
-    <depollsoft.tagmaster.TagItemView
-        android:id="@+id/dummyTagItemView"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:visibility="invisible"/>
+        <depollsoft.tagmaster.TagItemView
+            android:id="@+id/tagItemView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-</FrameLayout>
+        <!-- Just to hold vertical space while loading. -->
+        <depollsoft.tagmaster.TagItemView
+            android:id="@+id/dummyTagItemView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="noHideDescendants"
+            android:visibility="invisible" />
+    </FrameLayout>
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/savedTagMoreOptions"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/home_more_options"
+        app:srcCompat="@drawable/ic_more_vert"
+        app:tint="?attr/colorOnSurfaceVariant" />
+</LinearLayout>

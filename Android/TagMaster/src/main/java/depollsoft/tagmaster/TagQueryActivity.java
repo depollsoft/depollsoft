@@ -8,5 +8,11 @@ public class TagQueryActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.tagqueryactivity);
+    EdgeToEdgeKt.setUpToolbar(this, true);
+  }
+
+  @Override
+  public boolean onSupportNavigateUp() {
+    return EdgeToEdgeKt.navigateUpOrHome(this);
   }
 }
