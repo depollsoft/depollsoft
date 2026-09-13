@@ -282,11 +282,11 @@
                         android:backgroundTint="@null"
                             android:drawableStart="@drawable/ic_key"
                             android:drawablePadding="8dp"
-                            android:drawableTint="?attr/colorPrimary"
+                            android:drawableTint="@color/key_button_foreground"
                             android:text="@string/Play"
                             android:textAllCaps="false"
                             android:textAppearance="?attr/textAppearanceLabelLarge"
-                            android:textColor="?attr/colorPrimary" />
+                            android:textColor="@color/key_button_foreground" />
                     </LinearLayout>
                 </TableRow>
 

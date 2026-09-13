@@ -1635,3 +1635,344 @@ TM_CAPTURE_IMPL
     [self exerciseLongText:YES];
 }
 @end
+
+// In-memory Home fixtures never write favorites or contact the tag provider.
+@interface TMFooterPitchTests : TMPolishRegressionTests
+@property UIWindow *window;
+@property UIWindow *previousWindow;
+@end
+@implementation TMFooterPitchTests
+- (void)tearDown {
+    [DPNote.C4 stop];
+    self.window.hidden = YES;
+    self.window.rootViewController = nil;
+    [self.previousWindow makeKeyWindow];
+    [super tearDown];
+}
+- (void)mount:(UIViewController *)controller width:(CGFloat)width dark:(BOOL)dark large:(BOOL)large {
+    if (!self.previousWindow) for (UIWindow *window in UIApplication.sharedApplication.windows) if (window.isKeyWindow) self.previousWindow = window;
+    self.window.hidden = YES;
+    self.window.rootViewController = nil;
+    self.window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, width, UIScreen.mainScreen.bounds.size.height)];
+    self.window.overrideUserInterfaceStyle = dark ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+    self.window.traitOverrides.preferredContentSizeCategory = large ? UIContentSizeCategoryAccessibilityExtraExtraExtraLarge : UIContentSizeCategoryLarge;
+    self.window.tintColor = UIColor.systemBlueColor;
+    self.window.backgroundColor = UIColor.systemBackgroundColor;
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:controller];
+    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255 alpha:1];
+    appearance.titleTextAttributes = @{NSForegroundColorAttributeName:UIColor.whiteColor};
+    nav.navigationBar.standardAppearance = appearance;
+    nav.navigationBar.scrollEdgeAppearance = appearance;
+    nav.navigationBar.tintColor = UIColor.whiteColor;
+    self.window.rootViewController = nav;
+    [self.window makeKeyAndVisible];
+    [self settle];
+}
+- (void)settle {
+    [self.window updateTraitsIfNeeded];
+    [self.window layoutIfNeeded];
+    XCTestExpectation *turn = [self expectationWithDescription:@"native layout"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.12 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [turn fulfill]; });
+    [self waitForExpectations:@[turn] timeout:2];
+    [self.window layoutIfNeeded];
+    [CATransaction flush];
+}
+- (void)capture:(NSString *)name {
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad && [name containsString:@"barberpole"]) name = [name stringByAppendingString:@"-ipad"];
+    [self settle];
+    CGSize size = self.window.bounds.size;
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+    format.scale = MIN(1, 800 / MAX(size.width, size.height));
+    UIImage *image = [[[UIGraphicsImageRenderer alloc] initWithSize:size format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [self.window drawViewHierarchyInRect:self.window.bounds afterScreenUpdates:YES];
+    }];
+    NSString *dir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"tm-footer-pitch-captures"];
+    [NSFileManager.defaultManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+    NSData *data = UIImageJPEGRepresentation(image, 0.85);
+    XCTAssertTrue([data writeToFile:[dir stringByAppendingPathComponent:[name stringByAppendingPathExtension:@"jpg"]] atomically:YES]);
+}
+- (NSArray<UIButton *> *)links:(UIView *)view {
+    NSMutableArray *links = [NSMutableArray array];
+    for (UIView *child in view.subviews) {
+        if ([child isKindOfClass:UIButton.class]) [links addObject:child];
+        else [links addObjectsFromArray:[self links:child]];
+    }
+    return links;
+}
+- (void)testFooterNativeSizes {
+    Method favorites = class_getClassMethod(DPAppDelegate.class, @selector(favorites));
+    Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
+    IMP oldFavorites = method_getImplementation(favorites), oldCache = method_getImplementation(cache);
+    DPTag *tag = [self tag]; tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
+    IMP mockFavorites = imp_implementationWithBlock(^NSArray *(id owner) { return @[@1809]; });
+    IMP mockCache = imp_implementationWithBlock(^DPTag *(id owner, int identifier) { return tag; });
+    method_setImplementation(favorites, mockFavorites); method_setImplementation(cache, mockCache);
+    @try {
+        CGFloat width = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? 320 : UIScreen.mainScreen.bounds.size.width;
+        for (NSNumber *large in @[@NO, @YES]) for (NSNumber *dark in @[@NO, @YES]) {
+            DPHomeViewController *home = [DPHomeViewController new];
+            [self mount:home width:width dark:dark.boolValue large:large.boolValue];
+            [home.tableView reloadData]; [self settle];
+            UIView *footer = home.tableView.tableFooterView;
+            [home.tableView scrollRectToVisible:footer.frame animated:NO]; [self settle];
+            NSArray<UIButton *> *links = [self links:footer];
+            XCTAssertEqual(links.count, 4);
+            XCTAssertEqual([home.tableView numberOfRowsInSection:1], 1);
+            NSLog(@"TM_FOOTER after width=%.0f large=%@ dark=%@ height=%.1f", width, large, dark, footer.bounds.size.height);
+            if (!large.boolValue && width > 320) {
+                XCTAssertGreaterThanOrEqual(footer.bounds.size.height, 110);
+                XCTAssertLessThanOrEqual(footer.bounds.size.height, 140);
+            }
+            NSArray *destinations = @[@"https://www.barbershoptags.com", @"https://apps.depoll.com", @"https://apps.depoll.com/terms-of-use", @"https://www.davidpoll.com/applications/tag-master/donate"];
+            XCTAssertEqualObjects([links valueForKeyPath:@"url.absoluteString"], destinations);
+            XCTAssertEqualObjects(links.firstObject.currentTitle, @"Content provided by BarbershopTags.com");
+            for (UIButton *button in links) {
+                XCTAssertGreaterThanOrEqual(button.bounds.size.height, 44);
+                XCTAssertGreaterThanOrEqual(button.bounds.size.width, 44);
+                XCTAssertTrue(button.accessibilityTraits & UIAccessibilityTraitLink);
+                XCTAssertEqualWithAccuracy(button.titleLabel.font.pointSize, [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote compatibleWithTraitCollection:button.traitCollection].pointSize, 0.1);
+                CGSize text = [button.titleLabel sizeThatFits:CGSizeMake(button.titleLabel.bounds.size.width, CGFLOAT_MAX)];
+                XCTAssertGreaterThanOrEqual(button.titleLabel.bounds.size.height + 1, text.height);
+                CGRect rect = [button convertRect:button.bounds toView:footer];
+                XCTAssertTrue(CGRectContainsRect(CGRectInset(footer.bounds, -1, -1), rect));
+                for (UIButton *other in links) if (other != button) {
+                    XCTAssertFalse(CGRectIntersectsRect(CGRectInset(rect, 0.25, 0.25), [other convertRect:other.bounds toView:footer]), @"%@ overlaps %@", button.accessibilityIdentifier, other.accessibilityIdentifier);
+                }
+                CGRect tableRect = [button convertRect:button.bounds toView:home.tableView];
+                [home.tableView scrollRectToVisible:tableRect animated:NO]; [self settle];
+                CGPoint center = [button convertPoint:CGPointMake(button.bounds.size.width / 2, button.bounds.size.height / 2) toView:self.window];
+                XCTAssertEqual([self.window hitTest:center withEvent:nil], button);
+            }
+            if (!large.boolValue) {
+                XCTAssertEqualWithAccuracy([links[2] convertRect:links[2].bounds toView:footer].origin.y, [links[3] convertRect:links[3].bounds toView:footer].origin.y, 1);
+            }
+            [home.tableView scrollRectToVisible:footer.frame animated:NO];
+            NSString *name = [NSString stringWithFormat:@"tagmaster-ios-footer-pitch-after-%@-%@-%@", width == 320 ? @"sidebar" : @"phone", dark.boolValue ? @"dark" : @"light", large.boolValue ? @"AX5" : @"default"];
+            [self capture:name];
+        }
+    } @finally {
+        method_setImplementation(favorites, oldFavorites); method_setImplementation(cache, oldCache);
+        imp_removeBlock(mockFavorites); imp_removeBlock(mockCache);
+    }
+}
+// Count actual rendered pixels, not UIButton highlighted flags or configuration alone.
+- (NSUInteger)pixelsIn:(UIView *)view matching:(UIColor *)color {
+    NSUInteger width = ceil(view.bounds.size.width), height = ceil(view.bounds.size.height);
+    if (width == 0 || height == 0) return 0;
+    unsigned char *bytes = calloc(width * height, 4);
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(bytes, width, height, 8, width * 4, space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGContextTranslateCTM(context, 0, height); CGContextScaleCTM(context, 1, -1);
+    [view.layer renderInContext:context];
+    CGFloat r, g, b, a; [[color resolvedColorWithTraitCollection:view.traitCollection] getRed:&r green:&g blue:&b alpha:&a];
+    NSUInteger count = 0;
+    for (NSUInteger i = 0; i < width * height; i++) {
+        unsigned char *p = bytes + i * 4;
+        if (p[3] > 220 && fabs(p[0] / 255.0 - r) < 0.06 && fabs(p[1] / 255.0 - g) < 0.06 && fabs(p[2] / 255.0 - b) < 0.06) count++;
+    }
+    CGContextRelease(context); CGColorSpaceRelease(space); free(bytes);
+    return count;
+}
+- (CGFloat)luminance:(UIColor *)color traits:(UITraitCollection *)traits {
+    CGFloat r, g, b, a; [[color resolvedColorWithTraitCollection:traits] getRed:&r green:&g blue:&b alpha:&a];
+    CGFloat (^linear)(CGFloat) = ^CGFloat(CGFloat c) { return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4); };
+    return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+- (void)assertKey:(UIButton *)button playing:(BOOL)playing {
+    [self settle];
+    UIColor *fill = button.configuration.background.backgroundColor;
+    if (playing) {
+        UIColor *foreground = button.configuration.baseForegroundColor;
+        XCTAssertEqual(button.configuration.image.renderingMode, UIImageRenderingModeAlwaysOriginal);
+        XCTAssertGreaterThan([self pixelsIn:button matching:fill], button.bounds.size.width * button.bounds.size.height * 0.45);
+        XCTAssertGreaterThan([self pixelsIn:button.titleLabel matching:foreground], 2);
+        XCTAssertGreaterThan([self pixelsIn:button.imageView matching:foreground], 2);
+        CGFloat a = [self luminance:fill traits:button.traitCollection], b = [self luminance:foreground traits:button.traitCollection];
+        CGFloat contrast = (MAX(a, b) + 0.05) / (MIN(a, b) + 0.05);
+        NSLog(@"TM_PITCH %@ contrast=%.2f fillPixels=%lu textPixels=%lu iconPixels=%lu", button.accessibilityIdentifier, contrast, (unsigned long)[self pixelsIn:button matching:fill], (unsigned long)[self pixelsIn:button.titleLabel matching:foreground], (unsigned long)[self pixelsIn:button.imageView matching:foreground]);
+        XCTAssertGreaterThanOrEqual(contrast, 4.5);
+    } else {
+        XCTAssertEqualWithAccuracy(CGColorGetAlpha(fill.CGColor), 0, 0.01);
+        XCTAssertGreaterThan([self pixelsIn:button matching:button.tintColor], 5);
+    }
+    XCTAssertEqualWithAccuracy(button.layer.borderWidth, 1.5, 0.01);
+    XCTAssertEqualWithAccuracy(button.layer.cornerRadius, 8, 0.01);
+}
+- (void)testPitchRenderedLifecycle {
+    for (NSNumber *dark in @[@NO, @YES]) {
+        DPTagViewController *detail = [DPTagViewController new];
+        [detail loadViewIfNeeded];
+        DPTag *tag = [self tag]; tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
+        [detail setValue:tag forKey:@"tag"];
+        [self mount:detail width:UIScreen.mainScreen.bounds.size.width dark:dark.boolValue large:NO];
+        DPTagSummaryController *summary = [detail valueForKey:@"summaryController"];
+        DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+        UIButton *button = pitch.button;
+        NSString *prefix = [NSString stringWithFormat:@"tagmaster-ios-footer-pitch-%@", dark.boolValue ? @"dark" : @"light"];
+        [self assertKey:button playing:NO];
+        [self capture:[prefix stringByAppendingString:@"-idle"]];
+        CGRect idle = button.frame;
+        // Deterministic native held-touch fixture invokes the real shared sound targets.
+        button.highlighted = YES;
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        XCTAssertTrue(pitch.note.isPlaying);
+        [self assertKey:button playing:YES];
+        [self capture:[prefix stringByAppendingString:@"-held"]];
+        XCTAssertTrue(CGRectEqualToRect(idle, button.frame));
+        [button sendActionsForControlEvents:UIControlEventTouchUpInside]; button.highlighted = NO;
+        XCTAssertFalse(pitch.note.isPlaying);
+        [self assertKey:button playing:NO];
+        [self capture:[prefix stringByAppendingString:@"-released"]];
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        [button sendActionsForControlEvents:UIControlEventTouchCancel]; button.highlighted = NO;
+        XCTAssertFalse(pitch.note.isPlaying); [self assertKey:button playing:NO];
+        button.enabled = NO;
+        XCTAssertFalse([button accessibilityActivate]); [self assertKey:button playing:NO];
+        button.enabled = YES;
+        XCTAssertTrue([button accessibilityActivate]); [self assertKey:button playing:YES];
+        [self waitUntil:^BOOL { return !pitch.note.isPlaying; }]; [self assertKey:button playing:NO];
+        pitch.toggle = YES;
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        [button sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [self assertKey:button playing:YES];
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        [button sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [self assertKey:button playing:NO]; pitch.toggle = NO;
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        DPNote *old = pitch.note; pitch.note = [DPNote commonNotes].lastObject;
+        XCTAssertFalse(old.isPlaying); [self assertKey:button playing:NO];
+        pitch.note = tag.keyNote;
+        [button sendActionsForControlEvents:UIControlEventTouchDown];
+        [button removeFromSuperview];
+        XCTAssertFalse(pitch.note.isPlaying);
+        XCTAssertNil([button valueForKey:@"noteTimer"]);
+        [self assertKey:button playing:NO];
+    }
+}
+- (void)testBarberPolePendingQueryLifecycle {
+    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
+    IMP original = method_getImplementation(method);
+    Method motion = class_getInstanceMethod(NSClassFromString(@"TMBarberPoleLoadingView"), NSSelectorFromString(@"reduceMotionEnabled"));
+    IMP originalMotion = method_getImplementation(motion);
+    __block BOOL reduced = NO;
+    IMP mockMotion = imp_implementationWithBlock(^BOOL(id view) { return reduced; });
+    method_setImplementation(motion, mockMotion);
+    dispatch_semaphore_t gate = dispatch_semaphore_create(0);
+    XCTestExpectation *entered = [self expectationWithDescription:@"real query pending"];
+    __block NSUInteger calls = 0;
+    DPTag *tag = [self tag]; tag.title = @"Lost";
+    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
+        calls++;
+        XCTAssertEqualObjects(text, @"Lost"); XCTAssertEqual(number, 20); XCTAssertEqual(start, 0);
+        if (calls == 1) { [entered fulfill]; dispatch_semaphore_wait(gate, dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC)); }
+        if (calls == 2) [NSException raise:@"offline" format:@"fixture"];
+        DPTagQueryResult *result = [DPTagQueryResult new];
+        result.tags = @[tag]; result.count = 1; result.available = 1; result.start = 0;
+        return result;
+    });
+    method_setImplementation(method, mock);
+    DPTagQueryViewController *query = [DPTagQueryViewController new]; query.query = @"Lost";
+    @try {
+        [query performSelector:NSSelectorFromString(@"fetchResults")];
+        [self waitForExpectations:@[entered] timeout:3];
+        [query loadViewIfNeeded];
+        UIView *pole = [query valueForKey:@"activity"];
+        CALayer *stripes = [pole valueForKey:@"stripes"], *frame = [pole valueForKey:@"frameLayer"];
+        XCTAssertTrue(query.isLoading); XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        [self mount:query width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+        CABasicAnimation *animation = (id)[stripes animationForKey:@"rotationStripes"];
+        XCTAssertNotNil(animation); XCTAssertEqualWithAccuracy(animation.duration, 2, 0.01);
+        XCTAssertEqualObjects(animation.keyPath, @"transform.translation.y");
+        XCTAssertEqual(frame.animationKeys.count, 0);
+        CALayer *cylinder = [pole valueForKey:@"cylinder"];
+        XCTAssertLessThanOrEqual(CGRectGetMinY(stripes.frame) + 24, 0);
+        XCTAssertGreaterThanOrEqual(CGRectGetMaxY(stripes.frame), cylinder.bounds.size.height);
+        XCTAssertTrue(CATransform3DIsIdentity(frame.transform));
+        XCTAssertEqualObjects(pole.accessibilityLabel, @"Loading tags");
+        XCTAssertTrue(pole.isAccessibilityElement);
+        UITableView *table = [query valueForKey:@"tagTable"];
+        XCTAssertEqual(table.tableFooterView, pole);
+        XCTAssertEqualWithAccuracy(pole.bounds.size.width, table.bounds.size.width, 0.5);
+        CGRect stationary = frame.frame;
+        // Sample the live presentation layer at two bounded points in its loop.
+        [self capture:@"tagmaster-ios-barberpole-light-phase1"];
+        CGFloat first = stripes.presentationLayer.transform.m42;
+        XCTestExpectation *phase = [self expectationWithDescription:@"second stripe phase"];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.6 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [phase fulfill]; });
+        [self waitForExpectations:@[phase] timeout:2];
+        [self capture:@"tagmaster-ios-barberpole-light-phase2"];
+        CGFloat second = stripes.presentationLayer.transform.m42;
+        NSLog(@"TM_POLE phase1=%.2f phase2=%.2f frame=%@", first, second, NSStringFromCGRect(frame.frame));
+        XCTAssertGreaterThan(fabs(first - second), 4);
+        XCTAssertTrue(CGRectEqualToRect(stationary, frame.frame));
+        self.window.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+        [self capture:@"tagmaster-ios-barberpole-dark-pending"];
+        reduced = YES;
+        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertTrue(query.isLoading);
+        [self capture:@"tagmaster-ios-barberpole-dark-reduced-motion"];
+        reduced = NO;
+        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        pole.hidden = YES; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        pole.hidden = NO; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationWillResignActiveNotification object:nil];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+        XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        [query beginAppearanceTransition:NO animated:NO]; [query endAppearanceTransition];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        [query beginAppearanceTransition:YES animated:NO]; [query endAppearanceTransition];
+        XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        table.tableFooterView = nil; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        table.tableFooterView = pole; [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        dispatch_semaphore_signal(gate);
+        [self waitUntil:^BOOL { return !query.isLoading && query.tags.count == 1; }]; [self settle];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertNil(table.tableFooterView);
+        [query refresh];
+        [self waitUntil:^BOOL { return !query.isLoading && [[query valueForKey:@"failed"] boolValue]; }]; [self settle];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertNil(table.tableFooterView);
+        [[query valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [self waitUntil:^BOOL { return calls == 3 && !query.isLoading; }];
+        XCTAssertEqual(query.tags.count, 1);
+    } @finally {
+        dispatch_semaphore_signal(gate);
+        [self waitUntil:^BOOL { return !query.isLoading; }];
+        method_setImplementation(method, original); imp_removeBlock(mock);
+        method_setImplementation(motion, originalMotion); imp_removeBlock(mockMotion);
+    }
+}
+
+- (void)testSheetKeyRenderedLifecycle {
+    TMTestSummary *summary = [TMTestSummary new];
+    [summary loadViewIfNeeded];
+    DPTag *tag = [self tag];
+    DPRemoteLocation *location = [TMTestLocation new];
+    location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
+    location.type = @"pdf"; tag.sheetMusicUri = location; summary.tag = tag;
+    [@"%PDF-1.4 test" writeToURL:location.uri atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    @try {
+        [summary openSheetMusic];
+        [self waitUntil:^BOOL { return summary.captured != nil; }];
+        UIButton *button = (UIButton *)summary.captured.navigationItem.rightBarButtonItem.customView;
+        XCTAssertEqualObjects(button.accessibilityIdentifier, @"sheet.key");
+        UIViewController *host = [UIViewController new];
+        host.navigationItem.rightBarButtonItem = summary.captured.navigationItem.rightBarButtonItem;
+        [self mount:host width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+        [self assertKey:button playing:NO];
+        [self capture:@"tagmaster-ios-footer-pitch-sheet-idle"];
+        [button sendActionsForControlEvents:UIControlEventTouchDown]; [self assertKey:button playing:YES];
+        [self capture:@"tagmaster-ios-footer-pitch-sheet-held"];
+        [button sendActionsForControlEvents:UIControlEventTouchCancel]; [self assertKey:button playing:NO];
+        [self capture:@"tagmaster-ios-footer-pitch-sheet-cancelled"];
+        XCTAssertTrue([button accessibilityActivate]); [self assertKey:button playing:YES];
+        [self waitUntil:^BOOL { return !tag.keyNote.isPlaying; }]; [self assertKey:button playing:NO];
+    } @finally {
+        [tag.keyNote stop];
+        [NSFileManager.defaultManager removeItemAtURL:location.uri error:nil];
+        [NSFileManager.defaultManager removeItemAtPath:[DPFileCache pathForKey:location.cacheKey] error:nil];
+    }
+}
+@end

@@ -1,164 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:paddingTop="32dp"
-              android:orientation="vertical">
-
-    <LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:orientation="vertical">
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/appDisplayLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
-
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
         <TextView
             android:id="@+id/appNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
         <TextView
             android:id="@+id/dashTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/home_version_separator"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
         <TextView
             android:id="@+id/appVersionTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_version"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearLayout3"
-        android:gravity="center_vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
-
-        <depollsoft.lib.ui.Hyperlink
-            android:minHeight="48dp"
-            android:gravity="center_vertical"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:id="@+id/TextView01"
-            android:layout_width="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+        <androidx.constraintlayout.helper.widget.Flow
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:tag="http://apps.depoll.com"
-            android:text="@string/DepollSoft"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorPrimary">
-        </depollsoft.lib.ui.Hyperlink>
-
-        <TextView
-            android:id="@+id/copyrightTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="4dp"
-            android:text="@string/Copyright"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linkLayout"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
-
-        <TextView
-            android:id="@+id/textView7"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/ContentProvider"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-
-        <TextView
-            android:id="@+id/textView8"
-            android:visibility="gone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_space"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant">
-        </TextView>
-
-        <depollsoft.lib.ui.Hyperlink
-            android:minHeight="48dp"
-            android:gravity="center_vertical"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:id="@+id/textView4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:tag="http://www.barbershoptags.com"
-            android:text="@string/BarbershopTagsCom"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorPrimary">
-        </depollsoft.lib.ui.Hyperlink>
-    </LinearLayout>
-
+            app:constraint_referenced_ids="appNameTextView,dashTextView,appVersionTextView"
+            app:flow_wrapMode="chain"
+            app:flow_horizontalStyle="packed"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
     <depollsoft.lib.ui.Hyperlink
+        android:id="@+id/textView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:minHeight="48dp"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
+        android:tag="http://www.barbershoptags.com"
+        android:text="@string/home_content_attribution"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorPrimary" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+            <depollsoft.lib.ui.Hyperlink
+                android:id="@+id/TextView01"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:minWidth="48dp"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="4dp"
+                android:tag="http://apps.depoll.com"
+                android:text="@string/DepollSoft"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorPrimary" />
+            <TextView
+                android:id="@+id/copyrightTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/Copyright"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+        <depollsoft.lib.ui.Hyperlink
+            android:id="@+id/termsHyperlink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:minWidth="48dp"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:tag="http://apps.depoll.com/terms-of-use"
+            android:text="@string/TermsOfUse"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorPrimary" />
+        <depollsoft.lib.ui.Hyperlink
+            android:id="@+id/donateHyperlink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:minWidth="48dp"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:tag="http://www.davidpoll.com/applications/tag-master/donate"
+            android:text="@string/Donate"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorPrimary" />
+        <androidx.constraintlayout.helper.widget.Flow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="linearLayout3,termsHyperlink,donateHyperlink"
+            app:flow_wrapMode="chain"
+            app:flow_horizontalStyle="packed"
+            app:flow_horizontalGap="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <depollsoft.lib.ui.Hyperlink
         android:id="@+id/marketHyperlink"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:minHeight="48dp"
+        android:gravity="center"
         android:tag="https://market.android.com/details?id=depollsoft.pitchperfect"
         android:text="@string/FreePitchPipe"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?attr/colorPrimary"
-        android:visibility="gone">
-    </depollsoft.lib.ui.Hyperlink>
-
-    <depollsoft.lib.ui.Hyperlink
-        android:minHeight="48dp"
-        android:gravity="center_vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:id="@+id/termsHyperlink"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:tag="http://apps.depoll.com/terms-of-use"
-        android:text="@string/TermsOfUse"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorPrimary">
-    </depollsoft.lib.ui.Hyperlink>
-
-    <depollsoft.lib.ui.Hyperlink
-        android:minHeight="48dp"
-        android:gravity="center_vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:id="@+id/donateHyperlink"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:tag="http://www.davidpoll.com/applications/tag-master/donate"
-        android:text="@string/Donate"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorPrimary">
-    </depollsoft.lib.ui.Hyperlink>
-
+        android:visibility="gone" />
 </LinearLayout>

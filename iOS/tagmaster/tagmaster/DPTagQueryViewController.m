@@ -13,10 +13,121 @@
 #import "DPAppDelegate.h"
 #import "DPTagPageControllerBase.h"
 
+// A stationary barber-pole frame with moving stripes, only for tag queries.
+@interface TMBarberPoleLoadingView : UIView
+@property (nonatomic, strong) CALayer *cylinder;
+@property (nonatomic, strong) CAShapeLayer *stripes;
+@property (nonatomic, strong) CAShapeLayer *frameLayer;
+@property (nonatomic) BOOL requested;
+@property (nonatomic) BOOL controllerVisible;
+@property (nonatomic) BOOL appActive;
+- (void)startAnimating;
+- (void)stopAnimating;
+- (BOOL)isAnimating;
+@end
+
+@implementation TMBarberPoleLoadingView
+- (instancetype)initWithFrame:(CGRect)frame {
+    if ((self = [super initWithFrame:frame])) {
+        self.isAccessibilityElement = YES;
+        self.accessibilityLabel = @"Loading tags";
+        self.accessibilityIdentifier = @"query.loading.barberpole";
+        self.appActive = UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
+        self.cylinder = [CALayer layer];
+        self.cylinder.backgroundColor = UIColor.whiteColor.CGColor;
+        self.cylinder.cornerRadius = 3;
+        self.cylinder.masksToBounds = YES;
+        [self.layer addSublayer:self.cylinder];
+        self.stripes = [CAShapeLayer layer];
+        [self.cylinder addSublayer:self.stripes];
+        for (NSUInteger color = 0; color < 2; color++) {
+            CAShapeLayer *stripe = [CAShapeLayer layer];
+            UIBezierPath *path = [UIBezierPath bezierPath];
+            for (NSInteger y = -72; y < 108; y += 24) {
+                CGFloat start = y + color * 12;
+                [path moveToPoint:CGPointMake(-20, start + 20)];
+                [path addLineToPoint:CGPointMake(40, start - 10)];
+                [path addLineToPoint:CGPointMake(40, start - 4)];
+                [path addLineToPoint:CGPointMake(-20, start + 26)];
+                [path closePath];
+            }
+            stripe.path = path.CGPath;
+            stripe.fillColor = (color == 0 ? UIColor.systemRedColor : UIColor.systemBlueColor).CGColor;
+            [self.stripes addSublayer:stripe];
+        }
+        self.frameLayer = [CAShapeLayer layer];
+        [self.layer addSublayer:self.frameLayer];
+        NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+        [center addObserver:self selector:@selector(resignActive) name:UIApplicationWillResignActiveNotification object:nil];
+        [center addObserver:self selector:@selector(becomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
+        [center addObserver:self selector:@selector(updateAnimation) name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+    }
+    return self;
+}
+- (void)dealloc { [NSNotificationCenter.defaultCenter removeObserver:self]; }
+- (CGSize)intrinsicContentSize { return CGSizeMake(28, 68); }
+- (CGSize)sizeThatFits:(CGSize)size { return CGSizeMake(MAX(28, self.bounds.size.width), 68); }
+- (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
+- (BOOL)isAnimating { return self.requested; }
+- (void)startAnimating { self.requested = YES; self.hidden = NO; [self updateAnimation]; }
+- (void)stopAnimating { self.requested = NO; self.hidden = YES; [self updateAnimation]; }
+- (void)setControllerVisible:(BOOL)visible { _controllerVisible = visible; [self updateAnimation]; }
+- (void)setHidden:(BOOL)hidden { [super setHidden:hidden]; [self updateAnimation]; }
+- (void)didMoveToWindow { [super didMoveToWindow]; [self updateAnimation]; }
+- (void)resignActive { self.appActive = NO; [self updateAnimation]; }
+- (void)becomeActive { self.appActive = YES; [self updateAnimation]; }
+- (void)updateAnimation {
+    BOOL visible = self.window && self.controllerVisible && self.appActive && self.requested;
+    for (UIView *view = self; view; view = view.superview) {
+        visible &= !view.hidden && view.alpha > 0;
+        if (view.clipsToBounds) visible &= CGRectIntersectsRect([self convertRect:self.bounds toView:view], view.bounds);
+    }
+    if (!visible || [self reduceMotionEnabled]) {
+        [self.stripes removeAnimationForKey:@"rotationStripes"];
+    } else if (![self.stripes animationForKey:@"rotationStripes"]) {
+        CABasicAnimation *motion = [CABasicAnimation animationWithKeyPath:@"transform.translation.y"];
+        motion.fromValue = @0; motion.toValue = @24;
+        motion.duration = 2;
+        motion.repeatCount = HUGE_VALF;
+        motion.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+        [self.stripes addAnimation:motion forKey:@"rotationStripes"];
+    }
+}
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    [CATransaction begin]; [CATransaction setDisableActions:YES];
+    CGFloat x = floor((self.bounds.size.width - 28) / 2), y = 8;
+    self.cylinder.frame = CGRectMake(x + 5, y + 8, 18, 36);
+    // Keep one full repeat above the clip throughout the downward travel.
+    // Core Animation snapshots sublayers at their bounds during composition.
+    self.stripes.frame = CGRectMake(0, -24, self.cylinder.bounds.size.width, self.cylinder.bounds.size.height + 48);
+    self.frameLayer.frame = CGRectMake(x, y, 28, 52);
+    UIBezierPath *frame = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(4.5, 7.5, 19, 37) cornerRadius:3];
+    self.frameLayer.path = frame.CGPath;
+    self.frameLayer.fillColor = UIColor.clearColor.CGColor;
+    self.frameLayer.strokeColor = [UIColor.secondaryLabelColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+    self.frameLayer.lineWidth = 1;
+    if (self.frameLayer.sublayers.count == 0) {
+        for (NSNumber *top in @[@0, @46]) {
+            CAShapeLayer *cap = [CAShapeLayer layer];
+            cap.path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(1, top.doubleValue, 26, 6) cornerRadius:3].CGPath;
+            [self.frameLayer addSublayer:cap];
+        }
+    }
+    for (CAShapeLayer *cap in self.frameLayer.sublayers) cap.fillColor = self.frameLayer.strokeColor;
+    [CATransaction commit];
+    [self updateAnimation];
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self setNeedsLayout];
+}
+@end
+
 @interface DPTagQueryViewController () <UITableViewDataSource, UITableViewDelegate>
 
 @property (atomic, retain) DPTagQueryResult *mostRecentResult;
-@property (nonatomic, retain) UIActivityIndicatorView *activity;
+@property (nonatomic, retain) TMBarberPoleLoadingView *activity;
 @property (nonatomic, retain) UILabel *statusLabel;
 @property (nonatomic, retain) UIButton *retryButton;
 @property (nonatomic) BOOL failed;
@@ -84,8 +195,7 @@
     self.tagTable.estimatedRowHeight = 100;
     [self.tagTable registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
     
-    self.activity = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-    self.activity.hidesWhenStopped = YES;
+    self.activity = [[TMBarberPoleLoadingView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 68)];
     
     self.statusLabel = [[UILabel alloc] init];
     self.statusLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -127,6 +237,7 @@
                                                                         views:bindings]];
     
     [self fetchResults];
+    [self refreshViews]; // A request may have started before the view mounted.
     
     self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     self.navigationItem.title = !self.query || self.query.length == 0 ? @"Search Results" : self.query;
@@ -193,9 +304,26 @@
     }
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.activity.controllerVisible = YES;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    self.activity.controllerVisible = NO;
+}
+
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     [self sizeStatusHeader];
+    if (self.tagTable.tableFooterView == self.activity) {
+        CGRect frame = CGRectMake(0, 0, self.tagTable.bounds.size.width, 68);
+        if (!CGSizeEqualToSize(self.activity.frame.size, frame.size)) {
+            self.activity.frame = frame;
+            self.tagTable.tableFooterView = self.activity;
+        }
+    }
 }
 
 - (void)fetchResults {
@@ -260,6 +388,7 @@
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self.activity updateAnimation];
     CGFloat currentOffset = scrollView.contentOffset.y;
     CGFloat threshold = scrollView.contentSize.height * 7 / 8 - scrollView.frame.size.height;
     if (currentOffset >= threshold) {

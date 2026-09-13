@@ -24,6 +24,8 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 @interface DPHomeViewController ()
 
 @property (nonatomic, strong) TMBusyIndicator *busyIndicator;
+@property (nonatomic, strong) UIStackView *creditRow;
+@property (nonatomic, strong) UIStackView *legalRow;
 
 @end
 
@@ -68,16 +70,16 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     aboutFooter.layoutMarginsRelativeArrangement = YES;
     aboutFooter.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(8, 16, 16, 16);
     NSInteger year = [[NSCalendar currentCalendar] component:NSCalendarUnitYear fromDate:[NSDate date]];
-    UIButton *copyrightButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    UIButton *copyrightButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [copyrightButton setTitle:[NSString stringWithFormat:@"DepollSoft © %ld", (long)year] forState:UIControlStateNormal];
     copyrightButton.url = [NSURL URLWithString:@"https://apps.depoll.com"];
-    UIButton *bbsTagsButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    UIButton *bbsTagsButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [bbsTagsButton setTitle:@"Content provided by BarbershopTags.com" forState:UIControlStateNormal];
     bbsTagsButton.url = [NSURL URLWithString:@"https://www.barbershoptags.com"];
-    UIButton *touButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    UIButton *touButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [touButton setTitle:@"Terms of Use" forState:UIControlStateNormal];
     touButton.url = [NSURL URLWithString:@"https://apps.depoll.com/terms-of-use"];
-    UIButton *donateButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    UIButton *donateButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [donateButton setTitle:@"Donate" forState:UIControlStateNormal];
     donateButton.url = [NSURL URLWithString:@"https://www.davidpoll.com/applications/tag-master/donate"];
     for (UIButton *button in @[copyrightButton, bbsTagsButton, touButton, donateButton]) {
@@ -88,11 +90,28 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         UIButtonConfiguration *linkConfiguration = [UIButtonConfiguration plainButtonConfiguration];
         // The iPad sidebar column resolves tint to the label color; links keep the link color.
         linkConfiguration.baseForegroundColor = [UIColor systemBlueColor];
+        linkConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 4, 4, 4);
+        linkConfiguration.titleLineBreakMode = NSLineBreakByWordWrapping;
+        __weak UIButton *weakButton = button;
+        linkConfiguration.titleTextAttributesTransformer = ^NSDictionary<NSAttributedStringKey, id> *(NSDictionary<NSAttributedStringKey, id> *incoming) {
+            NSMutableDictionary *attributes = [incoming mutableCopy];
+            attributes[NSFontAttributeName] = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote compatibleWithTraitCollection:weakButton.traitCollection];
+            return attributes;
+        };
         button.configuration = linkConfiguration;
         button.accessibilityTraits |= UIAccessibilityTraitLink;
         [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
-        [aboutFooter addArrangedSubview:button];
     }
+    copyrightButton.accessibilityIdentifier = @"home.credit.developer";
+    bbsTagsButton.accessibilityIdentifier = @"home.credit.attribution";
+    touButton.accessibilityIdentifier = @"home.credit.terms";
+    donateButton.accessibilityIdentifier = @"home.credit.donate";
+    self.legalRow = [[UIStackView alloc] initWithArrangedSubviews:@[touButton, donateButton]];
+    self.legalRow.spacing = 4;
+    self.creditRow = [[UIStackView alloc] initWithArrangedSubviews:@[copyrightButton, self.legalRow]];
+    self.creditRow.spacing = 4;
+    [aboutFooter addArrangedSubview:bbsTagsButton];
+    [aboutFooter addArrangedSubview:self.creditRow];
     CGSize aboutFooterSize = [aboutFooter systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
     aboutFooter.frame = CGRectMake(0, 0, aboutFooterSize.width, aboutFooterSize.height);
     self.tableView.tableFooterView = aboutFooter;
@@ -172,6 +191,17 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     [self updateInlineTitleVisibility];
     UIView *footer = self.tableView.tableFooterView;
     CGFloat width = self.tableView.bounds.size.width;
+    CGFloat available = MAX(0, width - 32);
+    // Wrap whole link groups before compressing their titles. At accessibility
+    // sizes the terms/donation pair can also become vertical.
+    CGFloat legalWidth = self.legalRow.spacing;
+    for (UIButton *button in self.legalRow.arrangedSubviews) {
+        legalWidth += [button sizeThatFits:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)].width;
+    }
+    UIButton *developer = self.creditRow.arrangedSubviews.firstObject;
+    CGFloat developerWidth = [developer sizeThatFits:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)].width;
+    self.legalRow.axis = legalWidth > available ? UILayoutConstraintAxisVertical : UILayoutConstraintAxisHorizontal;
+    self.creditRow.axis = developerWidth + legalWidth + self.creditRow.spacing > available ? UILayoutConstraintAxisVertical : UILayoutConstraintAxisHorizontal;
     CGFloat height = [footer systemLayoutSizeFittingSize:CGSizeMake(width, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
     if (footer.frame.size.height != height || footer.frame.size.width != width) {
         footer.frame = CGRectMake(0, 0, width, height);

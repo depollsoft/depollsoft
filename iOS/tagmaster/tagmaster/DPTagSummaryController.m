@@ -14,43 +14,107 @@
 #import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
 
-// Keep pitch accessibility local to Tag Master; shared pitch-pipe behavior is unchanged.
-// Width-aware wrapping comes from TMWrappingButton (configured buttons cache
-// multiline heights across tab reattachment; it measures at the actual column width).
+// Width-aware wrapping stays local to Tag Master. Shared pitch callbacks own sound.
 @interface TMKeyButton : TMWrappingButton
 @property (nonatomic, copy) void (^playNote)(void);
+@property (nonatomic, strong) DPNote *note;
+@property (nonatomic, strong) NSTimer *noteTimer;
+@property (nonatomic) BOOL showingPlayback;
+- (void)updatePitchAppearance;
 @end
 @implementation TMKeyButton
 - (BOOL)accessibilityActivate {
-    if (!self.playNote) return NO;
+    if (!self.enabled || !self.playNote) return NO;
     self.playNote();
+    [self updatePitchAppearance];
     return YES;
+}
+- (void)setNote:(DPNote *)note {
+    _note = note;
+    [self updatePitchAppearance];
+}
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    [self.noteTimer invalidate];
+    self.noteTimer = nil;
+    if (self.window) {
+        // DPNote play/stop mutate an ivar, so KVO cannot observe playback.
+        // Only restyle when the actual bound note changes, while mounted.
+        __weak TMKeyButton *weakSelf = self;
+        self.noteTimer = [NSTimer timerWithTimeInterval:1.0 / 30 repeats:YES block:^(NSTimer *timer) {
+            TMKeyButton *button = weakSelf;
+            if ((button.enabled && button.note.isPlaying) != button.showingPlayback) [button updatePitchAppearance];
+        }];
+        [NSRunLoop.mainRunLoop addTimer:self.noteTimer forMode:NSRunLoopCommonModes];
+    } else {
+        [self.note stop];
+    }
+    [self updatePitchAppearance];
+}
+- (void)dealloc { [_noteTimer invalidate]; }
+- (void)setHighlighted:(BOOL)highlighted {
+    [super setHighlighted:highlighted];
+    [self updatePitchAppearance];
+}
+- (void)setEnabled:(BOOL)enabled {
+    [super setEnabled:enabled];
+    [self updatePitchAppearance];
+}
+- (void)updateConfiguration {
+    [super updateConfiguration];
+    [self updatePitchAppearance];
+}
+- (void)tintColorDidChange {
+    [super tintColorDidChange];
+    [self updatePitchAppearance];
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self updatePitchAppearance];
+}
+- (void)updatePitchAppearance {
+    self.showingPlayback = self.enabled && self.note.isPlaying;
+    BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
+    UIColor *blue = self.tintColor ?: UIColor.systemBlueColor;
+    // Use UIKit's high-contrast blue beneath white body text in light mode.
+    UITraitCollection *contrast = [UITraitCollection traitCollectionWithTraitsFromCollections:@[self.traitCollection,
+        [UITraitCollection traitCollectionWithAccessibilityContrast:UIAccessibilityContrastHigh]]];
+    UIColor *fill = dark ? blue : [blue resolvedColorWithTraitCollection:contrast];
+    UIColor *foreground = self.showingPlayback ? (dark ? UIColor.blackColor : UIColor.whiteColor) : blue;
+    UIButtonConfiguration *configuration = self.configuration;
+    if (configuration) {
+        configuration.baseForegroundColor = foreground;
+        UIBackgroundConfiguration *background = [UIBackgroundConfiguration clearConfiguration];
+        background.backgroundColor = self.showingPlayback ? fill : UIColor.clearColor;
+        background.cornerRadius = 8;
+        background.backgroundColorTransformer = ^UIColor *(UIColor *color) { return color; };
+        configuration.background = background;
+        configuration.imageColorTransformer = ^UIColor *(UIColor *color) { return foreground; };
+        // Navigation bars can retint template images independently of the title.
+        configuration.image = [[UIImage systemImageNamed:@"key"] imageWithTintColor:foreground renderingMode:UIImageRenderingModeAlwaysOriginal];
+        self.configuration = configuration;
+    }
+    self.backgroundColor = UIColor.clearColor;
+    [self setTitleColor:foreground forState:UIControlStateNormal];
+    [self setTitleColor:foreground forState:UIControlStateHighlighted];
+    self.layer.borderColor = [blue resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+    self.layer.borderWidth = 1.5;
+    self.layer.cornerRadius = 8;
 }
 @end
 
 @interface TMKeyPitchButton : DPPitchPipeButton
 @end
 @implementation TMKeyPitchButton
+- (void)setNote:(DPNote *)note {
+    [super setNote:note];
+    if ([self.button isKindOfClass:TMKeyButton.class]) ((TMKeyButton *)self.button).note = note;
+}
 - (void)updateConstraints {
     [super updateConstraints];
     [self.button setBackgroundImage:nil forState:UIControlStateNormal];
     [self.button setBackgroundImage:nil forState:UIControlStateHighlighted];
-    [self applyOutline];
-}
-- (void)applyOutline {
-    self.button.backgroundColor = [UIColor clearColor];
-    [self.button setTitleColor:self.button.tintColor forState:UIControlStateNormal];
-    self.button.layer.borderColor = [self.button.tintColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
-    self.button.layer.borderWidth = 1.5;
-    self.button.layer.cornerRadius = 8;
-}
-- (void)tintColorDidChange {
-    [super tintColorDidChange];
-    [self applyOutline];
-}
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
-    [self applyOutline];
+    if ([self.button isKindOfClass:TMKeyButton.class]) [(TMKeyButton *)self.button updatePitchAppearance];
 }
 @end
 
@@ -187,6 +251,7 @@
     __weak DPTagSummaryController *weakSelf = self;
     accessibleKey.playNote = ^{ [weakSelf playKeyNote]; };
     keyButton.button = accessibleKey;
+    accessibleKey.accessibilityIdentifier = @"summary.key";
     [accessibleKey addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchCancel];
     keyButton.button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
     keyButton.button.titleLabel.adjustsFontForContentSizeCategory = YES;
@@ -397,9 +462,19 @@
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
                 if (self.tag.keyNote) {
-                    TMKeyButton *toucher = [TMKeyButton buttonWithType:UIButtonTypeSystem];
+                    TMKeyButton *toucher = [TMKeyButton buttonWithType:UIButtonTypeCustom];
                     __weak DPTagSummaryController *weakSelf = self;
                     toucher.playNote = ^{ [weakSelf playKeyNote]; };
+                    toucher.note = self.tag.keyNote;
+                    toucher.tintColor = UIColor.systemBlueColor;
+                    toucher.accessibilityIdentifier = @"sheet.key";
+                    UIButtonConfiguration *keyConfiguration = [UIButtonConfiguration plainButtonConfiguration];
+                    keyConfiguration.image = [UIImage systemImageNamed:@"key"];
+                    keyConfiguration.imagePadding = 8;
+                    keyConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 8, 4, 8);
+                    toucher.configuration = keyConfiguration;
+                    toucher.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+                    toucher.titleLabel.adjustsFontForContentSizeCategory = YES;
                     toucher.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
                     toucher.accessibilityHint = @"Plays for one and a half seconds";
                     [toucher.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
@@ -437,10 +512,11 @@
 }
 
 - (void)playKeyNote {
-    [self.tag.keyNote play];
+    DPNote *note = self.tag.keyNote;
+    [note play];
     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
     dispatch_after(delayTime, dispatch_get_main_queue(), ^{
-        [self.tag.keyNote stop];
+        [note stop];
     });
 }
 

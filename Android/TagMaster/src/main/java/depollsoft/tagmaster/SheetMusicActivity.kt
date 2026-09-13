@@ -40,7 +40,7 @@ class SheetMusicActivity : AppCompatActivity() {
     lateinit var photoView: PhotoView
     lateinit var keyButton: ExtendedFloatingActionButton
     private var touchInProgress = false
-    private var playingNote: Note? = null
+    private var playingNote: Note? by trackable()
     private val clearTouchState = Runnable { touchInProgress = false }
     private val stopNote =
         Runnable {
@@ -58,6 +58,7 @@ class SheetMusicActivity : AppCompatActivity() {
         keyButton = findViewById(R.id.keyButton)
         keyButton.applyBottomInsetsAsMargin()
         keyButton.extend()
+        bindTo(R.id.keyButton, "Activated", { playingNote?.isPlaying == true })
         bindTo(R.id.sheetMusicLoading, "Visibility", { drawable == null }, BoolConverter.get())
         bindTo(R.id.keyButton, "Visibility", { tag?.keyNote }, BoolConverter.get())
         bindTo(R.id.keyButton, "Text", { tag?.writtenKey })
@@ -65,6 +66,7 @@ class SheetMusicActivity : AppCompatActivity() {
             getString(R.string.play_key_note, tag?.writtenKey.orEmpty())
         })
         keyButton.setOnTouchListener { _, event ->
+            if (!keyButton.isEnabled) return@setOnTouchListener false
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     keyButton.removeCallbacks(clearTouchState)

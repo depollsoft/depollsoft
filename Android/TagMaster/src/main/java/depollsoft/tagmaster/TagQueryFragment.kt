@@ -75,13 +75,7 @@ class TagQueryFragment : Fragment() {
 
         rootView.bindTo(
             R.id.loadingProgressBar,
-            "Visibility",
-            { model?.isLoading },
-            BoolConverter.get(),
-        )
-        rootView.bindTo(
-            R.id.loadingProgressBar,
-            "Indeterminate",
+            "Loading",
             { model?.isLoading },
             BoolConverter.get(),
         )
@@ -95,6 +89,32 @@ class TagQueryFragment : Fragment() {
         )
 
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.apply {
+            hostResumed = true
+            // Reconcile retained-query state after the window has resumed and its insets are applied.
+            post {
+                if (!isResumed) return@post
+                loading = model?.isLoading == true
+                (parent as? View)?.requestLayout()
+            }
+        }
+    }
+
+    override fun onPause() {
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.hostResumed = false
+        super.onPause()
+    }
+
+    override fun onDestroyView() {
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.apply {
+            hostResumed = false
+            loading = false
+        }
+        super.onDestroyView()
     }
 
     override fun onCreateOptionsMenu(

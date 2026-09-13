@@ -114,6 +114,9 @@ class TagSummaryFragment : Fragment() {
         )
 
         rootView.bindTo(R.id.playKeyNoteButton, "Note", { parent.tag?.keyNote })
+        val keyButton = rootView.findViewById<depollsoft.pitchperfect.lib.ui.PitchPipeButton>(R.id.playKeyNoteButton)
+        // Native View can reassert Pressed after note replacement; only the actual note owns this fill.
+        rootView.bindTo(R.id.playKeyNoteButton, "Activated", { keyButton.note?.isPlaying == true })
         rootView.bindTo(R.id.playKeyNoteButton, "Text", { parent.tag?.writtenKey })
         rootView.bindTo(
             R.id.keyRow,
