@@ -71,7 +71,7 @@
 {
     [super viewDidLoad];
     
-    if (![self.parentViewController isKindOfClass:[TMPageViewController class]]) {
+    if (![self.tabBarController.parentViewController isKindOfClass:[TMPageViewController class]]) {
         [DPAppDelegate setUpBackground:self.view];
     }
     
@@ -109,7 +109,7 @@
     
     NSMutableDictionary *bindings = [NSMutableDictionary dictionaryWithDictionary:NSDictionaryOfVariableBindings(tagTable)];
     
-    if (![self.parentViewController isKindOfClass:[TMPageViewController class]]) {
+    if (![self.tabBarController.parentViewController isKindOfClass:[TMPageViewController class]]) {
         [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[tagTable]|"
                                                                           options:0
                                                                           metrics:nil

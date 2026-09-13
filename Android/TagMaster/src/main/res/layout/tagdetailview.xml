@@ -82,15 +82,18 @@
             </LinearLayout>
         </ScrollView>
 
-        <LinearLayout
+        <ScrollView
             android:id="@+id/detailErrorState"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="32dp"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
             android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp">
 
             <TextView
                 android:id="@+id/detailErrorText"
@@ -108,7 +111,8 @@
                 android:minHeight="48dp"
                 android:text="@string/detail_retry"
                 app:icon="@drawable/ic_refresh" />
-        </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
     </FrameLayout>
 
     <!-- Keep page switching within thumb reach, below the content and above system bars. -->

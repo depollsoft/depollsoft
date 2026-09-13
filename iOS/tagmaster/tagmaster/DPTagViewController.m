@@ -239,7 +239,13 @@
     BOOL initialPending = empty && self.tagFetchPending;
     self.rootView.hidden = empty;
     self.rootView.accessibilityElementsHidden = empty;
-    self.tabBar.hidden = empty;
+    // Let the native controller update child safe areas as the bar returns.
+    // Setting UITabBar.hidden directly can leave content underneath the floating bar.
+    if (@available(iOS 18.0, *)) {
+        [self.pageTabController setTabBarHidden:empty animated:NO];
+    } else {
+        self.tabBar.hidden = empty;
+    }
     self.tabBar.accessibilityElementsHidden = empty;
     self.initialLoadingView.hidden = !empty;
     self.quartetStaff.hidden = !initialPending;

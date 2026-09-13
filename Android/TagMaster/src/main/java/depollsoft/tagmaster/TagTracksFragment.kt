@@ -7,9 +7,12 @@ import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.fragment.app.Fragment
+import com.bindroid.Binding
+import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.Property
 import depollsoft.tagmaster.barbershop.RemoteLocation
 
 class TagTracksFragment : Fragment() {
@@ -17,6 +20,7 @@ class TagTracksFragment : Fragment() {
         get() = this.activity as TagDetailActivity
 
     var selectedTrack: RemoteLocation? by trackable()
+    private var emptyStateBinding: Binding? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -184,15 +188,6 @@ class TagTracksFragment : Fragment() {
             BoolConverter.get(),
         )
 
-        UiBinder.bind(
-            rootView,
-            R.id.sorryTextView,
-            "Visibility",
-            this,
-            "Parent.Tag.Tracks",
-            BoolConverter.get(true, true),
-        )
-
         UiBinder.bind(rootView, R.id.mediaPlayer, "RemoteLocation", this, "SelectedTrack")
         UiBinder.bind(rootView, R.id.mediaPlayer, "Enabled", this, "SelectedTrack", BoolConverter.get())
 
@@ -202,7 +197,34 @@ class TagTracksFragment : Fragment() {
             selectedTrack = rb?.tag as? RemoteLocation
         }
 
+        // A missing selection or an in-flight/failed download is not an empty catalog.
+        // Observe the loaded tag and its track fields, including same-ID replacements.
+        emptyStateBinding =
+            UiBinder.bind(
+                Property<Boolean>(null, { empty ->
+                    if (empty) {
+                        // Cancel preparation/playback before the transport becomes unreachable.
+                        selectedTrack = null
+                        group.clearCheck()
+                        rootView.findViewById<MediaPlayerView>(R.id.mediaPlayer).apply {
+                            remoteLocation = null
+                            stop()
+                        }
+                    }
+                    rootView.findViewById<View>(R.id.sorryTextView).visibility = if (empty) View.VISIBLE else View.GONE
+                    rootView.findViewById<View>(R.id.mediaPlayer).visibility = if (empty) View.GONE else View.VISIBLE
+                    group.visibility = if (empty) View.GONE else View.VISIBLE
+                }, Boolean::class.java),
+                Property<Boolean>({ parent.tag?.tracks?.isEmpty() == true }, null, Boolean::class.java),
+                BindingMode.ONE_WAY,
+            )
+
         return rootView
+    }
+
+    override fun onDestroyView() {
+        emptyStateBinding = null
+        super.onDestroyView()
     }
 
     override fun onPause() {

@@ -14,7 +14,7 @@
 #import "tagmaster-Swift.h"
 
 @interface DPTeachableTagsController ()
-
+@property (nonatomic, strong) UIView *emptyHeader;
 @end
 
 @implementation DPTeachableTagsController
@@ -66,23 +66,75 @@
 
 #pragma mark - Table view data source
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    BOOL empty = [DPAppDelegate teachable].count == 0;
-    if (empty) {
-        UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
-        state.text = @"No teachable tags yet";
-        state.secondaryText = @"Open a tag, choose Favorite and Teachable options, then Mark as Teachable. Your teaching list will appear here.";
-        state.button.title = @"Browse Tags";
-        __weak DPTeachableTagsController *weakSelf = self;
-        state.buttonProperties.primaryAction = [UIAction actionWithHandler:^(UIAction *action) {
-            [weakSelf.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
-        }];
-        self.contentUnavailableConfiguration = state;
-    } else {
-        self.contentUnavailableConfiguration = nil;
+- (UIView *)emptyHeader {
+    if (!_emptyHeader) {
+        // A table header participates in native scrolling and accessibility. The
+        // unavailable overlay can put its action below the viewport at AX sizes.
+        UILabel *heading = [UILabel new];
+        heading.text = @"No teachable tags yet";
+        UIFont *titleFont = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle2];
+        heading.font = [UIFont fontWithDescriptor:[titleFont.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold] size:0];
+        heading.accessibilityTraits |= UIAccessibilityTraitHeader;
+        UILabel *guidance = [UILabel new];
+        guidance.text = @"Open a tag, choose Favorite and Teachable options, then Mark as Teachable. Your teaching list will appear here.";
+        guidance.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        guidance.textColor = UIColor.secondaryLabelColor;
+        for (UILabel *label in @[heading, guidance]) {
+            label.numberOfLines = 0;
+            label.adjustsFontForContentSizeCategory = YES;
+            label.textAlignment = NSTextAlignmentCenter;
+        }
+        UIButton *browse = [UIButton buttonWithType:UIButtonTypeSystem];
+        [browse setTitle:@"Browse Tags" forState:UIControlStateNormal];
+        browse.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        browse.titleLabel.adjustsFontForContentSizeCategory = YES;
+        browse.titleLabel.numberOfLines = 0;
+        browse.titleLabel.textAlignment = NSTextAlignmentCenter;
+        browse.accessibilityIdentifier = @"teachable.browse";
+        [browse.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [browse addTarget:self action:@selector(browseTags) forControlEvents:UIControlEventTouchUpInside];
+        UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[heading, guidance, browse]];
+        stack.axis = UILayoutConstraintAxisVertical;
+        stack.spacing = 16;
+        stack.translatesAutoresizingMaskIntoConstraints = NO;
+        _emptyHeader = [UIView new];
+        [_emptyHeader addSubview:stack];
+        [NSLayoutConstraint activateConstraints:@[
+            [stack.leadingAnchor constraintEqualToAnchor:_emptyHeader.leadingAnchor constant:32],
+            [stack.trailingAnchor constraintEqualToAnchor:_emptyHeader.trailingAnchor constant:-32],
+            [stack.topAnchor constraintEqualToAnchor:_emptyHeader.topAnchor constant:32],
+            [stack.bottomAnchor constraintEqualToAnchor:_emptyHeader.bottomAnchor constant:-32]
+        ]];
     }
-    self.editButtonItem.enabled = !empty;
-    return [DPAppDelegate teachable].count;
+    return _emptyHeader;
+}
+
+- (void)browseTags {
+    [self.navigationController pushViewController:[[DPBrowseViewController alloc] init] animated:YES];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    UIView *header = self.tableView.tableHeaderView;
+    CGFloat width = self.tableView.bounds.size.width;
+    if (!header || width <= 0) return;
+    CGSize fit = [header systemLayoutSizeFittingSize:CGSizeMake(width, 0)
+        withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel];
+    if (fabs(header.bounds.size.width - width) > .5 || fabs(header.bounds.size.height - ceil(fit.height)) > .5) {
+        header.frame = CGRectMake(0, 0, width, ceil(fit.height));
+        self.tableView.tableHeaderView = header;
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    NSInteger count = [DPAppDelegate teachable].count;
+    UIView *header = count == 0 ? self.emptyHeader : nil;
+    if (tableView.tableHeaderView != header) {
+        tableView.tableHeaderView = header;
+        [self.view setNeedsLayout];
+    }
+    self.editButtonItem.enabled = count > 0;
+    return count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {

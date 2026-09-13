@@ -15,7 +15,7 @@
 @end
 
 // Segments remain the source of truth for the existing index-to-filter mappings.
-// Accessibility text sizes use a native menu so every option can remain readable.
+// A native menu handles accessibility text and containers too narrow for the segments.
 @interface TMFilterControl : UIStackView
 @property (nonatomic, strong) UISegmentedControl *control;
 @property (nonatomic, strong) UIButton *menuButton;
@@ -55,15 +55,45 @@
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
     [self updateFilter];
+    [self setNeedsLayout];
 }
 - (void)selectIndex:(NSInteger)index {
     self.control.selectedSegmentIndex = index;
     [self.control sendActionsForControlEvents:UIControlEventValueChanged];
 }
+- (void)layoutSubviews {
+    [self updatePresentation];
+    [super layoutSubviews];
+}
+- (void)updatePresentation {
+    // Measure the wrapper, never the hidden segment control's zero width.
+    CGFloat available = self.bounds.size.width;
+    UIFont *font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleSubheadline]
+        scaledFontForFont:[UIFont systemFontOfSize:13 weight:UIFontWeightMedium]
+        compatibleWithTraitCollection:self.traitCollection];
+    NSMutableArray<NSNumber *> *widths = [NSMutableArray array];
+    CGFloat total = 0, widest = 0;
+    for (NSInteger index = 0; index < self.control.numberOfSegments; index++) {
+        CGFloat width = MAX(44, ceil([[self.control titleForSegmentAtIndex:index] sizeWithAttributes:@{NSFontAttributeName:font}].width) + 16);
+        [widths addObject:@(width)];
+        total += width;
+        widest = MAX(widest, width);
+    }
+    if (!self.control.apportionsSegmentWidthsByContent) total = widest * widths.count;
+    BOOL menu = UIContentSizeCategoryIsAccessibilityCategory(self.traitCollection.preferredContentSizeCategory)
+        || (available > 0 && available < total);
+    if (self.control.hidden != menu) self.control.hidden = menu;
+    if (self.menuButton.hidden == menu) self.menuButton.hidden = !menu;
+    if (!menu && available >= total && widths.count > 0) {
+        for (NSInteger index = 0; index < widths.count; index++) {
+            CGFloat width = self.control.apportionsSegmentWidthsByContent
+                ? widths[index].doubleValue + (available - total) / widths.count : available / widths.count;
+            if (fabs([self.control widthForSegmentAtIndex:index] - width) > 0.01) [self.control setWidth:width forSegmentAtIndex:index];
+        }
+    }
+}
 - (void)updateFilter {
-    BOOL large = UIContentSizeCategoryIsAccessibilityCategory(self.traitCollection.preferredContentSizeCategory);
-    self.control.hidden = large;
-    self.menuButton.hidden = !large;
+    [self updatePresentation];
     self.menuButton.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:self.traitCollection];
     NSString *selected = [self.control titleForSegmentAtIndex:self.control.selectedSegmentIndex];
     [self.menuButton setTitle:selected forState:UIControlStateNormal];

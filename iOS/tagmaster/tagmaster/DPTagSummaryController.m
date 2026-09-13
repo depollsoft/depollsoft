@@ -104,6 +104,37 @@
 }
 @end
 
+// The bar item owns the fitting size; the child keeps the existing press,
+// release, cancel, accessibility and blue playback appearance unchanged.
+@interface TMSheetKeyView : UIView
+@property (nonatomic, strong) TMKeyButton *button;
+- (instancetype)initWithButton:(TMKeyButton *)button;
+@end
+@implementation TMSheetKeyView
+- (instancetype)initWithButton:(TMKeyButton *)button {
+    CGSize size = button.intrinsicContentSize;
+    if ((self = [super initWithFrame:CGRectMake(0, 0, MAX(44, size.width), MAX(44, size.height))])) {
+        self.button = button;
+        [self.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [self.widthAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        button.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:button];
+        [NSLayoutConstraint activateConstraints:@[
+            [button.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
+            [button.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+            [button.topAnchor constraintEqualToAnchor:self.topAnchor],
+            [button.bottomAnchor constraintEqualToAnchor:self.bottomAnchor]
+        ]];
+    }
+    return self;
+}
+- (CGSize)intrinsicContentSize {
+    CGSize size = self.button.intrinsicContentSize;
+    return CGSizeMake(MAX(44, size.width), MAX(44, size.height));
+}
+- (CGSize)sizeThatFits:(CGSize)size { return self.intrinsicContentSize; }
+@end
+
 @interface TMKeyPitchButton : DPPitchPipeButton
 @end
 @implementation TMKeyPitchButton
@@ -161,6 +192,7 @@
 @property (nonatomic, strong) UIStackView *sheetMusicAction;
 @property (nonatomic, strong) TMBarberPoleLoadingView *sheetMusicLoading;
 @property (nonatomic, strong) TMBarberPoleLoadingView *ratingLoading;
+@property (nonatomic, strong) UIView *proseSectionBreak;
 @property (nonatomic, strong) UILabel *lyricsLabel;
 @property (nonatomic, strong) UILabel *notesLabel;
 @property (nonatomic, strong) UILabel *ratingHeader;
@@ -219,6 +251,8 @@
     [grid setView:lyricsLabel hidden:!self.tag.lyrics];
     [grid setView:lyricsHeader hidden:!self.tag.lyrics];
     
+    [grid setView:self.proseSectionBreak hidden:!self.tag.lyrics && !self.tag.notes];
+
     notesLabel.text = self.tag.notes;
     [grid setView:notesLabel hidden:!self.tag.notes];
     [grid setView:notesHeader hidden:!self.tag.notes];
@@ -319,6 +353,7 @@
                            [DPGridDimension dimension],
                            [DPGridDimension dimension],
                            [DPGridDimension dimension],
+                           [DPGridDimension dimension],
                            [DPGridDimension dimension]
                            ];
     
@@ -339,16 +374,19 @@
     self.sheetMusicLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Opening sheet music…"];
     self.sheetMusicAction = [self actionRowForButton:sheetMusicButton loader:self.sheetMusicLoading];
     [grid addSubview:self.sheetMusicAction row:7 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[lyricsHeader alignTop] row:8 column:0];
-    [grid addSubview:[notesHeader alignTop] row:9 column:0];
+    self.proseSectionBreak = [UIView new];
+    [self.proseSectionBreak.heightAnchor constraintEqualToConstant:16].active = YES;
+    [grid addSubview:self.proseSectionBreak row:8 column:0 rowSpan:1 colSpan:3];
+    [grid addSubview:[lyricsHeader alignTop] row:9 column:0];
+    [grid addSubview:[notesHeader alignTop] row:10 column:0];
     
     // Add content
     [grid addSubview:partsLabel row:3 column:2];
     [grid addSubview:typeLabel row:4 column:2];
     [grid addSubview:keyButton row:5 column:2];
     [grid addSubview:classicTagNumberLabel row:6 column:2];
-    [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:8 column:2];
-    [grid addSubview:notesLabel row:9 column:2];
+    [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:9 column:2];
+    [grid addSubview:notesLabel row:10 column:2];
     
     // Build rating UI
     UIStackView *ratingValue = [[UIStackView alloc] initWithArrangedSubviews:@[ratingLabel, ratingBar]];
@@ -501,12 +539,15 @@
                     toucher.titleLabel.adjustsFontForContentSizeCategory = YES;
                     toucher.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
                     toucher.accessibilityHint = @"Plays for one and a half seconds";
-                    [toucher.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
-                    [toucher.widthAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
                     [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
                     [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
                     [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
-                    previewer.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:toucher];
+                    UIBarButtonItem *keyItem = [[UIBarButtonItem alloc] initWithCustomView:[[TMSheetKeyView alloc] initWithButton:toucher]];
+                    // This control draws its own outlined/pressed background.
+                    // Shared Glass fitting caps custom content at 36pt even with
+                    // a 44pt intrinsic size; opting out leaves the bar unchanged.
+                    if (@available(iOS 26.0, *)) keyItem.hidesSharedBackground = YES;
+                    previewer.navigationItem.rightBarButtonItem = keyItem;
                 }
                 // Pushed previews keep the navigation bar (Back and the key note) on screen
                 // from the first frame; a modal preview opened with its chrome hidden.
