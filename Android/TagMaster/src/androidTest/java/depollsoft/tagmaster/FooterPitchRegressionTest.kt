@@ -275,7 +275,13 @@ class FooterPitchRegressionTest {
     ) {
         if (baseline) return
         instrumentation.runOnMainSync {
-            val expectedFill = button.context.getColor(if (playing) R.color.md_primary else R.color.md_surface)
+            val expectedFill = button.context.getColor(
+                if (playing) R.color.md_primary else if (button is ExtendedFloatingActionButton) R.color.sheet_key_surface else R.color.md_surface,
+            )
+            if (button is ExtendedFloatingActionButton) {
+                val fill = button.backgroundTintList!!.getColorForState(button.drawableState, android.graphics.Color.TRANSPARENT)
+                assertEquals("Floating key surface must be opaque", 255, android.graphics.Color.alpha(fill))
+            }
             val expectedInk =
                 button.context.getColor(
                     if (disabled) {

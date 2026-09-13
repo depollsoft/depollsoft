@@ -36,4 +36,6 @@
     <color name="md_surface_container_highest">#E3E3E3</color>
     <color name="md_outline">#767676</color>
     <color name="md_outline_variant">#C7C7C7</color>
+    <!-- Opaque floating sheet-key face; distinct from colorSurface to avoid elevation tinting. -->
+    <color name="sheet_key_surface">@color/md_surface_container_lowest</color>
 </resources>
