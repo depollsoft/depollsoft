@@ -2,11 +2,28 @@
 
 @interface TMPageSwitcher ()
 @property UIStackView *stack;
+@property UIVisualEffectView *materialView;
 @end
 @implementation TMPageSwitcher
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
-        self.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
+        self.backgroundColor = UIColor.clearColor;
+        self.materialView = [[UIVisualEffectView alloc] initWithEffect:nil];
+        self.materialView.userInteractionEnabled = NO;
+        self.materialView.translatesAutoresizingMaskIntoConstraints = NO;
+        self.materialView.layer.cornerRadius = 16;
+        self.materialView.layer.cornerCurve = kCACornerCurveContinuous;
+        self.materialView.clipsToBounds = YES;
+        [self addSubview:self.materialView];
+        [NSLayoutConstraint activateConstraints:@[
+            [self.materialView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
+            [self.materialView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
+            [self.materialView.topAnchor constraintEqualToAnchor:self.topAnchor],
+            [self.materialView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor]
+        ]];
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(updateMaterial) name:UIAccessibilityReduceTransparencyStatusDidChangeNotification object:nil];
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(updateMaterial) name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        [self updateMaterial];
         self.accessibilityIdentifier = @"page-switcher";
         self.isAccessibilityElement = NO;
         self.shouldGroupAccessibilityChildren = YES;
@@ -23,6 +40,23 @@
         ]];
     }
     return self;
+}
+- (void)dealloc { [NSNotificationCenter.defaultCenter removeObserver:self]; }
+- (BOOL)reduceTransparencyEnabled { return UIAccessibilityIsReduceTransparencyEnabled(); }
+- (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
+- (UIVisualEffect *)pageMaterialEffect {
+    if ([self reduceTransparencyEnabled]) return nil;
+    if (@available(iOS 26.0, *)) {
+        UIGlassEffect *glass = [UIGlassEffect effectWithStyle:UIGlassEffectStyleRegular];
+        glass.interactive = ![self reduceMotionEnabled];
+        return glass;
+    }
+    return [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
+}
+- (void)updateMaterial {
+    // No backing plate behind the native material, and no animated accessibility changes.
+    self.materialView.effect = [self pageMaterialEffect];
+    self.materialView.backgroundColor = [self reduceTransparencyEnabled] ? UIColor.secondarySystemBackgroundColor : UIColor.clearColor;
 }
 - (NSArray<UIButton *> *)buttons { return (NSArray<UIButton *> *)self.stack.arrangedSubviews; }
 - (void)setItems:(NSArray<UITabBarItem *> *)items {
@@ -68,13 +102,15 @@
         BOOL selected = item == self.selectedItem;
         button.selected = selected;
         button.enabled = item.enabled;
-        // Keep blue selection on charcoal, with a non-color selected trait as well.
-        // Match the bright-blue indicator on the Android charcoal bar. System blue
-        // alone is only 3.26:1 here, insufficient for the small tab captions.
-        UIColor *color = selected ? [UIColor colorWithRed:90.0 / 255.0 green:200.0 / 255.0 blue:250.0 / 255.0 alpha:1] : UIColor.whiteColor;
+        // Semantic labels remain readable over adaptive material in either theme.
+        // A blue outline and tint mark selection without relying on blue caption text.
         UIButtonConfiguration *configuration = button.configuration;
-        configuration.baseForegroundColor = color;
-        configuration.background.backgroundColor = selected ? [color colorWithAlphaComponent:0.14] : UIColor.clearColor;
+        configuration.baseForegroundColor = UIColor.labelColor;
+        configuration.background.backgroundColor = selected ? [UIColor.systemBlueColor colorWithAlphaComponent:0.12] : UIColor.clearColor;
+        configuration.background.strokeColor = selected ? UIColor.systemBlueColor : UIColor.clearColor;
+        configuration.background.strokeWidth = selected ? 2 : 0;
+        configuration.background.cornerRadius = 12;
+        configuration.cornerStyle = UIButtonConfigurationCornerStyleFixed;
         button.configuration = configuration;
         button.accessibilityTraits = UIAccessibilityTraitButton | (selected ? UIAccessibilityTraitSelected : 0);
         button.accessibilityValue = [NSString stringWithFormat:@"%lu of %lu", (unsigned long)index + 1, (unsigned long)self.items.count];
@@ -96,7 +132,15 @@
             configuration.attributedTitle = [[NSAttributedString alloc] initWithString:button.accessibilityLabel attributes:@{NSFontAttributeName: font}];
             button.configuration = configuration;
         }
-        height = MAX(height, [button sizeThatFits:CGSizeMake(width / MAX(1, self.buttons.count), CGFLOAT_MAX)].height);
+        // Measure the new font directly. UIButton can retain its pre-trait sizeThatFits
+        // cache until its own next layout, especially when only text size changes.
+        button.titleLabel.font = font;
+        NSMutableParagraphStyle *paragraph = [NSMutableParagraphStyle new];
+        paragraph.lineBreakMode = NSLineBreakByCharWrapping;
+        CGRect text = [button.accessibilityLabel boundingRectWithSize:CGSizeMake(MAX(1, width / MAX(1, self.buttons.count) - 8), CGFLOAT_MAX)
+            options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading
+            attributes:@{NSFontAttributeName:font, NSParagraphStyleAttributeName:paragraph} context:nil];
+        height = MAX(height, ceil(text.size.height) + 22 + 4 + 12);
     }
     return height;
 }
@@ -120,7 +164,8 @@
     [self.view addSubview:self.rootView];
     [self.view addSubview:self.tabBar];
     UIView *bottom = [UIView new];
-    bottom.backgroundColor = self.tabBar.backgroundColor;
+    bottom.backgroundColor = UIColor.clearColor;
+    bottom.userInteractionEnabled = NO;
     bottom.translatesAutoresizingMaskIntoConstraints = NO;
     bottom.isAccessibilityElement = NO;
     [self.view insertSubview:bottom belowSubview:self.tabBar];
@@ -142,6 +187,10 @@
     ]];
     [self.view layoutIfNeeded];
     [self rebuildItems];
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self.view setNeedsLayout];
 }
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];

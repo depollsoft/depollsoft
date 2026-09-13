@@ -57,7 +57,12 @@ class MediaPlayerLifecycleTest {
         }
     }
 
-    private fun start(view: MediaPlayerView) = view.findViewById<View>(R.id.playPauseButton).performClick()
+    private fun start(view: MediaPlayerView): Boolean {
+        val result = view.findViewById<View>(R.id.playPauseButton).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(view.isLoading, view.findViewById<BarberPoleLoadingView>(R.id.trackLoadingIndicator).loading)
+        return result
+    }
 
     private fun complete(pending: TaskCompletionSource<File>) {
         val file = File.createTempFile("track", ".mp3")
@@ -69,37 +74,37 @@ class MediaPlayerLifecycleTest {
         }
     }
 
-    private fun preparedListener(player: MediaPlayer): MediaPlayer.OnPreparedListener {
-        return listeners.getValue(player)
-    }
+    private fun preparedListener(player: MediaPlayer): MediaPlayer.OnPreparedListener = listeners.getValue(player)
 
     private val listeners = mutableMapOf<MediaPlayer, MediaPlayer.OnPreparedListener>()
 
-    @Test fun prepared_track_can_pause_resume_and_stop_from_the_controls() = withPlayer { view, player, pending ->
-        start(view)
-        complete(pending)
-        preparedListener(player).onPrepared(player)
-        assertTrue(view.isPlaying)
-        verify(player).start()
-        start(view)
-        verify(player).pause()
-        assertFalse(view.isPlaying)
-        assertTrue(view.findViewById<View>(R.id.stopButton).isEnabled)
-        start(view)
-        verify(player, times(2)).start()
-        view.findViewById<View>(R.id.stopButton).performClick()
-        assertFalse(view.isPlaying)
-        assertEquals(0, view.audioPosition)
-    }
+    @Test fun prepared_track_can_pause_resume_and_stop_from_the_controls() =
+        withPlayer { view, player, pending ->
+            start(view)
+            complete(pending)
+            preparedListener(player).onPrepared(player)
+            assertTrue(view.isPlaying)
+            verify(player).start()
+            start(view)
+            verify(player).pause()
+            assertFalse(view.isPlaying)
+            assertTrue(view.findViewById<View>(R.id.stopButton).isEnabled)
+            start(view)
+            verify(player, times(2)).start()
+            view.findViewById<View>(R.id.stopButton).performClick()
+            assertFalse(view.isPlaying)
+            assertEquals(0, view.audioPosition)
+        }
 
-    @Test fun stopped_player_ignores_late_prepared_callback() = withPlayer { view, player, pending ->
-        start(view)
-        complete(pending)
-        view.stop()
-        preparedListener(player).onPrepared(player)
-        verify(player, never()).start()
-        assertFalse(view.isPlaying)
-    }
+    @Test fun stopped_player_ignores_late_prepared_callback() =
+        withPlayer { view, player, pending ->
+            start(view)
+            complete(pending)
+            view.stop()
+            preparedListener(player).onPrepared(player)
+            verify(player, never()).start()
+            assertFalse(view.isPlaying)
+        }
 
     @Test fun stop_during_download_prevents_late_prepare() =
         withPlayer { view, player, pending ->
@@ -109,6 +114,8 @@ class MediaPlayerLifecycleTest {
             view.findViewById<View>(R.id.stopButton).performClick()
             complete(pending)
             assertFalse(view.isLoading)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertFalse(view.findViewById<BarberPoleLoadingView>(R.id.trackLoadingIndicator).loading)
             assertFalse(view.isPlaying)
             verify(player, never()).prepareAsync()
         }

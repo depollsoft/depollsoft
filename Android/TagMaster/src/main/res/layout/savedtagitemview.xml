@@ -13,13 +13,11 @@
         android:layout_height="wrap_content"
         android:layout_weight="1">
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <depollsoft.tagmaster.BarberPoleLoadingView
             android:id="@+id/loadingBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.TagMaster.CompactLoader"
             android:layout_gravity="center"
-            android:contentDescription="@string/home_loading_tag"
-            android:indeterminate="true" />
+            android:contentDescription="@string/home_loading_tag" />
 
         <LinearLayout
             android:id="@+id/failedToLoad"

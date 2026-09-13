@@ -1,0 +1,8 @@
+{
+  "artwork": {"width": 216, "height": 96, "fit": "uniform-center"},
+  "staff": {"x1": 8, "x2": 208, "y": 32, "spacing": 9, "count": 5, "width": 1, "alpha": 75},
+  "notes": {"count": 4, "x": 43, "dx": 43, "y": 59, "dy": -9, "headRx": 7, "headRy": 4.5, "rotationDegrees": -18, "stemX": 6, "stemLength": 25, "stemWidth": 1.8},
+  "colors": {"lightNote": "#007AA3", "darkNote": "#5AC8FA", "lightStaff": "#474747", "darkStaff": "#CACACA"},
+  "motion": {"periodSeconds": 2.8, "phaseStart": 0, "phaseEnd": 1, "stagger": 0.12, "activeFraction": 0.45, "lift": 4, "sampleCount": 121, "localPhase": "(phase - voice * stagger + 1) % 1", "translationY": "local < activeFraction ? -sin(local / activeFraction * pi) * lift : 0", "interpolation": "linear", "repeat": "infinite", "stillTranslations": [0, 0, 0, 0]},
+  "path": {"ellipse": "four-cubic-beziers", "fillRule": "nonzero", "stemCap": "butt"}
+}

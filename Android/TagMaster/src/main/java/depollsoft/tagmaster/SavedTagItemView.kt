@@ -43,7 +43,7 @@ abstract class SavedTagItemView :
 
     val isLoading: Boolean
         @JvmName("getIsLoading")
-        get() = this.tag == null && !this.failedToLoad
+        get() = this.tagId != null && this.tag == null && !this.failedToLoad
 
     var failedToLoad: Boolean by trackable(false)
 
@@ -120,7 +120,7 @@ abstract class SavedTagItemView :
             }
         }
 
-        UiBinder.bind(this, R.id.loadingBar, "Visibility", "IsLoading", BoolConverter.get())
+        UiBinder.bind(this, R.id.loadingBar, "Loading", "IsLoading")
         UiBinder.bind(this, R.id.tagItemView, "Visibility", "Tag", BoolConverter.get())
         UiBinder.bind(this, R.id.failedToLoad, "Visibility", "FailedToLoad", BoolConverter.get())
         UiBinder.bind(this, R.id.tagId, "Text", "TagId", ToStringConverter())

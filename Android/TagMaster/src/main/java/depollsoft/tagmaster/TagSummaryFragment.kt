@@ -37,9 +37,9 @@ class TagSummaryFragment : Fragment() {
     ): View? {
         val rootView = inflater.inflate(R.layout.tagsummaryview, container, false)
         rootView.findViewById<View>(R.id.scrollView1).applyContentInsets(maxWidthRes = R.dimen.two_column_max_width)
-        rootView.bindTo(R.id.sheetMusicProgress, "Visibility", { sheetMusicLoading.get() }, BoolConverter.get())
+        rootView.bindTo(R.id.sheetMusicProgress, "Loading", { sheetMusicLoading.get() })
         rootView.bindTo(R.id.sheetMusicLink, "Enabled", { !sheetMusicLoading.get() })
-        rootView.bindTo(R.id.ratingSubmitProgress, "Visibility", { ratingSubmitting.get() }, BoolConverter.get())
+        rootView.bindTo(R.id.ratingSubmitProgress, "Loading", { ratingSubmitting.get() })
 
         rootView.bindTo(R.id.titleTextView, "Text", { "${parent.tag?.title}" })
         rootView.bindTo(

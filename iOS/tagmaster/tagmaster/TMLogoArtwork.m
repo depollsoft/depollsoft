@@ -192,3 +192,204 @@ static void TMPrepareLogoPaths(void) {
 CGPathRef TMLogoFullPath(void) { TMPrepareLogoPaths(); return full; }
 CGPathRef TMLogoSilhouettePath(void) { TMPrepareLogoPaths(); return silhouette; }
 CGPathRef TMLogoHighlightsPath(void) { TMPrepareLogoPaths(); return highlights; }
+
+// Shared loader SHA-256: 793913bade417a7cf42997f22b98768d292b8aa7e7192bca1abba5a4bbbe76a5
+const CGFloat TMLoaderArtworkWidth = 34;
+const CGFloat TMLoaderArtworkHeight = 58;
+const CGFloat TMLoaderCompactHeight = 32;
+const CGFloat TMLoaderCompactWidth = 18.75862069;
+const CGFloat TMLoaderAxisAngle = 26;
+const CGFloat TMLoaderStripeStep = 108;
+const CGFloat TMLoaderPhaseMultiplier = 2;
+const CGFloat TMLoaderDurationSeconds = 2;
+const NSInteger TMLoaderRepeatMin = -6, TMLoaderRepeatMax = 6;
+CGPathRef TMLoaderMetalPath(void) {
+    static CGPathRef cached;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGPathMoveToPoint(path, NULL, 257.1, 0.46);
+        CGPathAddCurveToPoint(path, NULL, 264.75, 1.08, 270.71, 5, 277.38, 8.43);
+        CGPathAddCurveToPoint(path, NULL, 287.57, 15.03, 294.38, 25.3, 297.82, 36.84);
+        CGPathAddCurveToPoint(path, NULL, 300.51, 45.51, 300.18, 55.25, 298.11, 64.02);
+        CGPathAddCurveToPoint(path, NULL, 295.51, 69.23, 294.3, 74.72, 290.63, 79.41);
+        CGPathAddCurveToPoint(path, NULL, 286.57, 84.8, 281.86, 90.49, 275.81, 93.7);
+        CGPathAddCurveToPoint(path, NULL, 270.38, 97.12, 264.57, 97.98, 258.78, 100.49);
+        CGPathAddCurveToPoint(path, NULL, 263.18, 103.08, 267.78, 104.88, 271.16, 108.55);
+        CGPathAddCurveToPoint(path, NULL, 275.93, 113.53, 277.83, 120.23, 279.04, 126.84);
+        CGPathAddCurveToPoint(path, NULL, 279.65, 131.76, 277.66, 137.2, 275.42, 141.51);
+        CGPathAddCurveToPoint(path, NULL, 273.9, 143.48, 269.98, 143.93, 268.89, 146.33);
+        CGPathAddCurveToPoint(path, NULL, 263.44, 156.8, 137.71, 419.6, 135.26, 423.6);
+        CGPathAddCurveToPoint(path, NULL, 135.23, 425.78, 135.2, 427.96, 135.18, 430.13);
+        CGPathAddCurveToPoint(path, NULL, 132.99, 433.37, 131.4, 436.83, 128.58, 439.45);
+        CGPathAddCurveToPoint(path, NULL, 126.56, 441.22, 124.05, 442.49, 121.82, 444.01);
+        CGPathAddCurveToPoint(path, NULL, 117.55, 445.79, 113.4, 447.33, 108.78, 447.9);
+        CGPathAddCurveToPoint(path, NULL, 105.32, 447.87, 101.71, 446.66, 98.53, 445.36);
+        CGPathAddCurveToPoint(path, NULL, 100.26, 451.6, 101.61, 458.27, 101.48, 464.76);
+        CGPathAddCurveToPoint(path, NULL, 99.89, 472.72, 99.63, 479.96, 95.18, 487.04);
+        CGPathAddCurveToPoint(path, NULL, 91.09, 494.93, 84.75, 501.25, 77.35, 506.08);
+        CGPathAddCurveToPoint(path, NULL, 74.25, 507.57, 71.26, 509.03, 68.01, 510.48);
+        CGPathAddCurveToPoint(path, NULL, 67.18, 510.66, 60.35, 512.91, 57.67, 513.29);
+        CGPathAddCurveToPoint(path, NULL, 50.27, 513.82, 43.45, 513.55, 36.26, 511.18);
+        CGPathAddCurveToPoint(path, NULL, 30.46, 509.27, 24.76, 507.03, 19.89, 502.76);
+        CGPathAddCurveToPoint(path, NULL, 10.82, 496.35, 4.37, 486.16, 1.9, 475.38);
+        CGPathAddCurveToPoint(path, NULL, -0.09, 469.24, -0.44, 462.69, 0.49, 456.32);
+        CGPathAddCurveToPoint(path, NULL, 1.88, 450.5, 3.07, 444.07, 5.98, 438.86);
+        CGPathAddCurveToPoint(path, NULL, 9.1, 433.04, 12.98, 428.28, 17.72, 423.73);
+        CGPathAddCurveToPoint(path, NULL, 21.53, 421.11, 25.42, 418.61, 29.48, 416.39);
+        CGPathAddCurveToPoint(path, NULL, 31.07, 416.23, 32.65, 416.07, 34.23, 415.9);
+        CGPathAddCurveToPoint(path, NULL, 32.68, 414.54, 29.86, 412.14, 28.32, 410.88);
+        CGPathAddCurveToPoint(path, NULL, 22.61, 406.25, 20.97, 401, 17.91, 394.83);
+        CGPathAddCurveToPoint(path, NULL, 17.09, 391.46, 16.54, 387.62, 17.59, 384.41);
+        CGPathAddCurveToPoint(path, NULL, 18.3, 381.54, 19.21, 378.74, 20.16, 375.94);
+        CGPathAddCurveToPoint(path, NULL, 20.8, 375.57, 22.54, 373.49, 22.76, 372.82);
+        CGPathAddCurveToPoint(path, NULL, 24.85, 371.6, 26.94, 370.38, 29.04, 369.18);
+        CGPathAddCurveToPoint(path, NULL, 30.68, 364.89, 156.02, 105.93, 161.11, 93.93);
+        CGPathAddCurveToPoint(path, NULL, 162.14, 91.66, 161.09, 88.61, 161.29, 86.16);
+        CGPathAddCurveToPoint(path, NULL, 162.62, 83.69, 164.32, 81.38, 165.91, 79.06);
+        CGPathAddCurveToPoint(path, NULL, 168, 76.16, 170.8, 74.49, 173.77, 72.65);
+        CGPathAddCurveToPoint(path, NULL, 177.7, 71.95, 181.25, 70.05, 185.15, 69.36);
+        CGPathAddCurveToPoint(path, NULL, 191.24, 68.46, 197.81, 72.31, 203.84, 73.63);
+        CGPathAddCurveToPoint(path, NULL, 201.14, 67.55, 198.93, 61.46, 198.01, 54.83);
+        CGPathAddCurveToPoint(path, NULL, 197.48, 50.64, 198.15, 46.81, 198.63, 42.67);
+        CGPathAddCurveToPoint(path, NULL, 199.2, 37.7, 201.93, 32.76, 203.62, 28.02);
+        CGPathAddCurveToPoint(path, NULL, 204.41, 26.55, 205.18, 25.07, 205.95, 23.59);
+        CGPathAddCurveToPoint(path, NULL, 208.85, 19.54, 211.54, 15.51, 215.42, 12.3);
+        CGPathAddCurveToPoint(path, NULL, 220.01, 7.76, 225.43, 5.77, 231.1, 2.92);
+        CGPathAddCurveToPoint(path, NULL, 238.91, -0.53, 248.74, -0.29, 257.1, 0.46);
+        CGPathCloseSubpath(path);
+        CGPathMoveToPoint(path, NULL, 29.63, 431.72);
+        CGPathAddCurveToPoint(path, NULL, 27.59, 434.12, 25.1, 436.15, 23.21, 438.65);
+        CGPathAddCurveToPoint(path, NULL, 21.02, 442.01, 19.09, 445.77, 17.69, 449.53);
+        CGPathAddCurveToPoint(path, NULL, 15.96, 454.67, 16.25, 459.5, 16.15, 464.81);
+        CGPathAddCurveToPoint(path, NULL, 19.1, 459.94, 21.94, 454.72, 25.72, 450.44);
+        CGPathAddCurveToPoint(path, NULL, 28.32, 447.81, 31.33, 445.28, 34.46, 443.3);
+        CGPathAddCurveToPoint(path, NULL, 40.53, 439.92, 46.87, 438.2, 53.48, 436.31);
+        CGPathAddCurveToPoint(path, NULL, 50.58, 432.27, 47.22, 428.75, 41.96, 428.37);
+        CGPathAddCurveToPoint(path, NULL, 36.56, 427.62, 33.79, 428.43, 29.63, 431.72);
+        CGPathCloseSubpath(path);
+        CGPathMoveToPoint(path, NULL, 62.21, 415.75);
+        CGPathAddCurveToPoint(path, NULL, 66.46, 417.66, 70.05, 419.42, 73.84, 421.74);
+        CGPathAddCurveToPoint(path, NULL, 79.36, 424.31, 84.79, 427.07, 90.38, 429.5);
+        CGPathAddCurveToPoint(path, NULL, 95.53, 431.97, 100.64, 435.21, 106.01, 437.27);
+        CGPathAddCurveToPoint(path, NULL, 111.14, 438.53, 114.9, 436.39, 119.3, 434.2);
+        CGPathAddCurveToPoint(path, NULL, 120.5, 431.27, 120, 431.61, 119.6, 429.04);
+        CGPathAddCurveToPoint(path, NULL, 114.37, 426.79, 53.24, 402.78, 47.5, 402.32);
+        CGPathAddCurveToPoint(path, NULL, 51.18, 408.29, 56.87, 410.68, 62.21, 415.75);
+        CGPathCloseSubpath(path);
+        CGPathMoveToPoint(path, NULL, 179.42, 80.28);
+        CGPathAddCurveToPoint(path, NULL, 176.95, 81.88, 176.23, 85.47, 177.93, 87.86);
+        CGPathAddCurveToPoint(path, NULL, 180.02, 89.42, 234.81, 109.24, 249.07, 114.49);
+        CGPathAddCurveToPoint(path, NULL, 248.7, 113.58, 248.32, 112.68, 247.95, 111.77);
+        CGPathAddCurveToPoint(path, NULL, 244.57, 108.93, 241.53, 105.82, 237.69, 103.56);
+        CGPathAddCurveToPoint(path, NULL, 235.25, 101.44, 232.82, 99.46, 229.73, 98.36);
+        CGPathAddCurveToPoint(path, NULL, 225.56, 96.95, 200.7, 83.99, 192.08, 79.53);
+        CGPathAddCurveToPoint(path, NULL, 188.48, 77.26, 182.77, 77.8, 179.42, 80.28);
+        CGPathCloseSubpath(path);
+        CGPathMoveToPoint(path, NULL, 244.9, 11.67);
+        CGPathAddCurveToPoint(path, NULL, 239.05, 12.41, 232.13, 13.48, 227.37, 17.17);
+        CGPathAddCurveToPoint(path, NULL, 224.25, 19.36, 221.4, 21.86, 218.81, 24.65);
+        CGPathAddCurveToPoint(path, NULL, 216.49, 27.12, 215.23, 30.51, 213.61, 33.52);
+        CGPathAddCurveToPoint(path, NULL, 211.57, 39.3, 210.87, 44.03, 211.2, 50.22);
+        CGPathAddCurveToPoint(path, NULL, 213.49, 47.03, 215.93, 44.24, 217.66, 40.69);
+        CGPathAddCurveToPoint(path, NULL, 220.36, 38.11, 222.87, 34.9, 226.01, 32.9);
+        CGPathAddCurveToPoint(path, NULL, 229.94, 30.33, 234.25, 27.5, 238.93, 26.61);
+        CGPathAddCurveToPoint(path, NULL, 248.48, 24.54, 259.32, 24.09, 268.64, 27.41);
+        CGPathAddCurveToPoint(path, NULL, 272.92, 28.97, 282.97, 35.25, 284, 36.04);
+        CGPathAddCurveToPoint(path, NULL, 282.16, 31.88, 280.36, 27.88, 277.03, 24.66);
+        CGPathAddCurveToPoint(path, NULL, 273.66, 20.71, 269.44, 18.14, 265.35, 15.05);
+        CGPathAddCurveToPoint(path, NULL, 258.81, 12.81, 251.89, 10.67, 244.9, 11.67);
+        CGPathCloseSubpath(path);
+        cached = CGPathCreateCopy(path);
+        CGPathRelease(path);
+    });
+    return cached;
+}
+CGPathRef TMLoaderShaftPath(void) {
+    static CGPathRef cached;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGPathMoveToPoint(path, NULL, 159.01, 138.81);
+        CGPathAddCurveToPoint(path, NULL, 190, 131, 228, 127, 253.47, 140.72);
+        CGPathAddLineToPoint(path, NULL, 122.06, 413.54);
+        CGPathAddCurveToPoint(path, NULL, 105, 404, 65, 387, 43, 379);
+        CGPathAddLineToPoint(path, NULL, 159.01, 138.81);
+        CGPathCloseSubpath(path);
+        cached = CGPathCreateCopy(path);
+        CGPathRelease(path);
+    });
+    return cached;
+}
+CGPathRef TMLoaderStripePath(void) {
+    static CGPathRef cached;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        CGMutablePathRef path = CGPathCreateMutable();
+        CGPathMoveToPoint(path, NULL, 230.13745729, 131.08178698);
+        CGPathAddCurveToPoint(path, NULL, 224.66252935, 133.53431962, 219.74708702, 135.8253165, 213.94438061, 138.43654483);
+        CGPathAddCurveToPoint(path, NULL, 205.70329079, 142.15315664, 197.54287339, 146.37571269, 189.49296283, 150.30387188);
+        CGPathAddCurveToPoint(path, NULL, 188.32701783, 150.85470254, 187.64073759, 151.58333399, 187.4463965, 152.50774211);
+        CGPathAddCurveToPoint(path, NULL, 186.63656842, 155.38223288, 187.58786289, 193.95851037, 187.74651418, 197.88635432);
+        CGPathAddCurveToPoint(path, NULL, 193.13428647, 195.39742887, 199.05016635, 193.65910672, 204.22803907, 190.95402967);
+        CGPathAddCurveToPoint(path, NULL, 208.95014108, 188.60800256, 213.20180277, 185.86956668, 217.91008676, 183.61736166);
+        CGPathAddCurveToPoint(path, NULL, 225.91456716, 179.80516363, 236.43636293, 174.15914454, 241.1851375, 172.14873184);
+        CGPathAddCurveToPoint(path, NULL, 246.87212607, 169.75583365, 252.37252896, 167.27217399, 258.32341697, 165.26575724);
+        CGPathAddCurveToPoint(path, NULL, 264.23041842, 163.26350369, 270.0214306, 161.04576008, 276.05117598, 159.22326534);
+        CGPathAddCurveToPoint(path, NULL, 286.006199, 156.53395159, 296.32266185, 154.8758253, 306.8570511, 152.85250122);
+        CGPathAddCurveToPoint(path, NULL, 308.11129132, 145.90682713, 307.0194526, 118.41652376, 306.85091176, 111.57710805);
+        CGPathAddCurveToPoint(path, NULL, 290.12229737, 111.46373541, 275.20404393, 115.37034456, 259.85487728, 119.64959583);
+        CGPathAddCurveToPoint(path, NULL, 248.32298855, 122.72136842, 236.28635378, 128.33882679, 230.13745729, 131.08178698);
+        CGPathCloseSubpath(path);
+        cached = CGPathCreateCopy(path);
+        CGPathRelease(path);
+    });
+    return cached;
+}
+CGColorRef TMLoaderColor(NSString *name) {
+    static NSDictionary<NSString *, id> *colors;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+        NSMutableDictionary *values = [NSMutableDictionary dictionary];
+        {
+            CGFloat rgba[] = {0.74509804, 0.16470588, 0.20784314, 1};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"red"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        {
+            CGFloat rgba[] = {0, 0.38823529, 0.64705882, 1};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"blue"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        {
+            CGFloat rgba[] = {1, 1, 1, 1};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"white"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        {
+            CGFloat rgba[] = {0.27843137, 0.27843137, 0.27843137, 1};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"metalLight"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        {
+            CGFloat rgba[] = {0.79215686, 0.79215686, 0.79215686, 1};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"metalDark"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        {
+            CGFloat rgba[] = {0, 0, 0, 0};
+            CGColorRef color = CGColorCreate(space, rgba);
+            values[@"highlights"] = (__bridge id)color;
+            CGColorRelease(color);
+        }
+        colors = [values copy];
+        CGColorSpaceRelease(space);
+    });
+    return (__bridge CGColorRef)colors[name];
+}

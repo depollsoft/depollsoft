@@ -52,6 +52,9 @@ class PdfPagesRegressionTest {
                             assertEquals(bitmap.width * 2, bitmap.height)
                             assertEquals(Color.RED, bitmap.getPixel(bitmap.width / 2, bitmap.height / 4))
                             assertEquals(Color.BLUE, bitmap.getPixel(bitmap.width / 2, bitmap.height * 3 / 4))
+                            val pole = activity.findViewById<BarberPoleLoadingView>(R.id.sheetMusicLoading)
+                            assertFalse(pole.loading)
+                            assertFalse(pole.isAnimating)
                             rendered = true
                         }
                     }

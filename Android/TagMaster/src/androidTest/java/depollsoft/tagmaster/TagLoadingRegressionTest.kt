@@ -202,13 +202,73 @@ class TagLoadingRegressionTest {
             activity.window.decorView.invalidate()
         }
         assertTrue("Capture frame committed", committed.await(5, TimeUnit.SECONDS))
-        val bitmap = instrumentation.uiAutomation.takeScreenshot()
+        // PixelCopy captures the actual app window without UiAutomation's screenshot
+        // binder, which can stall on a long-running emulator. No reconstructed layout.
+        val copied = java.util.concurrent.CountDownLatch(1)
+        lateinit var bitmap: Bitmap
+        var result = android.view.PixelCopy.ERROR_UNKNOWN
+        instrumentation.runOnMainSync {
+            val activity =
+                androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+                    .getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
+                    .single()
+            bitmap = Bitmap.createBitmap(activity.window.decorView.width, activity.window.decorView.height, Bitmap.Config.ARGB_8888)
+            android.view.PixelCopy.request(activity.window, bitmap, {
+                result = it
+                copied.countDown()
+            }, android.os.Handler(android.os.Looper.getMainLooper()))
+        }
+        assertTrue("Native window copied", copied.await(5, TimeUnit.SECONDS))
+        assertEquals(android.view.PixelCopy.SUCCESS, result)
         val scale = minOf(1f, 800f / maxOf(bitmap.width, bitmap.height))
         val small = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
         val file = File(app.getExternalFilesDir(null), "tagmaster-android-loading-$label-$suffix.jpg")
         file.outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, 88, it) }
         if (small !== bitmap) small.recycle()
         bitmap.recycle()
+    }
+
+    private fun exportQuartetFrames() {
+        instrumentation.runOnMainSync {
+            val directory = File(app.getExternalFilesDir(null), "quartet-frames").apply { mkdirs() }
+            for (dark in listOf(false, true)) {
+                val config = android.content.res.Configuration(app.resources.configuration)
+                config.uiMode = (
+                    config.uiMode and
+                        android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                            .inv()
+                ) or
+                    (if (dark) android.content.res.Configuration.UI_MODE_NIGHT_YES else android.content.res.Configuration.UI_MODE_NIGHT_NO)
+                val view = TagLoadingView(app.createConfigurationContext(config))
+                for (scale in listOf(1, 10)) {
+                    view.layout(0, 0, 216 * scale, 96 * scale)
+                    for ((label, phase) in listOf(
+                        "0" to 0f,
+                        "0.125" to 0.125f,
+                        "0.25" to 0.25f,
+                        "0.5" to 0.5f,
+                        "0.75" to 0.75f,
+                        "1" to 1f,
+                        "still" to 0f,
+                    )) {
+                        val bitmap =
+                            Bitmap.createBitmap(
+                                view.width,
+                                view.height,
+                                Bitmap.Config.ARGB_8888,
+                                true,
+                                android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB),
+                            )
+                        view.drawQuartet(android.graphics.Canvas(bitmap), phase, label != "still")
+                        File(directory, "android-${if (dark) "dark" else "light"}-$scale-$label.png").outputStream().use {
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                        }
+                        bitmap.recycle()
+                    }
+                }
+            }
+        }
     }
 
     @Test fun controlled_pending_to_loaded_capture() {
@@ -220,6 +280,7 @@ class TagLoadingRegressionTest {
                 assertEquals(android.animation.ValueAnimator.areAnimatorsEnabled(), view.isAnimating)
                 assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO, view.importantForAccessibility)
             }
+            exportQuartetFrames()
             capture("pending")
             complete(nextFor(scenario))
             capture("loaded")

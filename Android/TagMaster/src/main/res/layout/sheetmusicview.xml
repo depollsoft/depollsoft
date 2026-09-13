@@ -18,13 +18,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <depollsoft.tagmaster.BarberPoleLoadingView
             android:id="@+id/sheetMusicLoading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.TagMaster.CompactLoader"
             android:layout_gravity="center"
-            android:contentDescription="@string/detail_loading"
-            android:indeterminate="true" />
+            android:contentDescription="@string/detail_loading" />
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/keyButton"

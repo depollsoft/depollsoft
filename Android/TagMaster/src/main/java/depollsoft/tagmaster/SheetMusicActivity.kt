@@ -39,6 +39,7 @@ class SheetMusicActivity : AppCompatActivity() {
     var rotation: Float by trackable(0f) { loadImage() }
     lateinit var photoView: PhotoView
     lateinit var keyButton: ExtendedFloatingActionButton
+    private var imageLoading by trackable(false)
     private var touchInProgress = false
     private var playingNote: Note? by trackable()
     private val clearTouchState = Runnable { touchInProgress = false }
@@ -59,7 +60,7 @@ class SheetMusicActivity : AppCompatActivity() {
         keyButton.applyBottomInsetsAsMargin()
         keyButton.extend()
         bindTo(R.id.keyButton, "Activated", { playingNote?.isPlaying == true })
-        bindTo(R.id.sheetMusicLoading, "Visibility", { drawable == null }, BoolConverter.get())
+        bindTo(R.id.sheetMusicLoading, "Loading", { imageLoading && drawable == null })
         bindTo(R.id.keyButton, "Visibility", { tag?.keyNote }, BoolConverter.get())
         bindTo(R.id.keyButton, "Text", { tag?.writtenKey })
         bindTo(R.id.keyButton, "ContentDescription", {
@@ -162,61 +163,66 @@ class SheetMusicActivity : AppCompatActivity() {
         val imageRotation = rotation
         viewScope.launch {
             loadMutex.withLock {
-                val bitmap =
-                    withContext(Dispatchers.IO) {
-                        try {
-                            var result: Bitmap? = null
-                            if (intent.type == "application/pdf") {
-                                contentResolver.openFileDescriptor(requireNotNull(intent.data), "r").use { fd ->
-                                    PdfRenderer(requireNotNull(fd)).use { renderer ->
-                                        val dpi = minOf(resources.displayMetrics.densityDpi, 200)
-                                        for (pageIndex in 0 until renderer.pageCount) {
-                                            ensureActive()
-                                            val rendered =
-                                                renderer.openPage(pageIndex).use { page ->
-                                                    val width = dpi * page.width / 72
-                                                    val height = dpi * page.height / 72
-                                                    require(width.toLong() * height * 4 <= MAX_BITMAP_SIZE)
-                                                    Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
-                                                        it.eraseColor(Color.WHITE)
-                                                        page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                imageLoading = true
+                try {
+                    val bitmap =
+                        withContext(Dispatchers.IO) {
+                            try {
+                                var result: Bitmap? = null
+                                if (intent.type == "application/pdf") {
+                                    contentResolver.openFileDescriptor(requireNotNull(intent.data), "r").use { fd ->
+                                        PdfRenderer(requireNotNull(fd)).use { renderer ->
+                                            val dpi = minOf(resources.displayMetrics.densityDpi, 200)
+                                            for (pageIndex in 0 until renderer.pageCount) {
+                                                ensureActive()
+                                                val rendered =
+                                                    renderer.openPage(pageIndex).use { page ->
+                                                        val width = dpi * page.width / 72
+                                                        val height = dpi * page.height / 72
+                                                        require(width.toLong() * height * 4 <= MAX_BITMAP_SIZE)
+                                                        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+                                                            it.eraseColor(Color.WHITE)
+                                                            page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                                        }
                                                     }
-                                                }
-                                            val pageBitmap = rotateBitmap(rendered, imageRotation)
-                                            if (pageBitmap !== rendered) rendered.recycle()
-                                            val previous = result
-                                            result =
-                                                if (previous == null) {
-                                                    pageBitmap
-                                                } else {
-                                                    appendBitmap(previous, pageBitmap).also {
-                                                        previous.recycle()
-                                                        pageBitmap.recycle()
+                                                val pageBitmap = rotateBitmap(rendered, imageRotation)
+                                                if (pageBitmap !== rendered) rendered.recycle()
+                                                val previous = result
+                                                result =
+                                                    if (previous == null) {
+                                                        pageBitmap
+                                                    } else {
+                                                        appendBitmap(previous, pageBitmap).also {
+                                                            previous.recycle()
+                                                            pageBitmap.recycle()
+                                                        }
                                                     }
-                                                }
+                                            }
                                         }
                                     }
+                                } else {
+                                    contentResolver.openInputStream(requireNotNull(intent.data)).use { stream ->
+                                        val decoded = requireNotNull(BitmapFactory.decodeStream(stream))
+                                        result = rotateBitmap(decoded, imageRotation)
+                                        if (result !== decoded) decoded.recycle()
+                                    }
                                 }
-                            } else {
-                                contentResolver.openInputStream(requireNotNull(intent.data)).use { stream ->
-                                    val decoded = requireNotNull(BitmapFactory.decodeStream(stream))
-                                    result = rotateBitmap(decoded, imageRotation)
-                                    if (result !== decoded) decoded.recycle()
-                                }
+                                result?.takeIf { it.byteCount <= MAX_BITMAP_SIZE }
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
+                            } catch (_: Exception) {
+                                null
                             }
-                            result?.takeIf { it.byteCount <= MAX_BITMAP_SIZE }
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (_: Exception) {
-                            null
+                        }
+                    if (!isFinishing && !isDestroyed) {
+                        if (bitmap == null) {
+                            openExternally(fallback = true)
+                        } else {
+                            drawable = bitmap.toDrawable(resources)
                         }
                     }
-                if (!isFinishing && !isDestroyed) {
-                    if (bitmap == null) {
-                        openExternally(fallback = true)
-                    } else {
-                        drawable = bitmap.toDrawable(resources)
-                    }
+                } finally {
+                    imageLoading = false
                 }
             }
         }

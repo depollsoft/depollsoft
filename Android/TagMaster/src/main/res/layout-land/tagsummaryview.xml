@@ -183,15 +183,10 @@
                                 android:textAppearance="?attr/textAppearanceBodyMedium" />
                         </LinearLayout>
 
-                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                        <depollsoft.tagmaster.BarberPoleLoadingView
                             android:id="@+id/ratingSubmitProgress"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:indeterminate="true"
-                            android:visibility="gone"
-                            android:contentDescription="@string/detail_submitting_rating"
-                            app:indicatorSize="24dp"
-                            app:trackThickness="2dp" />
+                            style="@style/Widget.TagMaster.CompactLoader"
+                            android:contentDescription="@string/detail_submitting_rating" />
 
                         <ImageButton
                             android:id="@+id/rateButton"
@@ -332,16 +327,11 @@
                         android:text="@string/SheetMusic"
                         app:icon="@drawable/ic_sheet_music" />
 
-                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                    <depollsoft.tagmaster.BarberPoleLoadingView
                         android:id="@+id/sheetMusicProgress"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/Widget.TagMaster.CompactLoader"
                         android:layout_marginStart="8dp"
-                        android:indeterminate="true"
-                        android:visibility="gone"
-                        android:contentDescription="@string/detail_loading"
-                        app:indicatorSize="24dp"
-                        app:trackThickness="2dp" />
+                        android:contentDescription="@string/detail_loading" />
                 </LinearLayout>
             </TableLayout>
 

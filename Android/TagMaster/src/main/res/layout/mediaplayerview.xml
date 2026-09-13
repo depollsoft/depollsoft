@@ -44,16 +44,11 @@
             app:iconPadding="0dp"
             app:iconSize="24dp" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <depollsoft.tagmaster.BarberPoleLoadingView
             android:id="@+id/trackLoadingIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.TagMaster.CompactLoader"
             android:layout_marginStart="8dp"
-            android:indeterminate="true"
-            android:visibility="gone"
-            android:contentDescription="@string/detail_track_loading"
-            app:indicatorSize="24dp"
-            app:trackThickness="2dp" />
+            android:contentDescription="@string/detail_track_loading" />
 
         <TextView
             android:id="@+id/counterTextView"

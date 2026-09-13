@@ -102,17 +102,11 @@
             android:fontFamily="sans-serif-medium"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
+        <depollsoft.tagmaster.BarberPoleLoadingView
             android:id="@+id/randomTagProgress"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            style="@style/Widget.TagMaster.CompactLoader"
             android:layout_marginStart="16dp"
-            android:contentDescription="@string/home_loading_random"
-            android:indeterminate="true"
-            android:visibility="gone"
-            app:indicatorSize="24dp"
-            app:indicatorInset="0dp"
-            app:trackThickness="2dp" />
+            android:contentDescription="@string/home_loading_random" />
     </LinearLayout>
 
     <LinearLayout

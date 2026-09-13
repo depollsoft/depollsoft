@@ -7,6 +7,7 @@
 #import "DPTeachableTagsController.h"
 #import "DPSettingsController.h"
 #import "DPTagTracksController.h"
+#import "TMBarberPoleLoadingView.h"
 #import "DPTagViewController.h"
 #import "DPFileCache.h"
 #import "DPRemoteLocation.h"

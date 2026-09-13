@@ -22,6 +22,47 @@ import org.robolectric.annotation.GraphicsMode
 @Config(application = Application::class, sdk = [28])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BarberPoleLoadingViewTest {
+    @Test fun generated_stripe_matches_original_android_control_point_transform() =
+        withPole { pole ->
+            val source =
+                pole.resources.getXml(R.drawable.ic_barberpole).use { xml ->
+                    while (xml.next() != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                        if (xml.name == "path") break
+                    }
+                    androidx.core.graphics.PathParser.createPathFromPathData(
+                        xml.getAttributeValue("http://schemas.android.com/apk/res/android", "pathData"),
+                    )!!
+                }
+            val original = android.graphics.PathMeasure(source, false)
+            repeat(5) { assertTrue(original.nextContour()) }
+            val expected = android.graphics.Path()
+            original.getSegment(0f, original.length, expected, true)
+            expected.close()
+            expected.transform(android.graphics.Matrix().apply { setRotate(-26f) })
+            val bounds = android.graphics.RectF()
+            expected.computeBounds(bounds, true)
+            expected.transform(android.graphics.Matrix().apply { setScale(1.4f, 1f, bounds.centerX(), bounds.centerY()) })
+            val actual = BarberPoleLogo(pole.resources).stripe
+            val actualBounds = android.graphics.RectF()
+            expected.computeBounds(bounds, true)
+            actual.computeBounds(actualBounds, true)
+            assertEquals(bounds.left, actualBounds.left, 0.001f)
+            assertEquals(bounds.top, actualBounds.top, 0.001f)
+            assertEquals(bounds.right, actualBounds.right, 0.001f)
+            assertEquals(bounds.bottom, actualBounds.bottom, 0.001f)
+            val a = android.graphics.PathMeasure(expected, false)
+            val b = android.graphics.PathMeasure(actual, false)
+            assertEquals(a.length, b.length, 0.001f)
+            val pointA = FloatArray(2)
+            val pointB = FloatArray(2)
+            for (sample in 0..100) {
+                a.getPosTan(a.length * sample / 100f, pointA, null)
+                b.getPosTan(b.length * sample / 100f, pointB, null)
+                assertEquals("Canonical stripe x at $sample", pointA[0], pointB[0], 0.001f)
+                assertEquals("Canonical stripe y at $sample", pointA[1], pointB[1], 0.001f)
+            }
+        }
+
     @Test fun stripes_move_but_logo_finials_collars_and_alpha_do_not() =
         withPole { pole ->
             for (size in listOf(68 to 116, 340 to 580, 400 to 580)) {

@@ -7,6 +7,7 @@
 //
 
 #import "DPTagSummaryController.h"
+#import "TMBarberPoleLoadingView.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPTextView.h"
@@ -157,6 +158,9 @@
 @property (nonatomic, strong) DPPitchPipeButton *keyButton;
 @property (nonatomic, strong) UILabel *classicTagNumberLabel;
 @property (nonatomic, strong) UIButton *sheetMusicButton;
+@property (nonatomic, strong) UIStackView *sheetMusicAction;
+@property (nonatomic, strong) TMBarberPoleLoadingView *sheetMusicLoading;
+@property (nonatomic, strong) TMBarberPoleLoadingView *ratingLoading;
 @property (nonatomic, strong) UILabel *lyricsLabel;
 @property (nonatomic, strong) UILabel *notesLabel;
 @property (nonatomic, strong) UILabel *ratingHeader;
@@ -209,7 +213,7 @@
     [grid setView:classicTagNumberLabel hidden:self.tag.classicTagNumber == 0];
     [grid setView:classicTagNumberHeader hidden:self.tag.classicTagNumber == 0];
     
-    [grid setView:sheetMusicButton hidden:!self.tag.sheetMusicUri];
+    [grid setView:self.sheetMusicAction hidden:!self.tag.sheetMusicUri];
     
     lyricsLabel.text = self.tag.lyrics;
     [grid setView:lyricsLabel hidden:!self.tag.lyrics];
@@ -332,7 +336,9 @@
     [grid addSubview:typeHeader row:4 column:0];
     [grid addSubview:keyHeader row:5 column:0];
     [grid addSubview:classicTagNumberHeader row:6 column:0];
-    [grid addSubview:sheetMusicButton row:7 column:0 rowSpan:1 colSpan:3];
+    self.sheetMusicLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Opening sheet music…"];
+    self.sheetMusicAction = [self actionRowForButton:sheetMusicButton loader:self.sheetMusicLoading];
+    [grid addSubview:self.sheetMusicAction row:7 column:0 rowSpan:1 colSpan:3];
     [grid addSubview:[lyricsHeader alignTop] row:8 column:0];
     [grid addSubview:[notesHeader alignTop] row:9 column:0];
     
@@ -350,7 +356,9 @@
     ratingValue.spacing = 4;
     ratingLabel.textAlignment = NSTextAlignmentCenter;
     ratingLabel.accessibilityLabel = @"Rating out of 5";
-    UIStackView *ratingGrid = [[UIStackView alloc] initWithArrangedSubviews:@[ratingValue, ratingButton]];
+    self.ratingLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Sending rating…"];
+    UIStackView *ratingAction = [self actionRowForButton:ratingButton loader:self.ratingLoading];
+    UIStackView *ratingGrid = [[UIStackView alloc] initWithArrangedSubviews:@[ratingValue, ratingAction]];
     ratingGrid.axis = UILayoutConstraintAxisHorizontal;
     ratingGrid.alignment = UIStackViewAlignmentCenter;
     ratingGrid.spacing = 8;
@@ -403,15 +411,31 @@
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
-/// Shows progress on the control that started the request and blocks only that control.
+// Reserve a neutral accessory slot, outside the disabled/filled button. Hiding
+// the pole never changes button width, title/icon configuration or hit area.
+- (UIStackView *)actionRowForButton:(UIButton *)button loader:(TMBarberPoleLoadingView *)loader {
+    UIView *slot = [UIView new];
+    [slot addSubview:loader];
+    loader.translatesAutoresizingMaskIntoConstraints = NO;
+    CGSize size = loader.intrinsicContentSize;
+    [NSLayoutConstraint activateConstraints:@[
+        [slot.widthAnchor constraintEqualToConstant:size.width],
+        [slot.heightAnchor constraintEqualToConstant:size.height],
+        [loader.centerXAnchor constraintEqualToAnchor:slot.centerXAnchor],
+        [loader.centerYAnchor constraintEqualToAnchor:slot.centerYAnchor],
+        [loader.widthAnchor constraintEqualToConstant:size.width],
+        [loader.heightAnchor constraintEqualToConstant:size.height]
+    ]];
+    UIStackView *row = [[UIStackView alloc] initWithArrangedSubviews:@[button, slot]];
+    row.axis = UILayoutConstraintAxisHorizontal;
+    row.alignment = UIStackViewAlignmentCenter;
+    row.spacing = 8;
+    return row;
+}
+
 - (void)setButton:(UIButton *)button busy:(BOOL)busy {
-    UIButtonConfiguration *configuration = button.configuration;
-    if (configuration) {
-        configuration.showsActivityIndicator = busy;
-        button.configuration = configuration;
-    } else if (button == self.ratingButton) {
-        [button setTitle:busy ? @"Sending…" : @"Rate" forState:UIControlStateNormal];
-    }
+    TMBarberPoleLoadingView *loader = button == self.ratingButton ? self.ratingLoading : self.sheetMusicLoading;
+    if (busy) [loader startAnimating]; else [loader stopAnimating];
     button.enabled = !busy;
 }
 

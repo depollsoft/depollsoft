@@ -16,6 +16,7 @@
 #import "DPSearchViewController.h"
 #import "DPTagQueryViewController.h"
 #import "TMLogoArtwork.h"
+#import "TMQuartetArtwork.h"
 #import "TMLogoBackgroundView.h"
 
 #import "DPTag.h"
@@ -1002,6 +1003,86 @@ TM_CAPTURE_IMPL
     for (DPTagPageControllerBase *page in detail.viewControllers) XCTAssertEqual(page.tag, tag);
     [self assertNotes:detail animated:NO];
 }
+- (void)testMatchedQuartetNativeFramesAndGlassPendingJourney {
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    NSString *directory = [NSTemporaryDirectory() stringByAppendingPathComponent:@"quartet-frames"];
+    [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
+    for (NSNumber *style in @[@(UIUserInterfaceStyleLight), @(UIUserInterfaceStyleDark)]) {
+        NSString *theme = style.integerValue == UIUserInterfaceStyleDark ? @"dark" : @"light";
+        DPTagViewController *detail = [DPTagViewController new];
+        detail.tagId = 1809;
+        NSUInteger request = self.requests.count - 1;
+        [self attach:detail size:UIScreen.mainScreen.bounds.size style:style.integerValue large:NO];
+        [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+        [self assertPending:detail];
+        [self assertNotes:detail animated:YES];
+        NSArray<CALayer *> *liveNotes = [[detail valueForKey:@"quartetStaff"] valueForKey:@"notes"];
+        CFTimeInterval start = [[liveNotes.firstObject animationForKey:@"gather"] beginTime];
+        for (NSUInteger i = 0; i < liveNotes.count; i++) {
+            CAKeyframeAnimation *animation = (CAKeyframeAnimation *)[liveNotes[i] animationForKey:@"gather"];
+            XCTAssertEqualObjects(animation.values, TMQuartetSamples(i));
+            XCTAssertEqualObjects(animation.calculationMode, kCAAnimationLinear);
+            XCTAssertEqualWithAccuracy(animation.duration, 2.8, 0.00001);
+            XCTAssertEqual(animation.beginTime, start);
+            XCTAssertNil(animation.timingFunctions);
+            XCTAssertEqualObjects(animation.values.firstObject, animation.values.lastObject);
+        }
+        [self capture:[NSString stringWithFormat:@"tagmaster-quartet-matched-ios-%@-%@-pending", device, theme]];
+        UIView *staff = [[NSClassFromString(@"TMQuartetStaffView") alloc] initWithFrame:CGRectZero];
+        staff.overrideUserInterfaceStyle = style.integerValue;
+        [staff updateTraitsIfNeeded];
+        for (NSNumber *scale in @[@1, @10]) {
+            CGSize size = CGSizeMake(TMQuartetWidth * scale.integerValue, TMQuartetHeight * scale.integerValue);
+            staff.frame = (CGRect){CGPointZero, size};
+            [staff setNeedsLayout]; [staff layoutIfNeeded];
+            for (NSString *label in @[@"0", @"0.125", @"0.25", @"0.5", @"0.75", @"1", @"still"]) {
+                NSArray<CALayer *> *notes = [staff valueForKey:@"notes"];
+                [CATransaction begin]; [CATransaction setDisableActions:YES];
+                for (NSUInteger i = 0; i < notes.count; i++) {
+                    NSArray<NSNumber *> *values = TMQuartetSamples(i);
+                    CGFloat position = label.doubleValue * (values.count - 1);
+                    NSUInteger index = MIN((NSUInteger)position, values.count - 2);
+                    CGFloat y = [label isEqualToString:@"still"] ? TMQuartetStill[i] : values[index].doubleValue + (values[index + 1].doubleValue - values[index].doubleValue) * (position - index);
+                    notes[i].transform = CATransform3DMakeTranslation(0, y, 0);
+                }
+                [CATransaction commit];
+                CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+                CGContextRef context = CGBitmapContextCreate(NULL, size.width, size.height, 8, 0, space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+                CGContextTranslateCTM(context, 0, size.height); CGContextScaleCTM(context, 1, -1);
+                [staff.layer renderInContext:context];
+                CGImageRef image = CGBitmapContextCreateImage(context);
+                NSData *png = UIImagePNGRepresentation([UIImage imageWithCGImage:image]);
+                NSString *name = [NSString stringWithFormat:@"ios-%@-%@-%@-%@.png", device, theme, scale, label];
+                XCTAssertTrue([png writeToFile:[directory stringByAppendingPathComponent:name] atomically:YES]);
+                CGImageRelease(image); CGContextRelease(context); CGColorSpaceRelease(space);
+            }
+        }
+        [self finish:request tag:[self tag:1809]];
+        [self assertLoaded:detail tag:[detail valueForKey:@"tag"]];
+        [self drainUIKit]; [self layout];
+        [self checkTabDistribution:detail];
+        [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@-summary", device, theme]];
+        [self exercisePageSelection:detail];
+        self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+        [self drainUIKit]; [self layout]; [self layout];
+        [self checkTabDistribution:detail];
+        [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@-ax5", device, theme]];
+        Method transparency = class_getInstanceMethod(TMPageSwitcher.class, NSSelectorFromString(@"reduceTransparencyEnabled"));
+        IMP originalTransparency = method_getImplementation(transparency);
+        IMP opaque = imp_implementationWithBlock(^BOOL(id view) { return YES; });
+        method_setImplementation(transparency, opaque);
+        @try {
+            [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceTransparencyStatusDidChangeNotification object:nil];
+            XCTAssertNil(((UIVisualEffectView *)[detail.tabBar valueForKey:@"materialView"]).effect);
+            [self checkTabDistribution:detail];
+            [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@-opaque-ax5", device, theme]];
+        } @finally {
+            method_setImplementation(transparency, originalTransparency); imp_removeBlock(opaque);
+            [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceTransparencyStatusDidChangeNotification object:nil];
+        }
+    }
+}
+
 - (void)testPreViewPendingDelayedSuccessAndSingleAnnouncement {
     DPTagViewController *detail = [DPTagViewController new];
     detail.tagId = 1809;
@@ -1160,6 +1241,12 @@ TM_CAPTURE_IMPL
     [detail endAppearanceTransition];
     [self assertNotes:detail animated:YES];
     UIView *staff = [detail valueForKey:@"quartetStaff"];
+    UIScrollView *scroll = ((UIView *)[detail valueForKey:@"initialLoadingView"]).subviews.firstObject;
+    CGPoint offset = scroll.contentOffset;
+    scroll.contentOffset = CGPointMake(0, 10000);
+    [self assertNotes:detail animated:NO];
+    scroll.contentOffset = offset;
+    [self assertNotes:detail animated:YES];
     staff.hidden = YES;
     [self assertNotes:detail animated:NO];
     staff.hidden = NO;
@@ -1194,6 +1281,7 @@ TM_CAPTURE_IMPL
     XCTAssertFalse(bar.isAccessibilityElement);
     XCTAssertEqual(bar.buttons.count, 4);
     CGRect safe = controller.view.safeAreaLayoutGuide.layoutFrame;
+    XCTAssertEqualWithAccuracy(CGRectGetMaxY(controller.rootView.frame), CGRectGetMinY(bar.frame), 0.5);
     NSMutableArray *rects = [NSMutableArray array];
     for (NSUInteger i = 0; i < bar.buttons.count; i++) {
         UIButton *button = bar.buttons[i];
@@ -1214,6 +1302,10 @@ TM_CAPTURE_IMPL
         XCTAssertLessThanOrEqual(CGRectGetMaxY(button.titleLabel.frame), button.bounds.size.height);
         UIView *hit = [controller.view hitTest:[button convertPoint:CGPointMake(button.bounds.size.width / 2, button.bounds.size.height / 2) toView:controller.view] withEvent:nil];
         XCTAssertEqual(hit, button, @"Hit %@ instead of %@, bar %@", hit, button, bar);
+        for (NSNumber *x in @[@1, @(button.bounds.size.width - 1)]) {
+            CGPoint corner = [button convertPoint:CGPointMake(x.doubleValue, 1) toView:controller.view];
+            XCTAssertEqual([controller.view hitTest:corner withEvent:nil], button, @"Material corners cannot shrink rectangular targets");
+        }
     }
     NSLog(@"TM_WIDTH %@ safe=%@ slots=%@ font=%@", NSStringFromClass(controller.class), NSStringFromCGRect(safe), rects, bar.traitCollection.preferredContentSizeCategory);
 }
@@ -1385,7 +1477,7 @@ TM_CAPTURE_IMPL
                 [self drainUIKit]; [self layout]; [self layout];
             }
             [self checkTabDistribution:controller];
-            [self capture:[NSString stringWithFormat:@"tagmaster-ios-fullwidth-%@-%@", device, page == 0 ? @"browse" : @"detail"]];
+            [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@", device, page == 0 ? @"browse" : @"detail"]];
             controller.selectedIndex = 2;
             [nav pushViewController:[UIViewController new] animated:NO];
             [self drainUIKit];
@@ -1407,26 +1499,73 @@ TM_CAPTURE_IMPL
     for (NSUInteger i = 0; i < 3; i++) components[i] = components[i] <= 0.04045 ? components[i] / 12.92 : pow((components[i] + 0.055) / 1.055, 2.4);
     return components[0] * 0.2126 + components[1] * 0.7152 + components[2] * 0.0722;
 }
-- (void)testPageCaptionsHaveReadableContrastOnCharcoal {
+- (void)testPageCaptionsUseReadableMaterialAndAccessibleFallback {
     TMPageSwitcher *bar = [TMPageSwitcher new];
     NSMutableArray *items = [NSMutableArray array];
     for (NSString *title in @[@"Summary", @"Details", @"Tracks", @"Videos"]) {
         [items addObject:[[UITabBarItem alloc] initWithTitle:title image:nil tag:items.count]];
     }
     bar.items = items;
-    for (UITabBarItem *selected in items) {
-        bar.selectedItem = selected;
+    __block BOOL reduced = NO;
+    __block BOOL motion = NO;
+    Method transparencyMethod = class_getInstanceMethod(TMPageSwitcher.class, NSSelectorFromString(@"reduceTransparencyEnabled"));
+    Method motionMethod = class_getInstanceMethod(TMPageSwitcher.class, NSSelectorFromString(@"reduceMotionEnabled"));
+    IMP oldTransparency = method_getImplementation(transparencyMethod);
+    IMP oldMotion = method_getImplementation(motionMethod);
+    IMP transparencyMock = imp_implementationWithBlock(^BOOL(id view) { return reduced; });
+    IMP motionMock = imp_implementationWithBlock(^BOOL(id view) { return motion; });
+    method_setImplementation(transparencyMethod, transparencyMock);
+    method_setImplementation(motionMethod, motionMock);
+    @try {
+        UIVisualEffectView *material = [bar valueForKey:@"materialView"];
+        XCTAssertTrue([material isKindOfClass:UIVisualEffectView.class]);
+        XCTAssertEqualObjects(bar.backgroundColor, UIColor.clearColor);
+        XCTAssertFalse(material.userInteractionEnabled);
         for (NSNumber *style in @[@(UIUserInterfaceStyleLight), @(UIUserInterfaceStyleDark)]) {
             UITraitCollection *traits = [UITraitCollection traitCollectionWithUserInterfaceStyle:style.integerValue];
-            for (UIButton *button in bar.buttons) {
-                UIColor *foreground = button.configuration.baseForegroundColor;
-                UIColor *fill = button.configuration.background.backgroundColor;
-                CGFloat foregroundLuminance = [self luminance:foreground on:bar.backgroundColor traits:traits];
-                CGFloat fillLuminance = [self luminance:fill on:bar.backgroundColor traits:traits];
-                XCTAssertGreaterThanOrEqual((MAX(foregroundLuminance, fillLuminance) + 0.05) /
-                                           (MIN(foregroundLuminance, fillLuminance) + 0.05), 4.5);
+            bar.overrideUserInterfaceStyle = style.integerValue;
+            for (NSNumber *reduce in @[@NO, @YES, @NO]) {
+                reduced = reduce.boolValue;
+                [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceTransparencyStatusDidChangeNotification object:nil];
+                if (reduced) {
+                    XCTAssertNil(material.effect);
+                    XCTAssertEqualObjects(material.backgroundColor, UIColor.secondarySystemBackgroundColor);
+                } else {
+                    XCTAssertEqualObjects(material.backgroundColor, UIColor.clearColor);
+                    if (@available(iOS 26.0, *)) {
+                        XCTAssertTrue([material.effect isKindOfClass:UIGlassEffect.class]);
+                        XCTAssertTrue(((UIGlassEffect *)material.effect).interactive);
+                        motion = YES;
+                        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+                        XCTAssertFalse(((UIGlassEffect *)material.effect).interactive);
+                        motion = NO;
+                        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+                    } else {
+                        XCTAssertTrue([material.effect isKindOfClass:UIBlurEffect.class]);
+                    }
+                }
+                for (UITabBarItem *selected in items) {
+                    bar.selectedItem = selected;
+                    for (UIButton *button in bar.buttons) {
+                        XCTAssertEqualObjects(button.configuration.baseForegroundColor, UIColor.labelColor);
+                        XCTAssertEqual(button.configuration.background.strokeWidth, button.selected ? 2 : 0);
+                        XCTAssertEqual((button.accessibilityTraits & UIAccessibilityTraitSelected) != 0, button.selected);
+                        // Only an opaque fallback has a known background for a contrast formula.
+                        // Live glass is inspected in native captures, not scored against an invented solid color.
+                        if (reduced) {
+                            UIColor *base = material.backgroundColor;
+                            CGFloat foreground = [self luminance:button.configuration.baseForegroundColor on:base traits:traits];
+                            CGFloat fill = [self luminance:button.configuration.background.backgroundColor on:base traits:traits];
+                            XCTAssertGreaterThanOrEqual((MAX(foreground, fill) + 0.05) / (MIN(foreground, fill) + 0.05), 4.5);
+                        }
+                    }
+                }
             }
         }
+    } @finally {
+        method_setImplementation(transparencyMethod, oldTransparency);
+        method_setImplementation(motionMethod, oldMotion);
+        imp_removeBlock(transparencyMock); imp_removeBlock(motionMock);
     }
 }
 - (void)testNativePendingAndLoadedCapturesAndAdaptiveLayout {
@@ -1453,8 +1592,8 @@ TM_CAPTURE_IMPL
             XCTAssertGreaterThanOrEqual(label.bounds.size.height + 1, [label sizeThatFits:CGSizeMake(label.bounds.size.width, CGFLOAT_MAX)].height);
         }
         UIView *staff = [detail valueForKey:@"quartetStaff"];
-        XCTAssertEqualWithAccuracy(staff.bounds.size.width, 204, 1);
-        XCTAssertEqualWithAccuracy(staff.bounds.size.height, 88, 1);
+        XCTAssertEqualWithAccuracy(staff.bounds.size.width, TMQuartetWidth, 1);
+        XCTAssertEqualWithAccuracy(staff.bounds.size.height, TMQuartetHeight, 1);
         NSString *suffix = variant == 0 ? @"light" : (large ? @"dark-ax5" : @"dark");
         NSString *name = [NSString stringWithFormat:@"tagmaster-ios-loading-%@-%@", device, suffix];
         [self capture:[name stringByAppendingString:@"-pending"]];
@@ -1638,6 +1777,19 @@ TM_CAPTURE_IMPL
 }
 @end
 
+#import "TMBarberPoleLoadingView.h"
+#import <AVKit/AVKit.h>
+
+@interface TMHeldRatingTag : TMRatingTag
+@property (nonatomic, strong) dispatch_semaphore_t gate;
+@end
+@implementation TMHeldRatingTag
+- (void)rate:(NSUInteger)rating {
+    if (self.gate) dispatch_semaphore_wait(self.gate, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC));
+    [super rate:rating];
+}
+@end
+
 // In-memory Home fixtures never write favorites or contact the tag provider.
 @interface TMFooterPitchTests : TMPolishRegressionTests
 @property UIWindow *window;
@@ -1703,6 +1855,206 @@ TM_CAPTURE_IMPL
     }
     return links;
 }
+- (void)assertCompact:(TMBarberPoleLoadingView *)pole pending:(BOOL)pending {
+    XCTAssertTrue([pole isKindOfClass:TMBarberPoleLoadingView.class]);
+    XCTAssertTrue(pole.compact);
+    XCTAssertEqual(pole.isAnimating, pending);
+    XCTAssertEqual(pole.hidden, !pending);
+    XCTAssertEqualWithAccuracy(pole.bounds.size.height, TMLoaderCompactHeight, 0.1);
+    // UIKit may reserve a 36pt navigation item; only the artwork is compact.
+    XCTAssertLessThanOrEqual(((CALayer *)[pole valueForKey:@"logoLayer"]).frame.size.width, 20);
+    CALayer *logo = [pole valueForKey:@"logoLayer"];
+    XCTAssertLessThanOrEqual(logo.frame.size.height, TMLoaderCompactHeight + 0.01);
+    XCTAssertEqualWithAccuracy(logo.transform.m11, logo.transform.m22, 0.000001);
+}
+- (void)compactComparisonDark:(BOOL)dark {
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
+    UIImage *image = [[[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(500, 230) format:format] imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+        [(dark ? [UIColor colorWithWhite:0.145 alpha:1] : [UIColor colorWithWhite:0.98 alpha:1]) setFill];
+        UIRectFill(CGRectMake(0, 0, 500, 230));
+        NSDictionary *text = @{NSFontAttributeName:[UIFont systemFontOfSize:18], NSForegroundColorAttributeName:dark ? UIColor.whiteColor : UIColor.blackColor};
+        [@"iOS • same artwork, phase 0.25" drawAtPoint:CGPointMake(16, 8) withAttributes:text];
+        for (NSUInteger i = 0; i < 2; i++) {
+            TMBarberPoleLoadingView *pole = i == 0 ? [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Loading"] : [[TMBarberPoleLoadingView alloc] initWithFrame:CGRectMake(0, 0, 34, 58)];
+            pole.overrideUserInterfaceStyle = dark ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+            pole.hidden = NO;
+            // A detached comparison view must resolve its override before reading its palette.
+            [pole updateTraitsIfNeeded]; [pole layoutIfNeeded];
+            CALayer *stripes = [pole valueForKey:@"stripes"];
+            stripes.transform = CATransform3DMakeTranslation(0, .25 * TMLoaderStripeStep * TMLoaderPhaseMultiplier, 0);
+            CGContextSaveGState(ctx.CGContext);
+            CGContextTranslateCTM(ctx.CGContext, 70 + i * 230, 50); CGContextScaleCTM(ctx.CGContext, 2, 2);
+            [pole.layer renderInContext:ctx.CGContext]; CGContextRestoreGState(ctx.CGContext);
+            [(i == 0 ? @"Compact 19×32" : @"Search 34×58") drawAtPoint:CGPointMake(25 + i * 230, 188) withAttributes:text];
+        }
+    }];
+    NSString *file = [NSString stringWithFormat:@"tagmaster-consistent-loading-ios-%@-comparison.jpg", dark ? @"dark" : @"light"];
+    XCTAssertTrue([UIImageJPEGRepresentation(image, .9) writeToFile:[NSTemporaryDirectory() stringByAppendingPathComponent:file] atomically:YES]);
+}
+- (void)testCompactLifecycleAndSizing {
+    UIViewController *host = [UIViewController new];
+    [self mount:host width:UIScreen.mainScreen.bounds.size.width dark:NO large:YES];
+    UIView *slot = [[UIView alloc] initWithFrame:CGRectMake(20, 130, 250, 60)]; slot.clipsToBounds = YES;
+    [host.view addSubview:slot];
+    TMBarberPoleLoadingView *pole = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Loading track"];
+    [slot addSubview:pole]; [pole startAnimating]; [self settle];
+    CALayer *stripes = [pole valueForKey:@"stripes"];
+    XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    pole.frame = CGRectMake(0, 0, 250, 60); [pole layoutIfNeeded];
+    CALayer *logo = [pole valueForKey:@"logoLayer"];
+    XCTAssertEqualWithAccuracy(logo.frame.size.height, 32, .01);
+    XCTAssertEqualWithAccuracy(logo.position.x, 125, .01);
+    slot.hidden = YES; [self settle]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    slot.hidden = NO; [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    pole.frame = CGRectOffset(pole.frame, 0, 100); [self settle]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    pole.frame = CGRectOffset(pole.frame, 0, -100); [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationWillResignActiveNotification object:nil];
+    XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    Method motion = class_getInstanceMethod(TMBarberPoleLoadingView.class, NSSelectorFromString(@"reduceMotionEnabled"));
+    IMP original = method_getImplementation(motion);
+    __block BOOL reduced = YES;
+    IMP mock = imp_implementationWithBlock(^BOOL(id view) { return reduced; });
+    method_setImplementation(motion, mock);
+    @try {
+        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertTrue(pole.isAnimating);
+        reduced = NO;
+        [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    } @finally { method_setImplementation(motion, original); imp_removeBlock(mock); }
+    [pole removeFromSuperview]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    [pole stopAnimating]; [slot addSubview:pole]; [self settle]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    XCTAssertFalse(pole.isAnimating);
+    pole.darkSurface = YES; [pole layoutIfNeeded];
+    XCTAssertTrue(CGColorEqualToColor(((CAShapeLayer *)[pole valueForKey:@"frameLayer"]).fillColor, TMLoaderColor(@"metalDark")));
+    [self compactComparisonDark:NO]; [self compactComparisonDark:YES];
+}
+- (void)testCompactHomeButtonsAndRefreshPending {
+    for (NSNumber *dark in @[@NO, @YES]) {
+        NSString *prefix = [NSString stringWithFormat:@"tagmaster-consistent-loading-ios-%@", dark.boolValue ? @"dark" : @"light"];
+        Method query = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:minimumRating:minimumDownloads:cache:fieldList:));
+        IMP oldQuery = method_getImplementation(query);
+        dispatch_semaphore_t gate = dispatch_semaphore_create(0);
+        IMP queryMock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *q, int n, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort, NSNumber *rating, NSNumber *downloads, BOOL cache, NSString *fields) {
+            dispatch_semaphore_wait(gate, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC));
+            [NSException raise:@"offline" format:@"Controlled pending fixture"]; return nil;
+        });
+        method_setImplementation(query, queryMock);
+        TMTestHome *home = [TMTestHome new];
+        @try {
+            [self mount:home width:UIScreen.mainScreen.bounds.size.width dark:dark.boolValue large:YES];
+            NSDictionary *item = [[home navigationItems] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"title == 'Random Tag'"]].firstObject;
+            ((void (^)(void))item[@"action"])(); [self settle];
+            NSIndexPath *index = [home performSelector:NSSelectorFromString(@"randomTagIndexPath")];
+            [home.tableView scrollToRowAtIndexPath:index atScrollPosition:UITableViewScrollPositionMiddle animated:NO]; [self settle];
+            UITableViewCell *cell = [home.tableView cellForRowAtIndexPath:index];
+            TMBarberPoleLoadingView *pole = (id)cell.accessoryView; [self assertCompact:pole pending:YES];
+            XCTAssertEqualObjects(cell.accessibilityLabel, @"Random Tag, loading"); XCTAssertFalse(pole.isAccessibilityElement);
+            [self capture:[prefix stringByAppendingString:@"-random-row"]];
+            dispatch_semaphore_signal(gate);
+            [self waitUntil:^BOOL { return home.retry != nil; }]; [self settle];
+            XCTAssertNil([home.tableView cellForRowAtIndexPath:index].accessoryView);
+        } @finally { dispatch_semaphore_signal(gate); method_setImplementation(query, oldQuery); imp_removeBlock(queryMock); }
+
+        TMHeldRatingTag *tag = [TMHeldRatingTag new]; tag.title = @"Lost"; tag.parts = 4; tag.rating = 4.5; tag.writtenKey = @"C";
+        tag.gate = dispatch_semaphore_create(0); tag.failRating = YES;
+        TMTestLocation *location = [TMTestLocation new]; location.type = @"pdf";
+        location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
+        tag.sheetMusicUri = location;
+        TMTestSummary *summary = [TMTestSummary new]; summary.busyIndicator = [TMBusyIndicator new]; summary.tag = tag;
+        [self mount:summary width:UIScreen.mainScreen.bounds.size.width dark:dark.boolValue large:NO];
+        UIButton *button = [summary valueForKey:@"ratingButton"], *sheetButton = [summary valueForKey:@"sheetMusicButton"];
+        CGRect ratingFrame = button.frame, sheetFrame = sheetButton.frame;
+        UIImage *star = button.configuration.image, *sheetIcon = sheetButton.configuration.image;
+        [summary rateTag:4]; [self settle];
+        TMBarberPoleLoadingView *ratingPole = [summary valueForKey:@"ratingLoading"];
+        [self assertCompact:ratingPole pending:YES]; XCTAssertFalse(button.enabled);
+        XCTAssertEqualObjects(button.configuration.image, star);
+        [self capture:[prefix stringByAppendingString:@"-rating"]];
+        dispatch_semaphore_signal(tag.gate);
+        [self waitUntil:^BOOL { return summary.retry != nil; }]; [self settle];
+        [self assertCompact:ratingPole pending:NO]; XCTAssertTrue(button.enabled);
+        XCTAssertTrue(CGRectEqualToRect(ratingFrame, button.frame)); XCTAssertEqualObjects(button.configuration.image, star);
+        tag.gate = nil; tag.failRating = NO; summary.retry();
+        [self waitUntil:^BOOL { return [button.accessibilityLabel isEqualToString:@"Rating submitted"]; }];
+        [self assertCompact:ratingPole pending:NO]; XCTAssertEqualObjects(button.configuration.image, star);
+
+        Method download = class_getClassMethod(DPRemoteLocation.class, @selector(dataWithContentsOfURL:error:));
+        IMP oldDownload = method_getImplementation(download);
+        dispatch_semaphore_t sheetGate = dispatch_semaphore_create(0);
+        IMP downloadMock = imp_implementationWithBlock(^NSData *(id cls, NSURL *url, NSError **error) {
+            dispatch_semaphore_wait(sheetGate, dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC)); return nil;
+        });
+        method_setImplementation(download, downloadMock); summary.retry = nil;
+        @try {
+            [summary openSheetMusic]; [self settle];
+            TMBarberPoleLoadingView *sheetPole = [summary valueForKey:@"sheetMusicLoading"];
+            [self assertCompact:sheetPole pending:YES]; XCTAssertFalse(sheetButton.enabled);
+            XCTAssertEqualObjects(sheetButton.configuration.image, sheetIcon);
+            XCTAssertFalse(CGRectIntersectsRect([sheetPole convertRect:sheetPole.bounds toView:summary.view], [sheetButton convertRect:sheetButton.bounds toView:summary.view]));
+            [self capture:[prefix stringByAppendingString:@"-sheet-button"]];
+            dispatch_semaphore_signal(sheetGate); [self waitUntil:^BOOL { return summary.retry != nil; }]; [self settle];
+            [self assertCompact:sheetPole pending:NO]; XCTAssertTrue(sheetButton.enabled);
+            XCTAssertEqualObjects(sheetButton.configuration.image, sheetIcon); XCTAssertTrue(CGRectEqualToRect(sheetFrame, sheetButton.frame));
+        } @finally { dispatch_semaphore_signal(sheetGate); method_setImplementation(download, oldDownload); imp_removeBlock(downloadMock); }
+
+        Method fetch = class_getInstanceMethod(DPTagViewController.class, @selector(fetchTagId:refresh:completion:));
+        IMP oldFetch = method_getImplementation(fetch);
+        __block void (^complete)(DPTag *);
+        IMP fetchMock = imp_implementationWithBlock(^(DPTagViewController *controller, int identifier, BOOL refresh, void (^completion)(DPTag *)) { complete = [completion copy]; });
+        method_setImplementation(fetch, fetchMock);
+        @try {
+            TMTestDetail *detail = [TMTestDetail new]; detail.tagId = 1809; complete(tag);
+            [self mount:detail width:UIScreen.mainScreen.bounds.size.width dark:dark.boolValue large:NO];
+            [detail loadTag:YES]; [self settle];
+            TMBarberPoleLoadingView *navPole = (id)((UIBarButtonItem *)[detail valueForKey:@"loadingBarButton"]).customView;
+            [self assertCompact:navPole pending:YES]; XCTAssertTrue(navPole.darkSurface);
+            XCTAssertEqual(detail.navigationItem.rightBarButtonItems.count, 3);
+            [self capture:[prefix stringByAppendingString:@"-refresh-nav"]];
+            [detail beginAppearanceTransition:NO animated:NO]; [detail endAppearanceTransition];
+            XCTAssertNil([[navPole valueForKey:@"stripes"] animationForKey:@"rotationStripes"]);
+            [detail beginAppearanceTransition:YES animated:NO]; [detail endAppearanceTransition];
+            complete(nil); [self settle]; [self assertCompact:navPole pending:NO];
+            XCTAssertEqual([detail valueForKey:@"tag"], tag); XCTAssertTrue([detail.navigationItem.rightBarButtonItems containsObject:[detail valueForKey:@"refreshBarButton"]]);
+            [detail loadTag:YES]; complete(tag); [self settle]; [self assertCompact:navPole pending:NO];
+        } @finally { method_setImplementation(fetch, oldFetch); imp_removeBlock(fetchMock); }
+    }
+}
+- (void)testCompactTrackAccessoryReadinessAndFailure {
+    Method getter = class_getInstanceMethod(AVPlayerItem.class, @selector(status));
+    IMP original = method_getImplementation(getter);
+    __block AVPlayerItemStatus status = AVPlayerItemStatusUnknown;
+    __block AVPlayerItem *observed;
+    IMP mock = imp_implementationWithBlock(^AVPlayerItemStatus(AVPlayerItem *item) { observed = item; return status; });
+    method_setImplementation(getter, mock);
+    @try {
+        TMTestTracks *tracks = [TMTestTracks new]; tracks.busyIndicator = [TMBusyIndicator new];
+        DPTag *tag = [self tag]; tag.title = @"Lost";
+        TMTestLocation *location = [TMTestLocation new]; location.type = @"mp3";
+        location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
+        tag.tenorTrackUri = location; tracks.tag = tag;
+        [self mount:tracks width:UIScreen.mainScreen.bounds.size.width dark:YES large:YES];
+        UITableView *table = [tracks valueForKey:@"partsTable"]; NSIndexPath *index = [NSIndexPath indexPathForRow:0 inSection:0];
+        [table.delegate tableView:table didSelectRowAtIndexPath:index]; [self settle];
+        UITableViewCell *cell = [table cellForRowAtIndexPath:index];
+        TMBarberPoleLoadingView *pole = (id)cell.accessoryView; [self assertCompact:pole pending:YES];
+        [self capture:@"tagmaster-consistent-loading-ios-dark-track-row"];
+        XCTAssertNotNil(observed);
+        [observed willChangeValueForKey:@"status"]; status = AVPlayerItemStatusFailed; [observed didChangeValueForKey:@"status"];
+        [self waitUntil:^BOOL { return tracks.retry != nil; }];
+        XCTAssertNil(cell.accessoryView); XCTAssertFalse(pole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+        status = AVPlayerItemStatusUnknown; tracks.retry(); [self settle];
+        TMBarberPoleLoadingView *retryPole = (id)cell.accessoryView; [self assertCompact:retryPole pending:YES];
+        // If the table changes its accessory meanwhile, an old completion must not clear it.
+        UIView *replacement = [UIView new]; cell.accessoryView = replacement;
+        [observed willChangeValueForKey:@"status"]; status = AVPlayerItemStatusReadyToPlay; [observed didChangeValueForKey:@"status"];
+        [self waitUntil:^BOOL { return [tracks.captured isKindOfClass:AVPlayerViewController.class]; }];
+        XCTAssertEqual(cell.accessoryView, replacement); XCTAssertFalse(retryPole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+    } @finally { method_setImplementation(getter, original); imp_removeBlock(mock); }
+}
+
 - (void)testFooterNativeSizes {
     Method favorites = class_getClassMethod(DPAppDelegate.class, @selector(favorites));
     Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
@@ -1934,8 +2286,12 @@ TM_CAPTURE_IMPL
     UIView *pole = [[NSClassFromString(@"TMBarberPoleLoadingView") alloc] initWithFrame:CGRectMake(0, 0, 34, 68)];
     CAShapeLayer *metal = [pole valueForKey:@"frameLayer"];
     // CAShapeLayer copies assigned paths; provider identity is checked above.
-    XCTAssertTrue(CGPathEqualToPath(metal.path, silhouette));
-    XCTAssertTrue(CGPathEqualToPath(((CAShapeLayer *)metal.sublayers.firstObject).path, highlights));
+    XCTAssertTrue(CGPathEqualToPath(metal.path, TMLoaderMetalPath()));
+    XCTAssertEqualObjects(metal.fillRule, kCAFillRuleEvenOdd);
+    XCTAssertEqual(metal.sublayers.count, 0, @"Highlights are holes, not white paint");
+    XCTAssertEqual(TMLoaderMetalPath(), TMLoaderMetalPath());
+    XCTAssertEqual(TMLoaderShaftPath(), TMLoaderShaftPath());
+    XCTAssertEqual(TMLoaderStripePath(), TMLoaderStripePath());
     NSString *fixturePath = [[NSBundle bundleForClass:self.class] pathForResource:@"screenbackground@2x" ofType:@"png"];
     XCTAssertNotNil(fixturePath);
     UIImage *fixture = [UIImage imageWithContentsOfFile:fixturePath];
@@ -2026,6 +2382,48 @@ TM_CAPTURE_IMPL
     XCTAssertTrue([UIImageJPEGRepresentation(sheet, 0.9) writeToFile:file atomically:YES]);
 }
 
+// Render the production layer tree, not a second implementation, into explicit sRGB pixels.
+- (void)exportUnifiedFrames:(UIView *)pole dark:(BOOL)dark {
+    CALayer *logo = [pole valueForKey:@"logoLayer"], *stripes = [pole valueForKey:@"stripes"];
+    [stripes removeAnimationForKey:@"rotationStripes"];
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    for (NSNumber *width in @[@340, @34]) {
+        size_t w = width.unsignedIntegerValue, h = w == 340 ? 580 : 58;
+        NSMutableArray<NSData *> *frames = [NSMutableArray array];
+        for (NSNumber *phase in @[@0, @0.25, @0.5, @0.75, @1, @0.001, @0.999]) {
+            [CATransaction begin]; [CATransaction setDisableActions:YES];
+            stripes.transform = CATransform3DMakeTranslation(0, (phase.doubleValue - floor(phase.doubleValue)) * TMLoaderStripeStep * TMLoaderPhaseMultiplier, 0);
+            [CATransaction commit];
+            NSMutableData *pixels = [NSMutableData dataWithLength:w * h * 4];
+            CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+            CGContextRef context = CGBitmapContextCreate(pixels.mutableBytes, w, h, 8, w * 4, space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+            CGContextTranslateCTM(context, 0, h); CGContextScaleCTM(context, 1, -1);
+            CGFloat scale = MIN(w / TMLogoWidth, h / TMLogoHeight);
+            CGContextTranslateCTM(context, (w - TMLogoWidth * scale) / 2, (h - TMLogoHeight * scale) / 2);
+            CGContextScaleCTM(context, scale, scale);
+            [logo renderInContext:context];
+            CGImageRef cg = CGBitmapContextCreateImage(context);
+            UIImage *image = [UIImage imageWithCGImage:cg];
+            NSString *file = [NSString stringWithFormat:@"unified-ios-%@-%@-%zu-%@.png", device, dark ? @"dark" : @"light", w, phase];
+            XCTAssertTrue([UIImagePNGRepresentation(image) writeToFile:[NSTemporaryDirectory() stringByAppendingPathComponent:file] atomically:YES]);
+            [frames addObject:pixels];
+            CGImageRelease(cg); CGContextRelease(context); CGColorSpaceRelease(space);
+        }
+        XCTAssertEqualObjects(frames[0], frames[4], @"Exact loop endpoint");
+        const uint8_t *first = frames[0].bytes;
+        for (NSUInteger phase = 1; phase < frames.count; phase++) {
+            const uint8_t *next = frames[phase].bytes;
+            NSUInteger changes = 0;
+            for (NSUInteger i = 0; i < w * h * 4; i += 4) {
+                XCTAssertEqual(first[i + 3], next[i + 3], @"Invariant outer alpha");
+                if (memcmp(first + i, next + i, 4)) changes++;
+            }
+            if (phase >= 5) XCTAssertLessThan(changes, w * h / 20, @"Near-wrap continuity");
+        }
+    }
+    stripes.transform = CATransform3DIdentity;
+}
+
 - (void)testBarberPoleLogoGeometry {
     UIView *pole = [[NSClassFromString(@"TMBarberPoleLoadingView") alloc] initWithFrame:CGRectMake(0, 0, 402, 68)];
     [pole layoutIfNeeded];
@@ -2047,29 +2445,40 @@ TM_CAPTURE_IMPL
     XCTAssertFalse(CGPathContainsPoint(metal.path, NULL, CGPointMake(5, 510), NO));
     __block NSUInteger curves = 0, highlights = 0;
     CGPathApplyWithBlock(metal.path, ^(const CGPathElement *element) { if (element->type == kCGPathElementAddCurveToPoint) curves++; });
-    CGPathApplyWithBlock(((CAShapeLayer *)metal.sublayers.firstObject).path, ^(const CGPathElement *element) { if (element->type == kCGPathElementMoveToPoint) highlights++; });
-    XCTAssertEqual(curves, 48); XCTAssertEqual(highlights, 4);
+    CGPathApplyWithBlock(metal.path, ^(const CGPathElement *element) { if (element->type == kCGPathElementMoveToPoint) highlights++; });
+    XCTAssertEqual(curves, 82); XCTAssertEqual(highlights - 1, 4);
+    XCTAssertEqualObjects(metal.fillRule, kCAFillRuleEvenOdd);
     CALayer *stripes = [pole valueForKey:@"stripes"];
+    XCTAssertEqual(stripes.sublayers.count, 13);
+    NSInteger index = TMLoaderRepeatMin;
     for (CAShapeLayer *band in stripes.sublayers) {
-        CGRect repeatBounds = CGPathGetPathBoundingBox(band.path);
-        XCTAssertLessThan(CGRectGetMinY(repeatBounds), 0);
-        XCTAssertLessThan(CGRectGetMaxY(repeatBounds), 800, @"Negative repeats must stay signed, not overflow");
-        XCTAssertGreaterThan(CGRectGetMaxY(repeatBounds), CGRectGetHeight(stripes.bounds));
+        XCTAssertTrue(CGPathEqualToPath(band.path, TMLoaderStripePath()));
+        XCTAssertEqualWithAccuracy(band.transform.m42, index * TMLoaderStripeStep, 0.0001);
+        XCTAssertLessThan(fabs(band.transform.m42), 800, @"Negative repeats must stay signed");
+        index++;
     }
-    CGPoint top = [shaft convertPoint:CGPointMake(60, 0) toLayer:logo];
-    CGPoint bottom = [shaft convertPoint:CGPointMake(60, 307) toLayer:logo];
+    CGRect repeatBounds = CGPathGetPathBoundingBox(TMLoaderStripePath());
+    XCTAssertLessThan(CGRectGetMinY(repeatBounds) + TMLoaderRepeatMin * TMLoaderStripeStep + 216, 0);
+    XCTAssertGreaterThan(CGRectGetMaxY(repeatBounds) + TMLoaderRepeatMax * TMLoaderStripeStep, TMLogoHeight);
+    CALayer *axis = stripes.superlayer;
+    XCTAssertEqual(axis.superlayer, shaft);
+    XCTAssertTrue(CGPathEqualToPath(((CAShapeLayer *)shaft.mask).path, TMLoaderShaftPath()));
+    CGPoint top = [axis convertPoint:CGPointMake(60, 0) toLayer:logo];
+    CGPoint bottom = [axis convertPoint:CGPointMake(60, 307) toLayer:logo];
     XCTAssertGreaterThan(top.x, bottom.x);
-    XCTAssertEqualWithAccuracy(atan2(top.x - bottom.x, bottom.y - top.y) * 180 / M_PI, 25.71, 0.02);
+    XCTAssertEqualWithAccuracy(atan2(top.x - bottom.x, bottom.y - top.y) * 180 / M_PI, 26, 0.0001);
 }
 - (void)verifyLogoPhases:(UIView *)pole reduced:(BOOL *)reduced {
     CALayer *stripes = [pole valueForKey:@"stripes"], *shaft = [pole valueForKey:@"cylinder"], *logo = [pole valueForKey:@"logoLayer"];
     CAShapeLayer *metal = [pole valueForKey:@"frameLayer"];
     CGPathRef stationary = CGPathCreateCopy(metal.path);
+    CGPathRef shaftFringe = CGPathCreateCopyByStrokingPath(TMLoaderShaftPath(), NULL, 4, kCGLineCapRound, kCGLineJoinRound, 1);
     NSMutableArray<UIImage *> *images = [NSMutableArray array];
     NSMutableArray<UIImage *> *screens = [NSMutableArray array];
     for (NSNumber *dark in @[@NO, @YES]) {
         self.window.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
         [self settle];
+        [self exportUnifiedFrames:pole dark:dark.boolValue];
         NSData *first = nil;
         TMLogoBackgroundView *background = [self findLogoBackground:self.window];
         XCTAssertNotNil(background);
@@ -2082,7 +2491,7 @@ TM_CAPTURE_IMPL
             else XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
             [stripes removeAnimationForKey:@"rotationStripes"];
             [CATransaction begin]; [CATransaction setDisableActions:YES];
-            stripes.transform = CATransform3DMakeTranslation(0, phase.doubleValue * 96, 0);
+            stripes.transform = CATransform3DMakeTranslation(0, (phase.doubleValue - floor(phase.doubleValue)) * TMLoaderStripeStep * TMLoaderPhaseMultiplier, 0);
             [CATransaction commit]; [CATransaction flush];
             [self assertNoArtworkAnimations:background.layer];
             XCTAssertEqualObjects(backgroundPixels, [self artworkPixels:[self artworkImage:background]], @"Watermark pixels must not change as loader phase advances");
@@ -2094,17 +2503,17 @@ TM_CAPTURE_IMPL
             for (NSUInteger y = 0; y < 257; y++) for (NSUInteger x = 0; x < 150; x++) {
                 CGPoint p = CGPointMake((x + 0.5) * 299.75076 / 150, (y + 0.5) * 513.52234 / 257);
                 CGPoint local = [shaft convertPoint:p fromLayer:logo];
-                // Exclude the 3-unit antialias fringe when comparing stationary pixels.
-                BOOL inShaft = CGRectContainsPoint(CGRectMake(3, 9, 114, 289), local);
+                // One raster pixel on either side of the shared shaft boundary.
+                BOOL inShaft = CGPathContainsPoint(TMLoaderShaftPath(), NULL, local, NO) || CGPathContainsPoint(shaftFringe, NULL, local, NO);
                 NSUInteger i = (y * 150 + x) * 4;
                 BOOL changed = memcmp(a + i, b + i, 4) != 0;
                 if (a[i + 3] != b[i + 3]) alphaChanges++;
                 if (changed) { if (inShaft) insideChanges++; else outsideChanges++; }
                 BOOL isRed = b[i] > 180 && b[i + 1] < 130 && b[i + 2] < 150;
-                BOOL isBlue = b[i + 2] > 180 && b[i] < 130;
+                BOOL isBlue = b[i + 2] > 150 && b[i] < 50 && b[i + 1] < 130;
                 if (isRed) red++; if (isBlue) blue++;
                 if (inShaft && b[i] > 240 && b[i + 1] > 240 && b[i + 2] > 240) white++;
-                if ((isRed || isBlue) && !CGPathContainsPoint(metal.path, NULL, p, NO)) spill++;
+                if ((isRed || isBlue) && !CGPathContainsPoint(TMLogoSilhouettePath(), NULL, p, NO)) spill++;
             }
             XCTAssertEqual(outsideChanges, 0); XCTAssertEqual(spill, 0); XCTAssertEqual(alphaChanges, 0);
             XCTAssertGreaterThan(red, 800); XCTAssertGreaterThan(blue, 800); XCTAssertGreaterThan(white, 800);
@@ -2121,6 +2530,7 @@ TM_CAPTURE_IMPL
         }]];
     }
     CGPathRelease(stationary);
+    CGPathRelease(shaftFringe);
     UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
     UIImage *sheet = [[[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(780, 360) format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
         for (NSUInteger theme = 0; theme < 2; theme++) {
@@ -2189,10 +2599,11 @@ TM_CAPTURE_IMPL
         XCTAssertEqualObjects(animation.keyPath, @"transform.translation.y");
         XCTAssertEqual(frame.animationKeys.count, 0);
         CALayer *cylinder = [pole valueForKey:@"cylinder"];
-        XCTAssertEqualObjects(animation.toValue, @96);
-        XCTAssertLessThanOrEqual(CGRectGetMinY(stripes.frame) + 96, 0);
+        XCTAssertEqualObjects(animation.toValue, @216);
+        XCTAssertEqualWithAccuracy(TMLoaderStripeStep * TMLoaderPhaseMultiplier, 216, 0.0001);
+        XCTAssertEqual(stripes.sublayers.count, 13);
         XCTAssertNotNil(cylinder.mask);
-        XCTAssertEqualWithAccuracy(atan2(cylinder.transform.m12, cylinder.transform.m11) * 180 / M_PI, 25.71, 0.02);
+        XCTAssertEqualWithAccuracy(atan2(stripes.superlayer.transform.m12, stripes.superlayer.transform.m11) * 180 / M_PI, 26, 0.0001);
         XCTAssertGreaterThanOrEqual(CGRectGetMaxY(stripes.frame), cylinder.bounds.size.height);
         XCTAssertTrue(CATransform3DIsIdentity(frame.transform));
         XCTAssertEqualObjects(pole.accessibilityLabel, @"Loading tags");

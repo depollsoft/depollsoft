@@ -92,7 +92,7 @@ class MeHeaderView : LinearLayout {
             )
         }
         bindTo(R.id.favoritesEmptyText, "Visibility", { FavoritesModel.favoriteIds.size == 0 }, BoolConverter.get())
-        UiBinder.bind(this, R.id.randomTagProgress, "Visibility", "IsLoading", BoolConverter.get())
+        UiBinder.bind(this, R.id.randomTagProgress, "Loading", "IsLoading")
         UiBinder.bind(this, R.id.randomTagButton, "Enabled", "IsLoading", BoolConverter.get(true))
         findViewById<View>(R.id.randomTagButton).setOnClickListener { loadRandomTag() }
         findViewById<View>(R.id.browseButton).setOnClickListener {

@@ -305,7 +305,7 @@ class BarberPoleQueryRegressionTest {
             }
             return bitmap
         }
-        for (phase in listOf(0f, 0.25f, 0.5f, 1f)) {
+        for (phase in listOf(0f, 0.25f, 0.5f, 0.75f, 1f)) {
             val next = frame(phase)
             val colors = mutableSetOf<Int>()
             for (y in 0 until next.height) for (x in 0 until next.width) colors.add(next.getPixel(x, y))
@@ -333,6 +333,23 @@ class BarberPoleQueryRegressionTest {
         label: String,
         screen: Bitmap,
     ) {
+        // Equal actual-pixel sRGB canvases for the cross-platform comparison.
+        // A detached instance uses the same production renderer without changing the pending view.
+        instrumentation.runOnMainSync {
+            val sample = BarberPoleLoadingView(pole.context)
+            for ((w, h) in listOf(340 to 580, 34 to 58)) {
+                sample.layout(0, 0, w, h)
+                for (phase in listOf(0f, 0.25f, 0.5f, 0.75f, 1f, 0.001f, 0.999f)) {
+                    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                    assertEquals(android.graphics.ColorSpace.get(android.graphics.ColorSpace.Named.SRGB), bitmap.colorSpace)
+                    sample.drawPole(Canvas(bitmap), phase)
+                    File(context.getExternalFilesDir(null), "unified-android-$label-$w-$phase.png").outputStream().use {
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    bitmap.recycle()
+                }
+            }
+        }
         // Native Canvas renders, taken while the real Search query remains held and pending.
         val sheet = Bitmap.createBitmap(800, 260, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(sheet)

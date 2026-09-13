@@ -202,7 +202,7 @@ public class MediaPlayerView extends LinearLayout {
     if (player == null) createPlayer();
 
     UiBinder.bind(this, R.id.counterTextView, "Text", "PositionString");
-    UiBinder.bind(this, R.id.trackLoadingIndicator, "Visibility", "IsLoading", BoolConverter.get());
+    UiBinder.bind(this, R.id.trackLoadingIndicator, "Loading", "IsLoading");
     updateSliderValues();
     updateControls();
   }

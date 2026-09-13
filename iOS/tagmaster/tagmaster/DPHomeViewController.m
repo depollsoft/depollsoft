@@ -7,6 +7,7 @@
 //
 
 #import "DPHomeViewController.h"
+#import "TMBarberPoleLoadingView.h"
 
 
 #import "DPAppDelegate.h"
@@ -382,7 +383,8 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         cell.backgroundColor = [UIColor clearColor];
         BOOL loadingRandom = [title isEqualToString:TMRandomTagTitle] && self.busyIndicator.busyCount > 0;
         if (loadingRandom) {
-            UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+            TMBarberPoleLoadingView *spinner = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Loading random tag"];
+            spinner.isAccessibilityElement = NO; // The row names the operation once.
             [spinner startAnimating];
             cell.accessoryView = spinner;
             cell.selectionStyle = UITableViewCellSelectionStyleNone;

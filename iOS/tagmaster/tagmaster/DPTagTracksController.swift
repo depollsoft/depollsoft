@@ -20,7 +20,8 @@ extension DPTagTracksController: UITableViewDelegate {
 
         // Only the tapped row shows progress; the page and navigation stay usable.
         let cell = tableView.cellForRow(at: indexPath)
-        let spinner = UIActivityIndicatorView(style: .medium)
+        let spinner = TMBarberPoleLoadingView(operationName: "Loading track")
+        spinner.isAccessibilityElement = false // The row names the operation once.
         spinner.startAnimating()
         cell?.accessoryView = spinner
         cell?.accessibilityLabel = "\(track.title ?? "Track"), loading"
@@ -36,14 +37,18 @@ extension DPTagTracksController: UITableViewDelegate {
 
         var observation: NSKeyValueObservation?
         var finished = false
-        let finish: (Bool) -> Void = { [weak self] ready in
-            guard !finished, let self else { return }
+        let finish: (Bool) -> Void = { [weak self, weak cell] ready in
+            guard !finished else { return }
             finished = true
+            spinner.stopAnimating()
             observation?.invalidate()
             observation = nil
+            guard let self else { return }
             self.busyIndicator.decrementBusyCount()
-            cell?.accessoryView = nil
-            cell?.accessibilityLabel = nil
+            if cell?.accessoryView === spinner {
+                cell?.accessoryView = nil
+                cell?.accessibilityLabel = nil
+            }
             guard ready else {
                 player.replaceCurrentItem(with: nil)
                 self.tm_showError("The learning track couldn't be played. Check your connection and try again.") { [weak self] in

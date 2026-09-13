@@ -2,6 +2,7 @@ package depollsoft.tagmaster
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -14,8 +15,6 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.animation.LinearInterpolator
-import kotlin.math.PI
-import kotlin.math.sin
 
 /** Decorative quartet only. The enclosing native text provides the loading status. */
 class TagLoadingView
@@ -25,7 +24,7 @@ class TagLoadingView
         attrs: AttributeSet? = null,
     ) : View(context, attrs) {
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private var phase = 0f
+        private var phase = QuartetArtwork.PHASESTART
         private val visibleBounds = Rect()
         private val layoutObserver = ViewTreeObserver.OnGlobalLayoutListener { updateMotion() }
         private val scrollObserver = ViewTreeObserver.OnScrollChangedListener { updateMotion() }
@@ -64,8 +63,8 @@ class TagLoadingView
                     motionAllowed()
             if (run && animator == null) {
                 animator =
-                    ValueAnimator.ofFloat(0f, 1f).apply {
-                        duration = 2800
+                    ValueAnimator.ofFloat(QuartetArtwork.PHASESTART, QuartetArtwork.PHASEEND).apply {
+                        duration = (QuartetArtwork.PERIOD * 1000).toLong()
                         repeatCount = ValueAnimator.INFINITE
                         interpolator = LinearInterpolator()
                         addUpdateListener {
@@ -126,26 +125,34 @@ class TagLoadingView
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
+            drawQuartet(canvas, phase, isAnimating)
+        }
+
+        // The production renderer also permits deterministic native-raster fixtures.
+        internal fun drawQuartet(
+            canvas: Canvas,
+            phase: Float,
+            moving: Boolean,
+        ) {
             val save = canvas.save()
-            canvas.scale(width / 216f, height / 96f)
-            paint.color = context.getColor(R.color.md_on_surface_variant)
-            paint.alpha = 75
-            paint.strokeWidth = 1f
-            for (line in 0..4) canvas.drawLine(8f, 32f + line * 9f, 208f, 32f + line * 9f, paint)
-            paint.color = context.getColor(R.color.md_primary)
+            val scale = minOf(width / QuartetArtwork.WIDTH, height / QuartetArtwork.HEIGHT)
+            canvas.translate((width - QuartetArtwork.WIDTH * scale) / 2, (height - QuartetArtwork.HEIGHT * scale) / 2)
+            canvas.scale(scale, scale)
+            val dark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+            paint.color = if (dark) QuartetArtwork.darkStaff else QuartetArtwork.lightStaff
+            paint.alpha = (QuartetArtwork.STAFFALPHA * 255).toInt()
+            paint.strokeWidth = QuartetArtwork.STAFFWIDTH
+            paint.style = Paint.Style.STROKE
+            canvas.drawPath(QuartetArtwork.staff, paint)
+            paint.color = if (dark) QuartetArtwork.darkNote else QuartetArtwork.lightNote
             paint.alpha = 255
-            for (voice in 0..3) {
-                val local = (phase - voice * 0.12f + 1f) % 1f
-                // A short gentle gathering gesture, then rest. Static mode is the settled quartet.
-                val lift = if (isAnimating && local < 0.45f) sin(local / 0.45f * PI).toFloat() * 4f else 0f
-                val x = 43f + voice * 43f
-                val y = 59f - voice * 9f - lift
+            paint.style = Paint.Style.FILL
+            for (voice in QuartetArtwork.x.indices) {
                 val noteSave = canvas.save()
-                canvas.rotate(-18f, x, y)
-                canvas.drawOval(x - 7f, y - 4.5f, x + 7f, y + 4.5f, paint)
+                val lift = if (moving) QuartetArtwork.translation(voice, phase) else QuartetArtwork.still[voice]
+                canvas.translate(QuartetArtwork.x[voice], QuartetArtwork.y[voice] + lift)
+                canvas.drawPath(QuartetArtwork.note, paint)
                 canvas.restoreToCount(noteSave)
-                paint.strokeWidth = 1.8f
-                canvas.drawLine(x + 6f, y, x + 6f, y - 25f, paint)
             }
             canvas.restoreToCount(save)
         }

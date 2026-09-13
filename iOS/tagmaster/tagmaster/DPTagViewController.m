@@ -7,6 +7,8 @@
 //
 
 #import "DPTagViewController.h"
+#import "TMBarberPoleLoadingView.h"
+#import "TMQuartetArtwork.h"
 #import "DPBarbershop.h"
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
@@ -15,9 +17,11 @@
 #import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
 
-// Decorative vector notation. No timers, assets, audio or accessibility children.
+// Decorative cached notation. The enclosing native labels own loading announcements.
 @interface TMQuartetStaffView : UIView
 @property (nonatomic, copy) NSArray<CAShapeLayer *> *notes;
+@property CALayer *artwork;
+@property CAShapeLayer *staff;
 @property (nonatomic) BOOL animationAllowed;
 - (void)updateMotion;
 @end
@@ -27,42 +31,44 @@
     if ((self = [super initWithFrame:frame])) {
         self.backgroundColor = UIColor.clearColor;
         self.accessibilityElementsHidden = YES;
+        self.artwork = [CALayer layer];
+        self.artwork.anchorPoint = CGPointZero;
+        [self.layer addSublayer:self.artwork];
+        self.staff = [CAShapeLayer layer];
+        self.staff.path = TMQuartetStaffPath();
+        self.staff.fillColor = nil;
+        self.staff.lineWidth = TMQuartetStaffWidth;
+        [self.artwork addSublayer:self.staff];
         NSMutableArray *notes = [NSMutableArray array];
         for (NSUInteger i = 0; i < 4; i++) {
             CAShapeLayer *note = [CAShapeLayer layer];
-            [self.layer addSublayer:note];
+            note.path = TMQuartetNotePath();
+            note.position = CGPointMake(TMQuartetX[i], TMQuartetY[i]);
+            [self.artwork addSublayer:note];
             [notes addObject:note];
         }
         self.notes = notes;
     }
     return self;
 }
-- (CGSize)intrinsicContentSize { return CGSizeMake(204, 88); }
-- (void)drawRect:(CGRect)rect {
-    [UIColor.separatorColor setStroke];
-    UIBezierPath *staff = [UIBezierPath bezierPath];
-    staff.lineWidth = 1;
-    for (NSUInteger i = 0; i < 5; i++) {
-        CGFloat y = 26 + i * 10;
-        [staff moveToPoint:CGPointMake(0, y)];
-        [staff addLineToPoint:CGPointMake(self.bounds.size.width, y)];
-    }
-    [staff stroke];
-}
+- (CGSize)intrinsicContentSize { return CGSizeMake(TMQuartetWidth, TMQuartetHeight); }
 - (void)layoutSubviews {
     [super layoutSubviews];
-    const CGFloat heights[] = {46, 36, 41, 56};
+    CGFloat scale = MIN(self.bounds.size.width / TMQuartetWidth, self.bounds.size.height / TMQuartetHeight);
+    BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
-    for (NSUInteger i = 0; i < self.notes.count; i++) {
-        CGFloat x = self.bounds.size.width * (0.2 + i * 0.2);
-        CGFloat y = heights[i];
-        UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(x - 7, y - 4.5, 14, 9)];
-        [path appendPath:[UIBezierPath bezierPathWithRoundedRect:CGRectMake(x + 5, y - 29, 2, 29) cornerRadius:1]];
-        self.notes[i].path = path.CGPath;
-        self.notes[i].fillColor = [UIColor.systemBlueColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
-    }
+    self.artwork.position = CGPointMake((self.bounds.size.width - TMQuartetWidth * scale) / 2,
+                                       (self.bounds.size.height - TMQuartetHeight * scale) / 2);
+    self.artwork.transform = CATransform3DMakeScale(scale, scale, 1);
+    self.staff.strokeColor = TMQuartetColor(dark, YES);
+    for (CAShapeLayer *note in self.notes) note.fillColor = TMQuartetColor(dark, NO);
     [CATransaction commit];
+    [self updateMotion];
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self setNeedsLayout];
 }
 - (void)setAnimationAllowed:(BOOL)allowed {
     _animationAllowed = allowed;
@@ -79,27 +85,36 @@
 - (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
 - (void)updateMotion {
     BOOL animate = self.animationAllowed && self.window && !self.hidden && ![self reduceMotionEnabled];
+    CGRect visible = [self convertRect:self.bounds toView:self.window];
+    for (UIView *ancestor = self; ancestor && animate; ancestor = ancestor.superview) {
+        if (ancestor.hidden || ancestor.alpha <= 0.01) animate = NO;
+        if (ancestor.clipsToBounds) visible = CGRectIntersection(visible, [ancestor convertRect:ancestor.bounds toView:self.window]);
+    }
+    if (CGRectIsEmpty(visible) || !CGRectIntersectsRect(visible, self.window.bounds)) animate = NO;
+    CFTimeInterval start = [self.artwork convertTime:CACurrentMediaTime() fromLayer:nil];
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
     for (NSUInteger i = 0; i < self.notes.count; i++) {
         CAShapeLayer *note = self.notes[i];
+        note.transform = CATransform3DMakeTranslation(0, TMQuartetStill[i], 0);
         if (!animate) {
             [note removeAllAnimations];
         } else if (![note animationForKey:@"gather"]) {
             CAKeyframeAnimation *motion = [CAKeyframeAnimation animationWithKeyPath:@"transform.translation.y"];
-            motion.values = @[@0, @(-4), @0, @0];
-            motion.keyTimes = @[@0, @0.2, @0.4, @1];
-            motion.timingFunctions = @[[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
-                                      [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
-                                      [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]];
-            motion.duration = 2.4;
-            motion.beginTime = CACurrentMediaTime() + i * 0.16;
+            motion.values = TMQuartetSamples(i);
+            motion.calculationMode = kCAAnimationLinear;
+            motion.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+            motion.duration = TMQuartetPeriod;
+            motion.beginTime = start;
             motion.repeatCount = HUGE_VALF;
             [note addAnimation:motion forKey:@"gather"];
         }
     }
+    [CATransaction commit];
 }
 @end
 
-@interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate>
+@interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate, UIScrollViewDelegate>
 
 @property (nonatomic, strong) DPTag *tag;
 
@@ -236,8 +251,9 @@
         ? [NSString stringWithFormat:@"%@ %@", self.loadingHeading.text, self.loadingStatus.text]
         : self.loadingStatus.text;
     self.retryButton.hidden = !self.loadFailed;
-    BOOL busy = self.busyIndicator.busyCount > 0;
-    UIActivityIndicatorView *spinner = (UIActivityIndicatorView *)self.loadingBarButton.customView;
+    BOOL busy = self.tagFetchPending; // Row/button work has its own inline indicator.
+    TMBarberPoleLoadingView *spinner = (TMBarberPoleLoadingView *)self.loadingBarButton.customView;
+    spinner.controllerVisible = self.screenVisible;
     if (busy && !empty) [spinner startAnimating]; else [spinner stopAnimating];
     self.navigationItem.rightBarButtonItems = empty ? @[] : @[self.shareBarButton, self.actionBarButton,
         busy ? self.loadingBarButton : self.refreshBarButton];
@@ -258,6 +274,7 @@
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     self.screenVisible = NO;
+    ((TMBarberPoleLoadingView *)self.loadingBarButton.customView).controllerVisible = NO;
     self.quartetStaff.animationAllowed = NO;
 }
 
@@ -320,10 +337,15 @@
     self.refreshBarButton = [DPAppDelegate barButtonItemWithSystemName:@"arrow.clockwise"
                                                                 target:self
                                                                 action:@selector(refreshTag)];
-    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-    spinner.hidesWhenStopped = NO;
+    TMBarberPoleLoadingView *spinner = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Refreshing tag"];
+    spinner.darkSurface = YES;
     self.loadingBarButton = [[UIBarButtonItem alloc] initWithCustomView:spinner];
-    self.loadingBarButton.accessibilityLabel = @"Loading";
+    if (@available(iOS 26.0, *)) {
+        // Keep light metal on charcoal, not inside the adjacent actions' pale glass fill.
+        self.loadingBarButton.sharesBackground = NO;
+        self.loadingBarButton.hidesSharedBackground = YES;
+    }
+    self.loadingBarButton.accessibilityLabel = @"Refreshing tag";
     self.loadingBarButton.accessibilityTraits = UIAccessibilityTraitStaticText;
     [self installInitialLoadingView];
     for (NSString *name in @[UIAccessibilityReduceMotionStatusDidChangeNotification,
@@ -331,6 +353,10 @@
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(loadingEnvironmentChanged:) name:name object:nil];
     }
     [self setTag:self.tag];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self.quartetStaff updateMotion];
 }
 
 - (void)installInitialLoadingView {
@@ -341,6 +367,7 @@
     [self.view addSubview:overlay];
     self.initialLoadingView = overlay;
     UIScrollView *scroll = [UIScrollView new];
+    scroll.delegate = self;
     scroll.translatesAutoresizingMaskIntoConstraints = NO;
     [overlay addSubview:scroll];
     UIView *content = [UIView new];
@@ -396,7 +423,7 @@
         [stack.topAnchor constraintGreaterThanOrEqualToAnchor:content.topAnchor constant:24],
         [stack.bottomAnchor constraintLessThanOrEqualToAnchor:content.bottomAnchor constant:-24],
         [stack.widthAnchor constraintEqualToAnchor:content.widthAnchor constant:-48],
-        [self.quartetStaff.widthAnchor constraintEqualToConstant:204],
+        [self.quartetStaff.widthAnchor constraintEqualToConstant:TMQuartetWidth],
         [self.loadingHeading.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor],
         [self.loadingStatus.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor],
         [self.retryButton.heightAnchor constraintGreaterThanOrEqualToConstant:44],

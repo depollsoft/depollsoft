@@ -93,6 +93,8 @@
 		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
 		A7C010000000000000000001 /* TMLogoArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000011 /* TMLogoArtwork.m */; };
 		A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000013 /* TMLogoBackgroundView.m */; };
+		A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C020000000000000000011 /* TMBarberPoleLoadingView.m */; };
+		A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C030000000000000000011 /* TMQuartetArtwork.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -252,6 +254,10 @@
 		A7C010000000000000000011 /* TMLogoArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoArtwork.m; sourceTree = "<group>"; };
 		A7C010000000000000000012 /* TMLogoBackgroundView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLogoBackgroundView.h; sourceTree = "<group>"; };
 		A7C010000000000000000013 /* TMLogoBackgroundView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoBackgroundView.m; sourceTree = "<group>"; };
+		A7C020000000000000000010 /* TMBarberPoleLoadingView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMBarberPoleLoadingView.h; sourceTree = "<group>"; };
+		A7C030000000000000000010 /* TMQuartetArtwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMQuartetArtwork.h; sourceTree = "<group>"; };
+		A7C020000000000000000011 /* TMBarberPoleLoadingView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMBarberPoleLoadingView.m; sourceTree = "<group>"; };
+		A7C030000000000000000011 /* TMQuartetArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetArtwork.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -409,6 +415,10 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
+				A7C020000000000000000010 /* TMBarberPoleLoadingView.h */,
+				A7C030000000000000000010 /* TMQuartetArtwork.h */,
+				A7C020000000000000000011 /* TMBarberPoleLoadingView.m */,
+				A7C030000000000000000011 /* TMQuartetArtwork.m */,
 				A7C010000000000000000010 /* TMLogoArtwork.h */,
 				A7C010000000000000000011 /* TMLogoArtwork.m */,
 				A7C010000000000000000012 /* TMLogoBackgroundView.h */,
@@ -715,6 +725,8 @@
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
+				A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */,
+				A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */,
 				A7C010000000000000000001 /* TMLogoArtwork.m in Sources */,
 				A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */,
 				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
