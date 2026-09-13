@@ -15,7 +15,7 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="screenbackground.png" translatesAutoresizingMaskIntoConstraints="NO" id="IPk-af-bMT">
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchWatermark" translatesAutoresizingMaskIntoConstraints="NO" id="IPk-af-bMT">
                     <rect key="frame" x="0.0" y="119" width="393" height="655"/>
                 </imageView>
             </subviews>
@@ -31,7 +31,7 @@
         </view>
     </objects>
     <resources>
-        <image name="screenbackground.png" width="260" height="440"/>
+        <image name="LaunchWatermark" width="480" height="800"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

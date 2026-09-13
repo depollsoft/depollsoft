@@ -13,8 +13,14 @@
 #import "DPAppDelegate.h"
 #import "DPTagPageControllerBase.h"
 
-// A stationary barber-pole frame with moving stripes, only for tag queries.
+#import "TMLogoArtwork.h"
+
+static const CGFloat TMLogoStripePeriod = 96;
+
+
+// The logo stays still; only the helical bands move in its local shaft space.
 @interface TMBarberPoleLoadingView : UIView
+@property (nonatomic, strong) CALayer *logoLayer;
 @property (nonatomic, strong) CALayer *cylinder;
 @property (nonatomic, strong) CAShapeLayer *stripes;
 @property (nonatomic, strong) CAShapeLayer *frameLayer;
@@ -33,30 +39,58 @@
         self.accessibilityLabel = @"Loading tags";
         self.accessibilityIdentifier = @"query.loading.barberpole";
         self.appActive = UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
+        self.logoLayer = [CALayer layer];
+        self.logoLayer.bounds = CGRectMake(0, 0, TMLogoWidth, TMLogoHeight);
+        [self.layer addSublayer:self.logoLayer];
+        self.frameLayer = [CAShapeLayer layer];
+        self.frameLayer.frame = self.logoLayer.bounds;
+        self.frameLayer.path = TMLogoSilhouettePath();
+        [self.logoLayer addSublayer:self.frameLayer];
+        CAShapeLayer *highlights = [CAShapeLayer layer];
+        highlights.frame = self.frameLayer.bounds;
+        highlights.path = TMLogoHighlightsPath();
+        highlights.fillColor = UIColor.whiteColor.CGColor;
+        [self.frameLayer addSublayer:highlights];
+
+        // Canonical shaft edges run (161.4,95) -> (29,370), 25.71° from vertical.
+        // Work in that axis space so phase never translates screen-vertically.
         self.cylinder = [CALayer layer];
+        self.cylinder.anchorPoint = CGPointZero;
+        self.cylinder.bounds = CGRectMake(0, 0, 120, 307);
+        self.cylinder.position = CGPointMake(161.4, 95);
+        self.cylinder.affineTransform = CGAffineTransformMakeRotation(atan2(132.4, 275));
         self.cylinder.backgroundColor = UIColor.whiteColor.CGColor;
-        self.cylinder.cornerRadius = 3;
-        self.cylinder.masksToBounds = YES;
-        [self.layer addSublayer:self.cylinder];
+        CAShapeLayer *shaftMask = [CAShapeLayer layer];
+        shaftMask.frame = self.cylinder.bounds;
+        UIBezierPath *shaft = [UIBezierPath bezierPath];
+        [shaft moveToPoint:CGPointMake(6, 12)];
+        [shaft addCurveToPoint:CGPointMake(114, 12) controlPoint1:CGPointMake(40, 20) controlPoint2:CGPointMake(80, 20)];
+        [shaft addLineToPoint:CGPointMake(114, 295)];
+        [shaft addCurveToPoint:CGPointMake(6, 295) controlPoint1:CGPointMake(80, 287) controlPoint2:CGPointMake(40, 287)];
+        [shaft closePath];
+        shaftMask.path = shaft.CGPath;
+        self.cylinder.mask = shaftMask;
+        [self.logoLayer addSublayer:self.cylinder];
         self.stripes = [CAShapeLayer layer];
+        // Full extra repeats on both ends prevent a compositor seam at wrap.
+        self.stripes.frame = CGRectMake(0, -TMLogoStripePeriod, 120, 307 + 2 * TMLogoStripePeriod);
         [self.cylinder addSublayer:self.stripes];
-        for (NSUInteger color = 0; color < 2; color++) {
+        // Keep the repeat offset signed: negative rows must not wrap to NSUIntegerMax.
+        for (NSInteger color = 0; color < 2; color++) {
             CAShapeLayer *stripe = [CAShapeLayer layer];
+            stripe.frame = self.stripes.bounds;
             UIBezierPath *path = [UIBezierPath bezierPath];
-            for (NSInteger y = -72; y < 108; y += 24) {
-                CGFloat start = y + color * 12;
-                [path moveToPoint:CGPointMake(-20, start + 20)];
-                [path addLineToPoint:CGPointMake(40, start - 10)];
-                [path addLineToPoint:CGPointMake(40, start - 4)];
-                [path addLineToPoint:CGPointMake(-20, start + 26)];
+            for (NSInteger y = -96; y < 672; y += 96) {
+                CGFloat start = y + color * 48;
+                [path moveToPoint:CGPointMake(-8, start + 35)];
+                [path addCurveToPoint:CGPointMake(128, start - 10) controlPoint1:CGPointMake(35, start + 15) controlPoint2:CGPointMake(85, start - 13)];
+                [path addLineToPoint:CGPointMake(128, start + 14)];
+                [path addCurveToPoint:CGPointMake(-8, start + 59) controlPoint1:CGPointMake(85, start + 11) controlPoint2:CGPointMake(35, start + 39)];
                 [path closePath];
             }
             stripe.path = path.CGPath;
-            stripe.fillColor = (color == 0 ? UIColor.systemRedColor : UIColor.systemBlueColor).CGColor;
             [self.stripes addSublayer:stripe];
         }
-        self.frameLayer = [CAShapeLayer layer];
-        [self.layer addSublayer:self.frameLayer];
         NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
         [center addObserver:self selector:@selector(resignActive) name:UIApplicationWillResignActiveNotification object:nil];
         [center addObserver:self selector:@selector(becomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -65,8 +99,8 @@
     return self;
 }
 - (void)dealloc { [NSNotificationCenter.defaultCenter removeObserver:self]; }
-- (CGSize)intrinsicContentSize { return CGSizeMake(28, 68); }
-- (CGSize)sizeThatFits:(CGSize)size { return CGSizeMake(MAX(28, self.bounds.size.width), 68); }
+- (CGSize)intrinsicContentSize { return CGSizeMake(34, 68); }
+- (CGSize)sizeThatFits:(CGSize)size { return CGSizeMake(MAX(34, self.bounds.size.width), 68); }
 - (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
 - (BOOL)isAnimating { return self.requested; }
 - (void)startAnimating { self.requested = YES; self.hidden = NO; [self updateAnimation]; }
@@ -86,7 +120,7 @@
         [self.stripes removeAnimationForKey:@"rotationStripes"];
     } else if (![self.stripes animationForKey:@"rotationStripes"]) {
         CABasicAnimation *motion = [CABasicAnimation animationWithKeyPath:@"transform.translation.y"];
-        motion.fromValue = @0; motion.toValue = @24;
+        motion.fromValue = @0; motion.toValue = @(TMLogoStripePeriod);
         motion.duration = 2;
         motion.repeatCount = HUGE_VALF;
         motion.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
@@ -96,25 +130,14 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     [CATransaction begin]; [CATransaction setDisableActions:YES];
-    CGFloat x = floor((self.bounds.size.width - 28) / 2), y = 8;
-    self.cylinder.frame = CGRectMake(x + 5, y + 8, 18, 36);
-    // Keep one full repeat above the clip throughout the downward travel.
-    // Core Animation snapshots sublayers at their bounds during composition.
-    self.stripes.frame = CGRectMake(0, -24, self.cylinder.bounds.size.width, self.cylinder.bounds.size.height + 48);
-    self.frameLayer.frame = CGRectMake(x, y, 28, 52);
-    UIBezierPath *frame = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(4.5, 7.5, 19, 37) cornerRadius:3];
-    self.frameLayer.path = frame.CGPath;
-    self.frameLayer.fillColor = UIColor.clearColor.CGColor;
-    self.frameLayer.strokeColor = [UIColor.secondaryLabelColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
-    self.frameLayer.lineWidth = 1;
-    if (self.frameLayer.sublayers.count == 0) {
-        for (NSNumber *top in @[@0, @46]) {
-            CAShapeLayer *cap = [CAShapeLayer layer];
-            cap.path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(1, top.doubleValue, 26, 6) cornerRadius:3].CGPath;
-            [self.frameLayer addSublayer:cap];
-        }
+    CGFloat scale = MIN(58 / TMLogoHeight, self.bounds.size.width / TMLogoWidth);
+    self.logoLayer.position = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
+    self.logoLayer.affineTransform = CGAffineTransformMakeScale(scale, scale);
+    self.frameLayer.fillColor = [UIColor.secondaryLabelColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+    NSArray<UIColor *> *colors = @[UIColor.systemRedColor, UIColor.systemBlueColor];
+    for (NSUInteger i = 0; i < colors.count; i++) {
+        ((CAShapeLayer *)self.stripes.sublayers[i]).fillColor = [colors[i] resolvedColorWithTraitCollection:self.traitCollection].CGColor;
     }
-    for (CAShapeLayer *cap in self.frameLayer.sublayers) cap.fillColor = self.frameLayer.strokeColor;
     [CATransaction commit];
     [self updateAnimation];
 }

@@ -91,6 +91,8 @@
 		C0DEFACE00000000000010B4 /* TagmasterModelsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */; };
 		C626097FE51C44A7BD3E6ADF /* DPTagNetworkTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 877D645B24654A1D98693468 /* DPTagNetworkTests.m */; };
 		C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 991D84FBF6F149678772B262 /* DPTrackModelTests.m */; };
+		A7C010000000000000000001 /* TMLogoArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000011 /* TMLogoArtwork.m */; };
+		A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000013 /* TMLogoBackgroundView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -246,6 +248,10 @@
 		F5BCD0DFDBC06C4180EBF6BC /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F63FCEA8F84786898B2EADF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F87508481E0BDCF004F43CEA /* tagmasterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7C010000000000000000010 /* TMLogoArtwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLogoArtwork.h; sourceTree = "<group>"; };
+		A7C010000000000000000011 /* TMLogoArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoArtwork.m; sourceTree = "<group>"; };
+		A7C010000000000000000012 /* TMLogoBackgroundView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLogoBackgroundView.h; sourceTree = "<group>"; };
+		A7C010000000000000000013 /* TMLogoBackgroundView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMLogoBackgroundView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -403,6 +409,10 @@
 				63D9472B151465B5000C8784 /* Barbershop */,
 				63712F0015130B21007997CC /* DPAppDelegate.h */,
 				63712F0115130B21007997CC /* DPAppDelegate.m */,
+				A7C010000000000000000010 /* TMLogoArtwork.h */,
+				A7C010000000000000000011 /* TMLogoArtwork.m */,
+				A7C010000000000000000012 /* TMLogoBackgroundView.h */,
+				A7C010000000000000000013 /* TMLogoBackgroundView.m */,
 				A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */,
 				A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */,
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
@@ -677,7 +687,7 @@
 				63A54E1B19F457ED00F0364E /* Images.xcassets in Resources */,
 				63712EFC15130B21007997CC /* InfoPlist.strings in Resources */,
 				1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */,
-				63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */,
+
 				63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */,
 				1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */,
 			);
@@ -688,6 +698,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63712F1815130B21007997CC /* InfoPlist.strings in Resources */,
+				63336A5E17F6C4FF00BC1EE2 /* screenbackground@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -704,6 +715,8 @@
 				1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */,
 				63712EFE15130B21007997CC /* main.m in Sources */,
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
+				A7C010000000000000000001 /* TMLogoArtwork.m in Sources */,
+				A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */,
 				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,
 				63D9471F1513198D000C8784 /* DPTag.m in Sources */,
 				63336A4517F6342400BC1EE2 /* DPTagViewController.m in Sources */,

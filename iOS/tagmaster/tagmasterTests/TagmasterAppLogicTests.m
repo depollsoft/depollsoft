@@ -15,6 +15,8 @@
 #import "DPBusyIndicator.h"
 #import "DPSearchViewController.h"
 #import "DPTagQueryViewController.h"
+#import "TMLogoArtwork.h"
+#import "TMLogoBackgroundView.h"
 
 #import "DPTag.h"
 #import "DPTagQueryResult.h"
@@ -1851,6 +1853,306 @@ TM_CAPTURE_IMPL
         [self assertKey:button playing:NO];
     }
 }
+// Render the production layer tree at explicit local-axis phases. These checks run
+// while the real query is held, not against a replacement illustration fixture.
+- (UIImage *)logoImage:(UIView *)pole {
+    CALayer *logo = [pole valueForKey:@"logoLayer"];
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+    format.scale = 1;
+    return [[[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(150, 257) format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        CGContextScaleCTM(context.CGContext, 150 / 299.75076, 257 / 513.52234);
+        [logo renderInContext:context.CGContext];
+    }];
+}
+- (NSData *)logoPixels:(UIImage *)image {
+    NSMutableData *pixels = [NSMutableData dataWithLength:150 * 257 * 4];
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(pixels.mutableBytes, 150, 257, 8, 150 * 4, space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    // CGImage already has raster row order. Unlike renderInContext:, drawing it
+    // into the bitmap needs no UIKit flip before comparing canonical y coordinates.
+    CGContextDrawImage(context, CGRectMake(0, 0, 150, 257), image.CGImage);
+    CGContextRelease(context); CGColorSpaceRelease(space);
+    return pixels;
+}
+- (TMLogoBackgroundView *)findLogoBackground:(UIView *)view {
+    if ([view isKindOfClass:TMLogoBackgroundView.class]) return (id)view;
+    for (UIView *child in view.subviews) {
+        TMLogoBackgroundView *found = [self findLogoBackground:child];
+        if (found) return found;
+    }
+    return nil;
+}
+- (void)assertNoArtworkAnimations:(CALayer *)layer {
+    XCTAssertEqual(layer.animationKeys.count, 0);
+    for (CALayer *child in layer.sublayers) [self assertNoArtworkAnimations:child];
+}
+- (UIImage *)artworkImage:(UIView *)view {
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
+    return [[[UIGraphicsImageRenderer alloc] initWithSize:view.bounds.size format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [view.layer renderInContext:context.CGContext];
+    }];
+}
+- (NSData *)artworkPixels:(UIImage *)image {
+    NSUInteger width = CGImageGetWidth(image.CGImage), height = CGImageGetHeight(image.CGImage);
+    NSMutableData *data = [NSMutableData dataWithLength:width * height * 4];
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(data.mutableBytes, width, height, 8, width * 4, space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGContextDrawImage(context, CGRectMake(0, 0, width, height), image.CGImage);
+    CGContextRelease(context); CGColorSpaceRelease(space);
+    return data;
+}
+- (void)testSharedVectorArtwork {
+    CGPathRef full = TMLogoFullPath(), silhouette = TMLogoSilhouettePath(), highlights = TMLogoHighlightsPath();
+    for (NSUInteger i = 0; i < 100; i++) {
+        XCTAssertEqual(full, TMLogoFullPath());
+        XCTAssertEqual(silhouette, TMLogoSilhouettePath());
+        XCTAssertEqual(highlights, TMLogoHighlightsPath());
+    }
+    // Independently split the public compound path to check part selection.
+    NSMutableArray<UIBezierPath *> *contours = [NSMutableArray array];
+    __block UIBezierPath *part;
+    __block NSUInteger curves = 0, closes = 0;
+    CGPathApplyWithBlock(full, ^(const CGPathElement *e) {
+        switch (e->type) {
+            case kCGPathElementMoveToPoint:
+                part = [UIBezierPath bezierPath]; [contours addObject:part]; [part moveToPoint:e->points[0]]; break;
+            case kCGPathElementAddCurveToPoint:
+                curves++; [part addCurveToPoint:e->points[2] controlPoint1:e->points[0] controlPoint2:e->points[1]]; break;
+            case kCGPathElementCloseSubpath: closes++; [part closePath]; break;
+            default: XCTFail(@"Unexpected canonical path command"); break;
+        }
+    });
+    XCTAssertEqual(contours.count, 9); XCTAssertEqual(curves, 122); XCTAssertEqual(closes, 9);
+    XCTAssertTrue(CGPathEqualToPath(contours[0].CGPath, silhouette));
+    UIBezierPath *shine = [UIBezierPath bezierPath];
+    for (NSNumber *index in @[@1, @2, @7, @8]) [shine appendPath:contours[index.unsignedIntegerValue]];
+    XCTAssertTrue(CGPathEqualToPath(shine.CGPath, highlights));
+    for (NSValue *value in @[[NSValue valueWithCGPoint:CGPointMake(35, 438)], [NSValue valueWithCGPoint:CGPointMake(90, 424)], [NSValue valueWithCGPoint:CGPointMake(110, 402)], [NSValue valueWithCGPoint:CGPointMake(110, 330)], [NSValue valueWithCGPoint:CGPointMake(155, 242)], [NSValue valueWithCGPoint:CGPointMake(200, 153)], [NSValue valueWithCGPoint:CGPointMake(200, 88)], [NSValue valueWithCGPoint:CGPointMake(238, 20)]]) {
+        XCTAssertTrue(CGPathContainsPoint(silhouette, NULL, value.CGPointValue, NO));
+        XCTAssertFalse(CGPathContainsPoint(full, NULL, value.CGPointValue, NO), @"All eight inner contours must remain cutouts");
+    }
+    UIView *pole = [[NSClassFromString(@"TMBarberPoleLoadingView") alloc] initWithFrame:CGRectMake(0, 0, 34, 68)];
+    CAShapeLayer *metal = [pole valueForKey:@"frameLayer"];
+    // CAShapeLayer copies assigned paths; provider identity is checked above.
+    XCTAssertTrue(CGPathEqualToPath(metal.path, silhouette));
+    XCTAssertTrue(CGPathEqualToPath(((CAShapeLayer *)metal.sublayers.firstObject).path, highlights));
+    NSString *fixturePath = [[NSBundle bundleForClass:self.class] pathForResource:@"screenbackground@2x" ofType:@"png"];
+    XCTAssertNotNil(fixturePath);
+    UIImage *fixture = [UIImage imageWithContentsOfFile:fixturePath];
+    XCTAssertNotNil(fixture);
+    XCTAssertEqual(CGImageGetWidth(fixture.CGImage), 480);
+    XCTAssertEqual(CGImageGetHeight(fixture.CGImage), 800);
+    XCTAssertNil([NSBundle.mainBundle pathForResource:@"screenbackground@2x" ofType:@"png"]);
+    XCTAssertNotNil([UIImage imageNamed:@"LaunchWatermark"]);
+    NSMutableArray<UIImage *> *captures = [NSMutableArray array];
+    NSArray<NSValue *> *sizes = @[[NSValue valueWithCGSize:CGSizeMake(320, 568)], [NSValue valueWithCGSize:CGSizeMake(402, 874)], [NSValue valueWithCGSize:CGSizeMake(834, 1210)], [NSValue valueWithCGSize:CGSizeMake(1194, 834)]];
+    for (NSNumber *tableMode in @[@NO, @YES]) for (NSNumber *dark in @[@NO, @YES]) for (NSValue *sizeValue in sizes) {
+        CGSize size = sizeValue.CGSizeValue;
+        UIView *root = tableMode.boolValue ? [[UITableView alloc] initWithFrame:(CGRect){CGPointZero, size}] : [[UIView alloc] initWithFrame:(CGRect){CGPointZero, size}];
+        root.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+        [DPAppDelegate setUpBackground:root];
+        [root layoutIfNeeded];
+        UIView *owner = tableMode.boolValue ? ((UITableView *)root).backgroundView : root;
+        [owner layoutIfNeeded];
+        TMLogoBackgroundView *background = [self findLogoBackground:owner];
+        XCTAssertNotNil(background); XCTAssertEqual(background.superview, owner);
+        XCTAssertFalse(background.userInteractionEnabled); XCTAssertFalse(background.isAccessibilityElement); XCTAssertTrue(background.accessibilityElementsHidden);
+        XCTAssertEqualWithAccuracy(background.frame.origin.y, 60, 0.01);
+        XCTAssertEqualWithAccuracy(background.frame.size.height, size.height - 104, 0.01);
+        XCTAssertEqualWithAccuracy(background.frame.size.width, size.width, 0.01);
+        XCTAssertNil([background hitTest:CGPointMake(50, 50) withEvent:nil]);
+        CAShapeLayer *art = (id)background.layer.sublayers.firstObject;
+        CGPathRef layerPath = art.path;
+        XCTAssertTrue(CGPathEqualToPath(layerPath, full)); XCTAssertEqualObjects(art.fillRule, kCAFillRuleNonZero);
+        XCTAssertEqualWithAccuracy(art.affineTransform.a, art.affineTransform.d, 0.000001);
+        CGFloat r, g, b, a; [[UIColor colorWithCGColor:art.fillColor] getRed:&r green:&g blue:&b alpha:&a];
+        XCTAssertEqualWithAccuracy(r, 128.0/255, 0.000001); XCTAssertEqualWithAccuracy(g, r, 0.000001); XCTAssertEqualWithAccuracy(b, r, 0.000001); XCTAssertEqualWithAccuracy(a, 76.0/255, 0.000001);
+        CGAffineTransform transform = art.affineTransform;
+        [background setNeedsLayout]; [background layoutIfNeeded];
+        XCTAssertTrue(CGAffineTransformEqualToTransform(transform, art.affineTransform)); XCTAssertEqual(art.path, layerPath);
+        [self assertNoArtworkAnimations:background.layer];
+        UIImageView *old = [[UIImageView alloc] initWithImage:fixture];
+        old.frame = background.bounds; old.contentMode = UIViewContentModeScaleAspectFit;
+        UIImage *oldImage = [self artworkImage:old], *newImage = [self artworkImage:background];
+        NSData *oldData = [self artworkPixels:oldImage], *newData = [self artworkPixels:newImage];
+        XCTAssertEqual(oldData.length, newData.length);
+        const uint8_t *p = oldData.bytes, *q = newData.bytes;
+        NSUInteger intersection = 0, unionCount = 0, interior = 0;
+        double delta = 0;
+        NSUInteger pixelWidth = CGImageGetWidth(newImage.CGImage);
+        NSInteger minX[2] = {NSIntegerMax, NSIntegerMax}, minY[2] = {NSIntegerMax, NSIntegerMax}, maxX[2] = {0, 0}, maxY[2] = {0, 0};
+        for (NSUInteger i = 0; i < oldData.length; i += 4) {
+            BOOL oldInk = p[i+3] > 38, newInk = q[i+3] > 38;
+            intersection += oldInk && newInk; unionCount += oldInk || newInk;
+            delta += abs((int)p[i+3] - (int)q[i+3]);
+            for (NSUInteger image = 0; image < 2; image++) if (image ? newInk : oldInk) {
+                NSInteger x = (i / 4) % pixelWidth, y = (i / 4) / pixelWidth;
+                minX[image] = MIN(minX[image], x); maxX[image] = MAX(maxX[image], x);
+                minY[image] = MIN(minY[image], y); maxY[image] = MAX(maxY[image], y);
+            }
+            if (q[i+3] == 76) { interior++; XCTAssertEqualWithAccuracy(q[i], 38, 1); XCTAssertEqual(q[i], q[i+1]); XCTAssertEqual(q[i], q[i+2]); }
+        }
+        XCTAssertEqualWithAccuracy(minX[0], minX[1], 2); XCTAssertEqualWithAccuracy(maxX[0], maxX[1], 2);
+        XCTAssertEqualWithAccuracy(minY[0], minY[1], 2); XCTAssertEqualWithAccuracy(maxY[0], maxY[1], 2);
+        NSLog(@"TM_VECTOR_BOUNDS size=%@ old=(%ld,%ld)-(%ld,%ld) new=(%ld,%ld)-(%ld,%ld)", NSStringFromCGSize(size), (long)minX[0], (long)minY[0], (long)maxX[0], (long)maxY[0], (long)minX[1], (long)minY[1], (long)maxX[1], (long)maxY[1]);
+        double overlap = (double)intersection / unionCount, meanAlphaError = delta / (oldData.length / 4) / 255;
+        XCTAssertGreaterThan(overlap, 0.95); XCTAssertLessThan(meanAlphaError, 0.005); XCTAssertGreaterThan(interior, 1000);
+        NSLog(@"TM_VECTOR table=%@ dark=%@ size=%@ overlap=%.6f meanAlphaError=%.6f interior=%lu", tableMode, dark, NSStringFromCGSize(size), overlap, meanAlphaError, (unsigned long)interior);
+        if (!tableMode.boolValue && size.width == (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? 834 : 402)) {
+            [captures addObject:oldImage]; [captures addObject:newImage];
+        }
+        // Detach from constraints before exercising a standalone bounds change.
+        [background removeFromSuperview];
+        background.translatesAutoresizingMaskIntoConstraints = YES;
+        background.bounds = CGRectMake(0, 0, background.bounds.size.height, background.bounds.size.width);
+        [background layoutIfNeeded];
+        XCTAssertEqual(art.path, layerPath); XCTAssertFalse(CGAffineTransformEqualToTransform(transform, art.affineTransform));
+        [self assertNoArtworkAnimations:background.layer];
+    }
+    XCTAssertEqual(captures.count, 4);
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
+    UIImage *sheet = [[[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(780, 720) format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        for (NSUInteger theme = 0; theme < 2; theme++) {
+            [(theme ? UIColor.blackColor : UIColor.whiteColor) setFill]; UIRectFill(CGRectMake(0, theme * 360, 780, 360));
+            for (NSUInteger column = 0; column < 2; column++) {
+                UIImage *image = captures[theme * 2 + column]; CGFloat s = MIN(350 / image.size.width, 318 / image.size.height);
+                [(column ? @"Shared vector" : @"Original PNG fixture") drawAtPoint:CGPointMake(column * 390 + 20, theme * 360 + 10) withAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:14], NSForegroundColorAttributeName:theme ? UIColor.whiteColor : UIColor.blackColor}];
+                [image drawInRect:CGRectMake(column * 390 + (390 - image.size.width * s) / 2, theme * 360 + 35, image.size.width * s, image.size.height * s)];
+            }
+        }
+    }];
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    NSString *file = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"tagmaster-ios-shared-vector-%@-watermark.jpg", device]];
+    XCTAssertTrue([UIImageJPEGRepresentation(sheet, 0.9) writeToFile:file atomically:YES]);
+}
+
+- (void)testBarberPoleLogoGeometry {
+    UIView *pole = [[NSClassFromString(@"TMBarberPoleLoadingView") alloc] initWithFrame:CGRectMake(0, 0, 402, 68)];
+    [pole layoutIfNeeded];
+    CALayer *logo = [pole valueForKey:@"logoLayer"], *shaft = [pole valueForKey:@"cylinder"];
+    CAShapeLayer *metal = [pole valueForKey:@"frameLayer"];
+    XCTAssertEqualWithAccuracy(logo.frame.size.height, 58, 0.001);
+    XCTAssertEqualWithAccuracy(logo.frame.size.width, 58 * 299.75076 / 513.52234, 0.001);
+    XCTAssertEqualWithAccuracy(logo.position.x, 201, 0.001);
+    XCTAssertEqualWithAccuracy(logo.frame.origin.y, 5, 0.001);
+    XCTAssertEqualWithAccuracy(logo.transform.m11, logo.transform.m22, 0.000001);
+    CGRect bounds = CGPathGetPathBoundingBox(metal.path);
+    XCTAssertEqualWithAccuracy(bounds.size.width, 299.75076, 0.01);
+    XCTAssertEqualWithAccuracy(bounds.size.height, 513.52234, 0.01);
+    // Round finials contain their cardinal interiors, but not square corners.
+    for (NSValue *value in @[[NSValue valueWithCGPoint:CGPointMake(248, 50)], [NSValue valueWithCGPoint:CGPointMake(50, 463)], [NSValue valueWithCGPoint:CGPointMake(205, 50)], [NSValue valueWithCGPoint:CGPointMake(290, 50)], [NSValue valueWithCGPoint:CGPointMake(50, 420)], [NSValue valueWithCGPoint:CGPointMake(50, 505)], [NSValue valueWithCGPoint:CGPointMake(272, 125)], [NSValue valueWithCGPoint:CGPointMake(23, 387)]]) {
+        XCTAssertTrue(CGPathContainsPoint(metal.path, NULL, value.CGPointValue, NO));
+    }
+    XCTAssertFalse(CGPathContainsPoint(metal.path, NULL, CGPointMake(201, 5), NO));
+    XCTAssertFalse(CGPathContainsPoint(metal.path, NULL, CGPointMake(5, 510), NO));
+    __block NSUInteger curves = 0, highlights = 0;
+    CGPathApplyWithBlock(metal.path, ^(const CGPathElement *element) { if (element->type == kCGPathElementAddCurveToPoint) curves++; });
+    CGPathApplyWithBlock(((CAShapeLayer *)metal.sublayers.firstObject).path, ^(const CGPathElement *element) { if (element->type == kCGPathElementMoveToPoint) highlights++; });
+    XCTAssertEqual(curves, 48); XCTAssertEqual(highlights, 4);
+    CALayer *stripes = [pole valueForKey:@"stripes"];
+    for (CAShapeLayer *band in stripes.sublayers) {
+        CGRect repeatBounds = CGPathGetPathBoundingBox(band.path);
+        XCTAssertLessThan(CGRectGetMinY(repeatBounds), 0);
+        XCTAssertLessThan(CGRectGetMaxY(repeatBounds), 800, @"Negative repeats must stay signed, not overflow");
+        XCTAssertGreaterThan(CGRectGetMaxY(repeatBounds), CGRectGetHeight(stripes.bounds));
+    }
+    CGPoint top = [shaft convertPoint:CGPointMake(60, 0) toLayer:logo];
+    CGPoint bottom = [shaft convertPoint:CGPointMake(60, 307) toLayer:logo];
+    XCTAssertGreaterThan(top.x, bottom.x);
+    XCTAssertEqualWithAccuracy(atan2(top.x - bottom.x, bottom.y - top.y) * 180 / M_PI, 25.71, 0.02);
+}
+- (void)verifyLogoPhases:(UIView *)pole reduced:(BOOL *)reduced {
+    CALayer *stripes = [pole valueForKey:@"stripes"], *shaft = [pole valueForKey:@"cylinder"], *logo = [pole valueForKey:@"logoLayer"];
+    CAShapeLayer *metal = [pole valueForKey:@"frameLayer"];
+    CGPathRef stationary = CGPathCreateCopy(metal.path);
+    NSMutableArray<UIImage *> *images = [NSMutableArray array];
+    NSMutableArray<UIImage *> *screens = [NSMutableArray array];
+    for (NSNumber *dark in @[@NO, @YES]) {
+        self.window.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+        [self settle];
+        NSData *first = nil;
+        TMLogoBackgroundView *background = [self findLogoBackground:self.window];
+        XCTAssertNotNil(background);
+        NSData *backgroundPixels = [self artworkPixels:[self artworkImage:background]];
+        for (NSNumber *phase in @[@0, @0.25, @0.5, @1, @0]) {
+            BOOL still = images.count % 5 == 4;
+            *reduced = still;
+            [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+            if (still) XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+            else XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+            [stripes removeAnimationForKey:@"rotationStripes"];
+            [CATransaction begin]; [CATransaction setDisableActions:YES];
+            stripes.transform = CATransform3DMakeTranslation(0, phase.doubleValue * 96, 0);
+            [CATransaction commit]; [CATransaction flush];
+            [self assertNoArtworkAnimations:background.layer];
+            XCTAssertEqualObjects(backgroundPixels, [self artworkPixels:[self artworkImage:background]], @"Watermark pixels must not change as loader phase advances");
+            UIImage *image = [self logoImage:pole]; [images addObject:image];
+            NSData *pixels = [self logoPixels:image];
+            if (!first) first = pixels;
+            const uint8_t *a = first.bytes, *b = pixels.bytes;
+            NSUInteger outsideChanges = 0, insideChanges = 0, red = 0, blue = 0, white = 0, spill = 0, alphaChanges = 0;
+            for (NSUInteger y = 0; y < 257; y++) for (NSUInteger x = 0; x < 150; x++) {
+                CGPoint p = CGPointMake((x + 0.5) * 299.75076 / 150, (y + 0.5) * 513.52234 / 257);
+                CGPoint local = [shaft convertPoint:p fromLayer:logo];
+                // Exclude the 3-unit antialias fringe when comparing stationary pixels.
+                BOOL inShaft = CGRectContainsPoint(CGRectMake(3, 9, 114, 289), local);
+                NSUInteger i = (y * 150 + x) * 4;
+                BOOL changed = memcmp(a + i, b + i, 4) != 0;
+                if (a[i + 3] != b[i + 3]) alphaChanges++;
+                if (changed) { if (inShaft) insideChanges++; else outsideChanges++; }
+                BOOL isRed = b[i] > 180 && b[i + 1] < 130 && b[i + 2] < 150;
+                BOOL isBlue = b[i + 2] > 180 && b[i] < 130;
+                if (isRed) red++; if (isBlue) blue++;
+                if (inShaft && b[i] > 240 && b[i + 1] > 240 && b[i + 2] > 240) white++;
+                if ((isRed || isBlue) && !CGPathContainsPoint(metal.path, NULL, p, NO)) spill++;
+            }
+            XCTAssertEqual(outsideChanges, 0); XCTAssertEqual(spill, 0); XCTAssertEqual(alphaChanges, 0);
+            XCTAssertGreaterThan(red, 800); XCTAssertGreaterThan(blue, 800); XCTAssertGreaterThan(white, 800);
+            if (phase.doubleValue == 0.25 || phase.doubleValue == 0.5) XCTAssertGreaterThan(insideChanges, 2000);
+            else XCTAssertEqualObjects(first, pixels, @"Loop end and reduced motion must equal phase zero, without seams");
+            XCTAssertTrue(CGPathEqualToPath(stationary, metal.path));
+            XCTAssertTrue(CATransform3DIsIdentity(metal.transform));
+            XCTAssertEqual(metal.animationKeys.count, 0);
+            NSLog(@"TM_LOGO dark=%@ phase=%@ still=%d red=%lu blue=%lu white=%lu changed=%lu outside=%lu spill=%lu", dark, phase, still, (unsigned long)red, (unsigned long)blue, (unsigned long)white, (unsigned long)insideChanges, (unsigned long)outsideChanges, (unsigned long)spill);
+        }
+        UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
+        [screens addObject:[[[UIGraphicsImageRenderer alloc] initWithSize:self.window.bounds.size format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+            [self.window drawViewHierarchyInRect:self.window.bounds afterScreenUpdates:YES];
+        }]];
+    }
+    CGPathRelease(stationary);
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat]; format.scale = 1;
+    UIImage *sheet = [[[UIGraphicsImageRenderer alloc] initWithSize:CGSizeMake(780, 360) format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        for (NSUInteger theme = 0; theme < 2; theme++) {
+            [(theme ? UIColor.blackColor : UIColor.whiteColor) setFill]; UIRectFill(CGRectMake(0, theme * 180, 780, 180));
+            NSDictionary *attributes = @{NSFontAttributeName:[UIFont systemFontOfSize:12], NSForegroundColorAttributeName:theme ? UIColor.whiteColor : UIColor.blackColor};
+            NSArray *labels = @[@"Phase 0", @"Phase .25", @"Phase .5", @"Loop end", @"Reduce Motion"];
+            for (NSUInteger col = 0; col < 5; col++) {
+                CGFloat x = col * 130, y = theme * 180;
+                [labels[col] drawAtPoint:CGPointMake(x + 5, y + 8) withAttributes:attributes];
+                [images[theme * 5 + col] drawInRect:CGRectMake(x + 5, y + 40, 58 * 299.75076 / 513.52234, 58)];
+                [images[theme * 5 + col] drawInRect:CGRectMake(x + 48, y + 36, 116 * 299.75076 / 513.52234, 116)];
+            }
+            [@"Logo / pending" drawAtPoint:CGPointMake(655, theme * 180 + 8) withAttributes:attributes];
+            TMLogoBackgroundView *referenceView = [[TMLogoBackgroundView alloc] initWithFrame:CGRectMake(0, 0, 480, 800)];
+            [referenceView layoutIfNeeded];
+            UIImage *reference = [self artworkImage:referenceView];
+            XCTAssertTrue(CGPathEqualToPath(((CAShapeLayer *)referenceView.layer.sublayers.firstObject).path, TMLogoFullPath()));
+            XCTAssertGreaterThan([self artworkPixels:reference].length, 0);
+            CGFloat s = MIN(65 / reference.size.width, 116 / reference.size.height);
+            [reference drawInRect:CGRectMake(655, theme * 180 + 36, reference.size.width * s, reference.size.height * s)];
+            [screens[theme] drawInRect:CGRectMake(727, theme * 180 + 35, 49, 105)];
+        }
+    }];
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    NSString *file = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"tagmaster-ios-shared-vector-%@-comparison.jpg", device]];
+    XCTAssertTrue([UIImageJPEGRepresentation(sheet, 0.9) writeToFile:file atomically:YES]);
+    *reduced = NO; stripes.transform = CATransform3DIdentity;
+    self.window.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+    [self settle];
+}
+
 - (void)testBarberPolePendingQueryLifecycle {
     Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
     IMP original = method_getImplementation(method);
@@ -1881,13 +2183,16 @@ TM_CAPTURE_IMPL
         UIView *pole = [query valueForKey:@"activity"];
         CALayer *stripes = [pole valueForKey:@"stripes"], *frame = [pole valueForKey:@"frameLayer"];
         XCTAssertTrue(query.isLoading); XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
-        [self mount:query width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+        [self mount:query width:UIScreen.mainScreen.bounds.size.width dark:NO large:YES];
         CABasicAnimation *animation = (id)[stripes animationForKey:@"rotationStripes"];
         XCTAssertNotNil(animation); XCTAssertEqualWithAccuracy(animation.duration, 2, 0.01);
         XCTAssertEqualObjects(animation.keyPath, @"transform.translation.y");
         XCTAssertEqual(frame.animationKeys.count, 0);
         CALayer *cylinder = [pole valueForKey:@"cylinder"];
-        XCTAssertLessThanOrEqual(CGRectGetMinY(stripes.frame) + 24, 0);
+        XCTAssertEqualObjects(animation.toValue, @96);
+        XCTAssertLessThanOrEqual(CGRectGetMinY(stripes.frame) + 96, 0);
+        XCTAssertNotNil(cylinder.mask);
+        XCTAssertEqualWithAccuracy(atan2(cylinder.transform.m12, cylinder.transform.m11) * 180 / M_PI, 25.71, 0.02);
         XCTAssertGreaterThanOrEqual(CGRectGetMaxY(stripes.frame), cylinder.bounds.size.height);
         XCTAssertTrue(CATransform3DIsIdentity(frame.transform));
         XCTAssertEqualObjects(pole.accessibilityLabel, @"Loading tags");
@@ -1896,23 +2201,24 @@ TM_CAPTURE_IMPL
         XCTAssertEqual(table.tableFooterView, pole);
         XCTAssertEqualWithAccuracy(pole.bounds.size.width, table.bounds.size.width, 0.5);
         CGRect stationary = frame.frame;
+        [self verifyLogoPhases:pole reduced:&reduced];
         // Sample the live presentation layer at two bounded points in its loop.
-        [self capture:@"tagmaster-ios-barberpole-light-phase1"];
+        [self capture:@"tagmaster-ios-shared-vector-light-phase1"];
         CGFloat first = stripes.presentationLayer.transform.m42;
         XCTestExpectation *phase = [self expectationWithDescription:@"second stripe phase"];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.6 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [phase fulfill]; });
         [self waitForExpectations:@[phase] timeout:2];
-        [self capture:@"tagmaster-ios-barberpole-light-phase2"];
+        [self capture:@"tagmaster-ios-shared-vector-light-phase2"];
         CGFloat second = stripes.presentationLayer.transform.m42;
         NSLog(@"TM_POLE phase1=%.2f phase2=%.2f frame=%@", first, second, NSStringFromCGRect(frame.frame));
         XCTAssertGreaterThan(fabs(first - second), 4);
         XCTAssertTrue(CGRectEqualToRect(stationary, frame.frame));
         self.window.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-        [self capture:@"tagmaster-ios-barberpole-dark-pending"];
+        [self capture:@"tagmaster-ios-shared-vector-dark-pending"];
         reduced = YES;
         [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
         XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertTrue(query.isLoading);
-        [self capture:@"tagmaster-ios-barberpole-dark-reduced-motion"];
+        [self capture:@"tagmaster-ios-shared-vector-dark-reduced-motion"];
         reduced = NO;
         [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
         XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
@@ -1925,6 +2231,13 @@ TM_CAPTURE_IMPL
         [query beginAppearanceTransition:NO animated:NO]; [query endAppearanceTransition];
         XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
         [query beginAppearanceTransition:YES animated:NO]; [query endAppearanceTransition];
+        XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+        CGPoint offset = table.contentOffset;
+        table.contentOffset = CGPointMake(0, 1000);
+        [pole performSelector:NSSelectorFromString(@"updateAnimation")];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        table.contentOffset = offset;
+        [pole performSelector:NSSelectorFromString(@"updateAnimation")];
         XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
         table.tableFooterView = nil; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
         table.tableFooterView = pole; [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);

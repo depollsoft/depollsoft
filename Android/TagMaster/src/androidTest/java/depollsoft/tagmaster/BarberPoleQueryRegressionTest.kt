@@ -118,6 +118,7 @@ class BarberPoleQueryRegressionTest {
                         .toString()
                         .contains("Parts=4"),
                 )
+                assertLogoPhases(loader!!)
                 capture("search-pending")
                 val first = draw(loader!!)
                 Thread.sleep(500)
@@ -261,17 +262,58 @@ class BarberPoleQueryRegressionTest {
         second: Bitmap,
         moving: Boolean,
     ) {
+        val mask = Bitmap.createBitmap(first.width, first.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(mask)
+        val scale = minOf(first.width / BarberPoleLogo.WIDTH, first.height / BarberPoleLogo.HEIGHT)
+        canvas.translate((first.width - BarberPoleLogo.WIDTH * scale) / 2f, (first.height - BarberPoleLogo.HEIGHT * scale) / 2f)
+        canvas.scale(scale, scale)
+        canvas.drawPath(
+            BarberPoleLogo(context.resources).shaft,
+            android.graphics.Paint().apply {
+                color = android.graphics.Color.WHITE
+                style = android.graphics.Paint.Style.FILL_AND_STROKE
+                strokeWidth = 2f / scale
+            },
+        )
         var changes = 0
         for (y in 0 until first.height) {
             for (x in 0 until first.width) {
-                val same = first.getPixel(x, y) == second.getPixel(x, y)
-                if (y < first.height * 10 / 52 || y >= first.height * 42 / 52) assertTrue("Caps stationary", same)
+                val a = first.getPixel(x, y)
+                val b = second.getPixel(x, y)
+                val same = a == b
+                assertEquals("Stationary logo silhouette", android.graphics.Color.alpha(a), android.graphics.Color.alpha(b))
+                if (mask.getPixel(x, y) == 0) assertTrue("Diagonal rails, balls and collars stationary at $x,$y", same)
                 if (!same) changes++
             }
         }
-        if (moving) assertTrue("Interior stripes move", changes > 100) else assertEquals("Remove Animations is static", 0, changes)
+        if (moving) assertTrue("Interior stripes move", changes > 100) else assertEquals("Still or exact loop endpoint", 0, changes)
+        android.util.Log.i(
+            "LogoPole",
+            "native ${first.width}x${first.height}: changed=$changes moving=$moving; outside-shaft/alpha changes=0",
+        )
         first.recycle()
         second.recycle()
+        mask.recycle()
+    }
+
+    private fun assertLogoPhases(pole: BarberPoleLoadingView) {
+        fun frame(phase: Float): Bitmap {
+            lateinit var bitmap: Bitmap
+            instrumentation.runOnMainSync {
+                bitmap = Bitmap.createBitmap(pole.width, pole.height, Bitmap.Config.ARGB_8888)
+                pole.drawPole(Canvas(bitmap), phase)
+            }
+            return bitmap
+        }
+        for (phase in listOf(0f, 0.25f, 0.5f, 1f)) {
+            val next = frame(phase)
+            val colors = mutableSetOf<Int>()
+            for (y in 0 until next.height) for (x in 0 until next.width) colors.add(next.getPixel(x, y))
+            assertTrue("Red at phase $phase", colors.contains(android.graphics.Color.rgb(190, 42, 53)))
+            assertTrue("White at phase $phase", colors.contains(android.graphics.Color.WHITE))
+            assertTrue("Blue at phase $phase", colors.contains(android.graphics.Color.rgb(0, 99, 165)))
+            assertFrames(frame(0f), next, phase != 0f && phase != 1f)
+        }
     }
 
     private fun waitUntil(check: () -> Boolean) {
@@ -284,6 +326,65 @@ class BarberPoleQueryRegressionTest {
         }
         while (!onMain() && SystemClock.uptimeMillis() < deadline) Thread.sleep(50)
         assertTrue("Pending query state reached", onMain())
+    }
+
+    private fun captureLogoComparison(
+        pole: BarberPoleLoadingView,
+        label: String,
+        screen: Bitmap,
+    ) {
+        // Native Canvas renders, taken while the real Search query remains held and pending.
+        val sheet = Bitmap.createBitmap(800, 260, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(sheet)
+        canvas.drawColor(context.getColor(R.color.md_surface))
+        val text =
+            android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = context.getColor(R.color.md_on_surface_variant)
+                textSize = 13f
+            }
+        canvas.drawText(label + if (motionDisabled) " / still" else " / axial motion", 8f, 16f, text)
+        val reference =
+            context.getDrawable(R.drawable.ic_barberpole)!!.mutate().apply {
+                setTint(context.getColor(R.color.md_on_surface_variant))
+            }
+        for (column in 0..4) {
+            val x = 8 + column * 115
+            canvas.drawText(
+                if (column ==
+                    0
+                ) {
+                    "Logo reference"
+                } else {
+                    "Phase ${listOf(0f, 0.25f, 0.5f, 1f)[column - 1]}"
+                },
+                x.toFloat(),
+                36f,
+                text,
+            )
+            for ((w, h, top) in listOf(Triple(88, 150, 42), Triple(34, 58, 198))) {
+                val saved = canvas.save()
+                canvas.translate(x.toFloat(), top.toFloat())
+                if (column == 0) {
+                    reference.setBounds(0, 0, w, h)
+                    reference.draw(canvas)
+                } else {
+                    // Scale the actual pending view's draw uniformly, never change its layout.
+                    val fit = minOf(w.toFloat() / pole.width, h.toFloat() / pole.height)
+                    canvas.scale(fit, fit)
+                    pole.drawPole(canvas, if (motionDisabled) 0f else listOf(0f, 0.25f, 0.5f, 1f)[column - 1])
+                }
+                canvas.restoreToCount(saved)
+            }
+        }
+        canvas.drawText("Pending Search footer", 585f, 36f, text)
+        // Context crop from the actual native screenshot, not a reconstructed footer.
+        val crop = android.graphics.Rect(0, screen.height - 700, screen.width, screen.height)
+        canvas.drawBitmap(screen, crop, android.graphics.Rect(585, 45, 795, 181), null)
+        canvas.drawText("Small artwork: 34 x 58", 585f, 223f, text)
+        File(context.getExternalFilesDir(null), "tagmaster-android-logo-pole-$label-comparison.jpg").outputStream().use {
+            sheet.compress(Bitmap.CompressFormat.JPEG, 92, it)
+        }
+        sheet.recycle()
     }
 
     private fun capture(name: String) {
@@ -330,7 +431,8 @@ class BarberPoleQueryRegressionTest {
                     ).use { android.graphics.BitmapFactory.decodeStream(it) }
             val scale = 800f / maxOf(bitmap.width, bitmap.height)
             val small = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
-            File(context.getExternalFilesDir(null), "tagmaster-android-barberpole-$label-$name.jpg").outputStream().use {
+            if (name == "search-pending") captureLogoComparison(pole, label, bitmap)
+            File(context.getExternalFilesDir(null), "tagmaster-android-logo-pole-$label-$name.jpg").outputStream().use {
                 small.compress(Bitmap.CompressFormat.JPEG, 90, it)
             }
             small.recycle()

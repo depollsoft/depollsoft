@@ -7,6 +7,7 @@
 //
 
 #import "DPAppDelegate.h"
+#import "TMLogoBackgroundView.h"
 
 @import FirebaseAuth;
 @import FirebaseCore;
@@ -300,9 +301,7 @@
 
 + (void)setUpBackground:(UIView *)view {
     view.backgroundColor = [UIColor systemBackgroundColor];
-    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
-    backgroundImage.userInteractionEnabled = NO;
-    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
+    TMLogoBackgroundView *backgroundImage = [[TMLogoBackgroundView alloc] initWithFrame:CGRectZero];
     backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
 
     if ([view isKindOfClass:[UITableView class]]) {
