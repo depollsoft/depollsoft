@@ -384,6 +384,8 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 @interface DPTagViewController (PolishTests)
 - (void)sendTag;
 - (void)loadTag:(BOOL)refresh;
+- (void)fetchTagId:(int)identifier refresh:(BOOL)refresh completion:(void (^)(DPTag *))completion;
+- (void)updateLoadingState;
 @end
 @interface DPTagSummaryController (PolishTests)
 - (void)rate;
@@ -550,6 +552,23 @@ TM_CAPTURE_IMPL
     XCTAssertEqualObjects([self tag].tagUri.absoluteString, @"http://tags.depoll.com/tag.php?id=1809");
 }
 
+- (void)testInitialPendingBeforeViewHidesPlaceholderPages {
+    Method method = class_getClassMethod(DPTag.class, @selector(loadTagById:refresh:));
+    IMP original = method_getImplementation(method);
+    IMP mock = imp_implementationWithBlock(^DPTag *(id cls, int identifier, BOOL refresh) { return nil; });
+    method_setImplementation(method, mock);
+    TMTestDetail *detail = [TMTestDetail new];
+    @try {
+        detail.tagId = 1809;
+        XCTAssertFalse(detail.isViewLoaded);
+        [detail loadViewIfNeeded];
+        XCTAssertTrue([[detail valueForKey:@"rootView"] isHidden]);
+        XCTAssertTrue(detail.tabBar.hidden);
+        XCTAssertEqual(detail.navigationItem.rightBarButtonItems.count, 0);
+        [self waitUntil:^BOOL { return [[detail valueForKey:@"busyIndicator"] busyCount] == 0; }];
+    } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
+}
+
 - (void)testNilLoadBalancesBusyAndRetryLoadsTag {
     TMTestDetail *detail = [TMTestDetail new];
     [detail loadViewIfNeeded];
@@ -561,17 +580,19 @@ TM_CAPTURE_IMPL
     method_setImplementation(method, mock);
     @try {
         detail.tagId = 1809;
-        [self waitUntil:^BOOL { return detail.retry != nil; }];
+        [self waitUntil:^BOOL { return [[detail valueForKey:@"loadFailed"] boolValue]; }];
         XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
-        XCTAssertNotNil(detail.contentUnavailableConfiguration);
+        XCTAssertFalse([[detail valueForKey:@"retryButton"] isHidden]);
         XCTAssertFalse([[detail valueForKey:@"shareBarButton"] isEnabled]);
         fail = NO;
-        detail.retry();
+        [[detail valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
         [self waitUntil:^BOOL { return [detail valueForKey:@"tag"] == tag; }];
         XCTAssertNil(detail.contentUnavailableConfiguration);
         XCTAssertTrue([[detail valueForKey:@"shareBarButton"] isEnabled]);
         fail = YES;
         detail.errorMessage = nil;
+        [detail beginAppearanceTransition:YES animated:NO];
+        [detail endAppearanceTransition];
         [detail loadTag:YES];
         [self waitUntil:^BOOL { return detail.errorMessage != nil; }];
         XCTAssertEqual([detail valueForKey:@"tag"], tag);
@@ -805,6 +826,655 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(segments.selectedSegmentIndex, 2);
 }
 
+@end
+
+// Held completions replace only the fetch boundary. The real controller, child pages,
+// navigation, request identity, busy indicator and native window all run unchanged.
+@interface TMPageLifecycleSpy : UIViewController
+@property NSUInteger appearances;
+@property NSUInteger disappearances;
+@property NSUInteger attachments;
+@property NSUInteger detachments;
+@property (nonatomic, weak) UIViewController *lastParent;
+@end
+@implementation TMPageLifecycleSpy
+- (void)viewDidAppear:(BOOL)animated { [super viewDidAppear:animated]; self.appearances++; }
+- (void)viewDidDisappear:(BOOL)animated { [super viewDidDisappear:animated]; self.disappearances++; }
+- (void)didMoveToParentViewController:(UIViewController *)parent {
+    [super didMoveToParentViewController:parent];
+    // UIKit 26 may repeat didMove during the first viewDidAppear. Count actual
+    // parent changes, while appearance callbacks below still require exact counts.
+    if (parent != self.lastParent) {
+        if (parent) self.attachments++; else self.detachments++;
+        self.lastParent = parent;
+    }
+}
+@end
+
+@interface TMLoadingRegressionTests : XCTestCase
+@property NSMutableArray<NSMutableDictionary *> *requests;
+@property DPTag *immediateTag;
+@property BOOL reduceMotion;
+@property IMP originalFetch;
+@property IMP fetchMock;
+@property IMP originalMotion;
+@property IMP motionMock;
+@property UIWindow *window;
+@property UIWindow *previousKeyWindow;
+@end
+
+@implementation TMLoadingRegressionTests
+- (void)setUp {
+    [super setUp];
+    self.requests = [NSMutableArray array];
+    __weak TMLoadingRegressionTests *weakSelf = self;
+    Method fetch = class_getInstanceMethod(DPTagViewController.class, @selector(fetchTagId:refresh:completion:));
+    self.originalFetch = method_getImplementation(fetch);
+    self.fetchMock = imp_implementationWithBlock(^(DPTagViewController *controller, int identifier, BOOL refresh, void (^completion)(DPTag *)) {
+        TMLoadingRegressionTests *test = weakSelf;
+        [test.requests addObject:[@{@"id": @(identifier), @"refresh": @(refresh), @"completion": [completion copy]} mutableCopy]];
+        if (test.immediateTag) {
+            completion(test.immediateTag);
+            test.requests.lastObject[@"completion"] = NSNull.null;
+        }
+    });
+    method_setImplementation(fetch, self.fetchMock);
+    Method motion = class_getInstanceMethod(NSClassFromString(@"TMQuartetStaffView"), NSSelectorFromString(@"reduceMotionEnabled"));
+    self.originalMotion = method_getImplementation(motion);
+    self.motionMock = imp_implementationWithBlock(^BOOL(id view) { return weakSelf.reduceMotion; });
+    method_setImplementation(motion, self.motionMock);
+}
+- (void)tearDown {
+    self.window.hidden = YES;
+    self.window.rootViewController = nil;
+    self.window = nil;
+    [self.previousKeyWindow makeKeyWindow];
+    method_setImplementation(class_getInstanceMethod(DPTagViewController.class, @selector(fetchTagId:refresh:completion:)), self.originalFetch);
+    method_setImplementation(class_getInstanceMethod(NSClassFromString(@"TMQuartetStaffView"), NSSelectorFromString(@"reduceMotionEnabled")), self.originalMotion);
+    imp_removeBlock(self.fetchMock);
+    imp_removeBlock(self.motionMock);
+    [super tearDown];
+}
+- (DPTag *)tag:(int)identifier {
+    DPTag *tag = [DPTag new];
+    tag.tagId = identifier;
+    tag.title = @"Lost";
+    tag.alternativeTitle = @"In Your Eyes";
+    tag.parts = 4;
+    tag.tagType = @"Barbershop";
+    tag.writtenKey = @"Minor:G";
+    tag.rating = 3.49;
+    tag.lyrics = @"There I go lost in your eyes.";
+    tag.posted = [NSDate dateWithTimeIntervalSince1970:1600000000];
+    return tag;
+}
+- (void)finish:(NSUInteger)index tag:(DPTag *)tag {
+    void (^completion)(DPTag *) = self.requests[index][@"completion"];
+    self.requests[index][@"completion"] = NSNull.null;
+    completion(tag);
+}
+// Let UIKit finish scheduled appearance/layout transactions, not a timed loading delay.
+- (void)drainUIKit {
+    XCTestExpectation *turn = [self expectationWithDescription:@"UIKit transaction turn"];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{ [turn fulfill]; });
+    });
+    [self waitForExpectations:@[turn] timeout:2];
+}
+- (void)layout {
+    [self.window updateTraitsIfNeeded];
+    [self.window setNeedsLayout];
+    [self.window layoutIfNeeded];
+    [CATransaction flush];
+}
+- (UINavigationController *)attach:(TMPageViewController *)detail size:(CGSize)size style:(UIUserInterfaceStyle)style large:(BOOL)large {
+    if (!self.window) {
+        for (UIWindow *candidate in UIApplication.sharedApplication.windows) {
+            if (candidate.isKeyWindow) self.previousKeyWindow = candidate;
+        }
+    }
+    self.window.hidden = YES;
+    self.window.rootViewController = nil;
+    self.window = [[UIWindow alloc] initWithFrame:(CGRect){CGPointZero, size}];
+    self.window.overrideUserInterfaceStyle = style;
+    self.window.traitOverrides.preferredContentSizeCategory = large ? UIContentSizeCategoryAccessibilityExtraExtraExtraLarge : UIContentSizeCategoryLarge;
+    self.window.tintColor = UIColor.systemBlueColor;
+    UIViewController *previous = [UIViewController new];
+    previous.title = @"Tags";
+    UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:previous];
+    // Match the app's charcoal navigation, without launching accounts, sync or networking.
+    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
+    appearance.titleTextAttributes = @{NSForegroundColorAttributeName: UIColor.whiteColor};
+    navigation.navigationBar.standardAppearance = appearance;
+    navigation.navigationBar.scrollEdgeAppearance = appearance;
+    navigation.navigationBar.compactAppearance = appearance;
+    navigation.navigationBar.compactScrollEdgeAppearance = appearance;
+    navigation.navigationBar.tintColor = UIColor.whiteColor;
+    navigation.navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    navigation.navigationBar.translucent = NO;
+    [navigation pushViewController:detail animated:NO];
+    self.window.rootViewController = navigation;
+    [self.window makeKeyAndVisible];
+    // Wait for actual UIKit appearance delivery, not a duration or a simulated fetch.
+    XCTNSPredicateExpectation *visible = [[XCTNSPredicateExpectation alloc] initWithPredicate:
+        [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+            return [[detail valueForKey:@"appeared"] boolValue];
+        }] object:nil];
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:3], XCTWaiterResultCompleted);
+    [self layout];
+    return navigation;
+}
+- (void)assertNotes:(DPTagViewController *)detail animated:(BOOL)animated {
+    NSArray<CALayer *> *notes = [[detail valueForKey:@"quartetStaff"] valueForKey:@"notes"];
+    XCTAssertEqual(notes.count, 4);
+    for (CALayer *note in notes) XCTAssertEqual(note.animationKeys.count, animated ? 1 : 0);
+}
+- (void)assertPending:(DPTagViewController *)detail {
+    XCTAssertNil([detail valueForKey:@"tag"]);
+    XCTAssertTrue([[detail valueForKey:@"tagFetchPending"] boolValue]);
+    UIView *root = [detail valueForKey:@"rootView"];
+    XCTAssertTrue(root.hidden);
+    XCTAssertTrue(root.accessibilityElementsHidden);
+    XCTAssertTrue(detail.tabBar.hidden);
+    XCTAssertTrue(detail.tabBar.accessibilityElementsHidden);
+    XCTAssertFalse([[detail valueForKey:@"initialLoadingView"] isHidden]);
+    XCTAssertEqualObjects([[detail valueForKey:@"loadingStatus"] text], ([NSString stringWithFormat:@"Loading tag %d…", detail.tagId]));
+    XCTAssertEqualObjects([[detail valueForKey:@"loadingHeading"] text], @"Gathering the quartet…");
+    XCTAssertTrue([[detail valueForKey:@"quartetStaff"] accessibilityElementsHidden]);
+    XCTAssertEqual(detail.navigationItem.rightBarButtonItems.count, 0);
+    XCTAssertFalse([[detail valueForKey:@"shareBarButton"] isEnabled]);
+    XCTAssertFalse([[detail valueForKey:@"actionBarButton"] isEnabled]);
+    for (DPTagPageControllerBase *page in detail.viewControllers) XCTAssertNil(page.tag);
+}
+- (void)assertLoaded:(DPTagViewController *)detail tag:(DPTag *)tag {
+    XCTAssertEqual([detail valueForKey:@"tag"], tag);
+    XCTAssertTrue([[detail valueForKey:@"initialLoadingView"] isHidden]);
+    XCTAssertFalse([[detail valueForKey:@"rootView"] isHidden]);
+    XCTAssertFalse([[detail valueForKey:@"rootView"] accessibilityElementsHidden]);
+    XCTAssertFalse(detail.tabBar.hidden);
+    XCTAssertEqual(detail.navigationItem.rightBarButtonItems.count, 3);
+    XCTAssertTrue([[detail valueForKey:@"shareBarButton"] isEnabled]);
+    XCTAssertTrue([[detail valueForKey:@"actionBarButton"] isEnabled]);
+    for (DPTagPageControllerBase *page in detail.viewControllers) XCTAssertEqual(page.tag, tag);
+    [self assertNotes:detail animated:NO];
+}
+- (void)testPreViewPendingDelayedSuccessAndSingleAnnouncement {
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    XCTAssertFalse(detail.isViewLoaded);
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    [self assertPending:detail];
+    XCTAssertEqual(self.requests.count, 1);
+    [detail loadTag:NO];
+    detail.tagId = 1809;
+    XCTAssertEqual(self.requests.count, 1, @"Mounting or repeating the same pending request must not fetch twice");
+    NSUInteger announced = [[detail valueForKey:@"announcedGeneration"] unsignedIntegerValue];
+    XCTAssertGreaterThan(announced, 0);
+    [detail updateLoadingState];
+    [[detail valueForKey:@"busyIndicator"] incrementBusyCount];
+    [[detail valueForKey:@"busyIndicator"] decrementBusyCount];
+    XCTAssertEqual([[detail valueForKey:@"announcedGeneration"] unsignedIntegerValue], announced);
+    DPTag *tag = [self tag:1809];
+    [self finish:0 tag:tag];
+    [self assertLoaded:detail tag:tag];
+    XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
+}
+- (void)testSynchronousCacheSuccessBeforeViewNeverShowsLoader {
+    self.immediateTag = [self tag:1809];
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    XCTAssertFalse(detail.isViewLoaded);
+    [detail loadViewIfNeeded];
+    [self assertLoaded:detail tag:self.immediateTag];
+    XCTAssertEqual([[detail valueForKey:@"announcedGeneration"] unsignedIntegerValue], 0);
+}
+- (void)testFailureBeforeMountAndInlineRetryUsesCurrentID {
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    [self finish:0 tag:nil];
+    XCTAssertFalse(detail.isViewLoaded);
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    XCTAssertEqualObjects([[detail valueForKey:@"loadingHeading"] text], @"Tag unavailable");
+    XCTAssertFalse([[detail valueForKey:@"retryButton"] isHidden]);
+    XCTAssertTrue([[detail valueForKey:@"rootView"] accessibilityElementsHidden]);
+    [self assertNotes:detail animated:NO];
+    [[detail valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
+    XCTAssertEqualObjects(self.requests.lastObject[@"id"], @1809);
+    [self assertPending:detail];
+    [self finish:1 tag:nil];
+    XCTAssertFalse([[detail valueForKey:@"retryButton"] isHidden]);
+    [self assertNotes:detail animated:NO];
+    [[detail valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
+    DPTag *tag = [self tag:1809];
+    [self finish:2 tag:tag];
+    [self assertLoaded:detail tag:tag];
+    XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
+}
+- (void)testRefreshFailureRetainsPagesAndRetryReplacesCurrentTag {
+    TMTestDetail *detail = [TMTestDetail new];
+    detail.tagId = 1809;
+    DPTag *tag = [self tag:1809];
+    [self finish:0 tag:tag];
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    [detail.tabBar.buttons[1] sendActionsForControlEvents:UIControlEventTouchUpInside];
+    [detail loadTag:YES];
+    [self assertLoaded:detail tag:tag];
+    XCTAssertEqual(detail.selectedIndex, 1);
+    XCTAssertEqualObjects(self.requests.lastObject[@"refresh"], @YES);
+    XCTAssertEqual(detail.navigationItem.rightBarButtonItems.lastObject, [detail valueForKey:@"loadingBarButton"]);
+    [self finish:1 tag:nil];
+    [self assertLoaded:detail tag:tag];
+    XCTAssertNotNil(detail.retry);
+    detail.retry();
+    DPTag *updated = [self tag:1809]; updated.title = @"Updated tag";
+    [self finish:2 tag:updated];
+    [self assertLoaded:detail tag:updated];
+    XCTAssertEqualObjects(detail.title, @"Updated tag");
+    XCTAssertEqual(detail.selectedIndex, 1);
+    XCTAssertTrue(detail.tabBar.buttons[1].selected);
+    XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
+    [[detail valueForKey:@"busyIndicator"] incrementBusyCount];
+    [self assertLoaded:detail tag:updated];
+    [[detail valueForKey:@"busyIndicator"] decrementBusyCount];
+}
+- (void)testOutOfOrderCompletionAndOldRetryCannotPopulateDifferentTag {
+    TMTestDetail *detail = [TMTestDetail new];
+    detail.tagId = 1809;
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    detail.tagId = 42;
+    [self finish:0 tag:[self tag:1809]];
+    [self assertPending:detail];
+    DPTag *current = [self tag:42];
+    [self finish:1 tag:current];
+    [self assertLoaded:detail tag:current];
+    [detail loadTag:YES];
+    [self finish:2 tag:nil];
+    void (^oldRetry)(void) = detail.retry;
+    detail.tagId = 99;
+    oldRetry();
+    XCTAssertEqual(self.requests.count, 4);
+    DPTag *next = [self tag:99];
+    [self finish:3 tag:next];
+    [self assertLoaded:detail tag:next];
+    XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
+}
+- (void)testNewSuccessThenOldFailureDoesNotReplaceCurrentScreen {
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    detail.tagId = 42;
+    [detail loadViewIfNeeded];
+    DPTag *tag = [self tag:42];
+    [self finish:1 tag:tag];
+    [self finish:0 tag:nil];
+    [self assertLoaded:detail tag:tag];
+    XCTAssertFalse([[detail valueForKey:@"loadFailed"] boolValue]);
+    XCTAssertEqual([[detail valueForKey:@"busyIndicator"] busyCount], 0);
+}
+- (void)testBackWhilePendingStopsMotionAndDoesNotRetainController {
+    __weak DPTagViewController *weakDetail;
+    TMBusyIndicator *busy;
+    @autoreleasepool {
+        DPTagViewController *detail = [DPTagViewController new];
+        weakDetail = detail;
+        detail.tagId = 1809;
+        UINavigationController *nav = [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+        busy = [detail valueForKey:@"busyIndicator"];
+        XCTAssertFalse(nav.navigationBarHidden);
+        XCTAssertFalse(detail.navigationItem.hidesBackButton);
+        XCTAssertTrue(nav.interactivePopGestureRecognizer.enabled);
+        XCTAssertNotNil(nav.navigationBar.backItem);
+        [nav popViewControllerAnimated:NO];
+        [self drainUIKit];
+        [self assertNotes:detail animated:NO];
+        XCTAssertEqual(nav.viewControllers.count, 1);
+    }
+    XCTAssertNil(weakDetail);
+    [self finish:0 tag:[self tag:1809]];
+    XCTAssertEqual(busy.busyCount, 0);
+}
+- (void)testMotionPolicyBackgroundVisibilityDetachmentAndCompletion {
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleDark large:NO];
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self assertNotes:detail animated:YES];
+    self.reduceMotion = YES;
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+    [self assertNotes:detail animated:NO];
+    XCTAssertFalse([[detail valueForKey:@"quartetStaff"] isHidden]);
+    self.reduceMotion = NO;
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+    [self assertNotes:detail animated:YES];
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationWillResignActiveNotification object:nil];
+    [self assertNotes:detail animated:NO];
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self assertNotes:detail animated:YES];
+    [detail beginAppearanceTransition:NO animated:NO];
+    [detail endAppearanceTransition];
+    [self assertNotes:detail animated:NO];
+    [detail beginAppearanceTransition:YES animated:NO];
+    [detail endAppearanceTransition];
+    [self assertNotes:detail animated:YES];
+    UIView *staff = [detail valueForKey:@"quartetStaff"];
+    staff.hidden = YES;
+    [self assertNotes:detail animated:NO];
+    staff.hidden = NO;
+    [self assertNotes:detail animated:YES];
+    UIStackView *stack = (UIStackView *)staff.superview;
+    [stack removeArrangedSubview:staff];
+    [staff removeFromSuperview];
+    XCTAssertNil(staff.window);
+    [self assertNotes:detail animated:NO];
+    [stack insertArrangedSubview:staff atIndex:0];
+    XCTAssertNotNil(staff.window);
+    [self assertNotes:detail animated:YES];
+    [self finish:0 tag:[self tag:1809]];
+    [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
+    [self assertNotes:detail animated:NO];
+}
+- (void)checkTabDistribution:(TMPageViewController *)controller {
+    TMPageSwitcher *bar = controller.tabBar;
+    // UIKit temporarily suppresses hits while trait/rotation layout animates.
+    // Await real interaction readiness, rather than sleeping or disabling motion.
+    XCTNSPredicateExpectation *interactive = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+        [self layout];
+        for (UIButton *button in bar.buttons) {
+            CGPoint center = [button convertPoint:CGPointMake(button.bounds.size.width / 2, button.bounds.size.height / 2) toView:controller.view];
+            if ([controller.view hitTest:center withEvent:nil] != button) return NO;
+        }
+        return bar.buttons.count == 4;
+    }] object:nil];
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[interactive] timeout:3], XCTWaiterResultCompleted);
+    XCTAssertFalse(bar.hidden);
+    XCTAssertTrue(bar.shouldGroupAccessibilityChildren);
+    XCTAssertFalse(bar.isAccessibilityElement);
+    XCTAssertEqual(bar.buttons.count, 4);
+    CGRect safe = controller.view.safeAreaLayoutGuide.layoutFrame;
+    NSMutableArray *rects = [NSMutableArray array];
+    for (NSUInteger i = 0; i < bar.buttons.count; i++) {
+        UIButton *button = bar.buttons[i];
+        CGRect rect = [button convertRect:button.bounds toView:controller.view];
+        [rects addObject:NSStringFromCGRect(rect)];
+        XCTAssertEqualWithAccuracy(rect.origin.x, safe.origin.x + safe.size.width * i / 4, 0.5);
+        XCTAssertEqualWithAccuracy(rect.size.width, safe.size.width / 4, 0.5);
+        XCTAssertEqualWithAccuracy(CGRectGetMaxY(rect), CGRectGetMaxY(safe), 0.5);
+        XCTAssertGreaterThanOrEqual(rect.size.height, 44);
+        XCTAssertGreaterThanOrEqual(rect.size.width, 44);
+        XCTAssertTrue(button.isAccessibilityElement);
+        XCTAssertFalse(button.hidden);
+        XCTAssertEqualObjects(button.accessibilityLabel, bar.items[i].title);
+        XCTAssertEqual(button.titleLabel.numberOfLines, 0);
+        XCTAssertEqualWithAccuracy(button.titleLabel.font.pointSize, [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1 compatibleWithTraitCollection:bar.traitCollection].pointSize, 0.1);
+        CGSize text = [button.titleLabel sizeThatFits:CGSizeMake(button.titleLabel.bounds.size.width, CGFLOAT_MAX)];
+        XCTAssertGreaterThanOrEqual(button.titleLabel.bounds.size.height + 0.5, text.height);
+        XCTAssertLessThanOrEqual(CGRectGetMaxY(button.titleLabel.frame), button.bounds.size.height);
+        UIView *hit = [controller.view hitTest:[button convertPoint:CGPointMake(button.bounds.size.width / 2, button.bounds.size.height / 2) toView:controller.view] withEvent:nil];
+        XCTAssertEqual(hit, button, @"Hit %@ instead of %@, bar %@", hit, button, bar);
+    }
+    NSLog(@"TM_WIDTH %@ safe=%@ slots=%@ font=%@", NSStringFromClass(controller.class), NSStringFromCGRect(safe), rects, bar.traitCollection.preferredContentSizeCategory);
+}
+- (void)capture:(NSString *)name {
+    [self layout];
+    CGSize size = self.window.bounds.size;
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+    format.scale = MIN(1, 800 / MAX(size.width, size.height));
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [self.window drawViewHierarchyInRect:self.window.bounds afterScreenUpdates:YES];
+    }];
+    NSData *jpeg = UIImageJPEGRepresentation(image, 0.85);
+    NSString *directory = [NSTemporaryDirectory() stringByAppendingPathComponent:@"tm-loading-captures"];
+    [NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([jpeg writeToFile:[directory stringByAppendingPathComponent:[name stringByAppendingPathExtension:@"jpg"]] atomically:YES]);
+    XCTAttachment *attachment = [XCTAttachment attachmentWithData:jpeg uniformTypeIdentifier:@"public.jpeg"];
+    attachment.name = name;
+    attachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+    [self addAttachment:attachment];
+}
+- (void)testPageContainmentAndAppearanceFollowOnlySelectedChild {
+    TMPageViewController *controller = [TMPageViewController new];
+    NSMutableArray<TMPageLifecycleSpy *> *pages = [NSMutableArray array];
+    for (NSString *title in @[@"One", @"Two", @"Three", @"Four"]) {
+        TMPageLifecycleSpy *page = [TMPageLifecycleSpy new];
+        page.tabBarItem = [[UITabBarItem alloc] initWithTitle:title image:nil tag:pages.count];
+        [pages addObject:page];
+    }
+    controller.viewControllers = pages;
+    UINavigationController *nav = [self attach:controller size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    XCTAssertEqual(pages[0].appearances, 1);
+    XCTAssertEqual(pages[0].attachments, 1);
+    XCTAssertEqual(pages[1].appearances, 0);
+    XCTAssertFalse(pages[1].isViewLoaded);
+    [controller.tabBar.buttons[1] sendActionsForControlEvents:UIControlEventTouchUpInside];
+    XCTAssertEqual(pages[0].disappearances, 1);
+    XCTAssertEqual(pages[0].detachments, 1);
+    XCTAssertNil(pages[0].parentViewController);
+    XCTAssertEqual(pages[1].appearances, 1);
+    XCTAssertEqual(pages[1].attachments, 1);
+    [controller.tabBar.buttons[1] sendActionsForControlEvents:UIControlEventTouchUpInside];
+    XCTAssertEqual(pages[1].appearances, 1);
+    TMPageLifecycleSpy *cover = [TMPageLifecycleSpy new];
+    [nav pushViewController:cover animated:NO];
+    XCTNSPredicateExpectation *covered = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return cover.appearances == 1; }] object:nil];
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[covered] timeout:3], XCTWaiterResultCompleted);
+    XCTAssertEqual(pages[1].disappearances, 1);
+    [nav popViewControllerAnimated:NO];
+    XCTNSPredicateExpectation *returned = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return pages[1].appearances == 2; }] object:nil];
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[returned] timeout:3], XCTWaiterResultCompleted);
+    XCTAssertEqual(pages[1].appearances, 2);
+    XCTAssertEqual(pages[0].appearances, 1);
+    controller.viewControllers = @[];
+    XCTAssertEqual(pages[1].disappearances, 2);
+    XCTAssertEqual(pages[1].detachments, 1);
+    XCTAssertEqual(controller.childViewControllers.count, 0);
+    XCTAssertEqual(controller.rootView.subviews.count, 0);
+    XCTAssertEqual(controller.tabBar.buttons.count, 0);
+}
+
+- (void)testNativeTabsFillWholeAvailableWidth {
+    DPTagViewController *detail = [DPTagViewController new];
+    detail.tagId = 1809;
+    [self finish:0 tag:[self tag:1809]];
+    [self attach:detail size:UIScreen.mainScreen.bounds.size style:UIUserInterfaceStyleLight large:NO];
+    [self checkTabDistribution:detail];
+}
+- (void)exercisePageSelection:(TMPageViewController *)controller {
+    for (NSUInteger i = 0; i < 4; i++) {
+        [controller.tabBar.buttons[i] sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [self drainUIKit];
+        [self layout];
+        XCTAssertEqual(controller.selectedIndex, i);
+        XCTAssertEqual(controller.tabBar.selectedItem, controller.viewControllers[i].tabBarItem);
+        XCTAssertTrue(controller.tabBar.buttons[i].selected);
+        XCTAssertTrue(controller.tabBar.buttons[i].accessibilityTraits & UIAccessibilityTraitSelected);
+        XCTAssertEqual(controller.childViewControllers.count, 1);
+        XCTAssertEqual(controller.childViewControllers.firstObject, controller.viewControllers[i]);
+        XCTAssertEqual(controller.viewControllers[i].parentViewController, controller);
+        XCTAssertEqual(controller.rootView.subviews.firstObject, controller.viewControllers[i].view);
+        XCTAssertEqual(controller.rootView.subviews.count, 1);
+    }
+    controller.viewControllers = [controller.viewControllers copy];
+    XCTAssertEqual(controller.selectedIndex, 3);
+    // The old delegate selection call remains meaningful and selects the real page.
+    [controller.tabBar.delegate tabBar:controller.tabBar didSelectItem:controller.tabBar.items[1]];
+    XCTAssertEqual(controller.selectedIndex, 1);
+    XCTAssertEqual(controller.tabBar.selectedItem, controller.tabBar.items[1]);
+}
+- (void)testBrowseAndDetailWidthsRotationLargeTextSplitAndSelection {
+    Method query = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
+    IMP original = method_getImplementation(query);
+    DPTag *tag = [self tag:1809];
+    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
+        DPTagQueryResult *result = [DPTagQueryResult new];
+        result.tags = @[tag]; result.available = 1; result.count = 1; result.start = 0;
+        return result;
+    });
+    method_setImplementation(query, mock);
+    @try {
+        CGSize portrait = UIScreen.mainScreen.bounds.size;
+        NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+        for (NSUInteger page = 0; page < 2; page++) {
+            TMPageViewController *controller;
+            if (page == 0) controller = [DPBrowseViewController new];
+            else {
+                DPTagViewController *detail = [DPTagViewController new];
+                detail.tagId = 1809;
+                controller = detail;
+            }
+            UINavigationController *nav = [self attach:controller size:portrait style:UIUserInterfaceStyleDark large:NO];
+            XCTAssertEqual(controller.selectedIndex, 0);
+            if (page == 1) {
+                [self assertPending:(DPTagViewController *)controller];
+                [self finish:self.requests.count - 1 tag:tag];
+                [self assertLoaded:(DPTagViewController *)controller tag:tag];
+            }
+            [self exercisePageSelection:controller];
+            if (page == 0) {
+                for (DPTagQueryViewController *child in controller.viewControllers) {
+                    XCTNSPredicateExpectation *loaded = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !child.isLoading && child.tags.count == 1; }] object:nil];
+                    XCTAssertEqual([XCTWaiter waitForExpectations:@[loaded] timeout:3], XCTWaiterResultCompleted);
+                }
+            }
+            for (NSUInteger variant = 0; variant < 4; variant++) {
+                BOOL landscape = variant % 2;
+                self.window.frame = (CGRect){CGPointZero, landscape ? CGSizeMake(portrait.height, portrait.width) : portrait};
+                self.window.traitOverrides.preferredContentSizeCategory = variant < 2 ? UIContentSizeCategoryLarge : UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+                [self drainUIKit]; [self layout]; [self layout];
+                [self checkTabDistribution:controller];
+                XCTAssertEqual(controller.selectedIndex, 1);
+            }
+            self.window.frame = (CGRect){CGPointZero, portrait};
+            self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
+            controller.selectedIndex = 0;
+            [self drainUIKit]; [self layout]; [self layout];
+            if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+                self.window.rootViewController = nil;
+                UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
+                split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
+                split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+                UIViewController *sidebar = [UIViewController new];
+                sidebar.title = @"Tags";
+                sidebar.view.backgroundColor = UIColor.secondarySystemBackgroundColor;
+                [split setViewController:[[UINavigationController alloc] initWithRootViewController:sidebar] forColumn:UISplitViewControllerColumnPrimary];
+                [split setViewController:nav forColumn:UISplitViewControllerColumnSecondary];
+                self.window.rootViewController = split;
+                XCTNSPredicateExpectation *tiled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+                    [self layout];
+                    CGRect first = [controller.tabBar.buttons.firstObject convertRect:controller.tabBar.buttons.firstObject.bounds toView:self.window];
+                    CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
+                    return split.displayMode == UISplitViewControllerDisplayModeOneBesideSecondary && CGRectGetMinX(first) >= CGRectGetMaxX(side);
+                }] object:nil];
+                XCTAssertEqual([XCTWaiter waitForExpectations:@[tiled] timeout:3], XCTWaiterResultCompleted);
+                [self drainUIKit]; [self layout]; [self layout];
+                [self checkTabDistribution:controller];
+                CGRect first = [controller.tabBar.buttons.firstObject convertRect:controller.tabBar.buttons.firstObject.bounds toView:self.window];
+                CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
+                XCTAssertGreaterThanOrEqual(CGRectGetMinX(first), CGRectGetMaxX(side));
+                for (NSNumber *width in @[@600, @(portrait.height)]) {
+                    self.window.frame = CGRectMake(0, 0, width.doubleValue, portrait.width);
+                    self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+                    [self drainUIKit]; [self layout]; [self layout];
+                    [self checkTabDistribution:controller];
+                }
+                self.window.frame = (CGRect){CGPointZero, portrait};
+                self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
+                [self drainUIKit]; [self layout]; [self layout];
+            }
+            [self checkTabDistribution:controller];
+            [self capture:[NSString stringWithFormat:@"tagmaster-ios-fullwidth-%@-%@", device, page == 0 ? @"browse" : @"detail"]];
+            controller.selectedIndex = 2;
+            [nav pushViewController:[UIViewController new] animated:NO];
+            [self drainUIKit];
+            [nav popViewControllerAnimated:NO];
+            [self drainUIKit]; [self layout];
+            XCTAssertEqual(controller.selectedIndex, 2);
+            [self checkTabDistribution:controller];
+        }
+    } @finally {
+        method_setImplementation(query, original);
+        imp_removeBlock(mock);
+    }
+}
+- (CGFloat)luminance:(UIColor *)color on:(UIColor *)background traits:(UITraitCollection *)traits {
+    CGFloat r, g, b, a, br, bg, bb, ba;
+    [[color resolvedColorWithTraitCollection:traits] getRed:&r green:&g blue:&b alpha:&a];
+    [[background resolvedColorWithTraitCollection:traits] getRed:&br green:&bg blue:&bb alpha:&ba];
+    CGFloat components[] = {r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)};
+    for (NSUInteger i = 0; i < 3; i++) components[i] = components[i] <= 0.04045 ? components[i] / 12.92 : pow((components[i] + 0.055) / 1.055, 2.4);
+    return components[0] * 0.2126 + components[1] * 0.7152 + components[2] * 0.0722;
+}
+- (void)testPageCaptionsHaveReadableContrastOnCharcoal {
+    TMPageSwitcher *bar = [TMPageSwitcher new];
+    NSMutableArray *items = [NSMutableArray array];
+    for (NSString *title in @[@"Summary", @"Details", @"Tracks", @"Videos"]) {
+        [items addObject:[[UITabBarItem alloc] initWithTitle:title image:nil tag:items.count]];
+    }
+    bar.items = items;
+    for (UITabBarItem *selected in items) {
+        bar.selectedItem = selected;
+        for (NSNumber *style in @[@(UIUserInterfaceStyleLight), @(UIUserInterfaceStyleDark)]) {
+            UITraitCollection *traits = [UITraitCollection traitCollectionWithUserInterfaceStyle:style.integerValue];
+            for (UIButton *button in bar.buttons) {
+                UIColor *foreground = button.configuration.baseForegroundColor;
+                UIColor *fill = button.configuration.background.backgroundColor;
+                CGFloat foregroundLuminance = [self luminance:foreground on:bar.backgroundColor traits:traits];
+                CGFloat fillLuminance = [self luminance:fill on:bar.backgroundColor traits:traits];
+                XCTAssertGreaterThanOrEqual((MAX(foregroundLuminance, fillLuminance) + 0.05) /
+                                           (MIN(foregroundLuminance, fillLuminance) + 0.05), 4.5);
+            }
+        }
+    }
+}
+- (void)testNativePendingAndLoadedCapturesAndAdaptiveLayout {
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    CGSize portrait = UIScreen.mainScreen.bounds.size;
+    for (NSUInteger variant = 0; variant < 3; variant++) {
+        BOOL large = variant == 2;
+        UIUserInterfaceStyle style = variant == 0 ? UIUserInterfaceStyleLight : UIUserInterfaceStyleDark;
+        TMTestDetail *detail = [TMTestDetail new];
+        detail.tagId = 1809;
+        NSUInteger request = self.requests.count - 1;
+        [self attach:detail size:portrait style:style large:large];
+        [self assertPending:detail];
+        UILabel *status = [detail valueForKey:@"loadingStatus"];
+        UIColor *background = [[detail valueForKey:@"initialLoadingView"] backgroundColor];
+        CGFloat textLuminance = [self luminance:status.textColor on:background traits:status.traitCollection];
+        CGFloat backgroundLuminance = [self luminance:background on:background traits:status.traitCollection];
+        XCTAssertGreaterThanOrEqual((MAX(textLuminance, backgroundLuminance) + 0.05) / (MIN(textLuminance, backgroundLuminance) + 0.05), 4.5);
+        XCTAssertEqualObjects(status.traitCollection.preferredContentSizeCategory, large ? UIContentSizeCategoryAccessibilityExtraExtraExtraLarge : UIContentSizeCategoryLarge);
+        XCTAssertEqualWithAccuracy(status.font.pointSize, [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:status.traitCollection].pointSize, 0.1);
+        for (NSString *key in @[@"loadingHeading", @"loadingStatus"]) {
+            UILabel *label = [detail valueForKey:key];
+            XCTAssertGreaterThan(label.bounds.size.width, 0);
+            XCTAssertGreaterThanOrEqual(label.bounds.size.height + 1, [label sizeThatFits:CGSizeMake(label.bounds.size.width, CGFLOAT_MAX)].height);
+        }
+        UIView *staff = [detail valueForKey:@"quartetStaff"];
+        XCTAssertEqualWithAccuracy(staff.bounds.size.width, 204, 1);
+        XCTAssertEqualWithAccuracy(staff.bounds.size.height, 88, 1);
+        NSString *suffix = variant == 0 ? @"light" : (large ? @"dark-ax5" : @"dark");
+        NSString *name = [NSString stringWithFormat:@"tagmaster-ios-loading-%@-%@", device, suffix];
+        [self capture:[name stringByAppendingString:@"-pending"]];
+        if (large) {
+            self.window.frame = CGRectMake(0, 0, portrait.height, portrait.width);
+            [self layout];
+            [self assertPending:detail];
+            UIScrollView *scroll = ((UIView *)[detail valueForKey:@"initialLoadingView"]).subviews.firstObject;
+            CGRect textRect = [status convertRect:status.bounds toView:scroll];
+            [scroll scrollRectToVisible:textRect animated:NO];
+            XCTAssertLessThanOrEqual(CGRectGetMaxY(textRect), scroll.contentSize.height + 1);
+            [self capture:[name stringByAppendingString:@"-landscape-pending"]];
+            self.window.frame = (CGRect){CGPointZero, portrait};
+        }
+        DPTag *tag = [self tag:1809];
+        [self finish:request tag:tag];
+        [self drainUIKit];
+        [self layout];
+        [self assertLoaded:detail tag:tag];
+        [self capture:[name stringByAppendingString:@"-loaded"]];
+    }
+}
 @end
 
 // Exercise the real tab/scroll/grid hierarchy without catalog or media requests.

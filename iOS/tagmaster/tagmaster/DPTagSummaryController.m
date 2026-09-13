@@ -54,6 +54,22 @@
 }
 @end
 
+// Multiline rows measure at their actual column width. UIKit's cached intrinsic
+// height can otherwise survive the first containment/layout transaction.
+@interface TMSummaryBodyLabel : UILabel
+@end
+@implementation TMSummaryBodyLabel
+- (CGSize)intrinsicContentSize {
+    if (self.bounds.size.width <= 0) return CGSizeMake(UIViewNoIntrinsicMetric, [super intrinsicContentSize].height);
+    return CGSizeMake(UIViewNoIntrinsicMetric, [self sizeThatFits:CGSizeMake(self.bounds.size.width, CGFLOAT_MAX)].height);
+}
+- (void)setBounds:(CGRect)bounds {
+    BOOL changed = self.bounds.size.width != bounds.size.width;
+    [super setBounds:bounds];
+    if (changed) [self invalidateIntrinsicContentSize];
+}
+@end
+
 @interface DPSheetMusicPreview : NSObject <QLPreviewItem>
 
 @property (nonatomic, strong) NSURL *previewItemURL;
@@ -285,19 +301,12 @@
     [self refreshView];
 }
 
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    // DPLabel deliberately has no intrinsic width. When the tab host detaches and
-    // reattaches this page, automatic multiline measurement can retain a height
-    // from a transient column width. Measure against the resolved width instead;
-    // the existing hugging/compression priorities can then size each auto row.
-    for (UILabel *label in @[partsLabel, typeLabel, classicTagNumberLabel,
-                             ratingLabel, lyricsLabel, notesLabel]) {
-        CGFloat width = CGRectGetWidth(label.bounds);
-        if ([label isDescendantOfView:grid] && width > 0 && label.preferredMaxLayoutWidth != width) {
-            label.preferredMaxLayoutWidth = width;
-        }
-    }
+- (UILabel *)makeBodyLabel {
+    UILabel *label = [TMSummaryBodyLabel new];
+    label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.numberOfLines = 0;
+    return label;
 }
 
 - (void)rate {

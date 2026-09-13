@@ -26,13 +26,61 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
+            android:visibility="gone"
             android:scaleType="centerInside"
             app:srcCompat="@drawable/ic_barberpole" />
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <ScrollView
+            android:id="@+id/detailLoadingState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp">
+                <LinearLayout
+                    android:id="@+id/detailLoadingComposition"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:importantForAccessibility="yes"
+                    android:screenReaderFocusable="true"
+                    android:accessibilityLiveRegion="polite">
+                    <depollsoft.tagmaster.TagLoadingView
+                        android:id="@+id/quartetIllustration"
+                        android:layout_width="216dp"
+                        android:layout_height="96dp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:importantForAccessibility="no"
+                        android:text="@string/detail_gathering_quartet"
+                        android:textAppearance="?attr/textAppearanceTitleLarge" />
+                    <TextView
+                        android:id="@+id/detailLoadingStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:importantForAccessibility="no"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
 
         <LinearLayout
             android:id="@+id/detailErrorState"
@@ -64,7 +112,7 @@
     </FrameLayout>
 
     <!-- Keep page switching within thumb reach, below the content and above system bars. -->
-    <com.google.android.material.tabs.TabLayout
+    <depollsoft.tagmaster.FullWidthTabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -76,6 +124,9 @@
         app:tabIndicatorColor="@color/brand_chrome_accent"
         app:tabRippleColor="@color/brand_tab_tint"
         app:tabIndicatorGravity="top"
-        app:tabMode="auto"
+        app:tabMode="fixed"
+        app:tabMaxWidth="0dp"
+        app:tabPaddingStart="8dp"
+        app:tabPaddingEnd="8dp"
         app:tabGravity="fill" />
 </LinearLayout>

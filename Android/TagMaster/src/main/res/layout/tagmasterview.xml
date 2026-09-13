@@ -40,7 +40,7 @@
     </FrameLayout>
 
     <!-- Keep page switching within thumb reach, below the content and above system bars. -->
-    <com.google.android.material.tabs.TabLayout
+    <depollsoft.tagmaster.FullWidthTabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -51,6 +51,9 @@
         app:tabIndicatorColor="@color/brand_chrome_accent"
         app:tabRippleColor="@color/brand_tab_tint"
         app:tabIndicatorGravity="top"
-        app:tabMode="auto"
+        app:tabMode="fixed"
+        app:tabMaxWidth="0dp"
+        app:tabPaddingStart="8dp"
+        app:tabPaddingEnd="8dp"
         app:tabGravity="fill" />
 </LinearLayout>

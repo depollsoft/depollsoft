@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import UIKit
 
 final class TagDetailUITests: XCTestCase {
     
@@ -293,10 +294,83 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 5))
     }
 
+    private func assertPageSlots(_ titles: [String]) {
+        let buttons = titles.map { app.buttons["page-\($0)"] }
+        XCTAssertEqual(buttons.count, 4)
+        for button in buttons { XCTAssertTrue(button.waitForExistence(timeout: 5)) }
+        let first = buttons[0].frame
+        let last = buttons[3].frame
+        let width = (last.maxX - first.minX) / 4
+        for (index, button) in buttons.enumerated() {
+            XCTAssertTrue(button.isHittable)
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            XCTAssertEqual(button.frame.minX, first.minX + CGFloat(index) * width, accuracy: 1)
+            XCTAssertEqual(button.frame.width, width, accuracy: 1)
+            XCTAssertEqual(button.frame.maxY, first.maxY, accuracy: 1)
+        }
+        XCTAssertEqual(app.buttons.matching(identifier: "page-\(titles[0])").count, 1)
+    }
+
+    private func captureFullWidth(_ page: String) {
+        let image = XCUIScreen.main.screenshot().image
+        let scale = min(1, 800 / max(image.size.width, image.size.height))
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let reduced = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        let attachment = XCTAttachment(data: reduced.jpegData(compressionQuality: 0.85)!, uniformTypeIdentifier: "public.jpeg")
+        let device = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "phone"
+        attachment.name = "tagmaster-ios-fullwidth-native-\(device)-\(page)"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func testFullWidthPagesInNativePortraitAndLandscape() throws {
+        let orientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = orientation }
+        XCUIDevice.shared.orientation = .portrait
+        openTag()
+        let detail = ["Summary", "Details", "Tracks", "Videos"]
+        assertPageSlots(detail)
+        captureFullWidth("detail")
+        for title in detail {
+            let button = app.buttons["page-\(title)"]
+            button.tap()
+            XCTAssertTrue(button.isSelected)
+        }
+        app.buttons["page-Details"].tap()
+        XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.orientation = .landscapeLeft
+        assertPageSlots(detail)
+        XCTAssertTrue(app.buttons["page-Details"].isSelected)
+        XCUIDevice.shared.orientation = .portrait
+        assertPageSlots(detail)
+        XCTAssertTrue(app.buttons["page-Details"].isSelected)
+        home()
+        app.tables.staticTexts["Browse"].tap()
+        let browse = ["Latest", "Rating", "Downloads", "Classic"]
+        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 30))
+        assertPageSlots(browse)
+        captureFullWidth("browse")
+        for title in browse {
+            let button = app.buttons["page-\(title)"]
+            button.tap()
+            XCTAssertTrue(button.isSelected)
+        }
+        XCUIDevice.shared.orientation = .landscapeLeft
+        assertPageSlots(browse)
+        XCTAssertTrue(app.buttons["page-Classic"].isSelected)
+        XCUIDevice.shared.orientation = .portrait
+        assertPageSlots(browse)
+        XCTAssertTrue(app.buttons["page-Classic"].isSelected)
+    }
+
     func testSummaryLyricsRemainReachableAfterChangingPages() throws {
         openTag()
-        app.tabBars.buttons["Details"].tap()
-        app.tabBars.buttons["Summary"].tap()
+        app.buttons["Details"].tap()
+        app.buttons["Summary"].tap()
         let lyrics = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'And I will wait to face the skies'")).firstMatch
         XCTAssertTrue(lyrics.exists)
         for _ in 0..<6 {
@@ -338,21 +412,21 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(pitch.exists)
         XCTAssertGreaterThanOrEqual(pitch.frame.height, 44)
         for title in ["Summary", "Details", "Tracks", "Videos"] {
-            let tab = app.tabBars.buttons[title]
+            let tab = app.buttons[title]
             XCTAssertTrue(tab.exists)
             XCTAssertGreaterThanOrEqual(tab.frame.height, 44)
             XCTAssertTrue(tab.isHittable)
         }
-        app.tabBars.buttons["Details"].tap()
+        app.buttons["Details"].tap()
         XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["Tracks"].tap()
+        app.buttons["Tracks"].tap()
         let emptyTracks = app.staticTexts["Sorry, no tracks could be found for this tag."]
         XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.waitForExistence(timeout: 5))
         capture("tracks")
-        app.tabBars.buttons["Videos"].tap()
+        app.buttons["Videos"].tap()
         XCTAssertTrue(app.tables.firstMatch.waitForExistence(timeout: 5))
         capture("videos")
-        app.tabBars.buttons["Summary"].tap()
+        app.buttons["Summary"].tap()
         capture("detail")
         app.navigationBars.buttons["Share"].tap()
         XCTAssertTrue(app.collectionViews["activityCollectionView"].waitForExistence(timeout: 10))

@@ -63,9 +63,10 @@ class TagBrowserActivity : AppCompatActivity() {
             tab.text = item.title
             tab.icon = item.icon
             tab.id = item.itemId
+            tab.setCustomView(R.layout.bottom_tab_content)
         }.attach()
 
-        tabLayout.applyContentInsets(bottom = false)
+        tabLayout.applyHorizontalInsetsAsPadding()
         findViewById<View>(R.id.searchButton).applyBottomInsetsAsMargin()
 
         findViewById<View>(R.id.searchButton).setOnClickListener {

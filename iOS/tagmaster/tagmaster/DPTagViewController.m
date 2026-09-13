@@ -15,6 +15,90 @@
 #import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
 
+// Decorative vector notation. No timers, assets, audio or accessibility children.
+@interface TMQuartetStaffView : UIView
+@property (nonatomic, copy) NSArray<CAShapeLayer *> *notes;
+@property (nonatomic) BOOL animationAllowed;
+- (void)updateMotion;
+@end
+
+@implementation TMQuartetStaffView
+- (instancetype)initWithFrame:(CGRect)frame {
+    if ((self = [super initWithFrame:frame])) {
+        self.backgroundColor = UIColor.clearColor;
+        self.accessibilityElementsHidden = YES;
+        NSMutableArray *notes = [NSMutableArray array];
+        for (NSUInteger i = 0; i < 4; i++) {
+            CAShapeLayer *note = [CAShapeLayer layer];
+            [self.layer addSublayer:note];
+            [notes addObject:note];
+        }
+        self.notes = notes;
+    }
+    return self;
+}
+- (CGSize)intrinsicContentSize { return CGSizeMake(204, 88); }
+- (void)drawRect:(CGRect)rect {
+    [UIColor.separatorColor setStroke];
+    UIBezierPath *staff = [UIBezierPath bezierPath];
+    staff.lineWidth = 1;
+    for (NSUInteger i = 0; i < 5; i++) {
+        CGFloat y = 26 + i * 10;
+        [staff moveToPoint:CGPointMake(0, y)];
+        [staff addLineToPoint:CGPointMake(self.bounds.size.width, y)];
+    }
+    [staff stroke];
+}
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    const CGFloat heights[] = {46, 36, 41, 56};
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    for (NSUInteger i = 0; i < self.notes.count; i++) {
+        CGFloat x = self.bounds.size.width * (0.2 + i * 0.2);
+        CGFloat y = heights[i];
+        UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(x - 7, y - 4.5, 14, 9)];
+        [path appendPath:[UIBezierPath bezierPathWithRoundedRect:CGRectMake(x + 5, y - 29, 2, 29) cornerRadius:1]];
+        self.notes[i].path = path.CGPath;
+        self.notes[i].fillColor = [UIColor.systemBlueColor resolvedColorWithTraitCollection:self.traitCollection].CGColor;
+    }
+    [CATransaction commit];
+}
+- (void)setAnimationAllowed:(BOOL)allowed {
+    _animationAllowed = allowed;
+    [self updateMotion];
+}
+- (void)setHidden:(BOOL)hidden {
+    [super setHidden:hidden];
+    [self updateMotion];
+}
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    [self updateMotion];
+}
+- (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
+- (void)updateMotion {
+    BOOL animate = self.animationAllowed && self.window && !self.hidden && ![self reduceMotionEnabled];
+    for (NSUInteger i = 0; i < self.notes.count; i++) {
+        CAShapeLayer *note = self.notes[i];
+        if (!animate) {
+            [note removeAllAnimations];
+        } else if (![note animationForKey:@"gather"]) {
+            CAKeyframeAnimation *motion = [CAKeyframeAnimation animationWithKeyPath:@"transform.translation.y"];
+            motion.values = @[@0, @(-4), @0, @0];
+            motion.keyTimes = @[@0, @0.2, @0.4, @1];
+            motion.timingFunctions = @[[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                      [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut],
+                                      [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear]];
+            motion.duration = 2.4;
+            motion.beginTime = CACurrentMediaTime() + i * 0.16;
+            motion.repeatCount = HUGE_VALF;
+            [note addAnimation:motion forKey:@"gather"];
+        }
+    }
+}
+@end
+
 @interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate>
 
 @property (nonatomic, strong) DPTag *tag;
@@ -30,6 +114,18 @@
 @property (nonatomic, strong) UIBarButtonItem *loadingBarButton;
 
 @property (nonatomic, strong) TMBusyIndicator *busyIndicator;
+@property (nonatomic) BOOL tagFetchPending;
+@property (nonatomic) BOOL loadFailed;
+@property (nonatomic) BOOL lastFetchWasRefresh;
+@property (nonatomic) NSUInteger requestGeneration;
+@property (nonatomic) NSUInteger announcedGeneration;
+@property (nonatomic) BOOL screenVisible;
+@property (nonatomic) BOOL applicationActive;
+@property (nonatomic, strong) UIView *initialLoadingView;
+@property (nonatomic, strong) TMQuartetStaffView *quartetStaff;
+@property (nonatomic, strong) UILabel *loadingHeading;
+@property (nonatomic, strong) UILabel *loadingStatus;
+@property (nonatomic, strong) UIButton *retryButton;
 
 @end
 
@@ -63,94 +159,134 @@
 }
 
 - (void)setTagId:(int)tId {
+    if (tagId == tId && self.tagFetchPending) return;
+    if (tagId != tId) {
+        // Old work may finish, but it no longer owns this screen.
+        self.requestGeneration++;
+        self.tagFetchPending = NO;
+        if (self.tag) self.tag = nil;
+    }
     tagId = tId;
     [self loadTag:NO];
 }
 
-- (void)loadTag:(BOOL)refresh {
-    if (!self.tag && self.isViewLoaded) {
-        UIContentUnavailableConfiguration *loading = [UIContentUnavailableConfiguration loadingConfiguration];
-        loading.text = @"Loading tag…";
-        self.contentUnavailableConfiguration = loading;
-    }
-    [self.busyIndicator incrementBusyCount];
+// Keep the synchronous catalog/cache contract off the main thread. Completion is on main.
+- (void)fetchTagId:(int)identifier refresh:(BOOL)refresh completion:(void (^)(DPTag *))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        @try {
-            DPTag *t = [DPTag loadTagById:self->tagId refresh:refresh];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.busyIndicator decrementBusyCount];
-                if (!t) {
-                    [self showLoadError:refresh];
-                    return;
-                }
-                self.contentUnavailableConfiguration = nil;
-                self.tag = t;
-            });
-        }
-        @catch (NSException *exception) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.busyIndicator decrementBusyCount];
-                [self showLoadError:refresh];
-            });
-        }
+        DPTag *loaded = nil;
+        @try { loaded = [DPTag loadTagById:identifier refresh:refresh]; }
+        @catch (NSException *exception) { /* Present a useful, non-diagnostic recovery state. */ }
+        dispatch_async(dispatch_get_main_queue(), ^{ completion(loaded); });
     });
 }
 
-- (void)showLoadError:(BOOL)refresh {
-    if (!self.tag) {
-        UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
-        state.image = [UIImage systemImageNamed:@"wifi.exclamationmark"];
-        state.text = @"Tag unavailable";
-        state.secondaryText = @"Check your connection and tag ID, then tap Refresh to try again.";
-        self.contentUnavailableConfiguration = state;
-    }
-    [self tm_showError:@"The tag couldn't be loaded. Check your connection and tag ID, then try again. Your saved tags are unchanged." retry:^{ [self loadTag:refresh]; }];
+- (void)loadTag:(BOOL)refresh {
+    if (self.tagFetchPending) return;
+    const int identifier = self.tagId;
+    const NSUInteger generation = ++self.requestGeneration;
+    self.tagFetchPending = YES;
+    self.loadFailed = NO;
+    self.lastFetchWasRefresh = refresh;
+    TMBusyIndicator *busy = self.busyIndicator;
+    [busy incrementBusyCount];
+    [self updateLoadingState];
+    __weak DPTagViewController *weakSelf = self;
+    [self fetchTagId:identifier refresh:refresh completion:^(DPTag *loaded) {
+        DPTagViewController *controller = weakSelf;
+        BOOL current = controller && controller.requestGeneration == generation && controller.tagId == identifier;
+        if (current) {
+            controller.tagFetchPending = NO;
+            controller.loadFailed = loaded == nil;
+            if (loaded) controller.tag = loaded;
+        }
+        // Balance even when the controller has gone away or another request owns the screen.
+        [busy decrementBusyCount];
+        if (!current) return;
+        [controller updateLoadingState];
+        if (!loaded && controller.tag && controller.screenVisible) {
+            [controller tm_showError:@"The tag couldn't be refreshed. Check your connection and try again. Your saved tags are unchanged." retry:^{
+                DPTagViewController *retryController = weakSelf;
+                if (retryController.requestGeneration == generation && retryController.tagId == identifier) {
+                    [retryController loadTag:refresh];
+                }
+            }];
+        }
+    }];
+}
+
+- (void)retryInitialTag {
+    [self loadTag:self.lastFetchWasRefresh];
 }
 
 - (void)updateLoadingState {
-    if (!self.isViewLoaded) return;
+    if (!self.isViewLoaded || !self.initialLoadingView) return;
+    BOOL empty = self.tag == nil;
+    BOOL initialPending = empty && self.tagFetchPending;
+    self.rootView.hidden = empty;
+    self.rootView.accessibilityElementsHidden = empty;
+    self.tabBar.hidden = empty;
+    self.tabBar.accessibilityElementsHidden = empty;
+    self.initialLoadingView.hidden = !empty;
+    self.quartetStaff.hidden = !initialPending;
+    self.loadingHeading.text = self.loadFailed ? @"Tag unavailable" : @"Gathering the quartet…";
+    self.loadingStatus.text = self.loadFailed
+        ? [NSString stringWithFormat:@"Couldn't load tag %d. Check your connection and tag ID, then try again.", self.tagId]
+        : (initialPending ? [NSString stringWithFormat:@"Loading tag %d…", self.tagId] : @"Choose a tag to get started.");
+    self.loadingStatus.accessibilityLabel = initialPending
+        ? [NSString stringWithFormat:@"%@ %@", self.loadingHeading.text, self.loadingStatus.text]
+        : self.loadingStatus.text;
+    self.retryButton.hidden = !self.loadFailed;
     BOOL busy = self.busyIndicator.busyCount > 0;
     UIActivityIndicatorView *spinner = (UIActivityIndicatorView *)self.loadingBarButton.customView;
-    if (busy) [spinner startAnimating]; else [spinner stopAnimating];
-    self.navigationItem.rightBarButtonItems = @[self.shareBarButton,
-                                                self.actionBarButton,
-                                                busy ? self.loadingBarButton : self.refreshBarButton];
+    if (busy && !empty) [spinner startAnimating]; else [spinner stopAnimating];
+    self.navigationItem.rightBarButtonItems = empty ? @[] : @[self.shareBarButton, self.actionBarButton,
+        busy ? self.loadingBarButton : self.refreshBarButton];
+    self.quartetStaff.animationAllowed = initialPending && self.screenVisible && self.applicationActive;
+    if (initialPending && self.screenVisible && self.applicationActive && self.announcedGeneration != self.requestGeneration) {
+        self.announcedGeneration = self.requestGeneration;
+        UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.loadingStatus);
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    self.screenVisible = YES;
+    self.applicationActive = UIApplication.sharedApplication.applicationState == UIApplicationStateActive;
+    [self updateLoadingState];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    self.screenVisible = NO;
+    self.quartetStaff.animationAllowed = NO;
+}
+
+- (void)loadingEnvironmentChanged:(NSNotification *)notification {
+    if ([notification.name isEqualToString:UIApplicationWillResignActiveNotification]) self.applicationActive = NO;
+    if ([notification.name isEqualToString:UIApplicationDidBecomeActiveNotification]) self.applicationActive = YES;
+    [self updateLoadingState];
+}
+
+- (void)dealloc {
+    [NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (void)setTag:(DPTag *)t {
     tag = t;
     
-    self.title = t.title;
+    self.title = t.title ?: @"Tag";
     self.shareBarButton.enabled = t != nil;
     self.actionBarButton.enabled = t != nil;
     for (DPTagPageControllerBase *page in self.viewControllers) {
         page.tag = t;
     }
+    [self updateLoadingState];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     [DPAppDelegate setUpBackground:self.view];
-    // Keep native page tabs usable when UIKit reports only the safe-area height.
-    [self.tabBar.heightAnchor constraintGreaterThanOrEqualToConstant:83].active = YES;
-    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-        // The detail column extends under the floating sidebar; page content already follows
-        // the safe area, so the page tabs must too or the first tab hides under the sidebar.
-        NSMutableArray<NSLayoutConstraint *> *edges = [NSMutableArray array];
-        for (NSLayoutConstraint *constraint in self.view.constraints) {
-            BOOL aboutTabBar = constraint.firstItem == self.tabBar || constraint.secondItem == self.tabBar;
-            BOOL horizontal = constraint.firstAttribute == NSLayoutAttributeLeading || constraint.firstAttribute == NSLayoutAttributeTrailing
-                || constraint.firstAttribute == NSLayoutAttributeLeft || constraint.firstAttribute == NSLayoutAttributeRight;
-            if (aboutTabBar && horizontal) [edges addObject:constraint];
-        }
-        [NSLayoutConstraint deactivateConstraints:edges];
-        [NSLayoutConstraint activateConstraints:@[
-            [self.tabBar.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor],
-            [self.tabBar.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor]
-        ]];
-    }
-
     NSMutableArray *controllers = [NSMutableArray array];
     
     self.summaryController = [[DPTagSummaryController alloc] init];
@@ -189,14 +325,83 @@
     self.loadingBarButton = [[UIBarButtonItem alloc] initWithCustomView:spinner];
     self.loadingBarButton.accessibilityLabel = @"Loading";
     self.loadingBarButton.accessibilityTraits = UIAccessibilityTraitStaticText;
-    [self updateLoadingState];
-    
-    if (!self.tag && self.busyIndicator.busyCount > 0) {
-        UIContentUnavailableConfiguration *loading = [UIContentUnavailableConfiguration loadingConfiguration];
-        loading.text = @"Loading tag…";
-        self.contentUnavailableConfiguration = loading;
+    [self installInitialLoadingView];
+    for (NSString *name in @[UIAccessibilityReduceMotionStatusDidChangeNotification,
+                             UIApplicationWillResignActiveNotification, UIApplicationDidBecomeActiveNotification]) {
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(loadingEnvironmentChanged:) name:name object:nil];
     }
     [self setTag:self.tag];
+}
+
+- (void)installInitialLoadingView {
+    UIView *overlay = [UIView new];
+    overlay.translatesAutoresizingMaskIntoConstraints = NO;
+    overlay.backgroundColor = UIColor.systemBackgroundColor;
+    overlay.accessibilityIdentifier = @"tag.initialLoading";
+    [self.view addSubview:overlay];
+    self.initialLoadingView = overlay;
+    UIScrollView *scroll = [UIScrollView new];
+    scroll.translatesAutoresizingMaskIntoConstraints = NO;
+    [overlay addSubview:scroll];
+    UIView *content = [UIView new];
+    content.translatesAutoresizingMaskIntoConstraints = NO;
+    [scroll addSubview:content];
+    self.quartetStaff = [TMQuartetStaffView new];
+    self.loadingHeading = [UILabel new];
+    self.loadingHeading.font = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle3];
+    self.loadingHeading.textColor = UIColor.labelColor;
+    self.loadingHeading.isAccessibilityElement = NO;
+    self.loadingStatus = [UILabel new];
+    self.loadingStatus.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    // SecondaryLabel's translucent gray falls below 4.5:1 on white at body size.
+    self.loadingStatus.textColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
+        return traits.userInterfaceStyle == UIUserInterfaceStyleDark ? UIColor.secondaryLabelColor : UIColor.darkGrayColor;
+    }];
+    self.loadingStatus.accessibilityIdentifier = @"tag.loadingStatus";
+    for (UILabel *label in @[self.loadingHeading, self.loadingStatus]) {
+        label.adjustsFontForContentSizeCategory = YES;
+        label.numberOfLines = 0;
+        label.textAlignment = NSTextAlignmentCenter;
+    }
+    self.retryButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.retryButton setTitle:@"Retry" forState:UIControlStateNormal];
+    self.retryButton.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    self.retryButton.titleLabel.adjustsFontForContentSizeCategory = YES;
+    [self.retryButton addTarget:self action:@selector(retryInitialTag) forControlEvents:UIControlEventTouchUpInside];
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[self.quartetStaff, self.loadingHeading, self.loadingStatus, self.retryButton]];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = 8;
+    [stack setCustomSpacing:20 afterView:self.quartetStaff];
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [content addSubview:stack];
+    NSLayoutConstraint *height = [content.heightAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.heightAnchor];
+    height.priority = UILayoutPriorityDefaultLow;
+    [NSLayoutConstraint activateConstraints:@[
+        [overlay.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [overlay.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [overlay.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [overlay.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
+        [scroll.leadingAnchor constraintEqualToAnchor:overlay.safeAreaLayoutGuide.leadingAnchor],
+        [scroll.trailingAnchor constraintEqualToAnchor:overlay.safeAreaLayoutGuide.trailingAnchor],
+        [scroll.topAnchor constraintEqualToAnchor:overlay.safeAreaLayoutGuide.topAnchor],
+        [scroll.bottomAnchor constraintEqualToAnchor:overlay.safeAreaLayoutGuide.bottomAnchor],
+        [content.leadingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.leadingAnchor],
+        [content.trailingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.trailingAnchor],
+        [content.topAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.topAnchor],
+        [content.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor],
+        [content.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor], height,
+        [stack.centerXAnchor constraintEqualToAnchor:content.centerXAnchor],
+        [stack.centerYAnchor constraintEqualToAnchor:content.centerYAnchor],
+        [stack.topAnchor constraintGreaterThanOrEqualToAnchor:content.topAnchor constant:24],
+        [stack.bottomAnchor constraintLessThanOrEqualToAnchor:content.bottomAnchor constant:-24],
+        [stack.widthAnchor constraintEqualToAnchor:content.widthAnchor constant:-48],
+        [self.quartetStaff.widthAnchor constraintEqualToConstant:204],
+        [self.loadingHeading.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor],
+        [self.loadingStatus.widthAnchor constraintLessThanOrEqualToAnchor:stack.widthAnchor],
+        [self.retryButton.heightAnchor constraintGreaterThanOrEqualToConstant:44],
+        [self.retryButton.widthAnchor constraintGreaterThanOrEqualToConstant:80]
+    ]];
 }
 
 - (void)showActions {

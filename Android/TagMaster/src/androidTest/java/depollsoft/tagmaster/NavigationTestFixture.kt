@@ -127,7 +127,8 @@ class NavigationTestFixture : ExternalResource() {
             label: Int,
             position: Int,
         ) {
-            onView(allOf(withText(label), isDescendantOfA(withId(R.id.tabLayout))))
+            // Material retains a GONE default label behind each custom wrapping label. Tap only the visible one.
+            onView(allOf(withText(label), isDisplayed(), isDescendantOfA(withId(R.id.tabLayout))))
                 .perform(click())
             assertPage(position)
         }

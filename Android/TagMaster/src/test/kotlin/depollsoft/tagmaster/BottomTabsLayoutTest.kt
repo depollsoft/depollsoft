@@ -24,8 +24,20 @@ class BottomTabsLayoutTest {
     fun landscape_tabs_stay_below_content() = checkLayouts(852, 393)
 
     @Test
-    @Config(qualifiers = "sw600dp-night")
-    fun expanded_dark_tabs_stay_below_content() = checkLayouts(800, 1280)
+    @Config(qualifiers = "sw1067dp-w1067dp-h1707dp-night")
+    fun expanded_dark_tabs_stay_below_content() = checkLayouts(1067, 1707)
+
+    @Test
+    @Config(qualifiers = "w393dp-h852dp")
+    fun large_font_labels_grow_without_clipping() {
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        val config =
+            android.content.res
+                .Configuration(app.resources.configuration)
+                .apply { fontScale = 2f }
+        app.resources.updateConfiguration(config, app.resources.displayMetrics)
+        checkLayouts(393, 852)
+    }
 
     private fun checkLayouts(
         widthDp: Int,
@@ -51,7 +63,16 @@ class BottomTabsLayoutTest {
                     } else {
                         listOf("Summary", "Details", "Tracks", "Videos")
                     }
-                labels.forEach { tabs.addTab(tabs.newTab().setText(it).setIcon(R.drawable.ic_tracks)) }
+                labels.forEach {
+                    tabs.addTab(
+                        tabs
+                            .newTab()
+                            .setText(it)
+                            .setIcon(R.drawable.ic_tracks)
+                            .setCustomView(R.layout.bottom_tab_content),
+                    )
+                }
+                tabs.applyHorizontalInsetsAsPadding()
                 val density = activity.resources.displayMetrics.density
                 val bottomInset = (24 * density).toInt()
                 // RichApplication owns the system-bar inset; children must not overlap it.
@@ -73,7 +94,23 @@ class BottomTabsLayoutTest {
                 assertEquals(height - bottomInset, tabBounds.bottom)
                 assertTrue("Pager clears bottom tabs", bounds(pager).bottom <= tabBounds.top)
                 assertTrue("Touch targets remain at least 48dp", tabs.height >= 48 * density)
-                assertEquals(TabLayout.MODE_AUTO, tabs.tabMode)
+                assertEquals(TabLayout.MODE_FIXED, tabs.tabMode)
+                val strip = tabs.getChildAt(0) as ViewGroup
+                assertEquals("Slots fill all safe width", tabs.width - tabs.paddingLeft - tabs.paddingRight, strip.width)
+                var right = 0
+                for (index in 0 until strip.childCount) {
+                    val child = strip.getChildAt(index)
+                    assertEquals(right, child.left)
+                    assertTrue("Equal slot $index at ${widthDp}dp", kotlin.math.abs(child.width * 4 - strip.width) <= 4)
+                    val label = tabs.getTabAt(index)!!.customView!!.findViewById<android.widget.TextView>(android.R.id.text1)
+                    assertEquals("Labels never ellipsize", 0, label.layout.getEllipsisCount(label.lineCount - 1))
+                    assertTrue(
+                        "Whole label height fits",
+                        label.layout.height <= label.height - label.compoundPaddingTop - label.compoundPaddingBottom,
+                    )
+                    right = child.right
+                }
+                assertEquals(strip.width, right)
                 assertEquals(TabLayout.INDICATOR_GRAVITY_TOP, tabs.tabIndicatorGravity)
                 root.findViewById<View>(R.id.searchButton)?.let {
                     assertTrue("Search stays above the tabs", bounds(it).bottom <= tabBounds.top)

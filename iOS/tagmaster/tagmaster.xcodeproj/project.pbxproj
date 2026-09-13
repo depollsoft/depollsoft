@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E47100000000000000000003 /* TMPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E47100000000000000000002 /* TMPageViewController.m */; };
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
 		1E4373A92363633E00C8447F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E4373A82363633E00C8447F /* CoreServices.framework */; };
@@ -131,6 +132,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E47100000000000000000001 /* TMPageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMPageViewController.h; sourceTree = "<group>"; };
+		E47100000000000000000002 /* TMPageViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMPageViewController.m; sourceTree = "<group>"; };
 		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
 		1E1E19791DD877B300DA766F /* tagmaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tagmaster.entitlements; sourceTree = "<group>"; };
 		1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -403,6 +406,8 @@
 				A1B2C3D42F8C18B200000002 /* TMTestAppDelegate.h */,
 				A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */,
 				1E927AD522AB2BF20018E370 /* DPAppDelegate.swift */,
+				E47100000000000000000001 /* TMPageViewController.h */,
+				E47100000000000000000002 /* TMPageViewController.m */,
 				63336A3617F586CD00BC1EE2 /* DPBrowseViewController.h */,
 				63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */,
 				638E739F17F7E21A000FFE53 /* DPHomeViewController.h */,
@@ -711,6 +716,7 @@
 				639F292617F94E9300517583 /* DPSearchViewController.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
 				1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */,
+				E47100000000000000000003 /* TMPageViewController.m in Sources */,
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,

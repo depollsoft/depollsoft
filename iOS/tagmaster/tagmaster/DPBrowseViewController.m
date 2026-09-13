@@ -29,8 +29,6 @@
     [super viewDidLoad];
     self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     [DPAppDelegate setUpBackground:self.view];
-    // Keep native page tabs usable when UIKit reports only the safe-area height.
-    [self.tabBar.heightAnchor constraintGreaterThanOrEqualToConstant:83].active = YES;
     
 	NSMutableArray *controllers = [NSMutableArray array];
     

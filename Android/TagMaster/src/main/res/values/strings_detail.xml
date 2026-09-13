@@ -16,4 +16,7 @@
     <string name="detail_submit">Submit</string>
     <string name="detail_rating_hint">Choose one to five stars, then submit your rating.</string>
     <string name="detail_playback_position">Playback position</string>
+    <string name="detail_gathering_quartet">Gathering the quartet…</string>
+    <string name="detail_loading_tag">Loading tag %1$d…</string>
+    <string name="detail_tag_refresh_failed">Couldn\'t refresh tag %1$d. Your loaded tag is still here.</string>
 </resources>

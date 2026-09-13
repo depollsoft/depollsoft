@@ -14,10 +14,10 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import bolts.Task
 import com.bindroid.BindingMode
-import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.ReflectedProperty
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import depollsoft.lib.compat.ui.Activities
@@ -26,9 +26,21 @@ import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.barbershop.Tag
 
 class TagDetailActivity : AppCompatActivity() {
-    var tag: Tag? by trackable()
+    // Tag.equals compares IDs; a refreshed instance still needs to update every bound field.
+    private val currentTag = com.bindroid.trackable.ComparingTrackableField<Tag?>(null) { left, right -> left === right }
+    var tag: Tag?
+        get() = currentTag.get()
+        set(value) {
+            currentTag.set(value)
+        }
     var isLoading: Boolean by trackable(false)
     var loadFailed: Boolean by trackable(false)
+
+    // Per-screen request dependency. Tests can control completion without changing the cache contract.
+    internal var tagLoader: (Int, Boolean) -> Task<Tag> = { id, refresh -> Tag.loadTagById(id, refresh) }
+    private var requestGeneration = 0
+    private var retryRefresh = false
+    private var refreshError: Snackbar? = null
 
     /** Toolbar title: the tag once loaded, the app name while loading or after a failure. */
     val displayTitle: CharSequence
@@ -50,68 +62,104 @@ class TagDetailActivity : AppCompatActivity() {
 
     private fun loadQueryItem(refresh: Boolean) {
         if (isLoading || isFinishing || isDestroyed) return
-        val original = this.tag
-        val contentToDelete =
-            if (original == null) {
-                emptyList()
-            } else {
-                listOfNotNull(
-                    original.allPartsTrackUri,
-                    original.baritoneTrackUri,
-                    original.bassTrackUri,
-                    original.leadTrackUri,
-                    original.notationUri,
-                    original.other1TrackUri,
-                    original.other2TrackUri,
-                    original.other3TrackUri,
-                    original.other4TrackUri,
-                    original.tenorTrackUri,
-                    original.sheetMusicUri,
-                )
-            }
+        val requestedId = tagId
+        val generation = ++requestGeneration
+        val original = tag
+        retryRefresh = refresh
+        refreshError?.dismiss()
         isLoading = true
         loadFailed = false
+        renderState()
         invalidateOptionsMenu()
 
-        val cache = ContentCache(this)
-        Task
-            .callInBackground<Void> {
-                // Refresh drops the tag's cached media before reloading; keep the file I/O off the UI thread.
-                for (loc in contentToDelete) {
-                    cache.deletePrivateContent(loc.uri, loc.type)
-                    cache.deletePublicContent(loc.uri, loc.type)
+        val request =
+            if (refresh && original != null) {
+                Task
+                    .callInBackground<Void> {
+                        val cache = ContentCache(this)
+                        for (loc in listOfNotNull(
+                            original.allPartsTrackUri,
+                            original.baritoneTrackUri,
+                            original.bassTrackUri,
+                            original.leadTrackUri,
+                            original.notationUri,
+                            original.other1TrackUri,
+                            original.other2TrackUri,
+                            original.other3TrackUri,
+                            original.other4TrackUri,
+                            original.tenorTrackUri,
+                            original.sheetMusicUri,
+                        )) {
+                            cache.deletePrivateContent(loc.uri, loc.type)
+                            cache.deletePublicContent(loc.uri, loc.type)
+                        }
+                        null
+                    }.continueWithTask { tagLoader(requestedId, refresh) }
+            } else {
+                try {
+                    tagLoader(requestedId, refresh)
+                } catch (error: Exception) {
+                    Task.forError<Tag>(error)
                 }
-                null
-            }.continueWithTask { Tag.loadTagById(tagId, refresh) }
-            .continueWith { task ->
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    isLoading = false
-                    if (!task.isFaulted && !task.isCancelled && task.result != null) {
-                        tag = task.result
-                    } else {
-                        tag = null
-                        loadFailed = true
-                        findViewById<TextView>(R.id.detailErrorText).text =
-                            getString(R.string.detail_tag_load_failed, tagId)
-                    }
-                    Activities.invalidateOptionsMenu(this)
-                }
-                null
             }
+        request.continueWith { task ->
+            runOnUiThread {
+                if (isFinishing || isDestroyed || generation != requestGeneration || tagId != requestedId) return@runOnUiThread
+                isLoading = false
+                if (!task.isFaulted && !task.isCancelled && task.result?.id == requestedId) {
+                    tag = task.result
+                } else {
+                    // A refresh failure must not discard an already-visible tag.
+                    loadFailed = true
+                    findViewById<TextView>(R.id.detailErrorText).text = getString(R.string.detail_tag_load_failed, requestedId)
+                    if (tag != null) {
+                        refreshError =
+                            Snackbar
+                                .make(
+                                    findViewById(R.id.frameLayout1),
+                                    getString(R.string.detail_tag_refresh_failed, requestedId),
+                                    Snackbar.LENGTH_INDEFINITE,
+                                ).setAction(R.string.detail_retry) { loadQueryItem(true) }
+                        refreshError?.show()
+                    }
+                }
+                renderState()
+                Activities.invalidateOptionsMenu(this)
+            }
+            null
+        }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        this.setContentView(R.layout.tagdetailview)
+    private fun renderState() {
+        val loaded = tag != null
+        val initialLoading = isLoading && !loaded
 
-        setUpToolbar(true)
+        fun show(
+            id: Int,
+            visible: Boolean,
+        ) {
+            findViewById<View>(id).visibility = if (visible) View.VISIBLE else View.GONE
+        }
+        show(R.id.detailLoadingState, initialLoading)
+        findViewById<TagLoadingView>(R.id.quartetIllustration).loading = initialLoading
+        val status = getString(R.string.detail_loading_tag, tagId)
+        findViewById<TextView>(R.id.detailLoadingStatus).text = status
+        findViewById<View>(R.id.detailLoadingComposition).contentDescription = getString(R.string.detail_gathering_quartet) + " " + status
+        show(R.id.imageView1, loaded)
+        show(R.id.viewPager, loaded)
+        show(R.id.tabLayout, loaded)
+        show(R.id.progress, isLoading && loaded)
+        show(R.id.detailErrorState, loadFailed && !loaded && !isLoading)
+        findViewById<View>(R.id.detailRetryButton).isEnabled = !isLoading
+        if (loaded) setUpPagerIfNeeded()
+    }
 
+    private fun setUpPagerIfNeeded() {
         val viewPager = findViewById<ViewPager2>(R.id.viewPager)
+        if (viewPager.adapter != null) return
         val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-
         viewPager.adapter =
-            object : FragmentStateAdapter(this.supportFragmentManager, lifecycle) {
+            object : FragmentStateAdapter(supportFragmentManager, lifecycle) {
                 override fun getItemCount(): Int = 4
 
                 override fun createFragment(position: Int): Fragment =
@@ -123,29 +171,52 @@ class TagDetailActivity : AppCompatActivity() {
                         else -> Fragment()
                     }
             }
-
         val tabs = PopupMenu(this, tabLayout).apply { inflate(R.menu.tagdetailnavigation) }.menu
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             val item = tabs.getItem(position)
             tab.text = item.title
             tab.icon = item.icon
             tab.id = item.itemId
+            tab.setCustomView(R.layout.bottom_tab_content)
         }.attach()
+    }
 
-        UiBinder.bind(
-            ReflectedProperty(this, "Title"),
-            ReflectedProperty(this, "DisplayTitle"),
-            BindingMode.ONE_WAY,
-        )
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.tagdetailview)
+        setUpToolbar(true)
+        UiBinder.bind(ReflectedProperty(this, "Title"), ReflectedProperty(this, "DisplayTitle"), BindingMode.ONE_WAY)
+        findViewById<TabLayout>(R.id.tabLayout).applyHorizontalInsetsAsPadding()
+        findViewById<View>(R.id.detailLoadingState).applyHorizontalInsetsAsPadding()
+        findViewById<View>(R.id.detailRetryButton).setOnClickListener { loadQueryItem(retryRefresh) }
+        loadQueryItem(false)
+    }
 
-        tabLayout.applyContentInsets(bottom = false)
-        UiBinder.bind(this, R.id.tabLayout, "Visibility", "Tag", BoolConverter.get())
-        UiBinder.bind(this, R.id.progress, "Visibility", "IsLoading", BoolConverter.get())
-        UiBinder.bind(this, R.id.viewPager, "Visibility", "LoadFailed", BoolConverter.get(true))
-        UiBinder.bind(this, R.id.detailErrorState, "Visibility", "LoadFailed", BoolConverter.get())
-        findViewById<View>(R.id.detailRetryButton).setOnClickListener { loadQueryItem(false) }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getIntExtra(TAG_ID_EXTRA, -1) == tagId) return
+        ++requestGeneration
+        setIntent(intent)
+        tag = null
+        isLoading = false
+        loadQueryItem(false)
+    }
 
-        this.loadQueryItem(false)
+    override fun onResume() {
+        super.onResume()
+        findViewById<TagLoadingView>(R.id.quartetIllustration).hostResumed = true
+    }
+
+    override fun onPause() {
+        findViewById<TagLoadingView>(R.id.quartetIllustration).hostResumed = false
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        ++requestGeneration
+        refreshError?.dismiss()
+        findViewById<TagLoadingView>(R.id.quartetIllustration).loading = false
+        super.onDestroy()
     }
 
     override fun onSupportNavigateUp() = navigateUpOrHome()
