@@ -8,7 +8,6 @@
     <string name="home_open">Open</string>
     <string name="home_cancel">Cancel</string>
     <string name="home_teachable_hint">Open a tag and choose Mark as Teachable to add it here.</string>
-    <string name="home_more_options">More options</string>
     <string name="home_version_separator">" - "</string>
     <string name="home_space">" "</string>
     <string name="home_title">Tag Master</string>

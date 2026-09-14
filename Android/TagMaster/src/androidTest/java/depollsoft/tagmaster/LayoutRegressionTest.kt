@@ -692,123 +692,15 @@ class LayoutRegressionTest {
     }
 
     @Test fun home_and_teachable_many_long_titles_reorder_geometry() {
-        val tags =
-            (0..14).map { index ->
-                tag().apply {
-                    id += 100 + index
-                    title =
-                        "A long title for an arrangement we want to sing together $index"
-                }
+        // Reuse the guarded fixture and real pointer path, not an unowned adapter or phantom overflow.
+        SavedListEditingTest().run {
+            setUp()
+            try {
+                pointer_drag_first_to_last_and_back_commits_once_per_drop()
+                responsive_rows_keep_controls_and_long_titles_inside_bounds()
+            } finally {
+                tearDown()
             }
-        val files = tags.map { java.io.File(app.filesDir, "TagCache/${it.id}") }
-        val originals = files.map { it.takeIf { file -> file.exists() }?.readBytes() }
-        files.zip(tags).forEach { (file, tag) ->
-            file.parentFile!!.mkdirs()
-            file.writeText(
-                depollsoft.lib.json.JsonSerializer
-                    .serialize(tag)
-                    .toString(),
-            )
-        }
-        try {
-            for (home in listOf(true, false)) {
-                val target = if (home) MeActivity::class.java else TeachableTagsActivity::class.java
-                ActivityScenario.launch(target).use { scenario ->
-                    if (home) {
-                        try {
-                            androidx.test.espresso.Espresso
-                                .onView(
-                                    androidx.test.espresso.matcher.ViewMatchers
-                                        .withId(android.R.id.button1),
-                                ).perform(
-                                    androidx.test.espresso.action.ViewActions
-                                        .click(),
-                                )
-                        } catch (
-                            _: androidx.test.espresso.NoMatchingViewException,
-                        ) {
-                        }
-                    }
-                    val ids = com.bindroid.trackable.TrackableCollection<Int>()
-                    ids.addAll(tags.map { it.id })
-                    lateinit var adapter: SavedTagListAdapter
-                    lateinit var list: androidx.recyclerview.widget.RecyclerView
-                    scenario.onActivity { a ->
-                        list = a.findViewById(if (home) R.id.homeList else R.id.teachableTagsItemsControl)
-                        adapter =
-                            SavedTagListAdapter(
-                                { ids },
-                            ) { context -> if (home) FavoriteTagItemView(context) else TeachableTagItemView(context) }
-                        if (home) {
-                            val current = list.adapter as androidx.recyclerview.widget.ConcatAdapter
-                            current.removeAdapter((a as MeActivity).favoritesAdapter)
-                            current.addAdapter(1, adapter)
-                            a.findViewById<View>(R.id.favoritesEmptyText).visibility = View.GONE
-                        } else {
-                            list.adapter = adapter
-                            a.findViewById<View>(R.id.teachableEmptyState).visibility = View.GONE
-                        }
-                        list.scrollToPosition(if (home) 1 else 0)
-                    }
-                    waitFor {
-                        var ready = false
-                        scenario.onActivity {
-                            ready =
-                                (0 until list.childCount)
-                                    .map {
-                                        list.getChildViewHolder(
-                                            list.getChildAt(it),
-                                        )
-                                    }.filterIsInstance<SavedTagListAdapter.Holder>()
-                                    .any {
-                                        it.row.tag !=
-                                            null
-                                    }
-                        }
-                        ready
-                    }
-                    settle()
-                    scenario.onActivity {
-                        val rows =
-                            (0 until list.childCount)
-                                .map {
-                                    list.getChildViewHolder(
-                                        list.getChildAt(it),
-                                    )
-                                }.filterIsInstance<SavedTagListAdapter.Holder>()
-                        rows.filter { it.row.tag != null }.forEach { holder ->
-                            textFits(holder.row.findViewById(R.id.titleTextView))
-                            val more = holder.row.findViewById<View>(R.id.savedTagMoreOptions)
-                            assertTrue(more.width >= (48 * it.resources.displayMetrics.density).toInt())
-                            assertTrue(more.height >= (48 * it.resources.displayMetrics.density).toInt())
-                            assertTrue(fullBounds(holder.row).contains(fullBounds(more)))
-                        }
-                    }
-                    capture(if (home) "home-many" else "teachable-many")
-                    scenario.onActivity {
-                        ids.removeAt(0)
-                        ids.add(tags.first().id)
-                    }
-                    waitFor { adapter.currentList.lastOrNull() == tags.first().id }
-                    settle()
-                    scenario.onActivity {
-                        list.itemAnimator?.endAnimations()
-                        list.scrollToPosition(list.adapter!!.itemCount - 1)
-                    }
-                    settle()
-                    scenario.onActivity { list.scrollBy(0, list.computeVerticalScrollRange()) }
-                    settle()
-                    if (home) {
-                        scenario.onActivity { a ->
-                            val link = a.findViewById<TextView>(R.id.donateHyperlink)
-                            assertTrue("Last footer link reachable", fullyVisible(link))
-                        }
-                    }
-                    capture(if (home) "home-footer" else "teachable-reordered")
-                }
-            }
-        } finally {
-            files.zip(originals).forEach { (file, original) -> if (original == null) file.delete() else file.writeBytes(original) }
         }
     }
 

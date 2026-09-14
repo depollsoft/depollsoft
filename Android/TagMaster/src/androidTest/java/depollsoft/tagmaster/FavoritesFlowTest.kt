@@ -85,7 +85,13 @@ class FavoritesFlowTest {
                 .getInstrumentation()
         var original: com.bindroid.trackable.TrackableCollection<Int>? = null
         instrumentation.runOnMainSync {
-            ListModel.setTestMode(true) // Never write fixture favorites to disk or Firebase.
+            org.junit.Assert.assertNull(
+                "Favorites fixtures require signed-out state",
+                com.google.firebase.auth.FirebaseAuth
+                    .getInstance()
+                    .currentUser,
+            )
+            ListModel.setTestMode(true) // Signed-out guard above; suppress fixture persistence.
             original = FavoritesModel.favoriteIds
             FavoritesModel.favoriteIds =
                 com.bindroid.trackable.TrackableCollection<Int>().apply {

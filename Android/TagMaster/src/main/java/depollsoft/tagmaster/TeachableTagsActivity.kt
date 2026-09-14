@@ -2,6 +2,9 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,6 +24,9 @@ class TeachableTagsActivity : AppCompatActivity() {
     lateinit var teachableAdapter: SavedTagListAdapter
         private set
 
+    lateinit var listEditor: SavedListEditor
+        private set
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,6 +39,7 @@ class TeachableTagsActivity : AppCompatActivity() {
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = teachableAdapter
         list.addItemDecoration(SavedTagListAdapter.RowDivider(this))
+        listEditor = SavedListEditor(this, ListModel("teachable"), teachableAdapter, list, R.string.TeachableTags, savedInstanceState)
 
         UiBinder.bind(
             ReflectedProperty(
@@ -47,7 +54,45 @@ class TeachableTagsActivity : AppCompatActivity() {
         supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.savedlistmenu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = listEditor.selectMenu(item) || super.onOptionsItemSelected(item)
+
     override fun onSupportNavigateUp() = navigateUpOrHome()
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        listEditor.prepareMenu(menu)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val handled = super.dispatchTouchEvent(event)
+        if (::listEditor.isInitialized) listEditor.afterTouchEvent(event)
+        return handled
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        listEditor.saveState(outState)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        listEditor.resume()
+    }
+
+    override fun onPause() {
+        listEditor.pause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        listEditor.destroy()
+        super.onDestroy()
+    }
 
     override fun onSearchRequested(): Boolean {
         val i = Intent(this, TagSearchActivity::class.java)

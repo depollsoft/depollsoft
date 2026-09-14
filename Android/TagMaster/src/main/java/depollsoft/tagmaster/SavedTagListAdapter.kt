@@ -7,7 +7,6 @@ import android.os.Looper
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.TrackableCollection
@@ -15,27 +14,36 @@ import com.bindroid.trackable.Tracker
 import com.bindroid.utils.Function
 
 /**
- * Recycling list of saved tag ids (favorites or teachable tags), keyed by tag id so reorders and
- * removals animate as moves instead of rebinding every row. Rows are the existing
- * [SavedTagItemView] subclasses, which load and render their own tag. The list follows the
- * Bindroid collection returned by [ids]; both in-place edits and replacement of the collection
- * (sign-in sync, tests) resubmit a snapshot.
+ * One synchronous owner for both source snapshots and drag previews. An AsyncListDiffer cannot
+ * race ItemTouchHelper's notifyItemMoved calls. Stable IDs belong only to this adapter; Home's
+ * ConcatAdapter deliberately retains its default NO_STABLE_IDS for the static header/footer.
  */
 class SavedTagListAdapter(
     private val ids: () -> TrackableCollection<Int>,
     private val createRow: (Context) -> SavedTagItemView,
-) : ListAdapter<Int, SavedTagListAdapter.Holder>(DIFF) {
+) : RecyclerView.Adapter<SavedTagListAdapter.Holder>() {
     class Holder(
         val row: SavedTagItemView,
     ) : RecyclerView.ViewHolder(row)
 
+    private val items = mutableListOf<Int>()
+    val currentList: List<Int> get() = items.toList()
+    internal var bindEditing: ((Holder) -> Unit)? = null
+    internal var sourceChanged: (() -> Unit)? = null
+    private var recycler: RecyclerView? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var disposed = false
 
-    // Bindroid trackers fire once per registration, so refresh re-registers after each update.
+    // Bindroid registrations are one-shot. Re-register even when only the collection was replaced.
     private val tracker =
         object : Tracker {
             override fun update() {
-                if (Looper.myLooper() == Looper.getMainLooper()) refresh() else mainHandler.post { refresh() }
+                if (disposed) return
+                if (Looper.myLooper() == Looper.getMainLooper() && recycler?.isComputingLayout != true) {
+                    refresh()
+                } else {
+                    mainHandler.post { if (!disposed) refresh() }
+                }
             }
         }
 
@@ -45,27 +53,93 @@ class SavedTagListAdapter(
     }
 
     private fun refresh() {
+        if (recycler?.isComputingLayout == true) {
+            mainHandler.post { if (!disposed) refresh() }
+            return
+        }
         val snapshot = Trackable.track(tracker, Function<List<Int>> { ids().toList() })
-        submitList(snapshot)
+        sourceChanged?.invoke()
+        showSnapshot(snapshot)
     }
 
-    override fun getItemId(position: Int): Long = getItem(position).toLong()
+    internal fun showSnapshot(snapshot: List<Int>) {
+        val old = items.toList()
+        if (old == snapshot) return
+        val diff =
+            DiffUtil.calculateDiff(
+                object : DiffUtil.Callback() {
+                    override fun getOldListSize() = old.size
+
+                    override fun getNewListSize() = snapshot.size
+
+                    override fun areItemsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ) = old[oldItemPosition] == snapshot[newItemPosition]
+
+                    override fun areContentsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ) = true
+                },
+            )
+        items.clear()
+        items.addAll(snapshot)
+        diff.dispatchUpdatesTo(this)
+    }
+
+    internal fun previewMove(
+        from: Int,
+        to: Int,
+    ): Boolean {
+        if (from !in items.indices || to !in items.indices || from == to) return false
+        items.add(to, items.removeAt(from))
+        notifyItemMoved(from, to)
+        return true
+    }
+
+    internal fun dispose() {
+        disposed = true
+        mainHandler.removeCallbacksAndMessages(null)
+        sourceChanged = null
+        bindEditing = null
+        recycler = null // A one-shot Bindroid registration may outlive the destroyed screen.
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        recycler = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        recycler = null
+    }
+
+    override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int) = items[position].toLong()
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
     ): Holder {
         val row = createRow(parent.context)
-        row.layoutParams =
-            RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        row.layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         return Holder(row)
+    }
+
+    override fun onViewAttachedToWindow(holder: Holder) {
+        super.onViewAttachedToWindow(holder)
+        // RecyclerView may reuse an offscreen cached holder without rebinding its unchanged tag ID.
+        // Editing state and position actions still need to reflect the current screen state.
+        bindEditing?.invoke(holder)
     }
 
     override fun onBindViewHolder(
         holder: Holder,
         position: Int,
     ) {
-        holder.row.bind(getItem(position))
+        holder.row.bind(items[position])
+        bindEditing?.invoke(holder)
     }
 
     /** Hairline between saved rows only (not around headers or footers sharing the list). */
@@ -94,20 +168,5 @@ class SavedTagListAdapter(
                 divider.draw(canvas)
             }
         }
-    }
-
-    companion object {
-        private val DIFF =
-            object : DiffUtil.ItemCallback<Int>() {
-                override fun areItemsTheSame(
-                    oldItem: Int,
-                    newItem: Int,
-                ) = oldItem == newItem
-
-                override fun areContentsTheSame(
-                    oldItem: Int,
-                    newItem: Int,
-                ) = true
-            }
     }
 }
