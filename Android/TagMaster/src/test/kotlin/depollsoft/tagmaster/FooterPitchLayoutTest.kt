@@ -24,6 +24,18 @@ import org.robolectric.annotation.GraphicsMode
 @Config(application = Application::class, sdk = [28])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class FooterPitchLayoutTest {
+    @Test fun copyright_refreshes_when_the_window_returns() =
+        withActivity { activity ->
+            val footer = LayoutInflater.from(activity).inflate(R.layout.meviewfooter, null) as ViewGroup
+            val copyright = footer.findViewById<TextView>(R.id.copyrightTextView)
+            val expected = "© ${java.util.GregorianCalendar().get(java.util.Calendar.YEAR)}"
+            assertEquals(expected, copyright.text.toString())
+            footer.dispatchWindowVisibilityChanged(View.GONE)
+            copyright.text = "© 2021"
+            footer.dispatchWindowVisibilityChanged(View.VISIBLE)
+            assertEquals(expected, copyright.text.toString())
+        }
+
     @Test fun footer_wraps_whole_links_at_phone_and_sidebar_widths() =
         withActivity { activity ->
             for (scale in listOf(1f, 1.3f, 2f)) {
@@ -71,7 +83,10 @@ class FooterPitchLayoutTest {
                         context.getString(R.string.app_version),
                         footer.findViewById<TextView>(R.id.appVersionTextView).text.toString(),
                     )
-                    assertEquals("© 2021", footer.findViewById<TextView>(R.id.copyrightTextView).text.toString())
+                    assertEquals(
+                        "© ${java.util.GregorianCalendar().get(java.util.Calendar.YEAR)}",
+                        footer.findViewById<TextView>(R.id.copyrightTextView).text.toString(),
+                    )
                     val urls =
                         mapOf(
                             R.id.TextView01 to "http://apps.depoll.com",

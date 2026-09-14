@@ -73,7 +73,7 @@
                 android:text="@string/DepollSoft"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorPrimary" />
-            <TextView
+            <depollsoft.tagmaster.CopyrightTextView
                 android:id="@+id/copyrightTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
