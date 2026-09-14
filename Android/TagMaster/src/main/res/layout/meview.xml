@@ -6,52 +6,31 @@
 
     <ImageView
         android:id="@+id/imageView1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:scaleType="centerInside"
+        android:importantForAccessibility="no"
         app:srcCompat="@drawable/ic_barberpole">
     </ImageView>
 
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <ScrollView
-            android:id="@+id/scrollView1"
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
+        <include layout="@layout/app_toolbar" />
+
+        <!-- Header (actions + Favorites heading), the recycled favorites rows, and the footer are
+             joined with a ConcatAdapter in MeActivity so the whole screen scrolls as one list. -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/homeList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingBottom="56dp"
-            android:paddingTop="16dp">
-
-            <LinearLayout
-                android:id="@+id/linearLayout2"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <depollsoft.tagmaster.MeHeaderView
-                    android:id="@+id/meHeaderView1"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1">
-                </depollsoft.tagmaster.MeHeaderView>
-
-                <depollsoft.lib.ui.ItemsControl
-                    android:id="@+id/favoritesItemsControl"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:animateLayoutChanges="true"
-                    android:divider="?attr/colorPrimary"
-                    android:showDividers="middle">
-                </depollsoft.lib.ui.ItemsControl>
-
-                <include layout="@layout/meviewfooter"/>
-            </LinearLayout>
-        </ScrollView>
+            android:paddingBottom="88dp"
+            android:paddingTop="16dp"
+            android:scrollbars="vertical" />
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -61,9 +40,10 @@
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:tint="#FFFFFF"
-        app:fabSize="normal"
+        android:contentDescription="@string/Search"
+        app:backgroundTint="?attr/colorPrimary"
+            app:tint="?attr/colorOnPrimary"
+            app:fabSize="normal"
         app:srcCompat="@drawable/ic_search"/>
 
 </FrameLayout>

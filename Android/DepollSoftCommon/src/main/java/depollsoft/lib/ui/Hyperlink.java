@@ -7,6 +7,8 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.bindroid.trackable.TrackableField;
@@ -75,6 +77,13 @@ public class Hyperlink extends androidx.appcompat.widget.AppCompatTextView {
       int after) {
     super.onTextChanged(text, start, before, after);
     this.ensureUnderlined();
+  }
+
+  /** Links act like buttons: announce them as such so screen readers offer activation. */
+  @Override
+  public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+    super.onInitializeAccessibilityNodeInfo(info);
+    info.setClassName(Button.class.getName());
   }
 
   public void setHyperlinkUri(String value) {

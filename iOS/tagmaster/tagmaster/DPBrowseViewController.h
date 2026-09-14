@@ -7,8 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "DPTabBarController.h"
+#import "TMPageViewController.h"
 
-@interface DPBrowseViewController : DPTabBarController
+@interface DPBrowseViewController : TMPageViewController
 
 @end

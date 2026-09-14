@@ -1,7 +1,7 @@
 package depollsoft.tagmaster.barbershop
 
-import depollsoft.lib.xml.XmlElement
 import android.app.Application
+import depollsoft.lib.xml.XmlElement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -14,12 +14,38 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class, manifest = Config.NONE)
 class VideoParseFromXmlTest {
-
-    private fun prop(name: String, value: String?): XmlElement {
+    private fun prop(
+        name: String,
+        value: String?,
+    ): XmlElement {
         val e = XmlElement()
         e.name = name
         e.value = value
         return e
+    }
+
+    @Test
+    fun parseFromXml_keeps_missing_or_invalid_posted_dates_absent() {
+        for (value in listOf(null, "", "not-a-date", "Sun, 31 Feb 2025", "2025-02-29", "2025-08-03junk", "Aug 3, 2025junk")) {
+            val root = XmlElement().apply { elements.add(prop("Posted", value)) }
+            val video = Video()
+            video.parseFromXml(root)
+            org.junit.Assert.assertNull(video.posted)
+        }
+    }
+
+    @Test
+    fun parseFromXml_accepts_feed_dates() {
+        val root = XmlElement().apply { elements.add(prop("Posted", "Sun, 3 Aug 2025")) }
+        val video = Video()
+        video.parseFromXml(root)
+        val calendar =
+            java.util.Calendar
+                .getInstance()
+                .apply { time = requireNotNull(video.posted) }
+        assertEquals(2025, calendar.get(java.util.Calendar.YEAR))
+        assertEquals(java.util.Calendar.AUGUST, calendar.get(java.util.Calendar.MONTH))
+        assertEquals(3, calendar.get(java.util.Calendar.DAY_OF_MONTH))
     }
 
     @Test
@@ -46,6 +72,6 @@ class VideoParseFromXmlTest {
         assertEquals("Choir", video.sungBy)
         assertEquals("https://example.com", video.sungWebsite)
         assertNotNull(video.posted)
-        assertTrue(video.posted.time > 0)
+        assertTrue(video.posted!!.time > 0)
     }
 }

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" >
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="72dp" >
 
     <depollsoft.lib.ui.LoadingImageView
         android:id="@+id/videoPreview"
@@ -9,14 +10,14 @@
         android:layout_height="60dp"
         android:layout_gravity="center_vertical"
         android:layout_marginBottom="4dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:importantForAccessibility="no"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="4dp"
         android:layout_weight="0" />
 
     <TableLayout
         android:id="@+id/tableLayout1"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|fill_horizontal"
         android:layout_weight="1"
@@ -32,23 +33,22 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dip"
+                android:layout_marginEnd="5dp"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/Teacher"
-                android:textSize="12sp"
-                android:textStyle="bold" >
+                android:textAppearance="?attr/textAppearanceLabelLarge" >
             </TextView>
 
             <TextView
                 android:id="@+id/teacherTextView"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:textSize="12sp" >
+                android:textAppearance="?attr/textAppearanceBodyMedium" >
             </TextView>
         </TableRow>
     </TableLayout>

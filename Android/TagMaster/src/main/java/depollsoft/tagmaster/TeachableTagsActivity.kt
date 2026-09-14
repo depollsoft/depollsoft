@@ -2,44 +2,96 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.BindingMode
-import com.bindroid.converters.AdapterConverter
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableCollection
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.Function
 import com.bindroid.utils.Property
 import com.bindroid.utils.ReflectedProperty
-import depollsoft.lib.compat.ui.ActionBars
 
 class TeachableTagsActivity : AppCompatActivity() {
-
     val teachableTags: TrackableCollection<Int>
         get() = TeachableTagsModel.teachableTagIds
+
+    /** Recycled teachable-tag rows, keyed by tag id; exposed for tests. */
+    lateinit var teachableAdapter: SavedTagListAdapter
+        private set
+
+    lateinit var listEditor: SavedListEditor
+        private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         this.setContentView(R.layout.teachabletagsview)
+        setUpToolbar(true)
 
-        UiBinder.bind(this, R.id.teachableTagsItemsControl, "Adapter", "TeachableTags",
-                AdapterConverter(TeachableTagItemView::class.java, false, true))
-        UiBinder.bind(ReflectedProperty(this.findViewById(R.id.noTeachableTagsTextView),
-                "Visibility"), Property(Function { this@TeachableTagsActivity.teachableTags.size == 0 }, null, Boolean::class.java), BindingMode.ONE_WAY, BoolConverter.get())
+        teachableAdapter = SavedTagListAdapter({ TeachableTagsModel.teachableTagIds }) { TeachableTagItemView(it) }
+        val list = findViewById<RecyclerView>(R.id.teachableTagsItemsControl)
+        list.applyContentInsets()
+        list.layoutManager = LinearLayoutManager(this)
+        list.adapter = teachableAdapter
+        list.addItemDecoration(SavedTagListAdapter.RowDivider(this))
+        listEditor = SavedListEditor(this, ListModel("teachable"), teachableAdapter, list, R.string.TeachableTags, savedInstanceState)
 
-        supportActionBar?.title = "Tag Master".makeTitleString(this)
+        UiBinder.bind(
+            ReflectedProperty(
+                findViewById(R.id.teachableEmptyState),
+                "Visibility",
+            ),
+            Property(Function { teachableTags.size == 0 }, null, Boolean::class.java),
+            BindingMode.ONE_WAY,
+            BoolConverter.get(),
+        )
+
+        supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == ActionBars.HOME_MENU_ITEM_ID) {
-            val intent = Intent(this, MeActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            this.startActivity(intent)
-            return true
-        }
-        return super.onOptionsItemSelected(item)
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.savedlistmenu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = listEditor.selectMenu(item) || super.onOptionsItemSelected(item)
+
+    override fun onSupportNavigateUp() = navigateUpOrHome()
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        listEditor.prepareMenu(menu)
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val handled = super.dispatchTouchEvent(event)
+        if (::listEditor.isInitialized) listEditor.afterTouchEvent(event)
+        return handled
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        listEditor.saveState(outState)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        listEditor.resume()
+    }
+
+    override fun onPause() {
+        listEditor.pause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        listEditor.destroy()
+        super.onDestroy()
     }
 
     override fun onSearchRequested(): Boolean {

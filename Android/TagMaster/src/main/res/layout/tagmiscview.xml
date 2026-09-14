@@ -1,258 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="wrap_content"
-              android:layout_height="fill_parent"
-              android:orientation="vertical">
-
-    <ScrollView
-        android:id="@+id/scrollView1"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
-        android:paddingTop="16dp">
-
-        <TableLayout
-            android:id="@+id/tableLayout1"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:shrinkColumns="1"
-            android:stretchColumns="1">
-
-            <TextView
-                android:id="@+id/titleTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:textSize="24sp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+  <ScrollView android:id="@+id/scrollView1" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingBottom="16dp" android:paddingTop="16dp">
+    <depollsoft.tagmaster.DetailMetadataLayout android:id="@+id/tableLayout1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="16dp" android:layout_marginEnd="16dp">
+      <TextView android:id="@+id/titleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:textAppearance="?attr/textAppearanceHeadlineSmall">
             </TextView>
-
-            <TableRow
-                android:id="@+id/lastRefreshedRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/LastRefreshed"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/lastRefreshedRow" android:tag="source" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/textView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/LastRefreshed" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <TextView
-                    android:id="@+id/lastRefreshedTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp">
+        <TextView android:id="@+id/lastRefreshedTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/downloadsRow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/Downloads"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/downloadsRow" android:tag="source" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:id="@+id/textView4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/Downloads" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <TextView
-                    android:id="@+id/downloadsTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp">
+        <TextView android:id="@+id/downloadsTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/linkHyperlinkRow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/Link"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/linkHyperlinkRow" android:tag="source" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:id="@+id/textView5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/Link" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/linkHyperlink"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/BarbershopTagsCom"
-                    android:textSize="12sp">
+        <depollsoft.lib.ui.Hyperlink android:minHeight="48dp" android:gravity="center_vertical" android:id="@+id/linkHyperlink" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/BarbershopTagsCom" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </depollsoft.lib.ui.Hyperlink>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/postedByRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/PostedBy"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/postedByRow" android:tag="posted" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/textView6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/PostedBy" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/postedByTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <depollsoft.lib.ui.Hyperlink android:minHeight="48dp" android:gravity="center_vertical" android:id="@+id/postedByTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </depollsoft.lib.ui.Hyperlink>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/postedRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/postedTitleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/Posted"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/postedRow" android:tag="posted" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/postedTitleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/Posted" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <TextView
-                    android:id="@+id/postedTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <TextView android:id="@+id/postedTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/arrangedByRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/arrangedByTitleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/ArrangedBy"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/arrangedByRow" android:tag="arranged" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/arrangedByTitleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/ArrangedBy" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/arrangedByTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <depollsoft.lib.ui.Hyperlink android:minHeight="48dp" android:gravity="center_vertical" android:id="@+id/arrangedByTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </depollsoft.lib.ui.Hyperlink>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/yearArrangedRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/yearArrangedTitleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/YearArranged"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/yearArrangedRow" android:tag="arranged" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/yearArrangedTitleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/YearArranged" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <TextView
-                    android:id="@+id/yearArrangedTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <TextView android:id="@+id/yearArrangedTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/sungByRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/sungByTitleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/SungBy"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/sungByRow" android:tag="sung" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/sungByTitleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/SungBy" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <depollsoft.lib.ui.Hyperlink
-                    android:id="@+id/sungByTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <depollsoft.lib.ui.Hyperlink android:minHeight="48dp" android:gravity="center_vertical" android:id="@+id/sungByTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </depollsoft.lib.ui.Hyperlink>
-            </TableRow>
-
-            <TableRow
-                android:id="@+id/yearSungRow"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/yearSungTitleTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginRight="5dip"
-                    android:text="@string/YearSung"
-                    android:textSize="12sp"
-                    android:textStyle="bold">
+      </depollsoft.tagmaster.DetailPairLayout>
+      <depollsoft.tagmaster.DetailPairLayout android:id="@+id/yearSungRow" android:tag="sung" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:id="@+id/yearSungTitleTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="start|center_vertical" android:layout_marginEnd="5dp" android:text="@string/YearSung" android:textAppearance="?attr/textAppearanceLabelLarge">
                 </TextView>
-
-                <TextView
-                    android:id="@+id/yearSungTextView"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="fill"
-                    android:textSize="12sp">
+        <TextView android:id="@+id/yearSungTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="fill" android:textAppearance="?attr/textAppearanceBodyMedium">
                 </TextView>
-            </TableRow>
-        </TableLayout>
-    </ScrollView>
-
+      </depollsoft.tagmaster.DetailPairLayout>
+    </depollsoft.tagmaster.DetailMetadataLayout>
+  </ScrollView>
 </LinearLayout>

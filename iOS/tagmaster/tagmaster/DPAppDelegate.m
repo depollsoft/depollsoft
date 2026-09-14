@@ -7,6 +7,8 @@
 //
 
 #import "DPAppDelegate.h"
+#import <limits.h>
+#import "TMLogoBackgroundView.h"
 
 @import FirebaseAuth;
 @import FirebaseCore;
@@ -31,6 +33,25 @@
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
+
+/// Shown in the secondary column before a tag is chosen on iPad.
+@interface TMTagPlaceholderController : UIViewController
+@end
+
+@implementation TMTagPlaceholderController
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [DPAppDelegate setUpBackground:self.view];
+    UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
+    state.image = [UIImage systemImageNamed:@"tag"];
+    state.text = @"No tag selected";
+    state.secondaryText = @"Choose a tag from Browse, Search, Favorites, or Teachable Tags to see its summary, tracks, and videos.";
+    self.contentUnavailableConfiguration = state;
+}
+@end
+
+@interface DPAppDelegate () <UISplitViewControllerDelegate>
+@end
 
 @implementation DPAppDelegate
 
@@ -73,13 +94,50 @@
     
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
+    self.window.tintColor = [UIColor systemBlueColor];
+    UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
+    [navigationAppearance configureWithOpaqueBackground];
+    navigationAppearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
+    navigationAppearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    navigationAppearance.largeTitleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    UINavigationController *navController = [[UINavigationController alloc] init];
+    UINavigationBar *navigationBar = navController.navigationBar;
+    navigationBar.standardAppearance = navigationAppearance;
+    navigationBar.scrollEdgeAppearance = navigationAppearance;
+    navigationBar.compactAppearance = navigationAppearance;
+    navigationBar.compactScrollEdgeAppearance = navigationAppearance;
+    navigationBar.tintColor = [UIColor whiteColor];
+    navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    navigationBar.barStyle = UIBarStyleBlack;
+    // With opaque chrome, keep UIKit's large-title host above the bar background.
+    navigationBar.translucent = NO;
     [self.window makeKeyAndVisible];
     
-    UINavigationController *navController = [[UINavigationController alloc] init];
-    self.window.rootViewController = navController;
-    [navController pushViewController:[[DPHomeViewController alloc] init] animated:YES];
-    
+    navController.navigationBar.prefersLargeTitles = YES;
+    [navController pushViewController:[[DPHomeViewController alloc] init] animated:NO];
     navigationController = navController;
+
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+        // List and detail side by side on iPad; the Home stack stays the primary column.
+        UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
+        split.delegate = self;
+        split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
+        split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+        [split setViewController:navController forColumn:UISplitViewControllerColumnPrimary];
+        UINavigationController *detailNavigation = [[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]];
+        detailNavigation.navigationBar.standardAppearance = navigationAppearance;
+        detailNavigation.navigationBar.scrollEdgeAppearance = navigationAppearance;
+        detailNavigation.navigationBar.compactAppearance = navigationAppearance;
+        detailNavigation.navigationBar.compactScrollEdgeAppearance = navigationAppearance;
+        detailNavigation.navigationBar.tintColor = [UIColor whiteColor];
+        detailNavigation.navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+        detailNavigation.navigationBar.barStyle = UIBarStyleBlack;
+        detailNavigation.navigationBar.translucent = NO;
+        [split setViewController:detailNavigation forColumn:UISplitViewControllerColumnSecondary];
+        self.window.rootViewController = split;
+    } else {
+        self.window.rootViewController = navController;
+    }
     [self.window makeKeyAndVisible];
     
     [self extraInit];
@@ -103,19 +161,52 @@
     if ([[FIRAuth auth] canHandleURL:url]) {
         return YES;
     }
-    if (url.pathComponents.count == 3 && [url.pathComponents[1] isEqualToString:@"tag"]) {
-        NSString *tagNumberString = url.pathComponents[2];
-        @try {
-            int tagId = tagNumberString.intValue;
-            DPTagViewController *controller = [[DPTagViewController alloc] init];
-            controller.tagId = tagId;
-            [self.navigationController pushViewController:controller animated:YES];
-        }
-        @catch (NSException *exception) {
-        }
-        return YES;
+    // Auth callbacks above keep their provider-specific schemes and paths.
+    if (url.scheme.length == 0 || [url.scheme caseInsensitiveCompare:@"tagmaster"] != NSOrderedSame ||
+        url.user || url.password || url.port) return NO;
+    // Split without normalizing away empty components or trailing slashes.
+    NSString *path = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO].path;
+    NSArray<NSString *> *components = [path componentsSeparatedByString:@"/"];
+    BOOL hostIsTag = [url.host isEqualToString:@"tag"] && components.count == 2;
+    BOOL pathHasTag = (url.host.length == 0 || [url.host isEqualToString:@"open"]) &&
+        components.count == 3 && [components[1] isEqualToString:@"tag"];
+    if ((!hostIsTag && !pathHasTag) || ![components.firstObject isEqualToString:@""]) return NO;
+    NSString *identifier = components.lastObject;
+    if (identifier.length == 0) return NO;
+    int tagId = 0;
+    for (NSUInteger index = 0; index < identifier.length; index++) {
+        unichar character = [identifier characterAtIndex:index];
+        if (character < '0' || character > '9') return NO;
+        int digit = character - '0';
+        if (tagId > (INT_MAX - digit) / 10) return NO;
+        tagId = tagId * 10 + digit;
     }
-    return NO;
+    if (tagId == 0) return NO;
+    [DPAppDelegate showTagWithId:tagId from:self.navigationController.topViewController];
+    return YES;
+}
+
++ (void)showTagWithId:(int)tagId from:(UIViewController *)sender {
+    DPTagViewController *controller = [[DPTagViewController alloc] init];
+    controller.tagId = tagId;
+    UISplitViewController *split = sender.splitViewController;
+    if (split && !split.isCollapsed) {
+        [split setViewController:[[UINavigationController alloc] initWithRootViewController:controller]
+                       forColumn:UISplitViewControllerColumnSecondary];
+        if (split.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
+            [split hideColumn:UISplitViewControllerColumnPrimary];
+        }
+        return;
+    }
+    UINavigationController *navigation = sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
+    [navigation pushViewController:controller animated:YES];
+}
+
+- (UISplitViewControllerColumn)splitViewController:(UISplitViewController *)svc topColumnForCollapsingToProposedTopColumn:(UISplitViewControllerColumn)proposedTopColumn {
+    // Keep a chosen tag on top when the window narrows; never surface the placeholder.
+    UINavigationController *secondary = (UINavigationController *)[svc viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UIViewController *detail = [secondary isKindOfClass:[UINavigationController class]] ? secondary.topViewController : secondary;
+    return [detail isKindOfClass:[DPTagViewController class]] ? UISplitViewControllerColumnSecondary : UISplitViewControllerColumnPrimary;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -209,17 +300,20 @@
                                                          scale:UIImageSymbolScaleMedium];
     UIImage *image = [UIImage systemImageNamed:systemName
                              withConfiguration:configuration];
-    return [[UIBarButtonItem alloc] initWithImage:image
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:image
                                             style:UIBarButtonItemStylePlain
                                            target:target
                                            action:action];
+    item.accessibilityLabel = @{@"magnifyingglass": @"Search",
+                                @"square.and.arrow.up": @"Share",
+                                @"tag": @"Favorite and Teachable options",
+                                @"arrow.clockwise": @"Refresh"}[systemName];
+    return item;
 }
 
 + (void)setUpBackground:(UIView *)view {
     view.backgroundColor = [UIColor systemBackgroundColor];
-    UIImageView *backgroundImage = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"screenbackground.png"]];
-    backgroundImage.userInteractionEnabled = NO;
-    backgroundImage.contentMode = UIViewContentModeScaleAspectFit;
+    TMLogoBackgroundView *backgroundImage = [[TMLogoBackgroundView alloc] initWithFrame:CGRectZero];
     backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
 
     if ([view isKindOfClass:[UITableView class]]) {

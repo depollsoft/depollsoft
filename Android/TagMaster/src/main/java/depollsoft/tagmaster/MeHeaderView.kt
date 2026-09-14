@@ -1,29 +1,38 @@
 package depollsoft.tagmaster
 
-import android.app.ProgressDialog
+import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.text.InputType
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
-import android.widget.EditText
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import bolts.Continuation
-import depollsoft.tagmaster.barbershop.Tag
-import depollsoft.tagmaster.TeachableTagsModel.teachableTagIds
-import depollsoft.tagmaster.barbershop.TagQueryResult
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.ReflectedProperty
-import com.bindroid.BindingMode
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.bindroid.converters.BoolConverter
-import com.bindroid.utils.Property
+import com.bindroid.trackable.TrackableBoolean
+import com.bindroid.ui.UiBinder
+import com.bindroid.utils.bindTo
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
 import depollsoft.lib.kotlin.ui.safeDismiss
-import java.util.*
+import depollsoft.tagmaster.barbershop.Tag
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import java.util.Random
 
 class MeHeaderView : LinearLayout {
     constructor(context: Context?) : super(context) {
@@ -34,157 +43,209 @@ class MeHeaderView : LinearLayout {
         init()
     }
 
+    private val loading = TrackableBoolean(false)
+    val isLoading: Boolean
+        @JvmName("getIsLoading")
+        get() = loading.get()
+
+    private var requestScope: CoroutineScope? = null
+    private var openTagDialog: AlertDialog? = null
+
+    // This view is a RecyclerView item on the home screen, so it can be detached while the user
+    // scrolls. In-flight work is therefore tied to the host activity's lifecycle, not to attachment.
+    private var observedLifecycle: Lifecycle? = null
+    private val lifecycleObserver =
+        LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY) release()
+        }
+
+    private val feedbackHost: View?
+        get() =
+            (context as? Activity)
+                ?.takeIf { !it.isFinishing && !it.isDestroyed }
+                ?.findViewById(android.R.id.content)
+
+    private val canShowFeedback: Boolean
+        get() = feedbackHost != null
+
     private fun init() {
-        inflate(this.context, R.layout.meviewheader, this)
-        if (!this.isInEditMode) {
-            val randomTagButton = findViewById<View>(R.id.randomTagButton)
-            randomTagButton.setOnClickListener {
-                val progress = ProgressDialog(this@MeHeaderView.context)
-                progress.setMessage("Loading...")
-                progress.isIndeterminate = true
-                progress.show()
-                Tag.query(
-                    null,
-                    0,
-                    0,
-                    null,
-                    SettingsModel.randomLearningTracksFilter,
-                    SettingsModel.randomSheetMusicFilter,
-                    null,
-                    null,
-                    SettingsModel.minimumRandomTagRating,
-                    SettingsModel.minimumRandomDownloads,
-                    false,
-                    "id"
-                ).continueWith(Continuation<TagQueryResult, Void?> { task ->
-                    if (task.isFaulted) {
-                        post {
-                            progress.safeDismiss()
-                            Toast.makeText(
-                                this@MeHeaderView.context, "Could not load a random tag.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } else {
-                        if (task.result.available == 0) {
-                            post {
-                                progress.safeDismiss()
-                                Toast
-                                    .makeText(
-                                        this@MeHeaderView.context,
-                                        "No tags that match your filters could be found.  Please adjust your filters using the Settings menu.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+        inflate(context, R.layout.meviewheader, this)
+        if (isInEditMode) return
+
+        for (id in intArrayOf(
+            R.id.browseButton,
+            R.id.teachableButton,
+            R.id.randomTagButton,
+            R.id.openByIdButton,
+        )) {
+            ViewCompat.setAccessibilityDelegate(
+                findViewById(id),
+                object : AccessibilityDelegateCompat() {
+                    override fun onInitializeAccessibilityNodeInfo(
+                        host: View,
+                        info: AccessibilityNodeInfoCompat,
+                    ) {
+                        super.onInitializeAccessibilityNodeInfo(host, info)
+                        info.className = Button::class.java.name
+                    }
+                },
+            )
+        }
+        bindTo(R.id.favoritesEmptyText, "Visibility", { FavoritesModel.favoriteIds.size == 0 }, BoolConverter.get())
+        UiBinder.bind(this, R.id.randomTagProgress, "Loading", "IsLoading")
+        UiBinder.bind(this, R.id.randomTagButton, "Enabled", "IsLoading", BoolConverter.get(true))
+        findViewById<View>(R.id.randomTagButton).setOnClickListener { loadRandomTag() }
+        findViewById<View>(R.id.browseButton).setOnClickListener {
+            context.startActivity(Intent(context, TagBrowserActivity::class.java))
+        }
+        findViewById<View>(R.id.teachableButton).setOnClickListener {
+            context.startActivity(Intent(context, TeachableTagsActivity::class.java))
+        }
+        findViewById<View>(R.id.openByIdButton).setOnClickListener { showOpenTagDialog() }
+    }
+
+    private fun loadRandomTag() {
+        if (isLoading || !canShowFeedback) return
+        loading.set(true)
+        requestScope?.cancel()
+        requestScope =
+            CoroutineScope(Dispatchers.Main + Job()).also { scope ->
+                scope.launch {
+                    try {
+                        val count =
+                            Tag
+                                .query(
+                                    null,
+                                    0,
+                                    0,
+                                    null,
+                                    SettingsModel.randomLearningTracksFilter,
+                                    SettingsModel.randomSheetMusicFilter,
+                                    null,
+                                    null,
+                                    SettingsModel.minimumRandomTagRating,
+                                    SettingsModel.minimumRandomDownloads,
+                                    false,
+                                    "id",
+                                ).await()
+                        if (count.available == 0) {
+                            feedbackHost?.let { host ->
+                                Snackbar
+                                    .make(host, R.string.home_random_no_matches, Snackbar.LENGTH_LONG)
+                                    .setTextMaxLines(6)
+                                    .setAction(R.string.Settings) {
+                                        if (canShowFeedback) context.startActivity(Intent(context, SettingsActivity::class.java))
+                                    }.show()
                             }
-                            return@Continuation null
+                            return@launch
                         }
-                        val r = Random()
-                        val chosenNumber = r.nextInt(task.result.available)
-                        Tag.query(
-                            null,
-                            1,
-                            chosenNumber,
-                            null,
-                            SettingsModel.randomLearningTracksFilter,
-                            SettingsModel.randomSheetMusicFilter,
-                            null,
-                            null,
-                            SettingsModel.minimumRandomTagRating,
-                            SettingsModel.minimumRandomDownloads,
-                            false,
-                            "id"
-                        ).continueWith<Void> { task ->
-                            if (task.isFaulted) {
-                                post {
-                                    progress.safeDismiss()
-                                    Toast.makeText(
-                                        this@MeHeaderView.context,
-                                        "Could not load a random tag.", Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            } else {
-                                post {
-                                    val i = Intent(
-                                        this@MeHeaderView.context,
-                                        TagDetailActivity::class.java
-                                    )
-                                    i.putExtra(
-                                        TagDetailActivity.TAG_ID_EXTRA, task.result.tags[0]
-                                            .id
-                                    )
-                                    this@MeHeaderView.context.startActivity(i)
-                                    progress.safeDismiss()
-                                }
-                            }
-                            null
+                        val chosenNumber = Random().nextInt(count.available)
+                        val result =
+                            Tag
+                                .query(
+                                    null,
+                                    1,
+                                    chosenNumber,
+                                    null,
+                                    SettingsModel.randomLearningTracksFilter,
+                                    SettingsModel.randomSheetMusicFilter,
+                                    null,
+                                    null,
+                                    SettingsModel.minimumRandomTagRating,
+                                    SettingsModel.minimumRandomDownloads,
+                                    false,
+                                    "id",
+                                ).await()
+                        if (canShowFeedback) openTag(result.tags[0].id)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        feedbackHost?.let { host ->
+                            Snackbar
+                                .make(host, R.string.home_random_error, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.home_retry) { loadRandomTag() }
+                                .show()
                         }
+                    } finally {
+                        loading.set(false)
                     }
-                    null
-                })
-            }
-            val browseButton = findViewById<View>(R.id.browseButton)
-            browseButton.setOnClickListener {
-                val i = Intent(this@MeHeaderView.context, TagBrowserActivity::class.java)
-                this@MeHeaderView.context.startActivity(i)
-            }
-            val teachableButton = findViewById<View>(R.id.teachableButton)
-            teachableButton.setOnClickListener {
-                val i = Intent(this@MeHeaderView.context, TeachableTagsActivity::class.java)
-                this@MeHeaderView.context.startActivity(i)
-            }
-            val openTagByIdButton = findViewById<View>(R.id.openByIdButton)
-            openTagByIdButton.setOnClickListener { v ->
-                val editText = EditText(v.context)
-                editText.inputType = InputType.TYPE_CLASS_NUMBER
-                editText.setImeActionLabel("Open", KeyEvent.KEYCODE_ENTER)
-                val dlg = AlertDialog.Builder(context)
-                    .setCancelable(true)
-                    .setNegativeButton("Cancel", null)
-                    .setTitle("Enter Tag ID")
-                    .setPositiveButton("Open") { dialog: DialogInterface?, which: Int ->
-                        if (editText.text.toString().isEmpty()) {
-                            return@setPositiveButton
-                        }
-                        openTag(editText.text.toString().toInt())
-                    }
-                    .setView(editText)
-                    .create()
-                editText.setOnEditorActionListener { v1: TextView?, actionId: Int, event: KeyEvent? ->
-                    if (event == null || event?.action == KeyEvent.ACTION_UP) {
-                        if (editText.text.toString().isEmpty()) {
-                            return@setOnEditorActionListener false
-                        }
-                        openTag(editText.text.toString().toInt())
-                        dlg.safeDismiss()
-                    }
-                    true
                 }
-                dlg.show()
-                editText.requestFocus()
+            }
+    }
+
+    private fun showOpenTagDialog() {
+        val content = inflate(context, R.layout.dialog_open_tag, null)
+        val input = content.findViewById<TextInputEditText>(R.id.openTagIdInput)
+        val dialog =
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.home_enter_tag_id)
+                .setView(content)
+                .setPositiveButton(R.string.home_open, null)
+                .setNegativeButton(R.string.home_cancel, null)
+                .create()
+
+        fun submit(): Boolean {
+            val id = input.text?.toString()?.toIntOrNull()
+            val field = content.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.openTagIdLayout)
+            if (id == null || id <= 0) {
+                field.error = context.getString(R.string.home_invalid_tag_id)
+                return false
+            }
+            field.error = null
+            if (!canShowFeedback) return false
+            openTag(id)
+            dialog.safeDismiss()
+            return true
+        }
+        input.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_GO ||
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)
+            ) {
+                submit()
+            } else {
+                false
             }
         }
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { submit() }
+            input.requestFocus()
+            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        }
+        dialog.setOnDismissListener { openTagDialog = null }
+        openTagDialog = dialog
+        dialog.show()
     }
 
     private fun openTag(id: Int) {
-        val i = Intent(
-            this@MeHeaderView.context,
-            TagDetailActivity::class.java
-        )
-        i.putExtra(
-            TagDetailActivity.TAG_ID_EXTRA,
-            id
-        )
-        this.context.startActivity(i)
+        val intent = Intent(context, TagDetailActivity::class.java)
+        intent.putExtra(TagDetailActivity.TAG_ID_EXTRA, id)
+        context.startActivity(intent)
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (!this.isInEditMode) {
-            UiBinder.bind(ReflectedProperty(findViewById(R.id.teachableButton), "Visibility"),
-                Property({ teachableTagIds.size > 0 }, null, Boolean::class.java),
-                BindingMode.ONE_WAY,
-                BoolConverter.get()
-            )
+        val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
+        if (lifecycle !== observedLifecycle) {
+            observedLifecycle?.removeObserver(lifecycleObserver)
+            observedLifecycle = lifecycle?.also { it.addObserver(lifecycleObserver) }
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        // Scrolling this row off screen must not cancel a random-tag request or close the Open Tag
+        // dialog; only a finishing host (or one without a lifecycle to observe) releases them here.
+        val host = context as? Activity
+        if (observedLifecycle == null || host == null || host.isFinishing || host.isDestroyed) release()
+        super.onDetachedFromWindow()
+    }
+
+    private fun release() {
+        requestScope?.cancel()
+        requestScope = null
+        loading.set(false)
+        openTagDialog?.safeDismiss()
+        openTagDialog = null
+        observedLifecycle?.removeObserver(lifecycleObserver)
+        observedLifecycle = null
     }
 }

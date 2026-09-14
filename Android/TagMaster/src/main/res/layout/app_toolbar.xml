@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared top app bar. Include at the top of every activity layout; the activity calls
+     setUpToolbar() (EdgeToEdge.kt), which wires it as the support action bar. -->
+<com.google.android.material.appbar.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/appBarLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true"
+    android:background="@color/brand_chrome"
+    android:theme="@style/ThemeOverlay.TagMaster.Chrome"
+    app:elevation="0dp"
+    app:liftOnScrollColor="@color/brand_chrome"
+    app:liftOnScroll="true">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brand_chrome"
+        app:titleTextColor="@color/brand_on_chrome"
+        app:navigationIconTint="@color/brand_on_chrome"
+        app:popupTheme="@style/ThemeOverlay.TagMaster.Popup" />
+
+</com.google.android.material.appbar.AppBarLayout>

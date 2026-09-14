@@ -1,314 +1,139 @@
 package depollsoft.tagmaster
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import org.hamcrest.Matchers.*
+import depollsoft.tagmaster.NavigationTestFixture.Companion.onResumed
+import depollsoft.tagmaster.barbershop.TagCollection
+import depollsoft.tagmaster.barbershop.TagSortOptions
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 
-/**
- * Instrumented UI tests for tag search functionality.
- * Tests are launched via MeActivity and navigate to search features.
- * Uses actual resource IDs from TagMaster app.
- */
+/** Real Search form -> results fragment -> bound row -> cached Detail. */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class TagSearchActivityTest {
+    private val fixture = NavigationTestFixture()
+    private val activityRule = ActivityScenarioRule(TagSearchActivity::class.java)
+    @get:Rule val rules: RuleChain = RuleChain.outerRule(fixture).around(activityRule)
 
-    @get:Rule
-    val activityRule = ActivityScenarioRule(MeActivity::class.java)
-
-    // ==================== Launch Tests ====================
-
-    @Test
-    fun testActivityLaunches() {
-        activityRule.scenario.onActivity { activity ->
-            assert(activity != null)
+    @Test fun testActivityLaunches() { onResumed<TagSearchActivity> { assertEquals(TagSortOptions.Title, it.model.sortBy) } }
+    @Test fun testSearchFormIsDisplayed() { onView(withId(R.id.searchTextBox)).check(matches(isDisplayed())) }
+    @Test fun testSearchActionIsDisplayed() { onView(withId(R.id.searchButton)).check(matches(isDisplayed())) }
+    @Test fun testTagQueryFragmentExists() {
+        submit()
+        onView(withId(R.id.tagQueryFragment)).check(matches(isDisplayed()))
+        onView(withId(R.id.queryResultListView)).check(matches(isDisplayed()))
+    }
+    @Test fun testTagCollectionSpinnerExists() { onView(withId(R.id.tagCollectionSpinner)).check(matches(isDisplayed())) }
+    @Test fun testTagCollectionSpinnerIsClickable() { onView(withId(R.id.tagCollectionSpinner)).check(matches(isClickable())) }
+    @Test fun testTagCollectionSpinnerCanOpen() {
+        choose(R.id.tagCollectionSpinner, "Classic Tags")
+        activityRule.scenario.onActivity { assertEquals(TagCollection.ClassicTags, it.model.collection) }
+        onView(withId(R.id.tagCollectionSpinner)).check(matches(withText("Classic Tags")))
+    }
+    @Test fun testTagItemTitleTextViewExists() { results(); onView(withId(R.id.titleTextView)).check(matches(withText(fixture.tag.title))) }
+    @Test fun testTagIdTextViewExists() { results(); onView(withId(R.id.idTextView)).check(matches(withText(fixture.tag.id.toString()))) }
+    @Test fun testResultRowOpensMatchingDetail() {
+        results()
+        onView(withId(R.id.titleTextView)).perform(click())
+        EspressoTestUtils.waitForView(withId(R.id.tabLayout))
+        onResumed<TagDetailActivity> { assertEquals(fixture.tag.id, it.tagId); assertEquals(fixture.tag.title, it.tag!!.title) }
+        onView(withId(R.id.tagIdTextView)).check(matches(withText(fixture.tag.id.toString())))
+    }
+    @Test fun testSheetMusicAvailabilityIndicatorExists() {
+        results()
+        onView(withId(R.id.sheetMusicCheckBox)).check(matches(isDisplayed()))
+        onResumed<TagSearchResultsActivity> {
+            assertFalse(it.findViewById<StatusIndicatorView>(R.id.sheetMusicCheckBox).getIsAvailable())
         }
     }
-
-    @Test
-    fun testViewPagerIsDisplayed() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testBottomNavigationIsDisplayed() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Tag Query Fragment Tests ====================
-
-    @Test
-    fun testTagQueryFragmentExists() {
-        // Navigate to search/query page via ViewPager
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        try {
-            onView(withId(R.id.tagQueryFragment))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // May require additional navigation
+    @Test fun testLearningTrackAvailabilityIndicatorExists() {
+        results()
+        onView(withId(R.id.learningTracksCheckBox)).check(matches(isDisplayed()))
+        onResumed<TagSearchResultsActivity> {
+            assertTrue(it.findViewById<StatusIndicatorView>(R.id.learningTracksCheckBox).getIsAvailable())
         }
     }
-
-    @Test
-    fun testTagCollectionSpinnerExists() {
-        // Navigate to search/query page
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        try {
-            onView(withId(R.id.tagCollectionSpinner))
-                .check(matches(isDisplayed()))
-        } catch (e: Exception) {
-            // Spinner may not be visible on this page
+    @Test fun testRatingContainerExists() { results(); onView(withId(R.id.ratingContainer)).check(matches(isDisplayed())) }
+    @Test fun testRatingTextViewExists() { results(); onView(withId(R.id.ratingTextView)).check(matches(withText("4.00"))) }
+    @Test fun testSearchButtonSubmitsQuery() { submit(); assertQuery("navigation fixture") }
+    @Test fun testImeSearchSubmitsQuery() {
+        onView(withId(R.id.searchTextBox)).perform(replaceText("keyboard query"), pressImeActionButton())
+        // IME dispatch can return while the Search activity is still RESUMED.
+        EspressoTestUtils.waitForView(withId(R.id.tagQueryFragment))
+        assertQuery("keyboard query")
+    }
+    @Test fun testBackFromResultsRetainsQuery() {
+        submit()
+        pressBack()
+        onResumed<TagSearchActivity> { assertEquals("navigation fixture", it.model.query) }
+        onView(withId(R.id.searchTextBox)).check(matches(withText("navigation fixture")))
+    }
+    @Test fun testSortSelectionIsApplied() {
+        choose(R.id.sortBySpinner, "Rating")
+        activityRule.scenario.onActivity { assertEquals(TagSortOptions.Rating, it.model.sortBy) }
+    }
+    @Test fun testFiltersReachResults() {
+        choose(R.id.partsSpinner, "4")
+        choose(R.id.learningTracksSpinner, "Yes")
+        choose(R.id.sheetMusicSpinner, "No")
+        choose(R.id.tagCollectionSpinner, "Easy Tags")
+        choose(R.id.sortBySpinner, "Downloads")
+        submit()
+        onResumed<TagSearchResultsActivity> {
+            val model = (it.supportFragmentManager.findFragmentById(R.id.tagQueryFragment) as TagQueryFragment).model!!
+            assertEquals(4, model.parts)
+            assertEquals(true, model.hasLearningTracks)
+            assertEquals(false, model.hasSheetMusic)
+            assertEquals(TagCollection.EasyTags, model.collection)
+            assertEquals(TagSortOptions.Downloaded, model.sortBy)
         }
     }
-
-    @Test
-    fun testTagCollectionSpinnerIsClickable() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        try {
-            onView(withId(R.id.tagCollectionSpinner))
-                .check(matches(isClickable()))
-        } catch (e: Exception) {
-            // Spinner may not be accessible
-        }
-    }
-
-    @Test
-    fun testTagCollectionSpinnerCanOpen() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        try {
-            onView(withId(R.id.tagCollectionSpinner))
-                .perform(click())
-
-            EspressoTestUtils.shortWait(200)
-
-            // Spinner dropdown should open
-        } catch (e: Exception) {
-            // Spinner may not be accessible
-        }
-    }
-
-    // ==================== Tag Item View Tests ====================
-
-    @Test
-    fun testTagItemTitleTextViewExists() {
-        // Title text view should exist in tag item layouts
-        try {
-            onView(withId(R.id.titleTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // May need to navigate to a list view first
-        }
-    }
-
-    @Test
-    fun testTagIdTextViewExists() {
-        try {
-            onView(withId(R.id.tagIdTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Tag ID may not be visible
-        }
-    }
-
-    @Test
-    fun testTagIdExists() {
-        try {
-            onView(withId(R.id.tagId))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Tag ID may not be visible
-        }
-    }
-
-    @Test
-    fun testFavoriteMarkerTextViewExists() {
-        try {
-            onView(withId(R.id.favoriteMarkerTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Favorite marker may not be visible
-        }
-    }
-
-    @Test
-    fun testTeachableMarkerTextViewExists() {
-        try {
-            onView(withId(R.id.teachableMarkerTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Teachable marker may not be visible
-        }
-    }
-
-    @Test
-    fun testRatingRowExists() {
-        try {
-            onView(withId(R.id.ratingRow))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Rating row may not be visible
-        }
-    }
-
-    @Test
-    fun testRatingTextViewExists() {
-        try {
-            onView(withId(R.id.ratingTextView))
-                .check(matches(anyOf(isDisplayed(), not(isDisplayed()))))
-        } catch (e: Exception) {
-            // Rating text view may not be visible
-        }
-    }
-
-    // ==================== ViewPager Navigation Tests ====================
-
-    @Test
-    fun testSwipeLeftOnViewPager() {
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testSwipeRightOnViewPager() {
-        // First swipe left to have room to swipe right
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .perform(swipeRight())
-
-        EspressoTestUtils.shortWait(300)
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    @Test
-    fun testMultipleViewPagerSwipes() {
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        repeat(3) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
-            EspressoTestUtils.shortWait(200)
-        }
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
-    }
-
-    // ==================== Bottom Navigation Tests ====================
-
-    @Test
-    fun testBottomNavigationClickable() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isClickable()))
-    }
-
-    @Test
-    fun testBottomNavigationEnabled() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isEnabled()))
-    }
-
-    // ==================== Configuration Change Tests ====================
-
-    @Test
-    fun testViewPagerPreservedAfterRotation() {
-        // Swipe to a different page
-        onView(withId(R.id.viewPager))
-            .perform(swipeLeft())
-
-        EspressoTestUtils.shortWait(300)
-
-        // Rotate
+    @Test fun testQueryPreservedAfterRecreation() {
+        onView(withId(R.id.searchTextBox)).perform(replaceText("retained query"), closeSoftKeyboard())
         activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        // ViewPager should still be displayed
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
+        onView(withId(R.id.searchTextBox)).check(matches(withText("retained query")))
+        activityRule.scenario.onActivity { assertEquals("retained query", it.model.query) }
     }
-
-    @Test
-    fun testBottomNavigationPreservedAfterRotation() {
+    @Test fun testCollectionPreservedAfterRecreation() {
+        choose(R.id.tagCollectionSpinner, "Easy Tags")
         activityRule.scenario.recreate()
-
-        EspressoTestUtils.shortWait(500)
-
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isDisplayed()))
+        onView(withId(R.id.tagCollectionSpinner)).check(matches(withText("Easy Tags")))
+        activityRule.scenario.onActivity { assertEquals(TagCollection.EasyTags, it.model.collection) }
+    }
+    @Test fun testQueryFieldIsEnabled() { onView(withId(R.id.searchTextBox)).check(matches(isEnabled())) }
+    @Test fun testSearchActionIsEnabled() { onView(withId(R.id.searchButton)).check(matches(isEnabled())) }
+    @Test fun testRepeatedCollectionSelectionsUseLatestValue() {
+        repeat(3) { choose(R.id.tagCollectionSpinner, "Classic Tags"); choose(R.id.tagCollectionSpinner, "Any") }
+        activityRule.scenario.onActivity { assertNull(it.model.collection) }
+        onView(withId(R.id.tagCollectionSpinner)).check(matches(withText("Any")))
     }
 
-    // ==================== Accessibility Tests ====================
-
-    @Test
-    fun testViewPagerIsEnabled() {
-        onView(withId(R.id.viewPager))
-            .check(matches(isEnabled()))
+    private fun choose(id: Int, text: String) {
+        onView(withId(id)).perform(scrollTo(), click())
+        onView(withText(text)).inRoot(isPlatformPopup()).perform(click())
     }
-
-    @Test
-    fun testBottomNavigationIsEnabled() {
-        onView(withId(R.id.bottomNavigation))
-            .check(matches(isEnabled()))
+    private fun submit() {
+        onView(withId(R.id.searchTextBox)).perform(replaceText("navigation fixture"), closeSoftKeyboard())
+        onView(withId(R.id.searchButton)).perform(click())
+        assertQuery("navigation fixture")
     }
-
-    // ==================== Edge Cases ====================
-
-    @Test
-    fun testRapidViewPagerSwipes() {
-        repeat(5) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeLeft())
-            EspressoTestUtils.shortWait(100)
+    private fun assertQuery(query: String) {
+        onResumed<TagSearchResultsActivity> {
+            val fragment = it.supportFragmentManager.findFragmentById(R.id.tagQueryFragment) as TagQueryFragment
+            assertEquals(query, fragment.model!!.query)
+            assertEquals(query, it.supportActionBar!!.title)
         }
-
-        repeat(5) {
-            onView(withId(R.id.viewPager))
-                .perform(swipeRight())
-            EspressoTestUtils.shortWait(100)
-        }
-
-        onView(withId(R.id.viewPager))
-            .check(matches(isDisplayed()))
     }
+    private fun results() { submit(); fixture.populateResults() }
 }

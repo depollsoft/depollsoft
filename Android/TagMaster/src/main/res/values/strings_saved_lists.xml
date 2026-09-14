@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="saved_list_edit">Edit</string>
+    <string name="saved_list_done">Done</string>
+    <string name="saved_list_remove">Remove</string>
+    <string name="saved_list_drag">Drag to reorder</string>
+    <string name="saved_list_tag_id">Tag ID %1$d</string>
+    <string name="saved_list_remove_named">Remove %1$s from %2$s</string>
+    <string name="saved_list_drag_named">Reorder %1$s, position %2$d of %3$d in %4$s. Drag or use Alt + arrow keys.</string>
+    <string name="saved_list_position">%1$s, position %2$d of %3$d in %4$s</string>
+    <string name="saved_list_remove_title">Remove from %1$s?</string>
+    <string name="saved_list_remove_message">%1$s will be removed from this list, not from the tag catalog.</string>
+    <string name="saved_list_changed">List updated. Drag canceled.</string>
+</resources>

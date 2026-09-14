@@ -49,6 +49,10 @@ public class TeachingVideoDisplay extends LinearLayout {
         Context.LAYOUT_INFLATER_SERVICE);
     inflater.inflate(R.layout.teachingvideodisplay, this, true);
 
+    android.util.TypedValue background = new android.util.TypedValue();
+    getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, background, true);
+    setBackgroundResource(background.resourceId);
+    this.setFocusable(true);
     this.setClickable(true);
     this.setOnClickListener(new OnClickListener() {
 
@@ -77,9 +81,9 @@ public class TeachingVideoDisplay extends LinearLayout {
 
   public void setTag(Tag value) {
     this.tag.set(value);
-    this.setThumbnailUri(String.format("http://img.youtube.com/vi/%s/2.jpg",
+    this.setThumbnailUri(String.format("https://img.youtube.com/vi/%s/2.jpg",
         value.getTeachingVideo()));
-    this.setWatchUri(String.format("http://www.youtube.com/watch?v=%s", value.getTeachingVideo()));
+    this.setWatchUri(String.format("https://www.youtube.com/watch?v=%s", value.getTeachingVideo()));
   }
 
   public void setThumbnailUri(String value) {

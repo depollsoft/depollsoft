@@ -46,9 +46,7 @@ extension DPHomeViewController: UITextFieldDelegate {
     }
     
     private func openTag(tagId: Int32) {
-        let tvc = DPTagViewController()
-        tvc.tagId = tagId
-        navigationController?.pushViewController(tvc, animated: true)
+        DPAppDelegate.showTag(withId: tagId, from: self)
     }
     
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {

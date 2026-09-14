@@ -213,7 +213,7 @@
 }
 
 - (NSArray *)parseWithUrl:(NSURL *)url {
-    NSData *data = [NSData dataWithContentsOfURL:url];
+    NSData *data = [DPRemoteLocation dataWithContentsOfURL:url error:nil];
     if (!data) {
         return nil;
     }

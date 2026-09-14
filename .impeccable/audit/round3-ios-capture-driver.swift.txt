@@ -1,0 +1,41 @@
+    // Temporary round-three device capture driver, removed after verification.
+    private func round3Capture(_ name: String) throws {
+        Thread.sleep(forTimeInterval: 1)
+        let root = "/Users/depoll/.local/share/pi-worktrees/20260907070801/fable-audit-ux-worktree-20260907/.impeccable/review/"
+        try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: root + "tagmaster-ios-round3-" + name + ".png"))
+    }
+
+    func testRound3Homes() throws {
+        let name = try String(contentsOfFile: "/Users/depoll/.local/share/pi-worktrees/20260907070801/fable-audit-ux-worktree-20260907/.impeccable/audit/r3-ios-capture-suffix.txt", encoding: .utf8)
+        home()
+        try round3Capture("home-" + name)
+        app.tables.firstMatch.swipeUp()
+        try round3Capture("home-inline-" + name)
+    }
+
+    private func round3Screens(_ suffix: String) throws {
+        home()
+        try round3Capture("home" + suffix)
+        app.tables.staticTexts["Browse"].tap()
+        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 30))
+        Thread.sleep(forTimeInterval: 2)
+        try round3Capture("browse" + suffix)
+        home()
+        app.tables.staticTexts["Settings"].tap()
+        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].waitForExistence(timeout: 5))
+        try round3Capture("settings" + suffix)
+        home()
+        openTag()
+        try round3Capture("summary" + suffix)
+        let pitch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Play key note'")).firstMatch
+        XCTAssertEqual(pitch.frame.height, app.buttons["Sheet Music"].frame.height, accuracy: 1)
+        XCTAssertEqual(pitch.frame.height, app.buttons["Rate tag"].frame.height, accuracy: 1)
+        app.tabBars.buttons["Tracks"].tap()
+        try round3Capture("tracks" + suffix)
+        app.tabBars.buttons["Videos"].tap()
+        try round3Capture("videos" + suffix)
+    }
+
+    func testRound3LightScreens() throws { try round3Screens("") }
+    func testRound3DarkScreens() throws { try round3Screens("-dark") }
+

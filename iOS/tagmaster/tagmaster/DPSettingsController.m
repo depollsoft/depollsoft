@@ -13,23 +13,26 @@
 #import "DPAppDelegate.h"
 #import "tagmaster-Swift.h"
 
-@interface DPSettingsController () <UIAlertViewDelegate>
+typedef NS_ENUM(NSInteger, TMSettingsSection) {
+    TMSettingsSectionAccount,
+    TMSettingsSectionLists,
+    TMSettingsSectionRandomFilters,
+    TMSettingsSectionPrivateBuild
+};
 
-@property (nonatomic, strong) DPBusyIndicator *busyIndicator;
+@interface DPSettingsController () <UITableViewDataSource, UITableViewDelegate>
 
-@property (nonatomic, strong) UIButton *logInButton;
-@property (nonatomic, strong) UIButton *clearFavoritesButton;
-@property (nonatomic, strong) UIButton *clearTeachableButton;
+@property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UISegmentedControl *minRating;
 @property (nonatomic, strong) UISegmentedControl *minDownloads;
 @property (nonatomic, strong) UISegmentedControl *sheetMusic;
 @property (nonatomic, strong) UISegmentedControl *learningTracks;
+@property (nonatomic, strong) NSArray<NSString *> *filterTitles;
+@property (nonatomic, strong) NSArray<UIView *> *filterControls;
 
 @end
 
 @implementation DPSettingsController
-
-@synthesize busyIndicator;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -44,36 +47,11 @@
     [super viewDidLoad];
     
     [DPAppDelegate setUpBackground:self.view];
-    
-    self.busyIndicator = [[DPBusyIndicator alloc] init];
+    // Inset groups need the grouped page color behind them to read as groups in light mode.
+    self.view.backgroundColor = [UIColor systemGroupedBackgroundColor];
     
     self.title = @"Settings";
     
-    DPGridLayout *grid = [[DPGridLayout alloc] init];
-    NSMutableArray *rows = [NSMutableArray array];
-    for (NSInteger index = 0; index < 12; index++) {
-        [rows addObject:[DPGridDimension dimension]];
-    }
-    if ([self isPrivateBuild]) {
-        [rows addObject:[DPGridDimension dimension]];
-        [rows addObject:[DPGridDimension dimension]];
-        [rows addObject:[DPGridDimension dimension]];
-    }
-    grid.rowDimensions = rows;
-    grid.columnDimensions = @[
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1]
-                              ];
-    UIScrollView *scroller = [[UIScrollView alloc] init];
-    
-    self.logInButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    self.clearFavoritesButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [self.clearFavoritesButton setTitle:@"Clear Favorites" forState:UIControlStateNormal];
-    [self.clearFavoritesButton addTarget:self action:@selector(clearFavorites) forControlEvents:UIControlEventTouchUpInside];
-    self.clearTeachableButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [self.clearTeachableButton setTitle:@"Clear Teachable Tags" forState:UIControlStateNormal];
-    [self.clearTeachableButton addTarget:self action:@selector(clearTeachable) forControlEvents:UIControlEventTouchUpInside];
     self.minRating = [[UISegmentedControl alloc] initWithItems:@[@"Any", @"1", @"2", @"3", @"4"]];
     self.minRating.apportionsSegmentWidthsByContent = YES;
     self.minRating.selectedSegmentIndex = [DPSettingsController minRatingValue];
@@ -87,77 +65,149 @@
     self.learningTracks.apportionsSegmentWidthsByContent = YES;
     self.learningTracks.selectedSegmentIndex = [DPSettingsController learningTracksValue];
     
-    UILabel *logInHeader = [self makeTitleLabel];
-    logInHeader.text = @"Log In";
-    UILabel *logInText = [self makeBodyLabel];
-    logInText.text = @"Log in to back up and synchronize your tag lists.";
-    logInText.numberOfLines = 0;
-    UILabel *favoritesHeader = [self makeTitleLabel];
-    favoritesHeader.text = @"Favorites";
-    UILabel *teachableHeader = [self makeTitleLabel];
-    teachableHeader.text = @"Teachable Tags";
-    UILabel *randomTagsHeader = [self makeTitleLabel];
-    randomTagsHeader.text = @"Random Tag Filters";
-    UILabel *minRatingHeader = [self makeHeader:@"Minimum Rating"];
-    UILabel *minDownloadHeader = [self makeHeader:@"Minimum Downloads"];
-    UILabel *sheetMusicHeader = [self makeHeader:@"Sheet Music"];
-    UILabel *learningTracksHeader = [self makeHeader:@"Learning Tracks"];
-    
-    [grid addSubview:logInHeader row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:logInText row:1 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.logInButton row:2 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:favoritesHeader row:3 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.clearFavoritesButton row:4 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:teachableHeader row:5 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:self.clearTeachableButton row:6 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:randomTagsHeader row:7 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:minRatingHeader row:8 column:0];
-    [grid addSubview:[self.minRating padHorizontal:0 vertical:8] row:8 column:2];
-    [grid addSubview:minDownloadHeader row:9 column:0];
-    [grid addSubview:[self.minDownloads padHorizontal:0 vertical:8] row:9 column:2];
-    [grid addSubview:sheetMusicHeader row:10 column:0];
-    [grid addSubview:[self.sheetMusic padHorizontal:0 vertical:8] row:10 column:2];
-    [grid addSubview:learningTracksHeader row:11 column:0];
-    [grid addSubview:[self.learningTracks padHorizontal:0 vertical:8] row:11 column:2];
-    if ([self isPrivateBuild]) {
-        UILabel *buildHeader = [self makeTitleLabel];
-        buildHeader.text = @"Private Build";
-        UILabel *metadata = [self makeBodyLabel];
-        metadata.text = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
-        UIButton *copyLogs = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-        [copyLogs setTitle:@"Copy Logs" forState:UIControlStateNormal];
-        [copyLogs addTarget:self action:@selector(copyLogs) forControlEvents:UIControlEventTouchUpInside];
-        [grid addSubview:buildHeader row:12 column:0 rowSpan:1 colSpan:3];
-        [grid addSubview:metadata row:13 column:0 rowSpan:1 colSpan:3];
-        [grid addSubview:copyLogs row:14 column:0 rowSpan:1 colSpan:3];
+    self.filterTitles = @[@"Minimum Rating", @"Minimum Downloads", @"Sheet Music", @"Learning Tracks"];
+    NSArray *controls = @[self.minRating, self.minDownloads, self.sheetMusic, self.learningTracks];
+    NSMutableArray *filterControls = [NSMutableArray array];
+    for (NSUInteger index = 0; index < controls.count; index++) {
+        UISegmentedControl *control = controls[index];
+        control.accessibilityLabel = self.filterTitles[index];
+        [control.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        [filterControls addObject:[self makeFilterControl:control label:self.filterTitles[index]]];
     }
+    self.filterControls = filterControls;
     
-    [self.logInButton addTarget:self action:@selector(logInClick) forControlEvents:UIControlEventTouchUpInside];
-    
-    [self setUpRootView:grid withScroller:scroller];
-    
-    self.busyIndicator.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:self.busyIndicator];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[busyIndicator]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(busyIndicator)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[busyIndicator]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(busyIndicator)]];
+    // Settings-shaped content belongs in an inset-grouped list.
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleInsetGrouped];
+    self.tableView.dataSource = self;
+    self.tableView.delegate = self;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 60;
+    self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:self.tableView];
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [self.tableView.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor]
+    ]];
     
     [self refreshLoginButton];
 }
 
-- (void)refreshLoginButton {
-    if (![FIRAuth auth].currentUser) {
-        [self.logInButton setTitle:@"Log In" forState:UIControlStateNormal];
-    } else {
-        [self.logInButton setTitle:@"Log Out" forState:UIControlStateNormal];
-    }
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.tableView reloadData];
 }
 
+- (void)refreshLoginButton {
+    if (!self.isViewLoaded) return;
+    [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:TMSettingsSectionAccount] withRowAnimation:UITableViewRowAnimationNone];
+}
+
+- (BOOL)isSignedIn {
+    return [FIRAuth auth].currentUser != nil;
+}
+
+#pragma mark - Table view
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return [self isPrivateBuild] ? 4 : 3;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    switch ((TMSettingsSection)section) {
+        case TMSettingsSectionAccount: return 1;
+        case TMSettingsSectionLists: return 2;
+        case TMSettingsSectionRandomFilters: return self.filterTitles.count;
+        case TMSettingsSectionPrivateBuild: return 2;
+    }
+    return 0;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    switch ((TMSettingsSection)section) {
+        case TMSettingsSectionAccount: return @"Account";
+        case TMSettingsSectionLists: return @"Saved Tags";
+        case TMSettingsSectionRandomFilters: return @"Random Tag Filters";
+        case TMSettingsSectionPrivateBuild: return @"Private Build";
+    }
+    return nil;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    switch ((TMSettingsSection)section) {
+        case TMSettingsSectionAccount: return @"Log in to back up and synchronize your tag lists.";
+        case TMSettingsSectionLists: return @"Clearing a list removes every tag from it on this device and, when logged in, on your other devices.";
+        case TMSettingsSectionRandomFilters: return @"Random Tag only picks tags that match these filters.";
+        case TMSettingsSectionPrivateBuild: return nil;
+    }
+    return nil;
+}
+
+- (UITableViewCell *)actionCellWithTitle:(NSString *)title detail:(NSString *)detail destructive:(BOOL)destructive enabled:(BOOL)enabled {
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:nil];
+    cell.textLabel.text = title;
+    cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.textLabel.adjustsFontForContentSizeCategory = YES;
+    cell.textLabel.numberOfLines = 0;
+    cell.detailTextLabel.text = detail;
+    cell.detailTextLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.detailTextLabel.adjustsFontForContentSizeCategory = YES;
+    UIColor *color = destructive ? [UIColor systemRedColor] : self.view.tintColor;
+    cell.textLabel.textColor = enabled ? color : [UIColor tertiaryLabelColor];
+    cell.userInteractionEnabled = enabled;
+    cell.accessibilityTraits = UIAccessibilityTraitButton | (enabled ? 0 : UIAccessibilityTraitNotEnabled);
+    return cell;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    switch ((TMSettingsSection)indexPath.section) {
+        case TMSettingsSectionAccount: {
+            UITableViewCell *cell = [self actionCellWithTitle:[self isSignedIn] ? @"Log Out" : @"Log In" detail:nil destructive:NO enabled:YES];
+            cell.accessibilityHint = [self isSignedIn] ? @"Signs out of Tag Master on this device" : @"Opens the sign-in options";
+            return cell;
+        }
+        case TMSettingsSectionLists: {
+            NSUInteger count = indexPath.row == 0 ? [DPAppDelegate favorites].count : [DPAppDelegate teachable].count;
+            NSString *title = indexPath.row == 0 ? @"Clear Favorites" : @"Clear Teachable Tags";
+            NSString *detail = [NSString stringWithFormat:@"%lu %@", (unsigned long)count, count == 1 ? @"tag" : @"tags"];
+            return [self actionCellWithTitle:title detail:detail destructive:YES enabled:count > 0];
+        }
+        case TMSettingsSectionRandomFilters:
+            return [self makeFormCellWithHeader:self.filterTitles[indexPath.row] control:self.filterControls[indexPath.row]];
+        case TMSettingsSectionPrivateBuild: {
+            if (indexPath.row == 0) {
+                UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+                cell.textLabel.text = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
+                cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+                cell.textLabel.adjustsFontForContentSizeCategory = YES;
+                cell.textLabel.numberOfLines = 0;
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                return cell;
+            }
+            return [self actionCellWithTitle:@"Copy Logs" detail:nil destructive:NO enabled:YES];
+        }
+    }
+    return [[UITableViewCell alloc] init];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    switch ((TMSettingsSection)indexPath.section) {
+        case TMSettingsSectionAccount:
+            [self logInClick];
+            break;
+        case TMSettingsSectionLists:
+            if (indexPath.row == 0) [self clearFavorites]; else [self clearTeachable];
+            break;
+        case TMSettingsSectionRandomFilters:
+            break;
+        case TMSettingsSectionPrivateBuild:
+            if (indexPath.row == 1) [self copyLogs];
+            break;
+    }
+}
 
 + (NSInteger)minDownloadsValue {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{@"random.minDownloads": @2}];
@@ -269,6 +319,7 @@
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
     [DPSettingsController setMinDownloadsValue:self.minDownloads.selectedSegmentIndex];
     [DPSettingsController setMinRatingValue:self.minRating.selectedSegmentIndex];
     [DPSettingsController setSheetMusicValue:self.sheetMusic.selectedSegmentIndex];
@@ -276,30 +327,32 @@
 }
 
 - (void)clearFavorites {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Favorite Tags"
-                                                                             message:@"Are you sure you want to clear your favorites?"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Clear Favorites?"
+                                                                             message:@"Every favorite will be removed from your list. You can add tags again from any tag's Favorite and Teachable options."
                                                                       preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Clear Favorites"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction * _Nonnull action) {
         [DPAppDelegate setFavorites:@[]];
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:TMSettingsSectionLists] withRowAnimation:UITableViewRowAnimationNone];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleCancel
                                                       handler:nil]];
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)clearTeachable {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Teachable Tags"
-                                                                             message:@"Are you sure you want to clear your teachable tags list?"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Clear Teachable Tags?"
+                                                                             message:@"Every teachable tag will be removed from your list. You can mark tags as teachable again from any tag's Favorite and Teachable options."
                                                                       preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Yes"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Clear Teachable Tags"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction * _Nonnull action) {
         [DPAppDelegate setTeachable:@[]];
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:TMSettingsSectionLists] withRowAnimation:UITableViewRowAnimationNone];
     }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"No"
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleCancel
                                                       handler:nil]];
     [self presentViewController:alertController animated:YES completion:nil];

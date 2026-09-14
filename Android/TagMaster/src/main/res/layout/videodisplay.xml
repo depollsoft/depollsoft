@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content" >
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="72dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp" >
 
     <depollsoft.lib.ui.LoadingImageView
         android:id="@+id/videoPreview"
@@ -9,14 +12,14 @@
         android:layout_height="60dp"
         android:layout_gravity="center_vertical"
         android:layout_marginBottom="4dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:importantForAccessibility="no"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="4dp"
         android:layout_weight="0" />
 
     <TableLayout
         android:id="@+id/tableLayout1"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|fill_horizontal"
         android:layout_weight="1"
@@ -32,23 +35,22 @@
                 android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dip"
+                android:layout_marginEnd="5dp"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/SungBy"
-                android:textSize="12sp"
-                android:textStyle="bold" >
+                android:textAppearance="?attr/textAppearanceLabelLarge" >
             </TextView>
 
             <TextView
                 android:id="@+id/sungByTextView"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:textSize="12sp" >
+                android:textAppearance="?attr/textAppearanceBodyMedium" >
             </TextView>
         </TableRow>
 
@@ -61,28 +63,27 @@
                 android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dip"
+                android:layout_marginEnd="5dp"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/Key"
-                android:textSize="12sp"
-                android:textStyle="bold" >
+                android:textAppearance="?attr/textAppearanceLabelLarge" >
             </TextView>
 
             <TextView
                 android:id="@+id/keyTextView"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:textSize="12sp" >
+                android:textAppearance="?attr/textAppearanceBodyMedium" >
             </TextView>
         </TableRow>
 
         <TableRow
-            android:id="@+id/tableRow3"
+            android:id="@+id/postedRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
 
@@ -90,46 +91,42 @@
                 android:id="@+id/textView5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dip"
+                android:layout_marginEnd="5dp"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
                 android:text="@string/Posted"
-                android:textSize="12sp"
-                android:textStyle="bold" >
+                android:textAppearance="?attr/textAppearanceLabelLarge" >
             </TextView>
 
             <TextView
                 android:id="@+id/postedTextView"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:linksClickable="false"
                 android:longClickable="false"
-                android:textSize="12sp" >
+                android:textAppearance="?attr/textAppearanceBodyMedium" >
             </TextView>
         </TableRow>
 
         <LinearLayout
             android:id="@+id/linearLayout1"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="vertical" >
 
-            <CheckBox
+            <depollsoft.tagmaster.StatusIndicatorView
                 android:id="@+id/multitrackCheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:button="@drawable/ic_yesnocheck"
-                android:buttonTint="@android:color/transparent"
-                android:buttonTintMode="add"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:clickable="false"
                 android:text="@string/Multitrack"
-                android:textSize="12sp" >
-            </CheckBox>
+                android:textAppearance="?attr/textAppearanceBodyMedium" >
+            </depollsoft.tagmaster.StatusIndicatorView>
         </LinearLayout>
     </TableLayout>
 
