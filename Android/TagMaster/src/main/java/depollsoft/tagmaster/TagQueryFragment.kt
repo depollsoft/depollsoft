@@ -137,6 +137,13 @@ class TagQueryFragment : Fragment() {
         return
     }
 
+    /** Keeps the row for the tag open in the detail pane visible in this list. */
+    fun revealTag(id: Int) {
+        val index = model?.tags?.indexOfFirst { it.id == id } ?: -1
+        if (index < 0) return
+        view?.findViewById<ListView>(R.id.queryResultListView)?.smoothScrollToPosition(index)
+    }
+
     fun onSearchRequested(): Boolean {
         val i = Intent(this.context, TagSearchActivity::class.java)
         this.startActivity(i)

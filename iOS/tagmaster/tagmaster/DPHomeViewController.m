@@ -52,6 +52,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(tm_splitSelectionChanged:) name:TMTagSelectionDidChangeNotification object:nil];
     [DPAppDelegate setUpBackground:self.view];
     
     // Random Tag shows its progress on its own row; nothing covers the screen.
@@ -128,11 +129,15 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
                                              target:self
                                              action:@selector(search)];
+    // The favorites row for the tag open beside this list stays selected
+    // instead of clearing when the screen reappears in an expanded split.
+    self.clearsSelectionOnViewWillAppear = !(self.splitViewController && !self.splitViewController.isCollapsed);
     [self viewDidLoadExtension];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self tm_syncSelectionForSplit];
     // The handwriting face belongs to Home only; pushed screens use the system title.
     UINavigationBar *bar = self.navigationController.navigationBar;
     bar.prefersLargeTitles = YES;
@@ -189,6 +194,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    [self tm_syncSelectionForSplit];
     [self updateInlineTitleVisibility];
     UIView *footer = self.tableView.tableFooterView;
     CGFloat width = self.tableView.bounds.size.width;
@@ -222,6 +228,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     [super viewDidAppear:animated];
     [self.tableView reloadData];
     [self updateEditButton];
+    [self tm_syncSelectionForSplit];
 }
 
 // Edit only has work to do when there are favorites to reorder or remove.
@@ -399,6 +406,8 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     if (indexPath.row < favorites.count) {
         tagCell.tagId = favorites[indexPath.row].intValue;
     }
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    tagCell.accessoryType = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
     return tagCell;
 }
 
@@ -407,14 +416,17 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
     if (indexPath.section == 0) {
+        // Navigation rows always deselect; only a tag row stays lit beside its detail.
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
         NSArray *items = [self navigationItems];
         if (indexPath.row < items.count) {
             void (^block)(void) = items[indexPath.row][@"action"];
             block();
         }
     } else {
+        if (!expanded) [tableView deselectRowAtIndexPath:indexPath animated:YES];
         NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
         if (indexPath.row < favorites.count) {
             [DPAppDelegate showTagWithId:favorites[indexPath.row].intValue from:self];
@@ -462,6 +474,43 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         return NO;
     }
     return YES;
+}
+
+#pragma mark - TMTagListSource
+
+- (NSArray<NSNumber *> *)tm_listedTagIds {
+    return [DPAppDelegate favorites];
+}
+
+- (void)tm_didStepToTagId:(int)tagId {
+    NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+    NSUInteger index = [favorites indexOfObject:@(tagId)];
+    if (index == NSNotFound) return;
+    NSIndexPath *path = [NSIndexPath indexPathForRow:index inSection:1];
+    [self.tableView selectRowAtIndexPath:path animated:!UIAccessibilityIsReduceMotionEnabled() scrollPosition:UITableViewScrollPositionNone];
+    [self.tableView scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionNone animated:!UIAccessibilityIsReduceMotionEnabled()];
+}
+
+- (void)tm_splitSelectionChanged:(NSNotification *)notification {
+    [self tm_syncSelectionForSplit];
+}
+
+- (void)tm_syncSelectionForSplit {
+    if (!self.isViewLoaded) return;
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    self.clearsSelectionOnViewWillAppear = !expanded;
+    for (UITableViewCell *cell in self.tableView.visibleCells) {
+        if ([cell isKindOfClass:DPTagCell.class]) {
+            UITableViewCellAccessoryType accessory = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
+            if (cell.accessoryType != accessory) cell.accessoryType = accessory;
+        }
+    }
+    NSNumber *current = expanded ? [DPAppDelegate currentSplitTagIdFor:self] : nil;
+    NSUInteger index = current ? [[DPAppDelegate favorites] indexOfObject:current] : NSNotFound;
+    NSIndexPath *path = index == NSNotFound ? nil : [NSIndexPath indexPathForRow:index inSection:1];
+    NSIndexPath *selected = self.tableView.indexPathForSelectedRow;
+    if (selected && ![selected isEqual:path]) [self.tableView deselectRowAtIndexPath:selected animated:NO];
+    if (path && ![selected isEqual:path]) [self.tableView selectRowAtIndexPath:path animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 @end

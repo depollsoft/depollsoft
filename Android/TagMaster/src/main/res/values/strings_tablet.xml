@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wide-window list-detail: a tag opens beside the list instead of replacing it. -->
+<resources>
+    <string name="tag_pane_empty_title">Pick a tag</string>
+    <string name="tag_pane_empty_body">Choose a tag from the list. Its summary, tracks, sheet music, and videos open here.</string>
+    <string name="previous_tag">Previous tag</string>
+    <string name="next_tag">Next tag</string>
+    <string name="tag_row_showing">Showing</string>
+    <string name="tag_pane_list_title">Tag list</string>
+    <string name="tag_pane_detail_title">Tag</string>
+</resources>

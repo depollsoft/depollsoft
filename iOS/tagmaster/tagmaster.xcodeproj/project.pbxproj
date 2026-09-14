@@ -97,6 +97,7 @@
 		A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C010000000000000000013 /* TMLogoBackgroundView.m */; };
 		A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C020000000000000000011 /* TMBarberPoleLoadingView.m */; };
 		A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C030000000000000000011 /* TMQuartetArtwork.m */; };
+		A7C040000000000000000001 /* TMQuartetStaffView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C040000000000000000011 /* TMQuartetStaffView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -263,6 +264,8 @@
 		A7C030000000000000000010 /* TMQuartetArtwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMQuartetArtwork.h; sourceTree = "<group>"; };
 		A7C020000000000000000011 /* TMBarberPoleLoadingView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMBarberPoleLoadingView.m; sourceTree = "<group>"; };
 		A7C030000000000000000011 /* TMQuartetArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetArtwork.m; sourceTree = "<group>"; };
+		A7C040000000000000000010 /* TMQuartetStaffView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMQuartetStaffView.h; sourceTree = "<group>"; };
+		A7C040000000000000000011 /* TMQuartetStaffView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetStaffView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -424,6 +427,8 @@
 				A7C030000000000000000010 /* TMQuartetArtwork.h */,
 				A7C020000000000000000011 /* TMBarberPoleLoadingView.m */,
 				A7C030000000000000000011 /* TMQuartetArtwork.m */,
+				A7C040000000000000000010 /* TMQuartetStaffView.h */,
+				A7C040000000000000000011 /* TMQuartetStaffView.m */,
 				A7C010000000000000000010 /* TMLogoArtwork.h */,
 				A7C010000000000000000011 /* TMLogoArtwork.m */,
 				A7C010000000000000000012 /* TMLogoBackgroundView.h */,
@@ -735,6 +740,7 @@
 				63712F0215130B21007997CC /* DPAppDelegate.m in Sources */,
 				A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */,
 				A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */,
+				A7C040000000000000000001 /* TMQuartetStaffView.m in Sources */,
 				A7C010000000000000000001 /* TMLogoArtwork.m in Sources */,
 				A7C010000000000000000002 /* TMLogoBackgroundView.m in Sources */,
 				A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */,

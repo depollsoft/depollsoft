@@ -9,6 +9,7 @@
 #import "DPTagViewController.h"
 #import "TMBarberPoleLoadingView.h"
 #import "TMQuartetArtwork.h"
+#import "TMQuartetStaffView.h"
 #import "DPBarbershop.h"
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
@@ -16,122 +17,6 @@
 #import "DPTagVideoController.h"
 #import "DPAppDelegate.h"
 #import <MessageUI/MessageUI.h>
-
-// Decorative cached notation. The enclosing native labels own loading announcements.
-@interface TMQuartetStaffView : UIView
-@property (nonatomic, copy) NSArray<CAShapeLayer *> *notes;
-@property CALayer *artwork;
-@property CAShapeLayer *staff;
-@property NSArray<CAShapeLayer *> *notation;
-@property (nonatomic) BOOL animationAllowed;
-- (void)updateMotion;
-@end
-
-@implementation TMQuartetStaffView
-- (instancetype)initWithFrame:(CGRect)frame {
-    if ((self = [super initWithFrame:frame])) {
-        self.backgroundColor = UIColor.clearColor;
-        self.accessibilityElementsHidden = YES;
-        self.artwork = [CALayer layer];
-        self.artwork.anchorPoint = CGPointZero;
-        [self.layer addSublayer:self.artwork];
-        self.staff = [CAShapeLayer layer];
-        self.staff.path = TMQuartetStaffPath();
-        self.staff.fillColor = nil;
-        self.staff.lineWidth = TMQuartetStaffWidth;
-        CAShapeLayer *staffMask = [CAShapeLayer layer];
-        staffMask.path = TMQuartetStaffMaskPath();
-        staffMask.fillRule = kCAFillRuleEvenOdd;
-        self.staff.mask = staffMask;
-        [self.artwork addSublayer:self.staff];
-        NSMutableArray *notation = [NSMutableArray array];
-        CGPathRef paths[] = {TMQuartetStemPath(), TMQuartetLedgerPath(), TMQuartetFlatPath(), TMQuartetLabelPath()};
-        for (NSUInteger i = 0; i < 4; i++) {
-            CAShapeLayer *symbol = [CAShapeLayer layer];
-            symbol.path = paths[i];
-            CAShapeLayer *mask = [CAShapeLayer layer];
-            mask.path = TMQuartetStaffMaskPath();
-            mask.fillRule = kCAFillRuleEvenOdd;
-            symbol.mask = mask;
-            [self.artwork addSublayer:symbol];
-            [notation addObject:symbol];
-        }
-        self.notation = notation;
-        NSMutableArray *notes = [NSMutableArray array];
-        for (NSUInteger i = 0; i < 4; i++) {
-            CAShapeLayer *note = [CAShapeLayer layer];
-            note.path = TMQuartetNotePath();
-            note.position = CGPointMake(TMQuartetX[i], TMQuartetY[i]);
-            [self.artwork addSublayer:note];
-            [notes addObject:note];
-        }
-        self.notes = notes;
-    }
-    return self;
-}
-- (CGSize)intrinsicContentSize { return CGSizeMake(TMQuartetWidth, TMQuartetHeight); }
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    CGFloat scale = MIN(self.bounds.size.width / TMQuartetWidth, self.bounds.size.height / TMQuartetHeight);
-    BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    self.artwork.position = CGPointMake((self.bounds.size.width - TMQuartetWidth * scale) / 2,
-                                       (self.bounds.size.height - TMQuartetHeight * scale) / 2);
-    self.artwork.transform = CATransform3DMakeScale(scale, scale, 1);
-    self.staff.strokeColor = TMQuartetColor(dark, YES);
-    for (CAShapeLayer *note in self.notes) note.fillColor = TMQuartetColor(dark, NO);
-    for (CAShapeLayer *symbol in self.notation) symbol.fillColor = TMQuartetColor(dark, NO);
-    [CATransaction commit];
-    [self updateMotion];
-}
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
-    [self setNeedsLayout];
-}
-- (void)setAnimationAllowed:(BOOL)allowed {
-    _animationAllowed = allowed;
-    [self updateMotion];
-}
-- (void)setHidden:(BOOL)hidden {
-    [super setHidden:hidden];
-    [self updateMotion];
-}
-- (void)didMoveToWindow {
-    [super didMoveToWindow];
-    [self updateMotion];
-}
-- (BOOL)reduceMotionEnabled { return UIAccessibilityIsReduceMotionEnabled(); }
-- (void)updateMotion {
-    BOOL animate = self.animationAllowed && self.window && !self.hidden && ![self reduceMotionEnabled];
-    CGRect visible = [self convertRect:self.bounds toView:self.window];
-    for (UIView *ancestor = self; ancestor && animate; ancestor = ancestor.superview) {
-        if (ancestor.hidden || ancestor.alpha <= 0.01) animate = NO;
-        if (ancestor.clipsToBounds) visible = CGRectIntersection(visible, [ancestor convertRect:ancestor.bounds toView:self.window]);
-    }
-    if (CGRectIsEmpty(visible) || !CGRectIntersectsRect(visible, self.window.bounds)) animate = NO;
-    CFTimeInterval start = [self.artwork convertTime:CACurrentMediaTime() fromLayer:nil];
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    for (NSUInteger i = 0; i < self.notes.count; i++) {
-        CAShapeLayer *note = self.notes[i];
-        note.opacity = TMQuartetStill[i];
-        if (!animate) {
-            [note removeAllAnimations];
-        } else if (![note animationForKey:@"gather"]) {
-            CAKeyframeAnimation *motion = [CAKeyframeAnimation animationWithKeyPath:@"opacity"];
-            motion.values = TMQuartetSamples(i);
-            motion.calculationMode = kCAAnimationLinear;
-            motion.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
-            motion.duration = TMQuartetPeriod;
-            motion.beginTime = start;
-            motion.repeatCount = HUGE_VALF;
-            [note addAnimation:motion forKey:@"gather"];
-        }
-    }
-    [CATransaction commit];
-}
-@end
 
 @interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate, UIScrollViewDelegate>
 
@@ -146,6 +31,10 @@
 @property (nonatomic, strong) UIBarButtonItem *shareBarButton;
 @property (nonatomic, strong) UIBarButtonItem *refreshBarButton;
 @property (nonatomic, strong) UIBarButtonItem *loadingBarButton;
+@property (nonatomic, strong) UIBarButtonItem *favoriteBarButton;
+@property (nonatomic, strong) UIBarButtonItem *teachableBarButton;
+@property (nonatomic, strong) UIBarButtonItem *previousTagBarButton;
+@property (nonatomic, strong) UIBarButtonItem *nextTagBarButton;
 
 @property (nonatomic, strong) TMBusyIndicator *busyIndicator;
 @property (nonatomic) BOOL tagFetchPending;
@@ -160,6 +49,11 @@
 @property (nonatomic, strong) UILabel *loadingHeading;
 @property (nonatomic, strong) UILabel *loadingStatus;
 @property (nonatomic, strong) UIButton *retryButton;
+
+@property (nonatomic, readonly) BOOL hasPreviousTag;
+@property (nonatomic, readonly) BOOL hasNextTag;
+- (void)stepToPreviousTag;
+- (void)stepToNextTag;
 
 @end
 
@@ -193,7 +87,7 @@
 }
 
 - (void)setTagId:(int)tId {
-    if (tagId == tId && self.tagFetchPending) return;
+    if (tagId == tId) return;
     if (tagId != tId) {
         // Old work may finish, but it no longer owns this screen.
         self.requestGeneration++;
@@ -280,8 +174,25 @@
     TMBarberPoleLoadingView *spinner = (TMBarberPoleLoadingView *)self.loadingBarButton.customView;
     spinner.controllerVisible = self.screenVisible;
     if (busy && !empty) [spinner startAnimating]; else [spinner stopAnimating];
-    self.navigationItem.rightBarButtonItems = empty ? @[] : @[self.shareBarButton, self.actionBarButton,
-        busy ? self.loadingBarButton : self.refreshBarButton];
+    self.previousTagBarButton.enabled = [self hasPreviousTag];
+    self.nextTagBarButton.enabled = [self hasNextTag];
+    BOOL expanded = self.splitViewController != nil && !self.splitViewController.isCollapsed;
+    BOOL showSteppers = self.source != nil && expanded;
+    [self refreshSavedStateButtons];
+    NSMutableArray<UIBarButtonItem *> *rightItems = [NSMutableArray array];
+    // UIKit renders the first item in this array farthest out. Beside a list the bar reads,
+    // left to right, the way Android's detail pane does: previous, next, favorite, teachable,
+    // refresh, share. Collapsed (iPhone) keeps share, the tag action sheet, refresh.
+    if (!empty) {
+        [rightItems addObjectsFromArray:expanded
+            ? @[self.shareBarButton, busy ? self.loadingBarButton : self.refreshBarButton,
+                self.teachableBarButton, self.favoriteBarButton]
+            : @[self.shareBarButton, self.actionBarButton, busy ? self.loadingBarButton : self.refreshBarButton]];
+    }
+    if (showSteppers) [rightItems addObjectsFromArray:@[self.nextTagBarButton, self.previousTagBarButton]];
+    if (![self.navigationItem.rightBarButtonItems isEqualToArray:rightItems]) {
+        self.navigationItem.rightBarButtonItems = rightItems;
+    }
     self.quartetStaff.animationAllowed = initialPending && self.screenVisible && self.applicationActive;
     if (initialPending && self.screenVisible && self.applicationActive && self.announcedGeneration != self.requestGeneration) {
         self.announcedGeneration = self.requestGeneration;
@@ -311,6 +222,79 @@
 
 - (void)dealloc {
     [NSNotificationCenter.defaultCenter removeObserver:self];
+}
+
+- (void)setSource:(id<TMTagListSource>)source {
+    _source = source;
+    [self updateLoadingState];
+}
+
+- (BOOL)canStepThroughSource {
+    return self.source && self.splitViewController && !self.splitViewController.isCollapsed;
+}
+
+#pragma mark - Stepping to a neighbouring tag
+
+- (NSInteger)indexOfCurrentTagInSource {
+    if (!self.source) return NSNotFound;
+    return [[self.source tm_listedTagIds] indexOfObject:@(self.tagId)];
+}
+
+- (BOOL)hasPreviousTag {
+    NSInteger index = [self indexOfCurrentTagInSource];
+    return index != NSNotFound && index > 0;
+}
+
+- (BOOL)hasNextTag {
+    NSInteger index = [self indexOfCurrentTagInSource];
+    if (index == NSNotFound) return NO;
+    return (NSUInteger)(index + 1) < [self.source tm_listedTagIds].count;
+}
+
+- (void)stepBy:(NSInteger)delta {
+    id<TMTagListSource> source = self.source;
+    if (![self canStepThroughSource]) return;
+    NSArray<NSNumber *> *ids = [source tm_listedTagIds] ?: @[];
+    NSUInteger index = [ids indexOfObject:@(self.tagId)];
+    if (index == NSNotFound) return;
+    NSInteger newIndex = (NSInteger)index + delta;
+    if (newIndex < 0 || (NSUInteger)newIndex >= ids.count) return;
+    int newTagId = ids[(NSUInteger)newIndex].intValue;
+    [DPAppDelegate showTagWithId:newTagId from:self];
+    [self updateLoadingState];
+}
+
+- (void)stepToPreviousTag {
+    [self stepBy:-1];
+}
+
+- (void)stepToNextTag {
+    [self stepBy:1];
+}
+
+- (void)sourceListMayHaveChanged:(NSNotification *)notification {
+    if (!self.source) return;
+    if ([notification.name isEqualToString:TMTagListDidChangeNotification] && notification.object != self.source) return;
+    [self updateLoadingState];
+}
+
+- (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
+    if (action == @selector(stepToPreviousTag)) return [self canStepThroughSource] && self.hasPreviousTag;
+    if (action == @selector(stepToNextTag)) return [self canStepThroughSource] && self.hasNextTag;
+    return [super canPerformAction:action withSender:sender];
+}
+
+- (NSArray<UIKeyCommand *> *)keyCommands {
+    if (![self canStepThroughSource]) return super.keyCommands;
+    UIKeyCommand *previous = [UIKeyCommand keyCommandWithInput:UIKeyInputUpArrow
+                                                  modifierFlags:UIKeyModifierCommand
+                                                         action:@selector(stepToPreviousTag)];
+    previous.discoverabilityTitle = @"Previous Tag";
+    UIKeyCommand *next = [UIKeyCommand keyCommandWithInput:UIKeyInputDownArrow
+                                              modifierFlags:UIKeyModifierCommand
+                                                     action:@selector(stepToNextTag)];
+    next.discoverabilityTitle = @"Next Tag";
+    return [(@[previous, next]) arrayByAddingObjectsFromArray:super.keyCommands ?: @[]];
 }
 
 - (void)setTag:(DPTag *)t {
@@ -362,6 +346,17 @@
     self.refreshBarButton = [DPAppDelegate barButtonItemWithSystemName:@"arrow.clockwise"
                                                                 target:self
                                                                 action:@selector(refreshTag)];
+    self.favoriteBarButton = [[UIBarButtonItem alloc] initWithImage:nil style:UIBarButtonItemStylePlain
+                                                             target:self action:@selector(toggleFavorite)];
+    self.teachableBarButton = [[UIBarButtonItem alloc] initWithImage:nil style:UIBarButtonItemStylePlain
+                                                              target:self action:@selector(toggleTeachable)];
+    [self refreshSavedStateButtons];
+    self.previousTagBarButton = [DPAppDelegate barButtonItemWithSystemName:@"chevron.up"
+                                                                     target:self
+                                                                     action:@selector(stepToPreviousTag)];
+    self.nextTagBarButton = [DPAppDelegate barButtonItemWithSystemName:@"chevron.down"
+                                                                 target:self
+                                                                 action:@selector(stepToNextTag)];
     TMBarberPoleLoadingView *spinner = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Refreshing tag"];
     spinner.darkSurface = YES;
     self.loadingBarButton = [[UIBarButtonItem alloc] initWithCustomView:spinner];
@@ -377,6 +372,11 @@
                              UIApplicationWillResignActiveNotification, UIApplicationDidBecomeActiveNotification]) {
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(loadingEnvironmentChanged:) name:name object:nil];
     }
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(loadingEnvironmentChanged:) name:TMTagSelectionDidChangeNotification object:nil];
+    // A source's list can change underneath this screen (a query page finishes
+    // loading, favorites/teachable are edited): recheck stepper enablement.
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(sourceListMayHaveChanged:) name:TMTagListDidChangeNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(sourceListMayHaveChanged:) name:@"tagmaster.userDataChanged" object:nil];
     [self setTag:self.tag];
 }
 
@@ -454,6 +454,38 @@
         [self.retryButton.heightAnchor constraintGreaterThanOrEqualToConstant:44],
         [self.retryButton.widthAnchor constraintGreaterThanOrEqualToConstant:80]
     ]];
+}
+
+#pragma mark - Favorite and teachable beside a list
+
+/// Beside a list the bar has room for the two saved-list toggles directly, as on Android;
+/// the symbol fills to show membership and the label names the action VoiceOver will take.
+- (void)refreshSavedStateButtons {
+    if (!self.favoriteBarButton || !self.teachableBarButton) return;
+    UIImageSymbolConfiguration *configuration =
+        [UIImageSymbolConfiguration configurationWithPointSize:17 weight:UIImageSymbolWeightRegular scale:UIImageSymbolScaleMedium];
+    BOOL favorite = [DPAppDelegate containsFavorite:self.tagId];
+    BOOL teachable = [DPAppDelegate containsTeachable:self.tagId];
+    self.favoriteBarButton.image = [UIImage systemImageNamed:favorite ? @"heart.fill" : @"heart" withConfiguration:configuration];
+    self.favoriteBarButton.accessibilityLabel = favorite ? @"Remove Favorite" : @"Add Favorite";
+    self.teachableBarButton.image = [UIImage systemImageNamed:teachable ? @"person.2.fill" : @"person.2" withConfiguration:configuration];
+    self.teachableBarButton.accessibilityLabel = teachable ? @"Unmark as Teachable" : @"Mark as Teachable";
+    self.favoriteBarButton.enabled = self.tag != nil;
+    self.teachableBarButton.enabled = self.tag != nil;
+}
+
+- (void)toggleFavorite {
+    if (!self.tag) return;
+    if ([DPAppDelegate containsFavorite:self.tagId]) [DPAppDelegate removeFavorite:self.tagId];
+    else [DPAppDelegate addFavorite:self.tagId];
+    [self updateLoadingState];
+}
+
+- (void)toggleTeachable {
+    if (!self.tag) return;
+    if ([DPAppDelegate containsTeachable:self.tagId]) [DPAppDelegate removeTeachable:self.tagId];
+    else [DPAppDelegate addTeachable:self.tagId];
+    [self updateLoadingState];
 }
 
 - (void)showActions {

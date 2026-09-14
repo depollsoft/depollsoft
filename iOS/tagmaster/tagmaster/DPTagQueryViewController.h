@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 #import "DPBarbershop.h"
+#import "DPAppDelegate.h"
 
-@interface DPTagQueryViewController : UIViewController
+@interface DPTagQueryViewController : UIViewController <TMTagListSource>
 
 @property (nonatomic) int maxResults;
 @property (nonatomic, copy) NSString *statusText;

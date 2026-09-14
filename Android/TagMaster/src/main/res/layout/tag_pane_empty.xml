@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The detail pane before a tag is chosen: the quartet at rest over the barber-pole watermark. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tagPaneEmptyState"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/tagPaneWatermark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_barberpole" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <depollsoft.tagmaster.TagLoadingView
+            android:id="@+id/tagPaneEmptyQuartet"
+            android:layout_width="@dimen/quartet_width"
+            android:layout_height="@dimen/quartet_height" />
+
+        <TextView
+            android:id="@+id/tagPaneEmptyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:accessibilityHeading="true"
+            android:gravity="center"
+            android:maxWidth="480dp"
+            android:text="@string/tag_pane_empty_title"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+        <TextView
+            android:id="@+id/tagPaneEmptyBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:maxWidth="480dp"
+            android:text="@string/tag_pane_empty_body"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+</FrameLayout>
