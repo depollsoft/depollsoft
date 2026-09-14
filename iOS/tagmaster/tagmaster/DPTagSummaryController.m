@@ -193,6 +193,10 @@
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *akaLabel;
+@property (nonatomic, strong) UILabel *versionLabel;
+@property (nonatomic, strong) UILabel *savedStatusLabel;
+@property (nonatomic, strong) UILabel *tagIdHeader;
+@property (nonatomic, strong) UILabel *tagIdLabel;
 @property (nonatomic, strong) UIProgressView *ratingBar;
 @property (nonatomic, strong) UILabel *ratingLabel;
 @property (nonatomic, strong) UIButton *ratingButton;
@@ -237,12 +241,30 @@
     return self;
 }
 
+/// "Favorite" and "Teachable tag" under the title, as on Android, whenever the tag is on a saved list.
+- (void)refreshSavedStatus {
+    if (!self.savedStatusLabel) return;
+    NSMutableArray<NSString *> *marks = [NSMutableArray array];
+    if (self.tag && [DPAppDelegate containsFavorite:self.tag.tagId]) [marks addObject:@"Favorite"];
+    if (self.tag && [DPAppDelegate containsTeachable:self.tag.tagId]) [marks addObject:@"Teachable tag"];
+    self.savedStatusLabel.text = [marks componentsJoinedByString:@"   "];
+    self.savedStatusLabel.hidden = marks.count == 0;
+}
+
+- (void)savedListsChanged:(NSNotification *)notification {
+    [self refreshSavedStatus];
+}
+
 - (void)refreshView {
     titleLabel.text = self.tag.title;
     
     akaLabel.text = [NSString stringWithFormat:@"a.k.a. %@", self.tag.alternativeTitle];
     akaLabel.hidden = self.tag.alternativeTitle.length == 0;
-    
+    self.versionLabel.text = [NSString stringWithFormat:@"Version: %@", self.tag.version ?: @""];
+    self.versionLabel.hidden = self.tag.version.length == 0;
+    [self refreshSavedStatus];
+    self.tagIdLabel.text = [NSString stringWithFormat:@"%d", self.tag.tagId];
+
     ratingLabel.text = [NSString stringWithFormat:@"%1.2f", self.tag.rating];
     ratingLabel.accessibilityValue = ratingLabel.text;
     ratingBar.progress = self.tag.rating / 5;
@@ -349,6 +371,16 @@
     notesLabel = [self makeBodyLabel];
     notesLabel.numberOfLines = 0;
     
+    self.versionLabel = [self makeBodyLabel];
+    self.versionLabel.textColor = [UIColor secondaryLabelColor];
+    self.savedStatusLabel = [UILabel new];
+    self.savedStatusLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+    self.savedStatusLabel.adjustsFontForContentSizeCategory = YES;
+    self.savedStatusLabel.numberOfLines = 0;
+    self.savedStatusLabel.textColor = [UIColor secondaryLabelColor];
+    self.tagIdHeader = [self makeHeader:@"Tag ID"];
+    self.tagIdLabel = [self makeBodyLabel];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(savedListsChanged:) name:@"tagmaster.userDataChanged" object:nil];
     ratingHeader = [self makeHeader:@"Rating"];
     partsHeader = [self makeHeader:@"Parts"];
     typeHeader = [self makeHeader:@"Type"];
@@ -375,6 +407,7 @@
     [ratingButton setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     self.classicPair = [TMDetailPair caption:classicTagNumberHeader value:classicTagNumberLabel];
     TMDetailMetadata *facts = [[TMDetailMetadata alloc] initWithArrangedSubviews:@[
+        [TMDetailPair caption:self.tagIdHeader value:self.tagIdLabel],
         [TMDetailPair caption:partsHeader value:partsLabel],
         [TMDetailPair caption:typeHeader value:typeLabel], self.classicPair,
         [TMDetailPair caption:ratingHeader value:ratingGrid]]];
@@ -403,7 +436,7 @@
     self.notesSection.spacing = 4;
     TMDetailSections *prose = [[TMDetailSections alloc] initWithArrangedSubviews:@[self.lyricsSection, self.notesSection]];
     TMSummaryColumns *columns = [[TMSummaryColumns alloc] initWithArrangedSubviews:@[performance, prose]];
-    UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, akaLabel]];
+    UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, akaLabel, self.versionLabel, self.savedStatusLabel]];
     identity.axis = UILayoutConstraintAxisVertical;
     identity.spacing = 4;
     grid = [[UIStackView alloc] initWithArrangedSubviews:@[identity, columns]];

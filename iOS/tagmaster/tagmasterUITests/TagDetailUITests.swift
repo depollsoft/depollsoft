@@ -357,7 +357,7 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertTrue(button.isSelected)
         }
         app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
         captureNativeGlass("detail-details")
         XCUIDevice.shared.orientation = .landscapeLeft
         assertNativeTabs(detail)
