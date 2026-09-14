@@ -7,6 +7,7 @@
 #import "DPFileCache.h"
 #import "TMBarberPoleLoadingView.h"
 #import "tagmaster-Swift.h"
+#import "TMReviewLoader.h"
 
 @interface TMReviewAuth : NSObject
 @property BOOL accepts;
@@ -109,44 +110,6 @@
 }
 @end
 
-// A real AVPlayerItem with controlled status. Production still installs Foundation
-// KVO and the actual AVPlayerItemFailedToPlayToEndTime notification observer.
-@interface TMReviewItem : AVPlayerItem
-@property AVPlayerItemStatus controlledStatus;
-@property NSUInteger statusRemovals;
-- (void)sendStatus:(AVPlayerItemStatus)status;
-@end
-@implementation TMReviewItem
-- (AVPlayerItemStatus)status { return self.controlledStatus; }
-- (void)sendStatus:(AVPlayerItemStatus)status {
-    [self willChangeValueForKey:@"status"];
-    self.controlledStatus = status;
-    [self didChangeValueForKey:@"status"];
-}
-- (void)removeObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath context:(void *)context {
-    if ([keyPath isEqualToString:@"status"]) self.statusRemovals++;
-    [super removeObserver:observer forKeyPath:keyPath context:context];
-}
-@end
-
-// Do not attach the controlled item to AVFoundation's loader. Its real KVO is
-// driven by the test, while the production detach/play/pause calls are recorded.
-@interface TMReviewPlayer : AVPlayer
-@property (nonatomic, strong) AVPlayerItem *controlledItem;
-@property NSUInteger detaches;
-@property NSUInteger pauses;
-@property NSUInteger plays;
-@end
-@implementation TMReviewPlayer
-- (AVPlayerItem *)currentItem { return self.controlledItem; }
-- (void)replaceCurrentItemWithPlayerItem:(AVPlayerItem *)item {
-    self.controlledItem = item;
-    if (!item) self.detaches++;
-}
-- (void)pause { self.pauses++; }
-- (void)play { self.plays++; }
-@end
-
 @interface TMReviewBusy : DPBusyIndicator
 @property NSUInteger settlements;
 @end
@@ -166,72 +129,47 @@
 @end
 
 @interface TMReviewTracks : DPTagTracksController
-@property (nonatomic, strong) AVPlayerItem *lastItem;
-@property (nonatomic, strong) AVPlayer *lastPlayer;
-@property (nonatomic, strong) NSURL *requestedURL;
-@property (nonatomic, strong) AVPlayerViewController *capturedPlayer;
+@property (nonatomic, strong) TMTrackLoader *lastLoader;
+@property (nonatomic, strong) DPTrack *presentedTrack;
+@property (nonatomic, strong) AVAudioPCMBuffer *presentedBuffer;
 @property (nonatomic, copy) void (^retry)(void);
-@property (nonatomic, copy) void (^presentationCompletion)(void);
+@property NSUInteger loads;
 @property NSUInteger errors;
 @property NSUInteger presentations;
 @property NSTimeInterval testTimeout;
-@property BOOL nativePresentation;
 @property BOOL realPlayback;
-@property BOOL delayPresentationCompletion;
+@property BOOL showInlinePlayer;
 @end
 @implementation TMReviewTracks
 - (NSTimeInterval)playbackReadyTimeout { return self.testTimeout > 0 ? self.testTimeout : 30; }
-- (AVPlayerItem *)makePlaybackItemWithUrl:(NSURL *)url {
-    self.requestedURL = url;
-    self.lastItem = self.realPlayback ? [super makePlaybackItemWithUrl:url] : [[TMReviewItem alloc] initWithURL:url];
-    return self.lastItem;
+- (TMTrackLoader *)makeTrackLoaderWithUrl:(NSURL *)url cacheKey:(NSString *)cacheKey {
+    self.loads++;
+    self.lastLoader = self.realPlayback ? [super makeTrackLoaderWithUrl:url cacheKey:cacheKey]
+        : TMCreateReviewLoader(url, cacheKey);
+    return self.lastLoader;
 }
-- (AVPlayer *)makePlaybackPlayerWithItem:(AVPlayerItem *)item {
-    if (self.realPlayback) self.lastPlayer = [super makePlaybackPlayerWithItem:item];
-    else {
-        TMReviewPlayer *player = [TMReviewPlayer new];
-        player.controlledItem = item;
-        self.lastPlayer = player;
-    }
-    return self.lastPlayer;
-}
-- (void)presentViewController:(UIViewController *)controller animated:(BOOL)animated completion:(void (^)(void))completion {
+- (void)presentPlayerFor:(DPTrack *)track buffer:(AVAudioPCMBuffer *)buffer {
     NSAssert(NSThread.isMainThread, @"Presentation must be on main");
-    if ([controller isKindOfClass:AVPlayerViewController.class]) {
-        self.capturedPlayer = (id)controller;
-        self.presentations++;
-    }
-    if (self.nativePresentation) [super presentViewController:controller animated:NO completion:completion];
-    else if (self.delayPresentationCompletion) self.presentationCompletion = completion;
-    else if (completion) completion();
-}
-- (UIViewController *)presentedViewController {
-    return self.nativePresentation ? super.presentedViewController : self.capturedPlayer;
+    self.presentations++;
+    self.presentedTrack = track;
+    self.presentedBuffer = buffer;
+    if (self.showInlinePlayer) [super presentPlayerFor:track buffer:buffer];
 }
 - (void)tm_showError:(NSString *)message retry:(void (^)(void))retry {
     NSAssert(NSThread.isMainThread, @"Recovery must be on main");
     self.errors++;
     self.retry = retry;
-    if (self.nativePresentation) {
-        NSAssert(![self.presentedViewController isKindOfClass:AVPlayerViewController.class], @"Dismiss player before showing recovery");
-        [super tm_showError:message retry:retry];
-    }
 }
 @end
 
 @interface TMReviewPlaybackTests : XCTestCase
 @property (nonatomic, strong) NSMutableArray<NSURL *> *files;
 @property (nonatomic, strong) NSMutableArray<NSString *> *cachePaths;
-@property (nonatomic, strong) UIWindow *window;
 @end
 
 @implementation TMReviewPlaybackTests
 - (void)setUp { [super setUp]; self.files = [NSMutableArray array]; self.cachePaths = [NSMutableArray array]; }
 - (void)tearDown {
-    [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
-    self.window.hidden = YES;
-    self.window.rootViewController = nil;
-    self.window = nil;
     for (NSURL *url in self.files) [[NSFileManager defaultManager] removeItemAtURL:url error:nil];
     for (NSString *path in self.cachePaths) [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
     [super tearDown];
@@ -274,225 +212,167 @@
     UITableView *table = [self table:tracks];
     [table.delegate tableView:table didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
 }
-- (void)failToEnd:(AVPlayerItem *)item {
-    [NSNotificationCenter.defaultCenter postNotificationName:AVPlayerItemFailedToPlayToEndTimeNotification object:item];
+- (AVAudioPCMBuffer *)buffer {
+    AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
+    AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:4410];
+    buffer.frameLength = 4410;
+    for (NSUInteger channel = 0; channel < 2; channel++) memset(buffer.floatChannelData[channel], 0, 4410 * sizeof(float));
+    return buffer;
 }
-- (void)assertSettled:(TMReviewBusy *)busy player:(TMReviewPlayer *)player {
+- (void)assertSettled:(TMReviewBusy *)busy loader:(TMControlledTrackLoader *)loader {
     XCTAssertEqual(busy.busyCount, 0);
     XCTAssertEqual(busy.settlements, 1);
-    XCTAssertNil(player.currentItem);
-    XCTAssertEqual(player.detaches, 1);
-    XCTAssertGreaterThanOrEqual(player.pauses, 1);
+    XCTAssertEqual(loader.cancels, 1);
 }
-- (void)testReadySettlesRowOnceAndKeepsObserving {
+- (void)testReadySettlesRowOnceAndPresentsBuffer {
     TMReviewTracks *tracks = [self tracks];
     [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
+    TMControlledTrackLoader *loader = (id)tracks.lastLoader;
     TMReviewBusy *busy = (id)tracks.busyIndicator;
     UITableViewCell *cell = [[self table:tracks] cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
     TMBarberPoleLoadingView *spinner = (id)cell.accessoryView;
     XCTAssertNotNil(spinner);
     XCTAssertTrue(spinner.isAnimating);
+    XCTAssertEqualObjects(cell.accessibilityLabel, @"Tenor, loading");
     XCTAssertEqual(busy.busyCount, 1);
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
+    AVAudioPCMBuffer *buffer = [self buffer];
+    [loader succeedWithBuffer:buffer];
     [self drain];
     XCTAssertEqual(tracks.presentations, 1);
+    XCTAssertEqual(tracks.presentedTrack, tracks.tag.tracks[0]);
+    XCTAssertEqual(tracks.presentedBuffer, buffer);
+    XCTAssertNil(tracks.playbackSession);
+    XCTAssertEqual(busy.busyCount, 0);
     XCTAssertEqual(busy.settlements, 1);
     XCTAssertFalse(spinner.isAnimating);
     XCTAssertNil(cell.accessoryView);
     XCTAssertNil(cell.accessibilityLabel);
-    XCTAssertEqual(item.statusRemovals, 0);
-    XCTAssertNotNil(tracks.lastPlayer.currentItem);
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
+    [loader succeedWithBuffer:buffer];
+    [loader fail];
     [self drain];
-    XCTAssertEqual(tracks.presentations, 1);
     [tracks cancelPlayback];
-    [self assertSettled:busy player:(id)tracks.lastPlayer];
-    XCTAssertGreaterThan(item.statusRemovals, 0);
+    XCTAssertEqual(tracks.presentations, 1);
+    XCTAssertEqual(tracks.errors, 0);
+    XCTAssertEqual(busy.settlements, 1);
+    XCTAssertEqual(loader.cancels, 0);
 }
-- (void)testFailureBeforeReadyOffersOneRetryAndDetaches {
+- (void)testFailureBeforeReadyOffersOneRetryAndCancelsLoader {
     TMReviewTracks *tracks = [self tracks];
     [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
-    [item sendStatus:AVPlayerItemStatusFailed];
-    [self failToEnd:item];
+    TMControlledTrackLoader *loader = (id)tracks.lastLoader;
+    TMTrackPlaybackSession *session = tracks.playbackSession;
+    [loader fail];
+    [loader fail];
+    [loader succeedWithBuffer:[self buffer]];
     [self drain];
     XCTAssertEqual(tracks.errors, 1);
     XCTAssertNotNil(tracks.retry);
+    XCTAssertEqual(tracks.playbackSession, session);
     XCTAssertEqual(tracks.presentations, 0);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
-    XCTAssertGreaterThan(item.statusRemovals, 0);
+    [tracks cancelPlayback];
+    [self assertSettled:(id)tracks.busyIndicator loader:loader];
 }
-- (void)testPendingControllerReleaseDetachesAndDoesNotRetainUntilDeadline {
+- (void)testPendingControllerReleaseCancelsAndDoesNotRetainUntilDeadline {
     __weak TMReviewTracks *weakTracks;
     __weak TMTrackPlaybackSession *weakSession;
-    TMReviewPlayer *player;
     TMReviewBusy *busy;
-    TMReviewItem *item;
+    TMControlledTrackLoader *loader;
     @autoreleasepool {
         TMReviewTracks *tracks = [self tracks];
         tracks.testTimeout = 0.05;
         [self select:tracks];
         weakTracks = tracks;
         weakSession = tracks.playbackSession;
-        player = (id)tracks.lastPlayer;
-        item = (id)tracks.lastItem;
+        loader = (id)tracks.lastLoader;
         busy = (id)tracks.busyIndicator;
     }
     XCTAssertNil(weakTracks);
     XCTAssertNil(weakSession);
-    [self assertSettled:busy player:player];
-    XCTAssertGreaterThan(item.statusRemovals, 0);
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self failToEnd:item];
+    [self assertSettled:busy loader:loader];
+    [loader succeedWithBuffer:[self buffer]];
+    [loader fail];
     [self waitPastTimeout];
-    [self assertSettled:busy player:player];
+    [self assertSettled:busy loader:loader];
 }
-- (void)testPendingPlayerAndItemReleaseWithoutOwnershipCycle {
-    __weak AVPlayer *weakPlayer;
-    __weak AVPlayerItem *weakItem;
+- (void)testPendingLoaderReleasesWithoutOwnershipCycle {
+    __weak TMTrackLoader *weakLoader;
     @autoreleasepool {
         TMReviewTracks *tracks = [self tracks];
         [self select:tracks];
-        weakPlayer = tracks.lastPlayer;
-        weakItem = tracks.lastItem;
+        weakLoader = tracks.lastLoader;
     }
     [self drain];
-    XCTAssertNil(weakPlayer);
-    XCTAssertNil(weakItem);
+    XCTAssertNil(weakLoader);
 }
 - (void)testLeavingPendingPageCancelsReadyFailureAndTimeout {
     TMReviewTracks *tracks = [self tracks];
     tracks.testTimeout = 0.05;
     [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
+    TMControlledTrackLoader *loader = (id)tracks.lastLoader;
     [tracks viewWillDisappear:NO];
     XCTAssertNil(tracks.playbackSession);
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self failToEnd:item];
+    [loader succeedWithBuffer:[self buffer]];
+    [loader fail];
     [self waitPastTimeout];
     XCTAssertEqual(tracks.presentations, 0);
     XCTAssertEqual(tracks.errors, 0);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
+    [self assertSettled:(id)tracks.busyIndicator loader:(id)tracks.lastLoader];
 }
 - (void)testTagChangeCancelsQueuedReadyCallback {
     TMReviewTracks *tracks = [self tracks];
     [self select:tracks];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusReadyToPlay];
+    [(TMControlledTrackLoader *)tracks.lastLoader succeedWithBuffer:[self buffer]];
     tracks.tag = [DPTag new];
     [self drain];
     XCTAssertNil(tracks.playbackSession);
     XCTAssertEqual(tracks.presentations, 0);
     XCTAssertEqual(tracks.errors, 0);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
+    [self assertSettled:(id)tracks.busyIndicator loader:(id)tracks.lastLoader];
 }
 - (void)testTimeoutOffersRetryAndLateReadyCannotPresent {
     TMReviewTracks *tracks = [self tracks];
     tracks.testTimeout = 0.01;
     [self select:tracks];
     [self waitUntil:^BOOL { return tracks.errors == 1; }];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusReadyToPlay];
+    [(TMControlledTrackLoader *)tracks.lastLoader succeedWithBuffer:[self buffer]];
     [self drain];
     XCTAssertNotNil(tracks.retry);
     XCTAssertEqual(tracks.presentations, 0);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
+    [self assertSettled:(id)tracks.busyIndicator loader:(id)tracks.lastLoader];
 }
 - (void)testReadyCancelsPreparationTimeout {
     TMReviewTracks *tracks = [self tracks];
     tracks.testTimeout = 0.05;
     [self select:tracks];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusReadyToPlay];
+    [(TMControlledTrackLoader *)tracks.lastLoader succeedWithBuffer:[self buffer]];
     [self drain];
     [self waitPastTimeout];
     XCTAssertEqual(tracks.errors, 0);
-    XCTAssertNotNil(tracks.lastPlayer.currentItem);
+    XCTAssertEqual(tracks.presentations, 1);
+    XCTAssertNil(tracks.playbackSession);
     XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 1);
     [tracks cancelPlayback];
-}
-- (void)testLateStatusFailureAndDuplicateNotificationOfferOneRetry {
-    TMReviewTracks *tracks = [self tracks];
-    [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self drain];
-    [item sendStatus:AVPlayerItemStatusFailed];
-    [self failToEnd:item];
-    [self drain];
-    XCTAssertEqual(tracks.errors, 1);
-    XCTAssertNotNil(tracks.retry);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
-}
-- (void)testFailureToEndWhileStatusReadyOffersRetryOnMain {
-    TMReviewTracks *tracks = [self tracks];
-    [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self drain];
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{ [self failToEnd:item]; });
-    [self waitUntil:^BOOL { return tracks.errors == 1; }];
-    [item sendStatus:AVPlayerItemStatusFailed];
-    [self drain];
-    XCTAssertEqual(tracks.errors, 1);
-    XCTAssertNotNil(tracks.retry);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
-}
-- (void)testBackgroundStatusDeliveryUsesMainThread {
-    TMReviewTracks *tracks = [self tracks];
-    [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{ [item sendStatus:AVPlayerItemStatusFailed]; });
-    [self waitUntil:^BOOL { return tracks.errors == 1; }];
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
-}
-- (void)testNativePlayerDisappearanceCancelsSessionButPresentingItDoesNot {
-    TMReviewTracks *tracks = [self tracks];
-    [self select:tracks];
-    TMReviewItem *item = (id)tracks.lastItem;
-    [item sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self drain];
-    TMTrackPlaybackSession *session = tracks.playbackSession;
-    [tracks viewWillDisappear:NO];
-    XCTAssertEqual(tracks.playbackSession, session);
-    XCTAssertFalse(tracks.playbackHasLeft);
-    [tracks.capturedPlayer viewDidDisappear:NO];
-    XCTAssertNil(tracks.playbackSession);
-    [self failToEnd:item];
-    [self drain];
-    XCTAssertEqual(tracks.errors, 0);
-    [self assertSettled:(id)tracks.busyIndicator player:(id)tracks.lastPlayer];
-    XCTAssertGreaterThan(item.statusRemovals, 0);
-}
-- (void)testCancelledPresentationCompletionCannotStartPlayer {
-    TMReviewTracks *tracks = [self tracks];
-    tracks.delayPresentationCompletion = YES;
-    [self select:tracks];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self drain];
-    XCTAssertNotNil(tracks.presentationCompletion);
-    [tracks cancelPlayback];
-    tracks.presentationCompletion();
-    XCTAssertEqual(((TMReviewPlayer *)tracks.lastPlayer).plays, 0);
 }
 - (void)testRetryCreatesFreshSessionAndIgnoresOldEvents {
     TMReviewTracks *tracks = [self tracks];
     [self select:tracks];
-    TMReviewItem *oldItem = (id)tracks.lastItem;
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusFailed];
+    TMControlledTrackLoader *oldLoader = (id)tracks.lastLoader;
+    [(TMControlledTrackLoader *)tracks.lastLoader fail];
     [self drain];
     TMTrackPlaybackSession *oldSession = tracks.playbackSession;
     void (^oldRetry)(void) = tracks.retry;
     oldRetry();
     XCTAssertNotEqual(tracks.playbackSession, oldSession);
-    XCTAssertNotEqual(tracks.lastItem, oldItem);
+    XCTAssertNotEqual(tracks.lastLoader, oldLoader);
     TMTrackPlaybackSession *newSession = tracks.playbackSession;
     oldRetry();
     XCTAssertEqual(tracks.playbackSession, newSession);
-    [oldItem sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self failToEnd:oldItem];
+    [oldLoader succeedWithBuffer:[self buffer]];
+    [oldLoader fail];
     [self drain];
     XCTAssertEqual(tracks.presentations, 0);
     XCTAssertEqual(tracks.errors, 1);
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusReadyToPlay];
+    [(TMControlledTrackLoader *)tracks.lastLoader succeedWithBuffer:[self buffer]];
     [self drain];
     XCTAssertEqual(tracks.presentations, 1);
     XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 2);
@@ -509,11 +389,11 @@
     [[self table:tracks] reloadData];
     [tracks.view layoutIfNeeded];
     [self select:tracks];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusFailed];
+    [(TMControlledTrackLoader *)tracks.lastLoader fail];
     [self drain];
     [items exchangeObjectAtIndex:0 withObjectAtIndex:1];
     tracks.retry();
-    XCTAssertEqualObjects(tracks.requestedURL, selected.source.uri);
+    XCTAssertEqualObjects(tracks.lastLoader.url, selected.source.uri);
     UITableViewCell *selectedCell = [[self table:tracks] cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
     // Track identity resolves the new row instead of replaying the old index.
     XCTAssertEqual(tracks.busyIndicator.busyCount, 1);
@@ -528,20 +408,20 @@
     other.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:other.testCacheKey]];
     [(NSMutableArray *)tracks.tag.tracks addObject:[DPTrack trackWithTitle:@"Other" source:other]];
     [self select:tracks];
-    TMReviewItem *oldItem = (id)tracks.lastItem;
-    [oldItem sendStatus:AVPlayerItemStatusFailed];
+    TMControlledTrackLoader *oldLoader = (id)tracks.lastLoader;
+    [oldLoader fail];
     [self drain];
     void (^oldRetry)(void) = tracks.retry;
     UITableView *table = [self table:tracks];
     [table.delegate tableView:table didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
-    AVPlayerItem *newItem = tracks.lastItem;
+    TMTrackLoader *newLoader = tracks.lastLoader;
     oldRetry();
-    [oldItem sendStatus:AVPlayerItemStatusReadyToPlay];
-    [self failToEnd:oldItem];
+    [oldLoader succeedWithBuffer:[self buffer]];
+    [oldLoader fail];
     [self drain];
-    XCTAssertEqual(tracks.lastItem, newItem);
-    XCTAssertEqualObjects(tracks.requestedURL, other.uri);
-    XCTAssertNotEqualObjects(tracks.requestedURL, first.source.uri);
+    XCTAssertEqual(tracks.lastLoader, newLoader);
+    XCTAssertEqualObjects(tracks.lastLoader.url, other.uri);
+    XCTAssertNotEqualObjects(tracks.lastLoader.url, first.source.uri);
     XCTAssertEqual(tracks.errors, 1);
     XCTAssertEqual(tracks.presentations, 0);
     [tracks cancelPlayback];
@@ -550,12 +430,12 @@
 - (void)testRetryCannotPlayRemovedTrack {
     TMReviewTracks *tracks = [self tracks];
     [self select:tracks];
-    [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusFailed];
+    [(TMControlledTrackLoader *)tracks.lastLoader fail];
     [self drain];
-    AVPlayerItem *oldItem = tracks.lastItem;
+    TMTrackLoader *oldLoader = tracks.lastLoader;
     [(NSMutableArray *)tracks.tag.tracks removeAllObjects];
     tracks.retry();
-    XCTAssertEqual(tracks.lastItem, oldItem);
+    XCTAssertEqual(tracks.lastLoader, oldLoader);
     XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
     [tracks cancelPlayback];
 }
@@ -563,34 +443,52 @@
     for (NSNumber *changeTag in @[@YES, @NO]) {
         TMReviewTracks *tracks = [self tracks];
         [self select:tracks];
-        [(TMReviewItem *)tracks.lastItem sendStatus:AVPlayerItemStatusFailed];
+        [(TMControlledTrackLoader *)tracks.lastLoader fail];
         [self drain];
-        AVPlayerItem *oldItem = tracks.lastItem;
+        TMTrackLoader *oldLoader = tracks.lastLoader;
         if (changeTag.boolValue) tracks.tag = [DPTag new];
         else [tracks viewWillDisappear:NO];
         tracks.retry();
-        XCTAssertEqual(tracks.lastItem, oldItem);
+        XCTAssertEqual(tracks.lastLoader, oldLoader);
         XCTAssertNil(tracks.playbackSession);
         XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
     }
 }
-- (void)testStreamFirstAndExistingCacheKeyPathArePreserved {
+- (void)testRemoteURIAndExistingCacheKeyPathArePreserved {
     TMReviewTracks *tracks = [self tracks];
-    [self select:tracks];
     DPTrack *track = tracks.tag.tracks[0];
-    XCTAssertEqualObjects(tracks.requestedURL, track.source.uri);
+    track.source.uri = [NSURL URLWithString:@"https://example.invalid/learning-track.wav"];
+    [self select:tracks];
+    XCTAssertEqualObjects(tracks.lastLoader.url, track.source.uri);
+    XCTAssertEqualObjects(tracks.lastLoader.cacheKey, track.source.cacheKey);
     [tracks cancelPlayback];
     [DPFileCache writeData:[@"local fixture" dataUsingEncoding:NSUTF8StringEncoding] forKey:track.source.cacheKey];
     [self select:tracks];
-    XCTAssertEqualObjects(tracks.requestedURL.path, [DPFileCache pathForKey:track.source.cacheKey]);
-    XCTAssertTrue(tracks.requestedURL.isFileURL);
+    XCTAssertEqualObjects(tracks.lastLoader.url.path, [DPFileCache pathForKey:track.source.cacheKey]);
+    XCTAssertTrue(tracks.lastLoader.url.isFileURL);
+    XCTAssertEqualObjects(tracks.lastLoader.cacheKey, track.source.cacheKey);
     [tracks cancelPlayback];
 }
 
-// Silent local PCM exercises real AVFoundation loading, UIKit presentation,
-// native dismissal, and the production recovery alert without internet access.
+- (void)testBackgroundCompletionDeliveryUsesMainThread {
+    for (NSNumber *succeed in @[@YES, @NO]) {
+        TMReviewTracks *tracks = [self tracks];
+        [self select:tracks];
+        TMControlledTrackLoader *loader = (id)tracks.lastLoader;
+        loader.backgroundDelivery = YES;
+        if (succeed.boolValue) [loader succeedWithBuffer:[self buffer]];
+        else [loader fail];
+        [self waitUntil:^BOOL { return tracks.presentations + tracks.errors == 1; }];
+        XCTAssertEqual(tracks.presentations, succeed.boolValue ? 1 : 0);
+        XCTAssertEqual(tracks.errors, succeed.boolValue ? 0 : 1);
+        XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+        XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 1);
+    }
+}
+
+// Silent local PCM exercises the production loader, decoder, and inline player.
 - (void)writeWAV:(NSURL *)url {
-    uint32_t samples = 8000 * 30, dataSize = samples * 2, riffSize = dataSize + 36;
+    uint32_t samples = 8000 / 4, dataSize = samples * 2, riffSize = dataSize + 36;
     uint32_t formatSize = 16, rate = 8000, byteRate = 16000;
     uint16_t format = 1, channels = 1, block = 2, bits = 16;
     NSMutableData *data = [NSMutableData data];
@@ -601,56 +499,86 @@
     [data increaseLengthBy:dataSize];
     XCTAssertTrue([data writeToURL:url atomically:YES]);
 }
-- (TMReviewTracks *)nativeTracks {
+- (TMReviewTracks *)localTracks {
     TMReviewTracks *tracks = [self tracks];
     tracks.realPlayback = YES;
-    tracks.nativePresentation = YES;
+    tracks.showInlinePlayer = YES;
     [self writeWAV:((DPTrack *)tracks.tag.tracks[0]).source.uri];
-    UIWindowScene *scene = (id)UIApplication.sharedApplication.connectedScenes.anyObject;
-    self.window = scene ? [[UIWindow alloc] initWithWindowScene:scene] : [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
-    self.window.rootViewController = tracks;
-    [self.window makeKeyAndVisible];
     [self select:tracks];
-    [self waitUntil:^BOOL { return tracks.presentedViewController == tracks.capturedPlayer && tracks.capturedPlayer != nil; }];
-    XCTAssertEqual(tracks.lastItem.status, AVPlayerItemStatusReadyToPlay, @"%@ at %@", tracks.lastItem.error, tracks.requestedURL);
-    XCTAssertNotNil(tracks.playbackSession);
+    [self waitUntil:^BOOL { return tracks.presentations == 1; }];
+    XCTAssertFalse(tracks.playerView.isHidden);
+    XCTAssertTrue(tracks.playerView.player.isLoaded);
+    XCTAssertEqual(tracks.playerView.track, tracks.tag.tracks[0]);
+    XCTAssertEqualWithAccuracy(tracks.playerView.player.duration, 0.25, 0.001);
+    XCTAssertNil(tracks.playbackSession);
     XCTAssertFalse(tracks.playbackHasLeft);
+    XCTAssertEqual(tracks.errors, 0);
+    XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+    XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 1);
     return tracks;
 }
-- (void)testRealLocalPlaybackDismissalTearsDownAndIgnoresLateFailure {
-    TMReviewTracks *tracks = [self nativeTracks];
-    AVPlayer *player = tracks.lastPlayer;
-    AVPlayerItem *item = tracks.lastItem;
-    __weak TMTrackPlaybackSession *weakSession = tracks.playbackSession;
-    [tracks.capturedPlayer dismissViewControllerAnimated:NO completion:nil];
-    [self waitUntil:^BOOL { return tracks.playbackSession == nil; }];
-    XCTAssertNil(weakSession);
-    XCTAssertNil(player.currentItem);
-    XCTAssertNil(tracks.capturedPlayer.player);
-    [self failToEnd:item];
-    [self drain];
-    XCTAssertEqual(tracks.errors, 0);
-    XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 1);
+- (void)assertUnloaded:(TMReviewTracks *)tracks {
+    XCTAssertTrue(tracks.playerView.isHidden);
+    XCTAssertFalse(tracks.playerView.player.isLoaded);
+    XCTAssertFalse(tracks.playerView.player.isPlaying);
+    XCTAssertNil(tracks.playerView.track);
+    XCTAssertNil(tracks.playbackSession);
 }
-- (void)testRealLocalPlaybackLateFailureDismissesThenShowsRetryAndCanPlayAgain {
-    TMReviewTracks *tracks = [self nativeTracks];
-    AVPlayer *oldPlayer = tracks.lastPlayer;
-    AVPlayerItem *oldItem = tracks.lastItem;
-    [self failToEnd:oldItem];
-    [self failToEnd:oldItem];
-    [self waitUntil:^BOOL { return [tracks.presentedViewController isKindOfClass:UIAlertController.class]; }];
-    XCTAssertEqual(tracks.errors, 1);
-    XCTAssertNil(oldPlayer.currentItem);
-    UIAlertController *alert = (id)tracks.presentedViewController;
-    XCTAssertEqualObjects([alert.actions valueForKey:@"title"], (@[@"Retry", @"Cancel"]));
-    void (^retry)(void) = tracks.retry;
-    [alert dismissViewControllerAnimated:NO completion:retry];
-    [self waitUntil:^BOOL { return tracks.presentations == 2; }];
-    XCTAssertNotEqual(tracks.lastPlayer, oldPlayer);
-    [self failToEnd:oldItem];
-    [self drain];
+- (void)testRealLocalPlaybackStopUnloadsAndHidesPlayer {
+    TMReviewTracks *tracks = [self localTracks];
+    [tracks cancelPlayback];
+    XCTAssertTrue(tracks.playerView.player.isLoaded);
+    XCTAssertFalse(tracks.playerView.isHidden);
+    [tracks stopPlayback];
+    [self assertUnloaded:tracks];
+}
+- (void)testRealLocalPlaybackLeavingUnloadsAndHidesPlayer {
+    TMReviewTracks *tracks = [self localTracks];
+    [tracks viewWillDisappear:NO];
+    XCTAssertTrue(tracks.playbackHasLeft);
+    [self assertUnloaded:tracks];
+    [self select:tracks];
+    XCTAssertEqual(tracks.loads, 1);
+}
+- (void)testRealLocalPlaybackTagChangeAndRemovalUnloadPlayer {
+    for (NSNumber *changeTag in @[@YES, @NO]) {
+        TMReviewTracks *tracks = [self localTracks];
+        if (changeTag.boolValue) tracks.tag = [DPTag new];
+        else [tracks didMoveToParentViewController:nil];
+        [self assertUnloaded:tracks];
+    }
+}
+- (void)testSelectingLoadedTrackRestartsWithoutReloading {
+    TMReviewTracks *tracks = [self localTracks];
+    [tracks.playerView.player pause];
+    [tracks.playerView.player seekTo:0.2];
+    [self select:tracks];
+    XCTAssertEqual(tracks.loads, 1);
+    XCTAssertEqual(tracks.presentations, 1);
+    XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 1);
+    XCTAssertLessThan(tracks.playerView.player.currentTime, 0.2);
+    [tracks stopPlayback];
+}
+- (void)testRealLocalDecodeFailureOffersRetryAndCanPlayAgain {
+    TMReviewTracks *tracks = [self tracks];
+    tracks.realPlayback = YES;
+    tracks.showInlinePlayer = YES;
+    NSURL *url = ((DPTrack *)tracks.tag.tracks[0]).source.uri;
+    XCTAssertTrue([[@"not audio" dataUsingEncoding:NSUTF8StringEncoding] writeToURL:url atomically:YES]);
+    [self select:tracks];
+    [self waitUntil:^BOOL { return tracks.errors == 1; }];
+    XCTAssertNotNil(tracks.retry);
+    XCTAssertTrue(tracks.playerView.isHidden);
+    XCTAssertFalse(tracks.playerView.player.isLoaded);
+    TMTrackLoader *oldLoader = tracks.lastLoader;
+    [self writeWAV:url];
+    tracks.retry();
+    [self waitUntil:^BOOL { return tracks.presentations == 1; }];
+    XCTAssertNotEqual(tracks.lastLoader, oldLoader);
+    XCTAssertTrue(tracks.playerView.player.isLoaded);
+    XCTAssertFalse(tracks.playerView.isHidden);
     XCTAssertEqual(tracks.errors, 1);
     XCTAssertEqual(((TMReviewBusy *)tracks.busyIndicator).settlements, 2);
-    [tracks cancelPlayback];
+    [tracks stopPlayback];
 }
 @end
