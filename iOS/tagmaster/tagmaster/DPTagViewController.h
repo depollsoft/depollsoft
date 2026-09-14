@@ -6,9 +6,9 @@
 //  Copyright (c) 2013 DepollSoft. All rights reserved.
 //
 
-#import "DPTabBarController.h"
+#import "TMPageViewController.h"
 
-@interface DPTagViewController : DPTabBarController
+@interface DPTagViewController : TMPageViewController
 
 @property (nonatomic) int tagId;
 

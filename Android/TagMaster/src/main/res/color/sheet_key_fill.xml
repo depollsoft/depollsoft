@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Floating controls need an opaque surface so shadows and sheet music cannot show through. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="@color/sheet_key_surface" />
+    <item android:state_activated="true" android:color="?attr/colorPrimary" />
+    <item android:color="@color/sheet_key_surface" />
+</selector>

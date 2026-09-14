@@ -1,0 +1,64 @@
+=== /tmp/tm-r3-home-final-large.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (10.882 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.882 (10.884) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.882 (10.885) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.882 (10.886) seconds
+=== /tmp/tm-r3-home-final-ax1.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (10.486 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.486 (10.487) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.486 (10.487) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.486 (10.488) seconds
+=== /tmp/tm-r3-home-final-ax5.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (12.200 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.200 (12.202) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.200 (12.203) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.200 (12.205) seconds
+** TEST SUCCEEDED **
+=== /tmp/tm-r3-home-final-dark.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (10.147 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.147 (10.148) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.147 (10.148) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.147 (10.149) seconds
+=== /tmp/tm-r3-home-final-ipad.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (10.846 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.846 (10.848) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.846 (10.848) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.846 (10.850) seconds
+=== /tmp/tm-r3-dark.log ===
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3DarkScreens]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3DarkScreens]' passed (50.357 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.357 (50.359) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.357 (50.360) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.357 (50.361) seconds
+=== /tmp/tm-r3-final-light.log ===
+	 Executed 14 tests, with 0 failures (0 unexpected) in 1.378 (1.382) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+	 Executed 28 tests, with 0 failures (0 unexpected) in 1.226 (1.234) seconds
+	 Executed 36 tests, with 0 failures (0 unexpected) in 0.018 (0.033) seconds
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.436 (0.441) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.021 (0.024) seconds
+	 Executed 17 tests, with 0 failures (0 unexpected) in 0.006 (0.019) seconds
+/Users/depoll/.local/share/pi-worktrees/20260907070801/fable-audit-ux-worktree-20260907/iOS/tagmaster/tagmasterTests/TagmasterAppLogicTests.m:522: error: -[TMPolishRegressionTests testAvailabilityUsesGreenWithoutChangingSpokenLabels] : ((tracks.image) equal to ([UIImage systemImageNamed:@"checkmark.circle.fill"])) failed: ("<UIImage:0x11cdb5720 symbol(system: circle) {19.666666666666664, 19} baseline=3.33333,contentInsets={1, 1.3333333333333333, 1, 1.3333333333333321},alignmentRectInsets={-0.66666666666666607, 0, -0.66666666666666652, 0} config=<traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Light, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)> renderingMode=automatic(template)>") is not equal to ("<UIImage:0x11cdb5a40 symbol(system: checkmark.circle.fill) {19.666666666666664, 19} baseline=3.33333,contentInsets={1, 1.3333333333333333, 1, 1.3333333333333321},alignmentRectInsets={-0.66666666666666607, 0, -0.66666666666666652, 0} config=<traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Light, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)> renderingMode=automatic(template)>")
+/Users/depoll/.local/share/pi-worktrees/20260907070801/fable-audit-ux-worktree-20260907/iOS/tagmaster/tagmasterTests/TagmasterAppLogicTests.m:524: error: -[TMPolishRegressionTests testAvailabilityUsesGreenWithoutChangingSpokenLabels] : ((tracks.tintColor) equal to ([UIColor systemGreenColor])) failed: ("<UIDynamicCatalogSystemColor: 0x10ce0ccc0; name = secondaryLabelColor>") is not equal to ("<UIDynamicCatalogSystemColor: 0x11cd75000; name = systemGreenColor>")
+/Users/depoll/.local/share/pi-worktrees/20260907070801/fable-audit-ux-worktree-20260907/iOS/tagmaster/tagmasterTests/TagmasterAppLogicTests.m:526: error: -[TMPolishRegressionTests testAvailabilityUsesGreenWithoutChangingSpokenLabels] : (([cell.accessibilityLabel containsString:@"Learning tracks available"]) is true) failed
+	 Executed 14 tests, with 3 failures (0 unexpected) in 14.572 (14.577) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 1.845 (1.846) seconds
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.113 (0.114) seconds
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+	 Executed 169 tests, with 3 failures (0 unexpected) in 19.622 (19.680) seconds
+	 Executed 169 tests, with 3 failures (0 unexpected) in 19.622 (19.685) seconds
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3Homes]' passed (10.207 seconds).
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3LightScreens]' started.
+Test Case '-[tagmasterUITests.TagMasterPolishUITests testRound3LightScreens]' passed (41.789 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 51.996 (51.999) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 51.996 (52.000) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 51.996 (52.001) seconds
+** TEST FAILED **

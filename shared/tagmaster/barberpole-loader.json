@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "geometry": {
+    "source": "Android/TagMaster/src/main/res/drawable/ic_barberpole.xml",
+    "viewport": [299.75076, 513.52234],
+    "metalContour": 0,
+    "transparentHighlightContours": [1, 2, 7, 8],
+    "metalFillRule": "evenOdd",
+    "shaft": [["M", [159.01, 138.81]], ["C", [190, 131, 228, 127, 253.47, 140.72]], ["L", [122.06, 413.54]], ["C", [105, 404, 65, 387, 43, 379]], ["L", [159.01, 138.81]], ["Z", []]],
+    "clip": "shaft",
+    "fillRule": "nonzero",
+    "strokeWidth": 0,
+    "stripeContour": 5,
+    "stripeAxisRotationDegrees": -26,
+    "stripeHorizontalScale": 1.4,
+    "stripeScalePivot": "rotated-control-point-bounds-center"
+  },
+  "colors": {"red": "#BE2A35", "blue": "#0063A5", "white": "#FFFFFF", "metalLight": "#474747", "metalDark": "#CACACA", "highlights": "#00000000"},
+  "artworkSize": [34, 58],
+  "compactArtworkHeight": 32,
+  "fit": "uniform-centered",
+  "motion": {"axisDegrees": 26, "stripeStep": 108, "repeatMin": -6, "repeatMax": 6, "evenColor": "red", "oddColor": "blue", "phaseMultiplier": 2, "phaseFormula": "(index + normalizedPhase * phaseMultiplier) * stripeStep", "direction": "positive-local-y", "durationSeconds": 2, "timing": "linear", "repeat": "infinite", "staticPhase": 0}
+}

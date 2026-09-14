@@ -1,4 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="barberpole">#11DDDDDD</color>
+
+    <!-- Chrome stays charcoal; interactive controls use the brighter blue. -->
+    <color name="status_available">#81C784</color>
+    <color name="md_primary">#5AC8FA</color>
+    <color name="md_on_primary">#00344A</color>
+    <color name="md_primary_container">#004D6B</color>
+    <color name="md_on_primary_container">#CDE9F7</color>
+    <color name="md_primary_inverse">#007AA3</color>
+    <color name="md_secondary">@color/md_primary</color>
+    <color name="md_on_secondary">@color/md_on_primary</color>
+    <color name="md_secondary_container">@color/md_primary_container</color>
+    <color name="md_on_secondary_container">@color/md_on_primary_container</color>
+    <color name="md_tertiary">#C8C8C8</color>
+    <color name="md_on_tertiary">#2E2E2E</color>
+    <color name="md_tertiary_container">#454545</color>
+    <color name="md_on_tertiary_container">#E6E6E6</color>
+    <color name="md_background">#131313</color>
+    <color name="md_on_background">#E5E5E5</color>
+    <color name="md_surface">#131313</color>
+    <color name="md_on_surface">#E5E5E5</color>
+    <color name="md_surface_variant">#474747</color>
+    <color name="md_on_surface_variant">#CACACA</color>
+    <color name="md_surface_inverse">#E5E5E5</color>
+    <color name="md_on_surface_inverse">#303030</color>
+    <color name="md_surface_container_lowest">#0E0E0E</color>
+    <color name="md_surface_container_low">#1B1B1B</color>
+    <color name="md_surface_container">#1F1F1F</color>
+    <color name="md_surface_container_high">#2A2A2A</color>
+    <color name="md_surface_container_highest">#353535</color>
+    <color name="md_outline">#919191</color>
+    <color name="md_outline_variant">#474747</color>
+    <!-- Opaque floating sheet-key face; distinct from colorSurface to avoid elevation tinting. -->
+    <color name="sheet_key_surface">@color/md_surface_container_high</color>
 </resources>

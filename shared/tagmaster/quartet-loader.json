@@ -1,0 +1,14 @@
+{
+  "artwork": {"width": 216, "height": 96, "fit": "uniform-center"},
+  "staff": {"x1": 8, "x2": 208, "y": 17, "spacing": 12, "count": 5, "width": 1, "alpha": 75, "clef": "treble"},
+  "notes": {"count": 4, "x": [108, 108, 108, 108], "y": [77, 65, 53, 41], "midi": [60, 64, 67, 70], "spelling": ["C4", "E4", "G4", "Bb4"], "headRx": 7, "headRy": 4.5, "rotationDegrees": -18},
+  "notation": {
+    "stem": [["M", [113.1, 77]], ["L", [113.1, 16]], ["L", [114.9, 16]], ["L", [114.9, 77]], ["Z", []]],
+    "ledger": [["M", [96, 76.5]], ["L", [120, 76.5]], ["L", [120, 77.5]], ["L", [96, 77.5]], ["Z", []]],
+    "flat": [["M", [89, 24]], ["L", [90.8, 24]], ["L", [90.8, 37.5]], ["C", [101, 30, 102, 42, 89, 47]], ["Z", []], ["M", [90.8, 40]], ["L", [90.8, 44]], ["C", [97, 40, 97, 35, 90.8, 40]], ["Z", []]],
+    "label": [["M", [145, 26]], ["C", [132, 18, 130, 42, 145, 35]], ["L", [145, 33]], ["C", [134, 39, 135, 22, 145, 28]], ["Z", []], ["M", [149, 24]], ["L", [159, 24]], ["L", [152, 37]], ["L", [150, 37]], ["L", [156, 26]], ["L", [149, 26]], ["Z", []]]
+  },
+  "colors": {"lightNote": "#007AA3", "darkNote": "#5AC8FA", "lightStaff": "#474747", "darkStaff": "#CACACA"},
+  "motion": {"periodSeconds": 2.8, "phaseStart": 0, "phaseEnd": 1, "stagger": 0.12, "activeFraction": 0.45, "depth": 0.35, "sampleCount": 121, "localPhase": "(phase - voice * stagger + 1) % 1", "opacity": "local < activeFraction ? 1 - sin(local / activeFraction * pi) * depth : 1", "interpolation": "linear", "repeat": "infinite", "stillOpacities": [1, 1, 1, 1]},
+  "path": {"ellipse": "four-cubic-beziers", "fillRule": "nonzero", "stemCap": "butt", "staffMaskFillRule": "evenodd"}
+}

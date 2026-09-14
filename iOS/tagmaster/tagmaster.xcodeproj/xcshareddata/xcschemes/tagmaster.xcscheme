@@ -89,6 +89,15 @@
                ReferencedContainer = "container:tagmaster.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference skipped="NO">
+            <BuildableReference
+               BuildableIdentifier="primary"
+               BlueprintIdentifier="BCF38A4E6382FE15E8CEB195"
+               BuildableName="tagmasterUITests.xctest"
+               BlueprintName="tagmasterUITests"
+               ReferencedContainer="container:tagmaster.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -14,6 +14,154 @@
 
 @end
 
+// Segments remain the source of truth for the existing index-to-filter mappings.
+// A native menu handles accessibility text and containers too narrow for the segments.
+@interface TMFilterControl : UIStackView
+@property (nonatomic, strong) UISegmentedControl *control;
+@property (nonatomic, strong) UIButton *menuButton;
+- (instancetype)initWithControl:(UISegmentedControl *)control label:(NSString *)label;
+- (void)selectIndex:(NSInteger)index;
+@end
+
+@implementation TMFilterControl
+- (instancetype)initWithControl:(UISegmentedControl *)control label:(NSString *)label {
+    if (self = [super initWithFrame:CGRectZero]) {
+        self.axis = UILayoutConstraintAxisVertical;
+        self.control = control;
+        self.menuButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        UIButtonConfiguration *menuConfiguration = [UIButtonConfiguration grayButtonConfiguration];
+        menuConfiguration.image = [UIImage systemImageNamed:@"chevron.up.chevron.down"];
+        menuConfiguration.imagePlacement = NSDirectionalRectEdgeTrailing;
+        menuConfiguration.imagePadding = 8;
+        menuConfiguration.preferredSymbolConfigurationForImage = [UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleCaption1];
+        self.menuButton.configuration = menuConfiguration;
+        self.menuButton.titleLabel.adjustsFontForContentSizeCategory = YES;
+        self.menuButton.titleLabel.numberOfLines = 0;
+        self.menuButton.accessibilityLabel = label;
+        self.menuButton.showsMenuAsPrimaryAction = YES;
+        NSLayoutConstraint *minimumHeight = [self.menuButton.heightAnchor constraintGreaterThanOrEqualToConstant:44];
+        minimumHeight.priority = UILayoutPriorityRequired - 1;
+        minimumHeight.active = YES;
+        for (NSLayoutConstraint *constraint in control.constraints) {
+            if (constraint.firstAttribute == NSLayoutAttributeHeight) constraint.priority = UILayoutPriorityRequired - 1;
+        }
+        [self addArrangedSubview:control];
+        [self addArrangedSubview:self.menuButton];
+        [control addTarget:self action:@selector(updateFilter) forControlEvents:UIControlEventValueChanged];
+        [self updateFilter];
+    }
+    return self;
+}
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self updateFilter];
+    [self setNeedsLayout];
+}
+- (void)selectIndex:(NSInteger)index {
+    self.control.selectedSegmentIndex = index;
+    [self.control sendActionsForControlEvents:UIControlEventValueChanged];
+}
+- (void)layoutSubviews {
+    [self updatePresentation];
+    [super layoutSubviews];
+}
+- (void)updatePresentation {
+    // Measure the wrapper, never the hidden segment control's zero width.
+    CGFloat available = self.bounds.size.width;
+    UIFont *font = [[UIFontMetrics metricsForTextStyle:UIFontTextStyleSubheadline]
+        scaledFontForFont:[UIFont systemFontOfSize:13 weight:UIFontWeightMedium]
+        compatibleWithTraitCollection:self.traitCollection];
+    NSMutableArray<NSNumber *> *widths = [NSMutableArray array];
+    CGFloat total = 0, widest = 0;
+    for (NSInteger index = 0; index < self.control.numberOfSegments; index++) {
+        CGFloat width = MAX(44, ceil([[self.control titleForSegmentAtIndex:index] sizeWithAttributes:@{NSFontAttributeName:font}].width) + 16);
+        [widths addObject:@(width)];
+        total += width;
+        widest = MAX(widest, width);
+    }
+    if (!self.control.apportionsSegmentWidthsByContent) total = widest * widths.count;
+    BOOL menu = UIContentSizeCategoryIsAccessibilityCategory(self.traitCollection.preferredContentSizeCategory)
+        || (available > 0 && available < total);
+    if (self.control.hidden != menu) self.control.hidden = menu;
+    if (self.menuButton.hidden == menu) self.menuButton.hidden = !menu;
+    if (!menu && available >= total && widths.count > 0) {
+        for (NSInteger index = 0; index < widths.count; index++) {
+            CGFloat width = self.control.apportionsSegmentWidthsByContent
+                ? widths[index].doubleValue + (available - total) / widths.count : available / widths.count;
+            if (fabs([self.control widthForSegmentAtIndex:index] - width) > 0.01) [self.control setWidth:width forSegmentAtIndex:index];
+        }
+    }
+}
+- (void)updateFilter {
+    [self updatePresentation];
+    self.menuButton.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:self.traitCollection];
+    NSString *selected = [self.control titleForSegmentAtIndex:self.control.selectedSegmentIndex];
+    [self.menuButton setTitle:selected forState:UIControlStateNormal];
+    self.menuButton.accessibilityValue = selected;
+    NSMutableArray *options = [NSMutableArray array];
+    for (NSInteger index = 0; index < self.control.numberOfSegments; index++) {
+        __weak TMFilterControl *weakSelf = self;
+        UIAction *action = [UIAction actionWithTitle:[self.control titleForSegmentAtIndex:index] image:nil identifier:nil handler:^(UIAction *action) {
+            [weakSelf selectIndex:index];
+        }];
+        action.state = self.control.selectedSegmentIndex == index ? UIMenuElementStateOn : UIMenuElementStateOff;
+        [options addObject:action];
+    }
+    self.menuButton.menu = [UIMenu menuWithChildren:options];
+}
+@end
+
+@implementation TMWrappingButton
+- (CGSize)intrinsicContentSize {
+    CGSize size = [super intrinsicContentSize];
+    if (CGRectGetWidth(self.bounds) > 0) {
+        size.height = [self sizeThatFits:CGSizeMake(CGRectGetWidth(self.bounds), CGFLOAT_MAX)].height;
+    }
+    return size;
+}
+- (void)setBounds:(CGRect)bounds {
+    BOOL widthChanged = CGRectGetWidth(self.bounds) != CGRectGetWidth(bounds);
+    [super setBounds:bounds];
+    if (widthChanged) [self invalidateIntrinsicContentSize];
+}
+@end
+
+@implementation TMBusyIndicator
+
+- (void)notify {
+    if (self.onBusyCountChanged) self.onBusyCountChanged(self.busyCount);
+}
+
+- (void)incrementBusyCount {
+    [super incrementBusyCount];
+    [self notify];
+}
+
+- (void)decrementBusyCount {
+    [super decrementBusyCount];
+    [self notify];
+}
+
+- (void)clearBusyCount {
+    [super clearBusyCount];
+    [self notify];
+}
+
+@end
+
+@implementation UIViewController (TMRecovery)
+
+- (void)tm_showError:(NSString *)message retry:(void (^)(void))retry {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Couldn't complete request" message:message preferredStyle:UIAlertControllerStyleAlert];
+    if (retry) {
+        [alert addAction:[UIAlertAction actionWithTitle:@"Retry" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { retry(); }]];
+    }
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+@end
+
 @implementation DPTagPageControllerBase
 
 @synthesize tag;
@@ -30,7 +178,8 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    // Only Home shows a large title; every pushed page stays inline.
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
 }
 
 - (void)didReceiveMemoryWarning
@@ -39,23 +188,53 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (UIView *)makeFilterControl:(UISegmentedControl *)control label:(NSString *)label {
+    return [[TMFilterControl alloc] initWithControl:control label:label];
+}
+
+- (UITableViewCell *)makeFormCellWithHeader:(NSString *)header control:(UIView *)control {
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    UILabel *label = [self makeHeader:header];
+    label.textColor = [UIColor secondaryLabelColor];
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[label, control]];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.spacing = 8;
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [cell.contentView addSubview:stack];
+    UILayoutGuide *margins = cell.contentView.layoutMarginsGuide;
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.leadingAnchor constraintEqualToAnchor:margins.leadingAnchor],
+        [stack.trailingAnchor constraintEqualToAnchor:margins.trailingAnchor],
+        [stack.topAnchor constraintEqualToAnchor:cell.contentView.topAnchor constant:12],
+        [stack.bottomAnchor constraintEqualToAnchor:cell.contentView.bottomAnchor constant:-12]
+    ]];
+    return cell;
+}
+
 - (UILabel *)makeHeader:(NSString *)name {
     UILabel *label = [[UILabel alloc] init];
     label.text = name;
-    label.font = [UIFont boldSystemFontOfSize:12];
-    [label setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+    label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.numberOfLines = 0;
+    label.textColor = [UIColor labelColor];
+    [label setContentCompressionResistancePriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
     return label;
 }
 
 - (UILabel *)makeBodyLabel {
     UILabel *label = [[DPLabel alloc] init];
-    label.font = [UIFont systemFontOfSize:12];
+    label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    label.adjustsFontForContentSizeCategory = YES;
+    label.numberOfLines = 0;
     return label;
 }
 
 - (UILabel *)makeTitleLabel {
     UILabel *titleLabel = [[UILabel alloc] init];
-    titleLabel.font = [UIFont boldSystemFontOfSize:24];
+    titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle1];
+    titleLabel.adjustsFontForContentSizeCategory = YES;
     titleLabel.numberOfLines = 0;
     return titleLabel;
 }
@@ -70,27 +249,35 @@
 }
 
 - (void)setUpRootView:(UIView *)view withScroller:(UIScrollView *)scroller {
-    view = [view padHorizontal:8 vertical:0];
+    // The scroller spans the safe area so its indicator sits at the screen edge;
+    // the content inside follows the readable width, which keeps lines short on
+    // iPad and in landscape and still uses the full width on a phone.
+    UIView *container = [[UIView alloc] init];
+    container.translatesAutoresizingMaskIntoConstraints = NO;
+    // A bare view only carries 8pt margins; page content sits on the standard 16pt inset.
+    container.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(0, 16, 0, 16);
     view.translatesAutoresizingMaskIntoConstraints = NO;
     scroller.translatesAutoresizingMaskIntoConstraints = NO;
-    NSDictionary *bindings = NSDictionaryOfVariableBindings(view);
-    [scroller addSubview:view];
-    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-4-[view]-4-|"
+    [container addSubview:view];
+    UILayoutGuide *readable = container.readableContentGuide;
+    [NSLayoutConstraint activateConstraints:@[
+        [view.leadingAnchor constraintEqualToAnchor:readable.leadingAnchor],
+        [view.trailingAnchor constraintEqualToAnchor:readable.trailingAnchor],
+        [view.topAnchor constraintEqualToAnchor:container.topAnchor constant:4],
+        [view.bottomAnchor constraintEqualToAnchor:container.bottomAnchor constant:-4]
+    ]];
+
+    NSDictionary *bindings = NSDictionaryOfVariableBindings(container);
+    [scroller addSubview:container];
+    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[container]|"
                                                                      options:0
                                                                      metrics:nil
                                                                        views:bindings]];
-    
-    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[view]|"
+    [scroller addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[container]|"
                                                                      options:0
                                                                      metrics:nil
                                                                        views:bindings]];
-    [scroller addConstraint:[NSLayoutConstraint constraintWithItem:view
-                                                         attribute:NSLayoutAttributeWidth
-                                                         relatedBy:NSLayoutRelationEqual
-                                                            toItem:scroller
-                                                         attribute:NSLayoutAttributeWidth
-                                                        multiplier:1
-                                                          constant:0]];
+    [container.widthAnchor constraintEqualToAnchor:scroller.frameLayoutGuide.widthAnchor].active = YES;
     
     id leftGuide = self.view.leftSafeAreaLayoutGuide;
     id rightGuide = self.view.rightSafeAreaLayoutGuide;
@@ -100,10 +287,7 @@
                                                                       options:0
                                                                       metrics:nil
                                                                         views:NSDictionaryOfVariableBindings(scroller, leftGuide, rightGuide)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[scroller]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(scroller)]];
+    [scroller.bottomAnchor constraintEqualToAnchor:self.view.keyboardLayoutGuide.topAnchor].active = YES;
     [scroller.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
 }
 

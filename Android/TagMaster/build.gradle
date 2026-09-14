@@ -88,6 +88,7 @@ android {
     }
 
     testOptions {
+        unitTests.includeAndroidResources = true
         // Disable animations for faster/more reliable UI tests in CI
         animationsDisabled = true
         

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="forms_yes">Yes</string>
+    <string name="forms_no">No</string>
+    <string name="forms_clear_cache_confirmation">Are you sure you want to clear your cache?\u0020\u0020Cached sheet music and tracks will not be accessible until you are connected to the internet again.</string>
+    <string name="forms_clear_favorites_confirmation">Are you sure you want to clear your favorite tags list?</string>
+    <string name="forms_clear_teachable_confirmation">Are you sure you want to clear your teachable tags list?</string>
+    <string name="forms_cache_cleared">Cache cleared.</string>
+    <string name="forms_favorites_cleared">Favorite tags cleared.</string>
+    <string name="forms_teachable_cleared">Teachable tags cleared.</string>
+    <string name="forms_logs_copied">Logs copied</string>
+    <string name="forms_private_build">Private Build</string>
+    <string name="forms_copy_logs">Copy Logs</string>
+    <string name="forms_private_build_metadata">Build %1$s · PR #%2$s</string>
+    <string name="forms_app_logs">App logs</string>
+    <string name="forms_changelog_title">Tag Master Changelog</string>
+    <string name="forms_cache_size_pending">…</string>
+    <string name="forms_cache_size">%1$.2f MB</string>
+    <string name="forms_clearing_cache">Clearing cache</string>
+    <string name="forms_clear_cache_failed">Could not clear the cache. Try again.</string>
+    <string name="forms_cache_size_failed">Could not calculate the cache size.</string>
+</resources>

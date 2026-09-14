@@ -16,13 +16,56 @@ class ListModel private constructor(
     var ids: TrackableCollection<Int>
         by trackable(preferences[listName] ?: TrackableCollection())
 
+    private var revision = 0L
+
+    /** A main-thread editing baseline. Identity and revision also detect replace/reset-and-restore. */
+    class Snapshot internal constructor(
+        internal val source: TrackableCollection<Int>,
+        internal val revision: Long,
+        val ids: List<Int>,
+    )
+
+    fun snapshot() = Snapshot(ids, revision, ids.toList())
+
+    /** Commit a complete permutation once, only if nothing changed since editing began. */
+    fun reorder(
+        expected: Snapshot,
+        order: List<Int>,
+    ): Boolean {
+        val current = ids
+        if (current !== expected.source || revision != expected.revision || current.toList() != expected.ids) return false
+        if (order == expected.ids || order.size != expected.ids.size ||
+            order.toSet().size != order.size || order.toSet() != expected.ids.toSet()
+        ) {
+            return false
+        }
+        current.transaction {
+            clear()
+            addAll(order)
+        }
+        return true
+    }
+
+    /** Move by stable tag ID, rejecting missing IDs, out-of-range destinations and no-ops. */
+    fun move(
+        id: Int,
+        destination: Int,
+    ): Boolean {
+        val baseline = snapshot()
+        val from = baseline.ids.indexOf(id)
+        if (from < 0 || destination !in baseline.ids.indices || from == destination) return false
+        val order = baseline.ids.toMutableList()
+        order.add(destination, order.removeAt(from))
+        return reorder(baseline, order)
+    }
+
     fun add(id: Int) {
         if (!ids.contains(id)) ids.add(id)
     }
 
     fun canMoveDown(id: Int): Boolean {
         val index: Int = ids.indexOf(id)
-        return index < ids.size - 1
+        return index >= 0 && index < ids.size - 1
     }
 
     fun canMoveUp(id: Int): Boolean {
@@ -33,19 +76,11 @@ class ListModel private constructor(
     fun contains(id: Int): Boolean = ids.contains(id)
 
     fun moveDown(id: Int) {
-        ids.transaction {
-            val index: Int = indexOf(id)
-            removeAt(index)
-            add(index + 1, id)
-        }
+        if (canMoveDown(id)) move(id, ids.indexOf(id) + 1)
     }
 
     fun moveUp(id: Int) {
-        ids.transaction {
-            val index: Int = ids.indexOf(id)
-            ids.removeAt(index)
-            ids.add(index - 1, id)
-        }
+        if (canMoveUp(id)) move(id, ids.indexOf(id) - 1)
     }
 
     fun remove(id: Int) {
@@ -85,6 +120,7 @@ class ListModel private constructor(
         Trackable.track(
             object : Tracker {
                 override fun update() {
+                    revision++
                     storeValue()
                     Trackable.track(this, { ids.track() })
                 }
@@ -101,7 +137,7 @@ class ListModel private constructor(
         }
 
         private fun storeValue(toFirestore: Boolean) {
-            Preferences.set(LISTS_KEY, preferences)
+            Preferences.setAsync(LISTS_KEY, preferences)
             if (toFirestore) {
                 toFirestore()
             }

@@ -393,9 +393,13 @@ NSString *const API_URI_STRING = @"https://www.barbershoptags.com/api.php?client
 }
 
 - (void)rate:(NSUInteger)r {
-    NSString *ratingPattern = @"http://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d";
+    NSString *ratingPattern = @"https://www.barbershoptags.com/api.php?client=TagMaster&action=rate&id=%d&rating=%d";
     NSURL *ratingURL = [NSURL URLWithString:[NSString stringWithFormat:ratingPattern, self.tagId, r]];
-    [NSString stringWithContentsOfURL:ratingURL usedEncoding:nil error:nil];
+    NSError *error = nil;
+    NSData *response = [DPRemoteLocation dataWithContentsOfURL:ratingURL error:&error];
+    if (!response || error) {
+        [NSException raise:@"RatingUnavailable" format:@"Unable to submit rating"];
+    }
 }
 
 @end

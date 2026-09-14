@@ -167,7 +167,17 @@ public class Preferences {
     return map;
   }
 
+  /** Writes synchronously and returns whether the disk write succeeded. */
   public static boolean set(String key, Object value) {
+    return set(key, value, true);
+  }
+
+  /** Updates in-memory preferences immediately and schedules the disk write. */
+  public static void setAsync(String key, Object value) {
+    set(key, value, false);
+  }
+
+  private static boolean set(String key, Object value, boolean synchronous) {
     if (testMode) {
       if (value == null) {
         testValues.remove(key);
@@ -181,13 +191,19 @@ public class Preferences {
     if (Preferences.preferences == null) {
       return false;
     }
+    SharedPreferences.Editor editor = Preferences.preferences.edit();
     if (value == null) {
-      return Preferences.preferences.edit().remove(key).commit();
+      editor.remove(key);
+    } else {
+      if (value instanceof Map) {
+        value = fromMap((Map<?, ?>)value);
+      }
+      editor.putString(key, JsonSerializer.serialize(value).toString());
     }
-    if (value instanceof Map) {
-      value = fromMap((Map<?, ?>)value);
+    if (synchronous) {
+      return editor.commit();
     }
-    return Preferences.preferences.edit()
-        .putString(key, JsonSerializer.serialize(value).toString()).commit();
+    editor.apply();
+    return true;
   }
 }

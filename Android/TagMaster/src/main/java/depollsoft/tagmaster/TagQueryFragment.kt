@@ -15,7 +15,6 @@ import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.ui.ThreadSwitchContext
 
 class TagQueryFragment : Fragment() {
-
     var model: QueryModel? by trackable()
 
     var handleSearchButton: Boolean by trackable(true)
@@ -28,31 +27,41 @@ class TagQueryFragment : Fragment() {
         this.refresh()
     }
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val rootView = inflater.inflate(R.layout.tagqueryview, container, false)
+        rootView.applyContentInsets(bottom = false)
+        rootView.findViewById<ListView>(R.id.queryResultListView).applyBottomInsetsAsPadding()
+        rootView.findViewById<View>(R.id.loadingProgressBar).applyBottomInsetsAsMargin()
 
         try {
             (rootView.findViewById(R.id.queryResultListView) as ListView)
-                .setOnScrollListener(object : OnScrollListener {
-
-                    override fun onScroll(
-                        view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int,
-                        totalItemCount: Int
-                    ) {
-                        if (this@TagQueryFragment.model != null && Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2) {
-                            this@TagQueryFragment.model!!.fetchResults(
-                                ThreadSwitchContext(this@TagQueryFragment.activity)
-                            )
+                .setOnScrollListener(
+                    object : OnScrollListener {
+                        override fun onScroll(
+                            view: AbsListView,
+                            firstVisibleItem: Int,
+                            visibleItemCount: Int,
+                            totalItemCount: Int,
+                        ) {
+                            if (this@TagQueryFragment.model != null &&
+                                Math.abs(totalItemCount - (firstVisibleItem + visibleItemCount)) < 2
+                            ) {
+                                this@TagQueryFragment.model!!.fetchResults(
+                                    ThreadSwitchContext(this@TagQueryFragment.activity),
+                                )
+                            }
                         }
-                    }
 
-                    override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {}
-                })
+                        override fun onScrollStateChanged(
+                            view: AbsListView,
+                            scrollState: Int,
+                        ) {}
+                    },
+                )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -61,20 +70,14 @@ class TagQueryFragment : Fragment() {
             R.id.queryResultListView,
             "Adapter",
             { model?.tags },
-            AdapterConverter<TagItemView>()
+            AdapterConverter<TagItemView>(),
         )
 
         rootView.bindTo(
             R.id.loadingProgressBar,
-            "Visibility",
+            "Loading",
             { model?.isLoading },
-            BoolConverter.get()
-        )
-        rootView.bindTo(
-            R.id.loadingProgressBar,
-            "Indeterminate",
-            { model?.isLoading },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         rootView.bindTo(R.id.statusTextView, "Text", { model?.statusText })
@@ -82,13 +85,42 @@ class TagQueryFragment : Fragment() {
             R.id.statusTextView,
             "Visibility",
             { model?.statusText },
-            BoolConverter.get()
+            BoolConverter.get(),
         )
 
         return rootView
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onResume() {
+        super.onResume()
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.apply {
+            hostResumed = true
+            // Reconcile retained-query state after the window has resumed and its insets are applied.
+            post {
+                if (!isResumed) return@post
+                loading = model?.isLoading == true
+                (parent as? View)?.requestLayout()
+            }
+        }
+    }
+
+    override fun onPause() {
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.hostResumed = false
+        super.onPause()
+    }
+
+    override fun onDestroyView() {
+        view?.findViewById<BarberPoleLoadingView>(R.id.loadingProgressBar)?.apply {
+            hostResumed = false
+            loading = false
+        }
+        super.onDestroyView()
+    }
+
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         super.onCreateOptionsMenu(menu, inflater)
 
         if (menu == null || inflater == null) {
@@ -114,7 +146,11 @@ class TagQueryFragment : Fragment() {
     fun refresh() {
         if (this.model == null) {
             try {
-                val modelString = this.activity?.intent?.extras?.getString(QUERY_MODEL)
+                val modelString =
+                    this.activity
+                        ?.intent
+                        ?.extras
+                        ?.getString(QUERY_MODEL)
                 this.model = JsonSerializer.deserialize(modelString) as QueryModel
             } catch (e: Exception) {
                 this.model = QueryModel()
@@ -127,5 +163,4 @@ class TagQueryFragment : Fragment() {
         @JvmField
         val QUERY_MODEL = "QueryModel"
     }
-
 }

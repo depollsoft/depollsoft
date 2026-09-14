@@ -86,7 +86,7 @@ class Tag {
 
     @JvmOverloads
     fun cache(overwrite: Boolean = true) {
-        if (overwrite) TagCache.put(id, SoftReference(this))
+        if (overwrite) synchronized(TagCache) { TagCache.put(id, SoftReference(this)) }
         CoroutineScope(Dispatchers.IO + Job()).launch {
             synchronized(CacheWriteLock) {
                 try {
@@ -305,15 +305,15 @@ class Tag {
 
         fun clearCache() {
             val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
-            for (f in directory.listFiles()) f.delete()
-            TagCache.clear()
+            for (f in directory.listFiles().orEmpty()) f.delete()
+            synchronized(TagCache) { TagCache.clear() }
         }
 
         val currentCacheSize: Long
             get() {
                 val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
                 var total: Long = 0
-                for (f in directory.listFiles()) total += f.length()
+                for (f in directory.listFiles().orEmpty()) total += f.length()
                 return total
             }
 
@@ -321,38 +321,35 @@ class Tag {
             return loadTagById(id, false)
         }
 
-        fun loadTagById(id: Int, refresh: Boolean): Task<Tag> {
-            val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
-            val file = File(directory, "" + id)
-            val loadedFromCache = false
-            if (!refresh && TagCache[id] != null) {
-                val cachedTag = TagCache[id]!!.get()
-                if (cachedTag != null) {
-                    return Task.forResult(cachedTag)
-                }
+        fun loadTagById(
+            id: Int,
+            refresh: Boolean,
+        ): Task<Tag> {
+            if (!refresh) {
+                val cachedTag = synchronized(TagCache) { TagCache[id]?.get() }
+                if (cachedTag != null) return Task.forResult(cachedTag)
+                return Task
+                    .callInBackground {
+                        val directory = File(RichApplication.getAppContext().filesDir, "TagCache")
+                        val file = File(directory, id.toString())
+                        val tag = JsonSerializer.deserialize(JSONObject(file.readText())) as Tag?
+                        if (tag == null || tag.appVersion != CURRENT_APP_VERSION) {
+                            throw IllegalStateException("Outdated tag cache")
+                        }
+                        synchronized(TagCache) { TagCache.put(id, SoftReference(tag)) }
+                        tag
+                    }.continueWithTask { task ->
+                        if (task.isFaulted || task.isCancelled) {
+                            loadTagById(id, true)
+                        } else {
+                            Task.forResult(task.result)
+                        }
+                    }
             }
-            return if (!loadedFromCache && !refresh && file.exists()) {
-                try {
-                    val inputStream: InputStream = FileInputStream(file)
-                    var buffer: ByteArray? = ByteArray(file.length().toInt())
-                    inputStream.read(buffer)
-                    inputStream.close()
-                    val cachedTag = String(buffer!!)
-                    buffer = null
-                    val jsonObj = JSONObject(cachedTag)
-                    val tag = JsonSerializer.deserialize(jsonObj) as Tag?
-                    if (tag == null || tag.appVersion != CURRENT_APP_VERSION) throw Exception()
-                    TagCache.put(id, SoftReference(tag))
-                    Task.forResult(tag)
-                } catch (e: Exception) {
-                    loadTagById(id, true)
-                }
-            } else {
-                queryById(id).onSuccess { task ->
-                    task.result.cache()
-                    TagCache.put(id, SoftReference(task.result))
-                    task.result
-                }
+            return queryById(id).onSuccess { task ->
+                task.result.cache()
+                synchronized(TagCache) { TagCache.put(id, SoftReference(task.result)) }
+                task.result
             }
         }
 

@@ -7,6 +7,7 @@
 //
 
 #import "DPTagTracksController.h"
+#import "tagmaster-Swift.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import <MediaPlayer/MediaPlayer.h>
@@ -17,7 +18,7 @@
 @property (nonatomic, strong) UILabel *recordingNotesHeader;
 @property (nonatomic, strong) UILabel *recordingNotesLabel;
 @property (nonatomic, strong) UITableView *partsTable;
-@property (nonatomic, strong) DPGridLayout *grid;
+@property (nonatomic, strong) UIStackView *header;
 
 @end
 
@@ -40,6 +41,7 @@
     self.apology.text = @"Sorry, no tracks could be found for this tag.";
     self.apology.numberOfLines = 0;
     self.recordingNotesHeader = [self makeHeader:@"Recording Notes"];
+    self.recordingNotesHeader.textColor = [UIColor secondaryLabelColor];
     self.recordingNotesLabel = [self makeBodyLabel];
     self.recordingNotesLabel.numberOfLines = 0;
     
@@ -48,46 +50,69 @@
     self.partsTable.dataSource = self;
     self.partsTable.backgroundColor = [UIColor clearColor];
     
-    self.grid = [[DPGridLayout alloc] init];
-    self.grid.translatesAutoresizingMaskIntoConstraints = NO;
-    self.grid.rowDimensions = @[
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimension],
-                                [DPGridDimension dimensionWithStars:1]
-                                ];
-    self.grid.columnDimensions = @[
-                                   [DPGridDimension dimension],
-                                   [DPGridDimension dimensionWithSize:8],
-                                   [DPGridDimension dimensionWithStars:1]
-                                   ];
-    
-    [self.grid addSubview:[self.apology padLeft:4 top:0 right:0 bottom:0] row:0 column:0 rowSpan:1 colSpan:3];
-    [self.grid addSubview:[self.recordingNotesHeader padLeft:4 top:0 right:0 bottom:0] row:1 column:0];
-    [self.grid addSubview:self.recordingNotesLabel row:1 column:2];
-    [self.grid addSubview:self.partsTable row:2 column:0 rowSpan:1 colSpan:3];
-    
-    [self.view addSubview:self.grid];
-    
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_grid]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_grid)]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-4-[_grid]|"
-                                                                      options:0
-                                                                      metrics:nil
-                                                                        views:NSDictionaryOfVariableBindings(_grid)]];
+    self.partsTable.translatesAutoresizingMaskIntoConstraints = NO;
+    self.partsTable.rowHeight = UITableViewAutomaticDimension;
+    self.partsTable.estimatedRowHeight = 60;
+    self.header = [[UIStackView alloc] initWithArrangedSubviews:@[self.apology, self.recordingNotesHeader, self.recordingNotesLabel]];
+    self.header.axis = UILayoutConstraintAxisVertical;
+    self.header.spacing = 8;
+    self.header.layoutMarginsRelativeArrangement = YES;
+    self.header.directionalLayoutMargins = NSDirectionalEdgeInsetsMake(16, 16, 16, 16);
+    self.partsTable.tableHeaderView = self.header;
+    [self.view addSubview:self.partsTable];
+    [NSLayoutConstraint activateConstraints:@[
+        [self.partsTable.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor],
+        [self.partsTable.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor],
+        [self.partsTable.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor],
+        [self.partsTable.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor]
+    ]];
     [self refreshView];
 }
 
+- (void)setTag:(DPTag *)tag {
+    if (self.tag != tag) [self cancelPlayback];
+    [super setTag:tag];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.playbackHasLeft = NO;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self playbackViewWillDisappear];
+}
+
+- (void)didMoveToParentViewController:(UIViewController *)parent {
+    [super didMoveToParentViewController:parent];
+    if (!parent) {
+        self.playbackHasLeft = YES;
+        [self cancelPlayback];
+    }
+}
+
+- (void)dealloc {
+    [_playbackSession cancel];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    CGFloat width = self.partsTable.bounds.size.width;
+    CGFloat height = [self.header systemLayoutSizeFittingSize:CGSizeMake(width, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    if (self.header.frame.size.height != height || self.header.frame.size.width != width) {
+        self.header.frame = CGRectMake(0, 0, width, height);
+        self.partsTable.tableHeaderView = self.header;
+    }
+}
+
 - (void)refreshView {
-    [self.grid setView:self.apology hidden:self.tag.tracks.count > 0];
-    
+    self.apology.hidden = self.tag.tracks.count > 0;
     self.recordingNotesLabel.text = self.tag.recordingMethod;
-    [self.grid setView:self.recordingNotesLabel hidden:!self.tag.recordingMethod];
-    [self.grid setView:self.recordingNotesHeader hidden:!self.tag.recordingMethod];
-    
+    self.recordingNotesLabel.hidden = !self.tag.recordingMethod;
+    self.recordingNotesHeader.hidden = !self.tag.recordingMethod;
     [self.partsTable reloadData];
-    [self.grid setView:self.partsTable hidden:self.tag.tracks.count == 0];
+    if (self.isViewLoaded) [self.view setNeedsLayout];
 }
 
 - (void)didReceiveMemoryWarning
@@ -99,7 +124,15 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [[UITableViewCell alloc] init];
     cell.textLabel.text = [self.tag.tracks[indexPath.row] title];
+    cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.textLabel.adjustsFontForContentSizeCategory = YES;
+    cell.textLabel.numberOfLines = 0;
     cell.backgroundColor = [UIColor clearColor];
+    // Tapping a part plays it; say so before the tap.
+    cell.imageView.image = [UIImage systemImageNamed:@"play.circle"
+                                   withConfiguration:[UIImageSymbolConfiguration configurationWithTextStyle:UIFontTextStyleTitle2]];
+    cell.imageView.tintColor = self.view.tintColor;
+    cell.accessibilityHint = @"Plays the learning track";
     return cell;
 }
 

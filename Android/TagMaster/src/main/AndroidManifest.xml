@@ -52,6 +52,7 @@
             android:icon="@mipmap/ic_launcher" />
         <activity
             android:name=".TagMasterBrowserActivity"
+            android:theme="@style/AppTheme.ActionBar"
             android:configChanges="keyboardHidden|orientation"
             android:icon="@mipmap/ic_launcher" />
 
@@ -81,6 +82,7 @@
             android:noHistory="true"
             android:exported="true">
             <intent-filter
+                android:autoVerify="true"
                 android:icon="@mipmap/ic_launcher"
                 android:label="@string/app_name">
                 <action android:name="android.intent.action.VIEW" />
@@ -96,6 +98,27 @@
                     android:host="barbershoptags.com"
                     android:pathPrefix="/dbpage.php"
                     android:scheme="http" />
+                <data
+                    android:host="www.barbershoptags.com"
+                    android:pathPrefix="/dbpage.php"
+                    android:scheme="https" />
+                <data
+                    android:host="barbershoptags.com"
+                    android:pathPrefix="/dbpage.php"
+                    android:scheme="https" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="tags.depoll.com"
+                    android:path="/tag.php"
+                    android:scheme="http" />
+                <data
+                    android:host="tags.depoll.com"
+                    android:path="/tag.php"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
         <activity
