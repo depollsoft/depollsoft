@@ -39,7 +39,7 @@
         UIView *selectedBackground = [[UIView alloc] init];
         selectedBackground.backgroundColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
             CGFloat alpha = traits.userInterfaceStyle == UIUserInterfaceStyleDark ? 0.22 : 0.14;
-            return [UIColor.systemBlueColor colorWithAlphaComponent:alpha];
+            return [[[DPAppDelegate accentColor] resolvedColorWithTraitCollection:traits] colorWithAlphaComponent:alpha];
         }];
         self.selectedBackgroundView = selectedBackground;
         self.rootView = [[UIView alloc] init];

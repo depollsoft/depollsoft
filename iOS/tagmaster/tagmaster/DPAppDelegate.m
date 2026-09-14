@@ -149,7 +149,7 @@ static __weak UIResponder *TMRecordedFirstResponder;
     
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
-    self.window.tintColor = [UIColor systemBlueColor];
+    self.window.tintColor = [DPAppDelegate accentColor];
     UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
     [navigationAppearance configureWithOpaqueBackground];
     navigationAppearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
@@ -329,6 +329,19 @@ static __weak UIResponder *TMRecordedFirstResponder;
         return detail != nil && [detail canPerformAction:action withSender:sender];
     }
     return [super canPerformAction:action withSender:sender];
+}
+
++ (UIColor *)accentColor {
+    static UIColor *accent;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        accent = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
+            return traits.userInterfaceStyle == UIUserInterfaceStyleDark
+                ? [UIColor colorWithRed:0x5A / 255.0 green:0xC8 / 255.0 blue:0xFA / 255.0 alpha:1]
+                : [UIColor colorWithRed:0x00 / 255.0 green:0x7A / 255.0 blue:0xA3 / 255.0 alpha:1];
+        }];
+    });
+    return accent;
 }
 
 + (NSNumber *)currentSplitTagIdFor:(UIViewController *)sender {

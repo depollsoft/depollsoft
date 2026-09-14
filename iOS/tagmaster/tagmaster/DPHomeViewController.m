@@ -91,7 +91,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         button.titleLabel.textAlignment = NSTextAlignmentCenter;
         UIButtonConfiguration *linkConfiguration = [UIButtonConfiguration plainButtonConfiguration];
         // The iPad sidebar column resolves tint to the label color; links keep the link color.
-        linkConfiguration.baseForegroundColor = [UIColor systemBlueColor];
+        linkConfiguration.baseForegroundColor = [DPAppDelegate accentColor];
         linkConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 4, 4, 4);
         linkConfiguration.titleLineBreakMode = NSLineBreakByWordWrapping;
         __weak UIButton *weakButton = button;
