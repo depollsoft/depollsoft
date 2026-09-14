@@ -57,5 +57,8 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 /// The tag id currently shown by the secondary column's detail controller for
 /// sender's split, or nil when there is no split or no tag showing yet.
 + (NSNumber *)currentSplitTagIdFor:(UIViewController *)sender;
+/// Tag Master's one accent, shared with Android: #007AA3 in light, #5AC8FA in dark. The window
+/// tint, page tabs, links, the lit row and the quartet notes all draw from it.
++ (UIColor *)accentColor;
 
 @end

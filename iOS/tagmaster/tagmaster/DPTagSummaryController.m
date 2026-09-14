@@ -7,6 +7,7 @@
 //
 
 #import "DPTagSummaryController.h"
+#import "DPAppDelegate.h"
 #import "TMBarberPoleLoadingView.h"
 #import "TMDetailLayout.h"
 #import "UIView+DPUtils.h"
@@ -79,7 +80,7 @@
 - (void)updatePitchAppearance {
     self.showingPlayback = self.enabled && self.note.isPlaying;
     BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
-    UIColor *blue = self.tintColor ?: UIColor.systemBlueColor;
+    UIColor *blue = self.tintColor ?: [DPAppDelegate accentColor];
     // Use UIKit's high-contrast blue beneath white body text in light mode.
     UITraitCollection *contrast = [UITraitCollection traitCollectionWithTraitsFromCollections:@[self.traitCollection,
         [UITraitCollection traitCollectionWithAccessibilityContrast:UIAccessibilityContrastHigh]]];
@@ -534,7 +535,7 @@
                     toucher.playNote = ^{ [weakSelf playKeyNote]; };
                     toucher.cancelTimedNote = ^{ [weakSelf cancelTimedKeyNote]; };
                     toucher.note = self.tag.keyNote;
-                    toucher.tintColor = UIColor.systemBlueColor;
+                    toucher.tintColor = [DPAppDelegate accentColor];
                     toucher.accessibilityIdentifier = @"sheet.key";
                     UIButtonConfiguration *keyConfiguration = [UIButtonConfiguration plainButtonConfiguration];
                     keyConfiguration.image = [UIImage systemImageNamed:@"key"];

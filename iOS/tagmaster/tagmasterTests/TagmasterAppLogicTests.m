@@ -1852,7 +1852,7 @@ TM_CAPTURE_IMPL
         XCTAssertNil(detail.tabBar.backgroundImage);
         XCTAssertNil(detail.tabBar.selectionIndicatorImage);
         XCTAssertNil(detail.tabBar.barTintColor);
-        XCTAssertEqualObjects(detail.tabBar.tintColor, UIColor.systemBlueColor);
+        XCTAssertEqualObjects(detail.tabBar.tintColor, [DPAppDelegate accentColor]);
         XCTAssertEqualObjects([detail.tabBar.items valueForKey:@"title"], (@[@"Summary", @"Details", @"Tracks", @"Videos"]));
         for (UITabBarItem *item in detail.tabBar.items) XCTAssertNotNil(item.image);
         [self exercisePageSelection:detail];
