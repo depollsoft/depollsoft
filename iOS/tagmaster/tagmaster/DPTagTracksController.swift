@@ -42,28 +42,46 @@ import os
             defer { session.finishTasksAndInvalidate() }
             guard let self, !self.isCancelled else { return }
             if let error { self.deliver(nil, error, completion); return }
+            // Stay file-backed: the download is moved, never read into memory.
             guard let location,
                   (response as? HTTPURLResponse).map({ $0.statusCode < 400 }) ?? true,
-                  let data = try? Data(contentsOf: location), !data.isEmpty else {
+                  let size = (try? FileManager.default.attributesOfItem(atPath: location.path))?[.size] as? NSNumber,
+                  size.intValue > 0 else {
                 self.deliver(nil, TMTrackLoader.unavailable, completion)
                 return
             }
-            DPFileCache.write(data, forKey: key)
-            if let cached = DPFileCache.path(forKey: key), FileManager.default.fileExists(atPath: cached) {
+            guard size.intValue <= TMTrackLoader.maximumDownloadBytes else {
+                self.deliver(nil, TMTrackLoader.tooLarge, completion)
+                return
+            }
+            if let cached = DPFileCache.path(forKey: key), TMTrackLoader.move(location, to: URL(fileURLWithPath: cached)) {
                 self.decode(URL(fileURLWithPath: cached), deleteAfterwards: false, completion: completion)
             } else {
-                // The cache refused the write; decode a private copy and drop it afterwards.
+                // The cache refused the file; decode a private copy and drop it afterwards.
                 let temporary = URL(fileURLWithPath: NSTemporaryDirectory())
                     .appendingPathComponent("tm-track-\(UUID().uuidString)")
-                do {
-                    try data.write(to: temporary)
+                if TMTrackLoader.move(location, to: temporary) {
                     self.decode(temporary, deleteAfterwards: true, completion: completion)
-                } catch {
-                    self.deliver(nil, error, completion)
+                } else {
+                    self.deliver(nil, TMTrackLoader.unavailable, completion)
                 }
             }
         }
         task?.resume()
+    }
+
+    /// Largest track the loader will accept from the network. Learning tracks are a few megabytes.
+    @objc static let maximumDownloadBytes = 64 * 1024 * 1024
+
+    private static func move(_ source: URL, to destination: URL) -> Bool {
+        let manager = FileManager.default
+        try? manager.removeItem(at: destination)
+        do {
+            try manager.moveItem(at: source, to: destination)
+            return true
+        } catch {
+            return false
+        }
     }
 
     @objc func cancel() {
@@ -104,6 +122,8 @@ import os
 
     static let unavailable = NSError(domain: "TMTrackLoader", code: 1,
                                      userInfo: [NSLocalizedDescriptionKey: "The learning track is unavailable."])
+    static let tooLarge = NSError(domain: "TMTrackLoader", code: 2,
+                                  userInfo: [NSLocalizedDescriptionKey: "The learning track is too large to load."])
 }
 
 /// One attempt to bring a track into the inline player. Owns the loader, the
