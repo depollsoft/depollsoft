@@ -8,6 +8,7 @@
 #import "DPTagViewController.h"
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
+#import "TMDetailLayout.h"
 #import "DPTagTracksController.h"
 #import "DPTagVideoController.h"
 #import "DPTagPageControllerBase.h"
@@ -1616,7 +1617,9 @@ TM_CAPTURE_IMPL
     for (NSString *key in @[@"titleLabel", @"akaLabel", @"partsLabel", @"typeLabel",
                              @"classicTagNumberLabel", @"lyricsLabel", @"notesLabel"]) {
         UILabel *label = [summary valueForKey:key];
-        if (![label isDescendantOfView:grid]) continue;
+        BOOL hidden = NO;
+        for (UIView *ancestor = label; ancestor && ancestor != grid; ancestor = ancestor.superview) hidden |= ancestor.hidden;
+        if (hidden) continue;
         CGFloat textHeight = [label sizeThatFits:CGSizeMake(label.bounds.size.width, CGFLOAT_MAX)].height;
         CGRect frame = [label convertRect:label.bounds toView:scroll];
         NSLog(@"TM_SUMMARY cycle=%ld %@ width=%.1f y=%.1f height=%.1f text=%.1f hugging=%.0f compression=%.0f",
@@ -1625,7 +1628,7 @@ TM_CAPTURE_IMPL
               [label contentCompressionResistancePriorityForAxis:UILayoutConstraintAxisVertical]);
         XCTAssertGreaterThan(label.bounds.size.width, 0);
         XCTAssertEqualWithAccuracy(label.bounds.size.height, textHeight, 1, @"%@ must hug its text", key);
-        expectedHeight += textHeight;
+        expectedHeight += ceil(textHeight);
     }
     // Allow the rating, key and sheet controls plus ordinary padding, not viewport-sized slack.
     for (NSString *key in @[@"ratingButton", @"keyButton", @"sheetMusicButton"]) {
@@ -1634,7 +1637,9 @@ TM_CAPTURE_IMPL
     }
     DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
     CGFloat keyHeight = [pitch.button sizeThatFits:CGSizeMake(pitch.button.bounds.size.width, CGFLOAT_MAX)].height;
-    XCTAssertEqualWithAccuracy(pitch.bounds.size.height, MAX(44, keyHeight) + 4, 1, @"Key row must fit its title and padding");
+    UIButton *sheetButton = [summary valueForKey:@"sheetMusicButton"];
+    CGFloat sheetHeight = [sheetButton sizeThatFits:CGSizeMake(sheetButton.bounds.size.width, CGFLOAT_MAX)].height;
+    XCTAssertEqualWithAccuracy(pitch.bounds.size.height, MAX(44, MAX(keyHeight, sheetHeight)), 1, @"Matched faces fit the larger title without a widget inset");
     UILabel *rating = [summary valueForKey:@"ratingLabel"];
     UIButton *rate = [summary valueForKey:@"ratingButton"];
     UIProgressView *bar = [summary valueForKey:@"ratingBar"];
@@ -1642,7 +1647,14 @@ TM_CAPTURE_IMPL
     XCTAssertEqualWithAccuracy(rating.bounds.size.height, ratingTextHeight, 1);
     CGFloat ratingHeight = ratingTextHeight + 4 + bar.bounds.size.height;
     expectedHeight += MAX(0, ratingHeight - rate.bounds.size.height);
-    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 80);
+    for (NSString *key in @[@"ratingHeader", @"partsHeader", @"typeHeader", @"classicTagNumberHeader", @"keyHeader", @"lyricsHeader", @"notesHeader"]) {
+        UILabel *header = [summary valueForKey:key];
+        BOOL hidden = NO;
+        for (UIView *ancestor = header; ancestor && ancestor != grid; ancestor = ancestor.superview) hidden |= ancestor.hidden;
+        if (!hidden) expectedHeight += ceil([header sizeThatFits:CGSizeMake(header.bounds.size.width, CGFLOAT_MAX)].height);
+    }
+    // Eight section/pair gaps, four within-block gaps, and the 8pt identity-to-facts gap.
+    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 8 * 16 + 4 * 4 + 8);
     for (NSString *name in @[@"lyrics", @"notes"]) {
         UILabel *header = [summary valueForKey:[name stringByAppendingString:@"Header"]];
         UILabel *body = [summary valueForKey:[name stringByAppendingString:@"Label"]];
@@ -1655,7 +1667,8 @@ TM_CAPTURE_IMPL
         CGRect text = [body convertRect:CGRectMake(0, (body.bounds.size.height - bodyHeight) / 2,
                                                    body.bounds.size.width, bodyHeight) toView:scroll];
         NSLog(@"TM_SUMMARY cycle=%ld %@ headingToBody=%.1f", (long)cycle, name, CGRectGetMinY(text) - CGRectGetMinY(heading));
-        XCTAssertEqualWithAccuracy(CGRectGetMinY(text), CGRectGetMinY(heading), 2, @"%@ starts beside its heading", name);
+        XCTAssertEqualWithAccuracy(CGRectGetMinY(text), CGRectGetMaxY(heading) + 4, 1, @"%@ starts below its heading", name);
+        XCTAssertEqualWithAccuracy(text.origin.x, heading.origin.x, .5);
         XCTAssertLessThanOrEqual(CGRectGetMaxY(text), scroll.contentSize.height + 1);
         // Both the first and last lines can be scrolled into the viewport.
         for (NSNumber *position in @[@(CGRectGetMinY(text)), @(CGRectGetMaxY(text) - 1)]) {
@@ -1732,7 +1745,10 @@ TM_CAPTURE_IMPL
             [self settleLayout:window];
             for (NSString *key in @[@"akaLabel", @"keyButton", @"keyHeader", @"classicTagNumberLabel",
                                      @"classicTagNumberHeader", @"sheetMusicButton", @"lyricsLabel", @"lyricsHeader", @"notesLabel", @"notesHeader"]) {
-                XCTAssertFalse([[summary valueForKey:key] isDescendantOfView:grid], @"%@ should be removed", key);
+                UIView *view = [summary valueForKey:key];
+                BOOL collapsed = NO;
+                for (UIView *ancestor = view; ancestor && ancestor != grid; ancestor = ancestor.superview) collapsed |= ancestor.hidden;
+                XCTAssertTrue(collapsed, @"%@ should collapse with its section", key);
             }
             XCTAssertLessThan(scroll.contentSize.height, initialHeight);
             summary.tag = tag;
@@ -1882,9 +1898,9 @@ TM_CAPTURE_IMPL
             self.window.frame = CGRectMake(0, 0, width.doubleValue, 852); [self settle];
             UIStackView *root = [details valueForKey:@"metadataStack"];
             UIScrollView *scroll = (id)root.superview.superview;
-            NSArray<UIStackView *> *pairs = [details valueForKey:@"metadataPairs"];
+            NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
             CGFloat lastBottom = 0;
-            for (UIStackView *pair in pairs) {
+            for (TMDetailPair *pair in pairs) {
                 UILabel *caption = [pair valueForKey:@"caption"];
                 UIView *value = [pair valueForKey:@"value"];
                 XCTAssertEqualObjects(pair.accessibilityElements, (@[caption, value]));
@@ -1960,12 +1976,17 @@ TM_CAPTURE_IMPL
             if (!(prose & 2)) tag.notes = nil;
             summary.tag = tag; [self settle];
             UIView *grid = [summary valueForKey:@"grid"];
-            UIView *gap = [summary valueForKey:@"proseSectionBreak"];
-            XCTAssertEqual([gap isDescendantOfView:grid], prose != 0);
+            UIStackView *lyrics = [summary valueForKey:@"lyricsSection"];
+            UIStackView *notes = [summary valueForKey:@"notesSection"];
+            XCTAssertEqual(lyrics.hidden, !(prose & 1));
+            XCTAssertEqual(notes.hidden, !(prose & 2));
+            XCTAssertEqual(lyrics.superview.hidden, prose == 0);
             if (prose) {
-                XCTAssertEqualWithAccuracy(gap.bounds.size.height, 16, .1);
-                UILabel *first = [summary valueForKey:prose & 1 ? @"lyricsHeader" : @"notesHeader"];
-                XCTAssertEqualWithAccuracy([first convertRect:first.bounds toView:grid].origin.y, CGRectGetMaxY([gap convertRect:gap.bounds toView:grid]), 1);
+                UIView *first = prose & 1 ? lyrics : notes;
+                UIView *performance = ((UIStackView *)first.superview.superview).arrangedSubviews.firstObject;
+                XCTAssertEqualWithAccuracy([first convertRect:first.bounds toView:grid].origin.y,
+                    CGRectGetMaxY([performance convertRect:performance.bounds toView:grid]) + 16, 1);
+                if (prose == 3) XCTAssertEqualWithAccuracy(notes.frame.origin.y, CGRectGetMaxY(lyrics.frame) + 16, 1);
             }
             UIButton *button = [summary valueForKey:@"sheetMusicButton"];
             if (sheet.boolValue) {
@@ -1974,6 +1995,165 @@ TM_CAPTURE_IMPL
                 [loader startAnimating]; [self settle]; XCTAssertTrue(CGRectEqualToRect(button.frame, frame));
                 [loader stopAnimating]; [self settle]; XCTAssertTrue(CGRectEqualToRect(button.frame, frame));
             }
+        }
+    }
+}
+@end
+
+@implementation TMLayoutRegressionTests (DetailComposition)
+- (void)captureComposition:(NSString *)name {
+    // Native tab selection is animated. Capture only after its real transition settles.
+    XCTestExpectation *frame = [self expectationWithDescription:@"native tab presentation settled"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, .4 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [frame fulfill]; });
+    [self waitForExpectations:@[frame] timeout:2];
+    [self settle];
+    CGSize size = self.window.bounds.size;
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+    format.scale = MIN(1, 800 / MAX(size.width, size.height));
+    UIImage *image = [[[UIGraphicsImageRenderer alloc] initWithSize:size format:format] imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [self.window drawViewHierarchyInRect:self.window.bounds afterScreenUpdates:YES];
+    }];
+    NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
+    NSString *file = [NSString stringWithFormat:@"tagmaster-detail-composition-ios-%@-%@.jpg", device, name];
+    XCTAssertTrue([UIImageJPEGRepresentation(image, .88) writeToFile:[NSTemporaryDirectory() stringByAppendingPathComponent:file] atomically:YES]);
+}
+- (void)testDetailCompositionOrdinaryPairedCapturesAndGeometry {
+    for (NSNumber *dark in @[@NO, @YES]) {
+        DPTag *tag = [self layoutTag];
+        tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
+        tag.provider = @"David Wright"; tag.arranger = @"David Wright"; tag.sungBy = @"The New Tradition";
+        tag.notes = @"Hold the last chord.";
+        DPTagViewController *detail = [DPTagViewController new];
+        UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:detail];
+        [self mount:navigation width:393 category:UIContentSizeCategoryLarge];
+        self.window.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+        [detail setValue:tag forKey:@"tag"]; [self settle];
+        DPTagSummaryController *summary = [detail valueForKey:@"summaryController"];
+        UIView *root = [summary valueForKey:@"grid"];
+        TMDetailMetadata *facts = [summary valueForKey:@"facts"];
+        CGFloat factAxis = -1;
+        for (TMDetailPair *pair in facts.arrangedSubviews) {
+            if (pair.hidden) continue;
+            CGFloat x = [pair.value convertRect:pair.value.bounds toView:root].origin.x;
+            if (factAxis < 0) factAxis = x;
+            XCTAssertEqualWithAccuracy(x, factAxis, .5, @"All Summary fact values share one axis");
+            UILabel *label = (id)pair.value.viewForFirstBaselineLayout;
+            if ([label isKindOfClass:UILabel.class]) {
+                CGFloat captionBaseline = [pair.caption convertPoint:CGPointMake(0, pair.caption.font.ascender) toView:root].y;
+                CGFloat valueBaseline = [label convertPoint:CGPointMake(0, label.font.ascender) toView:root].y;
+                XCTAssertEqualWithAccuracy(captionBaseline, valueBaseline, 2, @"Summary first visible baseline");
+            }
+        }
+        UILabel *title = [summary valueForKey:@"titleLabel"];
+        CGFloat leading = [title convertRect:title.bounds toView:root].origin.x;
+        for (NSString *key in @[@"akaLabel", @"lyricsHeader", @"lyricsLabel", @"notesHeader", @"notesLabel"]) {
+            UIView *view = [summary valueForKey:key];
+            XCTAssertEqualWithAccuracy([view convertRect:view.bounds toView:root].origin.x, leading, .5, @"%@ reading edge", key);
+        }
+        DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+        UIButton *sheet = [summary valueForKey:@"sheetMusicButton"];
+        CGRect keyFrame = [pitch.button convertRect:pitch.button.bounds toView:root];
+        CGRect sheetFrame = [sheet convertRect:sheet.bounds toView:root];
+        XCTAssertEqualWithAccuracy(keyFrame.origin.x, sheetFrame.origin.x, .5);
+        XCTAssertEqualWithAccuracy(keyFrame.size.width, sheetFrame.size.width, .5);
+        XCTAssertEqualWithAccuracy(keyFrame.size.height, sheetFrame.size.height, .5);
+        XCTAssertGreaterThanOrEqual(keyFrame.size.height, 44);
+        UILabel *rating = [summary valueForKey:@"ratingLabel"];
+        UIButton *rate = [summary valueForKey:@"ratingButton"];
+        XCTAssertEqualObjects(rating.text, @"3.49");
+        XCTAssertGreaterThanOrEqual(rating.bounds.size.width + .5, [rating.text sizeWithAttributes:@{NSFontAttributeName:rating.font}].width);
+        UILabel *type = [summary valueForKey:@"typeLabel"];
+        XCTAssertEqualObjects(type.text, tag.tagType);
+        XCTAssertGreaterThanOrEqual(type.bounds.size.height + .5, [type sizeThatFits:CGSizeMake(type.bounds.size.width, CGFLOAT_MAX)].height, @"Previously empty values acquire their visible text height");
+        XCTAssertGreaterThanOrEqual(type.bounds.size.width, [type.text sizeWithAttributes:@{NSFontAttributeName:type.font}].width);
+        CGRect ratingFrame = [rating convertRect:rating.bounds toView:root];
+        CGRect rateFrame = [rate convertRect:rate.bounds toView:root];
+        XCTAssertLessThanOrEqual(rateFrame.origin.x - CGRectGetMaxX(ratingFrame), 16);
+        TMBarberPoleLoadingView *loader = [summary valueForKey:@"sheetMusicLoading"];
+        for (NSNumber *busy in @[@YES, @NO]) {
+            if (busy.boolValue) [loader startAnimating]; else [loader stopAnimating];
+            sheet.enabled = !busy.boolValue; [self settle];
+            XCTAssertTrue(CGRectEqualToRect(sheetFrame, [sheet convertRect:sheet.bounds toView:root]));
+            XCTAssertTrue(CGRectEqualToRect(keyFrame, [pitch.button convertRect:pitch.button.bounds toView:root]));
+        }
+        [self captureComposition:[NSString stringWithFormat:@"ordinary-%@-summary", dark.boolValue ? @"dark" : @"light"]];
+        detail.selectedIndex = 1; [self settle];
+        DPTagDetailController *details = [detail valueForKey:@"detailController"];
+        NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
+        CGFloat axis = -1;
+        for (TMDetailPair *pair in pairs) {
+            if (pair.hidden) continue;
+            UILabel *caption = [pair valueForKey:@"caption"];
+            UIView *value = [pair valueForKey:@"value"];
+            CGFloat x = [value convertRect:value.bounds toView:details.view].origin.x;
+            if (axis < 0) axis = x;
+            XCTAssertEqualWithAccuracy(x, axis, .5);
+            UILabel *label = [value isKindOfClass:UIButton.class] ? ((UIButton *)value).titleLabel : (UILabel *)value;
+            CGFloat cBaseline = [caption convertPoint:CGPointMake(0, (caption.bounds.size.height - caption.font.lineHeight) / 2 + caption.font.ascender) toView:details.view].y;
+            CGFloat vBaseline = [label convertPoint:CGPointMake(0, (label.bounds.size.height - [label sizeThatFits:label.bounds.size].height) / 2 + label.font.ascender) toView:details.view].y;
+            XCTAssertEqualWithAccuracy(cBaseline, vBaseline, 2, @"%@ first visible baseline", caption.text);
+        }
+        [self captureComposition:[NSString stringWithFormat:@"ordinary-%@-details", dark.boolValue ? @"dark" : @"light"]];
+    }
+}
+@end
+
+@implementation TMLayoutRegressionTests (DetailCompositionAdaptive)
+- (void)testDetailCompositionAdaptiveGroupsAndCaptures {
+    for (UIContentSizeCategory category in @[UIContentSizeCategoryLarge, UIContentSizeCategoryExtraExtraExtraLarge, UIContentSizeCategoryAccessibilityExtraExtraExtraLarge]) {
+        for (NSNumber *width in @[@320, @393, @834]) {
+            DPTag *tag = [self layoutTag];
+            tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
+            tag.provider = @"David Wright"; tag.arranger = @"David Wright"; tag.sungBy = @"The New Tradition"; tag.notes = @"Hold the last chord.";
+            DPTagViewController *detail = [DPTagViewController new];
+            UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:detail];
+            [self mount:navigation width:width.doubleValue category:category];
+            if (width.intValue == 834) self.window.frame = CGRectMake(0, 0, 834, 393);
+            [detail setValue:tag forKey:@"tag"]; [self settle];
+            DPTagSummaryController *summary = [detail valueForKey:@"summaryController"];
+            UIView *root = [summary valueForKey:@"grid"];
+            UIStackView *lyrics = [summary valueForKey:@"lyricsSection"];
+            UIStackView *columns = (UIStackView *)lyrics.superview.superview;
+            BOOL wide = root.bounds.size.width >= 560 * [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:self.window.traitCollection].pointSize / 17 + 16;
+            XCTAssertEqual(columns.axis, wide ? UILayoutConstraintAxisHorizontal : UILayoutConstraintAxisVertical);
+            DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+            UIButton *sheet = [summary valueForKey:@"sheetMusicButton"];
+            CGRect k = [pitch.button convertRect:pitch.button.bounds toView:root], s = [sheet convertRect:sheet.bounds toView:root];
+            XCTAssertEqualWithAccuracy(k.origin.x, s.origin.x, .5); XCTAssertEqualWithAccuracy(k.size.width, s.size.width, .5); XCTAssertEqualWithAccuracy(k.size.height, s.size.height, .5);
+            XCTAssertGreaterThanOrEqual(k.size.height + .001, 44); // Floating-point conversion, not a sub-point target allowance.
+            BOOL captureLarge = width.intValue == 393 && [category isEqualToString:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+            BOOL captureWide = width.intValue == 834 && [category isEqualToString:UIContentSizeCategoryLarge];
+            UIScrollView *scroll = (id)root.superview.superview;
+            if (captureLarge) [scroll scrollRectToVisible:[sheet convertRect:sheet.bounds toView:scroll] animated:NO];
+            if (captureLarge || captureWide) [self captureComposition:captureLarge ? @"large-summary" : @"wide-summary"];
+            detail.selectedIndex = 1; [self settle];
+            DPTagDetailController *details = [detail valueForKey:@"detailController"];
+            NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
+            CGFloat axis = -1;
+            for (TMDetailPair *pair in pairs) {
+                if (pair.hidden) continue;
+                XCTAssertEqual(pair.axis, pairs.firstObject.axis);
+                CGFloat x = pair.value.frame.origin.x;
+                if (axis < 0) axis = x;
+                XCTAssertEqualWithAccuracy(x, axis, .5);
+                XCTAssertGreaterThanOrEqual(pair.value.bounds.size.width, 96);
+            }
+            if (captureLarge || captureWide) [self captureComposition:captureLarge ? @"large-details" : @"wide-details"];
+            if (captureLarge) {
+                UIStackView *metadata = [details valueForKey:@"metadataStack"];
+                UIScrollView *scroller = (id)metadata.superview.superview;
+                UIView *last = pairs.lastObject;
+                [scroller scrollRectToVisible:[last convertRect:last.bounds toView:scroller] animated:NO];
+                [self captureComposition:@"large-details-last-link"];
+            }
+            detail.selectedIndex = 0; [self settle];
+            tag.sheetMusicUri = nil; tag.writtenKey = nil; tag.alternativeTitle = @""; tag.lyrics = nil; tag.notes = nil;
+            [summary refreshView]; [self settle];
+            XCTAssertTrue(lyrics.superview.hidden);
+            XCTAssertEqual(columns.axis, UILayoutConstraintAxisVertical);
+            XCTAssertTrue([[summary valueForKey:@"keySection"] isHidden]);
+            XCTAssertTrue([[summary valueForKey:@"sheetMusicAction"] isHidden]);
+            if (captureWide) [self captureComposition:@"wide-missing"];
         }
     }
 }
@@ -2601,10 +2781,27 @@ TM_CAPTURE_IMPL
     CGFloat (^linear)(CGFloat) = ^CGFloat(CGFloat c) { return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4); };
     return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
 }
+- (void)logPitch:(UIButton *)button phase:(NSString *)phase {
+    DPNote *note = [button valueForKey:@"note"];
+    NSTimer *timer = [button valueForKey:@"noteTimer"];
+    UIColor *fill = button.configuration.background.backgroundColor;
+    NSLog(@"TM_PITCH_STATE %@ %@ attached=%d timerValid=%d playing=%d showing=%@ highlighted=%d enabled=%d fill=%@ fillPixels=%lu", phase, button.accessibilityIdentifier, button.window != nil, timer.valid, note.isPlaying, [button valueForKey:@"showingPlayback"], button.highlighted, button.enabled, fill, (unsigned long)[self pixelsIn:button matching:fill]);
+}
 - (void)assertKey:(UIButton *)button playing:(BOOL)playing {
+    if (playing) [self logPitch:button phase:@"before rendered wait"];
     [self settle];
     UIColor *fill = button.configuration.background.backgroundColor;
     if (playing) {
+        // Enabling a configured UIKit button can still be animating its disabled fill.
+        // Wait for rendered feedback, not merely the configuration or highlighted flag.
+        [self waitUntil:^BOOL {
+            [button layoutIfNeeded];
+            return [self pixelsIn:button matching:button.configuration.background.backgroundColor] > button.bounds.size.width * button.bounds.size.height * .45;
+        }];
+        [self logPitch:button phase:@"after rendered wait"];
+        XCTAssertTrue([[button valueForKey:@"note"] isPlaying], @"Rendered feedback must still represent a playing note");
+        XCTAssertTrue([[button valueForKey:@"showingPlayback"] boolValue]);
+        fill = button.configuration.background.backgroundColor;
         UIColor *foreground = button.configuration.baseForegroundColor;
         XCTAssertEqual(button.configuration.image.renderingMode, UIImageRenderingModeAlwaysOriginal);
         XCTAssertGreaterThan([self pixelsIn:button matching:fill], button.bounds.size.width * button.bounds.size.height * 0.45);
@@ -2621,6 +2818,87 @@ TM_CAPTURE_IMPL
     XCTAssertEqualWithAccuracy(button.layer.borderWidth, 1.5, 0.01);
     XCTAssertEqualWithAccuracy(button.layer.cornerRadius, 8, 0.01);
 }
+- (void)waitForPitchInterval:(NSTimeInterval)interval {
+    XCTestExpectation *deadline = [self expectationWithDescription:@"cross timed activation deadline"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, interval * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [deadline fulfill]; });
+    [self waitForExpectations:@[deadline] timeout:interval + 2];
+}
+- (void)testPitchTimedCancellationCannotStopLaterHold {
+    DPTagSummaryController *summary = [DPTagSummaryController new];
+    [summary loadViewIfNeeded]; summary.tag = [self tag];
+    [self mount:summary width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+    DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+    UIButton *button = pitch.button;
+    // Retain the cancelled owner across its deadline, just as a previous screen can remain alive.
+    TMTestSummary *previous = [TMTestSummary new];
+    [previous loadViewIfNeeded]; previous.tag = [self tag];
+    DPPitchPipeButton *previousPitch = [previous valueForKey:@"keyButton"];
+    XCTAssertEqual(previousPitch.note, pitch.note);
+    XCTAssertTrue([previousPitch.button accessibilityActivate]);
+    [previousPitch.button sendActionsForControlEvents:UIControlEventTouchCancel];
+    XCTAssertFalse(pitch.note.isPlaying);
+    CGRect idle = button.frame;
+    [button sendActionsForControlEvents:UIControlEventTouchDown];
+    XCTAssertTrue(pitch.note.isPlaying);
+    [self waitForPitchInterval:1.65];
+    [self logPitch:button phase:@"held past cancelled deadline"];
+    XCTAssertTrue(pitch.note.isPlaying, @"A cancelled activation must not stop a later same-note hold");
+    [self assertKey:button playing:YES];
+    XCTAssertTrue(CGRectEqualToRect(idle, button.frame));
+    [button sendActionsForControlEvents:UIControlEventTouchCancel];
+    XCTAssertFalse(pitch.note.isPlaying);
+    [self assertKey:button playing:NO];
+    XCTAssertNotNil(previous.view); // Keep the prior controller alive through the check.
+
+    for (NSString *interruption in @[@"touch", @"replacement", @"detach"]) {
+        DPTagSummaryController *owner = [DPTagSummaryController new];
+        [owner loadViewIfNeeded]; owner.tag = [self tag];
+        [self mount:owner width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+        DPPitchPipeButton *activePitch = [owner valueForKey:@"keyButton"];
+        XCTAssertTrue([activePitch.button accessibilityActivate]);
+        if ([interruption isEqualToString:@"replacement"]) {
+            DPNote *original = activePitch.note;
+            activePitch.note = DPNote.commonNotes.lastObject;
+            XCTAssertFalse(original.isPlaying);
+            activePitch.note = original;
+        } else if ([interruption isEqualToString:@"detach"]) {
+            [activePitch.button removeFromSuperview];
+            XCTAssertFalse(activePitch.note.isPlaying);
+            XCTAssertNil([activePitch.button valueForKey:@"noteTimer"]);
+            DPTagSummaryController *later = [DPTagSummaryController new];
+            [later loadViewIfNeeded]; later.tag = [self tag];
+            [self mount:later width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+            activePitch = [later valueForKey:@"keyButton"];
+        }
+        UIButton *held = activePitch.button;
+        CGRect frame = held.frame;
+        [held sendActionsForControlEvents:UIControlEventTouchDown];
+        [self waitForPitchInterval:1.65];
+        XCTAssertTrue(activePitch.note.isPlaying, @"%@ must invalidate the previous deadline", interruption);
+        [self assertKey:held playing:YES];
+        XCTAssertTrue(CGRectEqualToRect(frame, held.frame));
+        [held sendActionsForControlEvents:UIControlEventTouchCancel];
+        [self assertKey:held playing:NO];
+        XCTAssertNotNil(owner.view);
+    }
+}
+- (void)testPitchTimedReactivationKeepsNewDeadline {
+    DPTagSummaryController *summary = [DPTagSummaryController new];
+    [summary loadViewIfNeeded]; summary.tag = [self tag];
+    [self mount:summary width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
+    DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
+    UIButton *button = pitch.button;
+    XCTAssertTrue([button accessibilityActivate]);
+    [self waitForPitchInterval:0.9];
+    XCTAssertTrue([button accessibilityActivate]);
+    [self waitForPitchInterval:0.75];
+    [self logPitch:button phase:@"reactivated past first deadline"];
+    XCTAssertTrue(pitch.note.isPlaying, @"The first activation must not shorten the second activation");
+    XCTAssertTrue([[button valueForKey:@"showingPlayback"] boolValue]);
+    XCTAssertGreaterThan([self pixelsIn:button matching:button.configuration.background.backgroundColor], button.bounds.size.width * button.bounds.size.height * .45);
+    [self waitUntil:^BOOL { return !pitch.note.isPlaying; }];
+    [self assertKey:button playing:NO];
+}
 - (void)testPitchRenderedLifecycle {
     for (NSNumber *dark in @[@NO, @YES]) {
         DPTagViewController *detail = [DPTagViewController new];
@@ -2635,6 +2913,11 @@ TM_CAPTURE_IMPL
         [self assertKey:button playing:NO];
         [self capture:[prefix stringByAppendingString:@"-idle"]];
         CGRect idle = button.frame;
+        XCTAssertEqual(summary.tabBarController.selectedViewController, summary);
+        XCTAssertEqual(button.window, self.window);
+        XCTAssertTrue([[button valueForKey:@"noteTimer"] isValid]);
+        XCTAssertNil(summary.transitionCoordinator);
+        [self logPitch:button phase:@"before first gesture"];
         // Deterministic native held-touch fixture invokes the real shared sound targets.
         button.highlighted = YES;
         [button sendActionsForControlEvents:UIControlEventTouchDown];
@@ -2646,6 +2929,7 @@ TM_CAPTURE_IMPL
         XCTAssertFalse(pitch.note.isPlaying);
         [self assertKey:button playing:NO];
         [self capture:[prefix stringByAppendingString:@"-released"]];
+        XCTAssertTrue(CGRectEqualToRect(idle, button.frame), @"Released pitch keeps its visible face");
         [button sendActionsForControlEvents:UIControlEventTouchDown];
         [button sendActionsForControlEvents:UIControlEventTouchCancel]; button.highlighted = NO;
         XCTAssertFalse(pitch.note.isPlaying); [self assertKey:button playing:NO];

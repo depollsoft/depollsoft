@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DCC000000000000000000001 /* TMDetailLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC000000000000000000002; };
 		E47100000000000000000003 /* TMPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E47100000000000000000002 /* TMPageViewController.m */; };
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
 		1E1E197B1DD878A400DA766F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E1E197A1DD878A400DA766F /* GoogleService-Info.plist */; };
@@ -136,6 +137,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DCC000000000000000000002 /* TMDetailLayout.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMDetailLayout.m; sourceTree = "<group>"; };
+		DCC000000000000000000003 /* TMDetailLayout.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMDetailLayout.h; sourceTree = "<group>"; };
 		E47100000000000000000001 /* TMPageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMPageViewController.h; sourceTree = "<group>"; };
 		E47100000000000000000002 /* TMPageViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMPageViewController.m; sourceTree = "<group>"; };
 		1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsController.swift; sourceTree = "<group>"; };
@@ -441,6 +444,8 @@
 				63E8667215DCB86300E0FC17 /* DPTagCell.h */,
 				63E8667315DCB86300E0FC17 /* DPTagCell.m */,
 				638E735917F769E7000FFE53 /* DPTagDetailController.h */,
+				DCC000000000000000000002 /* TMDetailLayout.m */,
+				DCC000000000000000000003 /* TMDetailLayout.h */,
 				638E735A17F769E7000FFE53 /* DPTagDetailController.m */,
 				638E735D17F76B13000FFE53 /* DPTagPageControllerBase.h */,
 				638E735E17F76B13000FFE53 /* DPTagPageControllerBase.m */,
@@ -747,6 +752,7 @@
 				63E8667115DCADF000E0FC17 /* DPTagQueryViewController.m in Sources */,
 				1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */,
 				63E8667415DCB86300E0FC17 /* DPTagCell.m in Sources */,
+				DCC000000000000000000001 /* TMDetailLayout.m in Sources */,
 				638E735B17F769E7000FFE53 /* DPTagDetailController.m in Sources */,
 				638E738F17F7B872000FFE53 /* DPTagTracksController.m in Sources */,
 				639F293C1800C45300517583 /* DPTagVideoController.m in Sources */,

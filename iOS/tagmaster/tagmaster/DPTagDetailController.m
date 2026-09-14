@@ -7,46 +7,14 @@
 //
 
 #import "DPTagDetailController.h"
-// Metadata refits per pair. Shared DPGridLayout and other products stay unchanged.
-@interface TMDetailPair : UIStackView
-@property UILabel *caption;
-@property UIView *value;
-@property NSLayoutConstraint *captionWidth;
-@property CGFloat preferredCaptionWidth;
-@end
-@implementation TMDetailPair
-- (void)layoutSubviews {
-    CGFloat width = self.bounds.size.width;
-    if (width > 0 && !self.hidden) {
-        CGFloat caption = ceil([self.caption.text sizeWithAttributes:@{NSFontAttributeName:self.caption.font}].width);
-        UILabel *label = [self.value isKindOfClass:UIButton.class] ? ((UIButton *)self.value).titleLabel : (UILabel *)self.value;
-        NSString *text = [self.value isKindOfClass:UIButton.class] ? [(UIButton *)self.value currentTitle] : label.text;
-        UIFont *font = label.font ?: [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:self.traitCollection];
-        CGFloat natural = ceil([text sizeWithAttributes:@{NSFontAttributeName:font}].width) + 4;
-        CGFloat usableValue = MAX(44, MIN(natural, font.pointSize * 8));
-        // Align fitting columns where possible; a long caption cannot take width
-        // away from another pair whose short caption still fits beside its value.
-        CGFloat column = self.preferredCaptionWidth + 8 + usableValue <= width ? self.preferredCaptionWidth : caption;
-        BOOL stacked = column + 8 + usableValue > width;
-        self.captionWidth.active = !stacked;
-        self.captionWidth.constant = column;
-        self.axis = stacked ? UILayoutConstraintAxisVertical : UILayoutConstraintAxisHorizontal;
-        self.alignment = stacked ? UIStackViewAlignmentFill : UIStackViewAlignmentTop;
-        self.spacing = stacked ? 4 : 8;
-        UIStackView *parent = (UIStackView *)self.superview;
-        CGFloat separation = stacked ? 16 : 4;
-        if ([parent customSpacingAfterView:self] != separation) [parent setCustomSpacing:separation afterView:self];
-    }
-    [super layoutSubviews];
-}
-@end
+#import "TMDetailLayout.h"
 
 @interface TMDetailBodyLabel : UILabel
 @end
 @implementation TMDetailBodyLabel
 - (CGSize)intrinsicContentSize {
     if (self.bounds.size.width <= 0) return [super intrinsicContentSize];
-    return CGSizeMake(UIViewNoIntrinsicMetric, [self sizeThatFits:CGSizeMake(self.bounds.size.width, CGFLOAT_MAX)].height);
+    return CGSizeMake(UIViewNoIntrinsicMetric, [self sizeThatFits:CGSizeMake(self.preferredMaxLayoutWidth > 0 ? self.preferredMaxLayoutWidth : self.bounds.size.width, CGFLOAT_MAX)].height);
 }
 - (void)setBounds:(CGRect)bounds {
     BOOL changed = self.bounds.size.width != bounds.size.width;
@@ -81,7 +49,7 @@
 @property (nonatomic, strong) UILabel *yearSungHeader;
 @property (nonatomic, strong) UILabel *yearSungLabel;
 
-@property (nonatomic, strong) UIStackView *metadataStack;
+@property (nonatomic, strong) TMDetailMetadata *metadataStack;
 @property (nonatomic, copy) NSArray<TMDetailPair *> *metadataPairs;
 
 @end
@@ -118,16 +86,16 @@
     [self.postedByButton setTitle:self.tag.provider forState:UIControlStateNormal];
     self.postedByButton.url = self.tag.providerWebsite;
     [self setButton:self.postedByButton linked:!!self.tag.providerWebsite];
-    [self setMetadataView:self.postedByHeader hidden:!self.tag.provider];
-    [self setMetadataView:self.postedByButton hidden:!self.tag.provider];
+    [self setMetadataView:self.postedByHeader hidden:self.tag.provider.length == 0];
+    [self setMetadataView:self.postedByButton hidden:self.tag.provider.length == 0];
     
     self.postedLabel.text = [otherDateFormatter stringFromDate:self.tag.posted];
     
     [self.arrangedByButton setTitle:self.tag.arranger forState:UIControlStateNormal];
     self.arrangedByButton.url = self.tag.arrangerWebsite;
     [self setButton:self.arrangedByButton linked:!!self.tag.arrangerWebsite];
-    [self setMetadataView:self.arrangedByHeader hidden:!self.tag.arranger];
-    [self setMetadataView:self.arrangedByButton hidden:!self.tag.arranger];
+    [self setMetadataView:self.arrangedByHeader hidden:self.tag.arranger.length == 0];
+    [self setMetadataView:self.arrangedByButton hidden:self.tag.arranger.length == 0];
     
     self.yearArrangedLabel.text = [NSString stringWithFormat:@"%d", self.tag.yearArranged];
     [self setMetadataView:self.yearArrangedHeader hidden:self.tag.yearArranged == 0];
@@ -136,12 +104,13 @@
     [self.sungByButton setTitle:self.tag.sungBy forState:UIControlStateNormal];
     self.sungByButton.url = self.tag.sungByWebsite;
     [self setButton:self.sungByButton linked:!!self.tag.sungByWebsite];
-    [self setMetadataView:self.sungByHeader hidden:!self.tag.sungBy];
-    [self setMetadataView:self.sungByButton hidden:!self.tag.sungBy];
+    [self setMetadataView:self.sungByHeader hidden:self.tag.sungBy.length == 0];
+    [self setMetadataView:self.sungByButton hidden:self.tag.sungBy.length == 0];
     
     self.yearSungLabel.text = [NSString stringWithFormat:@"%d", self.tag.sungYear];
     [self setMetadataView:self.yearSungHeader hidden:self.tag.sungYear == 0];
     [self setMetadataView:self.yearSungLabel hidden:self.tag.sungYear == 0];
+    [self.metadataStack reloadValues];
 }
 
 /// A name without a website is plain information, not a disabled control.
@@ -186,8 +155,7 @@
         // button collapses to its minimum width and wraps one character per line.
         UIButtonConfiguration *configuration = [UIButtonConfiguration plainButtonConfiguration];
         configuration.titleLineBreakMode = NSLineBreakByWordWrapping;
-        // A hair of leading inset keeps the first glyph of a wrapped title from clipping.
-        configuration.contentInsets = NSDirectionalEdgeInsetsMake(0, 2, 0, 2);
+        configuration.contentInsets = NSDirectionalEdgeInsetsMake(0, 0, 0, 0);
         configuration.titleTextAttributesTransformer = ^NSDictionary<NSAttributedStringKey, id> *(NSDictionary<NSAttributedStringKey, id> *attributes) {
             NSMutableDictionary *updated = [attributes mutableCopy];
             updated[NSFontAttributeName] = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -206,18 +174,14 @@
     NSArray *values = @[self.tagIdLabel, self.lastRefreshedLabel, self.downloadsLabel, self.linkButton,
                         self.postedByButton, self.postedLabel, self.arrangedByButton, self.yearArrangedLabel,
                         self.sungByButton, self.yearSungLabel];
-    self.metadataStack = [[UIStackView alloc] initWithArrangedSubviews:@[self.titleLabel]];
+    self.metadataStack = [[TMDetailMetadata alloc] initWithArrangedSubviews:@[self.titleLabel]];
     self.metadataStack.axis = UILayoutConstraintAxisVertical;
     self.metadataStack.spacing = 4;
     [self.metadataStack setCustomSpacing:8 afterView:self.titleLabel];
     NSMutableArray *pairs = [NSMutableArray array];
     for (NSUInteger index = 0; index < captions.count; index++) {
-        TMDetailPair *pair = [[TMDetailPair alloc] initWithArrangedSubviews:@[captions[index], values[index]]];
-        pair.caption = captions[index];
-        pair.value = values[index];
-        pair.captionWidth = [pair.caption.widthAnchor constraintEqualToConstant:0];
-        pair.captionWidth.priority = UILayoutPriorityRequired - 1;
-        pair.accessibilityElements = @[pair.caption, pair.value];
+        TMDetailPair *pair = [TMDetailPair caption:captions[index] value:values[index]];
+        pair.section = index < 4 ? 0 : (index < 6 ? 1 : (index < 8 ? 2 : 3));
         [pairs addObject:pair];
         [self.metadataStack addArrangedSubview:pair];
     }
@@ -240,20 +204,6 @@
         if (pair.caption == view || pair.value == view) pair.hidden = hidden;
     }
     if (self.isViewLoaded) [self.view setNeedsLayout];
-}
-
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    CGFloat widestCaption = 0;
-    for (TMDetailPair *pair in self.metadataPairs) {
-        if (!pair.hidden) widestCaption = MAX(widestCaption, ceil([pair.caption.text sizeWithAttributes:@{NSFontAttributeName:pair.caption.font}].width));
-    }
-    for (TMDetailPair *pair in self.metadataPairs) {
-        if (pair.preferredCaptionWidth != widestCaption) {
-            pair.preferredCaptionWidth = widestCaption;
-            [pair setNeedsLayout];
-        }
-    }
 }
 
 - (void)didReceiveMemoryWarning

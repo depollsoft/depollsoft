@@ -145,7 +145,7 @@ class TagSummaryFragment : Fragment() {
         rootView.bindTo(R.id.lyricsRow, "Visibility", { parent.tag?.lyrics }, BoolConverter.get())
 
         rootView.bindTo(
-            R.id.sheetMusicLink,
+            R.id.linearLayout3,
             "Visibility",
             { parent.tag?.sheetMusicUri },
             BoolConverter.get(),
@@ -164,6 +164,12 @@ class TagSummaryFragment : Fragment() {
             BoolConverter.get(),
         )
 
+        rootView.bindTo(
+            R.id.savedStatusLayout,
+            "Visibility",
+            { parent.tag?.let { FavoritesModel.getIsFavorite(it.id) || TeachableTagsModel.getIsTeachableTag(it.id) } ?: false },
+            BoolConverter.get(),
+        )
         rootView.findViewById<View>(R.id.sheetMusicLink).setOnClickListener {
             loadSheetMusic(rootView)
         }

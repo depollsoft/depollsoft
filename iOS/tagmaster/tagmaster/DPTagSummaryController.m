@@ -8,7 +8,7 @@
 
 #import "DPTagSummaryController.h"
 #import "TMBarberPoleLoadingView.h"
-#import "DPGridLayout.h"
+#import "TMDetailLayout.h"
 #import "UIView+DPUtils.h"
 #import "DPTextView.h"
 #import "DPFileCache.h"
@@ -18,6 +18,7 @@
 // Width-aware wrapping stays local to Tag Master. Shared pitch callbacks own sound.
 @interface TMKeyButton : TMWrappingButton
 @property (nonatomic, copy) void (^playNote)(void);
+@property (nonatomic, copy) void (^cancelTimedNote)(void);
 @property (nonatomic, strong) DPNote *note;
 @property (nonatomic, strong) NSTimer *noteTimer;
 @property (nonatomic) BOOL showingPlayback;
@@ -31,6 +32,7 @@
     return YES;
 }
 - (void)setNote:(DPNote *)note {
+    if (self.cancelTimedNote) self.cancelTimedNote();
     _note = note;
     [self updatePitchAppearance];
 }
@@ -48,6 +50,7 @@
         }];
         [NSRunLoop.mainRunLoop addTimer:self.noteTimer forMode:NSRunLoopCommonModes];
     } else {
+        if (self.cancelTimedNote) self.cancelTimedNote();
         [self.note stop];
     }
     [self updatePitchAppearance];
@@ -138,6 +141,14 @@
 @interface TMKeyPitchButton : DPPitchPipeButton
 @end
 @implementation TMKeyPitchButton
+- (void)setButton:(UIButton *)button {
+    [super setButton:button];
+    // Remove the shared widget's 2pt face inset only in this app-local adapter.
+    // Its existing target/actions continue to own press and release playback.
+    for (NSLayoutConstraint *constraint in button.superview.constraints) {
+        if (constraint.firstItem == button || constraint.secondItem == button) constraint.constant = 0;
+    }
+}
 - (void)setNote:(DPNote *)note {
     [super setNote:note];
     if ([self.button isKindOfClass:TMKeyButton.class]) ((TMKeyButton *)self.button).note = note;
@@ -157,7 +168,7 @@
 @implementation TMSummaryBodyLabel
 - (CGSize)intrinsicContentSize {
     if (self.bounds.size.width <= 0) return CGSizeMake(UIViewNoIntrinsicMetric, [super intrinsicContentSize].height);
-    return CGSizeMake(UIViewNoIntrinsicMetric, [self sizeThatFits:CGSizeMake(self.bounds.size.width, CGFLOAT_MAX)].height);
+    return CGSizeMake(UIViewNoIntrinsicMetric, [self sizeThatFits:CGSizeMake(self.preferredMaxLayoutWidth > 0 ? self.preferredMaxLayoutWidth : self.bounds.size.width, CGFLOAT_MAX)].height);
 }
 - (void)setBounds:(CGRect)bounds {
     BOOL changed = self.bounds.size.width != bounds.size.width;
@@ -187,12 +198,12 @@
 @property (nonatomic, strong) UILabel *partsLabel;
 @property (nonatomic, strong) UILabel *typeLabel;
 @property (nonatomic, strong) DPPitchPipeButton *keyButton;
+@property (nonatomic) NSUInteger keyActivationGeneration;
 @property (nonatomic, strong) UILabel *classicTagNumberLabel;
 @property (nonatomic, strong) UIButton *sheetMusicButton;
 @property (nonatomic, strong) UIStackView *sheetMusicAction;
 @property (nonatomic, strong) TMBarberPoleLoadingView *sheetMusicLoading;
 @property (nonatomic, strong) TMBarberPoleLoadingView *ratingLoading;
-@property (nonatomic, strong) UIView *proseSectionBreak;
 @property (nonatomic, strong) UILabel *lyricsLabel;
 @property (nonatomic, strong) UILabel *notesLabel;
 @property (nonatomic, strong) UILabel *ratingHeader;
@@ -203,7 +214,12 @@
 @property (nonatomic, strong) UILabel *lyricsHeader;
 @property (nonatomic, strong) UILabel *classicTagNumberHeader;
 
-@property (nonatomic, strong) DPGridLayout *grid;
+@property (nonatomic, strong) UIStackView *grid;
+@property TMDetailPair *classicPair;
+@property TMDetailMetadata *facts;
+@property UIStackView *keySection;
+@property UIStackView *lyricsSection;
+@property UIStackView *notesSection;
 
 @end
 
@@ -224,7 +240,7 @@
     titleLabel.text = self.tag.title;
     
     akaLabel.text = [NSString stringWithFormat:@"a.k.a. %@", self.tag.alternativeTitle];
-    [grid setView:akaLabel hidden:!self.tag.alternativeTitle];
+    akaLabel.hidden = self.tag.alternativeTitle.length == 0;
     
     ratingLabel.text = [NSString stringWithFormat:@"%1.2f", self.tag.rating];
     ratingLabel.accessibilityValue = ratingLabel.text;
@@ -238,25 +254,21 @@
     keyButton.button.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
     keyButton.button.accessibilityHint = @"Plays for one and a half seconds";
     [keyButton.button setTitle:self.tag.writtenKey forState:UIControlStateNormal];
-    [grid setView:keyButton hidden:!self.tag.writtenKey];
-    [grid setView:keyHeader hidden:!self.tag.writtenKey];
+    self.keySection.hidden = self.tag.writtenKey.length == 0;
     
     classicTagNumberLabel.text = [NSString stringWithFormat:@"%d", self.tag.classicTagNumber];
-    [grid setView:classicTagNumberLabel hidden:self.tag.classicTagNumber == 0];
-    [grid setView:classicTagNumberHeader hidden:self.tag.classicTagNumber == 0];
+    self.classicPair.hidden = self.tag.classicTagNumber == 0;
     
-    [grid setView:self.sheetMusicAction hidden:!self.tag.sheetMusicUri];
+    self.sheetMusicAction.hidden = !self.tag.sheetMusicUri;
     
     lyricsLabel.text = self.tag.lyrics;
-    [grid setView:lyricsLabel hidden:!self.tag.lyrics];
-    [grid setView:lyricsHeader hidden:!self.tag.lyrics];
-    
-    [grid setView:self.proseSectionBreak hidden:!self.tag.lyrics && !self.tag.notes];
-
+    self.lyricsSection.hidden = self.tag.lyrics.length == 0;
     notesLabel.text = self.tag.notes;
-    [grid setView:notesLabel hidden:!self.tag.notes];
-    [grid setView:notesHeader hidden:!self.tag.notes];
-    
+    self.notesSection.hidden = self.tag.notes.length == 0;
+    [self.facts reloadValues];
+    [self.grid setNeedsLayout];
+    [self.view setNeedsLayout];
+
     [self.ratingButton setEnabled:self.tag != nil];
     [self.ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
     self.ratingButton.accessibilityLabel = @"Rate tag";
@@ -279,7 +291,11 @@
     ratingBar.isAccessibilityElement = NO;
     ratingButton = [[UIButton alloc] init];
     [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
-    ratingLabel = [self makeBodyLabel];
+    // The rating unit needs the number's lexical width, unlike full-width prose.
+    ratingLabel = [UILabel new];
+    ratingLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    ratingLabel.adjustsFontForContentSizeCategory = YES;
+    [ratingLabel setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     ratingButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     [ratingButton setTitle:@"Rate" forState:UIControlStateNormal];
     partsLabel = [self makeBodyLabel];
@@ -288,9 +304,12 @@
     TMKeyButton *accessibleKey = [TMKeyButton buttonWithType:UIButtonTypeCustom];
     __weak DPTagSummaryController *weakSelf = self;
     accessibleKey.playNote = ^{ [weakSelf playKeyNote]; };
+    accessibleKey.cancelTimedNote = ^{ [weakSelf cancelTimedKeyNote]; };
     keyButton.button = accessibleKey;
     accessibleKey.accessibilityIdentifier = @"summary.key";
     [accessibleKey addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchCancel];
+    // Invalidate timed accessibility cleanup without replacing the shared sound targets.
+    [accessibleKey addTarget:self action:@selector(cancelTimedKeyNote) forControlEvents:UIControlEventTouchDown | UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
     keyButton.button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
     keyButton.button.titleLabel.adjustsFontForContentSizeCategory = YES;
     UIButtonConfiguration *config = [UIButtonConfiguration plainButtonConfiguration];
@@ -337,77 +356,58 @@
     lyricsHeader = [self makeHeader:@"Lyrics"];
     classicTagNumberHeader = [self makeHeader:@"Classic Tag"];
     
-    grid = [[DPGridLayout alloc] init];
-    grid.columnDimensions = @[
-                              [DPGridDimension dimension],
-                              [DPGridDimension dimensionWithSize:8],
-                              [DPGridDimension dimensionWithStars:1],
-                              ];
-    grid.rowDimensions = @[
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension],
-                           [DPGridDimension dimension]
-                           ];
-    
-    // Add titles
-    [grid addSubview:titleLabel row:0 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[akaLabel padLeft:0 top:0 right:0 bottom:8]
-                 row:1
-              column:0
-             rowSpan:1
-             colSpan:3];
-    
-    // Add headers
-    [grid addSubview:[ratingHeader centeredVertically] row:2 column:0];
-    [grid addSubview:partsHeader row:3 column:0];
-    [grid addSubview:typeHeader row:4 column:0];
-    [grid addSubview:keyHeader row:5 column:0];
-    [grid addSubview:classicTagNumberHeader row:6 column:0];
-    self.sheetMusicLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Opening sheet music…"];
-    self.sheetMusicAction = [self actionRowForButton:sheetMusicButton loader:self.sheetMusicLoading];
-    [grid addSubview:self.sheetMusicAction row:7 column:0 rowSpan:1 colSpan:3];
-    self.proseSectionBreak = [UIView new];
-    [self.proseSectionBreak.heightAnchor constraintEqualToConstant:16].active = YES;
-    [grid addSubview:self.proseSectionBreak row:8 column:0 rowSpan:1 colSpan:3];
-    [grid addSubview:[lyricsHeader alignTop] row:9 column:0];
-    [grid addSubview:[notesHeader alignTop] row:10 column:0];
-    
-    // Add content
-    [grid addSubview:partsLabel row:3 column:2];
-    [grid addSubview:typeLabel row:4 column:2];
-    [grid addSubview:keyButton row:5 column:2];
-    [grid addSubview:classicTagNumberLabel row:6 column:2];
-    [grid addSubview:[lyricsLabel padLeft:0 top:0 right:0 bottom:8] row:9 column:2];
-    [grid addSubview:notesLabel row:10 column:2];
-    
     // Build rating UI
     UIStackView *ratingValue = [[UIStackView alloc] initWithArrangedSubviews:@[ratingLabel, ratingBar]];
     ratingValue.axis = UILayoutConstraintAxisVertical;
     ratingValue.spacing = 4;
-    ratingLabel.textAlignment = NSTextAlignmentCenter;
+    ratingLabel.textAlignment = NSTextAlignmentNatural;
     ratingLabel.accessibilityLabel = @"Rating out of 5";
     self.ratingLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Sending rating…"];
     UIStackView *ratingAction = [self actionRowForButton:ratingButton loader:self.ratingLoading];
-    UIStackView *ratingGrid = [[UIStackView alloc] initWithArrangedSubviews:@[ratingValue, ratingAction]];
+    TMRatingUnit *ratingGrid = [[TMRatingUnit alloc] initWithArrangedSubviews:@[ratingValue, ratingAction, [UIView new]]];
+    ratingGrid.baselineLabel = ratingLabel;
+    [ratingValue setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+    [ratingAction setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     ratingGrid.axis = UILayoutConstraintAxisHorizontal;
     ratingGrid.alignment = UIStackViewAlignmentCenter;
     ratingGrid.spacing = 8;
     [ratingButton setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-    [grid addSubview:[ratingGrid padHorizontal:0 vertical:4] row:2 column:2];
+    self.classicPair = [TMDetailPair caption:classicTagNumberHeader value:classicTagNumberLabel];
+    TMDetailMetadata *facts = [[TMDetailMetadata alloc] initWithArrangedSubviews:@[
+        [TMDetailPair caption:ratingHeader value:ratingGrid],
+        [TMDetailPair caption:partsHeader value:partsLabel],
+        [TMDetailPair caption:typeHeader value:typeLabel], self.classicPair]];
+    self.facts = facts;
+    self.sheetMusicLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Opening sheet music…"];
+    self.sheetMusicAction = [self actionRowForButton:sheetMusicButton loader:self.sheetMusicLoading];
+    UIView *keyRail = [UIView new];
+    [keyRail.widthAnchor constraintEqualToConstant:self.sheetMusicLoading.intrinsicContentSize.width].active = YES;
+    UIStackView *keyLane = [[UIStackView alloc] initWithArrangedSubviews:@[keyButton, keyRail]];
+    keyLane.axis = UILayoutConstraintAxisHorizontal;
+    keyLane.spacing = 8;
+    self.keySection = [[UIStackView alloc] initWithArrangedSubviews:@[keyHeader, keyLane]];
+    self.keySection.axis = UILayoutConstraintAxisVertical;
+    self.keySection.spacing = 4;
+    TMDetailSections *performance = [[TMDetailSections alloc] initWithArrangedSubviews:@[facts, self.keySection, self.sheetMusicAction]];
+    self.lyricsSection = [[UIStackView alloc] initWithArrangedSubviews:@[lyricsHeader, lyricsLabel]];
+    self.lyricsSection.axis = UILayoutConstraintAxisVertical;
+    self.lyricsSection.spacing = 4;
+    self.notesSection = [[UIStackView alloc] initWithArrangedSubviews:@[notesHeader, notesLabel]];
+    self.notesSection.axis = UILayoutConstraintAxisVertical;
+    self.notesSection.spacing = 4;
+    TMDetailSections *prose = [[TMDetailSections alloc] initWithArrangedSubviews:@[self.lyricsSection, self.notesSection]];
+    TMSummaryColumns *columns = [[TMSummaryColumns alloc] initWithArrangedSubviews:@[performance, prose]];
+    UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, akaLabel]];
+    identity.axis = UILayoutConstraintAxisVertical;
+    identity.spacing = 4;
+    grid = [[UIStackView alloc] initWithArrangedSubviews:@[identity, columns]];
+    grid.axis = UILayoutConstraintAxisVertical;
+    grid.spacing = 8;
     
     [ratingButton addTarget:self action:@selector(rate) forControlEvents:UIControlEventTouchUpInside];
     
     [self setUpRootView:grid withScroller:scroller];
     [sheetMusicButton.heightAnchor constraintEqualToAnchor:keyButton.button.heightAnchor].active = YES;
-    [ratingButton.heightAnchor constraintEqualToAnchor:keyButton.button.heightAnchor].active = YES;
     
     [self refreshView];
 }
@@ -527,6 +527,7 @@
                     TMKeyButton *toucher = [TMKeyButton buttonWithType:UIButtonTypeCustom];
                     __weak DPTagSummaryController *weakSelf = self;
                     toucher.playNote = ^{ [weakSelf playKeyNote]; };
+                    toucher.cancelTimedNote = ^{ [weakSelf cancelTimedKeyNote]; };
                     toucher.note = self.tag.keyNote;
                     toucher.tintColor = UIColor.systemBlueColor;
                     toucher.accessibilityIdentifier = @"sheet.key";
@@ -568,20 +569,32 @@
     });
 }
 
+- (void)cancelTimedKeyNote {
+    // UIKit input, note binding and the delayed callback all run on the main queue.
+    self.keyActivationGeneration++;
+}
+
 - (void)pitchTouchDown {
+    [self cancelTimedKeyNote];
     [self.tag.keyNote play];
 }
 
 - (void)pitchTouchUp {
+    [self cancelTimedKeyNote];
     [self.tag.keyNote stop];
 }
 
 - (void)playKeyNote {
+    [self cancelTimedKeyNote];
+    NSUInteger generation = self.keyActivationGeneration;
     DPNote *note = self.tag.keyNote;
     [note play];
+    __weak DPTagSummaryController *weakSelf = self;
     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
     dispatch_after(delayTime, dispatch_get_main_queue(), ^{
-        [note stop];
+        DPTagSummaryController *owner = weakSelf;
+        // A cancelled/replaced activation no longer owns this shared note's cleanup.
+        if (owner && owner.keyActivationGeneration == generation) [note stop];
     });
 }
 
