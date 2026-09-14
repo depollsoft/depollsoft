@@ -10,7 +10,6 @@
 #import "tagmaster-Swift.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
-#import <MediaPlayer/MediaPlayer.h>
 
 @interface DPTagTracksController () <UITableViewDataSource, UITableViewDelegate>
 
@@ -53,7 +52,9 @@
     self.partsTable.translatesAutoresizingMaskIntoConstraints = NO;
     self.partsTable.rowHeight = UITableViewAutomaticDimension;
     self.partsTable.estimatedRowHeight = 60;
-    self.header = [[UIStackView alloc] initWithArrangedSubviews:@[self.apology, self.recordingNotesHeader, self.recordingNotesLabel]];
+    self.playerView = [[TMTrackPlayerView alloc] init];
+    self.playerView.hidden = YES;
+    self.header = [[UIStackView alloc] initWithArrangedSubviews:@[self.apology, self.recordingNotesHeader, self.recordingNotesLabel, self.playerView]];
     self.header.axis = UILayoutConstraintAxisVertical;
     self.header.spacing = 8;
     self.header.layoutMarginsRelativeArrangement = YES;
@@ -70,7 +71,7 @@
 }
 
 - (void)setTag:(DPTag *)tag {
-    if (self.tag != tag) [self cancelPlayback];
+    if (self.tag != tag) [self stopPlayback];
     [super setTag:tag];
 }
 
@@ -88,12 +89,13 @@
     [super didMoveToParentViewController:parent];
     if (!parent) {
         self.playbackHasLeft = YES;
-        [self cancelPlayback];
+        [self stopPlayback];
     }
 }
 
 - (void)dealloc {
     [_playbackSession cancel];
+    [_playerView unload];
 }
 
 - (void)viewDidLayoutSubviews {

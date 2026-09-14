@@ -20,6 +20,10 @@
 		1E927AEF22AC27C30018E370 /* DPHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */; };
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
 		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
+		B4A1A0000000000000000001 /* TMBalanceAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */; };
+		B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000012 /* TMTrackPlayerView.swift */; };
+		B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */; };
+		B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */; };
 		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
 		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
 		2FA270FBF561239F254EB34E /* FirebaseAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE206F /* FirebaseAuthSwiftUI */; };
@@ -156,6 +160,10 @@
 		1E927AEE22AC27C30018E370 /* DPHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPHomeViewController.swift; sourceTree = "<group>"; };
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayer.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000012 /* TMTrackPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerView.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayerTests.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerCaptureTests.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
@@ -458,6 +466,8 @@
 				638E738D17F7B871000FFE53 /* DPTagTracksController.h */,
 				638E738E17F7B872000FFE53 /* DPTagTracksController.m */,
 				1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */,
+				B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */,
+				B4A1A0000000000000000012 /* TMTrackPlayerView.swift */,
 				639F293A1800C45300517583 /* DPTagVideoController.h */,
 				639F293B1800C45300517583 /* DPTagVideoController.m */,
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
@@ -500,6 +510,8 @@
 				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
 				44A11D000000000000000002 /* TMReviewFeedbackTests.m */,
+				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
+				B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -749,6 +761,8 @@
 				639F292617F94E9300517583 /* DPSearchViewController.m in Sources */,
 				636455741515731A002AD091 /* DPTagQueryResult.m in Sources */,
 				1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */,
+				B4A1A0000000000000000001 /* TMBalanceAudioPlayer.swift in Sources */,
+				B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */,
 				E47100000000000000000003 /* TMPageViewController.m in Sources */,
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
@@ -779,6 +793,8 @@
 				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				44A11D000000000000000001 /* TMReviewFeedbackTests.m in Sources */,
+				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
+				B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
