@@ -1052,6 +1052,12 @@ TM_CAPTURE_IMPL
         for (NSUInteger i = 0; i < liveNotes.count; i++) {
             CAKeyframeAnimation *animation = (CAKeyframeAnimation *)[liveNotes[i] animationForKey:@"gather"];
             XCTAssertEqualObjects(animation.values, TMQuartetSamples(i));
+            XCTAssertEqualObjects(animation.keyPath, @"opacity");
+            XCTAssertEqualWithAccuracy(TMQuartetMidi[i], ((CGFloat[]){60, 64, 67, 70})[i], .001);
+            XCTAssertEqual(liveNotes.count, 4);
+            XCTAssertTrue(CGPathEqualToPath(((CAShapeLayer *)liveNotes[i]).path, TMQuartetNotePath()));
+            XCTAssertFalse(CGPathIsEmpty(TMQuartetFlatPath()));
+            XCTAssertFalse(CGPathIsEmpty(TMQuartetLedgerPath()));
             XCTAssertEqualObjects(animation.calculationMode, kCAAnimationLinear);
             XCTAssertEqualWithAccuracy(animation.duration, 2.8, 0.00001);
             XCTAssertEqual(animation.beginTime, start);
@@ -1074,7 +1080,10 @@ TM_CAPTURE_IMPL
                     CGFloat position = label.doubleValue * (values.count - 1);
                     NSUInteger index = MIN((NSUInteger)position, values.count - 2);
                     CGFloat y = [label isEqualToString:@"still"] ? TMQuartetStill[i] : values[index].doubleValue + (values[index + 1].doubleValue - values[index].doubleValue) * (position - index);
-                    notes[i].transform = CATransform3DMakeTranslation(0, y, 0);
+                    notes[i].opacity = y;
+                    XCTAssertEqualWithAccuracy(notes[i].position.x, 108, .001);
+                    XCTAssertEqualWithAccuracy(notes[i].position.y, 77 - 12 * i, .001);
+                    XCTAssertTrue(CATransform3DIsIdentity(notes[i].transform));
                 }
                 [CATransaction commit];
                 CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
@@ -1646,7 +1655,15 @@ TM_CAPTURE_IMPL
     CGFloat ratingTextHeight = [rating sizeThatFits:CGSizeMake(rating.bounds.size.width, CGFLOAT_MAX)].height;
     XCTAssertEqualWithAccuracy(rating.bounds.size.height, ratingTextHeight, 1);
     CGFloat ratingHeight = ratingTextHeight + 4 + bar.bounds.size.height;
-    expectedHeight += MAX(0, ratingHeight - rate.bounds.size.height);
+    UIStackView *ratingUnit = (UIStackView *)rating.superview.superview;
+    BOOL stackedRating = ratingUnit.axis == UILayoutConstraintAxisVertical;
+    expectedHeight += stackedRating ? ratingHeight + ratingUnit.spacing : MAX(0, ratingHeight - rate.bounds.size.height);
+    XCTAssertGreaterThanOrEqual(rating.bounds.size.width + .5, [rating.text sizeWithAttributes:@{NSFontAttributeName:rating.font}].width, @"Full rating survives page switches");
+    if (stackedRating) {
+        CGRect valueFrame = [rating.superview convertRect:rating.superview.bounds toView:ratingUnit];
+        CGRect actionFrame = [rate.superview convertRect:rate.superview.bounds toView:ratingUnit];
+        XCTAssertEqualWithAccuracy(CGRectGetMinY(actionFrame) - CGRectGetMaxY(valueFrame), 8, .5, @"Only the regular rating group gap is added");
+    }
     for (NSString *key in @[@"ratingHeader", @"partsHeader", @"typeHeader", @"classicTagNumberHeader", @"keyHeader", @"lyricsHeader", @"notesHeader"]) {
         UILabel *header = [summary valueForKey:key];
         BOOL hidden = NO;
@@ -2020,12 +2037,14 @@ TM_CAPTURE_IMPL
 - (void)testDetailCompositionOrdinaryPairedCapturesAndGeometry {
     for (NSNumber *dark in @[@NO, @YES]) {
         DPTag *tag = [self layoutTag];
-        tag.title = @"Lost"; tag.alternativeTitle = @"In Your Eyes";
-        tag.provider = @"David Wright"; tag.arranger = @"David Wright"; tag.sungBy = @"The New Tradition";
-        tag.notes = @"Hold the last chord.";
+        tag.tagId = 2; tag.title = @"I Love to Sing 'Em"; tag.alternativeTitle = nil;
+        tag.rating = 3.35; tag.writtenKey = @"Major:Eb"; tag.classicTagNumber = 1;
+        tag.provider = @"Daniel Gillis"; tag.arranger = @"Mac Huff"; tag.sungBy = nil;
+        tag.yearArranged = 0; tag.sungYear = 0; tag.lyrics = nil; tag.notes = nil;
+        tag.downloadCount = 70274; tag.posted = [NSDate dateWithTimeIntervalSince1970:1228608000];
         DPTagViewController *detail = [DPTagViewController new];
         UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:detail];
-        [self mount:navigation width:393 category:UIContentSizeCategoryLarge];
+        [self mount:navigation width:427 category:UIContentSizeCategoryLarge];
         self.window.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
         [detail setValue:tag forKey:@"tag"]; [self settle];
         DPTagSummaryController *summary = [detail valueForKey:@"summaryController"];
@@ -2055,12 +2074,15 @@ TM_CAPTURE_IMPL
         CGRect keyFrame = [pitch.button convertRect:pitch.button.bounds toView:root];
         CGRect sheetFrame = [sheet convertRect:sheet.bounds toView:root];
         XCTAssertEqualWithAccuracy(keyFrame.origin.x, sheetFrame.origin.x, .5);
+        XCTAssertEqualWithAccuracy(CGRectGetMinX(keyFrame), 0, .5, @"Actual readable column leading edge");
+        XCTAssertEqualWithAccuracy(CGRectGetMaxX(keyFrame), root.bounds.size.width, .5, @"Actual readable column trailing edge");
+        NSLog(@"SPACING_IOS content=%@ key=%@ sheet=%@", NSStringFromCGRect(root.bounds), NSStringFromCGRect(keyFrame), NSStringFromCGRect(sheetFrame));
         XCTAssertEqualWithAccuracy(keyFrame.size.width, sheetFrame.size.width, .5);
         XCTAssertEqualWithAccuracy(keyFrame.size.height, sheetFrame.size.height, .5);
         XCTAssertGreaterThanOrEqual(keyFrame.size.height, 44);
         UILabel *rating = [summary valueForKey:@"ratingLabel"];
         UIButton *rate = [summary valueForKey:@"ratingButton"];
-        XCTAssertEqualObjects(rating.text, @"3.49");
+        XCTAssertEqualObjects(rating.text, @"3.35");
         XCTAssertGreaterThanOrEqual(rating.bounds.size.width + .5, [rating.text sizeWithAttributes:@{NSFontAttributeName:rating.font}].width);
         UILabel *type = [summary valueForKey:@"typeLabel"];
         XCTAssertEqualObjects(type.text, tag.tagType);
@@ -2080,7 +2102,7 @@ TM_CAPTURE_IMPL
         detail.selectedIndex = 1; [self settle];
         DPTagDetailController *details = [detail valueForKey:@"detailController"];
         NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
-        CGFloat axis = -1;
+        CGFloat axis = -1, previousBaseline = -1;
         for (TMDetailPair *pair in pairs) {
             if (pair.hidden) continue;
             UILabel *caption = [pair valueForKey:@"caption"];
@@ -2092,6 +2114,10 @@ TM_CAPTURE_IMPL
             CGFloat cBaseline = [caption convertPoint:CGPointMake(0, (caption.bounds.size.height - caption.font.lineHeight) / 2 + caption.font.ascender) toView:details.view].y;
             CGFloat vBaseline = [label convertPoint:CGPointMake(0, (label.bounds.size.height - [label sizeThatFits:label.bounds.size].height) / 2 + label.font.ascender) toView:details.view].y;
             XCTAssertEqualWithAccuracy(cBaseline, vBaseline, 2, @"%@ first visible baseline", caption.text);
+            XCTAssertEqualWithAccuracy(pair.bounds.size.height, 44, .5, @"Uniform ordinary row %@", caption.text);
+            if (previousBaseline >= 0) XCTAssertEqualWithAccuracy(cBaseline - previousBaseline, 44, .5, @"Visible baseline stride, not just wrapper height");
+            previousBaseline = cBaseline;
+            NSLog(@"SPACING_IOS row=%@ frame=%@ captionBaseline=%.2f valueBaseline=%.2f value=%@ label=%@ fit=%@", caption.text, NSStringFromCGRect([pair convertRect:pair.bounds toView:details.view]), cBaseline, vBaseline, NSStringFromCGRect(value.frame), NSStringFromCGRect([label convertRect:label.bounds toView:value]), NSStringFromCGSize([label sizeThatFits:label.bounds.size]));
         }
         [self captureComposition:[NSString stringWithFormat:@"ordinary-%@-details", dark.boolValue ? @"dark" : @"light"]];
     }
@@ -2121,7 +2147,21 @@ TM_CAPTURE_IMPL
             CGRect k = [pitch.button convertRect:pitch.button.bounds toView:root], s = [sheet convertRect:sheet.bounds toView:root];
             XCTAssertEqualWithAccuracy(k.origin.x, s.origin.x, .5); XCTAssertEqualWithAccuracy(k.size.width, s.size.width, .5); XCTAssertEqualWithAccuracy(k.size.height, s.size.height, .5);
             XCTAssertGreaterThanOrEqual(k.size.height + .001, 44); // Floating-point conversion, not a sub-point target allowance.
+            UILabel *rating = [summary valueForKey:@"ratingLabel"];
+            UIButton *rate = [summary valueForKey:@"ratingButton"];
+            XCTAssertGreaterThanOrEqual(rating.bounds.size.width + .5, ceil([rating.text sizeWithAttributes:@{NSFontAttributeName:rating.font}].width), @"Full numeric rating at %@ / %@", width, category);
+            XCTAssertGreaterThanOrEqual(rate.titleLabel.bounds.size.width + .5, [rate.titleLabel.text sizeWithAttributes:@{NSFontAttributeName:rate.titleLabel.font}].width, @"Full Rate title");
+            XCTAssertGreaterThanOrEqual(rate.bounds.size.height, 44);
+            CGRect ratingFrame = [rating convertRect:rating.bounds toView:root], rateFrame = [rate convertRect:rate.bounds toView:root];
+            XCTAssertFalse(CGRectIntersectsRect(ratingFrame, rateFrame));
+            NSLog(@"SPACING_IOS_RATING width=%@ category=%@ number=%@ fit=%.2f rate=%@", width, category, NSStringFromCGRect(ratingFrame), [rating.text sizeWithAttributes:@{NSFontAttributeName:rating.font}].width, NSStringFromCGRect(rateFrame));
             BOOL captureLarge = width.intValue == 393 && [category isEqualToString:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+            if (captureLarge) {
+                UIScrollView *ratingScroll = (id)root.superview.superview;
+                CGRect unit = [rating.superview.superview convertRect:rating.superview.superview.bounds toView:ratingScroll];
+                [ratingScroll scrollRectToVisible:unit animated:NO];
+                [self captureComposition:@"large-rating"];
+            }
             BOOL captureWide = width.intValue == 834 && [category isEqualToString:UIContentSizeCategoryLarge];
             UIScrollView *scroll = (id)root.superview.superview;
             if (captureLarge) [scroll scrollRectToVisible:[sheet convertRect:sheet.bounds toView:scroll] animated:NO];
@@ -2640,7 +2680,10 @@ TM_CAPTURE_IMPL
             TMBarberPoleLoadingView *sheetPole = [summary valueForKey:@"sheetMusicLoading"];
             [self assertCompact:sheetPole pending:YES]; XCTAssertFalse(sheetButton.enabled);
             XCTAssertEqualObjects(sheetButton.configuration.image, sheetIcon);
-            XCTAssertFalse(CGRectIntersectsRect([sheetPole convertRect:sheetPole.bounds toView:summary.view], [sheetButton convertRect:sheetButton.bounds toView:summary.view]));
+            CGRect poleFrame = [sheetPole convertRect:sheetPole.bounds toView:sheetButton];
+            XCTAssertTrue(CGRectContainsRect(sheetButton.bounds, poleFrame), @"Pending pole stays inside full-width action");
+            XCTAssertFalse(CGRectIntersectsRect(poleFrame, [sheetButton.titleLabel convertRect:sheetButton.titleLabel.bounds toView:sheetButton]), @"Pole must not cover the operation label");
+            XCTAssertFalse(CGRectIntersectsRect(poleFrame, [sheetButton.imageView convertRect:sheetButton.imageView.bounds toView:sheetButton]), @"Pole must not cover the action icon");
             [self capture:[prefix stringByAppendingString:@"-sheet-button"]];
             dispatch_semaphore_signal(sheetGate); [self waitUntil:^BOOL { return summary.retry != nil; }]; [self settle];
             [self assertCompact:sheetPole pending:NO]; XCTAssertTrue(sheetButton.enabled);

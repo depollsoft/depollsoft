@@ -22,6 +22,7 @@
 @property (nonatomic, copy) NSArray<CAShapeLayer *> *notes;
 @property CALayer *artwork;
 @property CAShapeLayer *staff;
+@property NSArray<CAShapeLayer *> *notation;
 @property (nonatomic) BOOL animationAllowed;
 - (void)updateMotion;
 @end
@@ -38,7 +39,24 @@
         self.staff.path = TMQuartetStaffPath();
         self.staff.fillColor = nil;
         self.staff.lineWidth = TMQuartetStaffWidth;
+        CAShapeLayer *staffMask = [CAShapeLayer layer];
+        staffMask.path = TMQuartetStaffMaskPath();
+        staffMask.fillRule = kCAFillRuleEvenOdd;
+        self.staff.mask = staffMask;
         [self.artwork addSublayer:self.staff];
+        NSMutableArray *notation = [NSMutableArray array];
+        CGPathRef paths[] = {TMQuartetStemPath(), TMQuartetLedgerPath(), TMQuartetFlatPath(), TMQuartetLabelPath()};
+        for (NSUInteger i = 0; i < 4; i++) {
+            CAShapeLayer *symbol = [CAShapeLayer layer];
+            symbol.path = paths[i];
+            CAShapeLayer *mask = [CAShapeLayer layer];
+            mask.path = TMQuartetStaffMaskPath();
+            mask.fillRule = kCAFillRuleEvenOdd;
+            symbol.mask = mask;
+            [self.artwork addSublayer:symbol];
+            [notation addObject:symbol];
+        }
+        self.notation = notation;
         NSMutableArray *notes = [NSMutableArray array];
         for (NSUInteger i = 0; i < 4; i++) {
             CAShapeLayer *note = [CAShapeLayer layer];
@@ -63,6 +81,7 @@
     self.artwork.transform = CATransform3DMakeScale(scale, scale, 1);
     self.staff.strokeColor = TMQuartetColor(dark, YES);
     for (CAShapeLayer *note in self.notes) note.fillColor = TMQuartetColor(dark, NO);
+    for (CAShapeLayer *symbol in self.notation) symbol.fillColor = TMQuartetColor(dark, NO);
     [CATransaction commit];
     [self updateMotion];
 }
@@ -96,11 +115,11 @@
     [CATransaction setDisableActions:YES];
     for (NSUInteger i = 0; i < self.notes.count; i++) {
         CAShapeLayer *note = self.notes[i];
-        note.transform = CATransform3DMakeTranslation(0, TMQuartetStill[i], 0);
+        note.opacity = TMQuartetStill[i];
         if (!animate) {
             [note removeAllAnimations];
         } else if (![note animationForKey:@"gather"]) {
-            CAKeyframeAnimation *motion = [CAKeyframeAnimation animationWithKeyPath:@"transform.translation.y"];
+            CAKeyframeAnimation *motion = [CAKeyframeAnimation animationWithKeyPath:@"opacity"];
             motion.values = TMQuartetSamples(i);
             motion.calculationMode = kCAAnimationLinear;
             motion.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];

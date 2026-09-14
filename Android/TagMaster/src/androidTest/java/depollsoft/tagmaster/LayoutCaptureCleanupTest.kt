@@ -20,6 +20,25 @@ class LayoutCaptureCleanupTest {
             assertArrayEquals(image.readBytes(), copy.readBytes())
             assertTrue(image.delete())
         }
+        if (InstrumentationRegistry.getArguments().getString("spacingCaptures") == "true") {
+            val spacing = File(context.cacheDir, "spacing-captures").apply { mkdirs() }
+            external.listFiles()!!.filter { it.name.startsWith("tagmaster-android-loading-default-") && it.extension == "jpg" }.forEach { image ->
+                val copy = File(spacing, image.name)
+                image.copyTo(copy, overwrite = true)
+                assertArrayEquals(image.readBytes(), copy.readBytes())
+                assertTrue(image.delete())
+            }
+            val frames = File(external, "quartet-frames")
+            if (frames.exists()) {
+                frames.walkTopDown().filter { it.isFile }.forEach { frame ->
+                    val copy = File(spacing, "quartet-frames/${frame.relativeTo(frames)}")
+                    copy.parentFile!!.mkdirs()
+                    frame.copyTo(copy, overwrite = true)
+                    assertArrayEquals(frame.readBytes(), copy.readBytes())
+                }
+                assertTrue(frames.deleteRecursively())
+            }
+        }
         // This existing TagLoadingRegressionTest output is opt-in; remove it only when
         // explicitly requested by the guarded runner after its original-data backup.
         if (InstrumentationRegistry.getArguments().getString("removeQuartetFrames") == "true") {

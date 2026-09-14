@@ -49,7 +49,12 @@ class DetailActionAlignmentTest {
                     val groupWidth =
                         icon.intrinsicWidth + key.compoundDrawablePadding +
                             ceil(Layout.getDesiredWidth(key.text, key.paint).toDouble()).toInt()
-                    assertEquals("Centered group text=$text width=$width padding=${key.paddingStart}/${key.paddingEnd} icon=${icon.intrinsicWidth} gap=${key.compoundDrawablePadding} group=$groupWidth measured=${key.measuredWidth} font=${key.textSize}", width / 2f, key.paddingStart + groupWidth / 2f, 1f)
+                    assertEquals(
+                        "Centered group text=$text width=$width padding=${key.paddingStart}/${key.paddingEnd} icon=${icon.intrinsicWidth} gap=${key.compoundDrawablePadding} group=$groupWidth measured=${key.measuredWidth} font=${key.textSize}",
+                        width / 2f,
+                        key.paddingStart + groupWidth / 2f,
+                        1f,
+                    )
                     assertEquals("No extra gap before the note text", 0f, key.layout.getLineLeft(0), 1f)
                     val before = key.paddingStart
                     key.isActivated = true

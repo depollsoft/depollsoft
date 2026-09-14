@@ -10,8 +10,14 @@ FOUNDATION_EXPORT const CGFloat TMQuartetStaffWidth;
 FOUNDATION_EXPORT const CGFloat TMQuartetStaffAlpha;
 FOUNDATION_EXPORT const CGFloat TMQuartetX[4];
 FOUNDATION_EXPORT const CGFloat TMQuartetY[4];
+FOUNDATION_EXPORT const CGFloat TMQuartetMidi[4];
 FOUNDATION_EXPORT const CGFloat TMQuartetStill[4];
 FOUNDATION_EXPORT CGColorRef TMQuartetColor(BOOL dark, BOOL staff); // Borrowed sRGB
 FOUNDATION_EXPORT CGPathRef TMQuartetNotePath(void); // Borrowed immutable path
 FOUNDATION_EXPORT CGPathRef TMQuartetStaffPath(void); // Borrowed immutable path
+FOUNDATION_EXPORT CGPathRef TMQuartetStemPath(void); // Borrowed immutable path
+FOUNDATION_EXPORT CGPathRef TMQuartetLedgerPath(void); // Borrowed immutable path
+FOUNDATION_EXPORT CGPathRef TMQuartetFlatPath(void); // Borrowed immutable path
+FOUNDATION_EXPORT CGPathRef TMQuartetLabelPath(void); // Borrowed immutable path
+FOUNDATION_EXPORT CGPathRef TMQuartetStaffMaskPath(void); // Borrowed immutable path
 FOUNDATION_EXPORT NSArray<NSNumber *> *TMQuartetSamples(NSUInteger voice);

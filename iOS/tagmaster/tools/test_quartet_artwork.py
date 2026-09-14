@@ -30,15 +30,33 @@ class QuartetArtworkTests(unittest.TestCase):
         for row in rows:
             self.assertEqual(len(row), 121)
             self.assertEqual(row[0], row[-1])
-            self.assertEqual(row[0], 0)
-            self.assertGreaterEqual(min(row), -4)
-            self.assertEqual(max(row), 0)
-        self.assertEqual(self.definition['motion']['stillTranslations'], [0]*4)
+            self.assertEqual(row[0], 1)
+            self.assertGreaterEqual(min(row), .65)
+            self.assertEqual(max(row), 1)
+        self.assertEqual(self.definition['motion']['stillOpacities'], [1]*4)
         self.assertEqual(self.definition['motion']['periodSeconds'], 2.8)
+
+    def test_c7_spelling_staff_and_shared_notation(self):
+        n = self.definition['notes']
+        self.assertEqual(n['midi'], [60, 64, 67, 70])
+        self.assertEqual([v - n['midi'][0] for v in n['midi']], [0, 4, 7, 10])
+        self.assertEqual(n['spelling'], ['C4', 'E4', 'G4', 'Bb4'])
+        self.assertEqual(n['count'], 4)
+        self.assertEqual(n['x'], [108] * 4)
+        self.assertEqual(n['y'], [77, 65, 53, 41])
+        self.assertEqual(self.definition['staff']['clef'], 'treble')
+        head, staff, stem, ledger, flat, label, mask = g.geometry(self.definition)
+        self.assertEqual(sum(command == "M" for command, _ in mask), 5)
+        self.assertEqual(sum(command == 'M' for command, _ in head), 1)
+        self.assertEqual(sum(command == 'M' for command, _ in staff), 5)
+        self.assertEqual(stem[0][1], (113.1, 77))
+        self.assertEqual(ledger[0][1], (96, 76.5))
+        self.assertTrue(flat and label)
+        self.assertGreater(min(n['y'][i] - n['y'][i+1] for i in range(3)), n['headRy'] * 2)
 
     def test_each_shared_input_reaches_both_platforms(self):
         import copy
-        for category, key, value in [('notes','headRx',8),('notes','stemLength',24),('notes','dy',-8),('staff','spacing',8),('colors','lightNote','#007BA3'),('motion','periodSeconds',2.4),('motion','stagger',0.16),('motion','lift',5),('artwork','width',204)]:
+        for category, key, value in [('notes','headRx',8),('notes','y',[78,65,53,41]),('staff','spacing',8),('colors','lightNote','#007BA3'),('motion','periodSeconds',2.4),('motion','stagger',0.16),('motion','depth',.4),('artwork','width',204)]:
             with self.subTest(category=category, key=key):
                 changed = copy.deepcopy(self.definition)
                 changed[category][key] = value
@@ -48,7 +66,7 @@ class QuartetArtworkTests(unittest.TestCase):
 
     def test_consumers_reject_independent_geometry_palette_and_motion(self):
         replacements = {
-            g.ANDROID/'TagLoadingView.kt': [('QuartetArtwork.translation','sin'),('QuartetArtwork.WIDTH','204f'),('QuartetArtwork.note','android.graphics.Path()'),('QuartetArtwork.PERIOD','2.4f'),('QuartetArtwork.lightNote','context.getColor(R.color.md_primary)')],
+            g.ANDROID/'TagLoadingView.kt': [('QuartetArtwork.opacity','sin'),('QuartetArtwork.WIDTH','204f'),('QuartetArtwork.note','android.graphics.Path()'),('QuartetArtwork.PERIOD','2.4f'),('QuartetArtwork.lightNote','context.getColor(R.color.md_primary)')],
             g.IOS/'DPTagViewController.m': [('TMQuartetSamples(i)','@[@0, @(-4), @0]'),('TMQuartetWidth','204'),('TMQuartetNotePath()','CGPathCreateMutable()'),('TMQuartetPeriod','2.4'),('kCAAnimationLinear','kCAAnimationCubic'),('TMQuartetColor(','IndependentColor(')]
         }
         for path, mutations in replacements.items():

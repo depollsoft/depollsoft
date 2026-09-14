@@ -6,12 +6,14 @@
 @property UIView *value;
 @property CGFloat preferredCaptionWidth;
 @property NSInteger section;
+@property CGFloat rowHeight;
 @property UILayoutConstraintAxis axis;
 - (void)fitWidth:(CGFloat)width captionWidth:(CGFloat)captionWidth stacked:(BOOL)stacked;
 + (instancetype)caption:(UILabel *)caption value:(UIView *)value;
 @end
 
 @interface TMDetailMetadata : UIStackView
+@property BOOL compactFacts;
 - (void)reloadValues;
 @end
 

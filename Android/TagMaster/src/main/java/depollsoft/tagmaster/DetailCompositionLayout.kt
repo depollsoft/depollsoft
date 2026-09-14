@@ -57,20 +57,20 @@ class DetailMetadataLayout
                     max((96 * resources.displayMetrics.density).toInt(), budget(row.getChildAt(1)))
                 } ?: 0
             val stacked = captionWidth + (8 * resources.displayMetrics.density).toInt() + valueBudget > width
-            var previousGroup: Any? = null
             rows.forEachIndexed { index, row ->
                 row.captionWidth = if (stacked) -1 else captionWidth
-                val group = row.tag
+                val summary = id == R.id.summaryFacts
+                val rating = row.getChildAt(1) is DetailRatingLayout
+                row.rowHeight = if (summary && !rating) 28 else 48
                 val gap =
-                    if (index == 0) {
-                        0
-                    } else if (stacked || group != previousGroup) {
-                        16
-                    } else {
+                    if (index > 0 && summary && rating) {
+                        8
+                    } else if (index > 0 && stacked) {
                         4
+                    } else {
+                        0
                     }
                 (row.layoutParams as LayoutParams).topMargin = (gap * resources.displayMetrics.density).toInt()
-                previousGroup = group
             }
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         }
@@ -84,6 +84,7 @@ class DetailPairLayout
         attrs: AttributeSet? = null,
     ) : ViewGroup(context, attrs) {
         var captionWidth = -1
+        var rowHeight = 48
         private var captionTop = 0
         private var valueTop = 0
         private var valueLeft = 0
@@ -113,7 +114,14 @@ class DetailPairLayout
                 captionTop = max(0, value.baseline - caption.baseline)
                 valueTop = max(0, caption.baseline - value.baseline)
             }
-            setMeasuredDimension(width, max(captionTop + caption.measuredHeight, valueTop + value.measuredHeight))
+            val natural = max(captionTop + caption.measuredHeight, valueTop + value.measuredHeight)
+            val multiline = (value is TextView && value.lineCount > 1) || captionWidth < 0
+            val inset = if (multiline) (4 * resources.displayMetrics.density).toInt() else 0
+            val height = max((rowHeight * resources.displayMetrics.density).toInt(), natural + inset * 2)
+            val offset = (height - natural) / 2
+            captionTop += offset
+            valueTop += offset
+            setMeasuredDimension(width, height)
         }
 
         override fun onLayout(
@@ -137,13 +145,28 @@ class DetailPairLayout
         override fun generateLayoutParams(attrs: AttributeSet) = LayoutParams(context, attrs)
     }
 
-class DetailRatingLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : LinearLayout(context, attrs) {
-    init { gravity = android.view.Gravity.CENTER_VERTICAL }
-    override fun getBaseline(): Int {
-        val number = findViewById<TextView>(R.id.ratingTextView)
-        return if (number != null && number.visibility != GONE && number.baseline >= 0) (measuredHeight - number.measuredHeight) / 2 + number.baseline else -1
+class DetailRatingLayout
+    @JvmOverloads
+    constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+    ) : LinearLayout(context, attrs) {
+        init {
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        override fun getBaseline(): Int {
+            val number = findViewById<TextView>(R.id.ratingTextView)
+            return if (number != null && number.visibility != GONE &&
+                number.baseline >= 0
+            ) {
+                (measuredHeight - number.measuredHeight) / 2 + number.baseline
+            } else {
+                -1
+            }
+        }
     }
-}
+
 /** Split complete groups only when both have useful scaled reading width. */
 class SummaryColumnsLayout
     @JvmOverloads

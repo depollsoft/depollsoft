@@ -318,7 +318,7 @@
     config.imagePadding = 8;
     keyButton.button.configuration = config;
     classicTagNumberLabel = [self makeBodyLabel];
-    sheetMusicButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    sheetMusicButton = [TMWrappingButton buttonWithType:UIButtonTypeRoundedRect];
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
     [sheetMusicButton addTarget:self action:@selector(openSheetMusic) forControlEvents:UIControlEventTouchUpInside];
     // Sheet music is the primary action; key is outlined and rating stays plain.
@@ -328,7 +328,7 @@
     sheetConfiguration.image = [UIImage systemImageNamed:@"doc.richtext"];
     sheetConfiguration.imagePadding = 8;
     sheetConfiguration.titleLineBreakMode = NSLineBreakByWordWrapping;
-    sheetConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 16, 4, 16);
+    sheetConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(8, 44, 8, 44);
     sheetMusicButton.configuration = sheetConfiguration;
     [sheetMusicButton setTitle:@"Sheet Music" forState:UIControlStateNormal];
     UIButtonConfiguration *rateConfiguration = [UIButtonConfiguration plainButtonConfiguration];
@@ -374,18 +374,23 @@
     [ratingButton setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
     self.classicPair = [TMDetailPair caption:classicTagNumberHeader value:classicTagNumberLabel];
     TMDetailMetadata *facts = [[TMDetailMetadata alloc] initWithArrangedSubviews:@[
-        [TMDetailPair caption:ratingHeader value:ratingGrid],
         [TMDetailPair caption:partsHeader value:partsLabel],
-        [TMDetailPair caption:typeHeader value:typeLabel], self.classicPair]];
+        [TMDetailPair caption:typeHeader value:typeLabel], self.classicPair,
+        [TMDetailPair caption:ratingHeader value:ratingGrid]]];
+    facts.compactFacts = YES;
     self.facts = facts;
     self.sheetMusicLoading = [[TMBarberPoleLoadingView alloc] initWithOperationName:@"Opening sheet music…"];
-    self.sheetMusicAction = [self actionRowForButton:sheetMusicButton loader:self.sheetMusicLoading];
-    UIView *keyRail = [UIView new];
-    [keyRail.widthAnchor constraintEqualToConstant:self.sheetMusicLoading.intrinsicContentSize.width].active = YES;
-    UIStackView *keyLane = [[UIStackView alloc] initWithArrangedSubviews:@[keyButton, keyRail]];
-    keyLane.axis = UILayoutConstraintAxisHorizontal;
-    keyLane.spacing = 8;
-    self.keySection = [[UIStackView alloc] initWithArrangedSubviews:@[keyHeader, keyLane]];
+    self.sheetMusicAction = [[UIStackView alloc] initWithArrangedSubviews:@[sheetMusicButton]];
+    [self.sheetMusicAction addSubview:self.sheetMusicLoading];
+    self.sheetMusicLoading.translatesAutoresizingMaskIntoConstraints = NO;
+    CGSize poleSize = self.sheetMusicLoading.intrinsicContentSize;
+    [NSLayoutConstraint activateConstraints:@[
+        [self.sheetMusicLoading.trailingAnchor constraintEqualToAnchor:self.sheetMusicAction.trailingAnchor constant:-12],
+        [self.sheetMusicLoading.centerYAnchor constraintEqualToAnchor:self.sheetMusicAction.centerYAnchor],
+        [self.sheetMusicLoading.widthAnchor constraintEqualToConstant:poleSize.width],
+        [self.sheetMusicLoading.heightAnchor constraintEqualToConstant:poleSize.height]
+    ]];
+    self.keySection = [[UIStackView alloc] initWithArrangedSubviews:@[keyHeader, keyButton]];
     self.keySection.axis = UILayoutConstraintAxisVertical;
     self.keySection.spacing = 4;
     TMDetailSections *performance = [[TMDetailSections alloc] initWithArrangedSubviews:@[facts, self.keySection, self.sheetMusicAction]];

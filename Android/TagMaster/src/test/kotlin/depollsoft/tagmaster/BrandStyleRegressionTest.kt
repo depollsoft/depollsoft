@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import androidx.appcompat.app.AppCompatActivity
 import android.app.Application
 import android.graphics.Color
 import android.text.Spanned
@@ -8,6 +7,7 @@ import android.text.TextPaint
 import android.text.style.MetricAffectingSpan
 import android.view.LayoutInflater
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.ImageViewCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
@@ -69,7 +69,20 @@ class BrandStyleRegressionTest {
         assertNotNull(key.compoundDrawablesRelative[0])
         assertEquals(primary, ImageViewCompat.getImageTintList(rate)!!.defaultColor)
         val height = (48 * activity.resources.displayMetrics.density).toInt()
-        for (button in listOf(sheet, key, rate)) assertEquals(height, button.layoutParams.height)
+        for (button in listOf(sheet, key, rate)) {
+            button.measure(
+                android.view.View.MeasureSpec.makeMeasureSpec(
+                    (180 * activity.resources.displayMetrics.density).toInt(),
+                    android.view.View.MeasureSpec.EXACTLY,
+                ),
+                android.view.View.MeasureSpec
+                    .makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED),
+            )
+            assertTrue("Actual accessible target, with wrapping permitted", button.measuredHeight >= height)
+            if (button is android.widget.TextView) {
+                assertTrue(button.measuredHeight >= button.layout.height + button.compoundPaddingTop + button.compoundPaddingBottom)
+            }
+        }
         val indicator = StatusIndicatorView(activity).apply { text = "Sheet music" }
         val body = MaterialColors.getColor(indicator, com.google.android.material.R.attr.colorOnSurface)
         for (available in listOf(false, true)) {
@@ -82,30 +95,38 @@ class BrandStyleRegressionTest {
             icon.draw(android.graphics.Canvas(bitmap))
             val pixels = IntArray(48 * 48)
             bitmap.getPixels(pixels, 0, 48, 0, 0, 48, 48)
-            val tint = if (available) activity.getColor(R.color.status_available) else
-                MaterialColors.getColor(indicator, com.google.android.material.R.attr.colorOnSurfaceVariant)
+            val tint =
+                if (available) {
+                    activity.getColor(R.color.status_available)
+                } else {
+                    MaterialColors.getColor(indicator, com.google.android.material.R.attr.colorOnSurfaceVariant)
+                }
             // Vector edges are antialiased. Compare RGB on a covered pixel, not alpha=255.
-            assertTrue("Availability icon uses its semantic tint", pixels.any {
-                Color.alpha(it) > 128 && (it and 0xFFFFFF) == (tint and 0xFFFFFF)
-            })
+            assertTrue(
+                "Availability icon uses its semantic tint",
+                pixels.any {
+                    Color.alpha(it) > 128 && (it and 0xFFFFFF) == (tint and 0xFFFFFF)
+                },
+            )
             bitmap.recycle()
             assertTrue(indicator.contentDescription.contains("Sheet music"))
         }
     }
 
-    @Test fun chrome_paints_only_the_inherited_status_inset() = withActivity { activity ->
-        activity.setContentView(R.layout.meview)
-        activity.setUpToolbar(showUp = false)
-        val content = activity.findViewById<android.view.View>(android.R.id.content)
-        content.setPadding(0, 12, 0, 4)
-        val bitmap = android.graphics.Bitmap.createBitmap(100, 100, android.graphics.Bitmap.Config.ARGB_8888)
-        content.background.setBounds(0, 0, 100, 100)
-        content.background.draw(android.graphics.Canvas(bitmap))
-        assertEquals(activity.getColor(R.color.brand_chrome), bitmap.getPixel(50, 6))
-        assertEquals(Color.TRANSPARENT, bitmap.getPixel(50, 50))
-        assertEquals(Color.TRANSPARENT, bitmap.getPixel(50, 98))
-        bitmap.recycle()
-    }
+    @Test fun chrome_paints_only_the_inherited_status_inset() =
+        withActivity { activity ->
+            activity.setContentView(R.layout.meview)
+            activity.setUpToolbar(showUp = false)
+            val content = activity.findViewById<android.view.View>(android.R.id.content)
+            content.setPadding(0, 12, 0, 4)
+            val bitmap = android.graphics.Bitmap.createBitmap(100, 100, android.graphics.Bitmap.Config.ARGB_8888)
+            content.background.setBounds(0, 0, 100, 100)
+            content.background.draw(android.graphics.Canvas(bitmap))
+            assertEquals(activity.getColor(R.color.brand_chrome), bitmap.getPixel(50, 6))
+            assertEquals(Color.TRANSPARENT, bitmap.getPixel(50, 50))
+            assertEquals(Color.TRANSPARENT, bitmap.getPixel(50, 98))
+            bitmap.recycle()
+        }
 
     @Test fun handwriting_measurement_and_drawing_keep_full_bounds_inside_the_toolbar() =
         withActivity { activity ->

@@ -15,6 +15,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.animation.LinearInterpolator
+import kotlin.math.roundToInt
 
 /** Decorative quartet only. The enclosing native text provides the loading status. */
 class TagLoadingView
@@ -143,14 +144,22 @@ class TagLoadingView
             paint.alpha = (QuartetArtwork.STAFFALPHA * 255).toInt()
             paint.strokeWidth = QuartetArtwork.STAFFWIDTH
             paint.style = Paint.Style.STROKE
+            val staffSave = canvas.save()
+            canvas.clipPath(QuartetArtwork.staffmask)
             canvas.drawPath(QuartetArtwork.staff, paint)
             paint.color = if (dark) QuartetArtwork.darkNote else QuartetArtwork.lightNote
             paint.alpha = 255
             paint.style = Paint.Style.FILL
+            canvas.drawPath(QuartetArtwork.stem, paint)
+            canvas.drawPath(QuartetArtwork.ledger, paint)
+            canvas.drawPath(QuartetArtwork.flat, paint)
+            canvas.drawPath(QuartetArtwork.label, paint)
+            canvas.restoreToCount(staffSave)
             for (voice in QuartetArtwork.x.indices) {
                 val noteSave = canvas.save()
-                val lift = if (moving) QuartetArtwork.translation(voice, phase) else QuartetArtwork.still[voice]
-                canvas.translate(QuartetArtwork.x[voice], QuartetArtwork.y[voice] + lift)
+                val opacity = if (moving) QuartetArtwork.opacity(voice, phase) else QuartetArtwork.still[voice]
+                paint.alpha = (opacity * 255).roundToInt()
+                canvas.translate(QuartetArtwork.x[voice], QuartetArtwork.y[voice])
                 canvas.drawPath(QuartetArtwork.note, paint)
                 canvas.restoreToCount(noteSave)
             }

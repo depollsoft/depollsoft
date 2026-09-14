@@ -25,7 +25,12 @@ class CenteredPitchPipeButton
             ready = true
         }
 
-        override fun onTextChanged(text: CharSequence?, start: Int, lengthBefore: Int, lengthAfter: Int) {
+        override fun onTextChanged(
+            text: CharSequence?,
+            start: Int,
+            lengthBefore: Int,
+            lengthAfter: Int,
+        ) {
             super.onTextChanged(text, start, lengthBefore, lengthAfter)
             // Fixed-size TextViews may only invalidate when the text changes.
             if (ready) requestLayout()
