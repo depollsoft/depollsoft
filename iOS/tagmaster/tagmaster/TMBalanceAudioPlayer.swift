@@ -229,6 +229,8 @@ private final class TMRenderState {
     /// Longest track the player will decode into memory. Learning tracks are a minute or
     /// two; this keeps a stray long file from taking hundreds of megabytes of PCM.
     @objc static let maximumDecodedDuration: TimeInterval = 8 * 60
+    /// Hard ceiling on decoded PCM, whatever the sample rate or channel count.
+    @objc static let maximumDecodedBytes = 256 * 1024 * 1024
 
     /// Decodes an audio file into a non-interleaved float buffer this player can render.
     /// Reads in chunks and stops early when `shouldCancel` returns true.
@@ -236,7 +238,10 @@ private final class TMRenderState {
         let file = try AVAudioFile(forReading: url, commonFormat: .pcmFormatFloat32, interleaved: false)
         let rate = file.processingFormat.sampleRate
         guard rate > 0, file.length > 0 else { throw decodeError(1, "The track contains no audio.") }
-        guard TimeInterval(file.length) / rate <= maximumDecodedDuration else {
+        let channels = Int(file.processingFormat.channelCount)
+        let decodedBytes = file.length * Int64(channels) * Int64(MemoryLayout<Float>.size)
+        guard TimeInterval(file.length) / rate <= maximumDecodedDuration, channels > 0,
+              decodedBytes <= Int64(maximumDecodedBytes) else {
             throw decodeError(3, "The track is too long to load.")
         }
         let frames = AVAudioFrameCount(clamping: file.length)
@@ -247,7 +252,6 @@ private final class TMRenderState {
         guard let chunk = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: chunkFrames) else {
             throw decodeError(2, "The track could not be decoded.")
         }
-        let channels = Int(file.processingFormat.channelCount)
         while buffer.frameLength < frames {
             if shouldCancel() { throw decodeError(4, "Loading was cancelled.") }
             try file.read(into: chunk, frameCount: min(chunkFrames, frames - buffer.frameLength))
@@ -284,10 +288,18 @@ private final class TMRenderState {
         if engine.isRunning { engine.pause() }
     }
 
-    /// Pauses and rewinds to the beginning.
+    /// Pauses, rewinds to the beginning, and gives the audio session back so audio
+    /// that was interrupted in another app can resume.
     @objc func stop() {
         pause()
         state.currentFrame = 0
+        releaseSession()
+    }
+
+    private func releaseSession() {
+        guard !engine.isInManualRenderingMode else { return }
+        engine.stop()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     @objc func seek(to time: TimeInterval) {
