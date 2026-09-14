@@ -531,8 +531,8 @@ TM_CAPTURE_IMPL
     tag.sheetMusicUri = [DPRemoteLocation new];
     tag.tenorTrackUri = [DPRemoteLocation new];
     cell.tagInstance = tag;
-    XCTAssertEqualObjects(sheet.image, [UIImage systemImageNamed:@"checkmark.circle.fill"]);
-    XCTAssertEqualObjects(tracks.image, [UIImage systemImageNamed:@"checkmark.circle.fill"]);
+    XCTAssertEqualObjects(sheet.image, [UIImage systemImageNamed:@"checkmark"]);
+    XCTAssertEqualObjects(tracks.image, [UIImage systemImageNamed:@"checkmark"]);
     XCTAssertEqualObjects(sheet.tintColor, [UIColor systemGreenColor]);
     XCTAssertEqualObjects(tracks.tintColor, [UIColor systemGreenColor]);
     XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music available"]);
@@ -1927,7 +1927,7 @@ TM_CAPTURE_IMPL
     UIScrollView *scroll = (UIScrollView *)grid.superview.superview;
     XCTAssertTrue([scroll isKindOfClass:UIScrollView.class]);
     CGFloat expectedHeight = 8; // Scroll content's top/bottom inset.
-    for (NSString *key in @[@"titleLabel", @"akaLabel", @"partsLabel", @"typeLabel",
+    for (NSString *key in @[@"titleLabel", @"akaLabel", @"versionLabel", @"savedStatusLabel", @"tagIdLabel", @"partsLabel", @"typeLabel",
                              @"classicTagNumberLabel", @"lyricsLabel", @"notesLabel"]) {
         UILabel *label = [summary valueForKey:key];
         BOOL hidden = NO;
@@ -1968,14 +1968,14 @@ TM_CAPTURE_IMPL
         CGRect actionFrame = [rate.superview convertRect:rate.superview.bounds toView:ratingUnit];
         XCTAssertEqualWithAccuracy(CGRectGetMinY(actionFrame) - CGRectGetMaxY(valueFrame), 8, .5, @"Only the regular rating group gap is added");
     }
-    for (NSString *key in @[@"ratingHeader", @"partsHeader", @"typeHeader", @"classicTagNumberHeader", @"keyHeader", @"lyricsHeader", @"notesHeader"]) {
+    for (NSString *key in @[@"ratingHeader", @"tagIdHeader", @"partsHeader", @"typeHeader", @"classicTagNumberHeader", @"keyHeader", @"lyricsHeader", @"notesHeader"]) {
         UILabel *header = [summary valueForKey:key];
         BOOL hidden = NO;
         for (UIView *ancestor = header; ancestor && ancestor != grid; ancestor = ancestor.superview) hidden |= ancestor.hidden;
         if (!hidden) expectedHeight += ceil([header sizeThatFits:CGSizeMake(header.bounds.size.width, CGFLOAT_MAX)].height);
     }
-    // Eight section/pair gaps, four within-block gaps, and the 8pt identity-to-facts gap.
-    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 8 * 16 + 4 * 4 + 8);
+    // Nine section/pair gaps (Tag ID joined the facts), five within-block gaps, and the 8pt identity-to-facts gap.
+    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 9 * 16 + 5 * 4 + 8);
     for (NSString *name in @[@"lyrics", @"notes"]) {
         UILabel *header = [summary valueForKey:[name stringByAppendingString:@"Header"]];
         UILabel *body = [summary valueForKey:[name stringByAppendingString:@"Label"]];
@@ -2170,7 +2170,7 @@ TM_CAPTURE_IMPL
     tag.lastRefreshed = [NSDate dateWithTimeIntervalSince1970:1600000000];
     details.tag = tag;
     [self mount:details width:393 category:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-    UILabel *value = [details valueForKey:@"tagIdLabel"];
+    UILabel *value = [details valueForKey:@"lastRefreshedLabel"];
     CGFloat lexicalWidth = [value.text sizeWithAttributes:@{NSFontAttributeName:value.font}].width;
     NSLog(@"TM_LAYOUT_PROBE ID width=%.1f lexical=%.1f height=%.1f", value.bounds.size.width, lexicalWidth, value.bounds.size.height);
     XCTAssertGreaterThanOrEqual(value.bounds.size.width + 1, lexicalWidth);
@@ -2239,8 +2239,8 @@ TM_CAPTURE_IMPL
                 XCTAssertFalse(pair.hasAmbiguousLayout);
                 if ([category isEqualToString:UIContentSizeCategoryLarge]) XCTAssertEqual(pair.axis, UILayoutConstraintAxisHorizontal);
             }
-            UILabel *identifier = [details valueForKey:@"tagIdLabel"];
-            XCTAssertEqualObjects(identifier.text, @"1809");
+            UILabel *identifier = [details valueForKey:@"lastRefreshedLabel"];
+            XCTAssertGreaterThan(identifier.text.length, 0);
             XCTAssertLessThanOrEqual(identifier.bounds.size.height, identifier.font.lineHeight + 1);
             CGRect lastLine = CGRectMake(0, lastBottom - 1, 1, 1);
             [scroll scrollRectToVisible:lastLine animated:NO];

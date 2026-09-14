@@ -76,9 +76,10 @@
         self.aka.textColor = [UIColor labelColor];
         self.details.textColor = [UIColor labelColor];
         UILabel *hasSheetMusicLabel = [[UILabel alloc] init];
-        hasSheetMusicLabel.text = @"Sheet Music";
+        // Same words and marks as the Android row: sentence case, green check, grey cross.
+        hasSheetMusicLabel.text = @"Sheet music";
         UILabel *hasLearningTracksLabel = [[UILabel alloc] init];
-        hasLearningTracksLabel.text = @"Learning Tracks";
+        hasLearningTracksLabel.text = @"Learning tracks";
         for (UILabel *label in @[hasSheetMusicLabel, hasLearningTracksLabel]) {
             label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1];
             label.textColor = [UIColor labelColor];
@@ -192,7 +193,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"checkmark.circle.fill"];
+        image = [UIImage systemImageNamed:@"checkmark"];
     });
     return image;
 }
@@ -201,7 +202,7 @@
     static UIImage *image;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"circle"];
+        image = [UIImage systemImageNamed:@"xmark"];
     });
     return image;
 }
