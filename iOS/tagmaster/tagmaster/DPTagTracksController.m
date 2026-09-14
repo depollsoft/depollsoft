@@ -7,6 +7,7 @@
 //
 
 #import "DPTagTracksController.h"
+#import "tagmaster-Swift.h"
 #import "DPGridLayout.h"
 #import "UIView+DPUtils.h"
 #import <MediaPlayer/MediaPlayer.h>
@@ -66,6 +67,33 @@
         [self.partsTable.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor]
     ]];
     [self refreshView];
+}
+
+- (void)setTag:(DPTag *)tag {
+    if (self.tag != tag) [self cancelPlayback];
+    [super setTag:tag];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.playbackHasLeft = NO;
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self playbackViewWillDisappear];
+}
+
+- (void)didMoveToParentViewController:(UIViewController *)parent {
+    [super didMoveToParentViewController:parent];
+    if (!parent) {
+        self.playbackHasLeft = YES;
+        [self cancelPlayback];
+    }
+}
+
+- (void)dealloc {
+    [_playbackSession cancel];
 }
 
 - (void)viewDidLayoutSubviews {

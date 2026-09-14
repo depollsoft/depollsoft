@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		44A11D000000000000000001 /* TMReviewFeedbackTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 44A11D000000000000000002 /* TMReviewFeedbackTests.m */; };
 		DCC000000000000000000001 /* TMDetailLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC000000000000000000002; };
 		E47100000000000000000003 /* TMPageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E47100000000000000000002 /* TMPageViewController.m */; };
 		1E0BA24222B56ADF00207D61 /* DPSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0BA24122B56ADF00207D61 /* DPSettingsController.swift */; };
@@ -137,6 +138,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		44A11D000000000000000002 /* TMReviewFeedbackTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMReviewFeedbackTests.m; sourceTree = "<group>"; };
 		DCC000000000000000000002 /* TMDetailLayout.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMDetailLayout.m; sourceTree = "<group>"; };
 		DCC000000000000000000003 /* TMDetailLayout.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMDetailLayout.h; sourceTree = "<group>"; };
 		E47100000000000000000001 /* TMPageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMPageViewController.h; sourceTree = "<group>"; };
@@ -497,6 +499,7 @@
 				991D84FBF6F149678772B262 /* DPTrackModelTests.m */,
 				85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */,
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
+				44A11D000000000000000002 /* TMReviewFeedbackTests.m */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -775,6 +778,7 @@
 				C82AB1B080A949869C19F68A /* DPTrackModelTests.m in Sources */,
 				6AEE390B17744F198CD9FB59 /* DPTagModelExtendedTests.m in Sources */,
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
+				44A11D000000000000000001 /* TMReviewFeedbackTests.m in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1070,6 +1074,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(CONFIGURATION_TEMP_DIR)/tagmaster.build/DerivedSources",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1094,6 +1102,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(CONFIGURATION_TEMP_DIR)/tagmaster.build/DerivedSources",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

@@ -67,6 +67,38 @@ class UtilitiesTest {
     fun parseDate_parses_single_digit_feed_day() = assertDate("Sun, 3 Aug 2025", 2025, Calendar.AUGUST, 3)
 
     @Test
+    fun parseDate_rejects_impossible_calendar_values() {
+        for (input in listOf(
+            "Sun, 31 Feb 2025", "2025-02-29", "Feb 29, 2025",
+            "2025-13-01", "2025-00-01", "2025-01-00", "Apr 31, 2025",
+            "Mon, 3 Aug 2025", "0000-01-01",
+        )) assertNull(input, parseDate(input))
+    }
+
+    @Test
+    fun parseDate_requires_the_entire_input() {
+        for (input in listOf(
+            "Sun, 3 Aug 2025junk", "2025-08-03junk", "Aug 3, 2025junk",
+            "2025-08-03 12:00", "2025-08-03/extra", "1577836800000ms",
+            "9223372036854775808", "-9223372036854775809",
+        )) assertNull(input, parseDate(input))
+    }
+
+    @Test
+    fun parseDate_accepts_valid_leap_days_in_all_formats() {
+        for (input in listOf("Thu, 29 Feb 2024", "2024-02-29", "Feb 29, 2024")) {
+            assertDate(input, 2024, Calendar.FEBRUARY, 29)
+        }
+    }
+
+    @Test
+    fun parseDate_preserves_timestamp_boundaries() {
+        for (timestamp in listOf(Long.MIN_VALUE, -1L, 0L, Long.MAX_VALUE)) {
+            assertEquals(timestamp, requireNotNull(parseDate(timestamp.toString())).time)
+        }
+    }
+
+    @Test
     fun nullable_date_converter_hides_absent_values() {
         assertEquals("", NullableDateConverter(" %tD").convertToTarget(null, String::class.java))
     }

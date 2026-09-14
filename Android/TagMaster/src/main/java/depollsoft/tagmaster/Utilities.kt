@@ -7,20 +7,20 @@ import android.text.TextPaint
 import com.bindroid.converters.ToStringConverter
 import depollsoft.lib.ui.CustomTypefaceSpan
 import depollsoft.lib.ui.SpannableUtilities
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.*
 
 /** Parses feed, millisecond, ISO, or US dates; missing or unparseable dates stay absent. */
 fun parseDate(dateString: String?): Date? {
     if (dateString.isNullOrBlank()) return null
+    // Keep numeric timestamps, including pre-epoch values, unchanged.
+    dateString.toLongOrNull()?.let { return Date(it) }
     for (format in listOf("EEE, d MMM yyyy", "yyyy-MM-dd", "MMM d, yyyy")) {
-        // Keep numeric timestamps, including pre-epoch values, unchanged.
-        if (format == "yyyy-MM-dd") dateString.toLongOrNull()?.let { return Date(it) }
-        try {
-            SimpleDateFormat(format, Locale.US).parse(dateString)?.let { return it }
-        } catch (_: java.text.ParseException) {
-            // Try the next supported feed format.
-        }
+        val parser = SimpleDateFormat(format, Locale.US).apply { isLenient = false }
+        val position = ParsePosition(0)
+        val parsed = parser.parse(dateString, position)
+        if (parsed != null && position.index == dateString.length) return parsed
     }
     return null
 }

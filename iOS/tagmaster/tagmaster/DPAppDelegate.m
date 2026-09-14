@@ -7,6 +7,7 @@
 //
 
 #import "DPAppDelegate.h"
+#import <limits.h>
 #import "TMLogoBackgroundView.h"
 
 @import FirebaseAuth;
@@ -160,18 +161,29 @@
     if ([[FIRAuth auth] canHandleURL:url]) {
         return YES;
     }
-    // Accept tagmaster://open/tag/N (the original form), tagmaster://tag/N and tagmaster:///tag/N.
-    NSArray<NSString *> *components = url.pathComponents;
+    // Auth callbacks above keep their provider-specific schemes and paths.
+    if (url.scheme.length == 0 || [url.scheme caseInsensitiveCompare:@"tagmaster"] != NSOrderedSame ||
+        url.user || url.password || url.port) return NO;
+    // Split without normalizing away empty components or trailing slashes.
+    NSString *path = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO].path;
+    NSArray<NSString *> *components = [path componentsSeparatedByString:@"/"];
     BOOL hostIsTag = [url.host isEqualToString:@"tag"] && components.count == 2;
-    BOOL pathHasTag = components.count >= 2 && [components[components.count - 2] isEqualToString:@"tag"];
-    if (hostIsTag || pathHasTag) {
-        int tagId = components.lastObject.intValue;
-        if (tagId > 0) {
-            [DPAppDelegate showTagWithId:tagId from:self.navigationController.topViewController];
-        }
-        return YES;
+    BOOL pathHasTag = (url.host.length == 0 || [url.host isEqualToString:@"open"]) &&
+        components.count == 3 && [components[1] isEqualToString:@"tag"];
+    if ((!hostIsTag && !pathHasTag) || ![components.firstObject isEqualToString:@""]) return NO;
+    NSString *identifier = components.lastObject;
+    if (identifier.length == 0) return NO;
+    int tagId = 0;
+    for (NSUInteger index = 0; index < identifier.length; index++) {
+        unichar character = [identifier characterAtIndex:index];
+        if (character < '0' || character > '9') return NO;
+        int digit = character - '0';
+        if (tagId > (INT_MAX - digit) / 10) return NO;
+        tagId = tagId * 10 + digit;
     }
-    return NO;
+    if (tagId == 0) return NO;
+    [DPAppDelegate showTagWithId:tagId from:self.navigationController.topViewController];
+    return YES;
 }
 
 + (void)showTagWithId:(int)tagId from:(UIViewController *)sender {

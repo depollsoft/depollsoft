@@ -26,7 +26,7 @@ class VideoParseFromXmlTest {
 
     @Test
     fun parseFromXml_keeps_missing_or_invalid_posted_dates_absent() {
-        for (value in listOf(null, "", "not-a-date")) {
+        for (value in listOf(null, "", "not-a-date", "Sun, 31 Feb 2025", "2025-02-29", "2025-08-03junk", "Aug 3, 2025junk")) {
             val root = XmlElement().apply { elements.add(prop("Posted", value)) }
             val video = Video()
             video.parseFromXml(root)
