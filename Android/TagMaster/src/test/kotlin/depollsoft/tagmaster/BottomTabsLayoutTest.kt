@@ -90,7 +90,10 @@ class BottomTabsLayoutTest {
                         content.offsetDescendantRectToMyCoords(view, it)
                     }
                 val tabBounds = bounds(tabs)
-                assertSame(tabs, root.getChildAt(root.childCount - 1))
+                // The tabs close whichever column owns them: the whole screen on phones, the
+                // detail fragment on the detail screen, the list pane in the two-pane layout.
+                val column = tabs.parent as ViewGroup
+                assertSame(tabs, column.getChildAt(column.childCount - 1))
                 assertEquals(height - bottomInset, tabBounds.bottom)
                 assertTrue("Pager clears bottom tabs", bounds(pager).bottom <= tabBounds.top)
                 assertTrue("Touch targets remain at least 48dp", tabs.height >= 48 * density)

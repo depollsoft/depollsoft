@@ -6,10 +6,14 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
+import androidx.core.view.ViewCompat
+import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.BoundUi
+import com.bindroid.ui.UiBinder
+import com.bindroid.utils.Property
 import com.bindroid.utils.bindTo
 import depollsoft.tagmaster.barbershop.Tag
 
@@ -36,17 +40,20 @@ class TagItemView :
                 Context.LAYOUT_INFLATER_SERVICE,
             ) as LayoutInflater
         inflater.inflate(R.layout.tagitemview, this, true)
-        val background = android.util.TypedValue()
-        context.theme.resolveAttribute(android.R.attr.selectableItemBackground, background, true)
-        setBackgroundResource(background.resourceId)
+        // Carries the lit state of the tag open in the detail pane as well as the touch ripple.
+        setBackgroundResource(R.drawable.tag_row_background)
         this.isFocusable = true
         this.isClickable = true
         this.isLongClickable = false
         setOnClickListener {
-            if (this@TagItemView.tag != null) {
+            val id = this@TagItemView.tag?.id ?: return@setOnClickListener
+            val host = this@TagItemView.context as? TagPaneHost
+            if (host != null && host.hasDetailPane) {
+                host.showTag(id)
+            } else {
                 val i = Intent(this@TagItemView.context, TagDetailActivity::class.java)
                 val b = Bundle()
-                b.putInt(TagDetailActivity.TAG_ID_EXTRA, this@TagItemView.tag!!.id)
+                b.putInt(TagDetailActivity.TAG_ID_EXTRA, id)
                 i.putExtras(b)
                 this@TagItemView.context.startActivity(i)
             }
@@ -54,8 +61,26 @@ class TagItemView :
         setOnLongClickListener { false }
     }
 
+    /** True while this row's tag is the one open in the detail pane. */
+    private val isShowing: Boolean
+        get() {
+            val host = context as? TagPaneHost ?: return false
+            val selected = host.selectedTagId
+            return selected != null && selected == tag?.id
+        }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        // Both the fill and the spoken state come from the same trackable read, so the row lights
+        // and unlights as the pane's selection moves.
+        UiBinder.bind(
+            Property<Boolean>(null, { showing ->
+                isActivated = showing == true
+                ViewCompat.setStateDescription(this, if (showing == true) context.getString(R.string.tag_row_showing) else null)
+            }, Boolean::class.java),
+            Property<Boolean>({ isShowing }, null, Boolean::class.java),
+            BindingMode.ONE_WAY,
+        )
         bindTo(R.id.titleTextView, "Text", { tag?.title })
         bindTo(
             R.id.akaTextView,

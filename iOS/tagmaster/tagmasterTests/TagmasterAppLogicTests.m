@@ -18,6 +18,7 @@
 #import "DPTagQueryViewController.h"
 #import "TMLogoArtwork.h"
 #import "TMQuartetArtwork.h"
+#import "TMQuartetStaffView.h"
 #import "TMLogoBackgroundView.h"
 
 #import "DPTag.h"
@@ -390,6 +391,8 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 - (void)loadTag:(BOOL)refresh;
 - (void)fetchTagId:(int)identifier refresh:(BOOL)refresh completion:(void (^)(DPTag *))completion;
 - (void)updateLoadingState;
+- (void)stepToPreviousTag;
+- (void)stepToNextTag;
 @end
 @interface DPTagSummaryController (PolishTests)
 - (void)rate;
@@ -398,6 +401,8 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 @end
 @interface DPTagQueryViewController (PolishTests)
 - (void)refresh;
+- (void)refreshViews;
+- (void)tm_syncSelectionForSplit;
 @end
 
 // Capture only presentation. Production action and background-work paths still run.
@@ -877,6 +882,13 @@ TM_CAPTURE_IMPL
 - (void)navigationController:(UINavigationController *)navigationController didShowViewController:(UIViewController *)viewController animated:(BOOL)animated {
     self.shown = viewController;
 }
+@end
+
+@interface TMTabletTestSplit : UISplitViewController
+@property BOOL simulateCollapse;
+@end
+@implementation TMTabletTestSplit
+- (BOOL)isCollapsed { return self.simulateCollapse || super.isCollapsed; }
 @end
 
 @interface TMLoadingRegressionTests : XCTestCase
@@ -1433,6 +1445,298 @@ TM_CAPTURE_IMPL
     controller.selectedIndex = 1;
     XCTAssertEqual(controller.tabBar.selectedItem, controller.tabBar.items[1]);
 }
+- (TMTabletTestSplit *)tabletSplitWithList:(UIViewController *)list {
+    for (UIWindow *candidate in UIApplication.sharedApplication.windows) {
+        if (candidate.isKeyWindow) self.previousKeyWindow = candidate;
+    }
+    self.window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, 1194, 834)];
+    self.window.traitOverrides.horizontalSizeClass = UIUserInterfaceSizeClassRegular;
+    TMTabletTestSplit *split = [[TMTabletTestSplit alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
+    split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
+    split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+    split.minimumPrimaryColumnWidth = 320;
+    split.maximumPrimaryColumnWidth = 400;
+    split.preferredPrimaryColumnWidthFraction = 0.36;
+    split.delegate = (id<UISplitViewControllerDelegate>)UIApplication.sharedApplication.delegate;
+    [split setViewController:[[UINavigationController alloc] initWithRootViewController:list] forColumn:UISplitViewControllerColumnPrimary];
+    UIViewController *placeholder = [NSClassFromString(@"TMTagPlaceholderController") new];
+    [split setViewController:[[UINavigationController alloc] initWithRootViewController:placeholder] forColumn:UISplitViewControllerColumnSecondary];
+    self.window.rootViewController = split;
+    [self.window makeKeyAndVisible];
+    [self drainUIKit]; [self layout];
+    XCTAssertFalse(split.isCollapsed);
+    return split;
+}
+
+- (DPTagQueryViewController *)tabletQuery {
+    DPTagQueryViewController *query = [DPTagQueryViewController new];
+    query.hasMoreResults = NO; // Fixture does not fetch until the pagination assertion.
+    query.tags = @[[self tag:1809], [self tag:42], [self tag:99]];
+    return query;
+}
+
+- (DPTagViewController *)tabletDetail:(UISplitViewController *)split {
+    UINavigationController *nav = (id)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    XCTAssertTrue([nav.viewControllers.firstObject isKindOfClass:DPTagViewController.class]);
+    return (id)nav.viewControllers.firstObject;
+}
+
+- (void)testTabletReusesDetailPreservesEveryPageAndChangesSourceWithoutReloading {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    UINavigationController *originalSecondary = (id)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+    appearance.backgroundColor = UIColor.darkGrayColor;
+    originalSecondary.navigationBar.standardAppearance = appearance;
+    [DPAppDelegate showTagWithId:1809 from:query];
+    XCTAssertEqual([split viewControllerForColumn:UISplitViewControllerColumnSecondary], originalSecondary);
+    XCTAssertEqualObjects(originalSecondary.navigationBar.standardAppearance.backgroundColor, UIColor.darkGrayColor);
+    DPTagViewController *detail = [self tabletDetail:split];
+    [detail loadViewIfNeeded];
+    [self finish:0 tag:[self tag:1809]];
+    // Beside a list the bar reads, leading to trailing: previous, next, favorite, teachable,
+    // refresh, share — direct toggles like Android's pane, not the phone's action sheet.
+    NSArray<UIBarButtonItem *> *items = detail.navigationItem.rightBarButtonItems;
+    UIBarButtonItem *favorite = [detail valueForKey:@"favoriteBarButton"];
+    UIBarButtonItem *teachable = [detail valueForKey:@"teachableBarButton"];
+    XCTAssertEqual(items.count, 6);
+    XCTAssertEqualObjects([items subarrayWithRange:NSMakeRange(2, 4)],
+                          (@[teachable, favorite, [detail valueForKey:@"nextTagBarButton"], [detail valueForKey:@"previousTagBarButton"]]));
+    XCTAssertFalse([items containsObject:[detail valueForKey:@"actionBarButton"]]);
+    XCTAssertEqualObjects(favorite.accessibilityLabel, @"Add Favorite");
+    XCTAssertEqualObjects(teachable.accessibilityLabel, @"Mark as Teachable");
+    [DPAppDelegate removeFavorite:1809];
+    [detail performSelector:NSSelectorFromString(@"toggleFavorite")];
+    XCTAssertTrue([DPAppDelegate containsFavorite:1809]);
+    XCTAssertEqualObjects(favorite.accessibilityLabel, @"Remove Favorite");
+    [detail performSelector:NSSelectorFromString(@"toggleFavorite")];
+    XCTAssertFalse([DPAppDelegate containsFavorite:1809]);
+    NSArray *pages = [detail.viewControllers copy];
+    for (NSUInteger page = 0; page < 4; page++) {
+        detail.selectedIndex = page;
+        int identifier = page % 2 == 0 ? 42 : 1809;
+        [DPAppDelegate showTagWithId:identifier from:query];
+        XCTAssertEqual([self tabletDetail:split], detail);
+        XCTAssertEqual(detail.selectedIndex, page);
+        XCTAssertEqualObjects(detail.viewControllers, pages);
+        XCTAssertEqual(detail.source, query);
+        [self finish:self.requests.count - 1 tag:[self tag:identifier]];
+    }
+    NSUInteger requests = self.requests.count;
+    [DPAppDelegate showTagWithId:detail.tagId from:query];
+    XCTAssertEqual(self.requests.count, requests, @"The same loaded tag is a no-op");
+    DPTagQueryViewController *other = [self tabletQuery];
+    UINavigationController *primary = (id)[split viewControllerForColumn:UISplitViewControllerColumnPrimary];
+    [primary pushViewController:other animated:NO];
+    [DPAppDelegate showTagWithId:detail.tagId from:other];
+    XCTAssertEqual(detail.source, other);
+    XCTAssertEqual(self.requests.count, requests);
+    [DPAppDelegate showTagWithId:detail.tagId from:primary];
+    XCTAssertNil(detail.source);
+    XCTAssertFalse([detail.navigationItem.rightBarButtonItems containsObject:[detail valueForKey:@"nextTagBarButton"]]);
+    XCTAssertEqual(detail.keyCommands.count, 0);
+}
+
+- (void)testTabletSteppingEndsKeyboardPagingAndPersistentQuerySelection {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    [DPAppDelegate showTagWithId:1809 from:query];
+    DPTagViewController *detail = [self tabletDetail:split];
+    [detail loadViewIfNeeded];
+    UIBarButtonItem *previous = [detail valueForKey:@"previousTagBarButton"];
+    UIBarButtonItem *next = [detail valueForKey:@"nextTagBarButton"];
+    XCTAssertFalse(previous.enabled);
+    XCTAssertTrue(next.enabled);
+    XCTAssertEqualObjects(previous.accessibilityLabel, @"Previous tag");
+    XCTAssertEqualObjects(next.accessibilityLabel, @"Next tag");
+    // Leading edge of the right group, as on Android: previous, next, favorite, teachable, refresh, share.
+    NSArray<UIBarButtonItem *> *items = detail.navigationItem.rightBarButtonItems;
+    XCTAssertEqualObjects([items subarrayWithRange:NSMakeRange(items.count - 2, 2)], (@[next, previous]));
+    XCTAssertEqual(items.count, 2, @"Only the steppers while the tag is still loading");
+    XCTAssertEqualObjects(detail.keyCommands[0].discoverabilityTitle, @"Previous Tag");
+    XCTAssertEqualObjects(detail.keyCommands[1].discoverabilityTitle, @"Next Tag");
+    XCTAssertEqualObjects(detail.keyCommands[0].input, UIKeyInputUpArrow);
+    XCTAssertEqualObjects(detail.keyCommands[1].input, UIKeyInputDownArrow);
+    XCTAssertEqual(detail.keyCommands[0].modifierFlags, UIKeyModifierCommand);
+    XCTAssertFalse([detail canPerformAction:@selector(stepToPreviousTag) withSender:nil]);
+    [detail stepToPreviousTag];
+    XCTAssertEqual(self.requests.count, 1);
+    [self finish:0 tag:nil]; // Failed loads must still allow moving to another tag.
+    XCTAssertTrue([detail.navigationItem.rightBarButtonItems containsObject:next]);
+    [detail stepToNextTag];
+    XCTAssertEqual(detail.tagId, 42);
+    XCTAssertEqual([self tabletDetail:split], detail);
+    XCTAssertTrue(previous.enabled);
+    XCTAssertTrue(next.enabled);
+    [detail stepToNextTag];
+    XCTAssertEqual(detail.tagId, 99);
+    XCTAssertFalse(next.enabled);
+    [detail stepToNextTag];
+    XCTAssertEqual(self.requests.count, 3);
+    UITableView *table = [query valueForKey:@"tagTable"];
+    XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
+    [query refreshViews];
+    [self layout];
+    DPTagCell *cell = [table cellForRowAtIndexPath:table.indexPathForSelectedRow];
+    XCTAssertNotNil(cell);
+    XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryNone);
+    XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+    [detail stepToPreviousTag];
+    XCTAssertEqual(detail.tagId, 42);
+
+    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
+    IMP original = method_getImplementation(method);
+    DPTag *fourth = [self tag:100];
+    XCTestExpectation *fetched = [self expectationWithDescription:@"Next page fetched at last loaded tag"];
+    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
+        XCTAssertEqual(start, 3);
+        DPTagQueryResult *result = [DPTagQueryResult new];
+        result.start = 3; result.count = 1; result.available = 4; result.tags = @[fourth];
+        [fetched fulfill];
+        return result;
+    });
+    method_setImplementation(method, mock);
+    @try {
+        DPTagQueryResult *loaded = [DPTagQueryResult new]; loaded.start = 0; loaded.count = 3;
+        [query setValue:loaded forKey:@"mostRecentResult"];
+        query.hasMoreResults = YES;
+        [detail stepToNextTag];
+        [self waitForExpectations:@[fetched] timeout:3];
+        XCTNSPredicateExpectation *appended = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+            return !query.isLoading && query.tags.count == 4 && next.enabled;
+        }] object:nil];
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[appended] timeout:3], XCTWaiterResultCompleted);
+        XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
+        [detail stepToNextTag];
+        XCTAssertEqual(detail.tagId, 100);
+        XCTAssertFalse(next.enabled);
+        query.tags = @[];
+        [query refreshViews];
+        XCTAssertNil(table.indexPathForSelectedRow);
+        XCTAssertFalse(previous.enabled);
+        XCTAssertFalse(next.enabled);
+    } @finally {
+        method_setImplementation(method, original);
+        imp_removeBlock(mock);
+    }
+}
+
+- (void)testTabletCollapseClearsSelectionAndKeepsPhonePushBehavior {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    [DPAppDelegate showTagWithId:1809 from:query];
+    DPTagViewController *detail = [self tabletDetail:split];
+    [detail loadViewIfNeeded];
+    UITableView *table = [query valueForKey:@"tagTable"];
+    split.simulateCollapse = YES;
+    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
+    XCTAssertNil(table.indexPathForSelectedRow);
+    XCTAssertNil([DPAppDelegate currentSplitTagIdFor:query]);
+    XCTAssertEqual(detail.keyCommands.count, 0);
+    XCTAssertFalse([detail.navigationItem.rightBarButtonItems containsObject:[detail valueForKey:@"nextTagBarButton"]]);
+    for (UITableViewCell *cell in table.visibleCells) XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryDisclosureIndicator);
+    [detail stepToNextTag];
+    XCTAssertEqual(detail.tagId, 1809);
+    split.simulateCollapse = NO;
+    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
+    XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:0 inSection:0]);
+    split.simulateCollapse = YES;
+    UINavigationController *navigation = query.navigationController;
+    NSUInteger count = navigation.viewControllers.count;
+    [DPAppDelegate showTagWithId:42 from:query];
+    XCTAssertEqual(navigation.viewControllers.count, count + 1);
+    XCTAssertTrue([navigation.topViewController isKindOfClass:DPTagViewController.class]);
+    XCTAssertNotEqual(navigation.topViewController, detail);
+    XCTAssertNil(((DPTagViewController *)navigation.topViewController).source);
+}
+
+- (void)testTabletSavedListsReselectAfterReloadAndClearWhenCurrentTagIsRemoved {
+    NSArray *favorites = [DPAppDelegate favorites];
+    NSArray *teachable = [DPAppDelegate teachable];
+    Method cache = class_getClassMethod(DPTag.class, @selector(loadFromCache:));
+    IMP original = method_getImplementation(cache);
+    NSDictionary *tags = @{@42: [self tag:42], @99: [self tag:99]};
+    IMP mock = imp_implementationWithBlock(^DPTag *(id cls, int identifier) { return tags[@(identifier)]; });
+    method_setImplementation(cache, mock);
+    @try {
+        [DPAppDelegate setFavorites:@[@42, @99]];
+        [DPAppDelegate setTeachable:@[@42, @99]];
+        DPHomeViewController *home = [DPHomeViewController new];
+        TMTabletTestSplit *split = [self tabletSplitWithList:home];
+        DPTeachableTagsController *teachableList = [DPTeachableTagsController new];
+        for (UITableViewController<TMTagListSource> *list in @[(id)home, (id)teachableList]) {
+            if (list != home) [home.navigationController pushViewController:list animated:NO];
+            [list loadViewIfNeeded];
+            [DPAppDelegate showTagWithId:42 from:list];
+            XCTAssertEqualObjects([list tm_listedTagIds], (@[@42, @99]));
+            [list.tableView reloadData];
+            [list performSelector:@selector(tm_syncSelectionForSplit)];
+            NSIndexPath *selected = [NSIndexPath indexPathForRow:0 inSection:list == home ? 1 : 0];
+            XCTAssertEqualObjects(list.tableView.indexPathForSelectedRow, selected);
+            XCTAssertFalse(list.clearsSelectionOnViewWillAppear);
+            [[self tabletDetail:split] stepToNextTag];
+            XCTAssertEqual(list.tableView.indexPathForSelectedRow.row, 1);
+            if (list == home) [DPAppDelegate setFavorites:@[@42]];
+            else [DPAppDelegate setTeachable:@[@42]];
+            [self drainUIKit];
+            XCTAssertNil(list.tableView.indexPathForSelectedRow);
+            XCTAssertFalse([[self tabletDetail:split] canPerformAction:@selector(stepToNextTag) withSender:nil]);
+        }
+    } @finally {
+        [DPAppDelegate setFavorites:favorites];
+        [DPAppDelegate setTeachable:teachable];
+        method_setImplementation(cache, original);
+        imp_removeBlock(mock);
+    }
+}
+
+- (void)testTabletPlaceholderCopyLayoutDynamicTypeAndStillQuartet {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    UINavigationController *secondary = (id)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UIViewController *placeholder = secondary.viewControllers.firstObject;
+    UIStackView *stack = nil;
+    for (UIView *view in placeholder.view.subviews) if ([view isKindOfClass:UIStackView.class]) stack = (id)view;
+    XCTAssertNotNil(stack);
+    XCTAssertEqual(stack.arrangedSubviews.count, 3);
+    TMQuartetStaffView *staff = (id)stack.arrangedSubviews[0];
+    UILabel *heading = (id)stack.arrangedSubviews[1];
+    UILabel *body = (id)stack.arrangedSubviews[2];
+    XCTAssertEqualObjects(heading.text, @"Pick a tag");
+    XCTAssertEqualObjects(body.text, @"Choose a tag from the list. Its summary, tracks, sheet music, and videos open here.");
+    XCTAssertTrue(heading.adjustsFontForContentSizeCategory);
+    XCTAssertTrue(body.adjustsFontForContentSizeCategory);
+    XCTAssertEqual(heading.numberOfLines, 0);
+    XCTAssertEqual(body.numberOfLines, 0);
+    XCTAssertEqual([stack customSpacingAfterView:staff], 24);
+    XCTAssertEqual(stack.spacing, 8);
+    XCTAssertTrue(CGSizeEqualToSize(staff.intrinsicContentSize, CGSizeMake(TMQuartetWidth, TMQuartetHeight)));
+    for (NSNumber *dark in @[@NO, @YES]) {
+        self.window.overrideUserInterfaceStyle = dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+        for (NSNumber *reduced in @[@NO, @YES]) {
+            self.reduceMotion = reduced.boolValue;
+            [self layout]; [staff updateMotion];
+            XCTAssertFalse(staff.animationAllowed);
+            for (CALayer *note in staff.notes) XCTAssertEqual(note.animationKeys.count, 0);
+        }
+    }
+    CGRect safe = placeholder.view.safeAreaLayoutGuide.layoutFrame;
+    XCTAssertEqualWithAccuracy(CGRectGetMidX(stack.frame), CGRectGetMidX(safe), 1);
+    XCTAssertEqualWithAccuracy(CGRectGetMidY(stack.frame), CGRectGetMidY(safe), 1);
+    XCTAssertLessThanOrEqual(body.bounds.size.width, 480);
+    XCTAssertTrue(CGRectContainsRect(safe, stack.frame));
+    DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+    for (NSNumber *dark in @[@NO, @YES]) {
+        UITraitCollection *traits = [UITraitCollection traitCollectionWithUserInterfaceStyle:dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight];
+        UIColor *color = [cell.selectedBackgroundView.backgroundColor resolvedColorWithTraitCollection:traits];
+        XCTAssertEqualWithAccuracy(CGColorGetAlpha(color.CGColor), dark.boolValue ? 0.22 : 0.14, 0.001);
+    }
+    [cell setSelected:YES animated:NO];
+    XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+    [cell setSelected:NO animated:NO];
+    XCTAssertFalse(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+}
+
 - (void)testBrowseAndDetailWidthsRotationLargeTextSplitAndSelection {
     Method query = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
     IMP original = method_getImplementation(query);

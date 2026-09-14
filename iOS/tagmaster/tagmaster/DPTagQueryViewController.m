@@ -25,6 +25,9 @@
 @property (nonatomic, retain) UITableView *tagTable;
 @property (nonatomic, retain) UIRefreshControl *refreshControl;
 
+- (NSUInteger)indexForTagId:(int)tagId;
+- (void)tm_syncSelectionForSplit;
+
 @end
 
 @implementation DPTagQueryViewController
@@ -70,6 +73,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(tm_splitSelectionChanged:) name:TMTagSelectionDidChangeNotification object:nil];
     
     if (![self.tabBarController.parentViewController isKindOfClass:[TMPageViewController class]]) {
         [DPAppDelegate setUpBackground:self.view];
@@ -180,8 +184,10 @@
     if ([self.refreshControl isRefreshing]) {
         [self.refreshControl endRefreshing];
     }
-    
+
     [self.tagTable reloadData];
+    [self tm_syncSelectionForSplit];
+    [NSNotificationCenter.defaultCenter postNotificationName:TMTagListDidChangeNotification object:self];
 }
 
 - (void)sizeStatusHeader {
@@ -198,6 +204,7 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.activity.controllerVisible = YES;
+    [self tm_syncSelectionForSplit];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -207,6 +214,7 @@
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    [self tm_syncSelectionForSplit];
     [self sizeStatusHeader];
     if (self.tagTable.tableFooterView == self.activity) {
         CGRect frame = CGRectMake(0, 0, self.tagTable.bounds.size.width, 68);
@@ -227,35 +235,34 @@
     self.isLoading = YES;
     [self refreshViews];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        DPTagQueryResult *result = nil;
         @try {
-            DPTagQueryResult *result = [DPTag query:self.query
-                                    numberOfResults:self.resultSetSize
-                                              start:self.mostRecentResult.start + self.mostRecentResult.count
-                                              parts:self.parts
-                                     learningTracks:self.hasLearningTracks
-                                         sheetMusic:self.hasSheetMusic
-                                         collection:self.collection
-                                             sortBy:self.sortBy];
-            if (!result) {
-                [NSException raise:NSInternalInconsistencyException format:@"Result should be non-nil"];
-            };
-            self.statusText = nil;
-            self.mostRecentResult = result;
-            [(NSMutableArray *)self.tags addObjectsFromArray:result.tags];
-            self.hasMoreResults = result.start + result.count < MIN(result.available, self.maxResults);
-            if (result.available == 0) {
-                self.statusText = @"No tags could be found that matched your query.";
+            result = [DPTag query:self.query
+                 numberOfResults:self.resultSetSize
+                           start:self.mostRecentResult.start + self.mostRecentResult.count
+                           parts:self.parts
+                  learningTracks:self.hasLearningTracks
+                      sheetMusic:self.hasSheetMusic
+                      collection:self.collection
+                          sortBy:self.sortBy];
+        } @catch (NSException *exception) {
+            // The main-thread completion presents the same recovery state as a nil result.
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // Steppers read this list on main. Publish a whole page there too.
+            if (result) {
+                self.mostRecentResult = result;
+                self.tags = [self.tags arrayByAddingObjectsFromArray:result.tags];
+                self.hasMoreResults = result.start + result.count < MIN(result.available, self.maxResults);
+                self.statusText = result.available == 0 ? @"No tags could be found that matched your query." : nil;
+            } else {
+                self.statusText = @"Tags couldn't be loaded. Check your connection and try again.";
+                self.failed = YES;
+                self.hasMoreResults = NO;
             }
-        }
-        @catch (NSException *exception) {
-            self.statusText = @"Tags couldn't be loaded. Check your connection and try again.";
-            self.failed = YES;
-            self.hasMoreResults = NO;
-        }
-        @finally {
             self.isLoading = NO;
-            [self performSelectorOnMainThread:@selector(refreshViews) withObject:nil waitUntilDone:NO];
-        }
+            [self refreshViews];
+        });
     });
 }
 
@@ -264,13 +271,18 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    if (!expanded) {
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    }
     [DPAppDelegate showTagWithId:[self.tags[indexPath.row] tagId] from:self];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     DPTagCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
     cell.tagInstance = self.tags[indexPath.row];
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    cell.accessoryType = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
     return cell;
 }
 
@@ -285,6 +297,52 @@
     if (currentOffset >= threshold) {
         [self fetchResults];
     }
+}
+
+#pragma mark - TMTagListSource
+
+- (NSArray<NSNumber *> *)tm_listedTagIds {
+    return [self.tags valueForKeyPath:@"tagId"];
+}
+
+- (NSUInteger)indexForTagId:(int)tagId {
+    return [self.tags indexOfObjectPassingTest:^BOOL(DPTag *candidate, NSUInteger idx, BOOL *stop) {
+        return candidate.tagId == tagId;
+    }];
+}
+
+- (void)tm_didStepToTagId:(int)tagId {
+    NSUInteger index = [self indexForTagId:tagId];
+    if (index != NSNotFound) {
+        NSIndexPath *path = [NSIndexPath indexPathForRow:index inSection:0];
+        [self.tagTable selectRowAtIndexPath:path animated:!UIAccessibilityIsReduceMotionEnabled() scrollPosition:UITableViewScrollPositionNone];
+        [self.tagTable scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionNone animated:!UIAccessibilityIsReduceMotionEnabled()];
+    }
+    DPTag *last = self.tags.lastObject;
+    if (last && last.tagId == tagId && self.hasMoreResults) {
+        [self fetchResults];
+    }
+}
+
+- (void)tm_splitSelectionChanged:(NSNotification *)notification {
+    [self tm_syncSelectionForSplit];
+}
+
+- (void)tm_syncSelectionForSplit {
+    if (!self.isViewLoaded) return;
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    for (UITableViewCell *cell in self.tagTable.visibleCells) {
+        if ([cell isKindOfClass:DPTagCell.class]) {
+            UITableViewCellAccessoryType accessory = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
+            if (cell.accessoryType != accessory) cell.accessoryType = accessory;
+        }
+    }
+    NSNumber *current = expanded ? [DPAppDelegate currentSplitTagIdFor:self] : nil;
+    NSUInteger index = current ? [[self tm_listedTagIds] indexOfObject:current] : NSNotFound;
+    NSIndexPath *path = index == NSNotFound ? nil : [NSIndexPath indexPathForRow:index inSection:0];
+    NSIndexPath *selected = self.tagTable.indexPathForSelectedRow;
+    if (selected && ![selected isEqual:path]) [self.tagTable deselectRowAtIndexPath:selected animated:NO];
+    if (path && ![selected isEqual:path]) [self.tagTable selectRowAtIndexPath:path animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 @end

@@ -32,7 +32,16 @@
     if (self) {
         self.backgroundColor = [UIColor clearColor];
         // Every tag row navigates to the tag, so it carries the standard disclosure chevron.
+        // A list controller beside an expanded detail hides this per row instead.
         self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        // Full-bleed tint wash for the row whose tag is open beside the list;
+        // no bar, no rounding, so it reads as a plain lit row.
+        UIView *selectedBackground = [[UIView alloc] init];
+        selectedBackground.backgroundColor = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
+            CGFloat alpha = traits.userInterfaceStyle == UIUserInterfaceStyleDark ? 0.22 : 0.14;
+            return [UIColor.systemBlueColor colorWithAlphaComponent:alpha];
+        }];
+        self.selectedBackgroundView = selectedBackground;
         self.rootView = [[UIView alloc] init];
         self.rootView.translatesAutoresizingMaskIntoConstraints = NO;
         
@@ -111,7 +120,10 @@
 {
     [super setSelected:selected animated:animated];
 
-    // Configure the view for the selected state
+    // The row whose tag is open beside the list also reads as selected to VoiceOver.
+    self.accessibilityTraits = selected
+        ? (self.accessibilityTraits | UIAccessibilityTraitSelected)
+        : (self.accessibilityTraits & ~UIAccessibilityTraitSelected);
 }
 
 - (void)setTagId:(int)tId {

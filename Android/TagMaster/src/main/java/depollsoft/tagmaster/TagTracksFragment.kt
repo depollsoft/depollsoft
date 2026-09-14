@@ -16,8 +16,10 @@ import com.bindroid.utils.Property
 import depollsoft.tagmaster.barbershop.RemoteLocation
 
 class TagTracksFragment : Fragment() {
-    val parent: TagDetailActivity
-        get() = this.activity as TagDetailActivity
+    // The pages sit inside TagDetailFragment (full-screen on phones, in the detail pane on
+    // tablets). Fragment.getTag() is final, so the host they bind through is its TagDetailModel.
+    val parent: TagDetailHost
+        get() = (parentFragment as? TagDetailFragment)?.model ?: (activity as TagDetailHost)
 
     var selectedTrack: RemoteLocation? by trackable()
     private var emptyStateBinding: Binding? = null
