@@ -28,6 +28,9 @@
 #import "DPVideo.h"
 #import "DPFileCache.h"
 #import "DPSettingsController.h"
+#import <AVFoundation/AVFoundation.h>
+#import "tagmaster-Swift.h"
+#import "TMReviewLoader.h"
 
 @interface DPHomeViewController (Testing)
 - (NSArray<NSDictionary *> *)navigationItems;
@@ -433,9 +436,21 @@ TM_CAPTURE_IMPL
 @end
 @interface TMTestTracks : DPTagTracksController
 TM_CAPTURE
+@property BOOL controlledLoading;
+@property (nonatomic, strong) TMControlledTrackLoader *lastLoader;
+@property NSUInteger presentations;
 @end
 @implementation TMTestTracks
 TM_CAPTURE_IMPL
+- (TMTrackLoader *)makeTrackLoaderWithUrl:(NSURL *)url cacheKey:(NSString *)cacheKey {
+    if (!self.controlledLoading) return [super makeTrackLoaderWithUrl:url cacheKey:cacheKey];
+    self.lastLoader = TMCreateReviewLoader(url, cacheKey);
+    return self.lastLoader;
+}
+- (void)presentPlayerFor:(DPTrack *)track buffer:(AVAudioPCMBuffer *)buffer {
+    self.presentations++;
+    [super presentPlayerFor:track buffer:buffer];
+}
 @end
 @interface TMTestLocation : DPRemoteLocation
 @end
@@ -3016,38 +3031,6 @@ TM_CAPTURE_IMPL
         } @finally { method_setImplementation(fetch, oldFetch); imp_removeBlock(fetchMock); }
     }
 }
-- (void)testCompactTrackAccessoryReadinessAndFailure {
-    Method getter = class_getInstanceMethod(AVPlayerItem.class, @selector(status));
-    IMP original = method_getImplementation(getter);
-    __block AVPlayerItemStatus status = AVPlayerItemStatusUnknown;
-    __block AVPlayerItem *observed;
-    IMP mock = imp_implementationWithBlock(^AVPlayerItemStatus(AVPlayerItem *item) { observed = item; return status; });
-    method_setImplementation(getter, mock);
-    @try {
-        TMTestTracks *tracks = [TMTestTracks new]; tracks.busyIndicator = [TMBusyIndicator new];
-        DPTag *tag = [self tag]; tag.title = @"Lost";
-        TMTestLocation *location = [TMTestLocation new]; location.type = @"mp3";
-        location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
-        tag.tenorTrackUri = location; tracks.tag = tag;
-        [self mount:tracks width:UIScreen.mainScreen.bounds.size.width dark:YES large:YES];
-        UITableView *table = [tracks valueForKey:@"partsTable"]; NSIndexPath *index = [NSIndexPath indexPathForRow:0 inSection:0];
-        [table.delegate tableView:table didSelectRowAtIndexPath:index]; [self settle];
-        UITableViewCell *cell = [table cellForRowAtIndexPath:index];
-        TMBarberPoleLoadingView *pole = (id)cell.accessoryView; [self assertCompact:pole pending:YES];
-        [self capture:@"tagmaster-consistent-loading-ios-dark-track-row"];
-        XCTAssertNotNil(observed);
-        [observed willChangeValueForKey:@"status"]; status = AVPlayerItemStatusFailed; [observed didChangeValueForKey:@"status"];
-        [self waitUntil:^BOOL { return tracks.retry != nil; }];
-        XCTAssertNil(cell.accessoryView); XCTAssertFalse(pole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
-        status = AVPlayerItemStatusUnknown; tracks.retry(); [self settle];
-        TMBarberPoleLoadingView *retryPole = (id)cell.accessoryView; [self assertCompact:retryPole pending:YES];
-        // If the table changes its accessory meanwhile, an old completion must not clear it.
-        UIView *replacement = [UIView new]; cell.accessoryView = replacement;
-        [observed willChangeValueForKey:@"status"]; status = AVPlayerItemStatusReadyToPlay; [observed didChangeValueForKey:@"status"];
-        [self waitUntil:^BOOL { return [tracks.captured isKindOfClass:AVPlayerViewController.class]; }];
-        XCTAssertEqual(cell.accessoryView, replacement); XCTAssertFalse(retryPole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
-    } @finally { method_setImplementation(getter, original); imp_removeBlock(mock); }
-}
 
 - (void)testFooterNativeSizes {
     Method favorites = class_getClassMethod(DPAppDelegate.class, @selector(favorites));
@@ -3801,6 +3784,86 @@ TM_CAPTURE_IMPL
         [tag.keyNote stop];
         [NSFileManager.defaultManager removeItemAtURL:location.uri error:nil];
         [NSFileManager.defaultManager removeItemAtPath:[DPFileCache pathForKey:location.cacheKey] error:nil];
+    }
+}
+@end
+
+// Keep this regression on the class used by the targeted xcodebuild filter.
+@implementation TMPolishRegressionTests (TrackAccessory)
+- (void)testCompactTrackAccessoryReadinessAndFailure {
+    TMTestTracks *tracks = [TMTestTracks new]; tracks.busyIndicator = [TMBusyIndicator new];
+    tracks.controlledLoading = YES;
+    DPTag *tag = [self tag]; tag.title = @"Lost";
+    TMTestLocation *location = [TMTestLocation new]; location.type = @"mp3";
+    location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
+    tag.tenorTrackUri = location; tracks.tag = tag;
+    UIWindow *previousWindow;
+    for (UIWindow *candidate in UIApplication.sharedApplication.windows) if (candidate.isKeyWindow) previousWindow = candidate;
+    UIWindow *window = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
+    window.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+    window.rootViewController = tracks;
+    void (^settle)(void) = ^{
+        [window updateTraitsIfNeeded];
+        [window layoutIfNeeded];
+        XCTestExpectation *turn = [self expectationWithDescription:@"track row layout"];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.12 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [turn fulfill]; });
+        [self waitForExpectations:@[turn] timeout:2];
+        [window layoutIfNeeded];
+    };
+    void (^assertCompact)(TMBarberPoleLoadingView *) = ^(TMBarberPoleLoadingView *pole) {
+        XCTAssertTrue([pole isKindOfClass:TMBarberPoleLoadingView.class]);
+        XCTAssertTrue(pole.compact);
+        XCTAssertTrue(pole.isAnimating);
+        XCTAssertFalse(pole.hidden);
+        XCTAssertEqualWithAccuracy(pole.bounds.size.height, TMLoaderCompactHeight, 0.1);
+        CALayer *logo = [pole valueForKey:@"logoLayer"];
+        XCTAssertLessThanOrEqual(logo.frame.size.width, 20);
+        XCTAssertLessThanOrEqual(logo.frame.size.height, TMLoaderCompactHeight + 0.01);
+        XCTAssertEqualWithAccuracy(logo.transform.m11, logo.transform.m22, 0.000001);
+    };
+    [window makeKeyAndVisible];
+    @try {
+        settle();
+        UITableView *table = [tracks valueForKey:@"partsTable"]; NSIndexPath *index = [NSIndexPath indexPathForRow:0 inSection:0];
+        [table.delegate tableView:table didSelectRowAtIndexPath:index]; settle();
+        UITableViewCell *cell = [table cellForRowAtIndexPath:index];
+        TMBarberPoleLoadingView *pole = (id)cell.accessoryView; assertCompact(pole);
+        UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:window.bounds.size];
+        UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+            [window drawViewHierarchyInRect:window.bounds afterScreenUpdates:YES];
+        }];
+        XCTAttachment *attachment = [XCTAttachment attachmentWithImage:image];
+        attachment.name = @"tagmaster-consistent-loading-ios-dark-track-row";
+        [self addAttachment:attachment];
+        TMControlledTrackLoader *oldLoader = tracks.lastLoader;
+        XCTAssertNotNil(oldLoader.completion);
+        oldLoader.completion(nil, [NSError errorWithDomain:@"TMReviewLoader" code:1 userInfo:nil]);
+        [self waitUntil:^BOOL { return tracks.retry != nil; }];
+        XCTAssertNil(cell.accessoryView); XCTAssertFalse(pole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+        tracks.retry(); settle();
+        XCTAssertNotEqual(tracks.lastLoader, oldLoader);
+        TMBarberPoleLoadingView *retryPole = (id)cell.accessoryView; assertCompact(retryPole);
+        AVAudioFormat *format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2];
+        AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:4410];
+        buffer.frameLength = 4410;
+        for (NSUInteger channel = 0; channel < 2; channel++) memset(buffer.floatChannelData[channel], 0, 4410 * sizeof(float));
+        oldLoader.completion(buffer, nil); settle();
+        XCTAssertEqual(cell.accessoryView, retryPole);
+        XCTAssertTrue(retryPole.isAnimating);
+        XCTAssertEqual(tracks.busyIndicator.busyCount, 1);
+        XCTAssertEqual(tracks.presentations, 0);
+        // If the table changes its accessory meanwhile, completion must not clear it.
+        UIView *replacement = [UIView new]; cell.accessoryView = replacement;
+        tracks.lastLoader.completion(buffer, nil);
+        [self waitUntil:^BOOL { return tracks.presentations == 1 && !tracks.playerView.isHidden; }];
+        XCTAssertTrue(tracks.playerView.player.isLoaded);
+        XCTAssertEqual(cell.accessoryView, replacement); XCTAssertFalse(retryPole.isAnimating); XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
+    } @finally {
+        [tracks stopPlayback];
+        window.hidden = YES;
+        window.rootViewController = nil;
+        [previousWindow makeKeyWindow];
     }
 }
 @end
