@@ -27,7 +27,7 @@ Run `scripts/release/release.py prepare` with the selected versions and notes. I
 
 ## Generate and review screenshots
 
-First download and inspect the current screenshots for the selected app and platform with `scripts/release/review.py`. Compare by user flow, populated state, appearance, and device family, not just image count. The public store baseline is the starting point. Preserve coverage unless a feature was removed or there is an explicit reason to replace a scene. Record additions, replacements, and omissions in the PR.
+First download and inspect the current screenshots for the selected app and platform with `scripts/release/review.py`, using a separate baseline directory. The capture command requires a fresh output directory. After capture, run the review command on the completed bundle to add its comparison gallery. Compare by user flow, populated state, appearance, and device family, not just image count. The public store baseline is the starting point. Preserve coverage unless a feature was removed or there is an explicit reason to replace a scene. Record additions, replacements, and omissions in the PR.
 
 Generate new screenshots for every selected platform from the running native app. Use `scripts/release/capture.py` locally or the `Generate release assets` workflow on the preparation branch. The release PR also generates captures in Actions. iOS requires the documented simulators; Android requires a disposable emulator. Never use a personal device or a simulator containing user data.
 

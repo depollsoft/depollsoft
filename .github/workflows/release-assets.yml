@@ -107,6 +107,9 @@ jobs:
         run: |
           DEVELOPER_DIR="$(xcode-select -p)"
           export DEVELOPER_DIR
+          # Xcode 26 may list older runtimes in simctl while refusing all test
+          # destinations until its own iOS platform has been installed.
+          xcodebuild -downloadPlatform iOS
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"
       - name: Compare with current store screenshots
