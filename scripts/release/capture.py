@@ -71,8 +71,16 @@ def ios(app, dest):
         for family, (model, _) in IOS_DEVICES.items():
             udid = output('xcrun', 'simctl', 'create', f'Store-{app}-{family}', model, runtime)
             try:
-                run('xcrun', 'simctl', 'boot', udid)
-                run('xcrun', 'simctl', 'bootstatus', udid, '-b')
+                for attempt in range(2):
+                    run('xcrun', 'simctl', 'boot', udid, timeout=60)
+                    try:
+                        run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
+                        break
+                    except subprocess.TimeoutExpired:
+                        run('xcrun', 'simctl', 'shutdown', udid, timeout=60)
+                        if attempt == 1:
+                            raise
+                        print('Simulator boot stalled; retrying this disposable device once', flush=True)
                 run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
                     '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                     '--batteryState', 'charged', '--batteryLevel', '100')
@@ -102,8 +110,8 @@ def ios(app, dest):
                                     with Image.open(attachments / attachment['exportedFileName']) as image:
                                         image.convert('RGB').save(target)
             finally:
-                subprocess.run(['xcrun', 'simctl', 'shutdown', udid], check=False)
-                run('xcrun', 'simctl', 'delete', udid)
+                subprocess.run(['xcrun', 'simctl', 'shutdown', udid], check=False, timeout=60)
+                run('xcrun', 'simctl', 'delete', udid, timeout=60)
 
 
 def android(app, dest, serial):

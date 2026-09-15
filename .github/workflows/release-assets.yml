@@ -27,10 +27,10 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["ubuntu-24.04"]') }}
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-26' || 'ubuntu-24.04' }}
     timeout-minutes: 90
     concurrency:
-      group: release-capture-${{ inputs.platform == 'ios' && 'macos' || format('{0}-{1}', github.run_id, inputs.app) }}
+      group: release-capture-${{ github.run_id }}-${{ inputs.app }}-${{ inputs.platform }}
       cancel-in-progress: false
     env:
       RELEASE_APP: ${{ inputs.app }}
@@ -71,11 +71,16 @@ jobs:
           target: android-wear
           profile: wearos_small_round
           avd-name: release-wear-round
+          disk-size: 2048M
+          emulator-boot-timeout: 300
           pre-emulator-launch-script: sed -i 's/hw.lcd.circular=no/hw.lcd.circular=yes/;s/hw.lcd.circular=false/hw.lcd.circular=true/' ~/.android/avd/release-wear-round.avd/config.ini
           disable-animations: true
           script: >-
             "$RUNNER_TEMP/release-python/bin/python" scripts/release/wear.py
             --serial emulator-5554 --shape round --output build/release/wear
+      - name: Remove round watch emulator
+        if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
+        run: avdmanager delete avd --name release-wear-round
       - name: Capture Wear OS square
         if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
         uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
@@ -85,10 +90,15 @@ jobs:
           target: android-wear
           profile: wearos_square
           avd-name: release-wear-square
+          disk-size: 2048M
+          emulator-boot-timeout: 300
           disable-animations: true
           script: >-
             "$RUNNER_TEMP/release-python/bin/python" scripts/release/wear.py
             --serial emulator-5554 --shape square --output build/release/wear
+      - name: Remove square watch emulator
+        if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
+        run: avdmanager delete avd --name release-wear-square
       - name: Capture Android phone and tablet
         if: inputs.platform == 'android'
         uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
@@ -96,6 +106,8 @@ jobs:
           api-level: 35
           arch: x86_64
           target: google_apis
+          disk-size: 4096M
+          emulator-boot-timeout: 300
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1600x2560 -dns-server 8.8.8.8
           script: >-
@@ -107,9 +119,6 @@ jobs:
         run: |
           DEVELOPER_DIR="$(xcode-select -p)"
           export DEVELOPER_DIR
-          # Xcode 26 may list older runtimes in simctl while refusing all test
-          # destinations until its own iOS platform has been installed.
-          xcodebuild -downloadPlatform iOS
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"
       - name: Compare with current store screenshots

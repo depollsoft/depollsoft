@@ -28,7 +28,7 @@ Build numbers default to Unix seconds and can be overridden with `--build`. Conf
 
 ## Generate assets locally
 
-Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. The script selects the newest installed iOS 26 runtime supported by an installed Xcode, without changing the machine-wide developer selection. Actions installs the selected Xcode's iOS simulator platform with `xcodebuild -downloadPlatform iOS` before capture; `simctl` listing an older runtime alone does not guarantee that Xcode can run tests. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
+Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. The script selects the newest installed iOS 26 runtime supported by an installed Xcode, without changing the machine-wide developer selection. Actions uses fresh GitHub-hosted `macos-26` machines with their included Xcode/iOS runtimes, independently for each app. On a custom machine, install the selected Xcode's simulator platform with `xcodebuild -downloadPlatform iOS` if needed; `simctl` listing an older runtime alone does not guarantee that Xcode can run tests. Capture retries a stalled simulator boot once, with a three-minute limit per attempt. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
 
 ```sh
 python3 -m venv .venv-release
@@ -63,7 +63,7 @@ Pitch Perfect Android also requires round and square Wear OS captures. Boot disp
   --output build/release/pitchperfect-android
 ```
 
-The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically.
+The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically, gives each a 2 GB data partition, and deletes it before starting the next device to stay within hosted-runner disk limits.
 
 Download the current public store screenshots and build a comparison gallery for any capture bundle:
 
