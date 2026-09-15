@@ -2181,11 +2181,12 @@ TM_CAPTURE_IMPL
 }
 - (void)testDetailsAX5ValueDoesNotBecomeOneCharacterColumn {
     DPTagDetailController *details = [DPTagDetailController new];
-    DPTag *tag = [DPTag new]; tag.title = @"Lost"; tag.tagId = 1809;
+    DPTag *tag = [DPTag new]; tag.title = @"Lost"; tag.tagId = 1809; tag.downloadCount = 1234567;
     tag.lastRefreshed = [NSDate dateWithTimeIntervalSince1970:1600000000];
     details.tag = tag;
     [self mount:details width:393 category:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-    UILabel *value = [details valueForKey:@"lastRefreshedLabel"];
+    // Tag ID moved to the Summary; the download count is the Details value that never wraps.
+    UILabel *value = [details valueForKey:@"downloadsLabel"];
     CGFloat lexicalWidth = [value.text sizeWithAttributes:@{NSFontAttributeName:value.font}].width;
     NSLog(@"TM_LAYOUT_PROBE ID width=%.1f lexical=%.1f height=%.1f", value.bounds.size.width, lexicalWidth, value.bounds.size.height);
     XCTAssertGreaterThanOrEqual(value.bounds.size.width + 1, lexicalWidth);
@@ -2254,7 +2255,7 @@ TM_CAPTURE_IMPL
                 XCTAssertFalse(pair.hasAmbiguousLayout);
                 if ([category isEqualToString:UIContentSizeCategoryLarge]) XCTAssertEqual(pair.axis, UILayoutConstraintAxisHorizontal);
             }
-            UILabel *identifier = [details valueForKey:@"lastRefreshedLabel"];
+            UILabel *identifier = [details valueForKey:@"downloadsLabel"];
             XCTAssertGreaterThan(identifier.text.length, 0);
             XCTAssertLessThanOrEqual(identifier.bounds.size.height, identifier.font.lineHeight + 1);
             CGRect lastLine = CGRectMake(0, lastBottom - 1, 1, 1);
@@ -2263,7 +2264,9 @@ TM_CAPTURE_IMPL
             CGFloat full = scroll.contentSize.height;
             DPTag *minimal = [DPTag new]; minimal.title = @"Lost"; minimal.tagId = 1809;
             details.tag = minimal; [self settle];
-            for (NSNumber *index in @[@4, @6, @7, @8, @9]) XCTAssertTrue(pairs[index.integerValue].hidden);
+            // Nine pairs without Tag ID: posted by, arranged by, year arranged, sung by, year sung hide.
+            XCTAssertEqual(pairs.count, 9);
+            for (NSNumber *index in @[@3, @5, @6, @7, @8]) XCTAssertTrue(pairs[index.integerValue].hidden);
             XCTAssertLessThan(scroll.contentSize.height, full);
             details.tag = tag; [self settle];
             XCTAssertEqualWithAccuracy(scroll.contentSize.height, full, 1);
