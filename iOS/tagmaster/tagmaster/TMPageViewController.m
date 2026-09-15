@@ -1,4 +1,5 @@
 #import "TMPageViewController.h"
+#import "DPAppDelegate.h"
 
 @interface TMPageViewController ()
 @property (nonatomic, strong) UITabBarController *pageTabController;
@@ -57,7 +58,7 @@
     ]];
     [tabs didMoveToParentViewController:self];
     tabs.tabBar.accessibilityIdentifier = @"page-tab-bar";
-    tabs.tabBar.tintColor = UIColor.systemBlueColor;
+    tabs.tabBar.tintColor = [DPAppDelegate accentColor];
     // No appearance/background override: UIKit supplies Liquid Glass on 26
     // and its native tab bar material on 17–25, including accessibility policy.
 }

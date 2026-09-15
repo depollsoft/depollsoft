@@ -21,8 +21,10 @@ import depollsoft.tagmaster.lib.RatingConverter
 import java.util.*
 
 class TagSummaryFragment : Fragment() {
-    val parent: TagDetailActivity
-        get() = this.activity as TagDetailActivity
+    // The pages sit inside TagDetailFragment (full-screen on phones, in the detail pane on
+    // tablets). Fragment.getTag() is final, so the host they bind through is its TagDetailModel.
+    val parent: TagDetailHost
+        get() = (parentFragment as? TagDetailFragment)?.model ?: (activity as TagDetailHost)
     private val _canRate = TrackableBoolean(true)
     private val sheetMusicLoading = TrackableBoolean(false)
     private val ratingSubmitting = TrackableBoolean(false)
@@ -176,7 +178,7 @@ class TagSummaryFragment : Fragment() {
 
         rootView.findViewById<View>(R.id.rateButton).setOnClickListener {
             if (!canRate || !isUsable(rootView)) return@setOnClickListener
-            val popup = RatingsPopup(parent)
+            val popup = RatingsPopup(requireActivity())
             ratingsPopup = popup
             popup.setOnDismissListener(
                 OnDismissListener {
@@ -198,8 +200,8 @@ class TagSummaryFragment : Fragment() {
 
     private fun loadSheetMusic(rootView: View) {
         if (!isUsable(rootView) || sheetMusicLoading.get()) return
-        val host = parent
-        val tag = host.tag ?: return
+        val host = requireActivity()
+        val tag = parent.tag ?: return
         val location = tag.sheetMusicUri ?: return
         val sheetMusicType = location.type
         val sheetMusicUri = location.uri
@@ -255,8 +257,8 @@ class TagSummaryFragment : Fragment() {
         rating: Int,
     ) {
         if (!isUsable(rootView) || !canRate) return
-        val host = parent
-        val tag = host.tag ?: return
+        val host = requireActivity()
+        val tag = parent.tag ?: return
         ratingSubmitting.set(true)
         tag.rate(rating).continueWith { task ->
             host.runOnUiThread {

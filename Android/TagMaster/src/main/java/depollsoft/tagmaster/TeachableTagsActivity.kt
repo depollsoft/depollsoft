@@ -2,6 +2,7 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
@@ -16,9 +17,14 @@ import com.bindroid.utils.Function
 import com.bindroid.utils.Property
 import com.bindroid.utils.ReflectedProperty
 
-class TeachableTagsActivity : AppCompatActivity() {
+class TeachableTagsActivity :
+    AppCompatActivity(),
+    TagPaneHost {
     val teachableTags: TrackableCollection<Int>
         get() = TeachableTagsModel.teachableTagIds
+
+    internal lateinit var tagPane: TagPaneController
+        private set
 
     /** Recycled teachable-tag rows, keyed by tag id; exposed for tests. */
     lateinit var teachableAdapter: SavedTagListAdapter
@@ -52,7 +58,33 @@ class TeachableTagsActivity : AppCompatActivity() {
         )
 
         supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
+
+        tagPane =
+            TagPaneController(
+                activity = this,
+                listedIds = { TeachableTagsModel.teachableTagIds.toList() },
+                reveal = { id ->
+                    val index = teachableAdapter.currentList.indexOf(id)
+                    if (index >= 0) list.smoothScrollToPosition(index)
+                },
+            )
+        tagPane.onCreate(savedInstanceState)
     }
+
+    override val hasDetailPane: Boolean
+        get() = tagPane.hasDetailPane
+
+    override var selectedTagId: Int?
+        get() = tagPane.selectedTagId
+        set(value) {
+            tagPane.selectedTagId = value
+        }
+
+    override fun showTag(id: Int) = tagPane.showTag(id)
+
+    override fun listedTagIds(): List<Int> = tagPane.listedTagIds()
+
+    override fun revealTag(id: Int) = tagPane.revealTag(id)
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.savedlistmenu, menu)
@@ -60,6 +92,11 @@ class TeachableTagsActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = listEditor.selectMenu(item) || super.onOptionsItemSelected(item)
+
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent,
+    ): Boolean = tagPane.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
     override fun onSupportNavigateUp() = navigateUpOrHome()
 
@@ -76,6 +113,7 @@ class TeachableTagsActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         listEditor.saveState(outState)
+        tagPane.onSaveInstanceState(outState)
         super.onSaveInstanceState(outState)
     }
 

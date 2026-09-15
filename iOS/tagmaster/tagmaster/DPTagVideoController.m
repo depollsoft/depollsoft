@@ -115,7 +115,7 @@
     } else {
         DPVideo *video = self.tag.videos[indexPath.row];
         thumbnail = [NSURL URLWithString:[NSString stringWithFormat:@"https://img.youtube.com/vi/%@/2.jpg", video.youTubeCode]];
-        if (video.sungBy) [lines addObject:[NSString stringWithFormat:@"Sung By: %@", video.sungBy]];
+        if (video.sungBy) [lines addObject:[NSString stringWithFormat:@"Sung by: %@", video.sungBy]];
         if (video.sungKey) [lines addObject:[NSString stringWithFormat:@"Key: %@", video.sungKey]];
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         formatter.dateStyle = NSDateFormatterLongStyle;

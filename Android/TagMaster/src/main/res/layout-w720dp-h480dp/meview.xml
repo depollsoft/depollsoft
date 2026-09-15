@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home on a wide window: the favorites list stays on the left while the chosen tag opens on the
+     right. The phone layout (res/layout/meview.xml) is unchanged. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- One watermark behind both panes, below the shared bar (as the iPad split does); the panes
+         themselves stay transparent so it shows through once. -->
+    <ImageView
+        android:id="@+id/paneWatermark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_barberpole" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/listPane"
+            android:layout_width="@dimen/list_pane_width"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <include layout="@layout/app_toolbar" />
+
+                <!-- Header (actions + Favorites heading), the recycled favorites rows, and the footer are
+                     joined with a ConcatAdapter in MeActivity so the whole screen scrolls as one list. -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/homeList"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="88dp"
+                    android:scrollbars="vertical" />
+            </LinearLayout>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/searchButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginBottom="16dp"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/Search"
+                app:backgroundTint="?attr/colorPrimary"
+                app:fabSize="normal"
+                app:srcCompat="@drawable/ic_search"
+                app:tint="?attr/colorOnPrimary" />
+        </FrameLayout>
+
+        <include layout="@layout/tag_detail_pane" />
+    </LinearLayout>
+</FrameLayout>

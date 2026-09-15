@@ -18,5 +18,6 @@ public extension DPTeachableTagsController {
     
     @objc func onUserDataChanged() {
         self.tableView.reloadData()
+        self.tm_syncSelectionForSplit()
     }
 }

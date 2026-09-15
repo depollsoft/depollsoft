@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Browse on a wide window: the four tabs stay on the left while the chosen tag opens on the
+     right. The phone layout (res/layout/tagmasterview.xml) is unchanged. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- One watermark behind both panes, below the shared bar (as the iPad split does); the panes
+         themselves stay transparent so it shows through once. -->
+    <ImageView
+        android:id="@+id/paneWatermark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_barberpole" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/listPane"
+            android:layout_width="@dimen/list_pane_width"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <include layout="@layout/app_toolbar" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/searchButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginBottom="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:contentDescription="@string/Search"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:fabSize="normal"
+                    app:srcCompat="@drawable/ic_search"
+                    app:tint="?attr/colorOnPrimary" />
+            </FrameLayout>
+
+            <!-- Keep page switching within thumb reach, below the content and above system bars. -->
+            <depollsoft.tagmaster.FullWidthTabLayout
+                android:id="@+id/tabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/brand_chrome"
+                app:tabGravity="fill"
+                app:tabIconTint="@color/brand_tab_tint"
+                app:tabIndicatorColor="@color/brand_chrome_accent"
+                app:tabIndicatorGravity="top"
+                app:tabMaxWidth="0dp"
+                app:tabMode="fixed"
+                app:tabPaddingEnd="8dp"
+                app:tabPaddingStart="8dp"
+                app:tabRippleColor="@color/brand_tab_tint"
+                app:tabSelectedTextColor="@color/brand_on_chrome"
+                app:tabTextColor="@color/brand_tab_tint" />
+        </LinearLayout>
+
+        <include layout="@layout/tag_detail_pane" />
+    </LinearLayout>
+</FrameLayout>

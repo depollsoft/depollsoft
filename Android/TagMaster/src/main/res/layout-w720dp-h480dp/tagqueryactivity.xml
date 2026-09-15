@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Search results on a wide window: the results stay on the left while the chosen tag opens on
+     the right. The phone layout (res/layout/tagqueryactivity.xml) is unchanged. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- One watermark behind both panes, below the shared bar (as the iPad split does); the panes
+         themselves stay transparent so it shows through once. -->
+    <ImageView
+        android:id="@+id/paneWatermark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_barberpole" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/listPane"
+            android:layout_width="@dimen/list_pane_width"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <include layout="@layout/app_toolbar" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <fragment
+                    android:id="@+id/tagQueryFragment"
+                    android:name="depollsoft.tagmaster.TagQueryFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <include layout="@layout/tag_detail_pane" />
+    </LinearLayout>
+</FrameLayout>

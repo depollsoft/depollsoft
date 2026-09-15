@@ -22,6 +22,10 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.io.File
 
+/** The detail pages now live under TagDetailFragment, so look through child managers too. */
+private fun androidx.fragment.app.FragmentManager.allFragments(): List<androidx.fragment.app.Fragment> =
+    fragments.flatMap { listOf(it) + it.childFragmentManager.allFragments() }
+
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class, sdk = [28])
 class SummaryLoadingBindingTest {
@@ -63,7 +67,8 @@ class SummaryLoadingBindingTest {
             shadowOf(Looper.getMainLooper()).idle()
             val activity = controller.get()
             val summary =
-                activity.supportFragmentManager.fragments
+                activity.supportFragmentManager
+                    .allFragments()
                     .filterIsInstance<TagSummaryFragment>()
                     .single()
             val root = summary.requireView()

@@ -32,9 +32,15 @@
 #import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
+#import "TMQuartetStaffView.h"
+#import "TMQuartetArtwork.h"
 #import "tagmaster-Swift.h"
 
-/// Shown in the secondary column before a tag is chosen on iPad.
+NSNotificationName const TMTagListDidChangeNotification = @"TMTagListDidChangeNotification";
+NSNotificationName const TMTagSelectionDidChangeNotification = @"TMTagSelectionDidChangeNotification";
+
+/// Shown in the secondary column before a tag is chosen on iPad: the quartet
+/// staff at rest, over the same barber-pole background as the rest of the app.
 @interface TMTagPlaceholderController : UIViewController
 @end
 
@@ -42,15 +48,64 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [DPAppDelegate setUpBackground:self.view];
-    UIContentUnavailableConfiguration *state = [UIContentUnavailableConfiguration emptyConfiguration];
-    state.image = [UIImage systemImageNamed:@"tag"];
-    state.text = @"No tag selected";
-    state.secondaryText = @"Choose a tag from Browse, Search, Favorites, or Teachable Tags to see its summary, tracks, and videos.";
-    self.contentUnavailableConfiguration = state;
+
+    TMQuartetStaffView *staff = [TMQuartetStaffView new];
+    staff.animationAllowed = NO;
+    staff.translatesAutoresizingMaskIntoConstraints = NO;
+
+    UILabel *heading = [UILabel new];
+    heading.text = @"Pick a tag";
+    UIFontDescriptor *descriptor = [[UIFont preferredFontForTextStyle:UIFontTextStyleTitle2].fontDescriptor
+        fontDescriptorByAddingAttributes:@{UIFontDescriptorTraitsAttribute: @{UIFontWeightTrait: @(UIFontWeightSemibold)}}];
+    heading.font = [UIFont fontWithDescriptor:descriptor size:0];
+    heading.adjustsFontForContentSizeCategory = YES;
+    heading.numberOfLines = 0;
+    heading.textAlignment = NSTextAlignmentCenter;
+    heading.textColor = UIColor.labelColor;
+    heading.accessibilityTraits |= UIAccessibilityTraitHeader;
+
+    UILabel *body = [UILabel new];
+    body.text = @"Choose a tag from the list. Its summary, tracks, sheet music, and videos open here.";
+    body.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    body.adjustsFontForContentSizeCategory = YES;
+    body.numberOfLines = 0;
+    body.textAlignment = NSTextAlignmentCenter;
+    body.textColor = UIColor.secondaryLabelColor;
+
+    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[staff, heading, body]];
+    stack.axis = UILayoutConstraintAxisVertical;
+    stack.alignment = UIStackViewAlignmentCenter;
+    stack.spacing = 8;
+    [stack setCustomSpacing:24 afterView:staff];
+    stack.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:stack];
+    [NSLayoutConstraint activateConstraints:@[
+        [stack.centerXAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerXAnchor],
+        [stack.centerYAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerYAnchor],
+        [stack.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:24],
+        [stack.trailingAnchor constraintLessThanOrEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-24],
+        [heading.widthAnchor constraintLessThanOrEqualToConstant:480],
+        [body.widthAnchor constraintLessThanOrEqualToConstant:480],
+        [staff.widthAnchor constraintEqualToConstant:TMQuartetWidth],
+        [staff.heightAnchor constraintEqualToConstant:TMQuartetHeight]
+    ]];
 }
 @end
 
 @interface DPAppDelegate () <UISplitViewControllerDelegate>
+@end
+
+/// Records whichever responder a nil-targeted action lands on, i.e. the first responder.
+static __weak UIResponder *TMRecordedFirstResponder;
+
+@interface UIResponder (TMFirstResponder)
+- (void)tm_recordFirstResponder:(id)sender;
+@end
+
+@implementation UIResponder (TMFirstResponder)
+- (void)tm_recordFirstResponder:(id)sender {
+    TMRecordedFirstResponder = self;
+}
 @end
 
 @implementation DPAppDelegate
@@ -94,7 +149,7 @@
     
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
-    self.window.tintColor = [UIColor systemBlueColor];
+    self.window.tintColor = [DPAppDelegate accentColor];
     UINavigationBarAppearance *navigationAppearance = [[UINavigationBarAppearance alloc] init];
     [navigationAppearance configureWithOpaqueBackground];
     navigationAppearance.backgroundColor = [UIColor colorWithWhite:55.0 / 255.0 alpha:1];
@@ -121,8 +176,15 @@
         // List and detail side by side on iPad; the Home stack stays the primary column.
         UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
         split.delegate = self;
+        // One watermark behind both columns, installed before any column loads its view.
+        [DPAppDelegate installSharedBackgroundIn:split.view];
         split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
         split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+        // A comfortable list width on both 11- and 13-inch iPads, without
+        // touching the bar appearance shared with the detail column.
+        split.minimumPrimaryColumnWidth = 320;
+        split.maximumPrimaryColumnWidth = 400;
+        split.preferredPrimaryColumnWidthFraction = 0.36;
         [split setViewController:navController forColumn:UISplitViewControllerColumnPrimary];
         UINavigationController *detailNavigation = [[UINavigationController alloc] initWithRootViewController:[[TMTagPlaceholderController alloc] init]];
         detailNavigation.navigationBar.standardAppearance = navigationAppearance;
@@ -187,19 +249,118 @@
 }
 
 + (void)showTagWithId:(int)tagId from:(UIViewController *)sender {
-    DPTagViewController *controller = [[DPTagViewController alloc] init];
-    controller.tagId = tagId;
+    id<TMTagListSource> source = [sender conformsToProtocol:@protocol(TMTagListSource)] ? (id<TMTagListSource>)sender : nil;
+    if ([sender isKindOfClass:DPTagViewController.class]) source = ((DPTagViewController *)sender).source;
     UISplitViewController *split = sender.splitViewController;
     if (split && !split.isCollapsed) {
-        [split setViewController:[[UINavigationController alloc] initWithRootViewController:controller]
-                       forColumn:UISplitViewControllerColumnSecondary];
+        UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+        UIViewController *root = [secondary isKindOfClass:[UINavigationController class]] ? secondary.viewControllers.firstObject : nil;
+        if ([root isKindOfClass:[DPTagViewController class]]) {
+            // Reuse the existing detail so the page the user was on (Summary,
+            // Details, Tracks, Videos) survives the tag change.
+            DPTagViewController *existing = (DPTagViewController *)root;
+            existing.source = source;
+            existing.tagId = tagId;
+        } else {
+            DPTagViewController *controller = [[DPTagViewController alloc] init];
+            controller.source = source;
+            controller.tagId = tagId;
+            if ([secondary isKindOfClass:UINavigationController.class]) {
+                // Keep the placeholder's configured navigation bar and safe-area behavior.
+                [secondary setViewControllers:@[controller] animated:NO];
+            } else {
+                [split setViewController:[[UINavigationController alloc] initWithRootViewController:controller]
+                               forColumn:UISplitViewControllerColumnSecondary];
+            }
+        }
+        [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
+        [source tm_didStepToTagId:tagId];
         if (split.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
             [split hideColumn:UISplitViewControllerColumnPrimary];
         }
         return;
     }
+    DPTagViewController *controller = [[DPTagViewController alloc] init];
+    controller.tagId = tagId;
     UINavigationController *navigation = sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
     [navigation pushViewController:controller animated:YES];
+}
+
+#pragma mark - Keyboard stepping from either column
+
+/// The detail showing beside a list, or nil when there is no expanded split or no tag yet.
+- (DPTagViewController *)tm_expandedDetail {
+    UISplitViewController *split = (UISplitViewController *)self.window.rootViewController;
+    if (![split isKindOfClass:UISplitViewController.class] || split.isCollapsed) return nil;
+    UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UIViewController *root = [secondary isKindOfClass:UINavigationController.class] ? secondary.viewControllers.firstObject : nil;
+    return [root isKindOfClass:DPTagViewController.class] ? (DPTagViewController *)root : nil;
+}
+
+/// Whether the first responder sits inside the detail column, where the detail's own key
+/// commands already serve; asking the chain with a nil target reaches the first responder.
+- (BOOL)tm_detailOwnsFocus:(DPTagViewController *)detail {
+    TMRecordedFirstResponder = nil;
+    [UIApplication.sharedApplication sendAction:@selector(tm_recordFirstResponder:) to:nil from:self forEvent:nil];
+    for (UIResponder *responder = TMRecordedFirstResponder; responder; responder = responder.nextResponder) {
+        if (responder == detail) return YES;
+    }
+    return NO;
+}
+
+/// The list column usually holds keyboard focus on iPad, and the detail is not in its
+/// responder chain. The delegate is always in the chain, so it republishes the detail's
+/// ⌘↑ / ⌘↓ commands and forwards their actions.
+- (NSArray<UIKeyCommand *> *)keyCommands {
+    DPTagViewController *detail = [self tm_expandedDetail];
+    if (!detail || [self tm_detailOwnsFocus:detail]) return nil;
+    return detail.keyCommands;
+}
+
+- (void)stepToPreviousTag {
+    [[self tm_expandedDetail] stepToPreviousTag];
+}
+
+- (void)stepToNextTag {
+    [[self tm_expandedDetail] stepToNextTag];
+}
+
+- (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
+    if (action == @selector(stepToPreviousTag) || action == @selector(stepToNextTag)) {
+        DPTagViewController *detail = [self tm_expandedDetail];
+        return detail != nil && [detail canPerformAction:action withSender:sender];
+    }
+    return [super canPerformAction:action withSender:sender];
+}
+
++ (UIColor *)accentColor {
+    static UIColor *accent;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        accent = [UIColor colorWithDynamicProvider:^UIColor *(UITraitCollection *traits) {
+            return traits.userInterfaceStyle == UIUserInterfaceStyleDark
+                ? [UIColor colorWithRed:0x5A / 255.0 green:0xC8 / 255.0 blue:0xFA / 255.0 alpha:1]
+                : [UIColor colorWithRed:0x00 / 255.0 green:0x7A / 255.0 blue:0xA3 / 255.0 alpha:1];
+        }];
+    });
+    return accent;
+}
+
++ (NSNumber *)currentSplitTagIdFor:(UIViewController *)sender {
+    UISplitViewController *split = sender.splitViewController;
+    if (!split || split.isCollapsed) return nil;
+    UINavigationController *secondary = (UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
+    UIViewController *root = [secondary isKindOfClass:[UINavigationController class]] ? secondary.viewControllers.firstObject : nil;
+    if (![root isKindOfClass:[DPTagViewController class]]) return nil;
+    return @(((DPTagViewController *)root).tagId);
+}
+
+- (void)splitViewControllerDidCollapse:(UISplitViewController *)splitViewController {
+    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:splitViewController];
+}
+
+- (void)splitViewControllerDidExpand:(UISplitViewController *)splitViewController {
+    [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:splitViewController];
 }
 
 - (UISplitViewControllerColumn)splitViewController:(UISplitViewController *)svc topColumnForCollapsingToProposedTopColumn:(UISplitViewControllerColumn)proposedTopColumn {
@@ -307,20 +468,17 @@
     item.accessibilityLabel = @{@"magnifyingglass": @"Search",
                                 @"square.and.arrow.up": @"Share",
                                 @"tag": @"Favorite and Teachable options",
-                                @"arrow.clockwise": @"Refresh"}[systemName];
+                                @"arrow.clockwise": @"Refresh",
+                                @"chevron.up": @"Previous tag",
+                                @"chevron.down": @"Next tag"}[systemName];
     return item;
 }
 
-+ (void)setUpBackground:(UIView *)view {
-    view.backgroundColor = [UIColor systemBackgroundColor];
+static TMLogoBackgroundView *TMSharedBackground;
+
++ (TMLogoBackgroundView *)addLogoBackgroundTo:(UIView *)view {
     TMLogoBackgroundView *backgroundImage = [[TMLogoBackgroundView alloc] initWithFrame:CGRectZero];
     backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
-
-    if ([view isKindOfClass:[UITableView class]]) {
-        UITableView *tableView = (UITableView *)view;
-        view = tableView.backgroundView = [[UIView alloc] init];
-    }
-
     [view addSubview:backgroundImage];
     [view sendSubviewToBack:backgroundImage];
     [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
@@ -331,7 +489,33 @@
                                                                  options:0
                                                                  metrics:nil
                                                                    views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    return backgroundImage;
 }
 
++ (void)installSharedBackgroundIn:(UIView *)view {
+    [TMSharedBackground removeFromSuperview];
+    view.backgroundColor = [UIColor systemBackgroundColor];
+    TMSharedBackground = [self addLogoBackgroundTo:view];
+}
+
++ (void)removeSharedBackground {
+    [TMSharedBackground removeFromSuperview];
+    TMSharedBackground = nil;
+}
+
++ (void)setUpBackground:(UIView *)view {
+    if (TMSharedBackground) {
+        // The split paints the watermark once behind both columns; screens stay clear.
+        view.backgroundColor = [UIColor clearColor];
+        if ([view isKindOfClass:[UITableView class]]) ((UITableView *)view).backgroundView = nil;
+        return;
+    }
+    view.backgroundColor = [UIColor systemBackgroundColor];
+    if ([view isKindOfClass:[UITableView class]]) {
+        UITableView *tableView = (UITableView *)view;
+        view = tableView.backgroundView = [[UIView alloc] init];
+    }
+    [self addLogoBackgroundTo:view];
+}
 
 @end

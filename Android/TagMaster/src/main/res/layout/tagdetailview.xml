@@ -1,136 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Full-screen tag detail (phones, deep links, Random Tag). The detail itself lives in
+     TagDetailFragment so tablets can host the same pages beside a list (@layout/tag_detail_pane).
+     The <fragment> tag creates the pages' views during setContentView, so the activity's views and
+     its first load are in place by the end of onCreate. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <include layout="@layout/app_toolbar" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/progress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:contentDescription="@string/detail_loading"
-        android:visibility="gone" />
-
-    <FrameLayout
-        android:id="@+id/frameLayout1"
+    <fragment
+        android:id="@+id/tagDetailFragment"
+        android:name="depollsoft.tagmaster.TagDetailFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <ImageView
-            android:id="@+id/imageView1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:visibility="gone"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/ic_barberpole" />
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/viewPager"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
-
-        <ScrollView
-            android:id="@+id/detailLoadingState"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:visibility="gone">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="24dp">
-                <LinearLayout
-                    android:id="@+id/detailLoadingComposition"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:importantForAccessibility="yes"
-                    android:screenReaderFocusable="true"
-                    android:accessibilityLiveRegion="polite">
-                    <depollsoft.tagmaster.TagLoadingView
-                        android:id="@+id/quartetIllustration"
-                        android:layout_width="@dimen/quartet_width"
-                        android:layout_height="@dimen/quartet_height" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:importantForAccessibility="no"
-                        android:text="@string/detail_gathering_quartet"
-                        android:textAppearance="?attr/textAppearanceTitleLarge" />
-                    <TextView
-                        android:id="@+id/detailLoadingStatus"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:importantForAccessibility="no"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textAppearance="?attr/textAppearanceBodyMedium" />
-                </LinearLayout>
-            </LinearLayout>
-        </ScrollView>
-
-        <ScrollView
-            android:id="@+id/detailErrorState"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:visibility="gone">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="32dp">
-
-            <TextView
-                android:id="@+id/detailErrorText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/detailRetryButton"
-                style="?attr/materialButtonTonalStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:minHeight="48dp"
-                android:text="@string/detail_retry"
-                app:icon="@drawable/ic_refresh" />
-            </LinearLayout>
-        </ScrollView>
-    </FrameLayout>
-
-    <!-- Keep page switching within thumb reach, below the content and above system bars. -->
-    <depollsoft.tagmaster.FullWidthTabLayout
-        android:id="@+id/tabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:background="@color/brand_chrome"
-        app:tabTextColor="@color/brand_tab_tint"
-        app:tabSelectedTextColor="@color/brand_on_chrome"
-        app:tabIconTint="@color/brand_tab_tint"
-        app:tabIndicatorColor="@color/brand_chrome_accent"
-        app:tabRippleColor="@color/brand_tab_tint"
-        app:tabIndicatorGravity="top"
-        app:tabMode="fixed"
-        app:tabMaxWidth="0dp"
-        app:tabPaddingStart="8dp"
-        app:tabPaddingEnd="8dp"
-        app:tabGravity="fill" />
+        android:layout_weight="1" />
 </LinearLayout>
