@@ -1,18 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The detail pane before a tag is chosen: the quartet at rest over the barber-pole watermark. -->
+<!-- The detail pane before a tag is chosen: the quartet at rest. The barber-pole watermark is the
+     two-pane root's (@id/paneWatermark), shared with the list. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/tagPaneEmptyState"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <ImageView
-        android:id="@+id/tagPaneWatermark"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:importantForAccessibility="no"
-        android:scaleType="centerInside"
-        app:srcCompat="@drawable/ic_barberpole" />
 
     <LinearLayout
         android:layout_width="match_parent"

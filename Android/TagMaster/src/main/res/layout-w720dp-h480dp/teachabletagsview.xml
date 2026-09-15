@@ -1,75 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Teachable Tags on a wide window: the list stays on the left while the chosen tag opens on the
      right. The phone layout (res/layout/teachabletagsview.xml) is unchanged. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:id="@+id/listPane"
-        android:layout_width="@dimen/list_pane_width"
-        android:layout_height="match_parent">
+    <!-- One watermark behind both panes, below the shared bar (as the iPad split does); the panes
+         themselves stay transparent so it shows through once. -->
+    <ImageView
+        android:id="@+id/paneWatermark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        app:srcCompat="@drawable/ic_barberpole" />
 
-        <ImageView
-            android:id="@+id/imageView1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/ic_barberpole" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:id="@+id/linearLayout1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+        <FrameLayout
+            android:id="@+id/listPane"
+            android:layout_width="@dimen/list_pane_width"
+            android:layout_height="match_parent">
 
-            <include layout="@layout/app_toolbar" />
-
-            <FrameLayout
+            <LinearLayout
+                android:id="@+id/linearLayout1"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/teachableTagsItemsControl"
+                <include layout="@layout/app_toolbar" />
+
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clipToPadding="false"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="16dp"
-                    android:scrollbars="vertical" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
 
-                <LinearLayout
-                    android:id="@+id/teachableEmptyState"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="vertical"
-                    android:padding="32dp">
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/teachableTagsItemsControl"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:scrollbars="vertical" />
 
-                    <TextView
-                        android:id="@+id/noTeachableTagsTextView"
+                    <LinearLayout
+                        android:id="@+id/teachableEmptyState"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="@string/NoTeachableTags"
-                        android:textAppearance="?attr/textAppearanceBodyLarge" />
+                        android:layout_gravity="center"
+                        android:orientation="vertical"
+                        android:padding="32dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:text="@string/home_teachable_hint"
-                        android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-                </LinearLayout>
-            </FrameLayout>
-        </LinearLayout>
-    </FrameLayout>
+                        <TextView
+                            android:id="@+id/noTeachableTagsTextView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="@string/NoTeachableTags"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-    <include layout="@layout/tag_detail_pane" />
-</LinearLayout>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:text="@string/home_teachable_hint"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <include layout="@layout/tag_detail_pane" />
+    </LinearLayout>
+</FrameLayout>

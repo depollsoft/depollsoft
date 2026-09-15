@@ -59,6 +59,9 @@ class TagDetailModel : TagDetailHost {
 class TagDetailFragment : Fragment() {
     val model = TagDetailModel()
 
+    private val hostedInPane: Boolean
+        get() = (activity as? TagPaneHost)?.hasDetailPane == true
+
     var tag: Tag?
         get() = model.tag
         set(value) {
@@ -248,7 +251,8 @@ class TagDetailFragment : Fragment() {
         rootView.findViewById<TextView>(R.id.detailLoadingStatus).text = status
         rootView.findViewById<View>(R.id.detailLoadingComposition).contentDescription =
             getString(R.string.detail_gathering_quartet) + " " + status
-        show(R.id.imageView1, loaded)
+        // Beside a list the two-pane root paints one watermark behind both panes.
+        show(R.id.imageView1, loaded && !hostedInPane)
         val viewPager = rootView.findViewById<ViewPager2>(R.id.viewPager)
         val wasVisible = viewPager.visibility == View.VISIBLE
         show(R.id.viewPager, loaded)

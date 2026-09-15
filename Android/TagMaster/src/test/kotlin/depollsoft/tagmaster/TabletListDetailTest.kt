@@ -99,6 +99,48 @@ class TabletListDetailTest {
         }
     }
 
+    private fun visibleWatermarks(view: View): Int {
+        if (view.visibility != View.VISIBLE) return 0
+        val own = if (view.id == R.id.paneWatermark || view.id == R.id.imageView1) 1 else 0
+        if (view !is ViewGroup) return own
+        return own + (0 until view.childCount).sumOf { visibleWatermarks(view.getChildAt(it)) }
+    }
+
+    @Test fun one_watermark_sits_behind_both_panes_like_the_ipad_split() {
+        for (clazz in listScreens) {
+            val controller = launchScreen(clazz)
+            try {
+                val activity = controller.get()
+                val content = activity.findViewById<View>(android.R.id.content)
+                assertEquals("${clazz.simpleName}: one watermark for the whole window", 1, visibleWatermarks(content))
+                assertNotNull(clazz.simpleName, activity.findViewById<View>(R.id.paneWatermark))
+                assertNull(
+                    "${clazz.simpleName} list pane keeps its own watermark",
+                    activity.findViewById<View>(R.id.listPane).findViewById<View>(R.id.imageView1),
+                )
+                assertNull(clazz.simpleName, activity.findViewById<View>(R.id.tagPaneEmptyState).findViewById<View>(R.id.imageView1))
+            } finally {
+                controller.pause().stop().destroy()
+            }
+        }
+        val controller = teachable()
+        try {
+            val activity = controller.get()
+            activity.showTag(ids[0])
+            idle()
+            val fragment = activity.tagPane.detailFragment!!
+            assertNotNull(fragment.tag)
+            assertEquals(
+                "The open tag leaves the shared watermark alone",
+                View.GONE,
+                fragment.requireView().findViewById<View>(R.id.imageView1).visibility,
+            )
+            assertEquals(1, visibleWatermarks(activity.findViewById(android.R.id.content)))
+        } finally {
+            controller.pause().stop().destroy()
+        }
+    }
+
     @Config(qualifiers = "w411dp-h914dp")
     @Test fun no_list_screen_has_a_detail_pane_at_phone_width() {
         for (clazz in listScreens) {
