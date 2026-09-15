@@ -389,6 +389,14 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 #import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
 
+@interface TMSheetMusicViewController : UIViewController
+@property (nonatomic, strong, readonly) QLPreviewController *previewer;
+@property (nonatomic, strong) UIBarButtonItem *fullScreenItem;
+@property (nonatomic, strong) UIBarButtonItem *keyItem;
+- (instancetype)initWithPreviewer:(QLPreviewController *)previewer title:(NSString *)title fileURL:(NSURL *)fileURL keyItem:(UIBarButtonItem *)keyItem;
+- (void)toggleFullScreen;
+@end
+
 @interface DPTagViewController (PolishTests)
 - (void)sendTag;
 - (void)loadTag:(BOOL)refresh;
@@ -668,7 +676,16 @@ TM_CAPTURE_IMPL
     XCTAssertNil(summary.captured);
     [@"%PDF-1.4 test" writeToURL:location.uri atomically:YES encoding:NSUTF8StringEncoding error:nil];
     summary.retry();
-    [self waitUntil:^BOOL { return [summary.captured isKindOfClass:NSClassFromString(@"QLPreviewController")]; }];
+    // The preview travels inside its detail-column host; without a navigation stack it is
+    // presented in one, with Done.
+    [self waitUntil:^BOOL {
+        UINavigationController *presented = (id)summary.captured;
+        if (![presented isKindOfClass:UINavigationController.class]) return NO;
+        UIViewController *host = presented.topViewController;
+        return [host isKindOfClass:NSClassFromString(@"TMSheetMusicViewController")] &&
+            [host.childViewControllers.firstObject isKindOfClass:NSClassFromString(@"QLPreviewController")] &&
+            host.navigationItem.leftBarButtonItem != nil;
+    }];
     XCTAssertEqual(summary.busyIndicator.busyCount, 0);
     [[NSFileManager defaultManager] removeItemAtURL:location.uri error:nil];
     [[NSFileManager defaultManager] removeItemAtPath:[DPFileCache pathForKey:location.cacheKey] error:nil];
@@ -1705,6 +1722,44 @@ TM_CAPTURE_IMPL
     }
 }
 
+- (void)testTabletSheetMusicStaysInDetailColumnAndCanGoFullScreen {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    [DPAppDelegate showTagWithId:1809 from:query];
+    DPTagViewController *detail = [self tabletDetail:split];
+    [detail loadViewIfNeeded];
+    [self finish:0 tag:[self tag:1809]];
+    UINavigationController *secondary = detail.navigationController;
+    QLPreviewController *previewer = [NSClassFromString(@"QLPreviewController") new];
+    UIBarButtonItem *key = [[UIBarButtonItem alloc] initWithTitle:@"Key: C" style:UIBarButtonItemStylePlain target:nil action:nil];
+    NSURL *file = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"sheet.pdf"]];
+    TMSheetMusicViewController *host = [[TMSheetMusicViewController alloc] initWithPreviewer:previewer title:@"Lost" fileURL:file keyItem:key];
+    XCTAssertEqualObjects(host.childViewControllers, @[previewer], @"QuickLook rides inside the host");
+    [secondary pushViewController:host animated:NO];
+    [self drainUIKit]; [self layout]; [self layout];
+    UIView *primary = [split viewControllerForColumn:UISplitViewControllerColumnPrimary].view;
+    CGRect primaryFrame = [primary convertRect:primary.bounds toView:self.window];
+    CGRect preview = [previewer.view convertRect:previewer.view.bounds toView:self.window];
+    XCTAssertGreaterThanOrEqual(CGRectGetMinX(preview), CGRectGetMaxX(primaryFrame) - 1, @"The sheet sits in the detail column, not under the list");
+    XCTAssertGreaterThan(CGRectGetWidth(preview), 300);
+    UIBarButtonItem *fullScreen = host.fullScreenItem;
+    XCTAssertTrue([host.navigationItem.rightBarButtonItems containsObject:fullScreen]);
+    XCTAssertTrue([host.navigationItem.rightBarButtonItems containsObject:key]);
+    XCTAssertEqualObjects(fullScreen.accessibilityLabel, @"Full screen");
+    XCTAssertEqualObjects(host.title, @"Lost");
+    [host toggleFullScreen];
+    XCTAssertEqual(split.preferredDisplayMode, UISplitViewControllerDisplayModeSecondaryOnly);
+    XCTAssertEqualObjects(fullScreen.accessibilityLabel, @"Show list");
+    [host toggleFullScreen];
+    XCTAssertEqual(split.preferredDisplayMode, UISplitViewControllerDisplayModeOneBesideSecondary);
+    XCTAssertEqualObjects(fullScreen.accessibilityLabel, @"Full screen");
+    [host toggleFullScreen];
+    XCTAssertEqual(split.preferredDisplayMode, UISplitViewControllerDisplayModeSecondaryOnly);
+    [secondary popViewControllerAnimated:NO];
+    [self drainUIKit]; [self layout];
+    XCTAssertEqual(split.preferredDisplayMode, UISplitViewControllerDisplayModeOneBesideSecondary, @"Leaving the sheet gives the list back");
+}
+
 - (void)testTabletPlaceholderCopyLayoutDynamicTypeAndStillQuartet {
     DPTagQueryViewController *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
@@ -2722,11 +2777,18 @@ TM_CAPTURE_IMPL
         [summary openSheetMusic];
         NSPredicate *ready = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return summary.captured != nil; }];
         XCTAssertEqual([XCTWaiter waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:ready object:nil]] timeout:5], XCTWaiterResultCompleted);
-        QLPreviewController *preview = (id)summary.captured;
+        // The sheet host carries the bar items; Quick Look rides inside it, pinned to the
+        // visible column. Free the host from its modal stack to exercise it in a pushed one.
+        UINavigationController *presented = (id)summary.captured;
+        XCTAssertTrue([presented isKindOfClass:UINavigationController.class]);
+        UIViewController *host = presented.topViewController;
+        XCTAssertTrue([host isKindOfClass:NSClassFromString(@"TMSheetMusicViewController")]);
+        QLPreviewController *preview = (id)host.childViewControllers.firstObject;
         XCTAssertTrue([preview isKindOfClass:NSClassFromString(@"QLPreviewController")]);
-        // Quick Look inserts its own Share/Markup items on iPad. The app's key
-        // must remain present, but need not remain the rightmost bar item.
-        UIBarButtonItem *keyItem = preview.navigationItem.rightBarButtonItem;
+        presented.viewControllers = @[];
+        host.navigationItem.leftBarButtonItem = nil;
+        UIBarButtonItem *keyItem = [host valueForKey:@"keyItem"];
+        XCTAssertNotNil(keyItem);
         UIViewController *root = [UIViewController new];
         UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:root];
         TMLayoutNavigationObserver *observer = [TMLayoutNavigationObserver new];
@@ -2734,18 +2796,18 @@ TM_CAPTURE_IMPL
         [self mount:navigation width:393 category:UIContentSizeCategoryLarge];
         XCTNSPredicateExpectation *rootReady = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == root; }] object:nil];
         XCTAssertEqual([XCTWaiter waitForExpectations:@[rootReady] timeout:3], XCTWaiterResultCompleted);
-        [navigation pushViewController:preview animated:NO];
-        XCTNSPredicateExpectation *previewReady = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == preview && !preview.transitionCoordinator; }] object:nil];
+        [navigation pushViewController:host animated:NO];
+        XCTNSPredicateExpectation *previewReady = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == host && !host.transitionCoordinator; }] object:nil];
         XCTAssertEqual([XCTWaiter waitForExpectations:@[previewReady] timeout:5], XCTWaiterResultCompleted);
         for (NSNumber *landscape in @[@NO, @YES]) {
             self.window.frame = landscape.boolValue ? CGRectMake(0, 0, 852, 393) : CGRectMake(0, 0, 393, 852);
             [self settle];
             XCTNSPredicateExpectation *fitted = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
-                return preview.currentPreviewItem != nil && [preview.navigationItem.rightBarButtonItems containsObject:keyItem] && keyItem.customView.window == self.window && keyItem.customView.bounds.size.width > 0 && !preview.transitionCoordinator;
+                return preview.currentPreviewItem != nil && [host.navigationItem.rightBarButtonItems containsObject:keyItem] && keyItem.customView.window == self.window && keyItem.customView.bounds.size.width > 0 && !host.transitionCoordinator;
             }] object:nil];
             XCTAssertEqual([XCTWaiter waitForExpectations:@[fitted] timeout:5], XCTWaiterResultCompleted);
             [self settle];
-            XCTAssertTrue([preview.navigationItem.rightBarButtonItems containsObject:keyItem]);
+            XCTAssertTrue([host.navigationItem.rightBarButtonItems containsObject:keyItem]);
             UIView *key = keyItem.customView;
             CGRect face = [key convertRect:key.bounds toView:self.window];
             CGRect target = CGRectMake(CGRectGetMidX(face) - 22, CGRectGetMidY(face) - 22, 44, 44);
@@ -3764,12 +3826,14 @@ TM_CAPTURE_IMPL
     @try {
         [summary openSheetMusic];
         [self waitUntil:^BOOL { return summary.captured != nil; }];
-        UIView *keyView = summary.captured.navigationItem.rightBarButtonItem.customView;
+        TMSheetMusicViewController *sheet = (id)((UINavigationController *)summary.captured).topViewController;
+        XCTAssertTrue([sheet isKindOfClass:TMSheetMusicViewController.class]);
+        UIView *keyView = sheet.keyItem.customView;
         UIButton *button = (id)keyView.subviews.firstObject;
         XCTAssertTrue([button isKindOfClass:UIButton.class]);
         XCTAssertEqualObjects(button.accessibilityIdentifier, @"sheet.key");
         UIViewController *host = [UIViewController new];
-        host.navigationItem.rightBarButtonItem = summary.captured.navigationItem.rightBarButtonItem;
+        host.navigationItem.rightBarButtonItem = sheet.keyItem;
         [self mount:host width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];
         [self assertKey:button playing:NO];
         [self capture:@"tagmaster-ios-footer-pitch-sheet-idle"];

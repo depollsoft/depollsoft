@@ -189,6 +189,110 @@
 
 @end
 
+/// Hosts the QuickLook preview inside the visible detail column. Beside a list on iPad the
+/// secondary column extends beneath the floating list column and marks that strip as unsafe
+/// area; QuickLook centres its page across its full bounds regardless, so the page ended up
+/// under the list. Pinning the preview to the safe area keeps the sheet in the detail view,
+/// and a full-screen toggle hides the list for reading, restoring the split on the way back.
+@interface TMSheetMusicViewController : UIViewController
+@property (nonatomic, strong, readonly) QLPreviewController *previewer;
+@property (nonatomic, strong, readonly) NSURL *fileURL;
+@property (nonatomic, strong) UIBarButtonItem *fullScreenItem;
+@property (nonatomic, strong) UIBarButtonItem *shareItem;
+@property (nonatomic, strong) UIBarButtonItem *keyItem;
+@property (nonatomic) BOOL fullScreen;
+@property (nonatomic) BOOL changedDisplayMode;
+@property (nonatomic) UISplitViewControllerDisplayMode displayModeToRestore;
+- (instancetype)initWithPreviewer:(QLPreviewController *)previewer title:(NSString *)title fileURL:(NSURL *)fileURL keyItem:(UIBarButtonItem *)keyItem;
+- (void)toggleFullScreen;
+@end
+
+@implementation TMSheetMusicViewController
+- (instancetype)initWithPreviewer:(QLPreviewController *)previewer title:(NSString *)title fileURL:(NSURL *)fileURL keyItem:(UIBarButtonItem *)keyItem {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
+        _previewer = previewer;
+        _fileURL = fileURL;
+        _keyItem = keyItem;
+        self.title = title;
+        self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
+        [self addChildViewController:previewer];
+        self.shareItem = [DPAppDelegate barButtonItemWithSystemName:@"square.and.arrow.up" target:self action:@selector(share)];
+        self.fullScreenItem = [[UIBarButtonItem alloc] initWithImage:nil style:UIBarButtonItemStylePlain target:self action:@selector(toggleFullScreen)];
+        [self refreshFullScreenItem];
+    }
+    return self;
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = UIColor.systemBackgroundColor;
+    UIView *preview = self.previewer.view;
+    preview.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:preview];
+    [NSLayoutConstraint activateConstraints:@[
+        [preview.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor],
+        [preview.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor],
+        [preview.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [preview.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor]
+    ]];
+    [self.previewer didMoveToParentViewController:self];
+}
+- (BOOL)besideAList {
+    UISplitViewController *split = self.splitViewController;
+    return split != nil && !split.isCollapsed;
+}
+- (void)refreshFullScreenItem {
+    UIImageSymbolConfiguration *configuration =
+        [UIImageSymbolConfiguration configurationWithPointSize:17 weight:UIImageSymbolWeightRegular scale:UIImageSymbolScaleMedium];
+    self.fullScreenItem.image = [UIImage systemImageNamed:self.fullScreen ? @"arrow.down.right.and.arrow.up.left" : @"arrow.up.left.and.arrow.down.right"
+                                        withConfiguration:configuration];
+    self.fullScreenItem.accessibilityLabel = self.fullScreen ? @"Show list" : @"Full screen";
+    // Leftmost first in the bar: key note, full screen (beside a list only), share.
+    NSMutableArray *items = [NSMutableArray arrayWithObject:self.shareItem];
+    if ([self besideAList]) [items addObject:self.fullScreenItem];
+    if (self.keyItem) [items addObject:self.keyItem];
+    self.navigationItem.rightBarButtonItems = items;
+}
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self refreshFullScreenItem];
+}
+- (void)toggleFullScreen {
+    UISplitViewController *split = self.splitViewController;
+    if (!split) return;
+    if (!self.fullScreen) {
+        if (!self.changedDisplayMode) {
+            self.displayModeToRestore = split.preferredDisplayMode;
+            self.changedDisplayMode = YES;
+        }
+        split.preferredDisplayMode = UISplitViewControllerDisplayModeSecondaryOnly;
+        self.fullScreen = YES;
+    } else {
+        split.preferredDisplayMode = self.displayModeToRestore;
+        self.changedDisplayMode = NO;
+        self.fullScreen = NO;
+    }
+    [self refreshFullScreenItem];
+}
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    // Leaving the sheet (back, or the tag changing beside it) gives the list back.
+    if (self.changedDisplayMode && (self.isMovingFromParentViewController || self.isBeingDismissed)) {
+        self.splitViewController.preferredDisplayMode = self.displayModeToRestore;
+        self.changedDisplayMode = NO;
+        self.fullScreen = NO;
+    }
+}
+- (void)share {
+    if (!self.fileURL) return;
+    UIActivityViewController *activity = [[UIActivityViewController alloc] initWithActivityItems:@[self.fileURL] applicationActivities:nil];
+    activity.popoverPresentationController.barButtonItem = self.shareItem;
+    [self presentViewController:activity animated:YES completion:nil];
+}
+- (void)done {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+@end
+
 @interface DPTagSummaryController () <QLPreviewControllerDataSource, UIActionSheetDelegate>
 
 @property (nonatomic, strong) UILabel *titleLabel;
@@ -562,6 +666,7 @@
                 [self setButton:self.sheetMusicButton busy:NO];
                 QLPreviewController *previewer = [[QLPreviewController alloc] init];
                 previewer.dataSource = self;
+                UIBarButtonItem *keyItem = nil;
                 if (self.tag.keyNote) {
                     TMKeyButton *toucher = [TMKeyButton buttonWithType:UIButtonTypeCustom];
                     __weak DPTagSummaryController *weakSelf = self;
@@ -582,20 +687,26 @@
                     [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
                     [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
                     [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
-                    UIBarButtonItem *keyItem = [[UIBarButtonItem alloc] initWithCustomView:[[TMSheetKeyView alloc] initWithButton:toucher]];
+                    keyItem = [[UIBarButtonItem alloc] initWithCustomView:[[TMSheetKeyView alloc] initWithButton:toucher]];
                     // This control draws its own outlined/pressed background.
                     // Shared Glass fitting caps custom content at 36pt even with
                     // a 44pt intrinsic size; opting out leaves the bar unchanged.
                     if (@available(iOS 26.0, *)) keyItem.hidesSharedBackground = YES;
-                    previewer.navigationItem.rightBarButtonItem = keyItem;
                 }
-                // Pushed previews keep the navigation bar (Back and the key note) on screen
-                // from the first frame; a modal preview opened with its chrome hidden.
-                previewer.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
+                // The host keeps the navigation bar (Back, the key note, full screen, share)
+                // on screen from the first frame and the sheet inside the detail column.
+                TMSheetMusicViewController *sheet =
+                    [[TMSheetMusicViewController alloc] initWithPreviewer:previewer
+                                                                    title:self.tag.title
+                                                                  fileURL:[NSURL fileURLWithPath:[DPFileCache pathForKey:key]]
+                                                                  keyItem:keyItem];
                 if (self.navigationController) {
-                    [self.navigationController pushViewController:previewer animated:YES];
+                    [self.navigationController pushViewController:sheet animated:YES];
                 } else {
-                    [self presentViewController:previewer animated:YES completion:NULL];
+                    sheet.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                                                                                           target:sheet
+                                                                                                           action:@selector(done)];
+                    [self presentViewController:[[UINavigationController alloc] initWithRootViewController:sheet] animated:YES completion:NULL];
                 }
             });
         } @catch (NSException *exception) {
