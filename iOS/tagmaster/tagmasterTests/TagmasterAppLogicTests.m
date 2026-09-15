@@ -957,6 +957,7 @@ TM_CAPTURE_IMPL
     method_setImplementation(motion, self.motionMock);
 }
 - (void)tearDown {
+    [DPAppDelegate removeSharedBackground];
     self.window.hidden = YES;
     self.window.rootViewController = nil;
     self.window = nil;
@@ -1490,6 +1491,7 @@ TM_CAPTURE_IMPL
     split.maximumPrimaryColumnWidth = 400;
     split.preferredPrimaryColumnWidthFraction = 0.36;
     split.delegate = (id<UISplitViewControllerDelegate>)UIApplication.sharedApplication.delegate;
+    [DPAppDelegate installSharedBackgroundIn:split.view]; // as the iPad launch does, before any column loads
     [split setViewController:[[UINavigationController alloc] initWithRootViewController:list] forColumn:UISplitViewControllerColumnPrimary];
     UIViewController *placeholder = [NSClassFromString(@"TMTagPlaceholderController") new];
     [split setViewController:[[UINavigationController alloc] initWithRootViewController:placeholder] forColumn:UISplitViewControllerColumnSecondary];
@@ -1758,6 +1760,47 @@ TM_CAPTURE_IMPL
     [secondary popViewControllerAnimated:NO];
     [self drainUIKit]; [self layout];
     XCTAssertEqual(split.preferredDisplayMode, UISplitViewControllerDisplayModeOneBesideSecondary, @"Leaving the sheet gives the list back");
+}
+
+- (NSArray<UIView *> *)logoBackgroundsIn:(UIView *)view {
+    NSMutableArray *found = [NSMutableArray array];
+    if ([view isKindOfClass:TMLogoBackgroundView.class]) [found addObject:view];
+    for (UIView *child in view.subviews) [found addObjectsFromArray:[self logoBackgroundsIn:child]];
+    return found;
+}
+
+- (void)testTabletPaintsOneWatermarkBehindBothColumns {
+    DPTagQueryViewController *query = [self tabletQuery];
+    TMTabletTestSplit *split = [self tabletSplitWithList:query];
+    UIViewController *placeholder = ((UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary]).viewControllers.firstObject;
+    [DPAppDelegate showTagWithId:1809 from:query];
+    DPTagViewController *detail = [self tabletDetail:split];
+    [detail loadViewIfNeeded];
+    [self finish:0 tag:[self tag:1809]];
+    [self drainUIKit]; [self layout];
+
+    NSArray<UIView *> *logos = [self logoBackgroundsIn:self.window];
+    XCTAssertEqual(logos.count, 1, @"One watermark for the whole app, not one per column");
+    XCTAssertEqual(logos.firstObject.superview, split.view);
+    XCTAssertEqual(split.view.subviews.firstObject, logos.firstObject, @"Behind both columns");
+    XCTAssertEqualWithAccuracy(logos.firstObject.frame.origin.y, 60, 0.01);
+    XCTAssertEqualWithAccuracy(CGRectGetWidth(logos.firstObject.frame), CGRectGetWidth(split.view.bounds), 0.01);
+
+    // Columns stay clear so the shared artwork shows through the list and the detail.
+    for (UIViewController *column in @[query, detail, placeholder]) {
+        UIView *view = column.view;
+        XCTAssertTrue(view.backgroundColor == nil || [view.backgroundColor isEqual:UIColor.clearColor], @"%@ paints over the watermark", column.class);
+        if ([view isKindOfClass:UITableView.class]) XCTAssertNil(((UITableView *)view).backgroundView, @"%@ keeps its own watermark", column.class);
+    }
+
+    // Phones keep a watermark per screen once the shared one is gone.
+    [DPAppDelegate removeSharedBackground];
+    XCTAssertEqual([self logoBackgroundsIn:self.window].count, 0);
+    UITableView *phoneList = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 402, 874)];
+    [DPAppDelegate setUpBackground:phoneList];
+    XCTAssertNotNil(phoneList.backgroundView);
+    XCTAssertEqual([self logoBackgroundsIn:phoneList.backgroundView].count, 1);
+    XCTAssertEqualObjects(phoneList.backgroundColor, UIColor.systemBackgroundColor);
 }
 
 - (void)testTabletPlaceholderCopyLayoutDynamicTypeAndStillQuartet {
