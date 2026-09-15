@@ -373,19 +373,43 @@ jobs:
               path.write_bytes(plistlib.dumps(data))
           PY
 
+          # Several runners share one macOS host and, by default, one
+          # ~/Library/Developer/Xcode/DerivedData. Concurrent archives then race
+          # on the explicit-module cache and fail in PrecompileModule with no
+          # diagnostic. Build in a per-run DerivedData instead, keep the raw
+          # xcodebuild log (xcpretty hides the real error), and retry once from
+          # a clean cache for anything transient.
+          derived_data="$RUNNER_TEMP/DerivedData"
           archive_app() {
             scheme="$1"
             archive="$artifact_dir/$2.xcarchive"
+            raw_log="$RUNNER_TEMP/$scheme-archive.log"
             set -o pipefail
-            xcodebuild archive \
-              -workspace iOS.xcworkspace \
-              -clonedSourcePackagesDirPath SourcePackages \
-              -scheme "$scheme" \
-              -configuration Release \
-              -destination 'generic/platform=iOS' \
-              -archivePath "$archive" \
-              CODE_SIGNING_ALLOWED=NO |
-                bundle exec xcpretty --color
+            for attempt in 1 2; do
+              rm -rf "$archive"
+              if xcodebuild archive \
+                -workspace iOS.xcworkspace \
+                -clonedSourcePackagesDirPath SourcePackages \
+                -derivedDataPath "$derived_data" \
+                -scheme "$scheme" \
+                -configuration Release \
+                -destination 'generic/platform=iOS' \
+                -archivePath "$archive" \
+                CODE_SIGNING_ALLOWED=NO 2>&1 |
+                  tee "$raw_log" |
+                  bundle exec xcpretty --color; then
+                break
+              fi
+              echo "::group::xcodebuild diagnostics ($scheme, attempt $attempt)"
+              grep -nE "error:|fatal error|PrecompileModule|\*\* ARCHIVE FAILED" "$raw_log" | tail -40 || true
+              echo "::endgroup::"
+              if [ "$attempt" -eq 2 ]; then
+                echo "Archiving $scheme failed twice." >&2
+                exit 65
+              fi
+              echo "Archiving $scheme failed; retrying from a clean DerivedData."
+              rm -rf "$derived_data"
+            done
             ditto -c -k --sequesterRsrc --keepParent \
               "$archive" "$artifact_dir/$2.xcarchive.zip"
             rm -rf "$archive"
