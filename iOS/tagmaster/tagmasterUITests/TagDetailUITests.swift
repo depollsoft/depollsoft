@@ -714,12 +714,20 @@ final class StoreScreenshotTests: XCTestCase {
         }
         home()
         XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].waitForExistence(timeout: 60))
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            app.tables.staticTexts["Cheer Up, Charlie"].tap()
+            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+        }
         snap("01-home")
         app.tables.staticTexts["Browse"].tap()
         let classic = app.buttons["page-Classic"]
         XCTAssertTrue(classic.waitForExistence(timeout: 15))
         classic.tap()
         XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 90))
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            app.tables.cells.firstMatch.tap()
+            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+        }
         snap("02-browse")
         home()
         app.navigationBars.buttons["Search"].tap()
@@ -727,9 +735,18 @@ final class StoreScreenshotTests: XCTestCase {
         snap("03-search")
         app.searchFields.firstMatch.tap()
         app.searchFields.firstMatch.typeText("Lone Prairie")
-        app.navigationBars.buttons["Search"].tap()
+        app.keyboards.buttons["Search"].tap()
         let result = app.tables.cells.matching(NSPredicate(format: "label CONTAINS %@", "Lone Prairie")).firstMatch
+        // UISearchController can consume the keyboard action while dismissing
+        // its presentation. Submit the retained query from the navigation bar.
+        if !result.waitForExistence(timeout: 5) {
+            app.navigationBars.buttons["Search"].tap()
+        }
         XCTAssertTrue(result.waitForExistence(timeout: 90))
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            result.tap()
+            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+        }
         snap("04-results")
     }
 }
