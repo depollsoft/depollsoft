@@ -35,6 +35,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(tm_splitSelectionChanged:) name:TMTagSelectionDidChangeNotification object:nil];
     [DPAppDelegate setUpBackground:self.view];
 
     [self.tableView registerClass:[DPTagCell class] forCellReuseIdentifier:@"Tag"];
@@ -45,17 +46,23 @@
     self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] init];
     self.navigationItem.backBarButtonItem.title = @"Teachable";
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
-    
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    // The row for the tag open beside this list stays selected instead of
+    // clearing when the screen reappears in an expanded split.
+    self.clearsSelectionOnViewWillAppear = !(self.splitViewController && !self.splitViewController.isCollapsed);
     [self viewDidLoadExtension];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self tm_syncSelectionForSplit];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
+    [self tm_syncSelectionForSplit];
 }
 
 - (void)didReceiveMemoryWarning
@@ -115,6 +122,7 @@
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    [self tm_syncSelectionForSplit];
     UIView *header = self.tableView.tableHeaderView;
     CGFloat width = self.tableView.bounds.size.width;
     if (!header || width <= 0) return;
@@ -141,11 +149,14 @@
     int tagId = [[DPAppDelegate teachable][indexPath.row] intValue];
     DPTagCell *tagCell = [self.tableView dequeueReusableCellWithIdentifier:@"Tag" forIndexPath:indexPath];
     tagCell.tagId = tagId;
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    tagCell.accessoryType = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
     return tagCell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    if (!expanded) [tableView deselectRowAtIndexPath:indexPath animated:YES];
     int tagId = [[DPAppDelegate teachable][indexPath.row] intValue];
     [DPAppDelegate showTagWithId:tagId from:self];
 }
@@ -173,6 +184,43 @@
 // Override to support conditional rearranging of the table view.
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
     return YES;
+}
+
+#pragma mark - TMTagListSource
+
+- (NSArray<NSNumber *> *)tm_listedTagIds {
+    return [DPAppDelegate teachable];
+}
+
+- (void)tm_didStepToTagId:(int)tagId {
+    NSArray<NSNumber *> *list = [DPAppDelegate teachable];
+    NSUInteger index = [list indexOfObject:@(tagId)];
+    if (index == NSNotFound) return;
+    NSIndexPath *path = [NSIndexPath indexPathForRow:index inSection:0];
+    [self.tableView selectRowAtIndexPath:path animated:!UIAccessibilityIsReduceMotionEnabled() scrollPosition:UITableViewScrollPositionNone];
+    [self.tableView scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionNone animated:!UIAccessibilityIsReduceMotionEnabled()];
+}
+
+- (void)tm_splitSelectionChanged:(NSNotification *)notification {
+    [self tm_syncSelectionForSplit];
+}
+
+- (void)tm_syncSelectionForSplit {
+    if (!self.isViewLoaded) return;
+    BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
+    self.clearsSelectionOnViewWillAppear = !expanded;
+    for (UITableViewCell *cell in self.tableView.visibleCells) {
+        if ([cell isKindOfClass:DPTagCell.class]) {
+            UITableViewCellAccessoryType accessory = expanded ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDisclosureIndicator;
+            if (cell.accessoryType != accessory) cell.accessoryType = accessory;
+        }
+    }
+    NSNumber *current = expanded ? [DPAppDelegate currentSplitTagIdFor:self] : nil;
+    NSUInteger index = current ? [[DPAppDelegate teachable] indexOfObject:current] : NSNotFound;
+    NSIndexPath *path = index == NSNotFound ? nil : [NSIndexPath indexPathForRow:index inSection:0];
+    NSIndexPath *selected = self.tableView.indexPathForSelectedRow;
+    if (selected && ![selected isEqual:path]) [self.tableView deselectRowAtIndexPath:selected animated:NO];
+    if (path && ![selected isEqual:path]) [self.tableView selectRowAtIndexPath:path animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 @end

@@ -217,6 +217,11 @@ class MeHeaderView : LinearLayout {
     }
 
     private fun openTag(id: Int) {
+        val host = context as? TagPaneHost
+        if (host != null && host.hasDetailPane) {
+            host.showTag(id)
+            return
+        }
         val intent = Intent(context, TagDetailActivity::class.java)
         intent.putExtra(TagDetailActivity.TAG_ID_EXTRA, id)
         context.startActivity(intent)

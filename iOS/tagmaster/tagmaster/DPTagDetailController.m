@@ -28,8 +28,6 @@
 @interface DPTagDetailController ()
 
 @property (nonatomic, strong) UILabel *titleLabel;
-@property (nonatomic, strong) UILabel *tagIdHeader;
-@property (nonatomic, strong) UILabel *tagIdLabel;
 @property (nonatomic, strong) UILabel *lastRefreshedHeader;
 @property (nonatomic, strong) UILabel *lastRefreshedLabel;
 @property (nonatomic, strong) UILabel *downloadsHeader;
@@ -68,8 +66,6 @@
 - (void)refreshView {
     // Update UI
     self.titleLabel.text = self.tag.title;
-    
-    self.tagIdLabel.text = [NSString stringWithFormat:@"%d", self.tag.tagId];
     
     NSDateFormatter *lastRefreshedFormatter = [[NSDateFormatter alloc] init];
     lastRefreshedFormatter.dateStyle = NSDateFormatterMediumStyle;
@@ -128,8 +124,6 @@
     [super viewDidLoad];
     
     self.titleLabel = [self makeTitleLabel];
-    self.tagIdHeader = [self makeHeader:@"Tag ID"];
-    self.tagIdLabel = [self makeBodyLabel];
     self.lastRefreshedHeader = [self makeHeader:@"Last Refreshed"];
     self.lastRefreshedLabel = [self makeBodyLabel];
     self.downloadsHeader = [self makeHeader:@"Downloads"];
@@ -137,17 +131,17 @@
     self.linkHeader = [self makeHeader:@"Link"];
     self.linkButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     [self.linkButton setTitle:@"BarbershopTags.com" forState:UIControlStateNormal];
-    self.postedByHeader = [self makeHeader:@"Posted By"];
+    self.postedByHeader = [self makeHeader:@"Posted by"];
     self.postedByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
     self.postedHeader = [self makeHeader:@"Posted"];
     self.postedLabel = [self makeBodyLabel];
-    self.arrangedByHeader = [self makeHeader:@"Arranged By"];
+    self.arrangedByHeader = [self makeHeader:@"Arranged by"];
     self.arrangedByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
-    self.yearArrangedHeader = [self makeHeader:@"Year Arranged"];
+    self.yearArrangedHeader = [self makeHeader:@"Year arranged"];
     self.yearArrangedLabel = [self makeBodyLabel];
-    self.sungByHeader = [self makeHeader:@"Sung By"];
+    self.sungByHeader = [self makeHeader:@"Sung by"];
     self.sungByButton = [TMWrappingButton buttonWithType:UIButtonTypeSystem];
-    self.yearSungHeader = [self makeHeader:@"Year Sung"];
+    self.yearSungHeader = [self makeHeader:@"Year sung"];
     self.yearSungLabel = [self makeBodyLabel];
     
     for (UIButton *button in @[self.linkButton, self.postedByButton, self.arrangedByButton, self.sungByButton]) {
@@ -168,10 +162,11 @@
         minimumHeight.priority = UILayoutPriorityRequired - 1;
         minimumHeight.active = YES;
     }
-    NSArray *captions = @[self.tagIdHeader, self.lastRefreshedHeader, self.downloadsHeader, self.linkHeader,
+    // Tag ID lives on the Summary, as on Android; Details keeps source, posting, arranging and singing facts.
+    NSArray *captions = @[self.lastRefreshedHeader, self.downloadsHeader, self.linkHeader,
                           self.postedByHeader, self.postedHeader, self.arrangedByHeader, self.yearArrangedHeader,
                           self.sungByHeader, self.yearSungHeader];
-    NSArray *values = @[self.tagIdLabel, self.lastRefreshedLabel, self.downloadsLabel, self.linkButton,
+    NSArray *values = @[self.lastRefreshedLabel, self.downloadsLabel, self.linkButton,
                         self.postedByButton, self.postedLabel, self.arrangedByButton, self.yearArrangedLabel,
                         self.sungByButton, self.yearSungLabel];
     self.metadataStack = [[TMDetailMetadata alloc] initWithArrangedSubviews:@[self.titleLabel]];
@@ -181,7 +176,7 @@
     NSMutableArray *pairs = [NSMutableArray array];
     for (NSUInteger index = 0; index < captions.count; index++) {
         TMDetailPair *pair = [TMDetailPair caption:captions[index] value:values[index]];
-        pair.section = index < 4 ? 0 : (index < 6 ? 1 : (index < 8 ? 2 : 3));
+        pair.section = index < 3 ? 0 : (index < 5 ? 1 : (index < 7 ? 2 : 3));
         [pairs addObject:pair];
         [self.metadataStack addArrangedSubview:pair];
     }
