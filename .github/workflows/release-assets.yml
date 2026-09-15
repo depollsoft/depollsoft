@@ -62,6 +62,33 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Capture Wear OS round
+        if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
+        uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
+        with:
+          api-level: 33
+          arch: x86_64
+          target: android-wear
+          profile: wearos_small_round
+          avd-name: release-wear-round
+          pre-emulator-launch-script: sed -i 's/hw.lcd.circular=no/hw.lcd.circular=yes/;s/hw.lcd.circular=false/hw.lcd.circular=true/' ~/.android/avd/release-wear-round.avd/config.ini
+          disable-animations: true
+          script: >-
+            "$RUNNER_TEMP/release-python/bin/python" scripts/release/wear.py
+            --serial emulator-5554 --shape round --output build/release/wear
+      - name: Capture Wear OS square
+        if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
+        uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
+        with:
+          api-level: 33
+          arch: x86_64
+          target: android-wear
+          profile: wearos_square
+          avd-name: release-wear-square
+          disable-animations: true
+          script: >-
+            "$RUNNER_TEMP/release-python/bin/python" scripts/release/wear.py
+            --serial emulator-5554 --shape square --output build/release/wear
       - name: Capture Android phone and tablet
         if: inputs.platform == 'android'
         uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808
@@ -70,9 +97,10 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1600x2560 -dns-server 8.8.8.8
           script: >-
             "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py
-            --app "$RELEASE_APP" --platform android --serial emulator-5554
+            --app "$RELEASE_APP" --platform android --serial emulator-5554 --wear-source build/release/wear
             --output "build/release/assets/$RELEASE_APP/android"
       - name: Capture iPhone and iPad
         if: inputs.platform == 'ios'
@@ -81,6 +109,11 @@ jobs:
           export DEVELOPER_DIR
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"
+      - name: Compare with current store screenshots
+        run: |
+          "$RUNNER_TEMP/release-python/bin/python" scripts/release/review.py \
+            --app "$RELEASE_APP" --platform "$RELEASE_PLATFORM" \
+            --output "build/release/assets/$RELEASE_APP/$RELEASE_PLATFORM"
       - name: Export reviewed listing and any planned release notes
         run: |
           python3 scripts/release/release.py export --app "$RELEASE_APP" \

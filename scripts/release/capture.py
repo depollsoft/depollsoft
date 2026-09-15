@@ -3,12 +3,15 @@
 import argparse
 import fcntl
 import signal
+import sys
+import shutil
 import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 
 from PIL import Image, ImageStat
 from release import APPS, ROOT, git, write_json, fingerprint
@@ -28,6 +31,15 @@ def output(*args):
     return subprocess.check_output(list(map(str, args)), text=True, timeout=300).strip()
 
 
+def screenshot_path(app, platform, family, scene):
+    if scene not in APPS[app]['store_scenes'][platform]:
+        return f'review/{family}/{scene}.png'
+    position = APPS[app]['store_scenes'][platform].index(scene) + 1
+    ordered = f'{position:02}-{scene[3:]}'
+    return (f'screenshots/en-US/{family}-{ordered}.png' if platform == 'ios'
+            else f'metadata/en-US/images/{family}/{ordered}.png')
+
+
 def ios(app, dest):
     config = APPS[app]
     devices = json.loads(output('xcrun', 'simctl', 'list', 'runtimes', '-j'))['runtimes']
@@ -43,29 +55,31 @@ def ios(app, dest):
                 run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
                     '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                     '--batteryState', 'charged', '--batteryLevel', '100')
-                run('xcrun', 'simctl', 'ui', udid, 'appearance', 'light')
-                result = work / f'{family}.xcresult'
-                env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
-                run('xcodebuild', 'test', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
-                    '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
-                    '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
-                    '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
-                    '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                    '-only-testing:' + app + 'UITests/StoreScreenshotTests',
-                    'CODE_SIGNING_ALLOWED=NO', env=env)
-                attachments = work / family
-                run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
-                    '--output-path', attachments)
-                manifest = json.loads((attachments / 'manifest.json').read_text())
-                for test in manifest:
-                    for attachment in test['attachments']:
-                        name = attachment['suggestedHumanReadableName']
-                        for scene in config['scenes']:
-                            if name.startswith(f'store-{scene}'):
-                                target = dest / 'screenshots/en-US' / f'{family}-{scene}.png'
-                                target.parent.mkdir(parents=True, exist_ok=True)
-                                with Image.open(attachments / attachment['exportedFileName']) as image:
-                                    image.convert('RGB').save(target)
+                for theme in ('light', 'dark'):
+                    subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
+                    run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
+                    result = work / f'{family}-{theme}.xcresult'
+                    env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
+                    run('xcodebuild', 'test', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
+                        '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
+                        '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
+                        '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
+                        '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
+                        '-only-testing:' + app + 'UITests/StoreScreenshotTests',
+                        'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
+                    attachments = work / f'{family}-{theme}'
+                    run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
+                        '--output-path', attachments)
+                    manifest = json.loads((attachments / 'manifest.json').read_text())
+                    for test in manifest:
+                        for attachment in test['attachments']:
+                            name = attachment['suggestedHumanReadableName']
+                            for scene in config['scenes']:
+                                if name.startswith(f'store-{scene}'):
+                                    target = dest / screenshot_path(app, 'ios', family, f'{scene}-{theme}')
+                                    target.parent.mkdir(parents=True, exist_ok=True)
+                                    with Image.open(attachments / attachment['exportedFileName']) as image:
+                                        image.convert('RGB').save(target)
             finally:
                 subprocess.run(['xcrun', 'simctl', 'shutdown', udid], check=False)
                 run('xcrun', 'simctl', 'delete', udid)
@@ -87,25 +101,29 @@ def android(app, dest, serial):
     try:
         for setting in ('window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'):
             run(*adb, 'shell', 'settings', 'put', 'global', setting, '0')
-        run(*adb, 'shell', 'cmd', 'uimode', 'night', 'no')
         run(*adb, 'shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0')
         run(*adb, 'shell', 'settings', 'put', 'system', 'user_rotation', '0')
         for family, (size, density) in ANDROID_DEVICES.items():
             run(*adb, 'shell', 'wm', 'size', size)
             run(*adb, 'shell', 'wm', 'density', density)
-            run(*adb, 'shell', 'pm', 'clear', package)
-            result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
-                            f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
-                            f'{package}.test/androidx.test.runner.AndroidJUnitRunner')
-            print(result)
-            # am instrument can return exit 0 even when the test failed.
-            if 'OK (1 test)' not in result or 'FAILURES' in result:
-                raise ValueError('Screenshot instrumentation failed')
-            target = dest / 'metadata/en-US/images' / family
-            target.mkdir(parents=True, exist_ok=True)
-            for scene in config['scenes']:
-                with (target / f'{scene}.png').open('wb') as handle:
-                    run(*adb, 'exec-out', 'run-as', package, 'cat', f'files/store-screenshots/{scene}.png', stdout=handle)
+            time.sleep(3)
+            for theme in ('light', 'dark'):
+                run(*adb, 'shell', 'cmd', 'uimode', 'night', 'yes' if theme == 'dark' else 'no')
+                run(*adb, 'shell', 'pm', 'clear', package)
+                result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
+                                f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
+                                f'{package}.test/androidx.test.runner.AndroidJUnitRunner')
+                print(result)
+                # am instrument can return exit 0 even when the test failed.
+                if 'OK (1 test)' not in result or 'FAILURES' in result:
+                    diagnostics = dest / 'android-logcat.txt'
+                    diagnostics.write_text(output(*adb, 'logcat', '-d', '-t', '1500'))
+                    raise ValueError(f'Screenshot instrumentation failed; see {diagnostics}')
+                for scene in config['scenes']:
+                    target = dest / screenshot_path(app, 'android', family, f'{scene}-{theme}')
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with target.open('wb') as handle:
+                        run(*adb, 'exec-out', 'run-as', package, 'cat', f'files/store-screenshots/{scene}.png', stdout=handle)
     finally:
         run(*adb, 'shell', 'wm', 'size', 'reset')
         run(*adb, 'shell', 'wm', 'density', 'reset')
@@ -114,10 +132,13 @@ def android(app, dest, serial):
 def validate(app, platform, dest):
     expected = {}
     for family, info in (IOS_DEVICES if platform == 'ios' else ANDROID_DEVICES).items():
+        selected = APPS[app]['store_scenes'][platform]
+        available = {f'{scene}-{theme}' for theme in ('light', 'dark') for scene in APPS[app]['scenes']}
+        if not selected or len(selected) != len(set(selected)) or len(selected) > (10 if platform == 'ios' else 8) or not set(selected) <= available:
+            raise ValueError('Invalid store screenshot selection')
         hashes = set()
-        for scene in APPS[app]['scenes']:
-            relative = (f'screenshots/en-US/{family}-{scene}.png' if platform == 'ios'
-                        else f'metadata/en-US/images/{family}/{scene}.png')
+        for scene in [f'{scene}-{theme}' for theme in ('light', 'dark') for scene in APPS[app]['scenes']]:
+            relative = screenshot_path(app, platform, family, scene)
             path = dest / relative
             with Image.open(path) as image:
                 image.load()
@@ -131,6 +152,16 @@ def validate(app, platform, dest):
                 raise ValueError(f'Duplicate scene: {path}')
             hashes.add(sha)
             expected[relative] = sha
+    if app == 'pitchperfect' and platform == 'android':
+        for shape in ('round', 'square'):
+            relative = f'metadata/en-US/images/wearScreenshots/{shape}.png'
+            path = dest / relative
+            with Image.open(path) as image:
+                if image.format != 'PNG' or image.size != (384, 384) or image.mode != 'RGB' or max(ImageStat.Stat(image).stddev) < 5:
+                    raise ValueError(f'Invalid Wear screenshot: {path}')
+            expected[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+        if len({expected[k] for k in expected if 'wearScreenshots' in k}) != 2:
+            raise ValueError('Round and square Wear screenshots are identical')
     actual = {str(p.relative_to(dest)) for p in dest.rglob('*.png')}
     if actual != set(expected):
         raise ValueError('Unexpected screenshot files in bundle')
@@ -144,17 +175,33 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--serial', default=os.environ.get('ANDROID_SERIAL', ''))
     parser.add_argument('--validate-only', action='store_true')
+    parser.add_argument('--wear-source', type=Path, help='Round and square outputs from wear.py, required for Pitch Perfect Android')
     args = parser.parse_args()
     dest = args.output.resolve()
+    source_sha, source_fingerprint = git('rev-parse', 'HEAD'), fingerprint()
     if not args.validate_only:
         if dest.exists():
             raise ValueError(f'Output already exists; choose a fresh directory: {dest}')
-        dest.mkdir(parents=True)
+        if args.app == 'pitchperfect' and args.platform == 'android':
+            if not args.wear_source:
+                raise ValueError('Pitch Perfect Android requires --wear-source with both watch shapes')
+            for shape in ('round', 'square'):
+                source = args.wear_source / f'{shape}.png'
+                evidence = json.loads((args.wear_source / f'{shape}.json').read_text())
+                if evidence != {'source_sha': git('rev-parse', 'HEAD'), 'source_fingerprint': fingerprint(),
+                                'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}:
+                    raise ValueError('Wear screenshots do not match this source')
+                target = dest / 'metadata/en-US/images/wearScreenshots' / source.name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+        dest.mkdir(parents=True, exist_ok=True)
         (ios(args.app, dest) if args.platform == 'ios' else android(args.app, dest, args.serial))
         # Android UiAutomation may encode RGBA; stores receive opaque RGB PNGs.
         for path in dest.rglob('*.png'):
             with Image.open(path) as image:
                 image.convert('RGB').save(path)
+    if (git('rev-parse', 'HEAD'), fingerprint()) != (source_sha, source_fingerprint):
+        raise ValueError('Source changed during capture; rerun from a stable checkout')
     files = validate(args.app, args.platform, dest)
     if not args.validate_only:
         write_json(dest / 'capture.json', {'app': args.app, 'platform': args.platform,
@@ -173,6 +220,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, interrupted)
     # Local capture commands can otherwise resize the same emulator or compete
     # for simulator resources. Serialize them just as the Actions jobs do.
-    with (Path(tempfile.gettempdir()) / 'depollsoft-store-capture.lock').open('a') as lock:
+    with (Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{sys.argv[sys.argv.index("--platform") + 1] if "--platform" in sys.argv else "help"}.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         main()

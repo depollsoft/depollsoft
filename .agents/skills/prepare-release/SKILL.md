@@ -27,7 +27,11 @@ Run `scripts/release/release.py prepare` with the selected versions and notes. I
 
 ## Generate and review screenshots
 
+First download and inspect the current screenshots for the selected app and platform with `scripts/release/review.py`. Compare by user flow, populated state, appearance, and device family, not just image count. The public store baseline is the starting point. Preserve coverage unless a feature was removed or there is an explicit reason to replace a scene. Record additions, replacements, and omissions in the PR.
+
 Generate new screenshots for every selected platform from the running native app. Use `scripts/release/capture.py` locally or the `Generate release assets` workflow on the preparation branch. The release PR also generates captures in Actions. iOS requires the documented simulators; Android requires a disposable emulator. Never use a personal device or a simulator containing user data.
+
+Open the generated `index.html`, compare contact sheets with `current-store/`, then inspect every captured PNG at full size. `store_scenes` in `apps.json` selects and orders uploads within the store limits; other captures remain in `review/`. Pitch Perfect includes populated songs, list editing, the song editor, and both Wear OS shapes on Android. Tag Master includes populated favorites, classic browsing, search filters/results, details, tracks, and videos. Both apps capture light and dark appearances on phone and tablet. Example songs and favorites must stay on the disposable device without signing into a real account.
 
 Inspect every captured PNG at full size. Confirm the intended scene has loaded, text is readable, navigation and media controls are visible, and no alerts, empty loading screens, test ads, or personal information appear. Tag Master captures use the live catalog; network failures must be fixed before proceeding. Update capture tests and scene definitions when product flows change. Do not substitute mock screens, image-generated UI, or stale screenshots.
 

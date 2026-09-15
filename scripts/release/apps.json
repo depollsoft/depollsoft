@@ -1,14 +1,99 @@
 {
   "pitchperfect": {
-    "name": "Pitch Perfect", "module": "PitchPerfect", "bundle_id": "depollsoft.pitchperfect",
-    "ios_scheme": "pitchperfectUITests", "scenes": ["01-pitch-pipe", "02-notes", "03-keys"],
-    "paths": ["iOS/pitchperfect", "Android/PitchPerfect", "Android/PitchPerfectWear", "Firebase/pitchperfect"],
-    "baseline": {"ios": "2.0.3", "android": "4.0.0"}
+    "name": "Pitch Perfect",
+    "module": "PitchPerfect",
+    "bundle_id": "depollsoft.pitchperfect",
+    "ios_scheme": "pitchperfectUITests",
+    "scenes": [
+      "01-pitch-pipe",
+      "02-notes",
+      "03-keys",
+      "04-songs",
+      "05-edit-songs",
+      "06-song-editor"
+    ],
+    "paths": [
+      "iOS/pitchperfect",
+      "Android/PitchPerfect",
+      "Android/PitchPerfectWear",
+      "Firebase/pitchperfect"
+    ],
+    "baseline": {
+      "ios": "2.0.3",
+      "android": "4.0.0"
+    },
+    "store_scenes": {
+      "ios": [
+        "01-pitch-pipe-light",
+        "02-notes-light",
+        "03-keys-light",
+        "04-songs-light",
+        "05-edit-songs-light",
+        "06-song-editor-light",
+        "01-pitch-pipe-dark",
+        "04-songs-dark",
+        "05-edit-songs-dark",
+        "06-song-editor-dark"
+      ],
+      "android": [
+        "01-pitch-pipe-light",
+        "02-notes-light",
+        "03-keys-light",
+        "04-songs-light",
+        "05-edit-songs-light",
+        "06-song-editor-light",
+        "01-pitch-pipe-dark",
+        "04-songs-dark"
+      ]
+    }
   },
   "tagmaster": {
-    "name": "Tag Master", "module": "TagMaster", "bundle_id": "depollsoft.tagmaster",
-    "ios_scheme": "tagmaster", "scenes": ["01-summary", "02-details", "03-tracks"],
-    "paths": ["iOS/tagmaster", "Android/TagMaster", "Firebase/tagmaster"],
-    "baseline": {"ios": "2.0.2", "android": "5.2.1"}
+    "name": "Tag Master",
+    "module": "TagMaster",
+    "bundle_id": "depollsoft.tagmaster",
+    "ios_scheme": "tagmaster",
+    "scenes": [
+      "01-home",
+      "02-browse",
+      "03-search",
+      "04-results",
+      "05-summary",
+      "06-details",
+      "07-tracks",
+      "08-videos"
+    ],
+    "paths": [
+      "iOS/tagmaster",
+      "Android/TagMaster",
+      "Firebase/tagmaster"
+    ],
+    "baseline": {
+      "ios": "2.0.2",
+      "android": "5.2.1"
+    },
+    "store_scenes": {
+      "ios": [
+        "01-home-light",
+        "02-browse-light",
+        "03-search-light",
+        "04-results-light",
+        "05-summary-light",
+        "06-details-light",
+        "07-tracks-light",
+        "08-videos-light",
+        "01-home-dark",
+        "05-summary-dark"
+      ],
+      "android": [
+        "01-home-light",
+        "02-browse-light",
+        "03-search-light",
+        "04-results-light",
+        "05-summary-light",
+        "07-tracks-light",
+        "08-videos-light",
+        "01-home-dark"
+      ]
+    }
   }
 }

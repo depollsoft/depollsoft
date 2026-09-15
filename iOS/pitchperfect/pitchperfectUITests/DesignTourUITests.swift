@@ -178,7 +178,7 @@ final class DesignTourUITests: XCTestCase {
     }
 }
 
-/// Opt-in capture of the running app. No mock views or replacement data.
+/// Opt-in capture of the native app with local example songs, without signing in.
 final class StoreScreenshotTests: XCTestCase {
     func testCaptureStoreScreenshots() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
@@ -187,19 +187,55 @@ final class StoreScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
         app.launch()
-        for (tab, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
-            let candidates = [app.tabBars.buttons[tab].firstMatch, app.buttons[tab].firstMatch,
-                              app.cells[tab].firstMatch, app.otherElements[tab].firstMatch]
-            let item = candidates.first { $0.exists } ?? app.descendants(matching: .any)[tab].firstMatch
-            XCTAssertTrue(item.waitForExistence(timeout: 15), "Missing store scene: \(tab)")
+        func tab(_ name: String) {
+            let candidates = [app.tabBars.buttons[name].firstMatch, app.buttons[name].firstMatch,
+                              app.cells[name].firstMatch, app.otherElements[name].firstMatch]
+            let item = candidates.first { $0.exists } ?? app.descendants(matching: .any)[name].firstMatch
+            XCTAssertTrue(item.waitForExistence(timeout: 15))
+            XCTAssertTrue(item.isHittable)
             item.tap()
-            // Let navigation and SwiftUI drawing finish before capturing pixels.
+        }
+        func snap(_ name: String) {
             Thread.sleep(forTimeInterval: 1)
-            XCTAssertEqual(app.state, .runningForeground)
             let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             attachment.name = "store-\(name)"
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+        for (title, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
+            tab(title)
+            snap(name)
+        }
+        tab("Songs")
+        let edit = app.navigationBars.buttons["Edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 10))
+        edit.tap()
+        if !app.tables.cells.containing(.staticText, identifier: "Blue Skies").firstMatch.exists {
+            for (index, title) in ["Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine"].enumerated() {
+                app.navigationBars.buttons["Add"].tap()
+                let field = app.textFields.firstMatch
+                XCTAssertTrue(field.waitForExistence(timeout: 10))
+                field.tap()
+                field.typeText(title)
+                app.keyboards.buttons["Done"].tap()
+                let keyName = ["F major", "C major", "G major", "D major"][index % 4]
+                let key = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", keyName)).firstMatch
+                XCTAssertTrue(key.exists)
+                key.tap()
+                app.navigationBars.buttons["Done"].firstMatch.tap()
+                XCTAssertTrue(app.navigationBars.buttons["Add"].waitForExistence(timeout: 10))
+            }
+        }
+        app.navigationBars.buttons["Sort Alphabetically"].tap()
+        app.navigationBars.buttons["Done"].tap()
+        snap("04-songs")
+        app.navigationBars.buttons["Edit"].tap()
+        snap("05-edit-songs")
+        let first = app.tables.cells.firstMatch
+        XCTAssertTrue(first.buttons.firstMatch.exists)
+        // The system detail disclosure opens the actual song editor.
+        first.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'info' OR label CONTAINS[c] 'detail'")).firstMatch.tap()
+        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 10))
+        snap("06-song-editor")
     }
 }

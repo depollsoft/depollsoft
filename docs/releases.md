@@ -40,9 +40,41 @@ git submodule update --init --recursive
   --platform android --serial emulator-5554 --output build/release/tagmaster-android
 ```
 
-Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Captures show the actual native app. Pitch Perfect covers the pitch pipe, notes, and key signatures. Tag Master opens live catalog tag 1809 and captures summary, details, and learning tracks. Tests fail when required content cannot load. They are opt-in, so ordinary test runs do not depend on the live catalog. Pitch Perfect captures its existing ad-free state on Android. Its iOS debug build suppresses ad requests during capture and keeps the normal unfilled-banner layout; production builds have no capture switch.
+Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Both appearances are captured for every scene:
 
-The validator checks the exact scene set, PNG dimensions, opaque pixels, blank images, duplicate scenes, file hashes, app, platform, and source commit. Inspect the images as well: pixel checks cannot judge copy legibility or whether a remote asset has finished loading. Update the native tests and `apps.json` together when the screens change.
+| App | Captured flows per appearance |
+| --- | --- |
+| Pitch Perfect | Pitch pipe, notes, keys, populated songs, editing/reordering, song editor |
+| Tag Master | Populated favorites, classic browsing, search filters, search results, summary, details, loaded learning tracks, videos |
+
+The tests use the real native views. Example songs are local to the disposable device; Tag Master's favorites and results load from the live catalog. No account sign-in or remote user-data writes are needed. Missing/deleted catalog entries, empty results, and failed media loads fail capture. Pitch Perfect captures its existing ad-free state on Android. Its iOS debug build suppresses ad requests; production builds have no capture switch.
+
+`apps.json` separates the complete capture scenes from the selected and ordered `store_scenes`: up to ten uploads per iOS device size and eight per Play phone/tablet category. Extra light/dark scenes remain in `review/` for visual review, outside the upload directories. Do not discard existing coverage merely to keep the automation short.
+
+Pitch Perfect Android also requires round and square Wear OS captures. Boot disposable API 33 Wear OS emulators with `wearos_small_round` and `wearos_square` profiles. Ensure the round AVD has `hw.lcd.circular=true` before booting. Capture each, then pass their directory to the phone/tablet command:
+
+```sh
+.venv-release/bin/python scripts/release/wear.py --serial emulator-5556 \
+  --shape round --output build/release/wear
+.venv-release/bin/python scripts/release/wear.py --serial emulator-5558 \
+  --shape square --output build/release/wear
+.venv-release/bin/python scripts/release/capture.py --app pitchperfect \
+  --platform android --serial emulator-5554 --wear-source build/release/wear \
+  --output build/release/pitchperfect-android
+```
+
+The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically.
+
+Download the current public store screenshots and build a comparison gallery for any capture bundle:
+
+```sh
+.venv-release/bin/python scripts/release/review.py --app tagmaster \
+  --platform ios --output build/release/tagmaster-ios
+```
+
+Open `index.html` inside the bundle. It links every full-size image, contact sheets, and downloaded `current-store/` screenshots with source URLs and retrieval time. The reference screenshots are never uploaded. Actions includes this comparison in every artifact and fails if the current listing cannot be retrieved. The public Play page groups multiple device types together; inspect the actual images when mapping coverage.
+
+The validator checks the exact scene set, PNG dimensions, opaque pixels, blank images, duplicate scenes, file hashes, app, platform, and source commit. Inspect the images as well: pixel checks cannot judge copy legibility or whether a remote asset has finished loading. Update the native tests and `apps.json` together when the screens change. The initial baseline comparison found five light/dark flows per iOS device for each app, plus phone/tablet songs and round/square watches for Pitch Perfect Android, and seven distinct Tag Master Android flows. Review these against the current listings on every release.
 
 ## Generate in Actions
 

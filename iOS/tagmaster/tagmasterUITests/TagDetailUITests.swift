@@ -651,41 +651,84 @@ final class StoreScreenshotTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launch()
-        let open = app.tables.staticTexts["Open Tag"]
-        XCTAssertTrue(open.waitForExistence(timeout: 15))
-        if !open.isHittable { app.tables.firstMatch.swipeUp() }
-        open.tap()
-        let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
-        alert.textFields.firstMatch.tap()
-        alert.textFields.firstMatch.typeText("1809")
-        alert.buttons["Open"].tap()
-        let share = app.navigationBars.buttons["Share"]
-        XCTAssertTrue(share.waitForExistence(timeout: 60))
-        expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: share)
-        waitForExpectations(timeout: 60)
-        XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 10))
-        for (tab, name) in [("Summary", "01-summary"), ("Details", "02-details"), ("Tracks", "03-tracks")] {
-            let item = app.buttons["page-\(tab)"]
-            XCTAssertTrue(item.waitForExistence(timeout: 10))
-            item.tap()
-            XCTAssertTrue(item.isSelected)
-            if tab == "Tracks" {
-                let lead = app.tables.cells.containing(.staticText, identifier: "Lead").firstMatch
-                XCTAssertTrue(lead.waitForExistence(timeout: 10))
-                lead.tap()
-                let transport = app.buttons["tagmaster.trackPlayer.playPause"]
-                XCTAssertTrue(transport.waitForExistence(timeout: 10))
-                expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: transport)
-                waitForExpectations(timeout: 60)
-                if transport.label == "Pause" { transport.tap() }
-            }
-            Thread.sleep(forTimeInterval: 1)
+        func home() {
+            app.terminate()
+            app.launch()
+            XCTAssertTrue(app.tables.staticTexts["Browse"].waitForExistence(timeout: 15))
+        }
+        func snap(_ name: String) {
+            Thread.sleep(forTimeInterval: 2)
             let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
             attachment.name = "store-\(name)"
             attachment.lifetime = .keepAlways
             add(attachment)
         }
+        func open(_ id: String) {
+            home()
+            let item = app.tables.staticTexts["Open Tag"]
+            if !item.isHittable { app.tables.firstMatch.swipeUp() }
+            item.tap()
+            let alert = app.alerts["Open Tag"]
+            XCTAssertTrue(alert.waitForExistence(timeout: 5))
+            alert.textFields.firstMatch.tap()
+            alert.textFields.firstMatch.typeText(id)
+            alert.buttons["Open"].tap()
+            let share = app.navigationBars.buttons["Share"]
+            XCTAssertTrue(share.waitForExistence(timeout: 90))
+            expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: share)
+            waitForExpectations(timeout: 90)
+            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 10))
+        }
+        // These are real catalog entries, saved only in this disposable simulator.
+        for id in ["669", "1478", "122"] {
+            open(id)
+            if app.navigationBars.buttons["Add Favorite"].exists {
+                app.navigationBars.buttons["Add Favorite"].tap()
+            } else if app.navigationBars.buttons["Favorite and Teachable options"].exists {
+                app.navigationBars.buttons["Favorite and Teachable options"].tap()
+                if app.buttons["Add Favorite"].exists { app.buttons["Add Favorite"].tap() }
+                else { app.buttons["Cancel"].tap() }
+            }
+        }
+        for (title, name) in [("Summary", "05-summary"), ("Details", "06-details"), ("Tracks", "07-tracks"), ("Videos", "08-videos")] {
+            let item = app.buttons["page-\(title)"]
+            XCTAssertTrue(item.waitForExistence(timeout: 10))
+            item.tap()
+            XCTAssertTrue(item.isSelected)
+            if title == "Tracks" {
+                let lead = app.tables.cells.containing(.staticText, identifier: "Lead").firstMatch
+                XCTAssertTrue(lead.waitForExistence(timeout: 15))
+                lead.tap()
+                let transport = app.buttons["tagmaster.trackPlayer.playPause"]
+                XCTAssertTrue(transport.waitForExistence(timeout: 10))
+                expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: transport)
+                waitForExpectations(timeout: 90)
+                if transport.label == "Pause" { transport.tap() }
+            }
+            if title == "Videos" {
+                XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 30))
+                app.tables.firstMatch.swipeUp()
+                Thread.sleep(forTimeInterval: 8)
+            }
+            snap(name)
+        }
+        home()
+        XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].waitForExistence(timeout: 60))
+        snap("01-home")
+        app.tables.staticTexts["Browse"].tap()
+        let classic = app.buttons["page-Classic"]
+        XCTAssertTrue(classic.waitForExistence(timeout: 15))
+        classic.tap()
+        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 90))
+        snap("02-browse")
+        home()
+        app.navigationBars.buttons["Search"].tap()
+        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
+        snap("03-search")
+        app.searchFields.firstMatch.tap()
+        app.searchFields.firstMatch.typeText("Lone Prairie")
+        app.keyboards.buttons["Search"].tap()
+        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 90))
+        snap("04-results")
     }
 }

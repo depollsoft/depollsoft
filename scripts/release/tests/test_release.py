@@ -139,7 +139,7 @@ class CaptureTests(unittest.TestCase):
     def test_missing_wrong_size_blank_and_duplicate_screenshots_fail(self):
         with tempfile.TemporaryDirectory() as folder:
             dest = Path(folder)
-            path = dest / 'screenshots/en-US/iphone-01-pitch-pipe.png'
+            path = dest / 'screenshots/en-US/iphone-01-pitch-pipe-light.png'
             path.parent.mkdir(parents=True)
             with self.assertRaises(FileNotFoundError):
                 capture.validate('pitchperfect', 'ios', dest)
@@ -152,9 +152,47 @@ class CaptureTests(unittest.TestCase):
             image = Image.new('RGB', (1320, 2868), 'white')
             ImageDraw.Draw(image).rectangle((0, 0, 800, 1000), fill='black')
             image.save(path)
-            image.save(path.with_name('iphone-02-notes.png'))
+            image.save(path.with_name('iphone-02-notes-light.png'))
             with self.assertRaisesRegex(ValueError, 'Duplicate'):
                 capture.validate('pitchperfect', 'ios', dest)
+
+
+class ExpandedCaptureTests(unittest.TestCase):
+    def test_store_limits_do_not_drop_review_scenes(self):
+        for app, config in release.APPS.items():
+            for platform, maximum in [('ios', 10), ('android', 8)]:
+                paths = [capture.screenshot_path(app, platform, 'device', f'{scene}-{theme}')
+                         for theme in ('light', 'dark') for scene in config['scenes']]
+                uploads = [p for p in paths if not p.startswith('review/')]
+                self.assertEqual(len(uploads), maximum)
+                self.assertEqual(len(set(paths)), 2 * len(config['scenes']))
+                self.assertTrue(any('dark' in p for p in uploads))
+                for position, scene in enumerate(config['store_scenes'][platform], 1):
+                    path = capture.screenshot_path(app, platform, 'device', scene)
+                    self.assertIn(f'{position:02}-{scene[3:]}', path)
+
+    def test_missing_dark_review_scene_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder, patch.object(capture, 'IOS_DEVICES', {'iphone': ('test', {(32, 48)})}):
+            dest = Path(folder)
+            i = 0
+            for theme in ('light', 'dark'):
+                for scene in release.APPS['pitchperfect']['scenes']:
+                    path = dest / capture.screenshot_path('pitchperfect', 'ios', 'iphone', f'{scene}-{theme}')
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    image = Image.new('RGB', (32, 48), 'white')
+                    ImageDraw.Draw(image).rectangle((0, 0, 12, 12+i), fill=(10*i, 0, 0))
+                    image.save(path)
+                    i += 1
+            self.assertEqual(len(capture.validate('pitchperfect', 'ios', dest)), 12)
+            (dest / capture.screenshot_path('pitchperfect', 'ios', 'iphone', '02-notes-dark')).unlink()
+            with self.assertRaises(FileNotFoundError):
+                capture.validate('pitchperfect', 'ios', dest)
+
+    def test_play_baseline_only_collects_screenshots(self):
+        from review import PlayScreenshots
+        parser = PlayScreenshots()
+        parser.feed('<img src="https://example.com/icon"><img data-screenshot-index="0" src="https://example.com/a=w526-h296"><img data-screenshot-index="0" src="https://example.com/a=w526-h296">')
+        self.assertEqual(parser.urls, ['https://example.com/a=s1600'])
 
 
 if __name__ == '__main__':
