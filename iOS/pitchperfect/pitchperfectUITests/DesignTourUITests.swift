@@ -222,7 +222,12 @@ final class StoreScreenshotTests: XCTestCase {
                 let key = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", keyName)).firstMatch
                 XCTAssertTrue(key.exists)
                 key.tap()
-                app.navigationBars.buttons["Done"].firstMatch.tap()
+                // On iPad the list's Done button remains in the hierarchy behind
+                // the editor sheet. Save through the sheet's navigation bar.
+                let save = app.navigationBars["Add Song"].buttons["Done"]
+                XCTAssertTrue(save.isHittable)
+                save.tap()
+                XCTAssertTrue(app.tables.cells.containing(.staticText, identifier: title).firstMatch.waitForExistence(timeout: 10))
                 XCTAssertTrue(app.navigationBars.buttons["Add"].waitForExistence(timeout: 10))
             }
         }
