@@ -3875,6 +3875,12 @@ TM_CAPTURE_IMPL
         UIButton *button = (id)keyView.subviews.firstObject;
         XCTAssertTrue([button isKindOfClass:UIButton.class]);
         XCTAssertEqualObjects(button.accessibilityIdentifier, @"sheet.key");
+        // Glyph plus the written key, as on the Summary and Android; one line, never "Key: …".
+        XCTAssertEqualObjects(button.configuration.title, tag.writtenKey);
+        XCTAssertNotNil(button.configuration.image);
+        XCTAssertEqual(button.titleLabel.numberOfLines, 1);
+        XCTAssertEqual(button.configuration.titleLineBreakMode, NSLineBreakByTruncatingTail);
+        XCTAssertEqual([button contentCompressionResistancePriorityForAxis:UILayoutConstraintAxisHorizontal], UILayoutPriorityRequired);
         UIViewController *host = [UIViewController new];
         host.navigationItem.rightBarButtonItem = sheet.keyItem;
         [self mount:host width:UIScreen.mainScreen.bounds.size.width dark:NO large:NO];

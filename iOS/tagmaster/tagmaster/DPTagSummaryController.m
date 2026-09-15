@@ -679,12 +679,17 @@
                     keyConfiguration.image = [UIImage systemImageNamed:@"key"];
                     keyConfiguration.imagePadding = 8;
                     keyConfiguration.contentInsets = NSDirectionalEdgeInsetsMake(4, 8, 4, 8);
+                    // The key glyph already says "key"; the title is the written key alone, as on
+                    // the Summary and on Android, and it stays on one line however tight the bar.
+                    keyConfiguration.titleLineBreakMode = NSLineBreakByTruncatingTail;
                     toucher.configuration = keyConfiguration;
                     toucher.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
                     toucher.titleLabel.adjustsFontForContentSizeCategory = YES;
+                    toucher.titleLabel.numberOfLines = 1;
+                    [toucher setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
                     toucher.accessibilityLabel = [NSString stringWithFormat:@"Play key note %@", self.tag.keyNote];
                     toucher.accessibilityHint = @"Plays for one and a half seconds";
-                    [toucher setTitle:[NSString stringWithFormat:@"Key: %@", self.tag.keyNote] forState:UIControlStateNormal];
+                    [toucher setTitle:self.tag.writtenKey forState:UIControlStateNormal];
                     [toucher addTarget:self action:@selector(pitchTouchDown) forControlEvents:UIControlEventTouchDown];
                     [toucher addTarget:self action:@selector(pitchTouchUp) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside | UIControlEventTouchCancel];
                     keyItem = [[UIBarButtonItem alloc] initWithCustomView:[[TMSheetKeyView alloc] initWithButton:toucher]];
