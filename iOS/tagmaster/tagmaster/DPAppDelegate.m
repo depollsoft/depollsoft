@@ -176,6 +176,8 @@ static __weak UIResponder *TMRecordedFirstResponder;
         // List and detail side by side on iPad; the Home stack stays the primary column.
         UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
         split.delegate = self;
+        // One watermark behind both columns, installed before any column loads its view.
+        [DPAppDelegate installSharedBackgroundIn:split.view];
         split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
         split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
         // A comfortable list width on both 11- and 13-inch iPads, without
@@ -472,16 +474,11 @@ static __weak UIResponder *TMRecordedFirstResponder;
     return item;
 }
 
-+ (void)setUpBackground:(UIView *)view {
-    view.backgroundColor = [UIColor systemBackgroundColor];
+static TMLogoBackgroundView *TMSharedBackground;
+
++ (TMLogoBackgroundView *)addLogoBackgroundTo:(UIView *)view {
     TMLogoBackgroundView *backgroundImage = [[TMLogoBackgroundView alloc] initWithFrame:CGRectZero];
     backgroundImage.translatesAutoresizingMaskIntoConstraints = NO;
-
-    if ([view isKindOfClass:[UITableView class]]) {
-        UITableView *tableView = (UITableView *)view;
-        view = tableView.backgroundView = [[UIView alloc] init];
-    }
-
     [view addSubview:backgroundImage];
     [view sendSubviewToBack:backgroundImage];
     [view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[backgroundImage]|"
@@ -492,7 +489,33 @@ static __weak UIResponder *TMRecordedFirstResponder;
                                                                  options:0
                                                                  metrics:nil
                                                                    views:NSDictionaryOfVariableBindings(backgroundImage)]];
+    return backgroundImage;
 }
 
++ (void)installSharedBackgroundIn:(UIView *)view {
+    [TMSharedBackground removeFromSuperview];
+    view.backgroundColor = [UIColor systemBackgroundColor];
+    TMSharedBackground = [self addLogoBackgroundTo:view];
+}
+
++ (void)removeSharedBackground {
+    [TMSharedBackground removeFromSuperview];
+    TMSharedBackground = nil;
+}
+
++ (void)setUpBackground:(UIView *)view {
+    if (TMSharedBackground) {
+        // The split paints the watermark once behind both columns; screens stay clear.
+        view.backgroundColor = [UIColor clearColor];
+        if ([view isKindOfClass:[UITableView class]]) ((UITableView *)view).backgroundView = nil;
+        return;
+    }
+    view.backgroundColor = [UIColor systemBackgroundColor];
+    if ([view isKindOfClass:[UITableView class]]) {
+        UITableView *tableView = (UITableView *)view;
+        view = tableView.backgroundView = [[UIView alloc] init];
+    }
+    [self addLogoBackgroundTo:view];
+}
 
 @end
