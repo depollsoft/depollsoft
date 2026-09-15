@@ -447,6 +447,13 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Isolate Ruby gems
+        run: |
+          mkdir -p "$RUNNER_TEMP/ruby-gems"
+          echo "GEM_HOME=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
+          echo "GEM_PATH=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/ruby-gems/bin" >> "$GITHUB_PATH"
+
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
