@@ -675,6 +675,13 @@ final class StoreScreenshotTests: XCTestCase {
             alert.textFields.firstMatch.typeText(id)
             alert.buttons["Open"].tap()
             let share = app.navigationBars.buttons["Share"]
+            // The live catalog occasionally fails a request. Exercise the app's
+            // Retry action, but never capture its error or loading state.
+            for _ in 0..<2 {
+                if share.waitForExistence(timeout: 30) { break }
+                let retry = app.buttons["Retry"].firstMatch
+                if retry.exists { retry.tap() }
+            }
             XCTAssertTrue(share.waitForExistence(timeout: 90))
             expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: share)
             waitForExpectations(timeout: 90)
