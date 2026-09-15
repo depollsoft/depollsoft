@@ -47,6 +47,13 @@ jobs:
           "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
       - name: Validate copy
         run: python3 scripts/release/release.py validate
+      - name: Reserve disk space for Android emulators
+        if: inputs.platform == 'android'
+        run: |
+          # These hosted-runner SDKs are unused by the Kotlin/Java capture builds.
+          # Wear OS images impose a minimum userdata size above disk-size.
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk
+          df -h "$HOME" "$RUNNER_TEMP"
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         if: inputs.platform == 'android'
         with:
