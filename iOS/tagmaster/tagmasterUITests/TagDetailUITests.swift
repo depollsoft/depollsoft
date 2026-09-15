@@ -7,6 +7,7 @@
 
 import XCTest
 import UIKit
+import UIKit
 
 final class TagDetailUITests: XCTestCase {
     

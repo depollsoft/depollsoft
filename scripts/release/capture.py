@@ -42,9 +42,30 @@ def screenshot_path(app, platform, family, scene):
 
 def ios(app, dest):
     config = APPS[app]
-    devices = json.loads(output('xcrun', 'simctl', 'list', 'runtimes', '-j'))['runtimes']
-    runtimes = [r for r in devices if r.get('isAvailable') and 'iOS' in r['name']]
-    runtime = max(runtimes, key=lambda r: tuple(map(int, r['version'].split('.'))))['identifier']
+    # Self-hosted machines can have several Xcodes and newer simulator runtimes
+    # than the globally selected toolchain. Select a compatible pair locally,
+    # without changing xcode-select for other runner jobs.
+    candidates = set(Path('/Applications').glob('Xcode*.app/Contents/Developer'))
+    candidates.add(Path(os.environ.get('DEVELOPER_DIR') or output('xcode-select', '-p')))
+    pairs = []
+    for developer in candidates:
+        env = dict(os.environ, DEVELOPER_DIR=str(developer))
+        try:
+            sdk = subprocess.check_output(['xcrun', '--sdk', 'iphonesimulator', '--show-sdk-version'],
+                                          env=env, text=True, stderr=subprocess.DEVNULL).strip()
+            sdk_version = tuple(map(int, sdk.split('.')))[:2]
+            data = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'runtimes', '-j'], env=env, text=True))
+            for runtime in data['runtimes']:
+                version = tuple(map(int, runtime['version'].split('.')))[:2]
+                if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
+                    pairs.append((version, sdk_version, str(developer), runtime['identifier']))
+        except (subprocess.CalledProcessError, ValueError):
+            continue
+    if not pairs:
+        raise ValueError('Install an iOS 26 simulator runtime supported by an installed Xcode')
+    _, _, developer, runtime = max(pairs)
+    os.environ['DEVELOPER_DIR'] = developer
+    print(f'Capture toolchain: {developer}; runtime: {runtime}', flush=True)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
