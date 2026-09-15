@@ -20,6 +20,12 @@ def main():
         raise ValueError('Use a disposable Wear OS emulator')
     source_sha, source_fingerprint = git('rev-parse', 'HEAD'), fingerprint()
     adb = ['adb', '-s', args.serial]
+    run(*adb, 'wait-for-device')
+    deadline = time.monotonic() + 180
+    while output(*adb, 'shell', 'getprop', 'sys.boot_completed') != '1':
+        if time.monotonic() > deadline:
+            raise ValueError('Wear OS did not finish booting')
+        time.sleep(2)
     if 'android.hardware.type.watch' not in output(*adb, 'shell', 'pm', 'list', 'features'):
         raise ValueError('Capture requires an actual Wear OS emulator')
     circular = 'FLAG_ROUND' in output(*adb, 'shell', 'dumpsys', 'display')
@@ -32,12 +38,18 @@ def main():
     run(*adb, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     run(*adb, 'shell', 'wm', 'dismiss-keyguard')
     run(*adb, 'shell', 'pm', 'clear', 'depollsoft.pitchperfect')
-    run(*adb, 'shell', 'am', 'start', '-W', '-n', 'depollsoft.pitchperfect/.PitchPipeActivity')
-    time.sleep(4)
-    run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml')
-    hierarchy = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml')
-    if 'pitchButton0' not in hierarchy or 'pitchButton11' not in hierarchy:
-        raise ValueError('The Wear pitch pipe is not visible')
+    deadline = time.monotonic() + 120
+    while True:
+        run(*adb, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
+        run(*adb, 'shell', 'wm', 'dismiss-keyguard')
+        run(*adb, 'shell', 'am', 'start', '-W', '-n', 'depollsoft.pitchperfect/.PitchPipeActivity')
+        time.sleep(3)
+        run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml')
+        hierarchy = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml')
+        if 'pitchButton0' in hierarchy and 'pitchButton11' in hierarchy:
+            break
+        if time.monotonic() > deadline:
+            raise ValueError('The Wear pitch pipe is not visible')
     args.output.mkdir(parents=True, exist_ok=True)
     path = args.output / f'{args.shape}.png'
     with path.open('wb') as handle:

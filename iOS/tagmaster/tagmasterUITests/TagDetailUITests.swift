@@ -727,8 +727,9 @@ final class StoreScreenshotTests: XCTestCase {
         snap("03-search")
         app.searchFields.firstMatch.tap()
         app.searchFields.firstMatch.typeText("Lone Prairie")
-        app.keyboards.buttons["Search"].tap()
-        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 90))
+        app.navigationBars.buttons["Search"].tap()
+        let result = app.tables.cells.matching(NSPredicate(format: "label CONTAINS %@", "Lone Prairie")).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 90))
         snap("04-results")
     }
 }
