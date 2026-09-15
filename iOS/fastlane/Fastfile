@@ -429,9 +429,12 @@ platform :ios do
     identifiers = [config[:bundle_identifier], config[:extension_bundle_identifier]].compact
     verifier = File.join(__dir__, "verify_firebase_ipa.py")
     sh("python3", verifier, "--archive", archive_path, "--app", app)
+    # Ad hoc profiles embed device UDIDs. Regenerate whenever the portal's device list has
+    # changed, so a newly registered iPhone or iPad can install the next Firebase build.
     match(
       type: "adhoc",
       readonly: false,
+      force_for_new_devices: true,
       app_identifier: identifiers,
       api_key: api_key,
     )
