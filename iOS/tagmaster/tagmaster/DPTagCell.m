@@ -189,22 +189,14 @@
     return formatter;
 }
 
+// Not cached: a symbol image carries the trait environment it was created in, and UIKit
+// already caches system symbols, so a fresh lookup is both cheap and always current.
 + (UIImage *)onImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"checkmark"];
-    });
-    return image;
+    return [UIImage systemImageNamed:@"checkmark"];
 }
 
 + (UIImage *)offImage {
-    static UIImage *image;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        image = [UIImage systemImageNamed:@"xmark"];
-    });
-    return image;
+    return [UIImage systemImageNamed:@"xmark"];
 }
 
 - (void)setTagInstance:(DPTag *)newTag {
