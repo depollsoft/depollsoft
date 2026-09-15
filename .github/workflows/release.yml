@@ -1,0 +1,80 @@
+name: Release mobile apps
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'releases/**'
+      - 'store/**'
+      - 'scripts/release/**'
+      - '.agents/skills/prepare-release/**'
+      - '.github/workflows/release*.yml'
+      - 'iOS/fastlane/**'
+      - 'Android/fastlane/**'
+  push:
+    branches: [main]
+    paths: ['releases/**']
+permissions:
+  contents: read
+concurrency:
+  group: mobile-release-${{ github.event_name }}-${{ github.event.pull_request.number || 'main' }}
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      any: ${{ steps.plan.outputs.any }}
+      captures: ${{ steps.plan.outputs.captures }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate release tooling and copy
+        run: |
+          python3 -m pip install -r scripts/release/requirements.txt
+          python3 -m unittest discover -s scripts/release/tests -v
+          python3 scripts/release/release.py validate
+          ruby -c scripts/release/production.rb
+          ruby scripts/release/tests/test_production.rb
+      - id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          matrix=$(python3 scripts/release/release.py plan --base "$BASE_SHA")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          MATRIX="$matrix" python3 - <<'PY'
+          import json, os
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              selected = json.loads(os.environ['MATRIX'])['include']
+              f.write('any=' + str(bool(selected)).lower() + '\n')
+              captures = selected or [{'app': app, 'platform': platform}
+                                      for app in ('pitchperfect', 'tagmaster') for platform in ('ios', 'android')]
+              f.write('captures=' + json.dumps({'include': captures}) + '\n')
+          PY
+  assets:
+    needs: plan
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.captures) }}
+    uses: ./.github/workflows/release-assets.yml
+    with:
+      app: ${{ matrix.app }}
+      platform: ${{ matrix.platform }}
+      source-sha: ${{ github.sha }}
+  deploy:
+    needs: [plan, assets]
+    if: github.event_name == 'push' && needs.plan.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    uses: ./.github/workflows/release-deploy.yml
+    with:
+      app: ${{ matrix.app }}
+      platform: ${{ matrix.platform }}
+      source-sha: ${{ github.sha }}
+    permissions:
+      contents: write
+    secrets: inherit

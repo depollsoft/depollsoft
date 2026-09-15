@@ -1,0 +1,14 @@
+{
+  "pitchperfect": {
+    "name": "Pitch Perfect", "module": "PitchPerfect", "bundle_id": "depollsoft.pitchperfect",
+    "ios_scheme": "pitchperfectUITests", "scenes": ["01-pitch-pipe", "02-notes", "03-keys"],
+    "paths": ["iOS/pitchperfect", "Android/PitchPerfect", "Android/PitchPerfectWear", "Firebase/pitchperfect"],
+    "baseline": {"ios": "2.0.3", "android": "4.0.0"}
+  },
+  "tagmaster": {
+    "name": "Tag Master", "module": "TagMaster", "bundle_id": "depollsoft.tagmaster",
+    "ios_scheme": "tagmaster", "scenes": ["01-summary", "02-details", "03-tracks"],
+    "paths": ["iOS/tagmaster", "Android/TagMaster", "Firebase/tagmaster"],
+    "baseline": {"ios": "2.0.2", "android": "5.2.1"}
+  }
+}

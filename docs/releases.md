@@ -1,0 +1,102 @@
+# Mobile releases
+
+Pitch Perfect and Tag Master each have their own listing copy, release plan, screenshots, and release tags. iOS and Android version independently too. The initial source versions are Pitch Perfect iOS 2.0.3 / Android 4.0.0 and Tag Master iOS 2.0.2 / Android 5.2.1.
+
+Use the repository's `prepare-release` skill to review changes, refresh copy, capture screens, and open a PR. A release is scheduled by changing `releases/<app>/release.json`. Merging that PR into `main` submits only the app/platform pairs in the changed plan. This infrastructure change includes no release plans and does not deploy anything.
+
+## Files and commands
+
+- `store/<app>/listing.json` contains reviewed English store copy. iOS and Android have separate fields and character limits.
+- `scripts/release/apps.json` maps app IDs, modules, capture scenes, and initial source versions.
+- `releases/<app>/release.json` records the selected platforms, their versions and builds, notes, and source baselines.
+- `releases/<app>/changes.md` holds app and shared-library commit evidence for the release PR.
+- `build/release/` holds generated files and is ignored by git.
+
+Prepare a release, using your chosen versions and a file containing reviewed notes:
+
+```sh
+python3 scripts/release/release.py prepare --app tagmaster \
+  --ios-version 2.0.3 --android-version 5.2.2 \
+  --since <last-shipped-commit> --notes /tmp/tagmaster-notes.txt
+python3 scripts/release/release.py validate
+python3 scripts/release/release.py plan --base origin/main
+```
+
+Omit a platform's version flag to leave it out of the release. `--since` is required for a platform's first release; subsequent preparations use that platform's latest version tag. If the first iOS and Android releases have different baselines, use `--ios-since` and `--android-since`. Baselines must be ancestors of the preparation commit. The shared paths include PitchPerfectLib, depolllib, Android common libraries, and cloud services.
+
+Build numbers default to Unix seconds and can be overridden with `--build`. Confirm they exceed the latest uploaded build, including builds that have not shipped. The helper enforces increasing versions/builds against the previous plan and published tags. Store APIs remain the authority for uploads made outside this system. Production build overrides apply only to the selected Gradle module or Xcode scheme, including Pitch Perfect's iOS widget. Existing private preview numbering is unchanged. The Android Wear companion is not shipped by these lanes because the Play app has no Wear track configured.
+
+## Generate assets locally
+
+Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
+
+```sh
+python3 -m venv .venv-release
+.venv-release/bin/pip install -r scripts/release/requirements.txt
+git submodule update --init --recursive
+.venv-release/bin/python scripts/release/capture.py --app tagmaster \
+  --platform ios --output build/release/tagmaster-ios
+.venv-release/bin/python scripts/release/capture.py --app tagmaster \
+  --platform android --serial emulator-5554 --output build/release/tagmaster-android
+```
+
+Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Captures show the actual native app. Pitch Perfect covers the pitch pipe, notes, and key signatures. Tag Master opens live catalog tag 1809 and captures summary, details, and learning tracks. Tests fail when required content cannot load. They are opt-in, so ordinary test runs do not depend on the live catalog. Pitch Perfect captures its existing ad-free state on Android. Its iOS debug build suppresses ad requests during capture and keeps the normal unfilled-banner layout; production builds have no capture switch.
+
+The validator checks the exact scene set, PNG dimensions, opaque pixels, blank images, duplicate scenes, file hashes, app, platform, and source commit. Inspect the images as well: pixel checks cannot judge copy legibility or whether a remote asset has finished loading. Update the native tests and `apps.json` together when the screens change.
+
+## Generate in Actions
+
+`Generate release assets` supports a manual app/platform selection and can run on a preparation branch:
+
+```sh
+gh workflow run release-assets.yml --ref <branch> -f app=tagmaster -f platform=ios
+gh run list --workflow release-assets.yml
+gh run download <run-id> --name release-assets-tagmaster-ios --dir /tmp/tagmaster-ios
+```
+
+The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each selected pair. Tooling or copy PRs without a release plan capture both apps on both platforms for regression coverage. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
+
+On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, and the app bundle. Existing icons and feature graphics remain managed in the stores.
+
+## Store access and first-use setup
+
+The workflows reuse the preview credentials:
+
+- Android: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, and `PLAY_SERVICE_ACCOUNT_JSON`. The service account accepts raw or base64 JSON and needs production release/listing permissions for both packages.
+- iOS: `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_PASSWORD`, and `MATCH_GIT_SSH_KEY`. `MATCH_GIT_BASIC_AUTHORIZATION` is the HTTPS fallback.
+
+The private signing repository must contain App Store profiles for `depollsoft.tagmaster`, `depollsoft.pitchperfect`, and `depollsoft.pitchperfect.widget`, with their production entitlements. Deployment lanes use readonly Match. Before the first iOS release, run the one-time provisioning workflow if a profile is missing:
+
+```sh
+gh workflow run release-signing.yml -f app=tagmaster
+```
+
+`Provision production signing` runs only from `main`, creates or repairs profiles for the selected app, and stores them in the encrypted signing repository. It requires a signing-repository credential with write access. It does not upload a binary or release an app. During implementation, the remote signing repository had Pitch Perfect's production app/widget profiles but lacked Tag Master's production profile, so run this for Tag Master after the tooling PR merges.
+
+ The iOS API key needs access to both production apps. The existing store records must have their review contact, content rights, age rating, privacy, encryption, and advertising answers completed. This tooling does not invent those answers. Store agreements or new required fields can block submission and need correction in the console.
+
+macOS jobs use the existing self-hosted macOS pool; Android jobs use Ubuntu with a fresh emulator. Same-repository PRs can capture on the macOS runner. Fork PRs run only the release plan tests on a hosted runner. No deployment credentials are passed to capture jobs. Consider making the release checks required in branch protection.
+
+## Submission and retries
+
+Apple submission requests automatic release after review. Google Play receives a completed production release with changes sent for review. Neither means the store has already approved or published the app.
+
+After each platform succeeds, the workflow creates a release record such as `tagmaster/ios/v2.0.3` or `pitchperfect/android/v4.0.1`, with its asset archive, notes, and source commit. Tags are app/platform scoped and cannot be reused for different source commits. A successful platform does not wait for another platform's store submission to succeed.
+
+For a transient failure, use **Re-run failed jobs** on the original workflow. Its source, version, build, and artifacts remain fixed. A full rerun also accepts already-published tags that point to that same commit. iOS reuses an uploaded build number after an interrupted submission; Play skips an already-committed production version code. A published GitHub release with an asset archive marks completion. If publication of that record was interrupted, rerunning completes it. Do not change version numbers or force-move tags to retry.
+
+If the source or copy needs correcting after a partial release, prepare a new release plan for only the affected platform with a new version/build. If a later release already shipped, do not rerun an older deployment.
+
+## Checks
+
+```sh
+.venv-release/bin/python -m unittest discover -s scripts/release/tests -v
+python3 scripts/release/release.py validate
+ruby -c scripts/release/production.rb
+ruby scripts/release/tests/test_production.rb
+actionlint .github/workflows/release*.yml
+```
+
+The unit tests cover isolated app selection, platform versions, initial infrastructure merges, version/build regressions, retries, copy export, and corrupt or incomplete screenshots. Live capture builds and runs the native tests. Signed submission requires store credentials and is exercised by a release PR, not an infrastructure PR.
+
+References: [Fastlane App Store delivery](https://docs.fastlane.tools/actions/deliver/), [Fastlane Play delivery](https://docs.fastlane.tools/actions/upload_to_play_store/), and the apps' existing [support](https://apps.depoll.com/) and [privacy](https://apps.depoll.com/privacy/) pages.

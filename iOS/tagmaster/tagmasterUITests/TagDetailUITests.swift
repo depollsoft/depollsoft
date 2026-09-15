@@ -643,3 +643,49 @@ final class TagMasterPolishUITests: XCTestCase {
         capture("browse-rows")
     }
 }
+
+/// Uses tag 1809 from the live catalog; a network/catalog failure fails capture.
+final class StoreScreenshotTests: XCTestCase {
+    func testCaptureStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launch()
+        let open = app.tables.staticTexts["Open Tag"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        if !open.isHittable { app.tables.firstMatch.swipeUp() }
+        open.tap()
+        let alert = app.alerts["Open Tag"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.textFields.firstMatch.tap()
+        alert.textFields.firstMatch.typeText("1809")
+        alert.buttons["Open"].tap()
+        let share = app.navigationBars.buttons["Share"]
+        XCTAssertTrue(share.waitForExistence(timeout: 60))
+        expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: share)
+        waitForExpectations(timeout: 60)
+        XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 10))
+        for (tab, name) in [("Summary", "01-summary"), ("Details", "02-details"), ("Tracks", "03-tracks")] {
+            let item = app.buttons["page-\(tab)"]
+            XCTAssertTrue(item.waitForExistence(timeout: 10))
+            item.tap()
+            XCTAssertTrue(item.isSelected)
+            if tab == "Tracks" {
+                let lead = app.tables.cells.containing(.staticText, identifier: "Lead").firstMatch
+                XCTAssertTrue(lead.waitForExistence(timeout: 10))
+                lead.tap()
+                let transport = app.buttons["tagmaster.trackPlayer.playPause"]
+                XCTAssertTrue(transport.waitForExistence(timeout: 10))
+                expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: transport)
+                waitForExpectations(timeout: 60)
+                if transport.label == "Pause" { transport.tap() }
+            }
+            Thread.sleep(forTimeInterval: 1)
+            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            attachment.name = "store-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+}

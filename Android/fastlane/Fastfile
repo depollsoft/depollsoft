@@ -125,3 +125,5 @@ platform :android do
     UI.success("Internal App Sharing URL: #{url}")
   end
 end
+
+import '../../scripts/release/production.rb'

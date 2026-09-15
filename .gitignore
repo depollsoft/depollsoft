@@ -26,3 +26,8 @@ CloudCode/**/config/global.json
 # iOS dependencies and build outputs
 iOS/Pods/
 iOS/build/
+
+# Generated release media and local capture tools
+/build/release/
+/.venv-release/
+/scripts/release/**/__pycache__/

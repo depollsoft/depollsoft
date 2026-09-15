@@ -177,3 +177,29 @@ final class DesignTourUITests: XCTestCase {
         }
     }
 }
+
+/// Opt-in capture of the running app. No mock views or replacement data.
+final class StoreScreenshotTests: XCTestCase {
+    func testCaptureStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launch()
+        for (tab, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
+            let candidates = [app.tabBars.buttons[tab].firstMatch, app.buttons[tab].firstMatch,
+                              app.cells[tab].firstMatch, app.otherElements[tab].firstMatch]
+            let item = candidates.first { $0.exists } ?? app.descendants(matching: .any)[tab].firstMatch
+            XCTAssertTrue(item.waitForExistence(timeout: 15), "Missing store scene: \(tab)")
+            item.tap()
+            // Let navigation and SwiftUI drawing finish before capturing pixels.
+            Thread.sleep(forTimeInterval: 1)
+            XCTAssertEqual(app.state, .runningForeground)
+            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            attachment.name = "store-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+}

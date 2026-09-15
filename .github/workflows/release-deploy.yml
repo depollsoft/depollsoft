@@ -1,0 +1,110 @@
+name: Deploy one app release
+on:
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+      source-sha:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["ubuntu-24.04"]') }}
+    timeout-minutes: 120
+    concurrency:
+      group: release-store-${{ inputs.platform }}-${{ inputs.platform == 'ios' && 'signing' || inputs.app }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    env:
+      RELEASE_APP: ${{ inputs.app }}
+      RELEASE_PLATFORM: ${{ inputs.platform }}
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      FL_SETUP_CI_KEYCHAIN_NAME: depollsoft-release-${{ github.run_id }}-${{ inputs.app }}.keychain
+      FL_SETUP_CI_SET_DEFAULT_KEYCHAIN: 'false'
+      FL_SETUP_CI_TIMEOUT: '7200'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source-sha }}
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Resolve release identity
+        id: identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/publish.py identity
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: steps.identity.outputs.done != 'true'
+        with:
+          name: release-assets-${{ inputs.app }}-${{ inputs.platform }}
+          path: build/release/assets/${{ inputs.app }}/${{ inputs.platform }}
+      - name: Set up validation tools
+        if: steps.identity.outputs.done != 'true'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/release-python"
+          "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
+          echo "RELEASE_PYTHON=$RUNNER_TEMP/release-python/bin/python" >> "$GITHUB_ENV"
+          echo "RELEASE_ASSETS=$GITHUB_WORKSPACE/build/release/assets/$RELEASE_APP/$RELEASE_PLATFORM" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        if: inputs.platform == 'android' && steps.identity.outputs.done != 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        if: inputs.platform == 'android' && steps.identity.outputs.done != 'true'
+        with:
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        if: steps.identity.outputs.done != 'true'
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+      - name: Prepare Android credentials
+        if: inputs.platform == 'android' && steps.identity.outputs.done != 'true'
+        env:
+          ANDROID_UPLOAD_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: python3 scripts/release/credentials.py
+      - name: Prepare signing repository access
+        if: inputs.platform == 'ios' && steps.identity.outputs.done != 'true'
+        env:
+          MATCH_GIT_SSH_KEY: ${{ secrets.MATCH_GIT_SSH_KEY }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: bash scripts/release/signing.sh
+      - name: Submit binary and store assets
+        if: steps.identity.outputs.done != 'true'
+        working-directory: ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+        run: bundle exec fastlane "$RELEASE_PLATFORM" deploy_production app:"$RELEASE_APP"
+      - name: Publish release record and assets
+        if: steps.identity.outputs.done != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release/publish.py publish
+      - name: Remove temporary credentials
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/release-upload.jks" "$RUNNER_TEMP/release-play.json" \
+            "$RUNNER_TEMP/release-match-key" "$RUNNER_TEMP/release-known-hosts"
+          if [ "$RELEASE_PLATFORM" = ios ]; then
+            keychain="$HOME/Library/Keychains/$FL_SETUP_CI_KEYCHAIN_NAME-db"
+            if [ -f "$keychain" ]; then security delete-keychain "$keychain"; fi
+          fi

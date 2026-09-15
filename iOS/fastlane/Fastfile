@@ -472,3 +472,5 @@ platform :ios do
     UI.success("Verified Firebase IPA: #{output_path}")
   end
 end
+
+import '../../scripts/release/production.rb'
