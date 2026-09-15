@@ -723,7 +723,8 @@ final class StoreScreenshotTests: XCTestCase {
         home()
         XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].waitForExistence(timeout: 60))
         if UIDevice.current.userInterfaceIdiom == .pad {
-            app.tables.staticTexts["Cheer Up, Charlie"].tap()
+            // Keep home distinct from the detail-only scenes, which use tag 122.
+            app.tables.staticTexts["Their Hearts Were Full Of Spring"].tap()
             XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
         }
         snap("01-home")
