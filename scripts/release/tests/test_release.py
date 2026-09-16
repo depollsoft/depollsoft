@@ -188,6 +188,36 @@ class ExpandedCaptureTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 capture.validate('pitchperfect', 'ios', dest)
 
+    def test_pitch_perfect_android_requires_the_derived_store_icon(self):
+        import icons
+        with tempfile.TemporaryDirectory() as folder, patch.object(capture, 'ANDROID_DEVICES', {'phoneScreenshots': ('32x48', '1')}):
+            dest = Path(folder)
+            i = 0
+            for theme in ('light', 'dark'):
+                for scene in release.APPS['pitchperfect']['scenes']:
+                    path = dest / capture.screenshot_path('pitchperfect', 'android', 'phoneScreenshots', f'{scene}-{theme}')
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    image = Image.new('RGB', (32, 48), 'white')
+                    ImageDraw.Draw(image).rectangle((0, 0, 12, 12 + i), fill=(10 * i, 0, 0))
+                    image.save(path)
+                    i += 1
+            for shape, shade in (('round', 40), ('square', 200)):
+                path = dest / f'metadata/en-US/images/wearScreenshots/{shape}.png'
+                path.parent.mkdir(parents=True, exist_ok=True)
+                image = Image.new('RGB', (384, 384), 'black')
+                ImageDraw.Draw(image).ellipse((40, 40, 300, 300), fill=(shade, shade, shade))
+                image.save(path)
+            icon = dest / 'metadata/en-US/images/icon.png'
+            with self.assertRaises(FileNotFoundError):
+                capture.validate('pitchperfect', 'android', dest)
+            rendered = icons.store('production')
+            self.assertEqual((rendered.size, rendered.mode, rendered.getpixel((0, 0))), ((512, 512), 'RGB', icons.PLATE))
+            rendered.save(icon)
+            self.assertIn('metadata/en-US/images/icon.png', capture.validate('pitchperfect', 'android', dest))
+            Image.new('RGB', (256, 256), 'white').save(icon)
+            with self.assertRaisesRegex(ValueError, 'store icon'):
+                capture.validate('pitchperfect', 'android', dest)
+
     def test_play_baseline_only_collects_screenshots(self):
         from review import PlayScreenshots
         parser = PlayScreenshots()

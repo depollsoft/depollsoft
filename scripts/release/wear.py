@@ -2,7 +2,9 @@
 """Capture Pitch Perfect's actual Wear OS app on a disposable watch emulator."""
 import argparse
 import hashlib
+import math
 import os
+import subprocess
 from pathlib import Path
 import time
 from PIL import Image
@@ -46,14 +48,26 @@ def main():
         time.sleep(3)
         run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml')
         hierarchy = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml')
-        if 'pitchButton0' in hierarchy and 'pitchButton11' in hierarchy:
+        # The instrument is one custom view; its cells are virtual accessibility
+        # nodes named after their notes.
+        if 'id/pitchInstrument' in hierarchy and 'octave 4' in hierarchy:
             break
         if time.monotonic() > deadline:
             raise ValueError('The Wear pitch pipe is not visible')
     args.output.mkdir(parents=True, exist_ok=True)
     path = args.output / f'{args.shape}.png'
-    with path.open('wb') as handle:
-        run(*adb, 'exec-out', 'screencap', '-p', stdout=handle)
+    # Hold the C4 cell (first on the ring, just right of twelve o'clock) so the
+    # store shows the instrument sounding: lit cell, name and frequency.
+    centre, ring = 192, 384 * 0.395
+    angle = math.radians(-90 + 360 / 26)
+    x, y = round(centre + ring * math.cos(angle)), round(centre + ring * math.sin(angle))
+    hold = subprocess.Popen([*map(str, adb), 'shell', 'input', 'swipe', str(x), str(y), str(x), str(y), '4000'])
+    try:
+        time.sleep(1.5)
+        with path.open('wb') as handle:
+            run(*adb, 'exec-out', 'screencap', '-p', stdout=handle)
+    finally:
+        hold.wait()
     with Image.open(path) as image:
         if image.size != (384, 384):
             raise ValueError(f'Unexpected watch size: {image.size}')

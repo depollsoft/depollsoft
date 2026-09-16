@@ -15,6 +15,7 @@ import time
 
 from PIL import Image, ImageStat
 from release import APPS, ROOT, git, write_json, fingerprint
+import icons
 
 IOS_DEVICES = {'iphone': ('iPhone 17 Pro Max', {(1320, 2868)}),
                'ipad': ('iPad Pro 13-inch (M5)', {(2064, 2752)})}
@@ -191,6 +192,13 @@ def validate(app, platform, dest):
             expected[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
         if len({expected[k] for k in expected if 'wearScreenshots' in k}) != 2:
             raise ValueError('Round and square Wear screenshots are identical')
+        # The listing icon is derived from the launcher icon so the two never drift.
+        relative = 'metadata/en-US/images/icon.png'
+        path = dest / relative
+        with Image.open(path) as image:
+            if image.format != 'PNG' or image.size != (512, 512) or image.mode != 'RGB':
+                raise ValueError(f'Invalid store icon: {path}')
+        expected[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     actual = {str(p.relative_to(dest)) for p in dest.rglob('*.png')}
     if actual != set(expected):
         raise ValueError('Unexpected screenshot files in bundle')
@@ -223,6 +231,9 @@ def main():
                 target = dest / 'metadata/en-US/images/wearScreenshots' / source.name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source, target)
+            icon = dest / 'metadata/en-US/images/icon.png'
+            icon.parent.mkdir(parents=True, exist_ok=True)
+            icons.store('production').save(icon, optimize=True)
         dest.mkdir(parents=True, exist_ok=True)
         (ios(args.app, dest) if args.platform == 'ios' else android(args.app, dest, args.serial))
         # Android UiAutomation may encode RGBA; stores receive opaque RGB PNGs.

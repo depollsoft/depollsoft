@@ -63,7 +63,7 @@ Pitch Perfect Android also requires round and square Wear OS captures. Boot disp
   --output build/release/pitchperfect-android
 ```
 
-The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically and deletes each before starting the next device. Wear OS images can require larger partitions than the requested 2 GB, so the capture job also removes unused .NET and Android NDK installations from its disposable hosted runner to leave enough disk space.
+Each watch capture holds the C4 cell so the instrument is shown sounding. The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically and deletes each before starting the next device. Wear OS images can require larger partitions than the requested 2 GB, so the capture job also removes unused .NET and Android NDK installations from its disposable hosted runner to leave enough disk space.
 
 Download the current public store screenshots and build a comparison gallery for any capture bundle:
 
@@ -90,7 +90,7 @@ The workflow must first exist on the default branch for manual dispatch. Release
 
 After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots, comparison images, and galleries stay in Actions artifacts or ignored local output directories; never commit them to git.
 
-On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, and the app bundle. Existing icons and feature graphics remain managed in the stores.
+On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, the app bundle, and for Pitch Perfect the listing icon, which `scripts/release/icons.py` derives from the launcher icon at capture time so the two never drift. Feature graphics and Tag Master's icon remain managed in the stores.
 
 ## Store access and first-use setup
 
