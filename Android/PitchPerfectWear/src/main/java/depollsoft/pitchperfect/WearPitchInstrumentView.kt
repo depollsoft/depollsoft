@@ -115,11 +115,25 @@ class WearPitchInstrumentView
         private val touchTracker =
             PitchMultiTouchTracker(
                 onStart = { cell ->
+                    cancelPendingStop(cell)
                     notes().getOrNull(cell)?.play()
                     performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 },
                 onStop = { cell -> notes().getOrNull(cell)?.stop() },
             )
+
+        // Accessibility clicks sound a note for a moment; each cell owns at most
+        // one pending stop so a re-activation or a finger never gets cut short.
+        private val pendingStops = mutableMapOf<Int, Runnable>()
+
+        private fun cancelPendingStop(cell: Int) {
+            pendingStops.remove(cell)?.let { removeCallbacks(it) }
+        }
+
+        private fun cancelPendingStops() {
+            pendingStops.values.forEach { removeCallbacks(it) }
+            pendingStops.clear()
+        }
         private var breathePhase = 0f
         internal var breatheAnimator: ValueAnimator? = null
             private set
@@ -481,7 +495,11 @@ class WearPitchInstrumentView
             if (size <= 0f || cellCenters.isEmpty()) return -1
             val dx = x - faceCx
             val dy = y - faceCy
-            if (hypot(dx, dy) < ringRadius - 1.25f * cellRadius) return -1
+            // The playable band reaches from the hole to just past the cells'
+            // outer rims: the whole face on a round watch, but not the score-only
+            // corners of a square one.
+            val distance = hypot(dx, dy)
+            if (distance < ringRadius - 1.25f * cellRadius || distance > ringRadius + 1.25f * cellRadius) return -1
             val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
             val step = 360.0 / cellCenters.size
             return floor(((angle + 90.0 + 360.0) % 360.0) / step).toInt()
@@ -579,6 +597,7 @@ class WearPitchInstrumentView
         }
 
         private fun stopEverything() {
+            cancelPendingStops()
             notes().forEach {
                 it.isPlaying = false
                 it.stop()
@@ -697,12 +716,17 @@ class WearPitchInstrumentView
                             note.isPlaying = !note.isPlaying
                             if (note.isPlaying) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         } else {
+                            cancelPendingStop(virtualViewId)
                             note.play()
                             performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                            postDelayed({
-                                note.stop()
-                                invalidate()
-                            }, 1500)
+                            val stop =
+                                Runnable {
+                                    pendingStops.remove(virtualViewId)
+                                    note.stop()
+                                    invalidate()
+                                }
+                            pendingStops[virtualViewId] = stop
+                            postDelayed(stop, 1500)
                         }
                     }
                 }
