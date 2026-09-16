@@ -88,6 +88,8 @@ gh run download <run-id> --name release-assets-tagmaster-ios --dir /tmp/tagmaste
 
 The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each selected pair. Tooling or copy PRs without a release plan capture both apps on both platforms for regression coverage. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
 
+After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots, comparison images, and galleries stay in Actions artifacts or ignored local output directories; never commit them to git.
+
 On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, and the app bundle. Existing icons and feature graphics remain managed in the stores.
 
 ## Store access and first-use setup

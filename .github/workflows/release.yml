@@ -64,6 +64,65 @@ jobs:
       app: ${{ matrix.app }}
       platform: ${{ matrix.platform }}
       source-sha: ${{ github.sha }}
+  comment-assets:
+    name: Link release assets in PR
+    needs: [plan, assets]
+    if: >-
+      !cancelled() && needs.plan.result == 'success' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          CAPTURE_MATRIX: ${{ needs.plan.outputs.captures }}
+          CAPTURE_RESULT: ${{ needs.assets.result }}
+        with:
+          script: |
+            const marker = '<!-- release-asset-artifacts -->';
+            const pr = context.payload.pull_request;
+            const {data: current} = await github.rest.pulls.get({
+              ...context.repo, pull_number: pr.number,
+            });
+            if (current.head.sha !== pr.head.sha) {
+              core.info('A newer commit is on this PR; leaving its asset links unchanged.');
+              return;
+            }
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              ...context.repo, run_id: context.runId, per_page: 100,
+            });
+            const apps = {pitchperfect: 'Pitch Perfect', tagmaster: 'Tag Master'};
+            const platforms = {ios: 'iPhone and iPad', android: 'Android'};
+            const rows = JSON.parse(process.env.CAPTURE_MATRIX).include.map(({app, platform}) => {
+              const artifact = artifacts.find(item =>
+                item.name === `release-assets-${app}-${platform}` && !item.expired);
+              const link = artifact
+                ? `[Download screenshots](${runUrl}/artifacts/${artifact.id})`
+                : `[Unavailable; check capture logs](${runUrl})`;
+              return `| ${apps[app]} | ${platforms[platform]} | ${link} |`;
+            });
+            const status = process.env.CAPTURE_RESULT === 'success'
+              ? 'All selected captures passed.' : 'Some captures did not complete successfully.';
+            const body = [marker, '## Release screenshots', '',
+              `${status} [View Actions run](${runUrl}) for PR commit \`${pr.head.sha}\`.`, '',
+              '| App | Platform | Artifact |', '| --- | --- | --- |', ...rows, '',
+              'Extract a ZIP and open `index.html` to review full-size screenshots, contact sheets, and the current store images.', '',
+              'Screenshots are Actions artifacts and are never committed to the repository. Downloads expire after 30 days; rerun the workflow to regenerate them.',
+            ].join('\n');
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: pr.number, per_page: 100,
+            });
+            const existing = comments.find(comment =>
+              comment.user?.type === 'Bot' && comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({...context.repo, comment_id: existing.id, body});
+            } else {
+              await github.rest.issues.createComment({...context.repo, issue_number: pr.number, body});
+            }
   deploy:
     needs: [plan, assets]
     if: github.event_name == 'push' && needs.plan.outputs.any == 'true'
