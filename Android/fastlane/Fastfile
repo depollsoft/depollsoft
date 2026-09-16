@@ -91,6 +91,26 @@ platform :android do
         )
       end
     end
+
+    if File.file?("build/private-listing/metadata/en-US/images/icon.png")
+      with_retries("Upload Pitch Perfect listing icon") do
+        upload_to_play_store(
+          package_name: "depollsoft.pitchperfect.private",
+          json_key: ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON_PATH"),
+          metadata_path: "build/private-listing/metadata",
+          skip_upload_apk: true,
+          skip_upload_aab: true,
+          skip_upload_metadata: true,
+          skip_upload_changelogs: true,
+          skip_upload_screenshots: true,
+          skip_upload_images: false,
+          changes_not_sent_for_review: true,
+          rescue_changes_not_sent_for_review: true,
+        )
+      end
+    else
+      UI.important("Skipping Pitch Perfect listing icon upload: build/private-listing/metadata/en-US/images/icon.png does not exist")
+    end
   end
 
   desc "Upload a private APK or AAB to Play Internal App Sharing"

@@ -497,6 +497,17 @@ jobs:
           echo "PLAY_SERVICE_ACCOUNT_JSON_PATH=$play_json_path" \
             >> "$GITHUB_ENV"
 
+      - name: Render private Play listing icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/icons"
+          "$RUNNER_TEMP/icons/bin/python" -m pip install \
+            -r scripts/release/requirements.txt
+          "$RUNNER_TEMP/icons/bin/python" scripts/release/icons.py \
+            --variant private \
+            --output Android/build/private-listing/metadata/en-US/images/icon.png
+
       - name: Deploy Android private builds
         working-directory: Android
         env:
