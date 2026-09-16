@@ -343,7 +343,7 @@ jobs:
               deployBuildNumber
                 ? `| **Deploy Build** | \`${deployBuildNumber}\` |`
                 : null,
-              '| **Android Status** | ⏳ Deploying to Play Internal Testing |',
+              '| **Android Status** | ⏳ Deploying phone + Wear OS to Play Internal Testing |',
               '| **iOS Status** | ⏳ Uploading to TestFlight |',
               `| **Firebase App Distribution** | ${firebaseStatus} |`,
               requestCommentUrl
@@ -1019,7 +1019,9 @@ jobs:
               verifyResult === 'success'
             ) {
               state = 'success';
-              status = '✅ Deployed to TestFlight & Play Internal Testing';
+              status =
+                '✅ Deployed to TestFlight & Play Internal Testing ' +
+                '(phone + Wear OS)';
             } else if (
               validationResult === 'cancelled' ||
               androidResult === 'cancelled' ||
@@ -1049,7 +1051,7 @@ jobs:
                 ? '⏭️ Not started'
                 : statusForPlatform(
                     androidResult,
-                    '✅ Uploaded to Play Internal Testing',
+                    '✅ Uploaded phone + Wear OS to Play Internal Testing',
                   );
             const iosPlatformStatus =
               validationResult !== 'success'
