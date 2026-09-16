@@ -173,6 +173,12 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - No nameplate on the watch: the ring occupies the bezel and the hole has no room for a legible DIGITAL PITCH PIPE caption. Square watches use the same geometry inside their inscribed circle and simply show more score in the corners.
 - Review captures: `.impeccable/review/watch-round-idle.png`, `watch-round-sounding.png`, `watch-round-ftof-sharp.png`, `watch-square-sounding.png`.
 
+### Icons
+
+Phone and watch launcher icons are adaptive foregrounds on the shared #474747 plate. The private build type carries a blue β band and the "Pitch Perfect β" label on both devices. The watch copies the phone's private foregrounds at every density; `scripts/release/tests/test_icons.py` enforces byte equality.
+
+`scripts/release/icons.py` derives the Play Store icon from the launcher foreground and plate. Every `/deploy` renders the private icon and re-uploads it to the private Play listing after the bundle uploads.
+
 ### Section Headers
 
 - Engraved labels: monospace 12sp, 0.14 tracking, secondary ink (`TextAppearance.Plate.SectionHeader`).
