@@ -67,6 +67,36 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/ClearSongList" />
 
+            <LinearLayout
+                android:id="@+id/watchSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/SectionWatch"
+                    android:textAppearance="@style/TextAppearance.Plate.SectionHeader" />
+
+                <TextView
+                    android:id="@+id/watchStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/plate_ink_secondary"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:id="@+id/watchButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
