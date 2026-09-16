@@ -87,6 +87,62 @@ class WearPitchInstrumentViewTest {
     }
 
     @Test
+    fun sectors_stopAtTheBezelSoSquareCornersAreNotPlayable() {
+        // A round face is playable right up to its edge...
+        assertEquals(12, view.cellAt(192f - 4f, 1f))
+        // ...but the corners of a square watch, beyond the cells' outer rims, are score only.
+        assertEquals(-1, view.cellAt(0f, 0f))
+        assertEquals(-1, view.cellAt(383f, 383f))
+        assertEquals(-1, view.cellAt(192f, 192f - view.ringRadius - 1.25f * view.cellRadius - 1f))
+
+        // A finger that slides off the face into a corner releases its note.
+        pointers(MotionEvent.ACTION_DOWN, 0 to 0)
+        assertTrue(model.notes[0].isPlaying)
+        val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_MOVE, 2f, 2f, 0)
+        try {
+            view.onTouchEvent(event)
+        } finally {
+            event.recycle()
+        }
+        assertFalse(model.notes[0].isPlaying)
+    }
+
+    @Test
+    fun accessibilityClick_pendingStopNeverCutsANewerActivationShort() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup()
+        activity.get().setContentView(view)
+        val provider = requireNotNull(view.accessibilityNodeProvider)
+        val looper = shadowOf(Looper.getMainLooper())
+
+        // Re-activating the same note restarts its 1.5 s window.
+        provider.performAction(0, AccessibilityNodeInfo.ACTION_CLICK, null)
+        looper.idleFor(Duration.ofMillis(1000))
+        provider.performAction(0, AccessibilityNodeInfo.ACTION_CLICK, null)
+        looper.idleFor(Duration.ofMillis(1000))
+        assertTrue(model.notes[0].isPlaying)
+        looper.idleFor(Duration.ofMillis(600))
+        assertFalse(model.notes[0].isPlaying)
+
+        // A finger that takes over the note holds it past the click's window.
+        provider.performAction(1, AccessibilityNodeInfo.ACTION_CLICK, null)
+        looper.idleFor(Duration.ofMillis(1000))
+        pointers(MotionEvent.ACTION_DOWN, 0 to 1)
+        looper.idleFor(Duration.ofMillis(2000))
+        assertTrue(model.notes[1].isPlaying)
+        pointers(MotionEvent.ACTION_UP, 0 to 1)
+        assertFalse(model.notes[1].isPlaying)
+
+        // stopAll clears pending stops so they cannot fire on a later activation.
+        provider.performAction(2, AccessibilityNodeInfo.ACTION_CLICK, null)
+        view.stopAll()
+        pointers(MotionEvent.ACTION_DOWN, 0 to 2)
+        looper.idleFor(Duration.ofMillis(2000))
+        assertTrue(model.notes[2].isPlaying)
+        pointers(MotionEvent.ACTION_UP, 0 to 2)
+        activity.pause().stop().destroy()
+    }
+
+    @Test
     fun lowRangeRow_stopsOldRangeNotesAndRepeatedSelectionKeepsTheRange() {
         model.isFromFToF = true
         val oldNote = model.notes[12] // F5 does not belong to C4-C5.
