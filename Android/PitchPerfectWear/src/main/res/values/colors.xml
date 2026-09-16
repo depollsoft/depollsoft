@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="plate_ground">#0E0F10</color>
+    <color name="plate_surface">#16181A</color>
+    <color name="plate_ink">#D9DBDD</color>
+    <color name="plate_ink_secondary">#898D92</color>
+    <color name="plate_hairline">#2C2F33</color>
+    <color name="plate_accent">#F2EFE6</color>
+    <color name="plate_on_accent">#101214</color>
+</resources>
