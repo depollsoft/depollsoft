@@ -166,6 +166,19 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 - Android widgets can sound in place, so cells toggle: tap to sound, tap to stop; the sounding cell lights and the readout shows note/frequency or a two-note interval. Android 12+ receives exact size-specific RemoteViews with 52dp circular cell targets and one 132×56dp range toggle. The center and background are inert—only visible instrument controls respond, so an imprecise tap never opens the app. The widget is a non-stretched square face inside a near-square 4×3 Pixel Launcher host (responsive on other launchers).
 - iOS cells use `AudioPlaybackIntent` with `openAppWhenRun = false`: the widget stays on Home Screen, synthesizes a 1.5-second tone, lights the active cell, and updates the frequency readout before clearing. Each iOS widget chooses C–C or F–F through system Edit Widget configuration. No widget surface or control deep-links into the app.
 
+### Wear OS
+
+- The watch app is the same instrument with the ring pushed to the bezel: thirteen glass cells on a circle of radius 0.395× the screen, each cell 0.085× wide, so the full round face is the pitch pipe. Tokens, cell drawing, bloom, breath, haptics, and accessibility names are identical to the phone (`WearPitchInstrumentView`); the watch is always the blackened-steel night variant because Wear OS has no light mode.
+- Touch is by wedge, not by circle: any finger in the band between the hole and the cells' outer rims belongs to the nearest cell, so gaps never drop a note, while a square watch's score-only corners stay inert; chords hold across fingers exactly as on the phone. The center readout and the C–C/F–F frame sit in the ring's hole; the frame's hit zone spans the hole strip around it (side padding, halfway up to the readout, down to the ring) because the drawn rows are only ~15dp tall on a 192dp watch. A crown or bezel turn also flips the range with the same selection tick.
+- No nameplate on the watch: the ring occupies the bezel and the hole has no room for a legible DIGITAL PITCH PIPE caption. Square watches use the same geometry inside their inscribed circle and simply show more score in the corners.
+- Review captures: `.impeccable/review/watch-round-idle.png`, `watch-round-sounding.png`, `watch-round-ftof-sharp.png`, `watch-square-sounding.png`.
+
+### Icons
+
+Phone and watch launcher icons are adaptive foregrounds on the shared #474747 plate. The private build type carries a blue β band and the "Pitch Perfect β" label on both devices. The watch copies the phone's private foregrounds at every density; `scripts/release/tests/test_icons.py` enforces byte equality.
+
+`scripts/release/icons.py` derives the Play Store icon from the launcher foreground and plate. Every `/deploy` renders the private icon and re-uploads it to the private Play listing after the bundle uploads.
+
 ### Section Headers
 
 - Engraved labels: monospace 12sp, 0.14 tracking, secondary ink (`TextAppearance.Plate.SectionHeader`).

@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_name">Pitch Perfect</string>
-    <string name="CtoC">C - B</string>
-    <string name="FtoF">F - E</string>
+    <string name="CtoC">C to C</string>
+    <string name="FtoF">F to F</string>
     <string name="AddSong">Add Song</string>
     <string name="SongTitle">Song Title</string>
     <string name="SongKey">Song Key</string>
@@ -32,8 +32,7 @@
     <string name="LogOut">Log out</string>
     <string name="LogInInfo">Log in using Facebook to back up and synchronize your song list and settings.</string>
     <string name="ViewChangelog">View Changelog</string>
-    <string name="title_activity_my">MyActivity</string>
-    <string name="hello_round">Hello Round World!</string>
-    <string name="hello_square">Hello Square World!</string>
 
+    <string name="RangeLowDescription">Octave range C to C</string>
+    <string name="RangeHighDescription">Octave range F to F</string>
 </resources>
