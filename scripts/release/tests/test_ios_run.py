@@ -16,12 +16,13 @@ class NativeRunnerTests(unittest.TestCase):
         processes = ('12 /CoreSimulator/Devices/owned/data/Containers/Bundle/Application/A/App.app/App\n'
                      '13 /CoreSimulator/Devices/other/data/Containers/Bundle/Application/B/App.app/App\n'
                      '14 /usr/bin/something\n')
-        with patch('ios_run.subprocess.check_output', return_value=processes), \
+        with patch('ios_run.Path.open'), \
+             patch('ios_run.subprocess.check_output', return_value=processes), \
              patch('ios_run.subprocess.run') as sample:
             ios_run.sample_simulator_apps('owned')
-        self.assertEqual(sample.call_count, 1)
+        self.assertEqual(sample.call_count, 5)
         self.assertEqual(sample.call_args.args[0][:4], ['sample', '12', '1', '10'])
-        self.assertEqual(sample.call_args.kwargs['timeout'], 4)
+        self.assertEqual(sample.call_args.kwargs['timeout'], 30)
 
     def launch(self, marker, *, wait=False, status=0):
         child = ('from pathlib import Path; import time; '

@@ -20,6 +20,10 @@ CASE_FINISHED = re.compile(r"^Test [Cc]ase '(.+)' (passed|failed|skipped)(?: on|
 def sample_simulator_apps(simulator):
     """Collect stacks from this device only, without delaying the watchdog."""
     try:
+        with Path(f'simulator-{simulator}-resources.txt').open('w') as resources:
+            for command in [['uptime'], ['vm_stat'], ['sysctl', 'vm.swapusage'],
+                            ['ps', '-axo', 'pid=,ppid=,%cpu=,%mem=,rss=,stat=,comm=']]:
+                subprocess.run(command, stdout=resources, stderr=resources, timeout=5)
         processes = subprocess.check_output(['ps', '-axo', 'pid=,comm='], text=True, timeout=2)
         for line in processes.splitlines():
             fields = line.strip().split(None, 1)
@@ -29,8 +33,8 @@ def sample_simulator_apps(simulator):
             if f'/Devices/{simulator}/data/Containers/Bundle/Application/' not in executable:
                 continue
             destination = Path(f'simulator-{simulator}-{pid}.sample.txt')
-            subprocess.run(['sample', pid, '1', '10', '-file', str(destination)],
-                           capture_output=True, timeout=4, check=True)
+            subprocess.run(['sample', pid, '1', '10', '-mayDie', '-file', str(destination)],
+                           capture_output=True, timeout=30, check=True)
             print(f'Captured slow-test stack: {destination}', flush=True)
     except (subprocess.SubprocessError, OSError) as error:
         print(f'Slow-test stack capture unavailable: {error}', flush=True)
@@ -113,9 +117,9 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
-                    if simulator and active_case and not sampled_case and now - case_started >= 20:
+                    if simulator and active_case and not sampled_case and now - case_started >= 10:
                         sampled_case = True
-                        threading.Thread(target=sample_simulator_apps, args=(simulator,), daemon=True).start()
+                        threading.Thread(target=sample_simulator_apps, args=(simulator,)).start()
                     if not first_test_seen and now - started >= startup_timeout:
                         stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
                     elif active_case and now - case_started >= test_timeout:
