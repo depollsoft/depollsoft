@@ -20,7 +20,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   plan:
-    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux]
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       any: ${{ steps.plan.outputs.any }}
@@ -30,10 +31,14 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: '3.3'
       - name: Validate release tooling and copy
         run: |
-          python3 -m pip install -r scripts/release/requirements.txt
-          python3 -m unittest discover -s scripts/release/tests -v
+          python3 -m venv "$RUNNER_TEMP/release-python"
+          "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
+          "$RUNNER_TEMP/release-python/bin/python" -m unittest discover -s scripts/release/tests -v
           python3 scripts/release/release.py validate
           ruby -c scripts/release/production.rb
           ruby scripts/release/tests/test_production.rb
@@ -71,7 +76,7 @@ jobs:
       !cancelled() && needs.plan.result == 'success' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux]
     permissions:
       actions: read
       pull-requests: write

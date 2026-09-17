@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   deploy:
-    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["ubuntu-24.04"]') }}
+    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["self-hosted", "Linux"]') }}
     timeout-minutes: 120
     concurrency:
       group: release-store-${{ inputs.platform }}-${{ inputs.platform == 'ios' && 'signing' || inputs.app }}

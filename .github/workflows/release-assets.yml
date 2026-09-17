@@ -27,7 +27,7 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["macos-26"]') || inputs.app == 'tagmaster' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["ubuntu-24.04"]') }}
+    runs-on: [self-hosted, macOS]
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
@@ -55,13 +55,6 @@ jobs:
             --retry 2 --retry-all-errors --retry-delay 5 \
             'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
             --output /dev/null
-      - name: Reserve disk space for Android emulators
-        if: inputs.platform == 'android' && runner.environment == 'github-hosted'
-        run: |
-          # These hosted-runner SDKs are unused by the Kotlin/Java capture builds.
-          # Wear OS images impose a minimum userdata size above disk-size.
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk
-          df -h "$HOME" "$RUNNER_TEMP"
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         if: inputs.platform == 'android'
         with:
@@ -71,12 +64,6 @@ jobs:
         if: inputs.platform == 'android'
         with:
           packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
-      - name: Enable emulator acceleration
-        if: inputs.platform == 'android' && runner.environment == 'github-hosted'
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
       - name: Capture Wear OS round
         if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
         run: |
