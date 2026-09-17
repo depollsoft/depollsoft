@@ -2,6 +2,7 @@
 """Run a capture on an owned emulator with bounded startup and shutdown."""
 import argparse
 from contextlib import contextmanager
+import fcntl
 import os
 from pathlib import Path
 import platform
@@ -162,4 +163,10 @@ if __name__ == '__main__':
         raise KeyboardInterrupt('Capture interrupted')
 
     signal.signal(signal.SIGTERM, interrupted)
-    main()
+    # Multiple runner slots share host emulator services. Take the lock before
+    # boot, and hold it through shutdown, including Wear captures. The native
+    # capture lock alone is too late: another emulator would already be alive.
+    with (Path(tempfile.gettempdir()) / 'depollsoft-store-emulator.lock').open('a') as lock:
+        print('Waiting for the host capture emulator slot', flush=True)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        main()

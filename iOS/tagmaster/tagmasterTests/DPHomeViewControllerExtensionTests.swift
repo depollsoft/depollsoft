@@ -41,10 +41,28 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     override func tearDown() {
+        homeViewController.dismiss(animated: false)
+        window.isHidden = true
+        window.rootViewController = nil
         window = nil
         navigationController = nil
         homeViewController = nil
         super.tearDown()
+    }
+
+    private func presentOpenTagAlert() {
+        homeViewController.openTag()
+        let visible = XCTNSPredicateExpectation(
+            predicate: NSPredicate { [weak self] _, _ in
+                guard let alert = self?.homeViewController.presentedViewController as? UIAlertController else {
+                    return false
+                }
+                return alert.viewIfLoaded?.window != nil
+            },
+            object: nil
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 5), .completed,
+                       "Open Tag alert should appear in the test window")
     }
 
     // MARK: - Open Tag Tests
@@ -55,15 +73,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagPresentsAlertController() {
-        // Call openTag
-        homeViewController.openTag()
-
-        // Wait for presentation
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         // Verify alert is presented
         XCTAssertNotNil(homeViewController.presentedViewController)
@@ -75,13 +85,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagAlertHasTextField() {
-        homeViewController.openTag()
-
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         let alert = homeViewController.presentedViewController as? UIAlertController
         XCTAssertNotNil(alert?.textFields)
@@ -90,13 +94,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagAlertHasCancelAndOpenActions() {
-        homeViewController.openTag()
-
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         let alert = homeViewController.presentedViewController as? UIAlertController
         XCTAssertEqual(alert?.actions.count, 2)
