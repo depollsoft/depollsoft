@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         if: inputs.platform == 'android'
         with:
-          distribution: temurin
+          distribution: ${{ runner.os == 'macOS' && 'zulu' || 'temurin' }}
           java-version: '17'
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         if: inputs.platform == 'android'
