@@ -149,6 +149,16 @@ class GitPlanTests(GitFixture, unittest.TestCase):
 
 
 class CaptureTests(unittest.TestCase):
+    def test_runtime_stays_within_selected_xcode_sdk(self):
+        runtimes = [{'name': 'iOS ' + version, 'version': version, 'identifier': version, 'isAvailable': True}
+                    for version in ['26.0', '26.2', '26.4']]
+        self.assertEqual(capture.ios_runtime('26.2', runtimes), '26.2')
+
+    def test_missing_compatible_runtime_requires_explicit_setup(self):
+        runtimes = [{'name': 'iOS 26.4', 'version': '26.4', 'identifier': '26.4', 'isAvailable': True}]
+        with self.assertRaisesRegex(ValueError, 'selected Xcode'):
+            capture.ios_runtime('26.2', runtimes)
+
     def test_pitch_perfect_retries_simulator_failure_once(self):
         take = unittest.mock.Mock(side_effect=[subprocess.CalledProcessError(65, 'xcodebuild'), 'complete.xcresult'])
         with patch.object(capture.time, 'sleep'):

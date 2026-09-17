@@ -60,30 +60,30 @@ def screenshot_path(app, platform, family, scene):
             else f'metadata/en-US/images/{family}/{ordered}.png')
 
 
+def ios_runtime(sdk, runtimes):
+    sdk_version = tuple(map(int, sdk.split('.')))[:2]
+    candidates = []
+    for runtime in runtimes:
+        version = tuple(map(int, runtime['version'].split('.')))[:2]
+        if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
+            candidates.append((version, runtime['identifier']))
+    if not candidates:
+        raise ValueError('Install an iOS 26 simulator runtime supported by the selected Xcode; '
+                         'set DEVELOPER_DIR explicitly to use a different toolchain')
+    return max(candidates)[1]
+
+
 def ios(app, dest):
     config = APPS[app]
-    # Self-hosted machines can have several Xcodes and newer simulator runtimes
-    # than the globally selected toolchain. Select a compatible pair locally,
-    # without changing xcode-select for other runner jobs.
-    candidates = set(Path('/Applications').glob('Xcode*.app/Contents/Developer'))
-    candidates.add(Path(os.environ.get('DEVELOPER_DIR') or output('xcode-select', '-p')))
-    pairs = []
-    for developer in candidates:
-        env = dict(os.environ, DEVELOPER_DIR=str(developer))
-        try:
-            sdk = subprocess.check_output(['xcrun', '--sdk', 'iphonesimulator', '--show-sdk-version'],
-                                          env=env, text=True, stderr=subprocess.DEVNULL).strip()
-            sdk_version = tuple(map(int, sdk.split('.')))[:2]
-            data = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'runtimes', '-j'], env=env, text=True))
-            for runtime in data['runtimes']:
-                version = tuple(map(int, runtime['version'].split('.')))[:2]
-                if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
-                    pairs.append((version, sdk_version, str(developer), runtime['identifier']))
-        except (subprocess.CalledProcessError, ValueError):
-            continue
-    if not pairs:
-        raise ValueError('Install an iOS 26 simulator runtime supported by an installed Xcode')
-    _, _, developer, runtime = max(pairs)
+    # CoreSimulatorService is shared by this user's runner jobs. Even probing
+    # another Xcode with simctl can replace the service beneath running tests.
+    # Honor the same selected toolchain as ordinary CI; never scan other Xcodes.
+    developer = os.environ.get('DEVELOPER_DIR') or output('xcode-select', '-p')
+    env = dict(os.environ, DEVELOPER_DIR=developer)
+    sdk = subprocess.check_output(['xcrun', '--sdk', 'iphonesimulator', '--show-sdk-version'],
+                                  env=env, text=True).strip()
+    data = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'runtimes', '-j'], env=env, text=True))
+    runtime = ios_runtime(sdk, data['runtimes'])
     os.environ['DEVELOPER_DIR'] = developer
     print(f'Capture toolchain: {developer}; runtime: {runtime}', flush=True)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
