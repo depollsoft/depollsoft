@@ -40,6 +40,8 @@ git submodule update --init --recursive
   --platform android --serial emulator-5554 --output build/release/tagmaster-android
 ```
 
+Android capture uses SystemUI demo mode to hide notification icons and show a consistent 9:41 clock, full battery, and Wi-Fi signal. It reapplies these settings after device size and theme changes, then exits demo mode when capture finishes. The status bar is rendered by Android during capture; screenshots are not retouched.
+
 Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Both appearances are captured for every scene:
 
 | App | Captured flows per appearance |

@@ -115,6 +115,22 @@ def ios(app, dest):
                 run('xcrun', 'simctl', 'delete', udid, timeout=60)
 
 
+def android_status_bar(adb):
+    # Let SystemUI render a clean status bar; never retouch captured app pixels.
+    # Reapply after density/theme changes, which can recreate SystemUI.
+    run(*adb, 'shell', 'settings', 'put', 'global', 'sysui_demo_allowed', '1')
+    for command, values in (
+        ('enter', {}),
+        ('clock', {'hhmm': '0941'}),
+        ('battery', {'level': '100', 'plugged': 'false', 'powersave': 'false'}),
+        ('network', {'wifi': 'show', 'mobile': 'hide', 'level': '4', 'fully': 'true'}),
+        ('notifications', {'visible': 'false'}),
+    ):
+        extras = [arg for key, value in values.items() for arg in ('--es', key, value)]
+        run(*adb, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo',
+            '--es', 'command', command, *extras)
+
+
 def android(app, dest, serial):
     if not serial.startswith('emulator-'):
         raise ValueError('Use a disposable emulator, never a personal device')
@@ -128,6 +144,7 @@ def android(app, dest, serial):
     package = config['bundle_id']
     run(*adb, 'install', '-r', base / f'debug/{config["module"]}-debug.apk')
     run(*adb, 'install', '-r', base / f'androidTest/debug/{config["module"]}-debug-androidTest.apk')
+    previous_demo = output(*adb, 'shell', 'settings', 'get', 'global', 'sysui_demo_allowed')
     try:
         for setting in ('window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'):
             run(*adb, 'shell', 'settings', 'put', 'global', setting, '0')
@@ -140,6 +157,7 @@ def android(app, dest, serial):
             for theme in ('light', 'dark'):
                 run(*adb, 'shell', 'cmd', 'uimode', 'night', 'yes' if theme == 'dark' else 'no')
                 run(*adb, 'shell', 'pm', 'clear', package)
+                android_status_bar(adb)
                 result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
                                 f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
                                 f'{package}.test/androidx.test.runner.AndroidJUnitRunner')
@@ -155,6 +173,11 @@ def android(app, dest, serial):
                     with target.open('wb') as handle:
                         run(*adb, 'exec-out', 'run-as', package, 'cat', f'files/store-screenshots/{scene}.png', stdout=handle)
     finally:
+        run(*adb, 'shell', 'am', 'broadcast', '-a', 'com.android.systemui.demo', '--es', 'command', 'exit')
+        if previous_demo == 'null':
+            run(*adb, 'shell', 'settings', 'delete', 'global', 'sysui_demo_allowed')
+        else:
+            run(*adb, 'shell', 'settings', 'put', 'global', 'sysui_demo_allowed', previous_demo)
         run(*adb, 'shell', 'wm', 'size', 'reset')
         run(*adb, 'shell', 'wm', 'density', 'reset')
 
