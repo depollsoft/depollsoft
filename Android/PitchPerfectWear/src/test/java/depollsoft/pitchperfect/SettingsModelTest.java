@@ -25,7 +25,7 @@ import depollsoft.lib.util.Preferences;
  * Tests preference operations for toggle notes and wake lock settings.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(manifest = Config.NONE)
+@Config(manifest = Config.NONE, sdk = 35)
 public class SettingsModelTest {
 
     @BeforeClass

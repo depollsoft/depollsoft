@@ -74,6 +74,12 @@
     <string name="SwitchToMajorKeys">Showing minor keys. Switch to major keys.</string>
     <string name="SwitchToMinorKeys">Showing major keys. Switch to minor keys.</string>
     <string name="SectionPitchPipe">Pitch Pipe</string>
+    <string name="SectionWatch">Watch</string>
+    <string name="WatchInstalledOn">Installed on %1$s</string>
+    <string name="WatchNotInstalledOn">Pitch Perfect is not on %1$s yet.</string>
+    <string name="WatchInstallOn">Install on %1$s</string>
+    <string name="WatchOpeningStore">Opening the Play Store on %1$s</string>
+    <string name="WatchOpenStoreFailed">Could not reach %1$s</string>
     <string name="SectionAccount">Account</string>
     <string name="SectionAppearance">Appearance</string>
     <string name="SectionAbout">About</string>

@@ -33,6 +33,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.gms:play-services-ads:25.4.0'
     implementation 'com.google.android.gms:play-services-wearable:20.0.1'
+    implementation 'androidx.wear:wear-remote-interactions:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'com.google.android.material:material:1.14.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

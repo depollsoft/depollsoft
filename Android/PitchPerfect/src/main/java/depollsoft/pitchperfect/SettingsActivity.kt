@@ -10,13 +10,17 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
 import android.widget.CompoundButton
+import android.widget.LinearLayout
 import android.widget.RadioButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.Trackable
@@ -25,6 +29,9 @@ import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.uibind
 import com.facebook.login.LoginManager
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.Wearable
+import com.google.android.material.button.MaterialButton
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
@@ -33,10 +40,17 @@ import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : AppCompatActivity() {
+    private val watchSource by lazy { watchNodeSource ?: WearableWatchNodeSource(this) }
+    private var watchRefresh: Job? = null
+    private var watchResumed = false
+    private var watchCapabilityClient: CapabilityClient? = null
+    private var watchCapabilityListener: CapabilityClient.OnCapabilityChangedListener? = null
     private val loggingIn = false
     private val loginTrackable: Trackable = Trackable()
     private lateinit var logInDialog: Dialog
@@ -236,6 +250,113 @@ class SettingsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loginTrackable.updateTrackers()
+        watchResumed = true
+        registerWatchCapabilityListener()
+        refreshWatches()
+    }
+
+    override fun onPause() {
+        watchResumed = false
+        watchRefresh?.cancel()
+        val client = watchCapabilityClient
+        val listener = watchCapabilityListener
+        watchCapabilityClient = null
+        watchCapabilityListener = null
+        if (client != null && listener != null) {
+            removeWatchCapabilityListener(client, listener)
+        }
+        super.onPause()
+    }
+
+    private fun refreshWatches() {
+        if (!watchResumed) return
+        watchRefresh?.cancel()
+        watchRefresh = lifecycleScope.launch {
+            val nodes = watchSource.connectedNodes()
+            // The source returns an empty list even for cancellation; discard stale results.
+            coroutineContext.ensureActive()
+            findViewById<View>(R.id.watchSection).visibility =
+                if (nodes.isEmpty()) View.GONE else View.VISIBLE
+            findViewById<TextView>(R.id.watchStatus).text = nodes.joinToString("\n") { node ->
+                getString(
+                    if (node.installed) R.string.WatchInstalledOn else R.string.WatchNotInstalledOn,
+                    node.name,
+                )
+            }
+            val buttons = findViewById<LinearLayout>(R.id.watchButtons)
+            buttons.removeAllViews()
+            nodes.filterNot { it.installed }.forEach { node ->
+                val button = layoutInflater.inflate(R.layout.settings_watch_button, buttons, false) as MaterialButton
+                button.text = getString(R.string.WatchInstallOn, node.name)
+                button.setOnClickListener { installOnWatch(node) }
+                buttons.addView(button)
+            }
+        }
+    }
+
+    private fun registerWatchCapabilityListener() {
+        try {
+            val client = Wearable.getCapabilityClient(applicationContext)
+            val listener = CapabilityClient.OnCapabilityChangedListener {
+                runOnUiThread { refreshWatches() }
+            }
+            watchCapabilityClient = client
+            watchCapabilityListener = listener
+            client.addListener(listener, WatchCompanion.CAPABILITY)
+                .addOnSuccessListener {
+                    // Registration may complete after onPause or a subsequent onResume.
+                    if (watchCapabilityListener !== listener) {
+                        removeWatchCapabilityListener(client, listener)
+                    }
+                }
+                .addOnFailureListener { error ->
+                    AppLog.info("Settings", "Watch capability listener unavailable: ${error.javaClass.simpleName}")
+                }
+        } catch (error: Exception) {
+            AppLog.info("Settings", "Watch capability listener unavailable: ${error.javaClass.simpleName}")
+        }
+    }
+
+    private fun removeWatchCapabilityListener(
+        client: CapabilityClient,
+        listener: CapabilityClient.OnCapabilityChangedListener,
+    ) {
+        try {
+            client.removeListener(listener, WatchCompanion.CAPABILITY)
+                .addOnFailureListener { error ->
+                    AppLog.info("Settings", "Watch capability listener removal failed: ${error.javaClass.simpleName}")
+                }
+        } catch (error: Exception) {
+            AppLog.info("Settings", "Watch capability listener removal failed: ${error.javaClass.simpleName}")
+        }
+    }
+
+    private fun installOnWatch(node: WatchNode) {
+        try {
+            val result = RemoteActivityHelper(this).startRemoteActivity(
+                WatchCompanion.installIntent(applicationContext.packageName),
+                node.id,
+            )
+            result.addListener(
+                {
+                    try {
+                        result.get()
+                        AppLog.info("Settings", "Watch Play Store launch succeeded")
+                        Toast.makeText(this, getString(R.string.WatchOpeningStore, node.name), Toast.LENGTH_SHORT).show()
+                    } catch (error: Exception) {
+                        showWatchInstallFailure(node, error)
+                    }
+                },
+                ContextCompat.getMainExecutor(this),
+            )
+        } catch (error: Exception) {
+            showWatchInstallFailure(node, error)
+        }
+    }
+
+    private fun showWatchInstallFailure(node: WatchNode, error: Exception) {
+        AppLog.info("Settings", "Watch Play Store launch failed: ${error.javaClass.simpleName}")
+        Toast.makeText(this, getString(R.string.WatchOpenStoreFailed, node.name), Toast.LENGTH_SHORT).show()
     }
 
     private fun setupPrivateBuildDiagnostics() {
