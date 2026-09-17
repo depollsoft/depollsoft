@@ -7,8 +7,10 @@ from html.parser import HTMLParser
 from io import BytesIO
 import json
 from pathlib import Path
+import ssl
 from urllib.request import urlopen
 
+import certifi
 from PIL import Image, ImageDraw
 from release import APPS, write_json
 
@@ -27,7 +29,9 @@ class PlayScreenshots(HTMLParser):
 
 
 def fetch(url):
-    with urlopen(url, timeout=60) as response:
+    # Self-hosted Python installations may not have a system CA bundle.
+    context = ssl.create_default_context(cafile=certifi.where())
+    with urlopen(url, timeout=60, context=context) as response:
         return response.read()
 
 
