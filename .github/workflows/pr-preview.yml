@@ -191,7 +191,7 @@ jobs:
 
   build-ios:
     name: Build iOS Preview
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, heavy]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     env:
@@ -390,6 +390,7 @@ jobs:
             for attempt in 1 2; do
               rm -rf "$archive"
               if xcodebuild archive \
+                -jobs 2 \
                 -workspace iOS.xcworkspace \
                 -clonedSourcePackagesDirPath SourcePackages \
                 -derivedDataPath "$derived_data" \

@@ -166,7 +166,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
@@ -174,7 +174,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
@@ -182,7 +182,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
@@ -635,7 +635,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectUITests \
@@ -655,7 +655,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \

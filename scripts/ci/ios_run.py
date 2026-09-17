@@ -17,14 +17,16 @@ CASE_STARTED = re.compile(r"^Test [Cc]ase '(.+)' started")
 CASE_FINISHED = re.compile(r"^Test [Cc]ase '(.+)' (passed|failed|skipped)(?: on| \()")
 
 
-def sample_simulator_apps(simulator):
+def sample_simulator_apps(simulator, command_pid=None):
     """Collect stacks from this device only, without delaying the watchdog."""
     try:
-        with Path(f'simulator-{simulator}-resources.txt').open('w') as resources:
+        stamp = time.time_ns()
+        with Path(f'simulator-{simulator}-{stamp}-resources.txt').open('w') as resources:
             for command in [['uptime'], ['vm_stat'], ['sysctl', 'vm.swapusage'],
                             ['ps', '-axo', 'pid=,ppid=,%cpu=,%mem=,rss=,stat=,comm=']]:
                 subprocess.run(command, stdout=resources, stderr=resources, timeout=5)
         processes = subprocess.check_output(['ps', '-axo', 'pid=,comm='], text=True, timeout=2)
+        pids = [str(command_pid)] if command_pid else []
         for line in processes.splitlines():
             fields = line.strip().split(None, 1)
             if len(fields) != 2:
@@ -32,7 +34,9 @@ def sample_simulator_apps(simulator):
             pid, executable = fields
             if f'/Devices/{simulator}/data/Containers/Bundle/Application/' not in executable:
                 continue
-            destination = Path(f'simulator-{simulator}-{pid}.sample.txt')
+            pids.append(pid)
+        for pid in pids:
+            destination = Path(f'simulator-{simulator}-{stamp}-{pid}.sample.txt')
             subprocess.run(['sample', pid, '1', '10', '-mayDie', '-file', str(destination)],
                            capture_output=True, timeout=30, check=True)
             print(f'Captured slow-test stack: {destination}', flush=True)
@@ -77,6 +81,7 @@ def run(command, *,
         case_started = None
         sampled_case = False
         sampler = None
+        sampled_startup = False
         stopping = None
         buffered = ''
         decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
@@ -123,6 +128,11 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
+                    if (simulator and not first_test_seen and not sampled_startup
+                            and now - started >= 120):
+                        sampled_startup = True
+                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator, child.pid))
+                        sampler.start()
                     if (simulator and active_case and not sampled_case and now - case_started >= 20
                             and (sampler is None or not sampler.is_alive())):
                         sampled_case = True

@@ -123,7 +123,7 @@ def ios(app, dest):
                         run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
                         result = work / f'{family}-{theme}-{attempt}.xcresult'
                         env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
-                        run('xcodebuild', 'test', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
+                        run('xcodebuild', 'test', '-jobs', '2', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
                             '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
                             '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
                             '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
