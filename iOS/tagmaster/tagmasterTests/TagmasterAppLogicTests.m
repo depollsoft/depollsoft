@@ -986,13 +986,14 @@ TM_CAPTURE_IMPL
     self.requests[index][@"completion"] = NSNull.null;
     completion(tag);
 }
-// Let UIKit finish scheduled appearance/layout transactions, not a timed loading delay.
+// Wait for actual UIKit appearance/layout state. Shared CI runners can take
+// longer to service the main queue; the predicates still require completion.
 - (void)drainUIKit {
     XCTestExpectation *turn = [self expectationWithDescription:@"UIKit transaction turn"];
     dispatch_async(dispatch_get_main_queue(), ^{
         dispatch_async(dispatch_get_main_queue(), ^{ [turn fulfill]; });
     });
-    [self waitForExpectations:@[turn] timeout:2];
+    [self waitForExpectations:@[turn] timeout:5];
 }
 - (void)layout {
     [self.window updateTraitsIfNeeded];
@@ -1033,14 +1034,14 @@ TM_CAPTURE_IMPL
     [self.window makeKeyAndVisible];
     XCTNSPredicateExpectation *rootShown = [[XCTNSPredicateExpectation alloc] initWithPredicate:
         [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == previous; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[rootShown] timeout:3], XCTWaiterResultCompleted);
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[rootShown] timeout:10], XCTWaiterResultCompleted);
     [navigation pushViewController:detail animated:NO];
     __weak TMPageViewController *weakDetail = detail;
     XCTNSPredicateExpectation *visible = [[XCTNSPredicateExpectation alloc] initWithPredicate:
         [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
             return observer.shown == weakDetail && [[weakDetail valueForKey:@"appeared"] boolValue] && !weakDetail.transitionCoordinator;
         }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:3], XCTWaiterResultCompleted);
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:10], XCTWaiterResultCompleted);
     navigation.delegate = nil;
     [self layout];
     return navigation;

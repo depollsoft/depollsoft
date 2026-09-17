@@ -51,8 +51,6 @@ jobs:
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      # Never reuse compiled tests from another branch on a self-hosted runner.
-      CI_DERIVED_DATA: ios-tests-${{ github.run_id }}-${{ github.run_attempt }}
       # UTF-8 encoding for build tools
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -201,7 +199,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -210,7 +207,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -219,7 +215,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             CODE_SIGNING_ALLOWED=NO \
@@ -242,7 +237,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -258,7 +252,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme tagmaster \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -274,7 +267,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -557,7 +549,6 @@ jobs:
       github.event_name == 'schedule'
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      CI_DERIVED_DATA: ios-ui-tests-${{ github.run_id }}-${{ github.run_attempt }}
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
 
@@ -681,7 +672,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme pitchperfectUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -702,7 +692,6 @@ jobs:
           "${{ steps.select_xcode.outputs.xcodebuild }}" test \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -derivedDataPath "$RUNNER_TEMP/$CI_DERIVED_DATA" \
             -scheme tagmasterUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \

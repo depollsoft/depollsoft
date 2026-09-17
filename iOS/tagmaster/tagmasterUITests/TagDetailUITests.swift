@@ -468,7 +468,21 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(sheet.isHittable)
         sheet.tap()
         let key = app.buttons["sheet.key"]
-        XCTAssertTrue(key.waitForExistence(timeout: 30))
+        // Exercise the real download and its retry action; never substitute a fixture.
+        let deadline = Date().addingTimeInterval(120)
+        var retries = 0
+        while Date() < deadline && !key.waitForExistence(timeout: 5) {
+            let failure = app.alerts["Couldn't complete request"]
+            if failure.exists {
+                XCTAssertTrue(failure.staticTexts[
+                    "Sheet music couldn't be opened. Check your connection and try again."
+                ].exists)
+                guard retries < 2 else { break }
+                failure.buttons["Retry"].tap()
+                retries += 1
+            }
+        }
+        XCTAssertTrue(key.exists, "Live sheet music must load before checking its key control")
         XCTAssertTrue(key.isHittable)
         print("TM_LAYOUT_PROBE native sheet key frame=\(key.frame)")
         layoutCapture("sheet-defect-portrait")
@@ -518,7 +532,7 @@ final class TagMasterPolishUITests: XCTestCase {
         alert.buttons["Cancel"].tap()
         openTag()
         app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
         assertNativeTabs(["Summary", "Details", "Tracks", "Videos"])
         layoutCapture("details")
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -600,7 +614,7 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertTrue(tab.isHittable)
         }
         app.buttons["Details"].tap()
-        XCTAssertTrue(app.staticTexts["Tag ID"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
         app.buttons["Tracks"].tap()
         let emptyTracks = app.staticTexts["Sorry, no tracks could be found for this tag."]
         XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.waitForExistence(timeout: 5))
