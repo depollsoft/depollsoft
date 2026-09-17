@@ -18,7 +18,7 @@ defaults:
 jobs:
   deploy:
     name: Cloud Run Deployment
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux]
     steps:
       - name: Setup node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -28,12 +28,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
+      - id: "auth"
+        uses: "google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093"
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
       - name: Setup GCP Service Account
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
 
       - name: Create geoip folder structure
         run: mkdir -p node_modules/geoip-lite/data
