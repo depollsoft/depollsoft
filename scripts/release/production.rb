@@ -5,6 +5,12 @@ require 'tmpdir'
 
 RELEASE_ROOT = File.expand_path('../..', __dir__)
 
+def production_play_releases(package, key)
+  require 'supply'
+  Supply::Client.make_from_config(params: {json_key: key, timeout: 300})
+    .list_track_release_summaries(package, 'production')
+end
+
 def production_plan(options, platform)
   app = options[:app].to_s
   configs = JSON.parse(File.read(File.join(RELEASE_ROOT, 'scripts/release/apps.json')))
@@ -50,6 +56,18 @@ platform :ios do
     identifier = config.fetch('bundle_id')
     store_app = Spaceship::ConnectAPI::App.find(identifier)
     UI.user_error!("App Store Connect app missing: #{identifier}") unless store_app
+    store_version = store_app.get_app_store_versions(
+      filter: {versionString: version.fetch('version'), platform: 'IOS'}, includes: 'build',
+    ).first
+    submitted_states = %w[WAITING_FOR_REVIEW IN_REVIEW ACCEPTED PENDING_APPLE_RELEASE
+                          PENDING_DEVELOPER_RELEASE PROCESSING_FOR_DISTRIBUTION READY_FOR_DISTRIBUTION]
+    if store_version && submitted_states.include?(store_version.app_version_state)
+      unless store_version.build&.version.to_s == version.fetch('build').to_s
+        UI.user_error!('This App Store version was submitted with a different build; choose a new version')
+      end
+      UI.success("#{app} version #{version.fetch('version')} build #{version.fetch('build')} is already submitted (#{store_version.app_version_state})")
+      next
+    end
     existing_build = store_app.get_builds(filter: {version: version.fetch('build').to_s}, includes: 'preReleaseVersion').first
     if existing_build && existing_build.app_version != version.fetch('version')
       UI.user_error!('This build number belongs to another App Store version; choose a new build number')
@@ -109,10 +127,18 @@ platform :android do
     app, config, version, assets = production_plan(options, 'android')
     package = config.fetch('bundle_id')
     key = ENV.fetch('PLAY_SERVICE_ACCOUNT_JSON_PATH')
-    # A successful Play edit commits the binary and listing together.
-    codes = google_play_track_version_codes(package_name: package, track: 'production', json_key: key)
-    if codes.map(&:to_i).include?(version.fetch('build'))
-      UI.success("#{app} build #{version.fetch('build')} is already on production")
+    # Release summaries include pending reviews, which are not yet live.
+    release = production_play_releases(package, key).find do |item|
+      item.track == 'production' && Array(item.active_artifacts).any? do |artifact|
+        artifact.version_code.to_i == version.fetch('build')
+      end
+    end
+    if release
+      accepted = %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].map { |state| "RELEASE_LIFECYCLE_STATE_#{state}" }
+      unless accepted.include?(release.release_lifecycle_state)
+        UI.user_error!("Play build #{version.fetch('build')} requires attention: #{release.release_lifecycle_state}")
+      end
+      UI.success("#{app} build #{version.fetch('build')} is already submitted (#{release.release_lifecycle_state})")
       next
     end
     %w[ANDROID_UPLOAD_KEYSTORE_PATH ANDROID_UPLOAD_KEYSTORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD].each do |name|

@@ -1,6 +1,6 @@
 # Mobile releases
 
-Pitch Perfect and Tag Master each have their own listing copy, release plan, screenshots, and release tags. iOS and Android version independently too. The initial source versions are Pitch Perfect iOS 2.0.3 / Android 4.0.0 and Tag Master iOS 2.0.2 / Android 5.2.1.
+Pitch Perfect and Tag Master each have their own listing copy, release plan, screenshots, and release tags. Their iOS and Android versions also change independently. The initial source versions are Pitch Perfect iOS 2.0.3 / Android 4.0.0 and Tag Master iOS 2.0.2 / Android 5.2.1.
 
 Use the repository's `prepare-release` skill to review changes, refresh copy, capture screens, and open a PR. A release is scheduled by changing `releases/<app>/release.json`. Merging that PR into `main` submits only the app/platform pairs in the changed plan. This infrastructure change includes no release plans and does not deploy anything.
 
@@ -121,7 +121,7 @@ Apple submission requests automatic release after review. Google Play receives a
 
 After each platform succeeds, the workflow creates a release record such as `tagmaster/ios/v2.0.3` or `pitchperfect/android/v4.0.1`, with its asset archive, notes, and source commit. Tags are app/platform scoped and cannot be reused for different source commits. A successful platform does not wait for another platform's store submission to succeed.
 
-For a transient failure, use **Re-run failed jobs** on the original workflow. Its source, version, build, and artifacts remain fixed. A full rerun also accepts already-published tags that point to that same commit. iOS reuses an uploaded build number after an interrupted submission; Play skips an already-committed production version code. A published GitHub release with an asset archive marks completion. If publication of that record was interrupted, rerunning completes it. Do not change version numbers or force-move tags to retry.
+For a transient failure, use **Re-run failed jobs** on the original workflow. Its source, version, build, and artifacts remain fixed. A full rerun also accepts already-published tags that point to that same commit. iOS reuses an uploaded build number after an interrupted submission. If the exact version/build is already in review, approved, or released, it skips submission. Play checks release lifecycle states and also skips the exact production build while it is in review, approved, or published. Draft, rejected, and unsent Play releases require attention instead of being recorded as submitted. A published GitHub release with an asset archive marks completion. If publication of that record was interrupted, rerunning completes it. Do not change version numbers or force-move tags to retry.
 
 If the source or copy needs correcting after a partial release, prepare a new release plan for only the affected platform with a new version/build. If a later release already shipped, do not rerun an older deployment.
 

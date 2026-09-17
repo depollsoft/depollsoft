@@ -18,6 +18,10 @@ module Spaceship
         new
       end
       def get_builds(**_options) = $existing_build ? [Struct.new(:app_version).new('2.0.9')] : []
+      def get_app_store_versions(**options)
+        $version_query = options
+        [$store_version].compact
+      end
     end
   end
 end
@@ -46,13 +50,24 @@ def build_app(**options)
 end
 def upload_to_app_store(**options) = $calls << [:upload_ios, options]
 def gradle(**options) = $calls << [:build_android, options]
-def google_play_track_version_codes(**_options) = $existing_build ? [1800000000] : []
 def upload_to_play_store(**options) = $calls << [:upload_android, options]
 def assert(value, message)
   raise(message) unless value
 end
 
 load File.expand_path('../production.rb', __dir__)
+
+def play_release(state, code = 1800000000, track = 'production')
+  artifact = Struct.new(:version_code).new(code)
+  Struct.new(:track, :active_artifacts, :release_lifecycle_state)
+    .new(track, [artifact], "RELEASE_LIFECYCLE_STATE_#{state}")
+end
+
+def production_play_releases(package, key)
+  $play_query = [package, key]
+  $play_releases || ($existing_build ? [play_release('PUBLISHED')] : [])
+end
+
 source_root = RELEASE_ROOT
 Object.send(:remove_const, :RELEASE_ROOT)
 Dir.mktmpdir('production-lane-test-') do |directory|
@@ -78,10 +93,13 @@ Dir.mktmpdir('production-lane-test-') do |directory|
     end
     [false, true].each do |existing|
       $existing_build = existing
+      $store_version = nil
+      $play_releases = nil
       $reject_capture = false
       $calls = []
       $lanes.fetch([:ios, :deploy_production]).call(app: app)
       assert($seen_identifier == "depollsoft.#{app}", 'Wrong store app')
+      assert($version_query == {filter: {versionString: '2.0.9', platform: 'IOS'}, includes: 'build'}, 'Wrong review version query')
       upload = $calls.assoc(:upload_ios).last
       assert(upload[:app_version] == '2.0.9' && upload[:build_number] == '1800000000', 'Wrong iOS version')
       assert(upload[:skip_binary_upload] == existing, 'Retry did not reuse build')
@@ -95,6 +113,7 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       assert(File.read(File.join(project, 'project.pbxproj')) == 'original project', 'Signing changes leaked')
       $calls = []
       $lanes.fetch([:android, :deploy_production]).call(app: app)
+      assert($play_query == ["depollsoft.#{app}", 'test-only'], 'Wrong Play review query')
       if existing
         assert(!$calls.assoc(:build_android) && !$calls.assoc(:upload_android), 'Re-uploaded active Play build')
       else
@@ -107,6 +126,50 @@ Dir.mktmpdir('production-lane-test-') do |directory|
         assert(!upload[:skip_upload_metadata] && !upload[:skip_upload_screenshots], 'Skipped store assets')
       end
     end
+    # Store accepted submission, then GitHub release-record publication failed.
+    # A retry must return without uploading assets or submitting a second review.
+    %w[WAITING_FOR_REVIEW IN_REVIEW ACCEPTED PENDING_APPLE_RELEASE PENDING_DEVELOPER_RELEASE
+       PROCESSING_FOR_DISTRIBUTION READY_FOR_DISTRIBUTION].each do |state|
+      $store_version = Struct.new(:app_version_state, :build).new(state, Struct.new(:version).new('1800000000'))
+      $calls = []
+      $lanes.fetch([:ios, :deploy_production]).call(app: app)
+      assert($calls.all? { |call| call.first == :validate }, "Repeated iOS submission in #{state}")
+    end
+    $store_version.build.version = '1799999999'
+    $calls = []
+    begin
+      $lanes.fetch([:ios, :deploy_production]).call(app: app)
+      raise 'Accepted a different submitted build'
+    rescue RuntimeError => error
+      raise unless error.message.include?('submitted with a different build')
+    end
+    assert($calls.all? { |call| call.first == :validate }, 'Changed a different submitted build')
+    $store_version.app_version_state = 'PREPARE_FOR_SUBMISSION'
+    $calls = []
+    $lanes.fetch([:ios, :deploy_production]).call(app: app)
+    assert($calls.assoc(:upload_ios), 'Skipped an unsubmitted iOS build')
+
+    %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].each do |state|
+      $play_releases = [play_release(state)]
+      $calls = []
+      $lanes.fetch([:android, :deploy_production]).call(app: app)
+      assert($calls.all? { |call| call.first == :validate }, "Repeated Play submission in #{state}")
+    end
+    %w[DRAFT NOT_SENT_FOR_REVIEW NOT_APPROVED UNSPECIFIED].each do |state|
+      $play_releases = [play_release(state)]
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise "Accepted unsubmitted Play build in #{state}"
+      rescue RuntimeError => error
+        raise unless error.message.include?('requires attention')
+      end
+      assert($calls.all? { |call| call.first == :validate }, 'Re-uploaded a rejected or unsubmitted Play build')
+    end
+    $play_releases = [play_release('PUBLISHED', 1799999999), play_release('IN_REVIEW', 1800000000, 'internal')]
+    $calls = []
+    $lanes.fetch([:android, :deploy_production]).call(app: app)
+    assert($calls.assoc(:upload_android), 'Wrong track/build suppressed a production submission')
     $reject_capture = true
     $calls = []
     begin
