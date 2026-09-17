@@ -113,7 +113,7 @@ gh workflow run release-signing.yml -f app=tagmaster
 
  The iOS API key needs access to both production apps. The existing store records must have their review contact, content rights, age rating, privacy, encryption, and advertising answers completed. This tooling does not invent those answers. Store agreements or new required fields can block submission and need correction in the console.
 
-macOS jobs use the existing self-hosted macOS pool; Android jobs use Ubuntu with a fresh emulator. Same-repository PRs can capture on the macOS runner. Fork PRs run only the release plan tests on a hosted runner. No deployment credentials are passed to capture jobs. Consider making the release checks required in branch protection.
+iOS captures use hosted macOS 26 runners. Pitch Perfect Android captures use hosted Ubuntu; Tag Master Android uses the existing self-hosted Linux pool because hosted Ubuntu runners timed out connecting to its live catalog. A catalog preflight checks connectivity before building. Captures use temporary emulators, with port 5560 reserved for Tag Master, and serialize each app/platform across runs. SDK disk cleanup runs only on disposable hosted runners. Fork PRs run only the release plan tests on a hosted runner. No deployment credentials are passed to capture jobs. iOS deployment uses the existing self-hosted macOS pool. Consider making the release checks required in branch protection.
 
 ## Submission and retries
 

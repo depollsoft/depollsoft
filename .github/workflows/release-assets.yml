@@ -27,14 +27,15 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: ${{ inputs.platform == 'ios' && 'macos-26' || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["macos-26"]') || inputs.app == 'tagmaster' && fromJSON('["self-hosted", "Linux"]') || fromJSON('["ubuntu-24.04"]') }}
     timeout-minutes: 90
     concurrency:
-      group: release-capture-${{ github.run_id }}-${{ inputs.app }}-${{ inputs.platform }}
+      group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
       cancel-in-progress: false
     env:
       RELEASE_APP: ${{ inputs.app }}
       RELEASE_PLATFORM: ${{ inputs.platform }}
+      RELEASE_ANDROID_PORT: ${{ inputs.app == 'tagmaster' && '5560' || '5554' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -55,7 +56,7 @@ jobs:
             'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
             --output /dev/null
       - name: Reserve disk space for Android emulators
-        if: inputs.platform == 'android'
+        if: inputs.platform == 'android' && runner.environment == 'github-hosted'
         run: |
           # These hosted-runner SDKs are unused by the Kotlin/Java capture builds.
           # Wear OS images impose a minimum userdata size above disk-size.
@@ -91,9 +92,9 @@ jobs:
       - name: Capture Android phone and tablet
         if: inputs.platform == 'android'
         run: |
-          "$RUNNER_TEMP/release-python/bin/python" scripts/release/emulator.py --name phone-tablet -- \
+          "$RUNNER_TEMP/release-python/bin/python" scripts/release/emulator.py --name phone-tablet --port "$RELEASE_ANDROID_PORT" -- \
             "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
-            --app "$RELEASE_APP" --platform android --serial emulator-5554 --wear-source build/release/wear \
+            --app "$RELEASE_APP" --platform android --serial "emulator-$RELEASE_ANDROID_PORT" --wear-source build/release/wear \
             --output "build/release/assets/$RELEASE_APP/android"
       - name: Capture iPhone and iPad
         if: inputs.platform == 'ios'

@@ -37,6 +37,9 @@ class StoreScreenshotTest {
     @Test fun captureStoreScreenshots() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("storeScreenshots") == "true")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        // Store scenes show a returning user's library, after viewing the changelog.
+        depollsoft.lib.util.Preferences.set("depollsoft.lib.LastVersionSeen",
+            context.packageManager.getPackageInfo(context.packageName, 0).versionCode)
         val intent = android.content.Intent(context, TagDetailActivity::class.java)
             .putExtra(TagDetailActivity.TAG_ID_EXTRA, 122)
         ActivityScenario.launch<TagDetailActivity>(intent).use { scenario ->
@@ -118,9 +121,6 @@ class StoreScreenshotTest {
         ActivityScenario.launch(MeActivity::class.java).use { scenario ->
             lateinit var activity: MeActivity
             scenario.onActivity { activity = it }
-            androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withId(android.R.id.button1))
-                .inRoot(androidx.test.espresso.matcher.RootMatchers.isDialog())
-                .perform(androidx.test.espresso.action.ViewActions.click())
             awaitContent("favorite tag rows") {
                 val list = activity.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.homeList)
                 (0 until list.childCount).map { list.getChildAt(it) }.filterIsInstance<SavedTagItemView>().let { rows -> rows.size == 3 && rows.all { it.tag != null && !it.isLoading && !it.failedToLoad } }
