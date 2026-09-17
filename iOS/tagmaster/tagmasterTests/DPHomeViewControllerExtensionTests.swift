@@ -11,6 +11,14 @@ import UIKit
 
 private final class HomePresentationFixture: DPHomeViewController {
     var presentationCompleted: (() -> Void)?
+    var appeared: (() -> Void)?
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        let completion = appeared
+        appeared = nil
+        completion?()
+    }
 
     override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
                           completion: (() -> Void)? = nil) {
@@ -54,12 +62,16 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
             window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 812))
         }
 
+        let appeared = expectation(description: "Home controller attached and appeared")
+        (homeViewController as! HomePresentationFixture).appeared = { appeared.fulfill() }
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-
-        // Load the view hierarchy
-        _ = homeViewController.view
-        homeViewController.view.layoutIfNeeded()
+        // Lay out the container first so it installs its child view. Loading
+        // the child's view alone does not attach it to the navigation hierarchy.
+        window.layoutIfNeeded()
+        navigationController.view.layoutIfNeeded()
+        wait(for: [appeared], timeout: 5)
+        XCTAssertTrue(homeViewController.view.window === window)
     }
 
     override func tearDown() {
