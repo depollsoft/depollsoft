@@ -149,6 +149,19 @@ class GitPlanTests(GitFixture, unittest.TestCase):
 
 
 class CaptureTests(unittest.TestCase):
+    def test_pitch_perfect_retries_simulator_failure_once(self):
+        take = unittest.mock.Mock(side_effect=[subprocess.CalledProcessError(65, 'xcodebuild'), 'complete.xcresult'])
+        with patch.object(capture.time, 'sleep'):
+            self.assertEqual(capture.native_capture('pitchperfect', 'iphone-light', take, simulator=True),
+                             'complete.xcresult')
+        self.assertEqual(take.call_args_list, [unittest.mock.call(0), unittest.mock.call(1)])
+
+    def test_pitch_perfect_android_failure_is_not_retried(self):
+        take = unittest.mock.Mock(side_effect=capture.NativeCaptureError('Failed tour'))
+        with patch.object(capture.time, 'sleep'), self.assertRaises(capture.NativeCaptureError):
+            capture.native_capture('pitchperfect', 'phone-light', take)
+        take.assert_called_once_with(0)
+
     def test_live_capture_returns_only_the_successful_retry(self):
         attempts = []
         def take(attempt):

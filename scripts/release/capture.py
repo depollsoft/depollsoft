@@ -36,10 +36,11 @@ class NativeCaptureError(RuntimeError):
     pass
 
 
-def native_capture(app, label, operation):
+def native_capture(app, label, operation, *, simulator=False):
     # Tag Master captures live catalog/media requests throughout each scene tour.
     # Retry the whole tour from a fresh app; export only a completed attempt.
-    attempts = 2 if app == 'tagmaster' else 1
+    # Either iOS app can encounter an unavailable XCTest/accessibility service.
+    attempts = 2 if simulator or app == 'tagmaster' else 1
     for attempt in range(attempts):
         try:
             return operation(attempt)
@@ -124,7 +125,7 @@ def ios(app, dest):
                             '-only-testing:' + app + 'UITests/StoreScreenshotTests',
                             'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
                         return result
-                    result = native_capture(app, f'{family}-{theme}', take)
+                    result = native_capture(app, f'{family}-{theme}', take, simulator=True)
                     attachments = work / f'{family}-{theme}'
                     run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
                         '--output-path', attachments)
