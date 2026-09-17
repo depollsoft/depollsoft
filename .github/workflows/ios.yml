@@ -98,37 +98,11 @@ jobs:
               | head -1 | sed 's/Xcode //')
           echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get iOS Simulator destination
+      - name: Create disposable iOS Simulator
         id: simulator
-        run: |
-          DESTINATION=$(
-            "${{ steps.select_xcode.outputs.xcrun }}" simctl list \
-              devices available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          devices = data.get('devices', {})
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone 16' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
-          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
-          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-          echo "Using simulator: $DESTINATION"
+        env:
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+        run: python3 ../scripts/ci/ios_simulator.py
 
       - name: Install xcpretty
         run: |
@@ -535,6 +509,14 @@ jobs:
           body-path: ${{ steps.metrics.outputs.comment_path }}
           edit-mode: replace
 
+      - name: Delete owned iOS Simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
+          xcrun simctl delete "$SIMULATOR_UDID"
+
   ui-tests:
     name: iOS UI Tests
     permissions:
@@ -577,36 +559,11 @@ jobs:
           echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
           echo "Selected Xcode: $DEVELOPER_DIR"
 
-      - name: Get iOS Simulator destination
+      - name: Create disposable iOS Simulator
         id: simulator
-        run: |
-          DESTINATION=$(
-            "${{ steps.select_xcode.outputs.xcrun }}" simctl list \
-              devices available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          devices = data.get('devices', {})
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone 16' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
-          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
-          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+        env:
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+        run: python3 ../scripts/ci/ios_simulator.py
 
       - name: Install xcpretty
         run: |
@@ -815,6 +772,14 @@ jobs:
           name: ios-uitest-xcresults
           path: iOS/ios-uitest-xcresults.tgz
           retention-days: 7
+
+      - name: Delete owned iOS Simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
+          xcrun simctl delete "$SIMULATOR_UDID"
 
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
