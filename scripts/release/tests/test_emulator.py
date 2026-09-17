@@ -4,9 +4,10 @@ import socket
 import subprocess
 import sys
 import unittest
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from emulator import check_port_available, stop_process_group
+from emulator import check_port_available, private_adb, stop_process_group
 
 
 class EmulatorPortTests(unittest.TestCase):
@@ -34,6 +35,18 @@ class EmulatorPortTests(unittest.TestCase):
 
 
 class EmulatorShutdownTests(unittest.TestCase):
+    def test_denied_signal_does_not_hide_a_live_process(self):
+        process = Mock()
+        process.poll.return_value = None
+        with patch('emulator.os.killpg', side_effect=PermissionError), self.assertRaises(PermissionError):
+            stop_process_group(process)
+
+    def test_sandbox_denial_after_process_exit_does_not_mask_capture_failure(self):
+        process = Mock()
+        process.poll.return_value = 0
+        with patch('emulator.os.killpg', side_effect=PermissionError):
+            stop_process_group(process)
+
     def start(self, code):
         process = subprocess.Popen([sys.executable, '-u', '-c', code],
                                    stdout=subprocess.PIPE, text=True, start_new_session=True)
@@ -63,3 +76,27 @@ time.sleep(60)
         readable, _, _ = select.select([emulator.stdout], [], [], 2)
         self.assertTrue(readable, 'An emulator child still holds the output pipe open')
         self.assertEqual(emulator.stdout.read(), '')
+
+
+class PrivateAdbTests(unittest.TestCase):
+    def test_uses_one_private_server_for_emulator_clients_and_cleanup_after_failure(self):
+        original = {'PATH': '/bin', 'ADB_SERVER_SOCKET': 'tcp:5037'}
+        with patch('emulator.check_port_available'), patch('emulator.subprocess.run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'capture failed'):
+                with private_adb(Path('/sdk'), 15560, original) as env:
+                    self.assertEqual(env['ADB_SERVER_SOCKET'], 'tcp:15560')
+                    self.assertEqual(env['ANDROID_ADB_SERVER_PORT'], '15560')
+                    self.assertEqual(env['ADB_LOCAL_TRANSPORT_MAX_PORT'], '0')
+                    self.assertEqual(env['PATH'].split(':')[0], '/sdk/platform-tools')
+                    raise RuntimeError('capture failed')
+        self.assertEqual(original['ADB_SERVER_SOCKET'], 'tcp:5037')
+        self.assertEqual([call.args[0] for call in run.call_args_list],
+                         [['/sdk/platform-tools/adb', 'start-server'], ['/sdk/platform-tools/adb', 'kill-server']])
+        self.assertTrue(all(call.kwargs['env'] == env for call in run.call_args_list))
+
+    def test_never_stops_an_existing_server_on_the_private_port(self):
+        with patch('emulator.check_port_available', side_effect=OSError('occupied')), patch('emulator.subprocess.run') as run:
+            with self.assertRaises(OSError):
+                with private_adb(Path('/sdk'), 15560, {}):
+                    self.fail('Must not acquire an occupied port')
+        run.assert_not_called()

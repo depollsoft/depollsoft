@@ -100,11 +100,18 @@ def ios(app, dest):
                         if attempt == 1:
                             raise
                         print('Simulator boot stalled; retrying this disposable device once', flush=True)
-                run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
-                    '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
-                    '--batteryState', 'charged', '--batteryLevel', '100')
                 for theme in ('light', 'dark'):
                     def take(attempt):
+                        if attempt:
+                            # A failed XCTest service can outlive the app. Reset
+                            # only our disposable simulator before retrying.
+                            run('xcrun', 'simctl', 'shutdown', udid, timeout=60)
+                            run('xcrun', 'simctl', 'erase', udid, timeout=60)
+                            run('xcrun', 'simctl', 'boot', udid, timeout=60)
+                            run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
+                        run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
+                            '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
+                            '--batteryState', 'charged', '--batteryLevel', '100')
                         subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
                         run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
                         result = work / f'{family}-{theme}-{attempt}.xcresult'

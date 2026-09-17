@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run a capture on an owned emulator with bounded startup and shutdown."""
 import argparse
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import platform
@@ -25,6 +26,12 @@ def stop_process_group(process, grace=10):
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
         pass
+    except PermissionError:
+        # A sandbox may no longer allow signaling a group after its owned
+        # leader exits. Never try another way to signal a still-live process.
+        if process.poll() is None:
+            raise
+        return
     try:
         process.wait(timeout=grace)
     except subprocess.TimeoutExpired:
@@ -34,7 +41,28 @@ def stop_process_group(process, grace=10):
         os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
+    except PermissionError:
+        if process.poll() is None:
+            raise
     process.wait(timeout=5)
+
+
+@contextmanager
+def private_adb(sdk, port, env):
+    """Own an ADB server so another runner's cleanup cannot disconnect us."""
+    check_port_available(port)
+    env = dict(env, ADB_SERVER_SOCKET=f'tcp:{port}',
+               ANDROID_ADB_SERVER_ADDRESS='localhost', ANDROID_ADB_SERVER_PORT=str(port),
+               ADB_LOCAL_TRANSPORT_MAX_PORT='0', ADB_MDNS_AUTO_CONNECT='',
+               PATH=str(sdk / 'platform-tools') + os.pathsep + env.get('PATH', ''))
+    # The emulator registers with this server explicitly. Do not discover and
+    # steal another job's emulator transport by scanning the standard ports.
+    adb = str(sdk / 'platform-tools/adb')
+    subprocess.run([adb, 'start-server'], env=env, check=True, timeout=30)
+    try:
+        yield env
+    finally:
+        subprocess.run([adb, 'kill-server'], env=env, check=False, timeout=30)
 
 
 def main():
@@ -81,7 +109,7 @@ def main():
                    '-no-boot-anim', '-camera-back', 'none', '-dns-server', '8.8.8.8']
         if not watch:
             options += ['-skin', '1600x2560']
-        with (logs / 'emulator.log').open('w') as log:
+        with private_adb(sdk, args.port + 10000, env) as env, (logs / 'emulator.log').open('w') as log:
             emulator = subprocess.Popen([str(sdk / 'emulator/emulator'), '-avd', args.name,
                                          '-port', str(args.port), *options], env=env,
                                         stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -92,7 +120,7 @@ def main():
                         raise RuntimeError(f'Emulator exited; see {logs / "emulator.log"}')
                     try:
                         boot = subprocess.run([*adb, 'shell', 'getprop', 'sys.boot_completed'],
-                                              capture_output=True, text=True, timeout=10)
+                                              env=env, capture_output=True, text=True, timeout=10)
                         if boot.stdout.strip() == '1':
                             break
                     except subprocess.TimeoutExpired:
@@ -101,7 +129,7 @@ def main():
                 else:
                     raise TimeoutError(f'Emulator did not boot within {args.boot_timeout}s')
                 print(f'{args.name} booted; starting capture', flush=True)
-                subprocess.run([*adb, 'shell', 'input', 'keyevent', '82'], check=True, timeout=15)
+                subprocess.run([*adb, 'shell', 'input', 'keyevent', '82'], env=env, check=True, timeout=15)
                 capture = subprocess.Popen(command, env=env, start_new_session=True)
                 try:
                     if capture.wait(timeout=3600):
@@ -116,13 +144,13 @@ def main():
                     try:
                         with (logs / filename).open('wb') as handle:
                             subprocess.run([*adb, *diagnostic], stdout=handle,
-                                           stderr=subprocess.DEVNULL, timeout=15)
+                                           env=env, stderr=subprocess.DEVNULL, timeout=15)
                     except (OSError, subprocess.TimeoutExpired):
                         pass
                 raise
             finally:
                 try:
-                    subprocess.run([*adb, 'emu', 'kill'], capture_output=True, timeout=10)
+                    subprocess.run([*adb, 'emu', 'kill'], env=env, capture_output=True, timeout=10)
                 except subprocess.TimeoutExpired:
                     pass
                 stop_process_group(emulator)
