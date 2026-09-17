@@ -87,6 +87,19 @@ class GitFixture:
 
 
 class GitPlanTests(GitFixture, unittest.TestCase):
+    def test_source_fingerprint_ignores_compiled_caches_but_detects_source_edits(self):
+        source = self.root / 'script.py'
+        source.write_text('print(1)')
+        cache = self.root / 'scripts/__pycache__/script.cpython-314.pyc'
+        cache.parent.mkdir(parents=True)
+        cache.write_bytes(b'compiled on capture runner')
+        self.commit()
+        original = release.fingerprint()
+        cache.write_bytes(b'compiled on deployment runner')
+        self.assertEqual(release.fingerprint(), original)
+        source.write_text('print(2)')
+        self.assertNotEqual(release.fingerprint(), original)
+
     def test_infrastructure_does_not_deploy(self):
         (self.root / 'script.py').write_text('print(1)')
         self.commit()

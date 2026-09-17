@@ -174,7 +174,8 @@ def export(app, platform, output, allow_unplanned=False):
 def fingerprint():
     """Include local tracked edits, while ignoring build output and caches."""
     return hashlib.sha256((git('rev-parse', 'HEAD') + '\n' +
-                           git('diff', 'HEAD', '--binary')).encode()).hexdigest()
+                           git('diff', 'HEAD', '--binary', '--', '.',
+                               ':(exclude)**/__pycache__/**', ':(exclude)**/*.pyc')).encode()).hexdigest()
 
 
 def main():
