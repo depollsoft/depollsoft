@@ -42,6 +42,8 @@ git submodule update --init --recursive
 
 Android capture uses SystemUI demo mode to hide notification icons and show a consistent 9:41 clock, full battery, and Wi-Fi signal. It reapplies these settings after device size and theme changes, then exits demo mode when capture finishes. The status bar is rendered by Android during capture; screenshots are not retouched.
 
+Actions runs each Android capture through `scripts/release/emulator.py`. The launcher creates a temporary AVD, waits up to five minutes for boot, and stops only its own emulator and capture process groups. Shutdown has a deadline and force-stops stuck children, including children holding output handles open. Failed captures upload emulator logs, logcat, and a diagnostic screenshot separately from the store assets. Tag Master's initial live tag request can use the app's Retry button twice after failures, within the existing two-minute capture deadline.
+
 Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Both appearances are captured for every scene:
 
 | App | Captured flows per appearance |

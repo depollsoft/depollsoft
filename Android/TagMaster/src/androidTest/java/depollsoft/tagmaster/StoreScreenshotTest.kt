@@ -49,8 +49,21 @@ class StoreScreenshotTest {
             }
             val deadline = System.currentTimeMillis() + 120000
             var loaded = false
+            var retries = 0
+            var nextRetry = System.currentTimeMillis() + 5000
             while (!loaded && System.currentTimeMillis() < deadline) {
-                onActivity { loaded = it.tag != null && !it.isLoading }
+                onActivity {
+                    loaded = it.tag != null && !it.isLoading
+                    if (!loaded && it.loadFailed && !it.isLoading && retries < 2 &&
+                        System.currentTimeMillis() >= nextRetry) {
+                        // Retry the real request through the same control a user sees.
+                        // Never capture an error state or substitute offline fixtures.
+                        println("Retrying live tag 122 after a load failure (retry ${retries + 1})")
+                        check(it.findViewById<android.view.View>(R.id.detailRetryButton).performClick())
+                        retries++
+                        nextRetry = System.currentTimeMillis() + 5000
+                    }
+                }
                 Thread.sleep(200)
             }
             check(loaded) { "Live tag 122 did not load; refusing empty store screenshots" }
