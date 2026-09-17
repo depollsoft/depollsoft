@@ -17,6 +17,9 @@ from PIL import Image, ImageStat
 from release import APPS, ROOT, git, write_json, fingerprint
 import icons
 
+sys.path.insert(0, str(ROOT / 'scripts/ci'))
+import ios_simulator
+
 IOS_DEVICES = {'iphone': ('iPhone 17 Pro Max', {(1320, 2868)}),
                'ipad': ('iPad Pro 13-inch (M5)', {(2064, 2752)})}
 ANDROID_DEVICES = {'phoneScreenshots': ('1080x1920', '420'),
@@ -140,8 +143,7 @@ def ios(app, dest):
                                     with Image.open(attachments / attachment['exportedFileName']) as image:
                                         image.convert('RGB').save(target)
             finally:
-                subprocess.run(['xcrun', 'simctl', 'shutdown', udid], check=False, timeout=60)
-                run('xcrun', 'simctl', 'delete', udid, timeout=60)
+                ios_simulator.delete(udid)
 
 
 def android_status_bar(adb):
@@ -320,4 +322,6 @@ if __name__ == '__main__':
                  else Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{platform}.lock')
     with lock_path.open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        if platform == 'ios':
+            ios_simulator.clean_abandoned_captures()
         main()

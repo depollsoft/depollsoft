@@ -4,6 +4,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 CI = Path(__file__).resolve().parents[2] / 'ci'
 
@@ -107,3 +108,26 @@ class SimulatorLockTests(unittest.TestCase):
                                     text=True, timeout=5)
             self.assertEqual(result.returncode, 0)
             self.assertIn('Parent finished', result.stdout)
+
+    def test_owned_simulator_stops_before_releasing_slot_on_failure(self):
+        sys.path.insert(0, str(CI))
+        import ios_run
+        with tempfile.TemporaryDirectory() as directory:
+            lock_path = Path(directory) / 'lock'
+            events = []
+            def shutdown(udid):
+                import fcntl
+                with lock_path.open('a') as competing:
+                    with self.assertRaises(BlockingIOError):
+                        fcntl.flock(competing, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                events.append(('shutdown', udid))
+            udid = '12345678-1234-1234-1234-123456789ABC'
+            with patch('ios_run.ios_simulator.clean_abandoned_captures',
+                       side_effect=lambda: events.append('clean')), \
+                 patch('ios_run.ios_simulator.boot',
+                       side_effect=lambda value: events.append(('boot', value))), \
+                 patch('ios_run.ios_simulator.shutdown', side_effect=shutdown):
+                status = ios_run.run([sys.executable, '-c', 'raise SystemExit(7)',
+                                      f'platform=iOS Simulator,id={udid}'], lock_path)
+            self.assertEqual(status, 7)
+            self.assertEqual(events, ['clean', ('boot', udid), ('shutdown', udid)])

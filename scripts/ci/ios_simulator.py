@@ -2,6 +2,7 @@
 """Create an owned test device without reusing a runner's saved app data."""
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -16,6 +17,36 @@ def delete(udid):
     except (subprocess.SubprocessError, OSError) as error:
         print(f'Simulator shutdown did not complete: {error}', flush=True)
     subprocess.run([xcrun, 'simctl', 'delete', udid], check=True, timeout=30)
+
+
+def clean_abandoned_captures():
+    """Call only while holding depollsoft-ios-simulator.lock.
+
+    Capture creates and deletes these disposable devices inside that lock, so
+    any left at acquisition belong to a terminated capture. Never touch named
+    developer devices or CI devices allocated by a job waiting for the lock.
+    """
+    xcrun = os.environ.get('XCRUN', 'xcrun')
+    devices = json.loads(subprocess.check_output(
+        [xcrun, 'simctl', 'list', 'devices', '-j'], text=True, timeout=60))['devices']
+    for available in devices.values():
+        for device in available:
+            if re.fullmatch(r'Store-(pitchperfect|tagmaster)-(iphone|ipad)', device['name']):
+                print(f"Removing abandoned capture simulator: {device['name']} ({device['udid']})", flush=True)
+                delete(device['udid'])
+
+
+def boot(udid):
+    xcrun = os.environ.get('XCRUN', 'xcrun')
+    print(f'Booting test simulator {udid}', flush=True)
+    subprocess.run([xcrun, 'simctl', 'boot', udid], check=True, timeout=60)
+    subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True, timeout=180)
+
+
+def shutdown(udid):
+    xcrun = os.environ.get('XCRUN', 'xcrun')
+    print(f'Shutting down test simulator {udid}', flush=True)
+    subprocess.run([xcrun, 'simctl', 'shutdown', udid], check=True, timeout=30)
 
 
 def main():

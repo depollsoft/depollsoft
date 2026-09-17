@@ -11,6 +11,8 @@ import subprocess
 import sys
 import time
 
+import ios_simulator
+
 CASE_STARTED = re.compile(r"^Test [Cc]ase '(.+)' started")
 CASE_FINISHED = re.compile(r"^Test [Cc]ase '(.+)' (passed|failed|skipped)(?: on| \()")
 
@@ -26,6 +28,9 @@ def signal_command(child, signum):
 def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *,
         fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15):
     child = None
+    # Only explicit iOS Simulator destinations belong to this invocation.
+    simulator = next((match[1] for value in command
+                      if (match := re.search(r'platform=iOS Simulator,id=([A-Fa-f0-9-]{36})', value))), None)
 
     def interrupted(_signum, _frame):
         raise KeyboardInterrupt
@@ -39,6 +44,9 @@ def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *,
         fcntl.flock(lock, fcntl.LOCK_EX)
         print(f'Acquired simulator slot after {time.monotonic() - started:.1f}s', flush=True)
         try:
+            if simulator:
+                ios_simulator.clean_abandoned_captures()
+                ios_simulator.boot(simulator)
             child = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                      start_new_session=True,
                                      env=dict(os.environ, NSUnbufferedIO='YES'))
@@ -110,6 +118,9 @@ def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *,
                     signal_command(child, signal.SIGKILL)
                     child.wait(timeout=5)
                 child.stdout.close()
+            if simulator:
+                # Release the shared slot only after our simulator stops using it.
+                ios_simulator.shutdown(simulator)
 
 
 if __name__ == '__main__':
