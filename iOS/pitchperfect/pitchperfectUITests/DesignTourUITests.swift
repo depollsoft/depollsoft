@@ -222,9 +222,17 @@ final class StoreScreenshotTests: XCTestCase {
                 let field = app.textFields.firstMatch
                 XCTAssertTrue(field.readyForCapture(timeout: 10))
                 field.tap()
-                // Submit through the field so this works with either a software
-                // keyboard or the simulator's connected hardware keyboard.
-                field.typeText(title + "\n")
+                field.typeText(title)
+                // Let SwiftUI receive the complete title before Return dismisses
+                // focus. Sending both in one keyboard batch can submit a prefix.
+                if field.value as? String != title {
+                    let entered = XCTNSPredicateExpectation(
+                        predicate: NSPredicate(format: "value == %@", title), object: field)
+                    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+                }
+                XCTAssertEqual(field.value as? String, title)
+                // Return works with both software and connected hardware keyboards.
+                field.typeText("\n")
                 XCTAssertEqual(field.value as? String, title)
                 let keyName = ["F major", "C major", "G major", "D major"][index % 4]
                 let key = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", keyName)).firstMatch
