@@ -11,12 +11,14 @@ on:
     paths:
       - "iOS/**"
       - ".github/workflows/ios.yml"
+      - "scripts/ci/**"
   pull_request:
     branches:
       - main
     paths:
       - "iOS/**"
       - ".github/workflows/ios.yml"
+      - "scripts/ci/**"
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * *"
@@ -276,42 +278,21 @@ jobs:
               --output pitchperfectlib-junit.xml || FAILED=1
 
 
-          # We continue even if tests fail - we'll check junit results later
-          exit 0
+          # Keep every scheme running, but preserve any xcodebuild failure.
+          exit "$FAILED"
 
       - name: Verify test results
         if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+          TEST_RUN_OUTCOME: ${{ steps.run_tests.outcome }}
         run: |
-          # Check junit XML files for actual test failures
-          # xcodebuild may exit 65 due to simctl issues even when tests pass
-          FAILED=0
-          for junit in pitchperfect-junit.xml tagmaster-junit.xml \
-            pitchperfectlib-junit.xml; do
-            if [ -f "$junit" ]; then
-              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              if [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
-                COUNTS="$FAILURES failures and $ERRORS errors"
-                echo "❌ $junit has $COUNTS out of $TESTS tests"
-                FAILED=1
-              else
-                echo "✅ $junit passed ($TESTS tests)"
-              fi
-            else
-              echo "⚠️ $junit not found - tests may not have run"
-              FAILED=1
-            fi
-          done
-          if [ "$FAILED" = "1" ]; then
-            REASON="Some tests failed or did not run."
-            echo "::error::$REASON Check the junit XML reports."
+          python3 ../scripts/ci/ios_test_results.py pitchperfect tagmaster pitchperfectlib
+          if [ "$TEST_RUN_OUTCOME" != success ]; then
+            echo '::error::xcodebuild did not complete all test schemes successfully.'
             exit 1
           fi
-          echo "All test suites passed!"
 
       - name: Summarize tests & coverage
         if: always()
@@ -508,6 +489,7 @@ jobs:
             iOS/*-coverage.json
             iOS/*-coverage.txt
             iOS/*-junit.xml
+            iOS/*-summary.json
           retention-days: 14
 
       - name: Publish unit test results (PR check)
