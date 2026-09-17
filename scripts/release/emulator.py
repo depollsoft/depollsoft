@@ -19,6 +19,7 @@ def check_port_available(port):
         # Allow those connections, but still reject an active listener.
         probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         probe.bind(('127.0.0.1', port))
+        return probe.getsockname()[1]
 
 
 def stop_process_group(process, grace=10):
@@ -51,7 +52,7 @@ def stop_process_group(process, grace=10):
 @contextmanager
 def private_adb(sdk, port, env):
     """Own an ADB server so another runner's cleanup cannot disconnect us."""
-    check_port_available(port)
+    port = check_port_available(port)
     env = dict(env, ADB_SERVER_SOCKET=f'tcp:{port}',
                ANDROID_ADB_SERVER_ADDRESS='localhost', ANDROID_ADB_SERVER_PORT=str(port),
                ADB_LOCAL_TRANSPORT_MAX_PORT='0', ADB_MDNS_AUTO_CONNECT='',
@@ -110,7 +111,7 @@ def main():
                    '-no-boot-anim', '-camera-back', 'none', '-dns-server', '8.8.8.8']
         if not watch:
             options += ['-skin', '1600x2560']
-        with private_adb(sdk, args.port + 10000, env) as env, (logs / 'emulator.log').open('w') as log:
+        with private_adb(sdk, 0, env) as env, (logs / 'emulator.log').open('w') as log:
             emulator = subprocess.Popen([str(sdk / 'emulator/emulator'), '-avd', args.name,
                                          '-port', str(args.port), *options], env=env,
                                         stdout=log, stderr=subprocess.STDOUT, start_new_session=True)

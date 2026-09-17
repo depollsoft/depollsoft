@@ -501,6 +501,7 @@ TM_CAPTURE_IMPL
 }
 
 - (void)waitUntil:(BOOL (^)(void))condition {
+    if (condition()) return;
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return condition(); }];
     XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil];
     XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:5], XCTWaiterResultCompleted);
@@ -654,7 +655,8 @@ TM_CAPTURE_IMPL
     XCTAssertTrue(button.enabled);
     tag.failRating = NO;
     summary.retry();
-    [self waitUntil:^BOOL { return !button.enabled; }];
+    [self waitUntil:^BOOL { return [button.accessibilityLabel isEqualToString:@"Rating submitted"]; }];
+    XCTAssertFalse(button.enabled);
     XCTAssertEqual(tag.submittedRating, 4);
     XCTAssertEqualObjects(button.accessibilityLabel, @"Rating submitted");
 }
@@ -2974,11 +2976,14 @@ TM_CAPTURE_IMPL
 - (void)settle {
     [self.window updateTraitsIfNeeded];
     [self.window layoutIfNeeded];
-    XCTestExpectation *turn = [self expectationWithDescription:@"native layout"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.12 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [turn fulfill]; });
-    [self waitForExpectations:@[turn] timeout:2];
+    XCTestExpectation *transaction = [self expectationWithDescription:@"native layout committed"];
+    [CATransaction begin];
+    [CATransaction setCompletionBlock:^{ [transaction fulfill]; }];
     [self.window layoutIfNeeded];
+    [CATransaction commit];
     [CATransaction flush];
+    [self waitForExpectations:@[transaction] timeout:3];
+    [self.window layoutIfNeeded];
 }
 - (void)capture:(NSString *)name {
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad && [name containsString:@"barberpole"]) name = [name stringByAppendingString:@"-ipad"];
@@ -3051,10 +3056,20 @@ TM_CAPTURE_IMPL
     CALayer *logo = [pole valueForKey:@"logoLayer"];
     XCTAssertEqualWithAccuracy(logo.frame.size.height, 32, .01);
     XCTAssertEqualWithAccuracy(logo.position.x, 125, .01);
-    slot.hidden = YES; [self settle]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
-    slot.hidden = NO; [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
-    pole.frame = CGRectOffset(pole.frame, 0, 100); [self settle]; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
-    pole.frame = CGRectOffset(pole.frame, 0, -100); [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    // Ancestor visibility is observed by the production monitor. Await its
+    // effect rather than assuming a fixed layout delay also fires that timer.
+    slot.hidden = YES;
+    [self waitUntil:^BOOL { return [stripes animationForKey:@"rotationStripes"] == nil; }];
+    XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    slot.hidden = NO;
+    [self waitUntil:^BOOL { return [stripes animationForKey:@"rotationStripes"] != nil; }];
+    XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
+    pole.frame = CGRectOffset(pole.frame, 0, 100);
+    [self waitUntil:^BOOL { return [stripes animationForKey:@"rotationStripes"] == nil; }];
+    XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+    pole.frame = CGRectOffset(pole.frame, 0, -100);
+    [self waitUntil:^BOOL { return [stripes animationForKey:@"rotationStripes"] != nil; }];
+    XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
     [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationWillResignActiveNotification object:nil];
     XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
     [NSNotificationCenter.defaultCenter postNotificationName:UIApplicationDidBecomeActiveNotification object:nil];
@@ -3283,6 +3298,12 @@ TM_CAPTURE_IMPL
         NSLog(@"TM_PITCH %@ contrast=%.2f fillPixels=%lu textPixels=%lu iconPixels=%lu", button.accessibilityIdentifier, contrast, (unsigned long)[self pixelsIn:button matching:fill], (unsigned long)[self pixelsIn:button.titleLabel matching:foreground], (unsigned long)[self pixelsIn:button.imageView matching:foreground]);
         XCTAssertGreaterThanOrEqual(contrast, 4.5);
     } else {
+        [self waitUntil:^BOOL {
+            [button layoutIfNeeded];
+            return CGColorGetAlpha(button.configuration.background.backgroundColor.CGColor) == 0
+                && [self pixelsIn:button matching:button.tintColor] > 5;
+        }];
+        fill = button.configuration.background.backgroundColor;
         XCTAssertEqualWithAccuracy(CGColorGetAlpha(fill.CGColor), 0, 0.01);
         XCTAssertGreaterThan([self pixelsIn:button matching:button.tintColor], 5);
     }

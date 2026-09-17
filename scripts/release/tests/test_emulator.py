@@ -79,9 +79,16 @@ time.sleep(60)
 
 
 class PrivateAdbTests(unittest.TestCase):
+    def test_chooses_an_available_private_port(self):
+        with patch('emulator.subprocess.run'):
+            with private_adb(Path('/sdk'), 0, {}) as env:
+                port = int(env['ANDROID_ADB_SERVER_PORT'])
+                self.assertGreater(port, 0)
+                self.assertEqual(env['ADB_SERVER_SOCKET'], f'tcp:{port}')
+
     def test_uses_one_private_server_for_emulator_clients_and_cleanup_after_failure(self):
         original = {'PATH': '/bin', 'ADB_SERVER_SOCKET': 'tcp:5037'}
-        with patch('emulator.check_port_available'), patch('emulator.subprocess.run') as run:
+        with patch('emulator.check_port_available', return_value=15560), patch('emulator.subprocess.run') as run:
             with self.assertRaisesRegex(RuntimeError, 'capture failed'):
                 with private_adb(Path('/sdk'), 15560, original) as env:
                     self.assertEqual(env['ADB_SERVER_SOCKET'], 'tcp:15560')

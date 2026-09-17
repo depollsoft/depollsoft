@@ -4,12 +4,23 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 CI = Path(__file__).resolve().parents[2] / 'ci'
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_exited_xcode_helper_permission_does_not_block_cleanup(self):
+        sys.path.insert(0, str(CI))
+        import ios_run
+        child = Mock(pid=42)
+        with patch('ios_run.os.killpg', side_effect=PermissionError):
+            child.poll.return_value = 1
+            ios_run.signal_command(child, 15)
+            child.poll.return_value = None
+            with self.assertRaises(PermissionError):
+                ios_run.signal_command(child, 15)
+
     def test_stack_capture_only_samples_apps_on_its_own_device(self):
         sys.path.insert(0, str(CI))
         import ios_run

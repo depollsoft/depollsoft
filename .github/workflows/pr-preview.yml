@@ -157,6 +157,8 @@ jobs:
           :PitchPerfect:assemblePrivate
           :PitchPerfectWear:assemblePrivate
           :TagMaster:assemblePrivate
+          "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m"
+          --max-workers=2
           -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
             needs.compute-version.outputs.build-number
           }}

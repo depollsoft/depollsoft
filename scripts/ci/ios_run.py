@@ -46,6 +46,11 @@ def signal_command(child, signum):
         os.killpg(child.pid, signum)
     except ProcessLookupError:
         pass
+    except PermissionError:
+        # Xcode can leave an OS-owned helper in its group after it exits.
+        # That helper must not prevent cleanup of our simulator.
+        if child.poll() is None:
+            raise
 
 
 def run(command, *,
@@ -71,6 +76,7 @@ def run(command, *,
         active_case = None
         case_started = None
         sampled_case = False
+        sampler = None
         stopping = None
         buffered = ''
         decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
@@ -117,9 +123,11 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
-                    if simulator and active_case and not sampled_case and now - case_started >= 10:
+                    if (simulator and active_case and not sampled_case and now - case_started >= 20
+                            and (sampler is None or not sampler.is_alive())):
                         sampled_case = True
-                        threading.Thread(target=sample_simulator_apps, args=(simulator,)).start()
+                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator,))
+                        sampler.start()
                     if not first_test_seen and now - started >= startup_timeout:
                         stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
                     elif active_case and now - case_started >= test_timeout:
