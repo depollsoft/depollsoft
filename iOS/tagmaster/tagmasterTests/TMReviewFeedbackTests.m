@@ -139,6 +139,7 @@
 @property NSTimeInterval testTimeout;
 @property BOOL realPlayback;
 @property BOOL showInlinePlayer;
+@property (nonatomic, copy) void (^didDeliverOutcome)(void);
 @end
 @implementation TMReviewTracks
 - (NSTimeInterval)playbackReadyTimeout { return self.testTimeout > 0 ? self.testTimeout : 30; }
@@ -154,11 +155,13 @@
     self.presentedTrack = track;
     self.presentedBuffer = buffer;
     if (self.showInlinePlayer) [super presentPlayerFor:track buffer:buffer];
+    if (self.didDeliverOutcome) self.didDeliverOutcome();
 }
 - (void)tm_showError:(NSString *)message retry:(void (^)(void))retry {
     NSAssert(NSThread.isMainThread, @"Recovery must be on main");
     self.errors++;
     self.retry = retry;
+    if (self.didDeliverOutcome) self.didDeliverOutcome();
 }
 @end
 
@@ -175,6 +178,7 @@
     [super tearDown];
 }
 - (void)waitUntil:(BOOL (^)(void))condition {
+    if (condition()) return;
     XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:
         [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return condition(); }] object:nil];
     XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:5], XCTWaiterResultCompleted);
@@ -476,9 +480,15 @@
         [self select:tracks];
         TMControlledTrackLoader *loader = (id)tracks.lastLoader;
         loader.backgroundDelivery = YES;
+        XCTestExpectation *delivered = [self expectationWithDescription:
+            succeed.boolValue ? @"background success delivered on main" : @"background failure delivered on main"];
+        tracks.didDeliverOutcome = ^{
+            XCTAssertTrue(NSThread.isMainThread);
+            [delivered fulfill];
+        };
         if (succeed.boolValue) [loader succeedWithBuffer:[self buffer]];
         else [loader fail];
-        [self waitUntil:^BOOL { return tracks.presentations + tracks.errors == 1; }];
+        [self waitForExpectations:@[delivered] timeout:5];
         XCTAssertEqual(tracks.presentations, succeed.boolValue ? 1 : 0);
         XCTAssertEqual(tracks.errors, succeed.boolValue ? 0 : 1);
         XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
