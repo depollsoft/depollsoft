@@ -12,6 +12,22 @@ from ios_simulator import delete, clean_abandoned, owner_identity, has_live_owne
 
 
 class SimulatorCleanupTests(unittest.TestCase):
+    def test_explicit_legacy_retirement_preserves_data_and_live_owners(self):
+        data = {'devices': {'runtime': [dict(name='iPhone 16e', udid=udid, state='Booted')
+                                        for udid in ['legacy', 'personal']]}}
+        for live in [False, True]:
+            with self.subTest(live=live), \
+                 patch.dict('os.environ', {'IOS_LEGACY_SIMULATOR_UDID': 'legacy'}), \
+                 patch('ios_simulator.subprocess.check_output', return_value=json.dumps(data)), \
+                 patch('ios_simulator.has_live_owner', return_value=live), \
+                 patch('ios_simulator.shutdown') as shutdown, patch('ios_simulator.delete') as remove:
+                clean_abandoned()
+                remove.assert_not_called()
+                if live:
+                    shutdown.assert_not_called()
+                else:
+                    shutdown.assert_called_once_with('legacy')
+
     def test_delete_is_attempted_after_shutdown_hangs(self):
         with patch('ios_simulator.subprocess.run', side_effect=[
             subprocess.TimeoutExpired('simctl shutdown', 30), None,

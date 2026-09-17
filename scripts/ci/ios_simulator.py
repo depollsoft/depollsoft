@@ -107,6 +107,14 @@ def clean_abandoned():
     failures = []
     for available in devices.values():
         for device in available:
+            # A maintainer can explicitly retire a legacy shared CI device
+            # which predates ownership records. Preserve its data and all
+            # other unregistered devices; never stop a registered live job.
+            if (device['udid'] == os.environ.get('IOS_LEGACY_SIMULATOR_UDID')
+                    and device.get('state') == 'Booted'
+                    and not has_live_owner(device['udid'])):
+                print(f"Retiring legacy CI simulator: {device['name']} ({device['udid']})", flush=True)
+                shutdown(device['udid'])
             reserved = re.fullmatch(
                 r'(Store-(pitchperfect|tagmaster)-(iphone|ipad)(-[a-f0-9-]{36})?|Depollsoft-Test-[a-f0-9-]{36})',
                 device['name'])
