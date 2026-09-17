@@ -10,6 +10,7 @@ on:
       - "Android/**"
       - "iOS/**"
       - ".github/workflows/pr-preview.yml"
+      - "scripts/ci/android_sdk.py"
       - ".github/workflows/preview-deploy-command.yml"
       - ".github/workflows/deploy-pr-preview.yml"
 
@@ -146,9 +147,18 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Check installed Android SDK
+        id: android-sdk
+        run: python3 scripts/ci/android_sdk.py
+
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        if: steps.android-sdk.outputs.available != 'true'
+        timeout-minutes: 5
         with:
           packages: "platform-tools platforms;android-35 platforms;android-37.0 build-tools;36.0.0"
+
+      - name: Verify Android SDK
+        run: python3 scripts/ci/android_sdk.py --require
 
       - name: Build private preview APKs
         working-directory: Android
@@ -238,6 +248,7 @@ jobs:
           # reuse it across self-hosted runners with different work roots.
           rm -rf SourcePackages
           for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
             xcodebuild -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
               -scheme pitchperfect \
@@ -388,6 +399,7 @@ jobs:
             raw_log="$RUNNER_TEMP/$scheme-archive.log"
             set -o pipefail
             for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
               rm -rf "$archive"
               if xcodebuild archive \
                 -jobs 2 \

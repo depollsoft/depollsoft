@@ -408,6 +408,7 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 
 @interface DPTagViewController (PolishTests)
 - (void)sendTag;
+- (UIViewController *)makeShareControllerWithItems:(NSArray *)items;
 - (void)loadTag:(BOOL)refresh;
 - (void)fetchTagId:(int)identifier refresh:(BOOL)refresh completion:(void (^)(DPTag *))completion;
 - (void)updateLoadingState;
@@ -434,10 +435,20 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 - (void)presentViewController:(UIViewController *)controller animated:(BOOL)animated completion:(void (^)(void))completion { self.captured = controller; } \
 - (void)tm_showError:(NSString *)message retry:(void (^)(void))retry { self.errorMessage = message; self.retry = retry; }
 @interface TMTestDetail : DPTagViewController
+@property (nonatomic, copy) NSArray *sharedItems;
+@property (nonatomic, strong) UIViewController *shareController;
 TM_CAPTURE
 @end
 @implementation TMTestDetail
 TM_CAPTURE_IMPL
+- (UIViewController *)makeShareControllerWithItems:(NSArray *)items {
+    // UIKit starts share-extension and link-metadata work during initialization,
+    // even when presentation is intercepted. Keep it out of these unit tests.
+    self.sharedItems = items;
+    self.shareController = [UIViewController new];
+    self.shareController.modalPresentationStyle = UIModalPresentationPopover;
+    return self.shareController;
+}
 @end
 @interface TMTestSummary : DPTagSummaryController
 TM_CAPTURE
@@ -586,7 +597,12 @@ TM_CAPTURE_IMPL
     [detail loadViewIfNeeded];
     [detail setValue:[self tag] forKey:@"tag"];
     [detail sendTag];
-    XCTAssertTrue([detail.captured isKindOfClass:UIActivityViewController.class]);
+    XCTAssertNotNil(detail.shareController);
+    XCTAssertEqual(detail.captured, detail.shareController);
+    XCTAssertEqualObjects(detail.sharedItems, (@[
+        [NSString stringWithFormat:@"%@ - Tag Master for iOS", [self tag].title],
+        [NSURL URLWithString:@"http://tags.depoll.com/tag.php?id=1809"]
+    ]));
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         XCTAssertEqual(detail.captured.popoverPresentationController.barButtonItem, [detail valueForKey:@"shareBarButton"]);
     }
