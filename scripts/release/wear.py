@@ -12,6 +12,30 @@ from capture import run, output
 from release import ROOT, fingerprint, git, write_json
 
 
+def wait_for_instrument(adb, timeout=120):
+    deadline = time.monotonic() + timeout
+    last_state = 'No UI hierarchy returned'
+    while time.monotonic() < deadline:
+        try:
+            run(*adb, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP', timeout=10)
+            run(*adb, 'shell', 'wm', 'dismiss-keyguard', timeout=10)
+            run(*adb, 'shell', 'am', 'start', '-W', '-n',
+                'depollsoft.pitchperfect/.PitchPipeActivity', timeout=20)
+            time.sleep(3)
+            # Never accept a stale dump after a failed UI Automator process.
+            run(*adb, 'shell', 'rm', '-f', '/sdcard/store-window.xml', timeout=10)
+            run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml', timeout=20)
+            last_state = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml', timeout=10)
+            # The custom instrument exposes virtual accessibility nodes for notes.
+            if 'id/pitchInstrument' in last_state and 'octave 4' in last_state:
+                return
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+            last_state = str(error)
+            print(f'Wear UI inspection failed; retrying within {timeout}s: {error}', flush=True)
+        time.sleep(2)
+    raise ValueError(f'The Wear pitch pipe is not visible: {last_state[:5000]}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--serial', required=True)
@@ -40,20 +64,7 @@ def main():
     run(*adb, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
     run(*adb, 'shell', 'wm', 'dismiss-keyguard')
     run(*adb, 'shell', 'pm', 'clear', 'depollsoft.pitchperfect')
-    deadline = time.monotonic() + 120
-    while True:
-        run(*adb, 'shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
-        run(*adb, 'shell', 'wm', 'dismiss-keyguard')
-        run(*adb, 'shell', 'am', 'start', '-W', '-n', 'depollsoft.pitchperfect/.PitchPipeActivity')
-        time.sleep(3)
-        run(*adb, 'shell', 'uiautomator', 'dump', '/sdcard/store-window.xml')
-        hierarchy = output(*adb, 'shell', 'cat', '/sdcard/store-window.xml')
-        # The instrument is one custom view; its cells are virtual accessibility
-        # nodes named after their notes.
-        if 'id/pitchInstrument' in hierarchy and 'octave 4' in hierarchy:
-            break
-        if time.monotonic() > deadline:
-            raise ValueError('The Wear pitch pipe is not visible')
+    wait_for_instrument(adb)
     args.output.mkdir(parents=True, exist_ok=True)
     path = args.output / f'{args.shape}.png'
     # Hold the C4 cell (first on the ring, just right of twelve o'clock) so the
