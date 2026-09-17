@@ -116,8 +116,28 @@ static __weak UIResponder *TMRecordedFirstResponder;
 @synthesize persistentStoreCoordinator = __persistentStoreCoordinator;
 @synthesize navigationController;
 
++ (void)configureCacheSerialization
+{
+    // Unit tests write the same disk cache later read by UI test launches.
+    // Register its value types before the test-only startup returns.
+    [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
+        return [url absoluteString];
+    } deserializer:^NSURL *(NSString *input) {
+        return [NSURL URLWithString:input];
+    } forClass:[NSURL class]];
+
+    NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+    [DPJsonSerializer registerSerializer:^NSString *(NSDate *date) {
+        return [numberFormatter stringFromNumber:@([date timeIntervalSince1970])];
+    } deserializer:^NSDate *(NSString *input) {
+        return [NSDate dateWithTimeIntervalSince1970:[numberFormatter numberFromString:input].doubleValue];
+    } forClass:[[NSDate date] class]];
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [DPAppDelegate configureCacheSerialization];
+
     if (NSClassFromString(@"XCTestCase") != nil) {
         self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
         self.window.rootViewController = [UIViewController new];
@@ -134,19 +154,6 @@ static __weak UIResponder *TMRecordedFirstResponder;
     [application registerForRemoteNotifications];
         
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    [DPJsonSerializer registerSerializer:^NSString *(NSURL *url) {
-        return [url absoluteString];
-    } deserializer:^NSURL *(NSString *input) {
-        return [NSURL URLWithString:input];
-    } forClass:[NSURL class]];
-    
-    NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
-    [DPJsonSerializer registerSerializer:^NSString *(NSDate *date) {
-        return [numberFormatter stringFromNumber:@([date timeIntervalSince1970])];
-    } deserializer:^NSDate *(NSString *input) {
-        return [NSDate dateWithTimeIntervalSince1970:[numberFormatter numberFromString:input].doubleValue];
-    } forClass:[[NSDate date] class]];
-    
     // Override point for customization after application launch.
     self.window.backgroundColor = [UIColor systemBackgroundColor];
     self.window.tintColor = [DPAppDelegate accentColor];
