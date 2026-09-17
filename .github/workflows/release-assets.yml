@@ -27,7 +27,7 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["macos-26"]') || inputs.app == 'tagmaster' && fromJSON('["self-hosted", "Linux"]') || fromJSON('["ubuntu-24.04"]') }}
+    runs-on: ${{ inputs.platform == 'ios' && fromJSON('["macos-26"]') || inputs.app == 'tagmaster' && fromJSON('["self-hosted", "macOS"]') || fromJSON('["ubuntu-24.04"]') }}
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
@@ -77,9 +77,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Verify provisioned emulator acceleration
-        if: inputs.platform == 'android' && runner.environment == 'self-hosted'
-        run: test -r /dev/kvm && test -w /dev/kvm
       - name: Capture Wear OS round
         if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
         run: |
