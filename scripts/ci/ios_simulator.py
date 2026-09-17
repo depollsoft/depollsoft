@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Create an owned test device without reusing a runner's saved app data."""
+import fcntl
 import json
+import plistlib
 import os
 import re
 from pathlib import Path
@@ -27,13 +29,30 @@ def clean_abandoned_captures():
     developer devices or CI devices allocated by a job waiting for the lock.
     """
     xcrun = os.environ.get('XCRUN', 'xcrun')
-    devices = json.loads(subprocess.check_output(
-        [xcrun, 'simctl', 'list', 'devices', '-j'], text=True, timeout=60))['devices']
+    try:
+        devices = json.loads(subprocess.check_output(
+            [xcrun, 'simctl', 'list', 'devices', '-j'], text=True, timeout=60))['devices']
+    except subprocess.TimeoutExpired:
+        # Discovery can hang when abandoned simulators exhaust host resources.
+        # Read only Apple's device metadata to recover our exact reserved names;
+        # still ask simctl to shut down/delete them, never remove files ourselves.
+        print('Simulator discovery stalled; reading device metadata for capture cleanup', flush=True)
+        devices = {'local': []}
+        for path in (Path.home() / 'Library/Developer/CoreSimulator/Devices').glob('*/device.plist'):
+            device = plistlib.loads(path.read_bytes())
+            if device.get('UDID') == path.parent.name:
+                devices['local'].append({'name': device.get('name', ''), 'udid': device['UDID']})
+    failures = []
     for available in devices.values():
         for device in available:
             if re.fullmatch(r'Store-(pitchperfect|tagmaster)-(iphone|ipad)', device['name']):
                 print(f"Removing abandoned capture simulator: {device['name']} ({device['udid']})", flush=True)
-                delete(device['udid'])
+                try:
+                    delete(device['udid'])
+                except (subprocess.SubprocessError, OSError) as error:
+                    failures.append(str(error))
+    if failures:
+        raise RuntimeError('Could not clean abandoned capture devices: ' + '; '.join(failures))
 
 
 def boot(udid):
@@ -86,6 +105,11 @@ if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--delete':
         delete(sys.argv[2])
     elif len(sys.argv) == 1:
-        main()
+        # Discovery itself can compete with a capture booting or shutting down.
+        with Path('/tmp/depollsoft-ios-simulator.lock').open('a') as lock:
+            print('Waiting for the host simulator slot before device creation', flush=True)
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            clean_abandoned_captures()
+            main()
     else:
         raise SystemExit('Usage: ios_simulator.py [--delete UDID]')
