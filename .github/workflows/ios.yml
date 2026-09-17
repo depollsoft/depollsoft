@@ -481,6 +481,7 @@ jobs:
             iOS/*-junit.xml
             iOS/*-summary.json
             iOS/*-test.log
+            iOS/*.sample.txt
           retention-days: 14
 
       - name: Publish unit test results (PR check)
