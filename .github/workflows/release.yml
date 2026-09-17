@@ -66,6 +66,7 @@ jobs:
         timeout-minutes: 46
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
+          retries: 3
           script: |
             const pr = context.payload.pull_request;
             const files = await github.paginate(github.rest.pulls.listFiles, {
