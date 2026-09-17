@@ -55,6 +55,7 @@ dependencies {
 }
 
 android {
+    sourceSets.androidTest.kotlin.directories.add(rootProject.file('store-screenshot-tests/src').path)
     buildFeatures {
         buildConfig = true
     }

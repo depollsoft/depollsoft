@@ -1,13 +1,12 @@
 package depollsoft.pitchperfect
 
-import android.graphics.Bitmap
+import depollsoft.testing.StoreScreenshots
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class StoreScreenshotTest {
@@ -15,11 +14,7 @@ class StoreScreenshotTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.waitForIdleSync()
         Thread.sleep(1000)
-        val image = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = File(instrumentation.targetContext.filesDir, "store-screenshots")
-        directory.mkdirs()
-        File(directory, "$name.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        image.recycle()
+        StoreScreenshots.capture(instrumentation, name)
     }
 
     @Test fun captureStoreScreenshots() {
