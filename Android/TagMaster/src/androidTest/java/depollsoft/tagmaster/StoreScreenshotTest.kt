@@ -47,7 +47,7 @@ class StoreScreenshotTest {
                 // main thread without waiting for global Espresso/Looper idleness.
                 InstrumentationRegistry.getInstrumentation().runOnMainSync { action(activity) }
             }
-            val deadline = System.currentTimeMillis() + 120000
+            var deadline = System.currentTimeMillis() + 120000
             var loaded = false
             var retries = 0
             var nextRetry = System.currentTimeMillis() + 5000
@@ -62,6 +62,8 @@ class StoreScreenshotTest {
                         check(it.findViewById<android.view.View>(R.id.detailRetryButton).performClick())
                         retries++
                         nextRetry = System.currentTimeMillis() + 5000
+                        // A slow failed connection must not consume the next attempt's budget.
+                        deadline = System.currentTimeMillis() + 120000
                     }
                 }
                 Thread.sleep(200)

@@ -28,8 +28,8 @@ def run(*args, **kwargs):
     return subprocess.run(list(map(str, args)), check=True, **kwargs)
 
 
-def output(*args):
-    return subprocess.check_output(list(map(str, args)), text=True, timeout=300).strip()
+def output(*args, timeout=300):
+    return subprocess.check_output(list(map(str, args)), text=True, timeout=timeout).strip()
 
 
 def screenshot_path(app, platform, family, scene):
@@ -160,7 +160,7 @@ def android(app, dest, serial):
                 android_status_bar(adb)
                 result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
                                 f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
-                                f'{package}.test/androidx.test.runner.AndroidJUnitRunner')
+                                f'{package}.test/androidx.test.runner.AndroidJUnitRunner', timeout=900)
                 print(result)
                 # am instrument can return exit 0 even when the test failed.
                 if 'OK (1 test)' not in result or 'FAILURES' in result:
