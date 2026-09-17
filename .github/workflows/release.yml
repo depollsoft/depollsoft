@@ -20,6 +20,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   plan:
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux]
     outputs:
@@ -57,6 +61,40 @@ jobs:
                                       for app in ('pitchperfect', 'tagmaster') for platform in ('ios', 'android')]
               f.write('captures=' + json.dumps({'include': captures}) + '\n')
           PY
+      - name: Wait for iOS CI before simulator captures
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 46
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo, pull_number: pr.number, per_page: 100,
+            });
+            // Match ios.yml's path filters. Copy-only release PRs do not run iOS CI.
+            const testsExpected = files.some(({filename}) =>
+              filename.startsWith('iOS/') || filename.startsWith('scripts/ci/') ||
+              filename === '.github/workflows/ios.yml');
+            if (!testsExpected) return;
+            for (let attempt = 0; attempt < 90; attempt++) {
+              const {data} = await github.rest.actions.listWorkflowRuns({
+                ...context.repo, workflow_id: 'ios.yml', event: 'pull_request',
+                head_sha: pr.head.sha, per_page: 100,
+              });
+              const run = data.workflow_runs
+                .filter(run => run.head_sha === pr.head.sha)
+                .sort((a, b) => b.id - a.id)[0];
+              if (run?.status === 'completed') {
+                if (run.conclusion !== 'success') {
+                  throw new Error(`iOS CI ${run.conclusion}: ${run.html_url}. Fix or rerun CI, then rerun release assets.`);
+                }
+                core.info(`iOS CI passed: ${run.html_url}`);
+                return;
+              }
+              core.info(`Waiting for iOS CI at ${pr.head.sha}: ${run?.status || 'not queued yet'}`);
+              await new Promise(resolve => setTimeout(resolve, 30000));
+            }
+            throw new Error('iOS CI did not finish within 45 minutes; no capture simulators were started.');
   assets:
     needs: plan
     if: >-
