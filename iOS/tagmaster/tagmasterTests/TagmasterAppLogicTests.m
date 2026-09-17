@@ -3881,14 +3881,19 @@ TM_CAPTURE_IMPL
         XCTAssertEqualWithAccuracy(pole.bounds.size.width, table.bounds.size.width, 0.5);
         CGRect stationary = frame.frame;
         [self verifyLogoPhases:pole reduced:&reduced];
-        // Sample the live presentation layer at two bounded points in its loop.
+        // Observe actual movement. A fixed sleep plus screenshot rendering can
+        // span a full loop and sample nearly the same phase on a busy runner.
         [self capture:@"tagmaster-ios-shared-vector-light-phase1"];
+        XCTAssertNotNil(stripes.presentationLayer);
         CGFloat first = stripes.presentationLayer.transform.m42;
-        XCTestExpectation *phase = [self expectationWithDescription:@"second stripe phase"];
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.6 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [phase fulfill]; });
-        [self waitForExpectations:@[phase] timeout:2];
+        __block CGFloat second = first;
+        [self waitUntil:^BOOL {
+            CALayer *presented = stripes.presentationLayer;
+            if (!presented) return NO;
+            second = presented.transform.m42;
+            return fabs(first - second) > 4;
+        }];
         [self capture:@"tagmaster-ios-shared-vector-light-phase2"];
-        CGFloat second = stripes.presentationLayer.transform.m42;
         NSLog(@"TM_POLE phase1=%.2f phase2=%.2f frame=%@", first, second, NSStringFromCGRect(frame.frame));
         XCTAssertGreaterThan(fabs(first - second), 4);
         XCTAssertTrue(CGRectEqualToRect(stationary, frame.frame));
