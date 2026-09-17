@@ -81,7 +81,7 @@ def delete(udid):
     xcrun = os.environ.get('XCRUN', 'xcrun')
     # A stuck shutdown must not prevent trying to delete our own device.
     try:
-        subprocess.run([xcrun, 'simctl', 'shutdown', udid], check=True, timeout=30)
+        shutdown(udid)
     except (subprocess.SubprocessError, OSError) as error:
         print(f'Simulator shutdown did not complete: {error}', flush=True)
     subprocess.run([xcrun, 'simctl', 'delete', udid], check=True, timeout=30)
@@ -131,14 +131,18 @@ def clean_abandoned():
 def boot(udid):
     xcrun = os.environ.get('XCRUN', 'xcrun')
     print(f'Booting test simulator {udid}', flush=True)
-    subprocess.run([xcrun, 'simctl', 'boot', udid], check=True, timeout=60)
+    # -b boots a stopped device and also succeeds when it is already running.
     subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True, timeout=180)
 
 
 def shutdown(udid):
     xcrun = os.environ.get('XCRUN', 'xcrun')
     print(f'Shutting down test simulator {udid}', flush=True)
-    subprocess.run([xcrun, 'simctl', 'shutdown', udid], check=True, timeout=30)
+    result = subprocess.run([xcrun, 'simctl', 'shutdown', udid],
+                            capture_output=True, text=True, timeout=30)
+    if result.returncode and 'current state: Shutdown' not in result.stderr:
+        print(result.stderr, flush=True)
+        result.check_returncode()
 
 
 def main():

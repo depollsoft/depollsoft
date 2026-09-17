@@ -98,12 +98,11 @@ def ios(app, dest):
                 udid = ios_simulator.create(f'Store-{app}-{family}-{uuid.uuid4()}', model, runtime)
             try:
                 for attempt in range(2):
-                    run('xcrun', 'simctl', 'boot', udid, timeout=60)
                     try:
-                        run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
+                        ios_simulator.boot(udid)
                         break
                     except subprocess.TimeoutExpired:
-                        run('xcrun', 'simctl', 'shutdown', udid, timeout=60)
+                        ios_simulator.shutdown(udid)
                         if attempt == 1:
                             raise
                         print('Simulator boot stalled; retrying this disposable device once', flush=True)
@@ -112,10 +111,10 @@ def ios(app, dest):
                         if attempt:
                             # A failed XCTest service can outlive the app. Reset
                             # only our disposable simulator before retrying.
-                            run('xcrun', 'simctl', 'shutdown', udid, timeout=60)
+                            ios_simulator.shutdown(udid)
                             run('xcrun', 'simctl', 'erase', udid, timeout=60)
-                            run('xcrun', 'simctl', 'boot', udid, timeout=60)
-                            run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
+                        # XCTest may shut down its device after a completed tour.
+                        ios_simulator.boot(udid)
                         run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
                             '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                             '--batteryState', 'charged', '--batteryLevel', '100')

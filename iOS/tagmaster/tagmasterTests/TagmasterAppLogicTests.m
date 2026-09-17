@@ -32,6 +32,15 @@
 #import "tagmaster-Swift.h"
 #import "TMReviewLoader.h"
 
+static NSData *TMSheetMusicFixturePDF(void) {
+    UIGraphicsPDFRenderer *renderer = [[UIGraphicsPDFRenderer alloc] initWithBounds:CGRectMake(0, 0, 612, 792)];
+    return [renderer PDFDataWithActions:^(UIGraphicsPDFRendererContext *context) {
+        [context beginPage];
+        [@"Sheet music test fixture" drawAtPoint:CGPointMake(32, 32)
+                                withAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:20]}];
+    }];
+}
+
 @interface DPHomeViewController (Testing)
 - (NSArray<NSDictionary *> *)navigationItems;
 @end
@@ -676,7 +685,7 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(summary.busyIndicator.busyCount, 0);
     XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[DPFileCache pathForKey:location.cacheKey]]);
     XCTAssertNil(summary.captured);
-    [@"%PDF-1.4 test" writeToURL:location.uri atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    XCTAssertTrue([TMSheetMusicFixturePDF() writeToURL:location.uri atomically:YES]);
     summary.retry();
     // The preview travels inside its detail-column host; without a navigation stack it is
     // presented in one, with Done.
@@ -3919,10 +3928,13 @@ TM_CAPTURE_IMPL
     DPRemoteLocation *location = [TMTestLocation new];
     location.uri = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString]];
     location.type = @"pdf"; tag.sheetMusicUri = location; summary.tag = tag;
-    [@"%PDF-1.4 test" writeToURL:location.uri atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    XCTAssertTrue([TMSheetMusicFixturePDF() writeToURL:location.uri atomically:YES]);
     @try {
         [summary openSheetMusic];
         [self waitUntil:^BOOL { return summary.captured != nil; }];
+        // The wait records a failure. Avoid cascading through unrelated nil
+        // control assertions if presentation itself did not complete.
+        if (!summary.captured) return;
         TMSheetMusicViewController *sheet = (id)((UINavigationController *)summary.captured).topViewController;
         XCTAssertTrue([sheet isKindOfClass:TMSheetMusicViewController.class]);
         UIView *keyView = sheet.keyItem.customView;

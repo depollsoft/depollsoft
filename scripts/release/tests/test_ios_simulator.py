@@ -8,10 +8,26 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_simulator import delete, clean_abandoned, owner_identity, has_live_owner, process_identity
+from ios_simulator import boot, shutdown, delete, clean_abandoned, owner_identity, has_live_owner, process_identity
 
 
 class SimulatorCleanupTests(unittest.TestCase):
+    def test_boot_waits_and_also_handles_an_already_booted_device(self):
+        with patch('ios_simulator.subprocess.run') as run:
+            boot('owned-device')
+        self.assertEqual(run.call_args.args[0][-3:], ['bootstatus', 'owned-device', '-b'])
+        self.assertEqual(run.call_args.kwargs['timeout'], 180)
+
+    def test_shutdown_accepts_stopped_devices_but_preserves_other_failures(self):
+        for error in ['Unable to shutdown device in current state: Shutdown', 'Device unavailable']:
+            result = subprocess.CompletedProcess(['simctl'], 149, '', error)
+            with self.subTest(error=error), patch('ios_simulator.subprocess.run', return_value=result):
+                if 'current state: Shutdown' in error:
+                    shutdown('owned-device')
+                else:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        shutdown('owned-device')
+
     def test_explicit_legacy_retirement_preserves_data_and_live_owners(self):
         data = {'devices': {'runtime': [dict(name='iPhone 16e', udid=udid, state='Booted')
                                         for udid in ['legacy', 'personal']]}}
@@ -39,7 +55,7 @@ class SimulatorCleanupTests(unittest.TestCase):
 
     def test_delete_failure_is_not_hidden(self):
         with patch('ios_simulator.subprocess.run', side_effect=[
-            None, subprocess.TimeoutExpired('simctl delete', 30),
+            subprocess.CompletedProcess(['simctl'], 0, '', ''), subprocess.TimeoutExpired('simctl delete', 30),
         ]), self.assertRaises(subprocess.TimeoutExpired):
             delete('owned-device')
 
