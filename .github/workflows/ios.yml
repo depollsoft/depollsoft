@@ -42,7 +42,8 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    runs-on: [self-hosted, macOS]
+    # Simulator jobs require the heavy slot; light slots share its process budget.
+    runs-on: [self-hosted, macOS, heavy]
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -240,7 +241,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
@@ -255,7 +256,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
@@ -270,7 +271,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
@@ -539,7 +540,8 @@ jobs:
     permissions:
       contents: read
       checks: write
-    runs-on: [self-hosted, macOS]
+    # Simulator jobs require the heavy slot; light slots share its process budget.
+    runs-on: [self-hosted, macOS, heavy]
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -674,7 +676,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-uitest-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
@@ -694,7 +696,7 @@ jobs:
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-uitest-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
