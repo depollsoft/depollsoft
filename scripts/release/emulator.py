@@ -57,7 +57,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='release-avd-') as folder:
         env = dict(os.environ, ANDROID_AVD_HOME=folder)
         with (logs / 'setup.log').open('w') as setup:
-            subprocess.run(['sdkmanager', package], env=env, stdout=setup, stderr=subprocess.STDOUT,
+            subprocess.run(['sdkmanager', 'emulator', package], env=env, stdout=setup, stderr=subprocess.STDOUT,
                            check=True, timeout=600)
             subprocess.run(['avdmanager', 'create', 'avd', '--name', args.name, '--package', package,
                             '--device', device], input='no\n', text=True, env=env, stdout=setup,
