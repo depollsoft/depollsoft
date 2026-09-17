@@ -33,20 +33,20 @@ class tagmasterUITests: XCTestCase {
     
     func testMainScreenDisplays() throws {
         // Wait for main screen to load
-        Thread.sleep(forTimeInterval: 1.0)
+
         XCTAssertTrue(app.exists, "App should exist")
     }
     
     func testAppHasContent() throws {
         let anyElement = app.descendants(matching: .any).element(boundBy: 0)
-        XCTAssertTrue(anyElement.waitForExistence(timeout: 5), "App should have visible content")
+        XCTAssertTrue(anyElement.existsOrWait(timeout: 5), "App should have visible content")
     }
     
     // MARK: - Navigation Bar Tests
     
     func testNavigationBarExists() throws {
         let navBar = app.navigationBars.firstMatch
-        XCTAssertTrue(navBar.waitForExistence(timeout: 5), "Navigation bar should exist")
+        XCTAssertTrue(navBar.existsOrWait(timeout: 5), "Navigation bar should exist")
     }
     
     // MARK: - Search Tests
@@ -77,16 +77,14 @@ class tagmasterUITests: XCTestCase {
         } else {
             throw XCTSkip("No search UI found")
         }
-        
-        Thread.sleep(forTimeInterval: 0.5)
+
         XCTAssertEqual(app.state, .runningForeground, "App should handle search interaction")
     }
     
     // MARK: - Content Display Tests
     
     func testMainContentExists() throws {
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         // App should have some content - table, collection view, or other UI
         let table = app.tables.firstMatch
         let collection = app.collectionViews.firstMatch
@@ -97,8 +95,7 @@ class tagmasterUITests: XCTestCase {
     }
     
     func testFavoritesOrListExists() throws {
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         // Look for favorites header or list
         let favoritesLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[cd] 'favorite'")).firstMatch
         let table = app.tables.firstMatch
@@ -110,30 +107,28 @@ class tagmasterUITests: XCTestCase {
     // MARK: - Interaction Tests
     
     func testCanTapContentIfExists() throws {
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         let table = app.tables.firstMatch
         if table.exists && table.cells.count > 0 {
             table.cells.element(boundBy: 0).tap()
-            Thread.sleep(forTimeInterval: 0.5)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "App should handle taps")
     }
     
     func testCanScrollContent() throws {
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         let table = app.tables.firstMatch
         let collection = app.collectionViews.firstMatch
         
         if table.exists {
             table.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+
             table.swipeDown()
         } else if collection.exists {
             collection.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+
             collection.swipeDown()
         }
         
@@ -143,8 +138,7 @@ class tagmasterUITests: XCTestCase {
     // MARK: - App Stability Tests
     
     func testAppDoesNotCrashOnRapidInteraction() throws {
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         // Try various interactions
         let table = app.tables.firstMatch
         
@@ -162,7 +156,9 @@ class tagmasterUITests: XCTestCase {
     
     func testLaunchPerformance() throws {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
-            measure(metrics: [XCTApplicationLaunchMetric()]) {
+            let options = XCTMeasureOptions()
+            options.iterationCount = 3
+            measure(metrics: [XCTApplicationLaunchMetric()], options: options) {
                 XCUIApplication().launch()
             }
         }

@@ -51,6 +51,10 @@ Choose a fresh output directory for each capture. Android emits phone and 10-inc
 | Pitch Perfect | Pitch pipe, notes, keys, populated songs, editing/reordering, song editor |
 | Tag Master | Populated favorites, classic browsing, search filters, search results, summary, details, loaded learning tracks, videos |
 
+iOS capture and CI test commands share `/tmp/depollsoft-ios-simulator.lock`. This prevents multiple runner slots on one Mac from driving simulators simultaneously. A log line distinguishes time waiting for that slot from time executing tests. Cancellation releases the slot after the owned test process exits.
+
+The regular iOS CI job runs each unit-test target before the UI regressions and interrupts XCTest after the first failed case. It enforces a 30-second duration budget per regression test, saves raw logs, and reports the slowest cases. Keep each UI test focused on one screen or interaction, check whether controls are already ready before waiting, and wait for the state the assertion needs, such as tappability after rotation. Store screenshot tours run separately as asset-generation jobs.
+
 The tests use the real native views. Example songs are local to the disposable device; Tag Master's favorites and results load from the live catalog. No account sign-in or remote user-data writes are needed. Missing/deleted catalog entries, empty results, and failed media loads fail capture. Pitch Perfect captures its existing ad-free state on Android. Its iOS debug build suppresses ad requests; production builds have no capture switch.
 
 `apps.json` separates the complete capture scenes from the selected and ordered `store_scenes`: up to ten uploads per iOS device size and eight per Play phone/tablet category. Extra light/dark scenes remain in `review/` for visual review, outside the upload directories. Do not discard existing coverage merely to keep the automation short.

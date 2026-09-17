@@ -44,6 +44,18 @@ def junit(scheme, tree):
     return ET.ElementTree(root)
 
 
+def check_durations(report, limit):
+    cases = sorted(report.findall('.//testcase'),
+                   key=lambda case: float(case.get('time', 0)), reverse=True)
+    for case in cases[:5]:
+        print(f'{case.get("classname")}/{case.get("name")}: {float(case.get("time", 0)):.2f}s')
+    slow = [case for case in cases if float(case.get('time', 0)) > limit]
+    if slow:
+        names = ', '.join(f'{case.get("classname")}/{case.get("name")} ({case.get("time")}s)'
+                          for case in slow)
+        raise ValueError(f'Tests exceeded the {limit:g}s budget: {names}')
+
+
 def main(schemes):
     failed = False
     for scheme in schemes:
@@ -58,8 +70,11 @@ def main(schemes):
                 os.environ.get('XCRUN', 'xcrun'), 'xcresulttool', 'get', 'test-results', 'tests',
                 '--path', f'{scheme}-results.xcresult', '--compact',
             ], text=True, timeout=60))
-            junit(scheme, tree).write(f'{scheme}-junit.xml', encoding='utf-8', xml_declaration=True)
+            report = junit(scheme, tree)
+            report.write(f'{scheme}-junit.xml', encoding='utf-8', xml_declaration=True)
             validate(summary)
+            if os.environ.get('IOS_MAX_TEST_SECONDS'):
+                check_durations(report, float(os.environ['IOS_MAX_TEST_SECONDS']))
             print(f'{scheme}: {summary["passedTests"]} passed, {summary.get("skippedTests", 0)} skipped')
         except (OSError, subprocess.SubprocessError, ValueError) as error:
             print(f'::error::{scheme}: {error}')

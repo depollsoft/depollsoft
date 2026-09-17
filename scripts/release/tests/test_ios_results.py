@@ -3,7 +3,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_test_results import junit, validate
+from ios_test_results import check_durations, junit, validate
 
 
 class XcodeResultTests(unittest.TestCase):
@@ -44,3 +44,11 @@ class XcodeResultTests(unittest.TestCase):
     def test_empty_xcode_tree_cannot_generate_passing_report(self):
         with self.assertRaises(ValueError):
             junit('app', {'testNodes': []})
+
+    def test_slow_passing_test_still_exceeds_budget(self):
+        tree = {'testNodes': [{'nodeType': 'Test Case', 'name': 'testSlow',
+                              'result': 'Passed', 'durationInSeconds': 30.1}]}
+        with self.assertRaisesRegex(ValueError, 'testSlow'):
+            check_durations(junit('app', tree), 30)
+        tree['testNodes'][0]['durationInSeconds'] = 2.5
+        check_durations(junit('app', tree), 30)

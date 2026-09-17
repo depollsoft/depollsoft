@@ -7,7 +7,6 @@
 
 import XCTest
 import UIKit
-import UIKit
 
 final class TagDetailUITests: XCTestCase {
     
@@ -18,7 +17,7 @@ final class TagDetailUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
-        Thread.sleep(forTimeInterval: 1.0)
+
     }
     
     override func tearDownWithError() throws {
@@ -33,7 +32,7 @@ final class TagDetailUITests: XCTestCase {
         
         if table.exists && table.cells.count > 0 {
             table.cells.element(boundBy: 0).tap()
-            Thread.sleep(forTimeInterval: 0.5)
+
             return true
         }
         
@@ -49,9 +48,7 @@ final class TagDetailUITests: XCTestCase {
         } else {
             return false
         }
-        
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         // Search for something
         let searchField = app.searchFields.firstMatch.exists ? 
                          app.searchFields.firstMatch : app.textFields.firstMatch
@@ -65,14 +62,12 @@ final class TagDetailUITests: XCTestCase {
         if searchButton.exists {
             searchButton.tap()
         }
-        
-        Thread.sleep(forTimeInterval: 2.0)
-        
+
         // Tap first result
         let table = app.tables.firstMatch
         if table.exists && table.cells.count > 0 {
             table.cells.element(boundBy: 0).tap()
-            Thread.sleep(forTimeInterval: 0.5)
+
             return true
         }
         
@@ -118,7 +113,7 @@ final class TagDetailUITests: XCTestCase {
         let backButton = app.navigationBars.buttons.element(boundBy: 0)
         if backButton.exists {
             backButton.tap()
-            Thread.sleep(forTimeInterval: 0.3)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should navigate back from detail")
@@ -141,7 +136,7 @@ final class TagDetailUITests: XCTestCase {
             // Tap each segment
             for index in 0..<segmentCount {
                 segmentedControl.buttons.element(boundBy: index).tap()
-                Thread.sleep(forTimeInterval: 0.3)
+
             }
         }
         
@@ -162,11 +157,10 @@ final class TagDetailUITests: XCTestCase {
         
         if favoriteButton.exists {
             favoriteButton.tap()
-            Thread.sleep(forTimeInterval: 0.3)
-            
+
             // Tap again to toggle
             favoriteButton.tap()
-            Thread.sleep(forTimeInterval: 0.3)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should handle favorite toggle")
@@ -185,20 +179,16 @@ final class TagDetailUITests: XCTestCase {
         
         if shareButton.exists {
             shareButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-            
+
             // Dismiss share sheet
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
         } else if shareIcon.exists {
             shareIcon.tap()
-            Thread.sleep(forTimeInterval: 0.5)
-            
+
             // Dismiss share sheet
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
         }
-        
-        Thread.sleep(forTimeInterval: 0.3)
-        
+
         XCTAssertEqual(app.state, .runningForeground, "Should handle share action")
     }
     
@@ -217,11 +207,11 @@ final class TagDetailUITests: XCTestCase {
         
         if scrollView.exists {
             scrollView.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+
             scrollView.swipeDown()
         } else if table.exists {
             table.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+
             table.swipeDown()
         }
         
@@ -236,13 +226,12 @@ final class TagDetailUITests: XCTestCase {
             let navigated = navigateToTagDetail()
             
             if navigated {
-                Thread.sleep(forTimeInterval: 0.3)
-                
+
                 // Navigate back
                 let backButton = app.navigationBars.buttons.element(boundBy: 0)
                 if backButton.exists {
                     backButton.tap()
-                    Thread.sleep(forTimeInterval: 0.3)
+
                 }
             } else {
                 break
@@ -253,27 +242,37 @@ final class TagDetailUITests: XCTestCase {
     }
 }
 
+// XCTest's existence waiter polls after one second even for a visible element.
+// Keep the bounded wait for asynchronous content, with no delay when ready.
+extension XCUIElement {
+    func existsOrWait(timeout: TimeInterval) -> Bool {
+        exists || waitForExistence(timeout: timeout)
+    }
+}
+
 // Strict regressions: no conditional passes when the requested screen is missing.
 extension TagMasterPolishUITests {
     private func assertNativeTabs(_ titles: [String]) {
         let bar = app.tabBars["page-tab-bar"]
-        XCTAssertTrue(bar.waitForExistence(timeout: 5))
+        XCTAssertTrue(bar.existsOrWait(timeout: 5))
         let buttons = titles.map { bar.buttons["page-\($0)"] }
         XCTAssertEqual(bar.buttons.count, 4)
         let screen = app.windows.firstMatch.frame
-        XCTAssertGreaterThan(bar.frame.minY, screen.midY)
-        XCTAssertLessThanOrEqual(bar.frame.maxY, screen.maxY + 1)
+        let barFrame = bar.frame
+        XCTAssertGreaterThan(barFrame.minY, screen.midY)
+        XCTAssertLessThanOrEqual(barFrame.maxY, screen.maxY + 1)
         var previous: CGRect?
         for (index, button) in buttons.enumerated() {
-            XCTAssertTrue(button.waitForExistence(timeout: 5))
+            XCTAssertTrue(button.existsOrWait(timeout: 5))
             XCTAssertEqual(button.label, titles[index])
             XCTAssertTrue(button.isHittable)
-            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
-            XCTAssertGreaterThanOrEqual(button.frame.width, 44)
-            XCTAssertTrue(bar.frame.insetBy(dx: -1, dy: -1).contains(button.frame))
+            let frame = button.frame
+            XCTAssertGreaterThanOrEqual(frame.height, 44)
+            XCTAssertGreaterThanOrEqual(frame.width, 44)
+            XCTAssertTrue(barFrame.insetBy(dx: -1, dy: -1).contains(frame))
             // The native selected lens can enlarge its AX frame beyond its slot.
             // Check disjoint 44pt activation targets, not custom equal-slot bounds.
-            let target = CGRect(x: button.frame.midX - 22, y: button.frame.midY - 22, width: 44, height: 44)
+            let target = CGRect(x: frame.midX - 22, y: frame.midY - 22, width: 44, height: 44)
             if let previous { XCTAssertFalse(previous.intersects(target)) }
             previous = target
         }
@@ -281,7 +280,7 @@ extension TagMasterPolishUITests {
         // Browse is in the iPad primary column; Detail is in secondary.
         if UIDevice.current.userInterfaceIdiom == .pad {
             let bars = app.navigationBars.allElementsBoundByIndex.filter { !$0.frame.isEmpty }
-            XCTAssertTrue(bars.contains { $0.frame.minX <= bar.frame.minX + 1 && $0.frame.maxX >= bar.frame.maxX - 1 })
+            XCTAssertTrue(bars.contains { $0.frame.minX <= barFrame.minX + 1 && $0.frame.maxX >= barFrame.maxX - 1 })
         }
     }
 
@@ -320,31 +319,27 @@ final class TagMasterPolishUITests: XCTestCase {
         add(attachment)
     }
 
-    private func home() {
-        app.terminate()
-        app.launch()
-        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
-    }
-
     private func openTag() {
         let row = app.tables.staticTexts["Open Tag"]
         if !row.isHittable { app.tables.firstMatch.swipeUp() }
-        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(row.existsOrWait(timeout: 5))
         row.tap()
         let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 3))
+        XCTAssertTrue(alert.existsOrWait(timeout: 3))
         alert.textFields.firstMatch.tap()
         alert.textFields.firstMatch.typeText("1809")
         alert.buttons["Open"].tap()
         let share = app.navigationBars.buttons["Share"]
-        XCTAssertTrue(share.waitForExistence(timeout: 20))
-        let enabled = NSPredicate(format: "enabled == true")
-        expectation(for: enabled, evaluatedWith: share)
-        waitForExpectations(timeout: 30)
-        XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 5))
+        XCTAssertTrue(share.existsOrWait(timeout: 20))
+        if !share.isEnabled {
+            let enabled = NSPredicate(format: "enabled == true")
+            expectation(for: enabled, evaluatedWith: share)
+            waitForExpectations(timeout: 10)
+        }
+        XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 5))
     }
 
-    func testNativeGlassTabsInPortraitAndLandscape() throws {
+    func testDetailTabsInPortraitAndLandscape() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
@@ -358,7 +353,7 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertTrue(button.isSelected)
         }
         app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
         captureNativeGlass("detail-details")
         XCUIDevice.shared.orientation = .landscapeLeft
         assertNativeTabs(detail)
@@ -366,10 +361,15 @@ final class TagMasterPolishUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         assertNativeTabs(detail)
         XCTAssertTrue(app.buttons["page-Details"].isSelected)
-        home()
+    }
+
+    func testBrowseTabsInPortraitAndLandscape() throws {
+        let orientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = orientation }
+        XCUIDevice.shared.orientation = .portrait
         app.tables.staticTexts["Browse"].tap()
         let browse = ["Latest", "Rating", "Downloads", "Classic"]
-        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
         assertNativeTabs(browse)
         captureNativeGlass("browse")
         for title in browse {
@@ -401,7 +401,7 @@ final class TagMasterPolishUITests: XCTestCase {
 
     private func reachLowestRatingAndCancel() {
         let lowest = app.buttons["1 star"]
-        XCTAssertTrue(lowest.waitForExistence(timeout: 5))
+        XCTAssertTrue(lowest.existsOrWait(timeout: 5))
         for _ in 0..<6 {
             if lowest.isHittable { break }
             let sheet = app.sheets.firstMatch
@@ -441,12 +441,12 @@ final class TagMasterPolishUITests: XCTestCase {
     }
 
     func testLayoutNativeEmptyTeachableBrowseReachable() throws {
-        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars.buttons["Search"].existsOrWait(timeout: 10))
         let row = app.tables.staticTexts["Teachable Tags"]
         for _ in 0..<6 { if row.isHittable { break }; app.tables.firstMatch.swipeUp() }
         XCTAssertTrue(row.isHittable)
         row.tap()
-        XCTAssertTrue(app.staticTexts["No teachable tags yet"].waitForExistence(timeout: 5), "Requires the original empty list; never clears a populated list")
+        XCTAssertTrue(app.staticTexts["No teachable tags yet"].existsOrWait(timeout: 5), "Requires the original empty list; never clears a populated list")
         let browse = app.buttons["teachable.browse"]
         let list = app.tables.containing(.button, identifier: "teachable.browse").firstMatch
         XCTAssertTrue(list.exists, "Scroll the Teachable table, not the other pane of an iPad split view")
@@ -455,7 +455,7 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(browse.isHittable)
         XCTAssertGreaterThanOrEqual(browse.frame.height, 44)
         browse.tap()
-        XCTAssertTrue(app.buttons["page-Latest"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 10))
     }
 
     func testLayoutNativeSheetKeyTarget() throws {
@@ -469,9 +469,9 @@ final class TagMasterPolishUITests: XCTestCase {
         sheet.tap()
         let key = app.buttons["sheet.key"]
         // Exercise the real download and its retry action; never substitute a fixture.
-        let deadline = Date().addingTimeInterval(120)
+        let deadline = Date().addingTimeInterval(10)
         var retries = 0
-        while Date() < deadline && !key.waitForExistence(timeout: 5) {
+        while Date() < deadline && !key.existsOrWait(timeout: 5) {
             let failure = app.alerts["Couldn't complete request"]
             if failure.exists {
                 XCTAssertTrue(failure.staticTexts[
@@ -489,50 +489,57 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
         XCUIDevice.shared.orientation = .landscapeLeft
-        XCTAssertTrue(key.waitForExistence(timeout: 5))
-        XCTAssertTrue(key.isHittable)
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: key)
+        XCTAssertTrue(key.isHittable || XCTWaiter.wait(for: [hittable], timeout: 5) == .completed)
         print("TM_LAYOUT_PROBE native landscape key frame=\(key.frame)")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
         layoutCapture("sheet-defect-landscape")
     }
 
-    func testLayoutNativeKeyboardAlertsAndSplit() throws {
+    func testSearchKeyboardInPortraitAndLandscape() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
-        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars.buttons["Search"].existsOrWait(timeout: 10))
         layoutCapture("home")
         app.navigationBars.buttons["Search"].tap()
         let field = app.searchFields.firstMatch
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertTrue(field.existsOrWait(timeout: 5))
         field.tap()
         field.typeText("harmony")
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.keyboards.firstMatch.existsOrWait(timeout: 5))
         let searchAction = app.navigationBars.buttons["Search"].firstMatch
         XCTAssertTrue(searchAction.isHittable)
         layoutCapture("search-keyboard")
         XCUIDevice.shared.orientation = .landscapeLeft
         field.tap()
         field.typeText(" quartet")
-        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.keyboards.firstMatch.existsOrWait(timeout: 5))
         XCTAssertTrue(searchAction.isHittable)
         layoutCapture("search-keyboard-landscape")
-        home()
-        XCUIDevice.shared.orientation = .portrait
+    }
+
+    func testOpenTagAlertControls() throws {
         let open = app.tables.staticTexts["Open Tag"]
         if !open.isHittable { app.tables.firstMatch.swipeUp() }
         open.tap()
         let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.existsOrWait(timeout: 5))
         XCTAssertTrue(alert.buttons["Cancel"].isHittable)
         XCTAssertTrue(alert.buttons["Open"].isHittable)
         XCTAssertTrue(alert.textFields.firstMatch.isHittable)
         layoutCapture("open-tag")
         alert.buttons["Cancel"].tap()
+    }
+
+    func testDetailLayoutInPortraitAndLandscape() throws {
+        let orientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = orientation }
+        XCUIDevice.shared.orientation = .portrait
         openTag()
         app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
         assertNativeTabs(["Summary", "Details", "Tracks", "Videos"])
         layoutCapture("details")
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -544,23 +551,24 @@ final class TagMasterPolishUITests: XCTestCase {
         for _ in 0..<8 { if rate.isHittable { break }; app.scrollViews.firstMatch.swipeUp() }
         XCTAssertTrue(rate.isHittable)
         rate.tap()
-        XCTAssertTrue(app.buttons["5 stars"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["5 stars"].existsOrWait(timeout: 5))
         reachLowestRatingAndCancel()
-        // No rating or share action is submitted.
-        home()
+    }
+
+    func testSettingsLoginDismissal() throws {
         let settings = app.tables.staticTexts["Settings"]
         if !settings.isHittable { app.tables.firstMatch.swipeUp() }
         settings.tap()
-        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].existsOrWait(timeout: 5))
         layoutCapture("settings")
         let login = app.tables.staticTexts["Log In"]
         // Never tap Log Out on an existing account.
         XCTAssertTrue(login.exists, "This read-only journey requires the signed-out entry")
         login.tap()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Close"].existsOrWait(timeout: 5))
         layoutCapture("login-entry")
         app.buttons["Close"].tap()
-        XCTAssertTrue(app.tables.staticTexts["Log In"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tables.staticTexts["Log In"].existsOrWait(timeout: 5))
     }
 
     func testSummaryLyricsRemainReachableAfterChangingPages() throws {
@@ -576,12 +584,12 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(lyrics.isHittable, "Lyrics must remain reachable even if the legacy grid leaves excess spacing")
     }
 
-    func testPolishScreensAndShareDismissal() throws {
-        XCTAssertTrue(app.navigationBars.buttons["Search"].waitForExistence(timeout: 10))
+    func testSearchFiltersAndKeyboard() throws {
+        XCTAssertTrue(app.navigationBars.buttons["Search"].existsOrWait(timeout: 10))
         XCTAssertTrue(app.tables.staticTexts["Teachable Tags"].exists)
         capture("home")
         app.navigationBars.buttons["Search"].tap()
-        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.searchFields.firstMatch.existsOrWait(timeout: 5))
         let sheetFilter = app.segmentedControls["Sheet Music"].exists ? app.segmentedControls["Sheet Music"] : app.buttons["Sheet Music"]
         XCTAssertTrue(sheetFilter.exists)
         XCTAssertGreaterThanOrEqual(sheetFilter.frame.height, 44)
@@ -590,17 +598,21 @@ final class TagMasterPolishUITests: XCTestCase {
         app.searchFields.firstMatch.typeText("love")
         XCTAssertTrue(app.keyboards.firstMatch.exists)
         capture("search-keyboard")
-        home()
+    }
+
+    func testSettingsFilters() throws {
         let settings = app.tables.staticTexts["Settings"]
         if !settings.isHittable { app.tables.firstMatch.swipeUp() }
         settings.tap()
-        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].existsOrWait(timeout: 5))
         capture("settings")
         app.swipeUp()
         let minimumRating = app.segmentedControls["Minimum Rating"].exists ? app.segmentedControls["Minimum Rating"] : app.buttons["Minimum Rating"]
-        XCTAssertTrue(minimumRating.waitForExistence(timeout: 5))
+        XCTAssertTrue(minimumRating.existsOrWait(timeout: 5))
         capture("settings-filters")
-        home()
+    }
+
+    func testDetailShareDismissal() throws {
         openTag()
         XCTAssertTrue(app.navigationBars.buttons["Favorite and Teachable options"].exists)
         XCTAssertTrue(app.navigationBars.buttons["Refresh"].exists)
@@ -614,18 +626,18 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertTrue(tab.isHittable)
         }
         app.buttons["Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
         app.buttons["Tracks"].tap()
         let emptyTracks = app.staticTexts["Sorry, no tracks could be found for this tag."]
-        XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.existsOrWait(timeout: 5))
         capture("tracks")
         app.buttons["Videos"].tap()
-        XCTAssertTrue(app.tables.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.tables.firstMatch.existsOrWait(timeout: 5))
         capture("videos")
         app.buttons["Summary"].tap()
         capture("detail")
         app.navigationBars.buttons["Share"].tap()
-        XCTAssertTrue(app.collectionViews["activityCollectionView"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.collectionViews["activityCollectionView"].existsOrWait(timeout: 10))
         capture("share")
         if app.buttons["Close"].exists {
             app.buttons["Close"].tap()
@@ -639,7 +651,7 @@ final class TagMasterPolishUITests: XCTestCase {
         waitForExpectations(timeout: 5)
         XCTAssertTrue(app.buttons["Rate tag"].isHittable)
         app.buttons["Rate tag"].tap()
-        XCTAssertTrue(app.buttons["5 stars"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["5 stars"].existsOrWait(timeout: 5))
         capture("rating")
         if app.buttons["Cancel"].exists {
             app.buttons["Cancel"].tap()
@@ -648,10 +660,12 @@ final class TagMasterPolishUITests: XCTestCase {
         }
         XCTAssertEqual(app.state, .runningForeground)
         XCTAssertTrue(app.navigationBars.buttons["Share"].isHittable)
-        home()
+    }
+
+    func testBrowseRowContentAndSize() throws {
         app.tables.staticTexts["Browse"].tap()
         let cell = app.tables.cells.firstMatch
-        XCTAssertTrue(cell.waitForExistence(timeout: 30))
+        XCTAssertTrue(cell.existsOrWait(timeout: 30))
         XCTAssertGreaterThan(cell.frame.height, 100)
         XCTAssertLessThan(cell.frame.height, 2000)
         XCTAssertTrue(cell.label.contains("Sheet music"))
@@ -669,7 +683,7 @@ final class StoreScreenshotTests: XCTestCase {
         func home() {
             app.terminate()
             app.launch()
-            XCTAssertTrue(app.tables.staticTexts["Browse"].waitForExistence(timeout: 15))
+            XCTAssertTrue(app.tables.staticTexts["Browse"].existsOrWait(timeout: 15))
         }
         func snap(_ name: String) {
             Thread.sleep(forTimeInterval: 2)
@@ -684,7 +698,7 @@ final class StoreScreenshotTests: XCTestCase {
             if !item.isHittable { app.tables.firstMatch.swipeUp() }
             item.tap()
             let alert = app.alerts["Open Tag"]
-            XCTAssertTrue(alert.waitForExistence(timeout: 5))
+            XCTAssertTrue(alert.existsOrWait(timeout: 5))
             alert.textFields.firstMatch.tap()
             alert.textFields.firstMatch.typeText(id)
             alert.buttons["Open"].tap()
@@ -692,14 +706,14 @@ final class StoreScreenshotTests: XCTestCase {
             // The live catalog occasionally fails a request. Exercise the app's
             // Retry action, but never capture its error or loading state.
             for _ in 0..<2 {
-                if share.waitForExistence(timeout: 30) { break }
+                if share.existsOrWait(timeout: 30) { break }
                 let retry = app.buttons["Retry"].firstMatch
                 if retry.exists { retry.tap() }
             }
-            XCTAssertTrue(share.waitForExistence(timeout: 90))
+            XCTAssertTrue(share.existsOrWait(timeout: 90))
             expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: share)
             waitForExpectations(timeout: 90)
-            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 10))
+            XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 10))
         }
         // These are real catalog entries, saved only in this disposable simulator.
         for id in ["669", "1478", "122"] {
@@ -714,47 +728,47 @@ final class StoreScreenshotTests: XCTestCase {
         }
         for (title, name) in [("Summary", "05-summary"), ("Details", "06-details"), ("Tracks", "07-tracks"), ("Videos", "08-videos")] {
             let item = app.buttons["page-\(title)"]
-            XCTAssertTrue(item.waitForExistence(timeout: 10))
+            XCTAssertTrue(item.existsOrWait(timeout: 10))
             item.tap()
             XCTAssertTrue(item.isSelected)
             if title == "Tracks" {
                 let lead = app.tables.cells.containing(.staticText, identifier: "Lead").firstMatch
-                XCTAssertTrue(lead.waitForExistence(timeout: 15))
+                XCTAssertTrue(lead.existsOrWait(timeout: 15))
                 lead.tap()
                 let transport = app.buttons["tagmaster.trackPlayer.playPause"]
-                XCTAssertTrue(transport.waitForExistence(timeout: 10))
+                XCTAssertTrue(transport.existsOrWait(timeout: 10))
                 expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: transport)
                 waitForExpectations(timeout: 90)
                 if transport.label == "Pause" { transport.tap() }
             }
             if title == "Videos" {
-                XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 30))
+                XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
                 app.tables.firstMatch.swipeUp()
                 Thread.sleep(forTimeInterval: 8)
             }
             snap(name)
         }
         home()
-        XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].waitForExistence(timeout: 60))
+        XCTAssertTrue(app.tables.staticTexts["Cheer Up, Charlie"].existsOrWait(timeout: 60))
         if UIDevice.current.userInterfaceIdiom == .pad {
             // Keep home distinct from the detail-only scenes, which use tag 122.
             app.tables.staticTexts["Their Hearts Were Full Of Spring"].tap()
-            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+            XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("01-home")
         app.tables.staticTexts["Browse"].tap()
         let classic = app.buttons["page-Classic"]
-        XCTAssertTrue(classic.waitForExistence(timeout: 15))
+        XCTAssertTrue(classic.existsOrWait(timeout: 15))
         classic.tap()
-        XCTAssertTrue(app.tables.cells.firstMatch.waitForExistence(timeout: 90))
+        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 90))
         if UIDevice.current.userInterfaceIdiom == .pad {
             app.tables.cells.firstMatch.tap()
-            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+            XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("02-browse")
         home()
         app.navigationBars.buttons["Search"].tap()
-        XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.searchFields.firstMatch.existsOrWait(timeout: 10))
         snap("03-search")
         app.searchFields.firstMatch.tap()
         app.searchFields.firstMatch.typeText("Lone Prairie")
@@ -762,13 +776,13 @@ final class StoreScreenshotTests: XCTestCase {
         let result = app.tables.cells.matching(NSPredicate(format: "label CONTAINS %@", "Lone Prairie")).firstMatch
         // UISearchController can consume the keyboard action while dismissing
         // its presentation. Submit the retained query from the navigation bar.
-        if !result.waitForExistence(timeout: 5) {
+        if !result.existsOrWait(timeout: 5) {
             app.navigationBars.buttons["Search"].tap()
         }
-        XCTAssertTrue(result.waitForExistence(timeout: 90))
+        XCTAssertTrue(result.existsOrWait(timeout: 90))
         if UIDevice.current.userInterfaceIdiom == .pad {
             result.tap()
-            XCTAssertTrue(app.buttons["Rate tag"].waitForExistence(timeout: 30))
+            XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("04-results")
     }

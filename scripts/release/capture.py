@@ -315,6 +315,9 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, interrupted)
     # Local capture commands can otherwise resize the same emulator or compete
     # for simulator resources. Serialize them just as the Actions jobs do.
-    with (Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{sys.argv[sys.argv.index("--platform") + 1] if "--platform" in sys.argv else "help"}.lock').open('a') as lock:
+    platform = sys.argv[sys.argv.index('--platform') + 1] if '--platform' in sys.argv else 'help'
+    lock_path = (Path('/tmp/depollsoft-ios-simulator.lock') if platform == 'ios'
+                 else Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{platform}.lock')
+    with lock_path.open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         main()

@@ -1034,14 +1034,18 @@ TM_CAPTURE_IMPL
     [self.window makeKeyAndVisible];
     XCTNSPredicateExpectation *rootShown = [[XCTNSPredicateExpectation alloc] initWithPredicate:
         [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == previous; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[rootShown] timeout:10], XCTWaiterResultCompleted);
+    if (![rootShown.predicate evaluateWithObject:rootShown.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[rootShown] timeout:10], XCTWaiterResultCompleted);
+    }
     [navigation pushViewController:detail animated:NO];
     __weak TMPageViewController *weakDetail = detail;
     XCTNSPredicateExpectation *visible = [[XCTNSPredicateExpectation alloc] initWithPredicate:
         [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
             return observer.shown == weakDetail && [[weakDetail valueForKey:@"appeared"] boolValue] && !weakDetail.transitionCoordinator;
         }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:10], XCTWaiterResultCompleted);
+    if (![visible.predicate evaluateWithObject:visible.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:10], XCTWaiterResultCompleted);
+    }
     navigation.delegate = nil;
     [self layout];
     return navigation;
@@ -1297,7 +1301,9 @@ TM_CAPTURE_IMPL
         [nav popViewControllerAnimated:NO];
         XCTNSPredicateExpectation *popped = [[XCTNSPredicateExpectation alloc] initWithPredicate:
             [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == root; }] object:nil];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[popped] timeout:3], XCTWaiterResultCompleted);
+        if (![popped.predicate evaluateWithObject:popped.object]) {
+            XCTAssertEqual([XCTWaiter waitForExpectations:@[popped] timeout:3], XCTWaiterResultCompleted);
+        }
         nav.delegate = nil;
         [self assertNotes:detail animated:NO];
         XCTAssertEqual(nav.viewControllers.count, 1);
@@ -1357,7 +1363,9 @@ TM_CAPTURE_IMPL
         [self layout];
         return [controller.pageTabController.selectedViewController.view isDescendantOfView:controller.rootView] && !controller.pageTabController.transitionCoordinator;
     }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[settled] timeout:3], XCTWaiterResultCompleted);
+    if (![settled.predicate evaluateWithObject:settled.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[settled] timeout:3], XCTWaiterResultCompleted);
+    }
     UITabBar *bar = controller.tabBar;
     XCTAssertTrue([bar isKindOfClass:UITabBar.class]);
     XCTAssertEqual(bar, controller.pageTabController.tabBar);
@@ -1414,7 +1422,9 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(pages[1].appearances, 0);
     controller.selectedIndex = 1;
     XCTNSPredicateExpectation *selected = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return pages[1].appearances == 1 && pages[0].disappearances == 1; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[selected] timeout:3], XCTWaiterResultCompleted);
+    if (![selected.predicate evaluateWithObject:selected.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[selected] timeout:3], XCTWaiterResultCompleted);
+    }
     XCTAssertEqual(pages[0].disappearances, 1);
     XCTAssertEqual(pages[0].detachments, 0);
     XCTAssertEqual(pages[0].parentViewController, controller.pageTabController);
@@ -1425,17 +1435,23 @@ TM_CAPTURE_IMPL
     TMPageLifecycleSpy *cover = [TMPageLifecycleSpy new];
     [nav pushViewController:cover animated:NO];
     XCTNSPredicateExpectation *covered = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return cover.appearances == 1; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[covered] timeout:3], XCTWaiterResultCompleted);
+    if (![covered.predicate evaluateWithObject:covered.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[covered] timeout:3], XCTWaiterResultCompleted);
+    }
     XCTAssertEqual(pages[1].disappearances, 1);
     [nav popViewControllerAnimated:NO];
     XCTNSPredicateExpectation *returned = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return pages[1].appearances == 2; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[returned] timeout:3], XCTWaiterResultCompleted);
+    if (![returned.predicate evaluateWithObject:returned.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[returned] timeout:3], XCTWaiterResultCompleted);
+    }
     XCTAssertEqual(pages[1].appearances, 2);
     XCTAssertEqual(pages[0].appearances, 1);
     // Removing the selected destination must show a surviving native page.
     controller.viewControllers = @[pages[0], pages[2], pages[3]];
     XCTNSPredicateExpectation *removed = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !pages[1].view.window && pages[1].disappearances == 2; }] object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[removed] timeout:3], XCTWaiterResultCompleted);
+    if (![removed.predicate evaluateWithObject:removed.object]) {
+        XCTAssertEqual([XCTWaiter waitForExpectations:@[removed] timeout:3], XCTWaiterResultCompleted);
+    }
     XCTAssertEqual(pages[1].disappearances, 2);
     UIViewController *survivor = controller.pageTabController.selectedViewController;
     XCTAssertTrue([controller.viewControllers containsObject:survivor]);
@@ -1463,7 +1479,9 @@ TM_CAPTURE_IMPL
             }
             return YES;
         }] object:nil];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:3], XCTWaiterResultCompleted);
+        if (![visible.predicate evaluateWithObject:visible.object]) {
+            XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:3], XCTWaiterResultCompleted);
+        }
         XCTAssertEqual(controller.selectedIndex, i);
         XCTAssertEqual(controller.tabBar.selectedItem, controller.viewControllers[i].tabBarItem);
         XCTAssertEqual(controller.pageTabController.selectedViewController, controller.viewControllers[i]);
@@ -1640,7 +1658,9 @@ TM_CAPTURE_IMPL
         XCTNSPredicateExpectation *appended = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
             return !query.isLoading && query.tags.count == 4 && next.enabled;
         }] object:nil];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[appended] timeout:3], XCTWaiterResultCompleted);
+        if (![appended.predicate evaluateWithObject:appended.object]) {
+            XCTAssertEqual([XCTWaiter waitForExpectations:@[appended] timeout:3], XCTWaiterResultCompleted);
+        }
         XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
         [detail stepToNextTag];
         XCTAssertEqual(detail.tagId, 100);
@@ -1851,7 +1871,16 @@ TM_CAPTURE_IMPL
     XCTAssertFalse(cell.accessibilityTraits & UIAccessibilityTraitSelected);
 }
 
-- (void)testBrowseAndDetailWidthsRotationLargeTextSplitAndSelection {
+- (void)testBrowseWidthsRotationLargeTextSplitAndSelection {
+    [self exerciseWidthsRotationLargeTextSplitAndSelection:0];
+}
+- (void)testDetailWidthsRotationLargeTextSplitAndSelection {
+    [self exerciseWidthsRotationLargeTextSplitAndSelection:1];
+}
+- (void)exerciseWidthsRotationLargeTextSplitAndSelection:(NSUInteger)page {
+    // This regression checks settled geometry and containment, not transition timing.
+    BOOL animationsEnabled = UIView.areAnimationsEnabled;
+    [UIView setAnimationsEnabled:NO];
     Method query = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
     IMP original = method_getImplementation(query);
     DPTag *tag = [self tag:1809];
@@ -1864,84 +1893,87 @@ TM_CAPTURE_IMPL
     @try {
         CGSize portrait = UIScreen.mainScreen.bounds.size;
         NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
-        for (NSUInteger page = 0; page < 2; page++) {
-            TMPageViewController *controller;
-            if (page == 0) controller = [DPBrowseViewController new];
-            else {
-                DPTagViewController *detail = [DPTagViewController new];
-                detail.tagId = 1809;
-                controller = detail;
-            }
-            UINavigationController *nav = [self attach:controller size:portrait style:UIUserInterfaceStyleDark large:NO];
-            XCTAssertEqual(controller.selectedIndex, 0);
-            if (page == 1) {
-                [self assertPending:(DPTagViewController *)controller];
-                [self finish:self.requests.count - 1 tag:tag];
-                [self assertLoaded:(DPTagViewController *)controller tag:tag];
-            }
-            [self exercisePageSelection:controller];
-            if (page == 0) {
-                for (DPTagQueryViewController *child in controller.viewControllers) {
-                    XCTNSPredicateExpectation *loaded = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !child.isLoading && child.tags.count == 1; }] object:nil];
+        TMPageViewController *controller;
+        if (page == 0) controller = [DPBrowseViewController new];
+        else {
+            DPTagViewController *detail = [DPTagViewController new];
+            detail.tagId = 1809;
+            controller = detail;
+        }
+        UINavigationController *nav = [self attach:controller size:portrait style:UIUserInterfaceStyleDark large:NO];
+        XCTAssertEqual(controller.selectedIndex, 0);
+        if (page == 1) {
+            [self assertPending:(DPTagViewController *)controller];
+            [self finish:self.requests.count - 1 tag:tag];
+            [self assertLoaded:(DPTagViewController *)controller tag:tag];
+        }
+        [self exercisePageSelection:controller];
+        if (page == 0) {
+            for (DPTagQueryViewController *child in controller.viewControllers) {
+                XCTNSPredicateExpectation *loaded = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !child.isLoading && child.tags.count == 1; }] object:nil];
+                if (![loaded.predicate evaluateWithObject:loaded.object]) {
                     XCTAssertEqual([XCTWaiter waitForExpectations:@[loaded] timeout:3], XCTWaiterResultCompleted);
                 }
             }
-            for (NSUInteger variant = 0; variant < 4; variant++) {
-                BOOL landscape = variant % 2;
-                self.window.frame = (CGRect){CGPointZero, landscape ? CGSizeMake(portrait.height, portrait.width) : portrait};
-                self.window.traitOverrides.preferredContentSizeCategory = variant < 2 ? UIContentSizeCategoryLarge : UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+        }
+        for (NSUInteger variant = 0; variant < 4; variant++) {
+            BOOL landscape = variant % 2;
+            self.window.frame = (CGRect){CGPointZero, landscape ? CGSizeMake(portrait.height, portrait.width) : portrait};
+            self.window.traitOverrides.preferredContentSizeCategory = variant < 2 ? UIContentSizeCategoryLarge : UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
+            [self drainUIKit]; [self layout]; [self layout];
+            [self checkTabDistribution:controller];
+            XCTAssertEqual(controller.selectedIndex, 1);
+        }
+        self.window.frame = (CGRect){CGPointZero, portrait};
+        self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
+        controller.selectedIndex = 0;
+        [self drainUIKit]; [self layout]; [self layout];
+        if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+            self.window.rootViewController = nil;
+            UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
+            split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
+            split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
+            UIViewController *sidebar = [UIViewController new];
+            sidebar.title = @"Tags";
+            sidebar.view.backgroundColor = UIColor.secondarySystemBackgroundColor;
+            [split setViewController:[[UINavigationController alloc] initWithRootViewController:sidebar] forColumn:UISplitViewControllerColumnPrimary];
+            [split setViewController:nav forColumn:UISplitViewControllerColumnSecondary];
+            self.window.rootViewController = split;
+            XCTNSPredicateExpectation *tiled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+                [self layout];
+                CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
+                CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
+                return split.displayMode == UISplitViewControllerDisplayModeOneBesideSecondary && CGRectGetMinX(first) >= CGRectGetMaxX(side);
+            }] object:nil];
+            if (![tiled.predicate evaluateWithObject:tiled.object]) {
+                XCTAssertEqual([XCTWaiter waitForExpectations:@[tiled] timeout:3], XCTWaiterResultCompleted);
+            }
+            [self drainUIKit]; [self layout]; [self layout];
+            [self checkTabDistribution:controller];
+            CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
+            CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
+            XCTAssertGreaterThanOrEqual(CGRectGetMinX(first), CGRectGetMaxX(side));
+            for (NSNumber *width in @[@600, @(portrait.height)]) {
+                self.window.frame = CGRectMake(0, 0, width.doubleValue, portrait.width);
+                self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
                 [self drainUIKit]; [self layout]; [self layout];
                 [self checkTabDistribution:controller];
-                XCTAssertEqual(controller.selectedIndex, 1);
             }
             self.window.frame = (CGRect){CGPointZero, portrait};
             self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
-            controller.selectedIndex = 0;
             [self drainUIKit]; [self layout]; [self layout];
-            if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-                self.window.rootViewController = nil;
-                UISplitViewController *split = [[UISplitViewController alloc] initWithStyle:UISplitViewControllerStyleDoubleColumn];
-                split.preferredDisplayMode = UISplitViewControllerDisplayModeOneBesideSecondary;
-                split.preferredSplitBehavior = UISplitViewControllerSplitBehaviorTile;
-                UIViewController *sidebar = [UIViewController new];
-                sidebar.title = @"Tags";
-                sidebar.view.backgroundColor = UIColor.secondarySystemBackgroundColor;
-                [split setViewController:[[UINavigationController alloc] initWithRootViewController:sidebar] forColumn:UISplitViewControllerColumnPrimary];
-                [split setViewController:nav forColumn:UISplitViewControllerColumnSecondary];
-                self.window.rootViewController = split;
-                XCTNSPredicateExpectation *tiled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
-                    [self layout];
-                    CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
-                    CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
-                    return split.displayMode == UISplitViewControllerDisplayModeOneBesideSecondary && CGRectGetMinX(first) >= CGRectGetMaxX(side);
-                }] object:nil];
-                XCTAssertEqual([XCTWaiter waitForExpectations:@[tiled] timeout:3], XCTWaiterResultCompleted);
-                [self drainUIKit]; [self layout]; [self layout];
-                [self checkTabDistribution:controller];
-                CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
-                CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
-                XCTAssertGreaterThanOrEqual(CGRectGetMinX(first), CGRectGetMaxX(side));
-                for (NSNumber *width in @[@600, @(portrait.height)]) {
-                    self.window.frame = CGRectMake(0, 0, width.doubleValue, portrait.width);
-                    self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryAccessibilityExtraExtraExtraLarge;
-                    [self drainUIKit]; [self layout]; [self layout];
-                    [self checkTabDistribution:controller];
-                }
-                self.window.frame = (CGRect){CGPointZero, portrait};
-                self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
-                [self drainUIKit]; [self layout]; [self layout];
-            }
-            [self checkTabDistribution:controller];
-            [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@", device, page == 0 ? @"browse" : @"detail"]];
-            controller.selectedIndex = 2;
-            [nav pushViewController:[UIViewController new] animated:NO];
-            [self drainUIKit];
-            [nav popViewControllerAnimated:NO];
-            [self drainUIKit]; [self layout];
-            XCTAssertEqual(controller.selectedIndex, 2);
-            [self checkTabDistribution:controller];
         }
+        [self checkTabDistribution:controller];
+        [self capture:[NSString stringWithFormat:@"tagmaster-ios-glass-tabs-%@-%@", device, page == 0 ? @"browse" : @"detail"]];
+        controller.selectedIndex = 2;
+        [nav pushViewController:[UIViewController new] animated:NO];
+        [self drainUIKit];
+        [nav popViewControllerAnimated:NO];
+        [self drainUIKit]; [self layout];
+        XCTAssertEqual(controller.selectedIndex, 2);
+        [self checkTabDistribution:controller];
     } @finally {
+        [UIView setAnimationsEnabled:animationsEnabled];
         method_setImplementation(query, original);
         imp_removeBlock(mock);
     }
