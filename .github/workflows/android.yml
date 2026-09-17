@@ -65,8 +65,13 @@ jobs:
         id: android-sdk
         run: python3 ../scripts/ci/android_sdk.py
 
+      - name: Install missing Android SDK packages
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager == 'true'
+        timeout-minutes: 5
+        run: python3 ../scripts/ci/android_sdk.py --install
+
       - name: Set up Android SDK
-        if: steps.android-sdk.outputs.available != 'true'
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager != 'true'
         timeout-minutes: 5
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:
@@ -274,8 +279,17 @@ jobs:
           'emulator' 'system-images;android-30;google_apis;arm64-v8a'
           'system-images;android-30;google_apis;x86_64'
 
+      - name: Install missing Android SDK packages
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager == 'true'
+        timeout-minutes: 5
+        run: >-
+          python3 ../scripts/ci/android_sdk.py --install
+          'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
+          'emulator' 'system-images;android-30;google_apis;arm64-v8a'
+          'system-images;android-30;google_apis;x86_64'
+
       - name: Set up Android SDK
-        if: steps.android-sdk.outputs.available != 'true'
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager != 'true'
         timeout-minutes: 5
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
         with:

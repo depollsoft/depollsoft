@@ -2,9 +2,10 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from android_sdk import BUILD_PACKAGES, find_sdk, missing_files
+from android_sdk import BUILD_PACKAGES, find_sdk, missing_files, install
 
 
 class InstalledSDKTests(unittest.TestCase):
@@ -46,3 +47,26 @@ class InstalledSDKTests(unittest.TestCase):
     def test_unknown_package_fails_instead_of_silently_skipping_it(self):
         with self.assertRaises(ValueError):
             missing_files(self.root, ['unknown'])
+
+    def test_complete_sdk_does_not_run_installer(self):
+        with patch('android_sdk.subprocess.run') as run:
+            install(self.root, BUILD_PACKAGES)
+        run.assert_not_called()
+
+    def test_installs_with_existing_tools_and_checks_the_result(self):
+        manager = self.root / 'cmdline-tools/latest/bin/sdkmanager'
+        manager.parent.mkdir(parents=True)
+        manager.write_bytes(b'fixture')
+        manager.chmod(0o755)
+        platform = self.root / 'platforms/android-37.0/android.jar'
+        platform.unlink()
+        with patch('android_sdk.subprocess.run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'incomplete'):
+                install(self.root, BUILD_PACKAGES)
+        self.assertEqual(run.call_args.args[0],
+                         [str(manager), f'--sdk_root={self.root}', '--install', *BUILD_PACKAGES])
+        self.assertEqual(run.call_args.kwargs['timeout'], 240)
+        self.assertTrue(run.call_args.kwargs['check'])
+        with patch('android_sdk.subprocess.run', side_effect=lambda *a, **kw: platform.write_bytes(b'download')):
+            install(self.root, BUILD_PACKAGES)
+        self.assertFalse(missing_files(self.root, BUILD_PACKAGES))
