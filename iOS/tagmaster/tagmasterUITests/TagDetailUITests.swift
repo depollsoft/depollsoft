@@ -489,8 +489,18 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
         XCUIDevice.shared.orientation = .landscapeLeft
-        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: key)
-        XCTAssertTrue(key.isHittable || XCTWaiter.wait(for: [hittable], timeout: 5) == .completed)
+        var previousFrame = CGRect.null
+        let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let frame = key.frame
+            let viewport = self.app.frame
+            defer { previousFrame = frame }
+            // Hittability remains true during rotation. Require stable geometry
+            // inside the landscape viewport before measuring the tap target.
+            return viewport.width > viewport.height && viewport.contains(frame)
+                && frame == previousFrame && key.isHittable
+                && frame.width >= 44 && frame.height >= 44
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
         print("TM_LAYOUT_PROBE native landscape key frame=\(key.frame)")
         XCTAssertGreaterThanOrEqual(key.frame.width, 44)
         XCTAssertGreaterThanOrEqual(key.frame.height, 44)
