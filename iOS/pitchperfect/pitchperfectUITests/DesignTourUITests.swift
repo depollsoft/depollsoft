@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import UserNotifications
 
 final class DesignTourUITests: XCTestCase {
     func testWidgetGalleryShowsPitchPipe() throws {
@@ -203,10 +204,7 @@ final class StoreScreenshotTests: XCTestCase {
         }
         func snap(_ name: String) {
             Thread.sleep(forTimeInterval: 1)
-            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            attachment.name = "store-\(name)"
-            attachment.lifetime = .keepAlways
-            add(attachment)
+            attachStoreScreenshot(name)
         }
         for (title, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
             tab(title)
@@ -258,5 +256,68 @@ final class StoreScreenshotTests: XCTestCase {
         first.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'info' OR label CONTAINS[c] 'detail'")).firstMatch.tap()
         XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
         snap("06-song-editor")
+    }
+}
+
+private extension XCTestCase {
+    func attachStoreScreenshot(_ name: String) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let banner = springboard.descendants(matching: .any)["NotificationShortLookView"].firstMatch
+        // Fresh simulators can announce system features during a capture tour.
+        // Dismiss the real banner, and retry if one arrives during the screenshot.
+        for _ in 0..<3 {
+            if banner.exists {
+                banner.swipeUp()
+                let dismissed = XCTNSPredicateExpectation(
+                    predicate: NSPredicate(format: "exists == false"), object: banner)
+                XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            }
+            let screenshot = XCUIScreen.main.screenshot()
+            if banner.exists { continue }
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = "store-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            return
+        }
+        XCTFail("A system notification is covering the store screenshot: \(name)")
+    }
+}
+
+/// Run explicitly with TEST_RUNNER_STORE_NOTIFICATION_TEST=1 to exercise a real banner.
+final class StoreScreenshotNotificationTests: XCTestCase {
+    func testDismissesNotificationBeforeCapture() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_NOTIFICATION_TEST"] == "1")
+        continueAfterFailure = false
+        let center = UNUserNotificationCenter.current()
+        let authorized = expectation(description: "Notification permission")
+        center.requestAuthorization(options: [.alert]) { granted, error in
+            XCTAssertNil(error)
+            XCTAssertTrue(granted)
+            authorized.fulfill()
+        }
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.alerts.buttons["Allow"].firstMatch
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        wait(for: [authorized], timeout: 5)
+        let app = XCUIApplication()
+        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launch()
+        let content = UNMutableNotificationContent()
+        content.title = "Store capture notification check"
+        content.body = "This banner must be dismissed before attaching the screenshot."
+        let scheduled = expectation(description: "Schedule banner")
+        let request = UNNotificationRequest(identifier: "store-capture-check", content: content,
+                                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false))
+        center.add(request) { error in
+            XCTAssertNil(error)
+            scheduled.fulfill()
+        }
+        defer { center.removeAllDeliveredNotifications() }
+        wait(for: [scheduled], timeout: 5)
+        let banner = springboard.descendants(matching: .any)["NotificationShortLookView"].firstMatch
+        XCTAssertTrue(banner.waitForExistence(timeout: 10))
+        attachStoreScreenshot("notification-check")
+        XCTAssertFalse(banner.exists)
     }
 }

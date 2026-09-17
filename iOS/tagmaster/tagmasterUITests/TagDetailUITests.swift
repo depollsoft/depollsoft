@@ -697,10 +697,7 @@ final class StoreScreenshotTests: XCTestCase {
         }
         func snap(_ name: String) {
             Thread.sleep(forTimeInterval: 2)
-            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-            attachment.name = "store-\(name)"
-            attachment.lifetime = .keepAlways
-            add(attachment)
+            attachStoreScreenshot(name)
         }
         func open(_ id: String) {
             home()
@@ -795,5 +792,30 @@ final class StoreScreenshotTests: XCTestCase {
             XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 30))
         }
         snap("04-results")
+    }
+}
+
+private extension XCTestCase {
+    func attachStoreScreenshot(_ name: String) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let banner = springboard.descendants(matching: .any)["NotificationShortLookView"].firstMatch
+        // Fresh simulators can announce system features during a capture tour.
+        // Dismiss the real banner, and retry if one arrives during the screenshot.
+        for _ in 0..<3 {
+            if banner.exists {
+                banner.swipeUp()
+                let dismissed = XCTNSPredicateExpectation(
+                    predicate: NSPredicate(format: "exists == false"), object: banner)
+                XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            }
+            let screenshot = XCUIScreen.main.screenshot()
+            if banner.exists { continue }
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = "store-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            return
+        }
+        XCTFail("A system notification is covering the store screenshot: \(name)")
     }
 }
