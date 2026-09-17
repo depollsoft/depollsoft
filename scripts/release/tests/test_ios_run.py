@@ -17,9 +17,10 @@ class NativeRunnerTests(unittest.TestCase):
         with patch('ios_run.os.killpg', side_effect=PermissionError):
             child.poll.return_value = 1
             ios_run.signal_command(child, 15)
+            child.send_signal.assert_not_called()
             child.poll.return_value = None
-            with self.assertRaises(PermissionError):
-                ios_run.signal_command(child, 15)
+            ios_run.signal_command(child, 15)
+            child.send_signal.assert_called_once_with(15)
 
     def test_stack_capture_only_samples_apps_on_its_own_device(self):
         sys.path.insert(0, str(CI))
@@ -139,4 +140,16 @@ class NativeRunnerTests(unittest.TestCase):
                                   f'platform=iOS Simulator,id={udid}'])
         self.assertEqual(status, 7)
         boot.assert_called_once_with(udid)
+        shutdown.assert_called_once_with(udid)
+
+    def test_signal_failure_still_shuts_down_owned_simulator(self):
+        sys.path.insert(0, str(CI))
+        import ios_run
+        udid = '12345678-1234-1234-1234-123456789ABC'
+        with patch('ios_run.ios_simulator.boot'), \
+             patch('ios_run.ios_simulator.shutdown') as shutdown, \
+             patch('ios_run.signal_command', side_effect=PermissionError):
+            with self.assertRaises(PermissionError):
+                ios_run.run([sys.executable, '-c', 'raise SystemExit(0)',
+                             f'platform=iOS Simulator,id={udid}'])
         shutdown.assert_called_once_with(udid)

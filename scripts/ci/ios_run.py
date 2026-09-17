@@ -51,10 +51,11 @@ def signal_command(child, signum):
     except ProcessLookupError:
         pass
     except PermissionError:
-        # Xcode can leave an OS-owned helper in its group after it exits.
-        # That helper must not prevent cleanup of our simulator.
+        # macOS may reject the group signal when it contains protected helpers.
+        # Signal our command directly if it is still alive; never target another
+        # process group or escalate permissions to reach a system helper.
         if child.poll() is None:
-            raise
+            child.send_signal(signum)
 
 
 def run(command, *,
@@ -149,17 +150,22 @@ def run(command, *,
                         last_notice = now
         return 1 if stopping is not None else child.wait(timeout=shutdown_timeout)
     finally:
-        if child is not None:
-            signal_command(child, signal.SIGTERM)
-            try:
-                child.wait(timeout=shutdown_timeout)
-            except subprocess.TimeoutExpired:
-                signal_command(child, signal.SIGKILL)
-                child.wait(timeout=5)
-            child.stdout.close()
-        if simulator:
-            # Stop only this command's simulator; other jobs keep running.
-            ios_simulator.shutdown(simulator)
+        try:
+            if child is not None:
+                try:
+                    signal_command(child, signal.SIGTERM)
+                    try:
+                        child.wait(timeout=shutdown_timeout)
+                    except subprocess.TimeoutExpired:
+                        signal_command(child, signal.SIGKILL)
+                        child.wait(timeout=5)
+                finally:
+                    child.stdout.close()
+        finally:
+            if simulator:
+                # A process-signal failure must not skip our device's cleanup.
+                ios_simulator.shutdown(simulator)
+
 
 
 if __name__ == '__main__':
