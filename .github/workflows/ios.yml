@@ -210,7 +210,7 @@ jobs:
             -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | tee pitchperfect-test.log | xcpretty --color
+            | tee pitchperfect-test.log
           python3 ../scripts/ci/ios_test_results.py pitchperfect
 
       - name: Run Tag Master unit tests
@@ -231,7 +231,7 @@ jobs:
             -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | tee tagmaster-test.log | xcpretty --color
+            | tee tagmaster-test.log
           python3 ../scripts/ci/ios_test_results.py tagmaster
 
       - name: Run Pitch Perfect library tests
@@ -251,7 +251,7 @@ jobs:
             -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | tee pitchperfectlib-test.log | xcpretty --color
+            | tee pitchperfectlib-test.log
           python3 ../scripts/ci/ios_test_results.py pitchperfectlib
 
       - name: Run Tag Master UI tests
@@ -272,7 +272,7 @@ jobs:
             -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | tee tagmaster-ui-test.log | xcpretty --color
+            | tee tagmaster-ui-test.log
           python3 ../scripts/ci/ios_test_results.py tagmaster-ui
 
       - name: Verify test results
@@ -529,9 +529,8 @@ jobs:
         if: always() && steps.simulator.outputs.udid != ''
         env:
           SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
-        run: |
-          xcrun simctl shutdown "$SIMULATOR_UDID" || true
-          xcrun simctl delete "$SIMULATOR_UDID"
+        timeout-minutes: 2
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
 
   ui-tests:
     name: iOS UI Tests
@@ -788,9 +787,8 @@ jobs:
         if: always() && steps.simulator.outputs.udid != ''
         env:
           SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
-        run: |
-          xcrun simctl shutdown "$SIMULATOR_UDID" || true
-          xcrun simctl delete "$SIMULATOR_UDID"
+        timeout-minutes: 2
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
 
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:

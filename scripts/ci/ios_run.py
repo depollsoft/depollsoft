@@ -1,19 +1,33 @@
 #!/usr/bin/env python3
-"""Run a simulator command exclusively across runner slots on this Mac."""
+"""Serialize simulator tests, stream their logs, and bound startup and test hangs."""
+import codecs
 import fcntl
 import os
 from pathlib import Path
 import re
+import selectors
 import signal
 import subprocess
 import sys
 import time
 
+CASE_STARTED = re.compile(r"^Test [Cc]ase '(.+)' started")
+CASE_FINISHED = re.compile(r"^Test [Cc]ase '(.+)' (passed|failed|skipped)(?: on| \()")
 
-def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *, fail_fast=False):
+
+def signal_command(child, signum):
+    # The command owns a separate process group. Never signal another job's tools.
+    try:
+        os.killpg(child.pid, signum)
+    except ProcessLookupError:
+        pass
+
+
+def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *,
+        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15):
     child = None
 
-    def interrupted(signum, _frame):
+    def interrupted(_signum, _frame):
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGINT, interrupted)
@@ -26,36 +40,85 @@ def run(command, lock_path=Path('/tmp/depollsoft-ios-simulator.lock'), *, fail_f
         print(f'Acquired simulator slot after {time.monotonic() - started:.1f}s', flush=True)
         try:
             child = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                     text=True, bufsize=1, env=dict(os.environ, NSUnbufferedIO='YES'))
-            for line in child.stdout:
-                print(line, end='', flush=True)
-                if fail_fast and re.match(r"^Test [Cc]ase '.+' failed(?: on| \()", line):
-                    print('::error::Stopping after the first failed test: ' + line.strip(), flush=True)
-                    child.send_signal(signal.SIGINT)
-                    try:
-                        remaining, _ = child.communicate(timeout=15)
-                        print(remaining, end='', flush=True)
-                    except subprocess.TimeoutExpired:
-                        child.kill()
-                        remaining, _ = child.communicate()
-                        print(remaining, end='', flush=True)
-                    return 1
-            return child.wait()
+                                     start_new_session=True,
+                                     env=dict(os.environ, NSUnbufferedIO='YES'))
+            started = last_output = last_notice = time.monotonic()
+            first_test_seen = False
+            active_case = None
+            case_started = None
+            stopping = None
+            buffered = ''
+            decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
+
+            def stop(reason):
+                nonlocal stopping
+                if stopping is None:
+                    print('::error::' + reason, flush=True)
+                    stopping = time.monotonic()
+                    signal_command(child, signal.SIGINT)
+
+            # Reading a line directly can block forever when XCTest or an inherited
+            # output pipe hangs. Poll both the pipe and the process instead.
+            with selectors.DefaultSelector() as selector:
+                selector.register(child.stdout, selectors.EVENT_READ)
+                while True:
+                    now = time.monotonic()
+                    if selector.select(timeout=.1):
+                        chunk = os.read(child.stdout.fileno(), 65536)
+                        if not chunk:
+                            break
+                        last_output = now
+                        decoded = decoder.decode(chunk)
+                        print(decoded, end='', flush=True)
+                        buffered += decoded
+                        while '\n' in buffered:
+                            line, buffered = buffered.split('\n', 1)
+                            begin = CASE_STARTED.match(line)
+                            end = CASE_FINISHED.match(line)
+                            if begin:
+                                first_test_seen = True
+                                active_case = begin[1]
+                                case_started = now
+                            if end:
+                                first_test_seen = True
+                                active_case = None
+                                if fail_fast and end[2] == 'failed':
+                                    stop('Stopping after the first failed test: ' + line)
+                    elif child.poll() is not None:
+                        break
+                    if stopping is not None:
+                        if now - stopping >= shutdown_timeout:
+                            signal_command(child, signal.SIGKILL)
+                            break
+                    elif fail_fast:
+                        if not first_test_seen and now - started >= startup_timeout:
+                            stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
+                        elif active_case and now - case_started >= test_timeout:
+                            stop(f'{active_case} exceeded the {test_timeout:g}s test budget.')
+                        elif now - last_output >= startup_timeout:
+                            stop(f'XCTest produced no output for {startup_timeout:g}s.')
+                        elif not first_test_seen and now - last_notice >= 30:
+                            print(f'Waiting for XCTest to start its first test ({now - started:.0f}s elapsed)', flush=True)
+                            last_notice = now
+            return 1 if stopping is not None else child.wait(timeout=shutdown_timeout)
         finally:
-            if child is not None and child.poll() is None:
-                child.terminate()
+            if child is not None:
+                signal_command(child, signal.SIGTERM)
                 try:
-                    child.wait(timeout=10)
+                    child.wait(timeout=shutdown_timeout)
                 except subprocess.TimeoutExpired:
-                    child.kill()
-                    child.wait()
+                    signal_command(child, signal.SIGKILL)
+                    child.wait(timeout=5)
+                child.stdout.close()
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         raise SystemExit('Provide a command to run')
     try:
-        status = run(sys.argv[1:], fail_fast=True)
+        # Scheduled UI jobs build before testing; regular CI reuses its build.
+        startup = 900 if 'test' in sys.argv[1:] else 300
+        status = run(sys.argv[1:], fail_fast=True, startup_timeout=startup)
     except KeyboardInterrupt:
         status = 130
     raise SystemExit(status if status >= 0 else 128 - status)

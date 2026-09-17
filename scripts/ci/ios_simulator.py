@@ -4,7 +4,18 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import uuid
+
+
+def delete(udid):
+    xcrun = os.environ.get('XCRUN', 'xcrun')
+    # A stuck shutdown must not prevent trying to delete our own device.
+    try:
+        subprocess.run([xcrun, 'simctl', 'shutdown', udid], check=True, timeout=30)
+    except (subprocess.SubprocessError, OSError) as error:
+        print(f'Simulator shutdown did not complete: {error}', flush=True)
+    subprocess.run([xcrun, 'simctl', 'delete', udid], check=True, timeout=30)
 
 
 def main():
@@ -41,4 +52,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) == 3 and sys.argv[1] == '--delete':
+        delete(sys.argv[2])
+    elif len(sys.argv) == 1:
+        main()
+    else:
+        raise SystemExit('Usage: ios_simulator.py [--delete UDID]')

@@ -64,3 +64,46 @@ class SimulatorLockTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn('Stopping after the first failed test', result.stdout)
             self.assertFalse(marker.exists())
+
+    def test_startup_and_individual_test_timeouts(self):
+        for output, expected in [('', 'did not start'),
+                                 ("Test Case '-[Example testHang]' started.", 'test budget')]:
+            with self.subTest(output=output), tempfile.TemporaryDirectory() as directory:
+                child = f'import time; print({output!r}, flush=True); time.sleep(60)'
+                code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
+                        'from ios_run import run; from pathlib import Path; '
+                        f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
+                        f'Path({str(Path(directory) / "lock")!r}), fail_fast=True, '
+                        'startup_timeout=.2, test_timeout=.2, shutdown_timeout=.2))')
+                result = subprocess.run([sys.executable, '-c', code], capture_output=True,
+                                        text=True, timeout=5)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(expected, result.stdout)
+
+    def test_unresponsive_command_is_killed_after_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            child = ('import signal, time; signal.signal(signal.SIGINT, signal.SIG_IGN); '
+                     'print("Test Case \'-[Example testFailure]\' failed (0.01 seconds).", flush=True); '
+                     'time.sleep(60)')
+            code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
+                    'from ios_run import run; from pathlib import Path; '
+                    f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
+                    f'Path({str(Path(directory) / "lock")!r}), fail_fast=True, shutdown_timeout=.2))')
+            result = subprocess.run([sys.executable, '-c', code], capture_output=True,
+                                    text=True, timeout=5)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('Stopping after the first failed test', result.stdout)
+
+    def test_inherited_output_pipe_cannot_keep_finished_command_running(self):
+        with tempfile.TemporaryDirectory() as directory:
+            child = ('import subprocess, sys; '
+                     'subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"]); '
+                     'print("Parent finished", flush=True)')
+            code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
+                    'from ios_run import run; from pathlib import Path; '
+                    f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
+                    f'Path({str(Path(directory) / "lock")!r})))')
+            result = subprocess.run([sys.executable, '-c', code], capture_output=True,
+                                    text=True, timeout=5)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('Parent finished', result.stdout)

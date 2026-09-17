@@ -178,6 +178,12 @@ final class DesignTourUITests: XCTestCase {
     }
 }
 
+private extension XCUIElement {
+    func readyForCapture(timeout: TimeInterval) -> Bool {
+        exists || waitForExistence(timeout: timeout)
+    }
+}
+
 /// Opt-in capture of the native app with local example songs, without signing in.
 final class StoreScreenshotTests: XCTestCase {
     func testCaptureStoreScreenshots() throws {
@@ -191,7 +197,7 @@ final class StoreScreenshotTests: XCTestCase {
             let candidates = [app.tabBars.buttons[name].firstMatch, app.buttons[name].firstMatch,
                               app.cells[name].firstMatch, app.otherElements[name].firstMatch]
             let item = candidates.first { $0.exists } ?? app.descendants(matching: .any)[name].firstMatch
-            XCTAssertTrue(item.waitForExistence(timeout: 15))
+            XCTAssertTrue(item.readyForCapture(timeout: 15))
             XCTAssertTrue(item.isHittable)
             item.tap()
         }
@@ -208,16 +214,18 @@ final class StoreScreenshotTests: XCTestCase {
         }
         tab("Songs")
         let edit = app.navigationBars.buttons["Edit"]
-        XCTAssertTrue(edit.waitForExistence(timeout: 10))
+        XCTAssertTrue(edit.readyForCapture(timeout: 10))
         edit.tap()
         if !app.tables.cells.containing(.staticText, identifier: "Blue Skies").firstMatch.exists {
             for (index, title) in ["Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine"].enumerated() {
                 app.navigationBars.buttons["Add"].tap()
                 let field = app.textFields.firstMatch
-                XCTAssertTrue(field.waitForExistence(timeout: 10))
+                XCTAssertTrue(field.readyForCapture(timeout: 10))
                 field.tap()
-                field.typeText(title)
-                app.keyboards.buttons["Done"].tap()
+                // Submit through the field so this works with either a software
+                // keyboard or the simulator's connected hardware keyboard.
+                field.typeText(title + "\n")
+                XCTAssertEqual(field.value as? String, title)
                 let keyName = ["F major", "C major", "G major", "D major"][index % 4]
                 let key = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", keyName)).firstMatch
                 XCTAssertTrue(key.exists)
@@ -227,8 +235,8 @@ final class StoreScreenshotTests: XCTestCase {
                 let save = app.navigationBars["Add Song"].buttons["Done"]
                 XCTAssertTrue(save.isHittable)
                 save.tap()
-                XCTAssertTrue(app.tables.cells.containing(.staticText, identifier: title).firstMatch.waitForExistence(timeout: 10))
-                XCTAssertTrue(app.navigationBars.buttons["Add"].waitForExistence(timeout: 10))
+                XCTAssertTrue(app.tables.cells.containing(.staticText, identifier: title).firstMatch.readyForCapture(timeout: 10))
+                XCTAssertTrue(app.navigationBars.buttons["Add"].readyForCapture(timeout: 10))
             }
         }
         app.navigationBars.buttons["Sort Alphabetically"].tap()
@@ -240,7 +248,7 @@ final class StoreScreenshotTests: XCTestCase {
         XCTAssertTrue(first.buttons.firstMatch.exists)
         // The system detail disclosure opens the actual song editor.
         first.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'info' OR label CONTAINS[c] 'detail'")).firstMatch.tap()
-        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
         snap("06-song-editor")
     }
 }
