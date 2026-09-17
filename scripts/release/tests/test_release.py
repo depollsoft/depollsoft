@@ -149,6 +149,32 @@ class GitPlanTests(GitFixture, unittest.TestCase):
 
 
 class CaptureTests(unittest.TestCase):
+    def test_live_capture_returns_only_the_successful_retry(self):
+        attempts = []
+        def take(attempt):
+            attempts.append(attempt)
+            if attempt == 0:
+                raise subprocess.CalledProcessError(65, 'xcodebuild')
+            return 'complete-second-result.xcresult'
+        with patch.object(capture.time, 'sleep'):
+            self.assertEqual(capture.native_capture('tagmaster', 'ipad-dark', take), 'complete-second-result.xcresult')
+        self.assertEqual(attempts, [0, 1])
+
+    def test_live_capture_stops_after_two_failed_attempts(self):
+        attempts = []
+        def take(attempt):
+            attempts.append(attempt)
+            raise capture.NativeCaptureError('Live catalog unavailable')
+        with patch.object(capture.time, 'sleep'), self.assertRaises(capture.NativeCaptureError):
+            capture.native_capture('tagmaster', 'phone-light', take)
+        self.assertEqual(attempts, [0, 1])
+
+    def test_capture_validation_errors_are_never_retried(self):
+        with patch.object(capture.time, 'sleep') as sleep:
+            with self.assertRaises(ValueError):
+                capture.native_capture('tagmaster', 'ipad-light', lambda attempt: (_ for _ in ()).throw(ValueError('Wrong source')))
+            sleep.assert_not_called()
+
     def test_missing_wrong_size_blank_and_duplicate_screenshots_fail(self):
         with tempfile.TemporaryDirectory() as folder:
             dest = Path(folder)

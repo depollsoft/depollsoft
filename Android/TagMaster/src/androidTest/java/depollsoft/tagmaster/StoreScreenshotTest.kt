@@ -41,7 +41,16 @@ class StoreScreenshotTest {
             .putExtra(TagDetailActivity.TAG_ID_EXTRA, 122)
         ActivityScenario.launch<TagDetailActivity>(intent).use { scenario ->
             lateinit var activity: TagDetailActivity
-            scenario.onActivity { activity = it }
+            scenario.onActivity {
+                activity = it
+                // Preserve the production request and log failures on subsequent retries.
+                it.tagLoader = { id, refresh ->
+                    depollsoft.tagmaster.barbershop.Tag.loadTagById(id, refresh).continueWithTask { task ->
+                        if (task.isFaulted) android.util.Log.e("StoreScreenshots", "Live tag $id request failed", task.error)
+                        task
+                    }
+                }
+            }
             fun onActivity(action: (TagDetailActivity) -> Unit) {
                 // Loading animations continuously invalidate the UI. Poll on the
                 // main thread without waiting for global Espresso/Looper idleness.

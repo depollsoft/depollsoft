@@ -32,6 +32,24 @@ def output(*args, timeout=300):
     return subprocess.check_output(list(map(str, args)), text=True, timeout=timeout).strip()
 
 
+class NativeCaptureError(RuntimeError):
+    pass
+
+
+def native_capture(app, label, operation):
+    # Tag Master captures live catalog/media requests throughout each scene tour.
+    # Retry the whole tour from a fresh app; export only a completed attempt.
+    attempts = 2 if app == 'tagmaster' else 1
+    for attempt in range(attempts):
+        try:
+            return operation(attempt)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, NativeCaptureError):
+            if attempt + 1 == attempts:
+                raise
+            print(f'{label} failed; retrying the native capture once in 15s', flush=True)
+            time.sleep(15)
+
+
 def screenshot_path(app, platform, family, scene):
     if scene not in APPS[app]['store_scenes'][platform]:
         return f'review/{family}/{scene}.png'
@@ -86,17 +104,20 @@ def ios(app, dest):
                     '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                     '--batteryState', 'charged', '--batteryLevel', '100')
                 for theme in ('light', 'dark'):
-                    subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
-                    run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
-                    result = work / f'{family}-{theme}.xcresult'
-                    env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
-                    run('xcodebuild', 'test', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
-                        '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
-                        '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
-                        '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
-                        '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                        '-only-testing:' + app + 'UITests/StoreScreenshotTests',
-                        'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
+                    def take(attempt):
+                        subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
+                        run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
+                        result = work / f'{family}-{theme}-{attempt}.xcresult'
+                        env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
+                        run('xcodebuild', 'test', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
+                            '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
+                            '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
+                            '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
+                            '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
+                            '-only-testing:' + app + 'UITests/StoreScreenshotTests',
+                            'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
+                        return result
+                    result = native_capture(app, f'{family}-{theme}', take)
                     attachments = work / f'{family}-{theme}'
                     run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
                         '--output-path', attachments)
@@ -156,17 +177,20 @@ def android(app, dest, serial):
             time.sleep(3)
             for theme in ('light', 'dark'):
                 run(*adb, 'shell', 'cmd', 'uimode', 'night', 'yes' if theme == 'dark' else 'no')
-                run(*adb, 'shell', 'pm', 'clear', package)
-                android_status_bar(adb)
-                result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
-                                f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
-                                f'{package}.test/androidx.test.runner.AndroidJUnitRunner', timeout=900)
-                print(result)
-                # am instrument can return exit 0 even when the test failed.
-                if 'OK (1 test)' not in result or 'FAILURES' in result:
-                    diagnostics = dest / 'android-logcat.txt'
-                    diagnostics.write_text(output(*adb, 'logcat', '-d', '-t', '1500'))
-                    raise ValueError(f'Screenshot instrumentation failed; see {diagnostics}')
+                def take(attempt):
+                    run(*adb, 'shell', 'pm', 'clear', package)
+                    android_status_bar(adb)
+                    result = output(*adb, 'shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
+                                    f'{package}.StoreScreenshotTest', '-e', 'storeScreenshots', 'true',
+                                    f'{package}.test/androidx.test.runner.AndroidJUnitRunner', timeout=900)
+                    print(result)
+                    # am instrument can return exit 0 even when the test failed.
+                    if 'OK (1 test)' not in result or 'FAILURES' in result:
+                        diagnostics = ROOT / f'build/release/emulator-logs/phone-tablet/{family}-{theme}-{attempt}.log'
+                        diagnostics.parent.mkdir(parents=True, exist_ok=True)
+                        diagnostics.write_text(output(*adb, 'logcat', '-d', '-t', '1500'))
+                        raise NativeCaptureError(f'Screenshot instrumentation failed; see {diagnostics}')
+                native_capture(app, f'{family}-{theme}', take)
                 for scene in config['scenes']:
                     target = dest / screenshot_path(app, 'android', family, f'{scene}-{theme}')
                     target.parent.mkdir(parents=True, exist_ok=True)

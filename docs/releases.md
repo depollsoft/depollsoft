@@ -117,6 +117,8 @@ macOS jobs use the existing self-hosted macOS pool; Android jobs use Ubuntu with
 
 ## Submission and retries
 
+Tag Master's screenshots depend on the live catalog and media. Each device/theme capture gets one retry after 15 seconds, with fresh app data and the same build. Only a fully successful native test supplies screenshots. A second failure stops the job; asset validation and source checks are never retried or bypassed.
+
 Apple submission requests automatic release after review. Google Play receives a completed production release with changes sent for review. Neither means the store has already approved or published the app.
 
 After each platform succeeds, the workflow creates a release record such as `tagmaster/ios/v2.0.3` or `pitchperfect/android/v4.0.1`, with its asset archive, notes, and source commit. Tags are app/platform scoped and cannot be reused for different source commits. A successful platform does not wait for another platform's store submission to succeed.

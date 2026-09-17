@@ -47,6 +47,13 @@ jobs:
           "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
       - name: Validate copy
         run: python3 scripts/release/release.py validate
+      - name: Check live Tag Master catalog connectivity
+        if: inputs.app == 'tagmaster'
+        run: |
+          curl --fail --silent --show-error --connect-timeout 15 --max-time 30 \
+            --retry 2 --retry-all-errors --retry-delay 5 \
+            'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
+            --output /dev/null
       - name: Reserve disk space for Android emulators
         if: inputs.platform == 'android'
         run: |
