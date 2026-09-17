@@ -11,6 +11,14 @@ import tempfile
 import time
 
 
+def check_port_available(port):
+    with socket.socket() as probe:
+        # A closed emulator connection can leave this port in TIME_WAIT.
+        # Allow those connections, but still reject an active listener.
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        probe.bind(('127.0.0.1', port))
+
+
 def stop_process_group(process, grace=10):
     """Stop only the session we created, including children holding log handles."""
     try:
@@ -42,8 +50,7 @@ def main():
     if args.port < 5554 or args.port > 5682 or args.port % 2:
         parser.error('Use an even emulator console port between 5554 and 5682')
     for port in (args.port, args.port + 1):
-        with socket.socket() as probe:
-            probe.bind(('127.0.0.1', port))  # Refuse to take over another emulator.
+        check_port_available(port)
     sdk = Path(os.environ.get('ANDROID_HOME') or os.environ['ANDROID_SDK_ROOT'])
     adb = [str(sdk / 'platform-tools/adb'), '-s', f'emulator-{args.port}']
     arch = 'arm64-v8a' if platform.machine() in ('arm64', 'aarch64') else 'x86_64'
