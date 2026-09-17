@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_simulator import delete, clean_abandoned_captures
+from ios_simulator import delete, clean_abandoned, owner_identity, has_live_owner, process_identity
 
 
 class SimulatorCleanupTests(unittest.TestCase):
@@ -35,7 +35,7 @@ class SimulatorCleanupTests(unittest.TestCase):
                                         for index, name in enumerate(names)]}}
         with patch('ios_simulator.subprocess.check_output', return_value=json.dumps(data)), \
                 patch('ios_simulator.delete') as remove:
-            clean_abandoned_captures()
+            clean_abandoned()
         self.assertEqual([call.args[0] for call in remove.call_args_list], ['0', '1'])
 
     def test_cleanup_recovers_names_from_metadata_when_discovery_hangs(self):
@@ -50,7 +50,7 @@ class SimulatorCleanupTests(unittest.TestCase):
                  patch('ios_simulator.subprocess.check_output',
                        side_effect=subprocess.TimeoutExpired('simctl list', 60)), \
                  patch('ios_simulator.delete') as remove:
-                clean_abandoned_captures()
+                clean_abandoned()
             remove.assert_called_once_with('owned')
 
     def test_cleanup_attempts_remaining_devices_after_one_failure(self):
@@ -60,5 +60,38 @@ class SimulatorCleanupTests(unittest.TestCase):
              patch('ios_simulator.delete', side_effect=[
                  subprocess.TimeoutExpired('simctl delete', 30), None]) as remove:
             with self.assertRaisesRegex(RuntimeError, 'Could not clean'):
-                clean_abandoned_captures()
+                clean_abandoned()
         self.assertEqual(remove.call_count, 2)
+
+    def test_actions_owner_is_worker_across_shell_steps(self):
+        identities = {
+            30: dict(pid=30, parent=20, started='child', command='python3'),
+            20: dict(pid=20, parent=10, started='shell', command='bash'),
+            10: dict(pid=10, parent=1, started='job', command='/runner/bin/Runner.Worker'),
+        }
+        with patch.dict('os.environ', {'GITHUB_ACTIONS': 'true'}), \
+             patch('ios_simulator.os.getpid', return_value=30), \
+             patch('ios_simulator.process_identity', side_effect=identities.get):
+            self.assertEqual(owner_identity(), identities[10])
+
+    def test_live_owners_survive_cleanup_but_reused_pids_do_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            registry = Path(directory)
+            (registry / 'active.json').write_text(json.dumps({'pid': 10, 'started': 'today'}))
+            (registry / 'reused.json').write_text(json.dumps({'pid': 10, 'started': 'yesterday'}))
+            data = {'devices': {'runtime': [dict(name='Store-tagmaster-iphone', udid=udid)
+                                            for udid in ['active', 'reused', 'unregistered']]}}
+            with patch('ios_simulator.REGISTRY', registry), \
+                 patch('ios_simulator.process_identity', return_value={'started': 'today'}), \
+                 patch('ios_simulator.subprocess.check_output', return_value=json.dumps(data)), \
+                 patch('ios_simulator.delete') as remove:
+                clean_abandoned()
+            self.assertEqual([call.args[0] for call in remove.call_args_list], ['reused', 'unregistered'])
+
+    def test_exited_owner_is_not_live(self):
+        with tempfile.TemporaryDirectory() as directory:
+            registry = Path(directory)
+            (registry / 'exited.json').write_text(json.dumps({'pid': 10, 'started': 'today'}))
+            with patch('ios_simulator.REGISTRY', registry), \
+                 patch('ios_simulator.process_identity', return_value=None):
+                self.assertFalse(has_live_owner('exited'))

@@ -47,7 +47,7 @@ jobs:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
-    timeout-minutes: 90
+    timeout-minutes: 45
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
@@ -194,7 +194,7 @@ jobs:
       # Reuse the build-for-testing output, but run each scheme one at a time.
       # Run each target in its own step so a unit failure stops before UI tests.
       - name: Run Pitch Perfect unit tests
-        timeout-minutes: 45
+        timeout-minutes: 20
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
@@ -214,7 +214,7 @@ jobs:
           python3 ../scripts/ci/ios_test_results.py pitchperfect
 
       - name: Run Tag Master unit tests
-        timeout-minutes: 45
+        timeout-minutes: 20
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
@@ -235,7 +235,7 @@ jobs:
           python3 ../scripts/ci/ios_test_results.py tagmaster
 
       - name: Run Pitch Perfect library tests
-        timeout-minutes: 45
+        timeout-minutes: 20
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
@@ -255,7 +255,7 @@ jobs:
           python3 ../scripts/ci/ios_test_results.py pitchperfectlib
 
       - name: Run Tag Master UI tests
-        timeout-minutes: 45
+        timeout-minutes: 20
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \

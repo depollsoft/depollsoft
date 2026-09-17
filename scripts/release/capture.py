@@ -12,6 +12,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import time
+import uuid
 
 from PIL import Image, ImageStat
 from release import APPS, ROOT, git, write_json, fingerprint
@@ -92,7 +93,9 @@ def ios(app, dest):
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
-            udid = output('xcrun', 'simctl', 'create', f'Store-{app}-{family}', model, runtime)
+            with ios_simulator.allocation():
+                ios_simulator.clean_abandoned()
+                udid = ios_simulator.create(f'Store-{app}-{family}-{uuid.uuid4()}', model, runtime)
             try:
                 for attempt in range(2):
                     run('xcrun', 'simctl', 'boot', udid, timeout=60)
@@ -315,13 +318,15 @@ if __name__ == '__main__':
         raise KeyboardInterrupt('Capture interrupted')
 
     signal.signal(signal.SIGTERM, interrupted)
-    # Local capture commands can otherwise resize the same emulator or compete
-    # for simulator resources. Serialize them just as the Actions jobs do.
+    # Android capture commands can resize the same emulator; serialize them.
+    # iOS jobs use separate, registered simulators and may run concurrently.
     platform = sys.argv[sys.argv.index('--platform') + 1] if '--platform' in sys.argv else 'help'
-    lock_path = (Path('/tmp/depollsoft-ios-simulator.lock') if platform == 'ios'
-                 else Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{platform}.lock')
-    with lock_path.open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        if platform == 'ios':
-            ios_simulator.clean_abandoned_captures()
+    if platform == 'ios':
+        with ios_simulator.allocation():
+            ios_simulator.clean_abandoned()
         main()
+    else:
+        lock_path = Path(tempfile.gettempdir()) / f'depollsoft-store-capture-{platform}.lock'
+        with lock_path.open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            main()

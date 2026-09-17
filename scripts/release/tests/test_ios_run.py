@@ -9,14 +9,14 @@ from unittest.mock import patch
 CI = Path(__file__).resolve().parents[2] / 'ci'
 
 
-class SimulatorLockTests(unittest.TestCase):
-    def launch(self, lock, marker, *, wait=False, status=0):
+class NativeRunnerTests(unittest.TestCase):
+    def launch(self, marker, *, wait=False, status=0):
         child = ('from pathlib import Path; import time; '
                  f'Path({str(marker)!r}).touch(); '
                  f'time.sleep({60 if wait else 0}); raise SystemExit({status})')
         code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                 'from ios_run import run; from pathlib import Path; '
-                f'raise SystemExit(run([sys.executable, "-c", {child!r}], Path({str(lock)!r})))')
+                f'raise SystemExit(run([sys.executable, "-c", {child!r}]))')
         process = subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
         self.addCleanup(self.stop, process)
@@ -34,21 +34,18 @@ class SimulatorLockTests(unittest.TestCase):
             time.sleep(.01)
         self.assertTrue(marker.exists())
 
-    def test_exclusive_slot_is_released_on_cancellation_and_failure(self):
+    def test_independent_commands_run_concurrently_and_cancel_independently(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            lock = root / 'lock'
-            first = self.launch(lock, root / 'first', wait=True)
+            first = self.launch(root / 'first', wait=True)
             self.wait_for(root / 'first')
-            second = self.launch(lock, root / 'second', status=7)
-            # The first command owns the slot until it has actually stopped.
-            time.sleep(.1)
-            self.assertFalse((root / 'second').exists())
+            second = self.launch(root / 'second', wait=True)
+            self.wait_for(root / 'second')
+            self.assertIsNone(first.poll())
+            self.assertIsNone(second.poll())
             self.stop(first)
-            self.assertEqual(second.wait(timeout=5), 7)
-            third = self.launch(lock, root / 'third')
-            self.assertEqual(third.wait(timeout=5), 0)
-            self.assertTrue((root / 'third').exists())
+            self.assertIsNone(second.poll())
+            self.stop(second)
 
     def test_first_failed_case_stops_command_before_more_tests(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -58,8 +55,7 @@ class SimulatorLockTests(unittest.TestCase):
                      f'time.sleep(60); Path({str(marker)!r}).touch()')
             code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                     'from ios_run import run; from pathlib import Path; '
-                    f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
-                    f'Path({str(Path(directory) / "lock")!r}), fail_fast=True))')
+                    f'raise SystemExit(run([sys.executable, "-c", {child!r}], fail_fast=True))')
             result = subprocess.run([sys.executable, '-c', code], capture_output=True,
                                     text=True, timeout=5)
             self.assertEqual(result.returncode, 1)
@@ -74,7 +70,7 @@ class SimulatorLockTests(unittest.TestCase):
                 code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                         'from ios_run import run; from pathlib import Path; '
                         f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
-                        f'Path({str(Path(directory) / "lock")!r}), fail_fast=True, '
+                        'fail_fast=True, '
                         'startup_timeout=.2, test_timeout=.2, shutdown_timeout=.2))')
                 result = subprocess.run([sys.executable, '-c', code], capture_output=True,
                                         text=True, timeout=5)
@@ -89,7 +85,7 @@ class SimulatorLockTests(unittest.TestCase):
             code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                     'from ios_run import run; from pathlib import Path; '
                     f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
-                    f'Path({str(Path(directory) / "lock")!r}), fail_fast=True, shutdown_timeout=.2))')
+                    'fail_fast=True, shutdown_timeout=.2))')
             result = subprocess.run([sys.executable, '-c', code], capture_output=True,
                                     text=True, timeout=5)
             self.assertEqual(result.returncode, 1)
@@ -102,32 +98,20 @@ class SimulatorLockTests(unittest.TestCase):
                      'print("Parent finished", flush=True)')
             code = (f'import sys; sys.path.insert(0, {str(CI)!r}); '
                     'from ios_run import run; from pathlib import Path; '
-                    f'raise SystemExit(run([sys.executable, "-c", {child!r}], '
-                    f'Path({str(Path(directory) / "lock")!r})))')
+                    f'raise SystemExit(run([sys.executable, "-c", {child!r}]))')
             result = subprocess.run([sys.executable, '-c', code], capture_output=True,
                                     text=True, timeout=5)
             self.assertEqual(result.returncode, 0)
             self.assertIn('Parent finished', result.stdout)
 
-    def test_owned_simulator_stops_before_releasing_slot_on_failure(self):
+    def test_owned_simulator_stops_on_command_failure(self):
         sys.path.insert(0, str(CI))
         import ios_run
-        with tempfile.TemporaryDirectory() as directory:
-            lock_path = Path(directory) / 'lock'
-            events = []
-            def shutdown(udid):
-                import fcntl
-                with lock_path.open('a') as competing:
-                    with self.assertRaises(BlockingIOError):
-                        fcntl.flock(competing, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                events.append(('shutdown', udid))
-            udid = '12345678-1234-1234-1234-123456789ABC'
-            with patch('ios_run.ios_simulator.clean_abandoned_captures',
-                       side_effect=lambda: events.append('clean')), \
-                 patch('ios_run.ios_simulator.boot',
-                       side_effect=lambda value: events.append(('boot', value))), \
-                 patch('ios_run.ios_simulator.shutdown', side_effect=shutdown):
-                status = ios_run.run([sys.executable, '-c', 'raise SystemExit(7)',
-                                      f'platform=iOS Simulator,id={udid}'], lock_path)
-            self.assertEqual(status, 7)
-            self.assertEqual(events, ['clean', ('boot', udid), ('shutdown', udid)])
+        udid = '12345678-1234-1234-1234-123456789ABC'
+        with patch('ios_run.ios_simulator.boot') as boot, \
+             patch('ios_run.ios_simulator.shutdown') as shutdown:
+            status = ios_run.run([sys.executable, '-c', 'raise SystemExit(7)',
+                                  f'platform=iOS Simulator,id={udid}'])
+        self.assertEqual(status, 7)
+        boot.assert_called_once_with(udid)
+        shutdown.assert_called_once_with(udid)
