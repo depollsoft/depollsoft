@@ -292,7 +292,7 @@ class LayoutRegressionTest {
         waitFor {
             scenario.onActivity {
                 result =
-                    it.supportFragmentManager.fragments
+                    it.detailFragment!!.childFragmentManager.fragments
                         .filterIsInstance<TagTracksFragment>()
                         .firstOrNull { f -> f.view != null }
             }

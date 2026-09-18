@@ -122,7 +122,7 @@ class FooterPitchRegressionTest {
             bounds.drop(index + 1).forEach { assertFalse("Nonoverlapping targets", Rect.intersects(rect, it)) }
         }
         assertEquals(footer.context.getString(R.string.app_version), footer.findViewById<TextView>(R.id.appVersionTextView).text.toString())
-        assertEquals(footer.context.getString(R.string.Copyright), footer.findViewById<TextView>(R.id.copyrightTextView).text.toString())
+        assertEquals(footer.context.getString(R.string.Copyright, java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)), footer.findViewById<TextView>(R.id.copyrightTextView).text.toString())
         assertEquals(View.GONE, footer.findViewById<View>(R.id.marketHyperlink).visibility)
     }
 
@@ -279,7 +279,9 @@ class FooterPitchRegressionTest {
         if (baseline) return
         instrumentation.runOnMainSync {
             val expectedFill =
-                button.context.getColor(
+                if (playing && button is ExtendedFloatingActionButton) {
+                    com.google.android.material.color.MaterialColors.getColor(button, androidx.appcompat.R.attr.colorPrimary)
+                } else button.context.getColor(
                     if (playing) {
                         R.color.md_primary
                     } else if (button is ExtendedFloatingActionButton) {
@@ -293,7 +295,12 @@ class FooterPitchRegressionTest {
                 assertEquals("Floating key surface must be opaque", 255, android.graphics.Color.alpha(fill))
             }
             val expectedInk =
-                button.context.getColor(
+                if (button is ExtendedFloatingActionButton) {
+                    com.google.android.material.color.MaterialColors.getColor(button,
+                        if (disabled) com.google.android.material.R.attr.colorOnSurface
+                        else if (playing) com.google.android.material.R.attr.colorOnPrimary
+                        else androidx.appcompat.R.attr.colorPrimary)
+                } else button.context.getColor(
                     if (disabled) {
                         R.color.md_on_surface
                     } else if (playing) {

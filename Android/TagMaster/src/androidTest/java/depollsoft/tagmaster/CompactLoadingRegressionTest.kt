@@ -118,7 +118,10 @@ class CompactLoadingRegressionTest {
     }
 
     private fun checkPending(pole: BarberPoleLoadingView) {
-        waitFor { pole.loading && pole.isAnimating }
+        val motionEnabled = android.provider.Settings.Global.getFloat(
+            context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f,
+        ) != 0f
+        waitFor { pole.loading && pole.isAnimating == motionEnabled }
         onMain {
             assertTrue(pole.hostResumed)
             assertTrue(pole.getGlobalVisibleRect(android.graphics.Rect()))
@@ -257,7 +260,7 @@ class CompactLoadingRegressionTest {
                         var ready = false
                         scenario.onActivity { activity ->
                             summary =
-                                activity.supportFragmentManager.fragments
+                                activity.detailFragment!!.childFragmentManager.fragments
                                     .filterIsInstance<TagSummaryFragment>()
                                     .firstOrNull()
                                     ?: return@onActivity

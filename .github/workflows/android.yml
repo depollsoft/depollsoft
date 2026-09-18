@@ -12,6 +12,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/android_instrumented.sh"
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/android_instrumented.sh"
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * *"
@@ -425,10 +427,7 @@ jobs:
             echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2;
             for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "Test attempt $attempt of $MAX_ATTEMPTS";
-            if ./gradlew connectedDebugAndroidTest
-            createDebugAndroidTestCoverageReport
-            -Pandroid.testInstrumentationRunnerArguments.coverage=true
-            --build-cache --stacktrace; then
+            if bash ../scripts/ci/android_instrumented.sh; then
             echo "Tests passed on attempt $attempt"; exit 0; fi;
             if [ $attempt -lt $MAX_ATTEMPTS ]; then
             echo "Tests failed, retrying..."; sleep 5; fi; done;
