@@ -15,6 +15,7 @@ The commit evidence below includes each app's paths and the shared paths selecte
 
 ## ios: 75d8daf8f0e45caa68d5bb26ad31c768346d750a..HEAD
 
+4debb78a test: target seeded favorites in iOS navigation checks
 0de11c60 ios: support both simulator architectures
 c781ea07 release: fix compact validation and stabilize native runners
 a600e75a test: bound UI cases and isolate controlled loading
@@ -89,6 +90,7 @@ e76b4ab0 More resilient backup code
 
 ## android: 8ee81c37101780bd59ef29547c3011849018198e..HEAD
 
+4debb78a test: target seeded favorites in iOS navigation checks
 0de11c60 ios: support both simulator architectures
 c781ea07 release: fix compact validation and stabilize native runners
 a600e75a test: bound UI cases and isolate controlled loading
