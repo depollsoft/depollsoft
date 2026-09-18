@@ -44,8 +44,7 @@ Android capture uses SystemUI demo mode to hide notification icons and show a co
 
 Actions runs each Android capture through `scripts/release/emulator.py`. The launcher creates a temporary AVD, waits up to five minutes for boot, and stops only its own emulator and capture process groups. Shutdown has a deadline and force-stops stuck children, including children holding output handles open. Failed captures upload emulator logs, logcat, and a diagnostic screenshot separately from the store assets. Both apps share a native screenshot guard that requires the app to own the foreground window before and after capture. It can close a Pixel Launcher crash/ANR dialog from the disposable emulator, but fails on errors from the app under test or other covering system windows. The opt-in Pitch Perfect `StoreScreenshotOverlayTest` exercises launcher recovery and rejects a Settings-screen capture with the instrumentation argument `storeOverlayCheck=true`. Tag Master's initial live tag request can use the app's Retry button twice after failures, within the existing two-minute capture deadline.
 
-Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Both appearances are captured for every scene. iOS builds once before booting a simulator, then uses `test-without-building` for one tour per device size. Each tour captures light and dark appearances at the same screen, so it enters sample songs, loads favorites, and navigates the app only once. `capture-timings.json` records build and tour durations. Quiet compiler output keeps live capture progress visible in Actions logs:
-
+Choose a fresh output directory for each capture. Android emits phone and 10-inch tablet sets. iOS emits 6.9-inch phone and 13-inch iPad sets. Both appearances are captured for every scene. iOS builds once before booting a simulator, then uses `test-without-building` for all four device/appearance tours. The app stays installed between appearances, preserving sample songs and cached live tags on that disposable device. `capture-timings.json` records build and tour durations. Quiet compiler output keeps live capture progress visible in Actions logs. Builds have a 15-minute deadline; each tour command has a 10-minute deadline before its retry.
 
 | App | Captured flows per appearance |
 | --- | --- |
@@ -124,7 +123,7 @@ Release jobs use the existing self-hosted pools, so they do not require paid hos
 
 ## Submission and retries
 
-Tag Master's screenshots depend on the live catalog and media. Each iOS device tour and Android device/theme capture gets one retry after 15 seconds, with fresh app data and the same build. Only a fully successful native test supplies screenshots. A second failure stops the job; asset validation and source checks are never retried or bypassed.
+Tag Master's screenshots depend on the live catalog and media. Each device/theme capture gets one retry after 15 seconds, with fresh app data and the same build. Only a fully successful native test supplies screenshots. A second failure stops the job; asset validation and source checks are never retried or bypassed.
 
 Apple submission requests automatic release after review. Google Play receives a completed production release with changes sent for review. Neither means the store has already approved or published the app.
 

@@ -31,12 +31,12 @@ class IOSCaptureTests(unittest.TestCase):
                 dest = Path(args[args.index('--output-path') + 1])
                 dest.mkdir()
                 attachments = []
+                color = 'white' if dest.name.endswith('light') else 'black'
                 for scene in capture.APPS[app]['scenes']:
-                    for theme, color in [('light', 'white'), ('dark', 'black')]:
-                        name = f'store-{scene}-{theme}'
-                        Image.new('RGB', (2, 2), color).save(dest / (name + '.png'))
-                        attachments.append({'suggestedHumanReadableName': name + '_1.png',
-                                            'exportedFileName': name + '.png'})
+                    name = f'store-{scene}'
+                    Image.new('RGB', (2, 2), color).save(dest / (name + '.png'))
+                    attachments.append({'suggestedHumanReadableName': name + '_1.png',
+                                        'exportedFileName': name + '.png'})
                 (dest / 'manifest.json').write_text(json.dumps([{'attachments': attachments}]))
 
         runtime = json.dumps({'runtimes': [{'name': 'iOS 26.2', 'version': '26.2',
@@ -71,21 +71,23 @@ class IOSCaptureTests(unittest.TestCase):
                 self.assertEqual({str(p.relative_to(dest)) for p in dest.rglob('*.png')}, expected)
             return calls, json.loads((dest / 'capture-timings.json').read_text())
 
-    def test_both_appearances_export_from_one_tour_per_size(self):
+    def test_all_appearances_reuse_one_build_and_installed_app(self):
         for app in capture.APPS:
             with self.subTest(app=app):
                 calls, timings = self.exercise(app)
                 self.assertEqual(sum('build-for-testing' in c for c in calls), 1)
-                self.assertEqual(sum('test-without-building' in c for c in calls), 2)
-                self.assertEqual([t['stage'] for t in timings], ['build', 'iphone-0', 'ipad-0'])
+                self.assertEqual(sum('test-without-building' in c for c in calls), 4)
+                self.assertFalse(any('uninstall' in c or 'erase' in c for c in calls))
+                self.assertEqual([t['stage'] for t in timings],
+                                 ['build', 'iphone-light-0', 'iphone-dark-0', 'ipad-light-0', 'ipad-dark-0'])
                 self.assertTrue(all(t['success'] for t in timings))
 
     def test_retry_resets_own_device_without_rebuilding(self):
         calls, timings = self.exercise('pitchperfect', retry=True)
         self.assertEqual(sum('build-for-testing' in c for c in calls), 1)
-        self.assertEqual(sum('test-without-building' in c for c in calls), 3)
+        self.assertEqual(sum('test-without-building' in c for c in calls), 5)
         self.assertIn(['xcrun', 'simctl', 'erase', 'phone'], calls)
-        self.assertEqual([t['success'] for t in timings], [True, False, True, True])
+        self.assertEqual([t['success'] for t in timings], [True, False, True, True, True, True])
 
     def test_build_failure_records_timing_without_starting_simulator(self):
         calls, timings = self.exercise('tagmaster', fail_build=True)

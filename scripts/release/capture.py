@@ -103,7 +103,7 @@ def ios(app, dest):
         try:
             # Keep compiler command lines out of the live log so the actual
             # capture progress remains visible through GitHub's log API.
-            run('xcodebuild', '-quiet', *args, **kwargs)
+            run('xcodebuild', *(['-quiet'] if label == 'build' else []), *args, **kwargs)
             succeeded = True
         finally:
             seconds = round(time.monotonic() - started, 1)
@@ -130,35 +130,35 @@ def ios(app, dest):
                         if attempt == 1:
                             raise
                         print('Simulator boot stalled; retrying this disposable device once', flush=True)
-                def take(attempt):
-                    if attempt:
-                        # Reset only our device if XCTest becomes unavailable.
-                        ios_simulator.shutdown(udid)
-                        run('xcrun', 'simctl', 'erase', udid, timeout=60)
-                    ios_simulator.boot(udid)
-                    run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
-                        '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
-                        '--batteryState', 'charged', '--batteryLevel', '100')
-                    run('xcrun', 'simctl', 'ui', udid, 'appearance', 'light')
-                    result = work / f'{family}-{attempt}.xcresult'
-                    # The tour captures both appearances at each screen, keeping
-                    # sample data and navigation work within one test session.
-                    xcode(f'{family}-{attempt}', 'test-without-building', *build,
-                          '-destination', f'platform=iOS Simulator,id={udid}',
-                          '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                          env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'))
-                    return result
-                result = native_capture(app, family, take, simulator=True)
-                attachments = work / family
-                run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
-                    '--output-path', attachments)
-                manifest = json.loads((attachments / 'manifest.json').read_text())
-                for test in manifest:
-                    for attachment in test['attachments']:
-                        name = attachment['suggestedHumanReadableName']
-                        for scene in config['scenes']:
-                            for theme in ('light', 'dark'):
-                                if name.startswith(f'store-{scene}-{theme}'):
+                for theme in ('light', 'dark'):
+                    def take(attempt):
+                        if attempt:
+                            # Reset only our device if XCTest becomes unavailable.
+                            ios_simulator.shutdown(udid)
+                            run('xcrun', 'simctl', 'erase', udid, timeout=60)
+                        ios_simulator.boot(udid)
+                        run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
+                            '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
+                            '--batteryState', 'charged', '--batteryLevel', '100')
+                        run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
+                        result = work / f'{family}-{theme}-{attempt}.xcresult'
+                        # Keep the app installed between appearances. The native
+                        # tours reuse their sample songs and cached live tags.
+                        xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
+                              '-destination', f'platform=iOS Simulator,id={udid}',
+                              '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
+                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=600)
+                        return result
+                    result = native_capture(app, f'{family}-{theme}', take, simulator=True)
+                    attachments = work / f'{family}-{theme}'
+                    run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
+                        '--output-path', attachments)
+                    manifest = json.loads((attachments / 'manifest.json').read_text())
+                    for test in manifest:
+                        for attachment in test['attachments']:
+                            name = attachment['suggestedHumanReadableName']
+                            for scene in config['scenes']:
+                                if name.startswith(f'store-{scene}'):
                                     target = dest / screenshot_path(app, 'ios', family, f'{scene}-{theme}')
                                     target.parent.mkdir(parents=True, exist_ok=True)
                                     with Image.open(attachments / attachment['exportedFileName']) as image:
