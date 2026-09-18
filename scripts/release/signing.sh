@@ -15,7 +15,7 @@ check_access() {
 try_ssh() {
   [ -n "${MATCH_GIT_SSH_KEY:-}" ] || return 1
   local key="$RUNNER_TEMP/release-match-key"
-  printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key"
+  printf '%s\n' "$MATCH_GIT_SSH_KEY" > "$key" || return 1
   ssh-keyscan -p 443 ssh.github.com > "$RUNNER_TEMP/release-known-hosts" 2>/dev/null || return 1
   local ssh_command="ssh -i '$key' -o IdentitiesOnly=yes -o Hostname=ssh.github.com -p 443 -o UserKnownHostsFile='$RUNNER_TEMP/release-known-hosts' -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=15"
   if ! GIT_SSH_COMMAND="$ssh_command" check_access git@github.com:depollsoft/certificates.git; then
@@ -26,7 +26,7 @@ try_ssh() {
     echo "GIT_SSH_COMMAND=$ssh_command"
     echo 'MATCH_GIT_URL=git@github.com:depollsoft/certificates.git'
     echo 'MATCH_GIT_BASIC_AUTHORIZATION='
-  } >> "$GITHUB_ENV"
+  } >> "$GITHUB_ENV" || { echo 'Could not persist verified signing credentials.' >&2; exit 1; }
   echo 'Verified signing repository access using SSH.'
 }
 
@@ -65,7 +65,7 @@ PY
     echo 'GIT_SSH_COMMAND='
     echo 'MATCH_GIT_URL=https://github.com/depollsoft/certificates.git'
     echo "MATCH_GIT_BASIC_AUTHORIZATION=$authorization"
-  } >> "$GITHUB_ENV"
+  } >> "$GITHUB_ENV" || { echo 'Could not persist verified signing credentials.' >&2; exit 1; }
   echo 'Verified signing repository access using HTTPS.'
 }
 

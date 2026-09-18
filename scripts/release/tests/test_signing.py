@@ -12,7 +12,8 @@ SCRIPT = Path(__file__).resolve().parents[1] / 'signing.sh'
 
 class SigningTests(unittest.TestCase):
     def run_signing(self, *, write=False, ssh_read=True, ssh_write=False,
-                    https_read=True, https_write=True, authorization='user:fake-token'):
+                    https_read=True, https_write=True, authorization='user:fake-token',
+                    export_fails=False):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             binaries = root / 'bin'
@@ -40,7 +41,7 @@ raise SystemExit(0 if os.environ[kind.upper() + '_' + permission] == '1' else 1)
             calls_file.touch()
             environment = {
                 **os.environ, 'PATH': str(binaries) + os.pathsep + os.environ['PATH'],
-                'RUNNER_TEMP': str(root), 'GITHUB_ENV': str(env_file),
+                'RUNNER_TEMP': str(root), 'GITHUB_ENV': str(root if export_fails else env_file),
                 'GITHUB_RUN_ID': '123', 'CALLS': str(calls_file),
                 'RELEASE_SIGNING_WRITE': str(write).lower(),
                 'MATCH_GIT_SSH_KEY': 'fake-private-key',
@@ -110,3 +111,19 @@ raise SystemExit(0 if os.environ[kind.upper() + '_' + permission] == '1' else 1)
         self.assertEqual(result.returncode, 0, result.stderr)
         decoded = base64.b64decode(selected['MATCH_GIT_BASIC_AUTHORIZATION']).decode()
         self.assertEqual(decoded, 'x-access-token:fake-token')
+
+    def test_ssh_export_failure_stops_before_fastlane_or_fallback(self):
+        result, selected, calls = self.run_signing(export_fails=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(selected, {})
+        self.assertNotIn('Verified signing repository access', result.stdout)
+        self.assertIn('Could not persist', result.stderr)
+        self.assertEqual([c['kind'] for c in calls], ['ssh'])
+
+    def test_https_export_failure_stops_before_fastlane_or_fallback(self):
+        result, selected, calls = self.run_signing(write=True, export_fails=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(selected, {})
+        self.assertNotIn('Verified signing repository access', result.stdout)
+        self.assertIn('Could not persist', result.stderr)
+        self.assertEqual([c['kind'] for c in calls], ['https', 'https'])
