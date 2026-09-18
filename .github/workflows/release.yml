@@ -59,7 +59,7 @@ jobs:
           PY
       - name: Wait for iOS CI before simulator captures
         if: github.event_name == 'pull_request' && steps.plan.outputs.any == 'true'
-        timeout-minutes: 46
+        timeout-minutes: 92
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           retries: 3
@@ -73,7 +73,7 @@ jobs:
               filename.startsWith('iOS/') || filename.startsWith('scripts/ci/') ||
               filename === '.github/workflows/ios.yml');
             if (!testsExpected) return;
-            for (let attempt = 0; attempt < 90; attempt++) {
+            for (let attempt = 0; attempt < 180; attempt++) {
               const {data} = await github.rest.actions.listWorkflowRuns({
                 ...context.repo, workflow_id: 'ios.yml', event: 'pull_request',
                 head_sha: pr.head.sha, per_page: 100,
@@ -91,7 +91,7 @@ jobs:
               core.info(`Waiting for iOS CI at ${pr.head.sha}: ${run?.status || 'not queued yet'}`);
               await new Promise(resolve => setTimeout(resolve, 30000));
             }
-            throw new Error('iOS CI did not finish within 45 minutes; no capture simulators were started.');
+            throw new Error('iOS CI did not finish within 90 minutes; no capture simulators were started.');
   assets:
     needs: plan
     if: >-
