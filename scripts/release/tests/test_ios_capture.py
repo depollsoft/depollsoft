@@ -45,6 +45,7 @@ class IOSCaptureTests(unittest.TestCase):
             dest = Path(folder)
             stack.enter_context(patch.dict(capture.os.environ, {'DEVELOPER_DIR': '/test/Xcode'}))
             stack.enter_context(patch.object(capture.subprocess, 'check_output', side_effect=['26.2', runtime]))
+            uninstall = stack.enter_context(patch.object(capture.subprocess, 'run'))
             stack.enter_context(patch.object(capture, 'run', side_effect=run))
             stack.enter_context(patch.object(capture.time, 'sleep'))
             stack.enter_context(patch.object(capture.ios_simulator, 'allocation', side_effect=nullcontext))
@@ -60,6 +61,9 @@ class IOSCaptureTests(unittest.TestCase):
             else:
                 capture.ios(app, dest)
                 self.assertEqual([call.args[0] for call in delete.call_args_list], ['phone', 'tablet'])
+                self.assertTrue(all(call.args[0][:3] == ['xcrun', 'simctl', 'uninstall']
+                                    for call in uninstall.call_args_list))
+                self.assertEqual(uninstall.call_count, tours)
                 expected = set()
                 for family in ('iphone', 'ipad'):
                     for scene in capture.APPS[app]['scenes']:
@@ -71,13 +75,13 @@ class IOSCaptureTests(unittest.TestCase):
                 self.assertEqual({str(p.relative_to(dest)) for p in dest.rglob('*.png')}, expected)
             return calls, json.loads((dest / 'capture-timings.json').read_text())
 
-    def test_all_appearances_reuse_one_build_and_installed_app(self):
+    def test_all_appearances_reuse_one_build_with_fresh_app_data(self):
         for app in capture.APPS:
             with self.subTest(app=app):
                 calls, timings = self.exercise(app)
                 self.assertEqual(sum('build-for-testing' in c for c in calls), 1)
                 self.assertEqual(sum('test-without-building' in c for c in calls), 4)
-                self.assertFalse(any('uninstall' in c or 'erase' in c for c in calls))
+                self.assertFalse(any('erase' in c for c in calls))
                 self.assertEqual([t['stage'] for t in timings],
                                  ['build', 'iphone-light-0', 'iphone-dark-0', 'ipad-light-0', 'ipad-dark-0'])
                 self.assertTrue(all(t['success'] for t in timings))

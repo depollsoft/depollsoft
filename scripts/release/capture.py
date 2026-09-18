@@ -140,10 +140,12 @@ def ios(app, dest):
                         run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
                             '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                             '--batteryState', 'charged', '--batteryLevel', '100')
+                        subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']],
+                                       check=False, timeout=30)
                         run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
                         result = work / f'{family}-{theme}-{attempt}.xcresult'
-                        # Keep the app installed between appearances. The native
-                        # tours reuse their sample songs and cached live tags.
+                        # Reuse compiled products while each tour starts with
+                        # fresh app data, matching the original capture behavior.
                         xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
                               '-destination', f'platform=iOS Simulator,id={udid}',
                               '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
