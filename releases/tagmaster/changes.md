@@ -15,6 +15,8 @@ The commit evidence below includes each app's paths and the shared paths selecte
 
 ## ios: 75d8daf8f0e45caa68d5bb26ad31c768346d750a..HEAD
 
+a600e75a test: bound UI cases and isolate controlled loading
+1c16afb8 test: stabilize native UI checks on Android 11
 176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
@@ -85,6 +87,8 @@ e76b4ab0 More resilient backup code
 
 ## android: 8ee81c37101780bd59ef29547c3011849018198e..HEAD
 
+a600e75a test: bound UI cases and isolate controlled loading
+1c16afb8 test: stabilize native UI checks on Android 11
 176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
