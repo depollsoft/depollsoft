@@ -9,19 +9,49 @@ import XCTest
 import UIKit
 @testable import tagmaster
 
+private final class HomePresentationFixture: DPHomeViewController {
+    var presentationCompleted: (() -> Void)?
+    var appeared: (() -> Void)?
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        let completion = appeared
+        appeared = nil
+        completion?()
+    }
+
+    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
+                          completion: (() -> Void)? = nil) {
+        // These unit tests inspect the presented controls. Animation coverage
+        // belongs to the UI suite; wait for the real UIKit completion here.
+        super.present(viewControllerToPresent, animated: false) { [weak self] in
+            completion?()
+            self?.presentationCompleted?()
+        }
+    }
+}
+
 class DPHomeViewControllerExtensionTests: XCTestCase {
 
     var homeViewController: DPHomeViewController!
     var navigationController: UINavigationController!
     var window: UIWindow!
+    private var animationsWereEnabled = true
 
     override func setUp() {
         super.setUp()
 
-        homeViewController = DPHomeViewController(style: .grouped)
+        animationsWereEnabled = UIView.areAnimationsEnabled
+        UIView.setAnimationsEnabled(false)
+        homeViewController = HomePresentationFixture(style: .grouped)
         navigationController = UINavigationController(rootViewController: homeViewController)
 
-        // Create window attached to foreground scene for proper view controller hierarchy
+    }
+
+    private func mountView() {
+        // Create a window only for tests that actually present an alert.
+        // Property/delegate tests do not need a rendered view hierarchy.
+        // Attach it to the foreground scene when the test host uses scenes.
         if let windowScene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive }) ?? UIApplication.shared.connectedScenes
@@ -32,19 +62,42 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
             window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 812))
         }
 
+        let appeared = expectation(description: "Home controller attached and appeared")
+        (homeViewController as! HomePresentationFixture).appeared = { appeared.fulfill() }
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-
-        // Load the view hierarchy
-        _ = homeViewController.view
-        homeViewController.view.layoutIfNeeded()
+        // Lay out the container first so it installs its child view. Loading
+        // the child's view alone does not attach it to the navigation hierarchy.
+        window.layoutIfNeeded()
+        navigationController.view.layoutIfNeeded()
+        wait(for: [appeared], timeout: 5)
+        XCTAssertTrue(homeViewController.view.window === window)
     }
 
     override func tearDown() {
+        if homeViewController.presentedViewController != nil {
+            let dismissed = expectation(description: "alert dismissed")
+            homeViewController.dismiss(animated: false) { dismissed.fulfill() }
+            wait(for: [dismissed], timeout: 5)
+        }
+        window?.isHidden = true
+        window?.rootViewController = nil
         window = nil
         navigationController = nil
         homeViewController = nil
+        UIView.setAnimationsEnabled(animationsWereEnabled)
         super.tearDown()
+    }
+
+    private func presentOpenTagAlert() {
+        mountView()
+        let presented = expectation(description: "Open Tag presentation completed")
+        (homeViewController as! HomePresentationFixture).presentationCompleted = { presented.fulfill() }
+        homeViewController.openTag()
+        wait(for: [presented], timeout: 5)
+        let alert = homeViewController.presentedViewController as? UIAlertController
+        XCTAssertNotNil(alert?.viewIfLoaded?.window,
+                        "Open Tag alert should appear in the test window")
     }
 
     // MARK: - Open Tag Tests
@@ -55,15 +108,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagPresentsAlertController() {
-        // Call openTag
-        homeViewController.openTag()
-
-        // Wait for presentation
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         // Verify alert is presented
         XCTAssertNotNil(homeViewController.presentedViewController)
@@ -75,13 +120,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagAlertHasTextField() {
-        homeViewController.openTag()
-
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         let alert = homeViewController.presentedViewController as? UIAlertController
         XCTAssertNotNil(alert?.textFields)
@@ -90,13 +129,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     func testOpenTagAlertHasCancelAndOpenActions() {
-        homeViewController.openTag()
-
-        let expectation = self.expectation(description: "Alert presented")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 1.0)
+        presentOpenTagAlert()
 
         let alert = homeViewController.presentedViewController as? UIAlertController
         XCTAssertEqual(alert?.actions.count, 2)

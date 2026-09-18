@@ -126,6 +126,19 @@
     XCTAssertEqualObjects(result.title, self.sampleTag.title);
 }
 
+- (void)testDiskCachePreservesMediaURLsAndDates {
+    self.sampleTag.sheetMusicUri = [self makeRemoteLocationWithURL:@"https://example.com/score.pdf" type:@"pdf"];
+    self.sampleTag.leadTrackUri = [self makeRemoteLocationWithURL:@"https://example.com/lead.mp3" type:@"mp3"];
+    self.sampleTag.posted = [NSDate dateWithTimeIntervalSince1970:1700000000];
+    [self.sampleTag cache];
+    [[DPTag tagCache] removeAllObjects];
+
+    DPTag *loaded = [DPTag loadFromCache:self.sampleTag.tagId];
+    XCTAssertEqualObjects(loaded.sheetMusicUri.uri, self.sampleTag.sheetMusicUri.uri);
+    XCTAssertEqualObjects(loaded.leadTrackUri.uri, self.sampleTag.leadTrackUri.uri);
+    XCTAssertEqualObjects(loaded.posted, self.sampleTag.posted);
+}
+
 #pragma mark - Load Tag By Id Tests
 
 - (void)testLoadTagByIdUsesCache {

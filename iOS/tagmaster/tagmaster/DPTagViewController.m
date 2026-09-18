@@ -528,11 +528,15 @@
     [self presentViewController:actions animated:YES completion:nil];
 }
 
+- (UIViewController *)makeShareControllerWithItems:(NSArray *)items {
+    return [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
+}
+
 - (void)sendTag {
     if (!self.tag) return;
     NSString *string = [NSString stringWithFormat:@"%@ - Tag Master for iOS", self.tag.title];
     NSURL *url = self.tag.tagUri;
-    UIActivityViewController *activityController = [[UIActivityViewController alloc] initWithActivityItems:@[string, url] applicationActivities:nil];
+    UIViewController *activityController = [self makeShareControllerWithItems:@[string, url]];
     activityController.popoverPresentationController.barButtonItem = self.shareBarButton;
     [self presentViewController:activityController animated:YES completion:nil];
 }

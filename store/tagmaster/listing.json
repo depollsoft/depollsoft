@@ -1,0 +1,16 @@
+{
+  "ios": {
+    "name": "Tag Master",
+    "subtitle": "Learn barbershop tags",
+    "description": "Find your next barbershop tag with the catalog from BarbershopTags.com. Search by title or lyrics, browse classic and recently added tags, and save favorites for your next afterglow.\n\nView sheet music, listen to learning tracks, and watch performances when they are available. Sound the starting pitch and share a tag with the people you sing with.",
+    "keywords": "barbershop,tags,harmony,singing,a cappella,sheet music,learning tracks,quartet",
+    "promotional_text": "Browse barbershop tags, save favorites, and learn with sheet music and tracks.",
+    "support_url": "https://apps.depoll.com/barbershop/tag-master/",
+    "privacy_url": "https://apps.depoll.com/privacy/"
+  },
+  "android": {
+    "title": "Tag Master",
+    "short_description": "Browse barbershop tags, save favorites, and learn with sheet music and tracks.",
+    "full_description": "Find your next barbershop tag with the catalog from BarbershopTags.com. Search by title or lyrics, browse classic and recently added tags, and save favorites for your next afterglow.\n\nView sheet music, listen to learning tracks, and watch performances when they are available. Sound the starting pitch and share a tag with the people you sing with."
+  }
+}

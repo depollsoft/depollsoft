@@ -1,0 +1,54 @@
+name: Provision production signing
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App whose production signing profiles need provisioning
+        type: choice
+        options: [tagmaster, pitchperfect]
+        required: true
+permissions:
+  contents: read
+jobs:
+  provision:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+    concurrency:
+      group: release-store-ios-signing
+      cancel-in-progress: false
+    env:
+      RELEASE_APP: ${{ inputs.app }}
+      FL_SETUP_CI_KEYCHAIN_NAME: depollsoft-signing-${{ github.run_id }}.keychain
+      FL_SETUP_CI_SET_DEFAULT_KEYCHAIN: 'false'
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: iOS
+      - name: Authenticate signing repository
+        env:
+          MATCH_GIT_SSH_KEY: ${{ secrets.MATCH_GIT_SSH_KEY }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: bash scripts/release/signing.sh
+      - name: Provision selected production app
+        working-directory: iOS
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+        run: bundle exec fastlane ios provision_production app:"$RELEASE_APP"
+      - name: Remove temporary credentials
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/release-match-key" "$RUNNER_TEMP/release-known-hosts"
+          keychain="$HOME/Library/Keychains/$FL_SETUP_CI_KEYCHAIN_NAME-db"
+          if [ -f "$keychain" ]; then security delete-keychain "$keychain"; fi

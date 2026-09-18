@@ -10,6 +10,7 @@ on:
       - "Android/**"
       - "iOS/**"
       - ".github/workflows/pr-preview.yml"
+      - "scripts/ci/android_sdk.py"
       - ".github/workflows/preview-deploy-command.yml"
       - ".github/workflows/deploy-pr-preview.yml"
 
@@ -146,9 +147,23 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Check installed Android SDK
+        id: android-sdk
+        run: python3 scripts/ci/android_sdk.py
+
+      - name: Install missing Android SDK packages
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager == 'true'
+        timeout-minutes: 5
+        run: python3 scripts/ci/android_sdk.py --install
+
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager != 'true'
+        timeout-minutes: 5
         with:
           packages: "platform-tools platforms;android-35 platforms;android-37.0 build-tools;36.0.0"
+
+      - name: Verify Android SDK
+        run: python3 scripts/ci/android_sdk.py --require
 
       - name: Build private preview APKs
         working-directory: Android
@@ -157,6 +172,8 @@ jobs:
           :PitchPerfect:assemblePrivate
           :PitchPerfectWear:assemblePrivate
           :TagMaster:assemblePrivate
+          "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m"
+          --max-workers=2
           -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
             needs.compute-version.outputs.build-number
           }}
@@ -189,7 +206,7 @@ jobs:
 
   build-ios:
     name: Build iOS Preview
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, heavy]
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     env:
@@ -236,6 +253,7 @@ jobs:
           # reuse it across self-hosted runners with different work roots.
           rm -rf SourcePackages
           for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
             xcodebuild -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
               -scheme pitchperfect \
@@ -386,8 +404,10 @@ jobs:
             raw_log="$RUNNER_TEMP/$scheme-archive.log"
             set -o pipefail
             for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
               rm -rf "$archive"
               if xcodebuild archive \
+                -jobs 2 \
                 -workspace iOS.xcworkspace \
                 -clonedSourcePackagesDirPath SourcePackages \
                 -derivedDataPath "$derived_data" \
@@ -446,6 +466,13 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Isolate Ruby gems
+        run: |
+          mkdir -p "$RUNNER_TEMP/ruby-gems"
+          echo "GEM_HOME=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
+          echo "GEM_PATH=$RUNNER_TEMP/ruby-gems" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/ruby-gems/bin" >> "$GITHUB_PATH"
 
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:

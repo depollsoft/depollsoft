@@ -36,6 +36,13 @@
     }
     bannerView.backgroundColor = UIColor.clearColor;
     bannerView.clipsToBounds = YES;
+#if DEBUG
+    // Store capture keeps the app's normal no-ad-fill layout without requesting
+    // a test creative. This switch is absent from production builds.
+    if ([NSProcessInfo.processInfo.environment[@"STORE_SCREENSHOTS"] isEqualToString:@"1"]) {
+        return;
+    }
+#endif
     [bannerView loadRequest:[self adRequest]];
 }
 

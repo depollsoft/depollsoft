@@ -55,6 +55,7 @@ dependencies {
 }
 
 android {
+    sourceSets.androidTest.kotlin.directories.add(rootProject.file('store-screenshot-tests/src').path)
     buildFeatures {
         buildConfig = true
     }
@@ -69,8 +70,19 @@ android {
         minSdk 24
         targetSdk 36
         resourceConfigurations += ['en']
+        // Release plans provide independent app/platform versions. Preview builds
+        // retain their existing numbering when no production override is present.
+        def releaseSelected = findProperty('DEPOLLSOFT_RELEASE_APP') == project.name
+        def releaseVersion = releaseSelected ? findProperty('DEPOLLSOFT_RELEASE_VERSION') : null
+        def releaseBuild = releaseSelected ? findProperty('DEPOLLSOFT_RELEASE_BUILD') : null
+        if ((releaseVersion == null) != (releaseBuild == null)) {
+            throw new GradleException('Provide both production version and build')
+        }
+        if (releaseVersion != null) {
+            versionName releaseVersion.toString()
+        }
         def privateBuildNumber = findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER')
-        versionCode(privateBuildNumber == null
+        versionCode(releaseBuild != null ? (releaseBuild as Integer) : privateBuildNumber == null
                 ? getVersionCode(build: 0, suffix: 1)
                 : (privateBuildNumber as Integer) * 10 + 1)
         buildConfigField "String", "PRIVATE_BUILD_NUMBER", '""'
