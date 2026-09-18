@@ -170,12 +170,10 @@ def ios(app, dest):
                         result = work / f'{family}-{theme}-{attempt}.xcresult'
                         # Reuse compiled products while each tour starts with
                         # fresh app data, matching the original capture behavior.
-                        # XCTest startup also counts against this process limit;
-                        # the live-catalog tour can take four minutes by itself.
                         xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
                               '-destination', f'platform=iOS Simulator,id={udid}',
                               '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=600)
+                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=300)
                         return result
                     result = native_capture(app, f'{family}-{theme}', take, simulator=True)
                     attachments = work / f'{family}-{theme}'

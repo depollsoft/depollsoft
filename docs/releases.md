@@ -105,7 +105,7 @@ gh run list --workflow release-assets.yml
 gh run download <run-id> --name release-assets-tagmaster-ios --dir /tmp/tagmaster-ios
 ```
 
-The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each selected pair. Tooling or copy PRs without a release plan capture both apps on both platforms for regression coverage. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
+The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each app/platform pair selected by a changed release plan. Tooling or copy PRs without a changed release plan run validation only; use the manual asset workflow when a screenshot refresh is wanted. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
 
 After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots and galleries stay in Actions artifacts or ignored local output directories; never commit them to git. Store baseline images stay in a separate local directory and are excluded from the bundles.
 
