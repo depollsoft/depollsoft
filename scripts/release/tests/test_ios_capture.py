@@ -1,9 +1,11 @@
 from contextlib import ExitStack, nullcontext
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -47,6 +49,7 @@ class IOSCaptureTests(unittest.TestCase):
             stack.enter_context(patch.object(capture.subprocess, 'check_output', side_effect=['26.2', runtime]))
             uninstall = stack.enter_context(patch.object(capture.subprocess, 'run'))
             stack.enter_context(patch.object(capture, 'run', side_effect=run))
+            stack.enter_context(patch.object(capture, 'run_owned', side_effect=run))
             stack.enter_context(patch.object(capture.time, 'sleep'))
             stack.enter_context(patch.object(capture.ios_simulator, 'allocation', side_effect=nullcontext))
             stack.enter_context(patch.object(capture.ios_simulator, 'clean_abandoned'))
@@ -98,3 +101,37 @@ class IOSCaptureTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(timings[0]['stage'], 'build')
         self.assertFalse(timings[0]['success'])
+
+
+class OwnedCommandTests(unittest.TestCase):
+    def test_descendants_stop_after_completion_or_timeout(self):
+        for timeout in (False, True):
+            with self.subTest(timeout=timeout), tempfile.TemporaryDirectory() as folder:
+                heartbeat = Path(folder) / 'heartbeat'
+                script = '''
+import os, signal, sys, time
+from pathlib import Path
+path = Path(sys.argv[1])
+pid = os.fork()
+if pid == 0:
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    while True:
+        path.write_text(str(time.monotonic_ns()))
+        time.sleep(.01)
+while not path.exists():
+    time.sleep(.01)
+if sys.argv[2] == 'timeout':
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    time.sleep(60)
+'''
+                arguments = (sys.executable, '-c', script, str(heartbeat),
+                             'timeout' if timeout else 'complete')
+                if timeout:
+                    with self.assertRaises(subprocess.TimeoutExpired):
+                        capture.run_owned(*arguments, timeout=2, env=os.environ, shutdown_timeout=.1)
+                else:
+                    capture.run_owned(*arguments, timeout=2, env=os.environ, shutdown_timeout=.1)
+                self.assertTrue(heartbeat.exists())
+                previous = heartbeat.read_text()
+                time.sleep(.1)
+                self.assertEqual(heartbeat.read_text(), previous, 'Command descendant is still running')

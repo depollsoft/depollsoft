@@ -20,6 +20,7 @@ import icons
 
 sys.path.insert(0, str(ROOT / 'scripts/ci'))
 import ios_simulator
+import ios_run
 
 IOS_DEVICES = {'iphone': ('iPhone 17 Pro Max', {(1320, 2868)}),
                'ipad': ('iPad Pro 13-inch (M5)', {(2064, 2752)})}
@@ -34,6 +35,29 @@ def run(*args, **kwargs):
 
 def output(*args, timeout=300):
     return subprocess.check_output(list(map(str, args)), text=True, timeout=timeout).strip()
+
+
+def run_owned(*args, timeout, env, shutdown_timeout=15):
+    """Stop this command's descendants before returning or retrying."""
+    command = list(map(str, args))
+    print('+ ' + ' '.join(command), flush=True)
+    child = subprocess.Popen(command, start_new_session=True,
+                             env=dict(env, NSUnbufferedIO='YES'))
+    try:
+        status = child.wait(timeout=timeout)
+        if status:
+            raise subprocess.CalledProcessError(status, command)
+    finally:
+        # Even a completed xcodebuild can leave descendants behind. Use the
+        # same permission-safe signaling as CI, restricted to our process group.
+        ios_run.signal_command(child, signal.SIGTERM)
+        try:
+            child.wait(timeout=shutdown_timeout)
+        except subprocess.TimeoutExpired:
+            pass
+        finally:
+            ios_run.signal_command(child, signal.SIGKILL)
+            child.wait(timeout=5)
 
 
 class NativeCaptureError(RuntimeError):
@@ -103,7 +127,7 @@ def ios(app, dest):
         try:
             # Keep compiler command lines out of the live log so the actual
             # capture progress remains visible through GitHub's log API.
-            run('xcodebuild', *(['-quiet'] if label == 'build' else []), *args, **kwargs)
+            run_owned('xcodebuild', *(['-quiet'] if label == 'build' else []), *args, **kwargs)
             succeeded = True
         finally:
             seconds = round(time.monotonic() - started, 1)
@@ -113,7 +137,7 @@ def ios(app, dest):
 
     # Build before booting a simulator, and reuse these products for both sizes.
     xcode('build', 'build-for-testing', '-jobs', '2', '-destination',
-          'generic/platform=iOS Simulator', *build, env=env, timeout=900)
+          'generic/platform=iOS Simulator', *build, env=env, timeout=600)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
@@ -149,7 +173,7 @@ def ios(app, dest):
                         xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
                               '-destination', f'platform=iOS Simulator,id={udid}',
                               '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=600)
+                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=300)
                         return result
                     result = native_capture(app, f'{family}-{theme}', take, simulator=True)
                     attachments = work / f'{family}-{theme}'
