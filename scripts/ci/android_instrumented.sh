@@ -4,9 +4,12 @@ cd "$(dirname "$0")/../../Android"
 
 # These fixtures install JVM-wide URL handlers that cannot be removed. Give
 # each its own instrumentation process and keep them out of the shared suite.
+# Controlled loading tests also need a fresh background executor, without
+# catalog requests still running from earlier UI tests.
 isolated=(
   depollsoft.tagmaster.BarberPoleQueryRegressionTest
   depollsoft.tagmaster.CompactLoadingRegressionTest
+  depollsoft.tagmaster.TagLoadingRegressionTest
 )
 excluded=$(IFS=,; echo "${isolated[*]}")
 archive=$(mktemp -d)

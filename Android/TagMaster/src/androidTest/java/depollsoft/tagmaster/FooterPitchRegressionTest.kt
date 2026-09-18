@@ -317,6 +317,7 @@ class FooterPitchRegressionTest {
             // Android 11 keeps that ripple visible even after jumpToCurrentState().
             val background = button.background
             val fillBitmap = Bitmap.createBitmap(button.width, button.height, Bitmap.Config.ARGB_8888)
+            fillBitmap.eraseColor(button.context.getColor(R.color.md_surface))
             if (background is android.graphics.drawable.RippleDrawable) {
                 background.getDrawable(0).draw(Canvas(fillBitmap))
             } else {

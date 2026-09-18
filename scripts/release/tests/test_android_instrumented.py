@@ -24,8 +24,8 @@ with open('invocations.jsonl', 'a') as f:
     f.write(json.dumps(args) + '\\n')
 if args[0] == 'createDebugAndroidTestCoverageReport':
     assert '-x' in args
-    assert len(list(pathlib.Path('TagMaster/build/outputs/androidTest-results/connected').rglob('*.xml'))) == 3
-    assert len(list(pathlib.Path('TagMaster/build/outputs/code_coverage/debugAndroidTest/connected').rglob('*.ec'))) == 3
+    assert len(list(pathlib.Path('TagMaster/build/outputs/androidTest-results/connected').rglob('*.xml'))) == 4
+    assert len(list(pathlib.Path('TagMaster/build/outputs/code_coverage/debugAndroidTest/connected').rglob('*.ec'))) == 4
     sys.exit(0)
 selected = next((a.split('=', 1)[1] for a in args if a.startswith('-Pandroid.testInstrumentationRunnerArguments.class=')), 'shared')
 for kind, relative in [('androidTest-results', 'connected/test.xml'), ('code_coverage', 'debugAndroidTest/connected/coverage.ec')]:
@@ -45,13 +45,13 @@ sys.exit(1 if os.environ.get('FAIL_FIXTURE') and selected.endswith('BarberPoleQu
     def test_isolates_global_handlers_and_preserves_all_results(self):
         result, calls = self.run_suite()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(calls), 4)
-        for index, name in enumerate(['BarberPoleQueryRegressionTest', 'CompactLoadingRegressionTest']):
+        self.assertEqual(len(calls), 5)
+        for index, name in enumerate(['BarberPoleQueryRegressionTest', 'CompactLoadingRegressionTest', 'TagLoadingRegressionTest']):
             self.assertIn('-Pandroid.testInstrumentationRunnerArguments.class=depollsoft.tagmaster.' + name, calls[index])
-        self.assertIn('-Pandroid.testInstrumentationRunnerArguments.notClass=depollsoft.tagmaster.BarberPoleQueryRegressionTest,depollsoft.tagmaster.CompactLoadingRegressionTest', calls[2])
+        self.assertIn('-Pandroid.testInstrumentationRunnerArguments.notClass=depollsoft.tagmaster.BarberPoleQueryRegressionTest,depollsoft.tagmaster.CompactLoadingRegressionTest,depollsoft.tagmaster.TagLoadingRegressionTest', calls[3])
         self.assertTrue(all('--no-parallel' in call for call in calls))
 
     def test_failure_is_reported_after_collecting_remaining_results(self):
         result, calls = self.run_suite(fail_fixture=True)
         self.assertEqual(result.returncode, 1, result.stderr)
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(calls), 5)

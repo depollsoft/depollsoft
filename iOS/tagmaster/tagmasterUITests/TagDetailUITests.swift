@@ -339,7 +339,7 @@ final class TagMasterPolishUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 5))
     }
 
-    func testDetailTabsInPortraitAndLandscape() throws {
+    func testDetailTabSelection() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
@@ -355,15 +355,18 @@ final class TagMasterPolishUITests: XCTestCase {
         app.buttons["page-Details"].tap()
         XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
         captureNativeGlass("detail-details")
-        XCUIDevice.shared.orientation = .landscapeLeft
-        assertNativeTabs(detail)
-        XCTAssertTrue(app.buttons["page-Details"].isSelected)
-        XCUIDevice.shared.orientation = .portrait
-        assertNativeTabs(detail)
-        XCTAssertTrue(app.buttons["page-Details"].isSelected)
     }
 
-    func testBrowseTabsInPortraitAndLandscape() throws {
+    func testDetailTabsInPortraitAndLandscape() throws {
+        let orientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = orientation }
+        XCUIDevice.shared.orientation = .portrait
+        openTag()
+        app.buttons["page-Details"].tap()
+        assertTabsSurviveRotation(["Summary", "Details", "Tracks", "Videos"], selected: "Details")
+    }
+
+    func testBrowseTabSelection() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
@@ -378,12 +381,25 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertTrue(button.isSelected)
         }
         captureNativeGlass("browse-classic")
-        XCUIDevice.shared.orientation = .landscapeLeft
-        assertNativeTabs(browse)
-        XCTAssertTrue(app.buttons["page-Classic"].isSelected)
+    }
+
+    func testBrowseTabsInPortraitAndLandscape() throws {
+        let orientation = XCUIDevice.shared.orientation
+        defer { XCUIDevice.shared.orientation = orientation }
         XCUIDevice.shared.orientation = .portrait
-        assertNativeTabs(browse)
-        XCTAssertTrue(app.buttons["page-Classic"].isSelected)
+        app.tables.staticTexts["Browse"].tap()
+        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
+        app.buttons["page-Classic"].tap()
+        assertTabsSurviveRotation(["Latest", "Rating", "Downloads", "Classic"], selected: "Classic")
+    }
+
+    private func assertTabsSurviveRotation(_ titles: [String], selected: String) {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        assertNativeTabs(titles)
+        XCTAssertTrue(app.buttons["page-\(selected)"].isSelected)
+        XCUIDevice.shared.orientation = .portrait
+        assertNativeTabs(titles)
+        XCTAssertTrue(app.buttons["page-\(selected)"].isSelected)
     }
 
     private func layoutCapture(_ name: String) {
