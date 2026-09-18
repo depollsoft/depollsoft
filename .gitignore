@@ -31,3 +31,21 @@ iOS/build/
 /build/release/
 /.venv-release/
 /scripts/release/**/__pycache__/
+
+# User exports and local credentials
+Firebase/**/allUsers
+Firebase/**/users.json
+Firebase/**/users.csv
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.p8
+*.mobileprovision
+*service-account*.json
+*service_account*.json
+# This shared development key is intentionally public.
+!/Android/debug.jks

@@ -3,6 +3,10 @@ useDefault = true
 
 [[allowlists]]
 description = "Firebase client bundle configuration is distributed with the apps"
+targetRules = ["gcp-api-key", "generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^AIza[\w-]{35}$''']
 paths = [
   '''(^|/)Android/.*/google-services\.json$''',
   '''(^|/)iOS/.*/GoogleService-Info(?:-Private)?\.plist$''',

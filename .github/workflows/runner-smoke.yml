@@ -2,9 +2,6 @@ name: Self-hosted Runner Smoke
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - ".github/workflows/runner-smoke.yml"
 
 permissions:
   contents: read

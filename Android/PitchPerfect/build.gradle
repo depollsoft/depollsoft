@@ -90,10 +90,13 @@ android {
             storePassword 'depollsoft'
         }
         release {
-            keyAlias System.getenv("ANDROID_UPLOAD_KEY_ALIAS") ?: 'depollsoft'
-            keyPassword System.getenv("ANDROID_UPLOAD_KEY_PASSWORD") ?: 'depollsoft'
-            storeFile file(System.getenv("ANDROID_UPLOAD_KEYSTORE_PATH") ?: '../debug.jks')
-            storePassword System.getenv("ANDROID_UPLOAD_KEYSTORE_PASSWORD") ?: 'depollsoft'
+            keyAlias System.getenv("ANDROID_UPLOAD_KEY_ALIAS")
+            keyPassword System.getenv("ANDROID_UPLOAD_KEY_PASSWORD")
+            def uploadKeystore = System.getenv("ANDROID_UPLOAD_KEYSTORE_PATH")
+            if (uploadKeystore) {
+                storeFile file(uploadKeystore)
+            }
+            storePassword System.getenv("ANDROID_UPLOAD_KEYSTORE_PASSWORD")
         }
     }
     namespace = 'depollsoft.pitchperfect'
@@ -143,7 +146,9 @@ android {
         }
         create("private") {
             initWith release
-            signingConfig signingConfigs.release
+            // Sideloaded previews opt in explicitly; store uploads require credentials.
+            signingConfig findProperty('DEPOLLSOFT_PRIVATE_DEBUG_SIGNING') == 'true'
+                    ? signingConfigs.debug : signingConfigs.release
             applicationIdSuffix ".private"
             def privateNumber = findProperty("DEPOLLSOFT_PRIVATE_BUILD_NUMBER") ?: ""
             def privatePr = findProperty("DEPOLLSOFT_PRIVATE_PR_NUMBER") ?: ""

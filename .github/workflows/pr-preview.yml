@@ -26,7 +26,8 @@ permissions:
 jobs:
   compute-version:
     name: Compute Preview Build
-    runs-on: [self-hosted, Linux]
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
@@ -172,6 +173,7 @@ jobs:
           :PitchPerfect:assemblePrivate
           :PitchPerfectWear:assemblePrivate
           :TagMaster:assemblePrivate
+          -PDEPOLLSOFT_PRIVATE_DEBUG_SIGNING=true
           "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m"
           --max-workers=2
           -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
