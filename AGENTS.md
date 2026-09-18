@@ -42,3 +42,10 @@
 ## Security & Configuration Tips
 
 - Keep secrets out of VCS. For API, provide `PUBSUB_VERIFICATION_TOKEN` (and GCP credentials) via environment or secret manager. Do not log PII; prefer IDs over raw data.
+
+## Production releases
+
+- Use `.agents/skills/prepare-release/SKILL.md` and `docs/releases.md` to prepare a release PR.
+- `releases/<app>/release.json` is the merge-to-deploy trigger. App and platform versions are independent; never bump the other app implicitly.
+- Listing copy lives in `store/<app>/listing.json`. Generate real native screenshots with `scripts/release/capture.py`; generated media stays out of git.
+- `.github/workflows/release.yml` captures assets on release PRs and submits selected production apps after merge. The private `/deploy` preview path is separate.

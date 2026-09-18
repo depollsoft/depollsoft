@@ -11,12 +11,14 @@ on:
     paths:
       - "iOS/**"
       - ".github/workflows/ios.yml"
+      - "scripts/ci/**"
   pull_request:
     branches:
       - main
     paths:
       - "iOS/**"
       - ".github/workflows/ios.yml"
+      - "scripts/ci/**"
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * *"
@@ -40,14 +42,18 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    runs-on: [self-hosted, macOS]
+    # Simulator jobs require the heavy slot; light slots share its process budget.
+    runs-on: [self-hosted, macOS, heavy]
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
-    timeout-minutes: 90
+    timeout-minutes: 45
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      # Native timeouts stop hangs; result validation also enforces actual duration.
+      IOS_MAX_TEST_SECONDS: '30'
+      IOS_LEGACY_SIMULATOR_UDID: ${{ vars.IOS_LEGACY_SIMULATOR_UDID }}
       # UTF-8 encoding for build tools
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -95,37 +101,11 @@ jobs:
               | head -1 | sed 's/Xcode //')
           echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get iOS Simulator destination
+      - name: Create disposable iOS Simulator
         id: simulator
-        run: |
-          DESTINATION=$(
-            "${{ steps.select_xcode.outputs.xcrun }}" simctl list \
-              devices available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          devices = data.get('devices', {})
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone 16' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
-          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
-          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
-          echo "Using simulator: $DESTINATION"
+        env:
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+        run: python3 ../scripts/ci/ios_simulator.py
 
       - name: Install xcpretty
         run: |
@@ -136,14 +116,8 @@ jobs:
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
           fi
 
-      - name: Cache SPM dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
-          restore-keys: |
-            spm-v2-${{ runner.os }}-
-
+      # These self-hosted runners retain ~/Library/Caches/org.swift.swiftpm.
+      # Restoring the same cache from Actions added four minutes per job.
       - name: Resolve SPM dependencies
         run: |
           # SourcePackages/workspace-state.json embeds absolute paths. Never
@@ -193,7 +167,7 @@ jobs:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
@@ -201,7 +175,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
@@ -209,7 +183,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color
-          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing \
+          "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
@@ -219,99 +193,96 @@ jobs:
             | xcpretty --color
 
       # Reuse the build-for-testing output, but run each scheme one at a time.
-      # Running multiple xcodebuild test processes against the same
-      # simulator can hang.
-      - name: Run all unit tests
-        id: run_tests
-        continue-on-error: true
-        env:
-          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+      # Run each target in its own step so a unit failure stops before UI tests.
+      - name: Run Pitch Perfect unit tests
+        timeout-minutes: 20
         run: |
           set -o pipefail
-
-          FAILED=0
-
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 30 \
+            -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit \
-              --output pitchperfect-junit.xml || FAILED=1
+            | tee pitchperfect-test.log
+          python3 ../scripts/ci/ios_test_results.py pitchperfect
 
-
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+      - name: Run Tag Master unit tests
+        timeout-minutes: 20
+        run: |
+          set -o pipefail
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
+            -only-testing:tagmasterTests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 30 \
+            -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit \
-              --output tagmaster-junit.xml || FAILED=1
+            | tee tagmaster-test.log
+          python3 ../scripts/ci/ios_test_results.py tagmaster
 
-
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+      - name: Run Pitch Perfect library tests
+        timeout-minutes: 20
+        run: |
+          set -o pipefail
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 30 \
+            -maximum-test-execution-time-allowance 30 \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
-            | xcpretty --color --report junit \
-              --output pitchperfectlib-junit.xml || FAILED=1
+            | tee pitchperfectlib-test.log
+          python3 ../scripts/ci/ios_test_results.py pitchperfectlib
 
-
-          # We continue even if tests fail - we'll check junit results later
-          exit 0
+      - name: Run Tag Master UI tests
+        timeout-minutes: 20
+        run: |
+          set -o pipefail
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
+            -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages \
+            -scheme tagmaster \
+            -only-testing:tagmasterUITests \
+            -destination '${{ steps.simulator.outputs.destination }}' \
+            -enableCodeCoverage YES \
+            -resultBundlePath tagmaster-ui-results.xcresult \
+            -parallel-testing-enabled NO \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 30 \
+            -maximum-test-execution-time-allowance 30 \
+            CODE_SIGNING_ALLOWED=NO \
+            SDKROOT=iphonesimulator \
+            | tee tagmaster-ui-test.log
+          python3 ../scripts/ci/ios_test_results.py tagmaster-ui
 
       - name: Verify test results
         if: always()
+        env:
+          DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
         run: |
-          # Check junit XML files for actual test failures
-          # xcodebuild may exit 65 due to simctl issues even when tests pass
-          FAILED=0
-          for junit in pitchperfect-junit.xml tagmaster-junit.xml \
-            pitchperfectlib-junit.xml; do
-            if [ -f "$junit" ]; then
-              FAILURES=$(grep -o 'failures="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              ERRORS=$(grep -o 'errors="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              TESTS=$(grep -o 'tests="[0-9]*"' "$junit" \
-                | head -1 | grep -o '[0-9]*' || echo "0")
-              if [ "$FAILURES" != "0" ] || [ "$ERRORS" != "0" ]; then
-                COUNTS="$FAILURES failures and $ERRORS errors"
-                echo "❌ $junit has $COUNTS out of $TESTS tests"
-                FAILED=1
-              else
-                echo "✅ $junit passed ($TESTS tests)"
-              fi
-            else
-              echo "⚠️ $junit not found - tests may not have run"
-              FAILED=1
-            fi
-          done
-          if [ "$FAILED" = "1" ]; then
-            REASON="Some tests failed or did not run."
-            echo "::error::$REASON Check the junit XML reports."
-            exit 1
-          fi
-          echo "All test suites passed!"
+          python3 ../scripts/ci/ios_test_results.py pitchperfect tagmaster pitchperfectlib tagmaster-ui
 
       - name: Summarize tests & coverage
         if: always()
@@ -362,10 +333,11 @@ jobs:
               pass
             return 0.0
 
-          include_lib = os.environ.get('INCLUDE_PITCHPERFECTLIB', '0') == '1'
+          include_lib = True
 
           pitch_tests = parse_junit('pitchperfect-junit.xml')
-          tag_tests = parse_junit('tagmaster-junit.xml')
+          tag_tests = tuple(a + b for a, b in zip(
+              parse_junit('tagmaster-junit.xml'), parse_junit('tagmaster-ui-junit.xml')))
           lib_tests = (
             parse_junit('pitchperfectlib-junit.xml')
             if include_lib else (0, 0, 0, 0))
@@ -508,6 +480,9 @@ jobs:
             iOS/*-coverage.json
             iOS/*-coverage.txt
             iOS/*-junit.xml
+            iOS/*-summary.json
+            iOS/*-test.log
+            iOS/simulator-*.txt
           retention-days: 14
 
       - name: Publish unit test results (PR check)
@@ -552,12 +527,20 @@ jobs:
           body-path: ${{ steps.metrics.outputs.comment_path }}
           edit-mode: replace
 
+      - name: Delete owned iOS Simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        timeout-minutes: 2
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
+
   ui-tests:
     name: iOS UI Tests
     permissions:
       contents: read
       checks: write
-    runs-on: [self-hosted, macOS]
+    # Simulator jobs require the heavy slot; light slots share its process budget.
+    runs-on: [self-hosted, macOS, heavy]
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -593,36 +576,11 @@ jobs:
           echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
           echo "Selected Xcode: $DEVELOPER_DIR"
 
-      - name: Get iOS Simulator destination
+      - name: Create disposable iOS Simulator
         id: simulator
-        run: |
-          DESTINATION=$(
-            "${{ steps.select_xcode.outputs.xcrun }}" simctl list \
-              devices available -j | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          devices = data.get('devices', {})
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone 16' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          for runtime in sorted(devices.keys(), reverse=True):
-            if 'iOS' in runtime:
-              for device in devices[runtime]:
-                if 'iPhone' in device['name'] and device['isAvailable']:
-                  parts = runtime.split('iOS-')[-1].split('-')
-                  ios_version = '.'.join(parts)
-                  print(f\"platform=iOS Simulator,\"
-                        f\"name={device['name']},OS={ios_version}\")
-                  sys.exit(0)
-          print('platform=iOS Simulator,name=iPhone 16,OS=18.4')
-          " 2>/dev/null || echo "platform=iOS Simulator,name=iPhone 16,OS=18.4")
-          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+        env:
+          XCRUN: ${{ steps.select_xcode.outputs.xcrun }}
+        run: python3 ../scripts/ci/ios_simulator.py
 
       - name: Install xcpretty
         run: |
@@ -633,14 +591,8 @@ jobs:
 
           fi
 
-      - name: Cache SPM dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: ~/Library/Caches/org.swift.swiftpm
-          key: spm-v2-${{ runner.os }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
-          restore-keys: |
-            spm-v2-${{ runner.os }}-
-
+      # These self-hosted runners retain ~/Library/Caches/org.swift.swiftpm.
+      # Restoring the same cache from Actions added four minutes per job.
       - name: Resolve SPM dependencies
         run: |
           # SourcePackages/workspace-state.json embeds absolute paths. Never
@@ -680,43 +632,44 @@ jobs:
 
       - name: Run pitchperfect UI tests
         id: pitchperfect_uitest
-        continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-uitest-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
-              --output pitchperfect-uitest-junit.xml || true
+              --output pitchperfect-uitest-junit.xml
+          python3 ../scripts/ci/ios_test_results.py pitchperfect-uitest
 
       - name: Run tagmaster UI tests
         id: tagmaster_uitest
-        continue-on-error: true
         env:
           DEVELOPER_DIR: ${{ steps.select_xcode.outputs.developer_dir }}
         run: |
           set -o pipefail
-          "${{ steps.select_xcode.outputs.xcodebuild }}" test \
+          python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test -jobs 2 \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
-            -scheme tagmasterUITests \
+            -scheme tagmaster \
+            -only-testing:tagmasterUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath tagmaster-uitest-results.xcresult \
-            -parallel-testing-enabled YES \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
             SDKROOT=iphonesimulator \
             | xcpretty --color --report junit \
-              --output tagmaster-uitest-junit.xml || true
+              --output tagmaster-uitest-junit.xml
+          python3 ../scripts/ci/ios_test_results.py tagmaster-uitest
 
       - name: Summarize UI tests
         if: always()
@@ -831,6 +784,13 @@ jobs:
           name: ios-uitest-xcresults
           path: iOS/ios-uitest-xcresults.tgz
           retention-days: 7
+
+      - name: Delete owned iOS Simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        timeout-minutes: 2
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
 
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:

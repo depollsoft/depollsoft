@@ -13,7 +13,7 @@ class FavoritesUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
-        Thread.sleep(forTimeInterval: 1.0)
+
     }
     
     override func tearDownWithError() throws {
@@ -51,8 +51,7 @@ class FavoritesUITests: XCTestCase {
         
         if table.exists && table.cells.count > 0 {
             table.cells.element(boundBy: 0).tap()
-            Thread.sleep(forTimeInterval: 0.5)
-            
+
             // Should navigate to detail or perform action
             XCTAssertEqual(app.state, .runningForeground, "Should handle favorite tap")
         } else {
@@ -66,9 +65,9 @@ class FavoritesUITests: XCTestCase {
         
         if table.exists {
             table.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+
             table.swipeDown()
-            Thread.sleep(forTimeInterval: 0.3)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should handle scrolling")
@@ -79,7 +78,7 @@ class FavoritesUITests: XCTestCase {
     func testSwipeOnFavoriteIfExists() throws {
         let table = app.tables.firstMatch
         
-        guard table.waitForExistence(timeout: 3) && table.cells.count > 0 else {
+        guard table.existsOrWait(timeout: 3) && table.cells.count > 0 else {
             throw XCTSkip("No favorites table or cells to test swipe on")
         }
         
@@ -91,8 +90,7 @@ class FavoritesUITests: XCTestCase {
         
         // Simple swipe - don't try to interact further as it can fail
         cell.swipeLeft()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         // Verify app is still running - that's the key test
         XCTAssertEqual(app.state, .runningForeground, "Should handle swipe actions")
     }
@@ -108,13 +106,12 @@ class FavoritesUITests: XCTestCase {
         
         // Tap to open detail
         table.cells.element(boundBy: 0).tap()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         // Navigate back
         let backButton = app.navigationBars.buttons.element(boundBy: 0)
         if backButton.exists {
             backButton.tap()
-            Thread.sleep(forTimeInterval: 0.3)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should navigate back")
@@ -125,7 +122,7 @@ class FavoritesUITests: XCTestCase {
     func testRapidFavoriteInteraction() throws {
         let table = app.tables.firstMatch
         
-        guard table.waitForExistence(timeout: 3) && table.cells.count > 0 else {
+        guard table.existsOrWait(timeout: 3) && table.cells.count > 0 else {
             // No table or cells - skip test rather than fail
             throw XCTSkip("No favorites table or cells to test rapid interaction")
         }
@@ -136,20 +133,19 @@ class FavoritesUITests: XCTestCase {
             let cell = table.cells.element(boundBy: i)
             
             // Ensure cell is hittable before tapping
-            guard cell.waitForExistence(timeout: 2) && cell.isHittable else {
+            guard cell.existsOrWait(timeout: 2) && cell.isHittable else {
                 continue  // Skip this cell if not ready
             }
             
             cell.tap()
-            Thread.sleep(forTimeInterval: 0.3)
-            
+
             // Navigate back if we went to detail - wait for back button to be ready
             let backButton = app.navigationBars.buttons.element(boundBy: 0)
-            if backButton.waitForExistence(timeout: 1) && backButton.isHittable {
+            if backButton.existsOrWait(timeout: 1) && backButton.isHittable {
                 backButton.tap()
                 // Wait for table to be visible again before next iteration
-                _ = table.waitForExistence(timeout: 2)
-                Thread.sleep(forTimeInterval: 0.3)
+                _ = table.existsOrWait(timeout: 2)
+
             }
         }
         

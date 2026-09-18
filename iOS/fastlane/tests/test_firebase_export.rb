@@ -12,6 +12,7 @@ module UI
 end
 
 def default_platform(_platform); end
+def import(_path); end # Production lanes have their own tests.
 def platform(_name) = yield
 def before_all; end
 def desc(_text); end

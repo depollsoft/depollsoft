@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import UserNotifications
 
 final class DesignTourUITests: XCTestCase {
     func testWidgetGalleryShowsPitchPipe() throws {
@@ -175,5 +176,148 @@ final class DesignTourUITests: XCTestCase {
             sleep(1)
             snap("tour-settings")
         }
+    }
+}
+
+private extension XCUIElement {
+    func readyForCapture(timeout: TimeInterval) -> Bool {
+        exists || waitForExistence(timeout: timeout)
+    }
+}
+
+/// Opt-in capture of the native app with local example songs, without signing in.
+final class StoreScreenshotTests: XCTestCase {
+    func testCaptureStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launch()
+        func tab(_ name: String) {
+            let candidates = [app.tabBars.buttons[name].firstMatch, app.buttons[name].firstMatch,
+                              app.cells[name].firstMatch, app.otherElements[name].firstMatch]
+            let item = candidates.first { $0.exists } ?? app.descendants(matching: .any)[name].firstMatch
+            XCTAssertTrue(item.readyForCapture(timeout: 15))
+            XCTAssertTrue(item.isHittable)
+            item.tap()
+        }
+        func snap(_ name: String) {
+            Thread.sleep(forTimeInterval: 1)
+            attachStoreScreenshot(name)
+        }
+        for (title, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
+            tab(title)
+            snap(name)
+        }
+        tab("Songs")
+        let edit = app.navigationBars.buttons["Edit"]
+        XCTAssertTrue(edit.readyForCapture(timeout: 10))
+        edit.tap()
+        if !app.tables.cells.containing(.staticText, identifier: "Blue Skies").firstMatch.exists {
+            for (index, title) in ["Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine"].enumerated() {
+                app.navigationBars.buttons["Add"].tap()
+                let field = app.textFields.firstMatch
+                XCTAssertTrue(field.readyForCapture(timeout: 10))
+                field.tap()
+                field.typeText(title)
+                // Let SwiftUI receive the complete title before Return dismisses
+                // focus. Sending both in one keyboard batch can submit a prefix.
+                if field.value as? String != title {
+                    let entered = XCTNSPredicateExpectation(
+                        predicate: NSPredicate(format: "value == %@", title), object: field)
+                    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+                }
+                XCTAssertEqual(field.value as? String, title)
+                // Return works with both software and connected hardware keyboards.
+                field.typeText("\n")
+                XCTAssertEqual(field.value as? String, title)
+                let keyName = ["F major", "C major", "G major", "D major"][index % 4]
+                let key = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", keyName)).firstMatch
+                XCTAssertTrue(key.exists)
+                key.tap()
+                // On iPad the list's Done button remains in the hierarchy behind
+                // the editor sheet. Save through the sheet's navigation bar.
+                let save = app.navigationBars["Add Song"].buttons["Done"]
+                XCTAssertTrue(save.isHittable)
+                save.tap()
+                XCTAssertTrue(app.tables.cells.containing(.staticText, identifier: title).firstMatch.readyForCapture(timeout: 10))
+                XCTAssertTrue(app.navigationBars.buttons["Add"].readyForCapture(timeout: 10))
+            }
+        }
+        app.navigationBars.buttons["Sort Alphabetically"].tap()
+        app.navigationBars.buttons["Done"].tap()
+        snap("04-songs")
+        app.navigationBars.buttons["Edit"].tap()
+        snap("05-edit-songs")
+        let first = app.tables.cells.firstMatch
+        XCTAssertTrue(first.buttons.firstMatch.exists)
+        // The system detail disclosure opens the actual song editor.
+        first.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'info' OR label CONTAINS[c] 'detail'")).firstMatch.tap()
+        XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
+        snap("06-song-editor")
+    }
+}
+
+private extension XCTestCase {
+    func attachStoreScreenshot(_ name: String) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let banner = springboard.descendants(matching: .any)["NotificationShortLookView"].firstMatch
+        // Fresh simulators can announce system features during a capture tour.
+        // Dismiss the real banner, and retry if one arrives during the screenshot.
+        for _ in 0..<3 {
+            if banner.exists {
+                banner.swipeUp()
+                let dismissed = XCTNSPredicateExpectation(
+                    predicate: NSPredicate(format: "exists == false"), object: banner)
+                XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            }
+            let screenshot = XCUIScreen.main.screenshot()
+            if banner.exists { continue }
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = "store-\(name)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            return
+        }
+        XCTFail("A system notification is covering the store screenshot: \(name)")
+    }
+}
+
+/// Run explicitly with TEST_RUNNER_STORE_NOTIFICATION_TEST=1 to exercise a real banner.
+final class StoreScreenshotNotificationTests: XCTestCase {
+    func testDismissesNotificationBeforeCapture() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_NOTIFICATION_TEST"] == "1")
+        continueAfterFailure = false
+        let center = UNUserNotificationCenter.current()
+        let authorized = expectation(description: "Notification permission")
+        center.requestAuthorization(options: [.alert]) { granted, error in
+            XCTAssertNil(error)
+            XCTAssertTrue(granted)
+            authorized.fulfill()
+        }
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.alerts.buttons["Allow"].firstMatch
+        if allow.waitForExistence(timeout: 5) { allow.tap() }
+        wait(for: [authorized], timeout: 5)
+        let app = XCUIApplication()
+        app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launch()
+        let content = UNMutableNotificationContent()
+        content.title = "Store capture notification check"
+        content.body = "This banner must be dismissed before attaching the screenshot."
+        let scheduled = expectation(description: "Schedule banner")
+        let request = UNNotificationRequest(identifier: "store-capture-check", content: content,
+                                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false))
+        center.add(request) { error in
+            XCTAssertNil(error)
+            scheduled.fulfill()
+        }
+        defer { center.removeAllDeliveredNotifications() }
+        wait(for: [scheduled], timeout: 5)
+        let banner = springboard.descendants(matching: .any)["NotificationShortLookView"].firstMatch
+        XCTAssertTrue(banner.waitForExistence(timeout: 10))
+        attachStoreScreenshot("notification-check")
+        XCTAssertFalse(banner.exists)
     }
 }

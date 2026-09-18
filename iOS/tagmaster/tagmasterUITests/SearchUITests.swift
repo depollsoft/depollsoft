@@ -13,7 +13,7 @@ class SearchUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
         app.launch()
-        Thread.sleep(forTimeInterval: 0.5)
+
     }
     
     override func tearDownWithError() throws {
@@ -53,8 +53,7 @@ class SearchUITests: XCTestCase {
     
     func testSearchFieldExists() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         let searchField = getSearchField()
         XCTAssertNotNil(searchField, "Search field should exist")
     }
@@ -63,8 +62,7 @@ class SearchUITests: XCTestCase {
     
     func testCanTypeInSearchField() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         guard let searchField = getSearchField() else {
             throw XCTSkip("Search field not found")
         }
@@ -79,16 +77,14 @@ class SearchUITests: XCTestCase {
     
     func testCanClearSearchField() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         guard let searchField = getSearchField() else {
             throw XCTSkip("Search field not found")
         }
         
         searchField.tap()
         searchField.typeText("test")
-        Thread.sleep(forTimeInterval: 0.3)
-        
+
         // Try to clear - look for clear button or select all and delete
         let clearButton = searchField.buttons["Clear text"]
         if clearButton.exists {
@@ -107,8 +103,7 @@ class SearchUITests: XCTestCase {
     
     func testCanExecuteSearch() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         guard let searchField = getSearchField() else {
             throw XCTSkip("Search field not found")
         }
@@ -121,24 +116,19 @@ class SearchUITests: XCTestCase {
         if searchButton.exists {
             searchButton.tap()
         }
-        
-        Thread.sleep(forTimeInterval: 1.0)
-        
+
         XCTAssertEqual(app.state, .runningForeground, "Should execute search")
     }
     
     func testSearchWithEmptyQueryDoesNotCrash() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         // Try to search without entering text
         let searchButton = app.keyboards.buttons["Search"]
         if searchButton.exists {
             searchButton.tap()
         }
-        
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         XCTAssertEqual(app.state, .runningForeground, "Should handle empty search")
     }
     
@@ -146,8 +136,7 @@ class SearchUITests: XCTestCase {
     
     func testSearchResultsDisplay() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         guard let searchField = getSearchField() else {
             throw XCTSkip("Search field not found")
         }
@@ -159,9 +148,7 @@ class SearchUITests: XCTestCase {
         if searchButton.exists {
             searchButton.tap()
         }
-        
-        Thread.sleep(forTimeInterval: 2.0)
-        
+
         // Results should appear in a table or list
         let table = app.tables.firstMatch
         let hasResults = table.exists || app.staticTexts.count > 0
@@ -173,8 +160,7 @@ class SearchUITests: XCTestCase {
     
     func testCanDismissSearch() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         // Try to dismiss search
         let cancelButton = app.buttons["Cancel"]
         if cancelButton.exists {
@@ -186,9 +172,7 @@ class SearchUITests: XCTestCase {
                 backButton.tap()
             }
         }
-        
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         XCTAssertEqual(app.state, .runningForeground, "Should dismiss search")
     }
     
@@ -196,8 +180,7 @@ class SearchUITests: XCTestCase {
     
     func testMultipleSearchesDoNotCrash() throws {
         _ = openSearch()
-        Thread.sleep(forTimeInterval: 0.5)
-        
+
         guard let searchField = getSearchField() else {
             throw XCTSkip("Search field not found")
         }
@@ -207,14 +190,12 @@ class SearchUITests: XCTestCase {
         if searchField.isHittable {
             searchField.tap()
             searchField.typeText("test")
-            Thread.sleep(forTimeInterval: 0.5)
-            
+
             let searchButton = app.keyboards.buttons["Search"]
             if searchButton.exists && searchButton.isHittable {
                 searchButton.tap()
             }
-            
-            Thread.sleep(forTimeInterval: 1.0)
+
         }
         
         XCTAssertEqual(app.state, .runningForeground, "Should handle search without crashing")

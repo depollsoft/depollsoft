@@ -36,7 +36,9 @@
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
+   <!-- Avoid screen-recording finalization stalls between UI tests. -->
    <TestAction
+      preferredScreenCaptureFormat = "screenshots"
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"

@@ -1,0 +1,183 @@
+name: Release mobile apps
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'releases/**'
+      - 'store/**'
+      - 'scripts/release/**'
+      - '.agents/skills/prepare-release/**'
+      - '.github/workflows/release*.yml'
+      - 'iOS/fastlane/**'
+      - 'Android/fastlane/**'
+  push:
+    branches: [main]
+    paths: ['releases/**']
+permissions:
+  contents: read
+concurrency:
+  group: mobile-release-${{ github.event_name }}-${{ github.event.pull_request.number || 'main' }}
+  cancel-in-progress: false
+jobs:
+  plan:
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux]
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      any: ${{ steps.plan.outputs.any }}
+      captures: ${{ steps.plan.outputs.captures }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: '3.3'
+      - name: Validate release tooling and copy
+        run: |
+          python3 -m venv "$RUNNER_TEMP/release-python"
+          "$RUNNER_TEMP/release-python/bin/pip" install -r scripts/release/requirements.txt
+          "$RUNNER_TEMP/release-python/bin/python" -m unittest discover -s scripts/release/tests -v
+          python3 scripts/release/release.py validate
+          ruby -c scripts/release/production.rb
+          ruby scripts/release/tests/test_production.rb
+      - id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          matrix=$(python3 scripts/release/release.py plan --base "$BASE_SHA")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          MATRIX="$matrix" python3 - <<'PY'
+          import json, os
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              selected = json.loads(os.environ['MATRIX'])['include']
+              f.write('any=' + str(bool(selected)).lower() + '\n')
+              captures = selected or [{'app': app, 'platform': platform}
+                                      for app in ('pitchperfect', 'tagmaster') for platform in ('ios', 'android')]
+              f.write('captures=' + json.dumps({'include': captures}) + '\n')
+          PY
+      - name: Wait for iOS CI before simulator captures
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 46
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          retries: 3
+          script: |
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo, pull_number: pr.number, per_page: 100,
+            });
+            // Match ios.yml's path filters. Copy-only release PRs do not run iOS CI.
+            const testsExpected = files.some(({filename}) =>
+              filename.startsWith('iOS/') || filename.startsWith('scripts/ci/') ||
+              filename === '.github/workflows/ios.yml');
+            if (!testsExpected) return;
+            for (let attempt = 0; attempt < 90; attempt++) {
+              const {data} = await github.rest.actions.listWorkflowRuns({
+                ...context.repo, workflow_id: 'ios.yml', event: 'pull_request',
+                head_sha: pr.head.sha, per_page: 100,
+              });
+              const run = data.workflow_runs
+                .filter(run => run.head_sha === pr.head.sha)
+                .sort((a, b) => b.id - a.id)[0];
+              if (run?.status === 'completed') {
+                if (run.conclusion !== 'success') {
+                  throw new Error(`iOS CI ${run.conclusion}: ${run.html_url}. Fix or rerun CI, then rerun release assets.`);
+                }
+                core.info(`iOS CI passed: ${run.html_url}`);
+                return;
+              }
+              core.info(`Waiting for iOS CI at ${pr.head.sha}: ${run?.status || 'not queued yet'}`);
+              await new Promise(resolve => setTimeout(resolve, 30000));
+            }
+            throw new Error('iOS CI did not finish within 45 minutes; no capture simulators were started.');
+  assets:
+    needs: plan
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.captures) }}
+    uses: ./.github/workflows/release-assets.yml
+    with:
+      app: ${{ matrix.app }}
+      platform: ${{ matrix.platform }}
+      source-sha: ${{ github.sha }}
+  comment-assets:
+    name: Link release assets in PR
+    needs: [plan, assets]
+    if: >-
+      !cancelled() && needs.plan.result == 'success' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux]
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          CAPTURE_MATRIX: ${{ needs.plan.outputs.captures }}
+          CAPTURE_RESULT: ${{ needs.assets.result }}
+        with:
+          script: |
+            const marker = '<!-- release-asset-artifacts -->';
+            const pr = context.payload.pull_request;
+            const {data: current} = await github.rest.pulls.get({
+              ...context.repo, pull_number: pr.number,
+            });
+            if (current.head.sha !== pr.head.sha) {
+              core.info('A newer commit is on this PR; leaving its asset links unchanged.');
+              return;
+            }
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              ...context.repo, run_id: context.runId, per_page: 100,
+            });
+            const apps = {pitchperfect: 'Pitch Perfect', tagmaster: 'Tag Master'};
+            const platforms = {ios: 'iPhone and iPad', android: 'Android'};
+            const rows = JSON.parse(process.env.CAPTURE_MATRIX).include.map(({app, platform}) => {
+              const artifact = artifacts.find(item =>
+                item.name === `release-assets-${app}-${platform}` && !item.expired);
+              const link = artifact
+                ? `[Download screenshots](${runUrl}/artifacts/${artifact.id})`
+                : `[Unavailable; check capture logs](${runUrl})`;
+              return `| ${apps[app]} | ${platforms[platform]} | ${link} |`;
+            });
+            const status = process.env.CAPTURE_RESULT === 'success'
+              ? 'All selected captures passed.' : 'Some captures did not complete successfully.';
+            const body = [marker, '## Release screenshots', '',
+              `${status} [View Actions run](${runUrl}) for PR commit \`${pr.head.sha}\`.`, '',
+              '| App | Platform | Artifact |', '| --- | --- | --- |', ...rows, '',
+              'Extract a ZIP and open `index.html` to review full-size screenshots, contact sheets, and the current store images.', '',
+              'Screenshots are Actions artifacts and are never committed to the repository. Downloads expire after 30 days; rerun the workflow to regenerate them.',
+            ].join('\n');
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: pr.number, per_page: 100,
+            });
+            const existing = comments.find(comment =>
+              comment.user?.type === 'Bot' && comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({...context.repo, comment_id: existing.id, body});
+            } else {
+              await github.rest.issues.createComment({...context.repo, issue_number: pr.number, body});
+            }
+  deploy:
+    needs: [plan, assets]
+    if: github.event_name == 'push' && needs.plan.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    uses: ./.github/workflows/release-deploy.yml
+    with:
+      app: ${{ matrix.app }}
+      platform: ${{ matrix.platform }}
+      source-sha: ${{ github.sha }}
+    permissions:
+      contents: write
+    secrets: inherit

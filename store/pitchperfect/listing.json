@@ -1,0 +1,16 @@
+{
+  "ios": {
+    "name": "Pitch Perfect",
+    "subtitle": "A pitch pipe for singers",
+    "description": "Find your starting note with a digital pitch pipe. Play individual notes, match a key signature to its key, and keep a song list with the pitches you need for rehearsal.\n\nUse Pitch Perfect when warming up, rehearsing with your quartet or choir, or starting a song with friends.",
+    "keywords": "pitch pipe,music,singing,choir,a cappella,notes,key signature,barbershop",
+    "promotional_text": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
+    "support_url": "https://apps.depoll.com/barbershop/pitch-perfect/",
+    "privacy_url": "https://apps.depoll.com/privacy/"
+  },
+  "android": {
+    "title": "Pitch Perfect",
+    "short_description": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
+    "full_description": "Find your starting note with a digital pitch pipe. Play individual notes, match a key signature to its key, and keep a song list with the pitches you need for rehearsal.\n\nUse Pitch Perfect when warming up, rehearsing with your quartet or choir, or starting a song with friends."
+  }
+}

@@ -29,6 +29,9 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 
 @interface DPAppDelegate : UIResponder <UIApplicationDelegate>
 
+/// Both app and unit-test hosts must preserve URL/date values in the disk cache.
++ (void)configureCacheSerialization;
+
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) DPBusyIndicator *busyIndicator;
 
