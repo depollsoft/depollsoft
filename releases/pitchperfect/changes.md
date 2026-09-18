@@ -15,6 +15,7 @@ The commit evidence below includes each app's paths and the shared paths selecte
 
 ## ios: b258d9677b8d37a5ac305f9490a3723c39251f84..HEAD
 
+0de11c60 ios: support both simulator architectures
 1c16afb8 test: stabilize native UI checks on Android 11
 176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
@@ -114,6 +115,7 @@ a75a320d Update Bindroid
 
 ## android: 25f4933267001e10997c4b4b9f19d57b94f70039..HEAD
 
+0de11c60 ios: support both simulator architectures
 1c16afb8 test: stabilize native UI checks on Android 11
 176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
