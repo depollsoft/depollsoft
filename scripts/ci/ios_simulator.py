@@ -132,7 +132,9 @@ def boot(udid):
     xcrun = os.environ.get('XCRUN', 'xcrun')
     print(f'Booting test simulator {udid}', flush=True)
     # -b boots a stopped device and also succeeds when it is already running.
-    subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True, timeout=180)
+    # A fresh iOS 26 device can spend several minutes in LaunchServices
+    # data migration on hosted runners, before any app or test can start.
+    subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True, timeout=600)
 
 
 def shutdown(udid):

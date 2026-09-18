@@ -16,7 +16,7 @@ class SimulatorCleanupTests(unittest.TestCase):
         with patch('ios_simulator.subprocess.run') as run:
             boot('owned-device')
         self.assertEqual(run.call_args.args[0][-3:], ['bootstatus', 'owned-device', '-b'])
-        self.assertEqual(run.call_args.kwargs['timeout'], 180)
+        self.assertEqual(run.call_args.kwargs['timeout'], 600)
 
     def test_shutdown_accepts_stopped_devices_but_preserves_other_failures(self):
         for error in ['Unable to shutdown device in current state: Shutdown', 'Device unavailable']:
