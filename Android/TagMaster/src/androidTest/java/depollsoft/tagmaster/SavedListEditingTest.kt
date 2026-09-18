@@ -454,7 +454,8 @@ class SavedListEditingTest {
                         scenario.moveToState(Lifecycle.State.CREATED)
                         scenario.moveToState(Lifecycle.State.RESUMED)
                         screen = current()
-                        inject(pointer, MotionEvent.ACTION_UP)
+                        // Losing the window cancels the native pointer stream. Older
+                        // Android versions reject an UP for that canceled stream.
                     }
                 }
                 main { screen.list.itemAnimator?.endAnimations() }

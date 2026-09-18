@@ -313,8 +313,17 @@ class FooterPitchRegressionTest {
             bitmap.eraseColor(button.context.getColor(R.color.md_surface))
             button.background.jumpToCurrentState()
             button.draw(Canvas(bitmap))
-            // Interior far from text and rounded corners, not the boolean state or ripple alone.
-            assertEquals("Rendered fill", expectedFill, bitmap.getPixel(button.width / 2, button.height / 4))
+            // Measure the native background beneath the transient pressed ripple.
+            // Android 11 keeps that ripple visible even after jumpToCurrentState().
+            val background = button.background
+            val fillBitmap = Bitmap.createBitmap(button.width, button.height, Bitmap.Config.ARGB_8888)
+            if (background is android.graphics.drawable.RippleDrawable) {
+                background.getDrawable(0).draw(Canvas(fillBitmap))
+            } else {
+                background.draw(Canvas(fillBitmap))
+            }
+            assertEquals("Rendered fill", expectedFill, fillBitmap.getPixel(button.width / 2, button.height / 4))
+            fillBitmap.recycle()
             if (!disabled) {
                 assertEquals("Text contrast role", expectedInk, button.currentTextColor)
                 val textPixels =
