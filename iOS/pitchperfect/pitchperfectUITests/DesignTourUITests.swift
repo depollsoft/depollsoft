@@ -203,8 +203,12 @@ final class StoreScreenshotTests: XCTestCase {
             item.tap()
         }
         func snap(_ name: String) {
-            Thread.sleep(forTimeInterval: 1)
-            attachStoreScreenshot(name)
+            for (theme, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+                XCUIDevice.shared.appearance = appearance
+                Thread.sleep(forTimeInterval: 1)
+                attachStoreScreenshot("\(name)-\(theme)")
+            }
+            XCUIDevice.shared.appearance = .light
         }
         for (title, name) in [("Pitch Pipe", "01-pitch-pipe"), ("Notes", "02-notes"), ("Keys", "03-keys")] {
             tab(title)

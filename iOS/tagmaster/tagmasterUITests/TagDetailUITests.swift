@@ -683,7 +683,7 @@ final class TagMasterPolishUITests: XCTestCase {
     }
 }
 
-/// Uses tag 1809 from the live catalog; a network/catalog failure fails capture.
+/// Uses real catalog entries; a network/catalog failure fails capture.
 final class StoreScreenshotTests: XCTestCase {
     func testCaptureStoreScreenshots() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SCREENSHOTS"] == "1")
@@ -696,8 +696,12 @@ final class StoreScreenshotTests: XCTestCase {
             XCTAssertTrue(app.tables.staticTexts["Browse"].existsOrWait(timeout: 15))
         }
         func snap(_ name: String) {
-            Thread.sleep(forTimeInterval: 2)
-            attachStoreScreenshot(name)
+            for (theme, appearance) in [("light", XCUIDevice.Appearance.light), ("dark", .dark)] {
+                XCUIDevice.shared.appearance = appearance
+                Thread.sleep(forTimeInterval: 2)
+                attachStoreScreenshot("\(name)-\(theme)")
+            }
+            XCUIDevice.shared.appearance = .light
         }
         func open(_ id: String) {
             home()

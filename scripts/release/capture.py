@@ -90,6 +90,30 @@ def ios(app, dest):
     runtime = ios_runtime(sdk, data['runtimes'])
     os.environ['DEVELOPER_DIR'] = developer
     print(f'Capture toolchain: {developer}; runtime: {runtime}', flush=True)
+    build = ['-workspace', ROOT / 'iOS/iOS.xcworkspace', '-scheme', config['ios_scheme'],
+             '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
+             '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
+             '-only-testing:' + app + 'UITests/StoreScreenshotTests',
+             'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', f'ARCHS={os.uname().machine}']
+    timings = []
+
+    def xcode(label, *args, **kwargs):
+        started = time.monotonic()
+        succeeded = False
+        try:
+            # Keep compiler command lines out of the live log so the actual
+            # capture progress remains visible through GitHub's log API.
+            run('xcodebuild', '-quiet', *args, **kwargs)
+            succeeded = True
+        finally:
+            seconds = round(time.monotonic() - started, 1)
+            timings.append({'stage': label, 'seconds': seconds, 'success': succeeded})
+            write_json(dest / 'capture-timings.json', timings)
+            print(f'{label}: {seconds}s, success={succeeded}', flush=True)
+
+    # Build before booting a simulator, and reuse these products for both sizes.
+    xcode('build', 'build-for-testing', '-jobs', '2', '-destination',
+          'generic/platform=iOS Simulator', *build, env=env, timeout=900)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
@@ -106,40 +130,35 @@ def ios(app, dest):
                         if attempt == 1:
                             raise
                         print('Simulator boot stalled; retrying this disposable device once', flush=True)
-                for theme in ('light', 'dark'):
-                    def take(attempt):
-                        if attempt:
-                            # A failed XCTest service can outlive the app. Reset
-                            # only our disposable simulator before retrying.
-                            ios_simulator.shutdown(udid)
-                            run('xcrun', 'simctl', 'erase', udid, timeout=60)
-                        # XCTest may shut down its device after a completed tour.
-                        ios_simulator.boot(udid)
-                        run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
-                            '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
-                            '--batteryState', 'charged', '--batteryLevel', '100')
-                        subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
-                        run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
-                        result = work / f'{family}-{theme}-{attempt}.xcresult'
-                        env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
-                        run('xcodebuild', 'test', '-jobs', '2', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
-                            '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
-                            '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
-                            '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
-                            '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                            '-only-testing:' + app + 'UITests/StoreScreenshotTests',
-                            'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
-                        return result
-                    result = native_capture(app, f'{family}-{theme}', take, simulator=True)
-                    attachments = work / f'{family}-{theme}'
-                    run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
-                        '--output-path', attachments)
-                    manifest = json.loads((attachments / 'manifest.json').read_text())
-                    for test in manifest:
-                        for attachment in test['attachments']:
-                            name = attachment['suggestedHumanReadableName']
-                            for scene in config['scenes']:
-                                if name.startswith(f'store-{scene}'):
+                def take(attempt):
+                    if attempt:
+                        # Reset only our device if XCTest becomes unavailable.
+                        ios_simulator.shutdown(udid)
+                        run('xcrun', 'simctl', 'erase', udid, timeout=60)
+                    ios_simulator.boot(udid)
+                    run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
+                        '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
+                        '--batteryState', 'charged', '--batteryLevel', '100')
+                    run('xcrun', 'simctl', 'ui', udid, 'appearance', 'light')
+                    result = work / f'{family}-{attempt}.xcresult'
+                    # The tour captures both appearances at each screen, keeping
+                    # sample data and navigation work within one test session.
+                    xcode(f'{family}-{attempt}', 'test-without-building', *build,
+                          '-destination', f'platform=iOS Simulator,id={udid}',
+                          '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
+                          env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'))
+                    return result
+                result = native_capture(app, family, take, simulator=True)
+                attachments = work / family
+                run('xcrun', 'xcresulttool', 'export', 'attachments', '--path', result,
+                    '--output-path', attachments)
+                manifest = json.loads((attachments / 'manifest.json').read_text())
+                for test in manifest:
+                    for attachment in test['attachments']:
+                        name = attachment['suggestedHumanReadableName']
+                        for scene in config['scenes']:
+                            for theme in ('light', 'dark'):
+                                if name.startswith(f'store-{scene}-{theme}'):
                                     target = dest / screenshot_path(app, 'ios', family, f'{scene}-{theme}')
                                     target.parent.mkdir(parents=True, exist_ok=True)
                                     with Image.open(attachments / attachment['exportedFileName']) as image:
