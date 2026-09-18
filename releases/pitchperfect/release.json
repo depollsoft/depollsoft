@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "app": "pitchperfect",
+  "platforms": {
+    "ios": {
+      "version": "3.0.0",
+      "build": 1789748893
+    },
+    "android": {
+      "version": "5.0.0",
+      "build": 1789748893
+    }
+  },
+  "notes": "A redesigned pitch pipe shows sounding notes and chords. Choose song keys from the key-signature list, organize your rehearsal songs, and sound notes from the refreshed Home Screen widget. Updated light and dark layouts make notes and song lists easier to read.",
+  "since": {
+    "ios": "b258d9677b8d37a5ac305f9490a3723c39251f84",
+    "android": "25f4933267001e10997c4b4b9f19d57b94f70039"
+  }
+}
