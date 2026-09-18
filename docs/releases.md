@@ -75,14 +75,23 @@ Pitch Perfect Android also requires round and square Wear OS captures. Boot disp
 
 Each watch capture holds the C4 cell so the instrument is shown sounding. The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically and deletes each before starting the next device. Wear OS images can require larger partitions than the requested 2 GB; provision sufficient free disk space on capture runners. The workflow never removes host SDKs.
 
-Download the current public store screenshots and build a comparison gallery for any capture bundle:
+Build a gallery for a capture bundle:
 
 ```sh
 .venv-release/bin/python scripts/release/review.py --app tagmaster \
   --platform ios --output build/release/tagmaster-ios
 ```
 
-Open `index.html` inside the bundle. It links every full-size image, contact sheets, and downloaded `current-store/` screenshots with source URLs and retrieval time. The reference screenshots are never uploaded. Actions includes this comparison in every artifact and fails if the current listing cannot be retrieved. The public Play page groups multiple device types together; inspect the actual images when mapping coverage.
+Open `index.html` inside the bundle to view the newly captured full-size images and contact sheets. Actions builds this gallery without downloading current store screenshots.
+
+For a local comparison, download the current store screenshots into a separate baseline directory:
+
+```sh
+.venv-release/bin/python scripts/release/review.py --app tagmaster \
+  --platform ios --download-current --output build/release/baselines/tagmaster-ios
+```
+
+The baseline has its own gallery and `current-store/sources.json` with source URLs and retrieval time. Keep it outside the capture bundle. The public Play page groups multiple device types together; inspect the actual images when mapping coverage.
 
 The validator checks the exact scene set, PNG dimensions, opaque pixels, blank images, duplicate scenes, file hashes, app, platform, and source commit. Inspect the images as well: pixel checks cannot judge copy legibility or whether a remote asset has finished loading. Update the native tests and `apps.json` together when the screens change. The initial baseline comparison found five light/dark flows per iOS device for each app, plus phone/tablet songs and round/square watches for Pitch Perfect Android, and seven distinct Tag Master Android flows. Review these against the current listings on every release.
 
@@ -98,7 +107,7 @@ gh run download <run-id> --name release-assets-tagmaster-ios --dir /tmp/tagmaste
 
 The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each selected pair. Tooling or copy PRs without a release plan capture both apps on both platforms for regression coverage. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
 
-After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots, comparison images, and galleries stay in Actions artifacts or ignored local output directories; never commit them to git.
+After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots and galleries stay in Actions artifacts or ignored local output directories; never commit them to git. Store baseline images stay in a separate local directory and are excluded from the bundles.
 
 On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, the app bundle, and for Pitch Perfect the listing icon, which `scripts/release/icons.py` derives from the launcher icon at capture time so the two never drift. Feature graphics and Tag Master's icon remain managed in the stores.
 

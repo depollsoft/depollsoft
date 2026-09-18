@@ -91,7 +91,7 @@ jobs:
         run: |
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"
-      - name: Compare with current store screenshots
+      - name: Build screenshot gallery
         run: |
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/review.py \
             --app "$RELEASE_APP" --platform "$RELEASE_PLATFORM" \
