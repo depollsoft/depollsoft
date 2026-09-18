@@ -7,7 +7,7 @@ These first-release baselines are inferred from repository changes and public st
 - iOS: `b258d967` added account deletion on September 15, 2022 while the marketing version was 2.0.1. The public App Store listing is 2.0.1, released September 19, 2022, and its notes include account deletion. Later source-only version bumps to 2.0.2 and 2.0.3 are not treated as shipped releases.
 - Android: the last substantive 4.0.0 changelog edit was `a383c41a` on August 24, 2022. The selected baseline is the later `25f49332` widget/settings fix on September 25, 2022, matching the public Play listing's update date and version 4.0.0. The January 2026 changelog move preserved the contents.
 - Confirm these inferred baselines and the new build number against store records, including unpublished uploads, before submission. Store console access was unavailable during preparation.
-- Production app and widget signing profile filenames exist. After PR #55 merged, [Tag Master provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35374524855) tested both configured repository credentials and found neither grants read/write access. Correct the signing repository credential and verify provisioning before opening this combined release PR.
+- [Tag Master signing provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35379275553) passed after the repository credential was updated. Verified the production Tag Master, Pitch Perfect, and Pitch Perfect widget profile filenames in the signing repository.
 
 Public listings: [App Store](https://apps.apple.com/us/app/pitch-perfect-pitch-pipe/id539417298), [Google Play](https://play.google.com/store/apps/details?id=depollsoft.pitchperfect).
 
@@ -15,6 +15,7 @@ The commit evidence below includes each app's paths and the shared paths selecte
 
 ## ios: b258d9677b8d37a5ac305f9490a3723c39251f84..HEAD
 
+176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
 e7b473bf Automate release assets and independent mobile app releases (#50)
@@ -112,6 +113,7 @@ a75a320d Update Bindroid
 
 ## android: 25f4933267001e10997c4b4b9f19d57b94f70039..HEAD
 
+176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
 e7b473bf Automate release assets and independent mobile app releases (#50)

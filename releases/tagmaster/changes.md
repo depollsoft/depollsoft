@@ -7,7 +7,7 @@ These first-release baselines are inferred from repository changes and public st
 - iOS: `75d8daf8` set version 2.0.2 on August 3, 2021. The public App Store listing is 2.0.2, released August 4, 2021. Subsequent commits before that release affected Android, not the iOS app or its shared library.
 - Android: `8ee81c37` is the last substantive changelog edit, dated August 22, 2022. It adds the 5.2.1 email-sign-in fix named in the public Play listing's notes. Play reports August 21, 2022 as its update date, so the version and content match but the dates differ by one day. The January 2026 changelog move preserved the contents.
 - Confirm these inferred baselines and the new build number against store records, including unpublished uploads, before submission. Store console access was unavailable during preparation.
-- The production profile `AppStore_depollsoft.tagmaster.mobileprovision` is missing. After merging the credential-selection fix in PR #55, [signing provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35374524855) failed at `Authenticate signing repository`: neither the configured HTTPS nor SSH credential grants read/write access to `depollsoft/certificates`. GitHub reports the preview deploy key as read-only. Correct `MATCH_GIT_BASIC_AUTHORIZATION` or replace `MATCH_GIT_SSH_KEY` with a credential that has repository read/write access, then rerun provisioning before opening the release PR.
+- [Tag Master signing provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35379275553) passed after the repository credential was updated. Verified the production Tag Master, Pitch Perfect, and Pitch Perfect widget profile filenames in the signing repository.
 
 Public listings: [App Store](https://apps.apple.com/us/app/tag-master/id721186126), [Google Play](https://play.google.com/store/apps/details?id=depollsoft.tagmaster).
 
@@ -15,6 +15,7 @@ The commit evidence below includes each app's paths and the shared paths selecte
 
 ## ios: 75d8daf8f0e45caa68d5bb26ad31c768346d750a..HEAD
 
+176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
 e7b473bf Automate release assets and independent mobile app releases (#50)
@@ -84,6 +85,7 @@ e76b4ab0 More resilient backup code
 
 ## android: 8ee81c37101780bd59ef29547c3011849018198e..HEAD
 
+176d05b9 test: repair mobile UI fixtures and isolate network handlers
 7941d036 release: update major-version changelogs and preparation skill
 cfdae998 security: remove private data and prepare public repository checks
 e7b473bf Automate release assets and independent mobile app releases (#50)
