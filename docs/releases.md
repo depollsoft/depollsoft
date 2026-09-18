@@ -120,7 +120,7 @@ gh run list --workflow release-assets.yml
 gh run download <run-id> --name release-assets-tagmaster-ios --dir /tmp/tagmaster-ios
 ```
 
-The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each selected pair. Tooling or copy PRs without a release plan capture both apps on both platforms for regression coverage. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
+The workflow must first exist on the default branch for manual dispatch. Release PRs automatically call the same workflow for each app/platform pair selected by a changed release plan. Tooling or copy PRs without a changed release plan run validation only; use the manual asset workflow when a screenshot refresh is wanted. Artifact names contain both app and platform. Each artifact contains screenshots, capture provenance, and release copy when a plan exists. Artifacts expire after 30 days; successful store submissions also archive assets on a GitHub release.
 
 After capture finishes, Actions adds or updates a PR comment with download links for each app/platform artifact. Failed captures link to the run logs. Extract a ZIP and open `index.html` to review the screenshots. Generated screenshots and galleries stay in Actions artifacts or ignored local output directories; never commit them to git. Store baseline images stay in a separate local directory and are excluded from the bundles.
 
@@ -140,6 +140,8 @@ gh workflow run release-signing.yml -f app=tagmaster
 ```
 
 `Provision production signing` runs only from `main`, creates or repairs profiles for the selected app, and stores them in the encrypted signing repository. It requires a signing-repository credential with write access. It does not upload a binary or release an app. During implementation, the remote signing repository had Pitch Perfect's production app/widget profiles but lacked Tag Master's production profile, so run this for Tag Master after the tooling PR merges.
+
+Signing authentication checks repository access before starting Fastlane. Provisioning prefers `MATCH_GIT_BASIC_AUTHORIZATION`, then tries `MATCH_GIT_SSH_KEY`, and requires a successful dry-run push to verify write permission without updating the repository. Production deployment needs only read access and tries SSH first, then HTTPS. A configured but unusable SSH key no longer prevents HTTPS fallback. The HTTPS secret accepts a raw token, `username:token`, or base64 Basic credentials, with an optional `Basic` or `Authorization: Basic` prefix. The helper masks and exports the normalized credentials for Fastlane; subsequent steps must not override them with the original secret.
 
  The iOS API key needs access to both production apps. The existing store records must have their review contact, content rights, age rating, privacy, encryption, and advertising answers completed. This tooling does not invent those answers. Store agreements or new required fields can block submission and need correction in the console.
 
