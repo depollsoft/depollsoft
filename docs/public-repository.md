@@ -5,37 +5,6 @@ Firebase client config files, OAuth client IDs, ad IDs, and the shared
 keys and service-account credentials belong in GitHub Actions secrets or the
 deployed service's secret store.
 
-## Firebase API key restrictions
-
-Public Firebase keys need an explicit API allowlist in Google Cloud. A scanner
-exception in this repository does not configure those restrictions. Review the
-live settings in each project's **APIs & Services > Credentials** page.
-
-On September 18, 2026, all four Android and iOS client keys were restricted to
-the Firebase client APIs in [Google's compatibility allowlist](https://firebase.google.com/docs/projects/api-keys#required-apis-for-firebase),
-excluding the unused Firebase AI Logic and Phone Number Verification APIs.
-Gemini, Maps, Translation, and other unrelated services are excluded. Production
-and private variants share their platform's key; no key values were changed.
-
-| Project | Android key resource ID | iOS key resource ID |
-| --- | --- | --- |
-| `pitch-perfect-94415` | `2` | `58` |
-| `tag-master` | `2` | `49` |
-
-The keys have no application restrictions. Firebase's browser-based sign-in
-flows can fail with Android package/certificate or iOS bundle-ID restrictions;
-Google documents this requirement for [Android](https://firebase.google.com/docs/auth/android/phone-auth)
-and [iOS](https://firebase.google.com/docs/auth/ios/phone-auth). Test all supported
-sign-in flows, existing production builds, and private builds before adding
-application restrictions or narrowing the Firebase API allowlist further.
-
-Deployed Firestore rules were checked against the files under `Firebase/`:
-users can access only their own user records, and other paths are denied.
-Read-only probes confirmed that Firebase Auth configuration still loads and
-unauthenticated user-document reads are denied. These probes do not replace
-end-to-end sign-in tests. App Check enforcement is not enabled; introduce its
-client integration and verify adoption before enabling enforcement.
-
 ## Android signing
 
 Release builds require `ANDROID_UPLOAD_KEYSTORE_PATH`,
