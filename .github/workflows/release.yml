@@ -154,7 +154,7 @@ jobs:
             const body = [marker, '## Release screenshots', '',
               `${status} [View Actions run](${runUrl}) for PR commit \`${pr.head.sha}\`.`, '',
               '| App | Platform | Artifact |', '| --- | --- | --- |', ...rows, '',
-              'Extract a ZIP and open `index.html` to review full-size screenshots, contact sheets, and the current store images.', '',
+              'Extract a ZIP and open `index.html` to review the newly captured full-size screenshots and contact sheets.', '',
               'Screenshots are Actions artifacts and are never committed to the repository. Downloads expire after 30 days; rerun the workflow to regenerate them.',
             ].join('\n');
             const comments = await github.paginate(github.rest.issues.listComments, {

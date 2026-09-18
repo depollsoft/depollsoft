@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download the current public store screenshots and build a local comparison gallery."""
+"""Build a screenshot gallery, optionally downloading a separate store baseline."""
 import argparse
 from datetime import datetime, timezone
 from html import escape
@@ -36,6 +36,8 @@ def fetch(url):
 
 
 def current(app, platform, dest):
+    # A reused directory can retain screenshots removed from the store listing.
+    dest.mkdir(parents=True, exist_ok=False)
     bundle = APPS[app]['bundle_id']
     if platform == 'ios':
         source = f'https://itunes.apple.com/lookup?bundleId={bundle}&country=us'
@@ -93,7 +95,7 @@ def gallery(dest):
         sections.append(f'<h2>{escape(name)}</h2><p><a href="contact-sheets/{index:02}.jpg">Contact sheet</a></p><section>{"".join(cards)}</section>')
     (dest / 'index.html').write_text('''<!doctype html><html lang="en"><meta charset="utf-8"><title>Release screenshot review</title>
 <style>body{font:16px system-ui;margin:32px;background:#eee;color:#222}section{display:flex;flex-wrap:wrap;gap:16px}a{color:inherit}section a{width:240px}img{width:100%;display:block}span{display:block;margin:8px 0}h2{margin-top:48px}</style>
-<h1>Release screenshot review</h1><p>screenshots/ and metadata/ contain the selected store uploads. review/ contains additional captured scenes. current-store/ is the public listing baseline and is never uploaded.</p>
+<h1>Release screenshot review</h1><p>screenshots/ and metadata/ contain the selected store uploads. review/ contains additional captured scenes.</p>
 ''' + ''.join(sections))
 
 
@@ -102,6 +104,9 @@ if __name__ == '__main__':
     parser.add_argument('--app', required=True, choices=APPS)
     parser.add_argument('--platform', required=True, choices=['ios', 'android'])
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--download-current', action='store_true',
+                        help='Download store screenshots into a new, separate baseline output directory')
     args = parser.parse_args()
-    current(args.app, args.platform, args.output)
+    if args.download_current:
+        current(args.app, args.platform, args.output)
     gallery(args.output)
