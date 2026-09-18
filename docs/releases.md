@@ -26,6 +26,21 @@ Omit a platform's version flag to leave it out of the release. `--since` is requ
 
 Build numbers default to Unix seconds and can be overridden with `--build`. Confirm they exceed the latest uploaded build, including builds that have not shipped. The helper enforces increasing versions/builds against the previous plan and published tags. Store APIs remain the authority for uploads made outside this system. Production build overrides apply only to the selected Gradle module or Xcode scheme, including Pitch Perfect's iOS widget. Existing private preview numbering is unchanged. The Android Wear companion is not shipped by these lanes because the Play app has no Wear track configured.
 
+## In-app changelogs
+
+Update the existing in-app changelog whenever preparing an Android release. `release.py prepare` writes the release plan and commit evidence; it does not update these resources.
+
+| App | Resource file | Displayed version keys |
+| --- | --- | --- |
+| Pitch Perfect | `Android/PitchPerfect/src/main/res/values/versionstrings.xml` | `app_version` is `X.Y.Z`; `VersionString` is `Version X.Y.Z` |
+| Tag Master | `Android/TagMaster/src/main/res/values/versionStrings.xml` | `VersionNumber` is `X.Y.Z`; `app_version` is `Version X.Y.Z` |
+
+Prepend an HTML entry to the `Changelog` string for the selected Android version, preserve older entries, and update both displayed version keys to match the release plan. Describe user-facing changes with the same facts as the Android store notes, preserving Android string escaping and the surrounding CDATA. These strings appear in the app, so Gradle's production version override alone is insufficient. Build the selected app to validate its resources and check the rendered changelog in the disposable emulator.
+
+The iOS apps currently have no in-app changelog. Their customer-facing release notes come from the release plan and are exported to App Store metadata; do not add a new changelog screen as part of routine release preparation.
+
+For first-release history, use `git log --follow -p -- <resource-file>` to find the last substantive changelog edit. The January 2026 moves into `src/main/res` retained the old contents. Compare actual entry changes with public store versions and dates, and use store/build records to confirm the shipped source when available. Record any remaining uncertainty instead of treating a file-move date as a release.
+
 ## Generate assets locally
 
 Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. The script uses `DEVELOPER_DIR` or the runner’s selected Xcode and picks its newest compatible iOS 26 runtime. It never probes other Xcode installations because switching CoreSimulator versions can disrupt other jobs sharing that user’s simulator service. Actions uses GitHub-hosted `macos-latest` for iOS and `ubuntu-latest` with KVM for Android. Each capture job has its own machine. On a custom machine, install the selected Xcode's simulator platform with `xcodebuild -downloadPlatform iOS` if needed; `simctl` listing an older runtime alone does not guarantee that Xcode can run tests. Capture retries a stalled simulator boot once, with a three-minute limit per attempt. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
