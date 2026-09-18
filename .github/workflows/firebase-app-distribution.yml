@@ -23,7 +23,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     outputs:
       pr-number: ${{ steps.resolve.outputs.pr-number }}
       pr-title: ${{ steps.resolve.outputs.pr-title }}
@@ -72,7 +72,7 @@ jobs:
     name: Android — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -164,7 +164,7 @@ jobs:
     name: Build iOS — ${{ matrix.app }}
     needs: metadata
     if: needs.metadata.result == 'success'
-    runs-on: [self-hosted, macOS, heavy]
+    runs-on: macos-latest
     timeout-minutes: 40
     env:
       LANG: en_US.UTF-8
@@ -329,7 +329,7 @@ jobs:
     name: Publish iOS — ${{ matrix.app }}
     needs: [metadata, ios-build]
     if: needs.ios-build.result == 'success'
-    runs-on: [self-hosted, light]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -418,7 +418,7 @@ jobs:
     name: Update Firebase distribution comments
     needs: [metadata, android, ios-publish]
     if: always() && needs.metadata.result == 'success'
-    runs-on: [self-hosted, heavy]
+    runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write

@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: [self-hosted, macOS, heavy]
+    runs-on: macos-latest
     timeout-minutes: 35
     env:
       LANG: en_US.UTF-8

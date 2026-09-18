@@ -1,4 +1,4 @@
-name: Self-hosted Runner Smoke
+name: GitHub-hosted Runner Smoke
 
 on:
   workflow_dispatch:
@@ -9,18 +9,25 @@ permissions:
 jobs:
   linux:
     name: Linux runner
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Inspect Linux host
         run: |
           uname -a
           getconf _NPROCESSORS_ONLN
-          free -h || true
+          free -h
+          test -c /dev/kvm
+      - name: Check live Tag Master catalog connectivity
+        run: |
+          curl --fail --silent --show-error --connect-timeout 15 --max-time 30 \
+            --retry 2 --retry-all-errors --retry-delay 5 \
+            'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
+            --output /dev/null
 
   macos:
     name: macOS runner
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     timeout-minutes: 5
     steps:
       - name: Inspect macOS host
@@ -29,10 +36,18 @@ jobs:
           sysctl -n hw.ncpu
           sysctl -n hw.memsize
           xcodebuild -version
+          xcrun simctl list runtimes
+          xcrun simctl list devicetypes | grep -E 'iPhone 17 Pro Max|iPad Pro 13-inch.*M5'
+      - name: Check live Tag Master catalog connectivity
+        run: |
+          curl --fail --silent --show-error --connect-timeout 15 --max-time 30 \
+            --retry 2 --retry-all-errors --retry-delay 5 \
+            'https://www.barbershoptags.com/api.php?client=TagMaster&id=122&n=1' \
+            --output /dev/null
 
   windows:
     name: Windows runner
-    runs-on: [self-hosted, Windows]
+    runs-on: windows-latest
     timeout-minutes: 5
     steps:
       - name: Inspect Windows host

@@ -23,7 +23,7 @@ on:
   schedule:
     - cron: "0 3 * * *"
 
-# Serialize runs per branch on self-hosted runners.
+# Serialize runs per branch.
 # Queue new runs instead of canceling to reduce “superseded” failures.
 concurrency:
   group: >-
@@ -42,7 +42,7 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -242,7 +242,7 @@ jobs:
     permissions:
       contents: read
       checks: write
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -276,7 +276,7 @@ jobs:
         run: >-
           python3 ../scripts/ci/android_sdk.py
           'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator' 'system-images;android-30;google_apis;arm64-v8a'
+          'emulator'
           'system-images;android-30;google_apis;x86_64'
 
       - name: Install missing Android SDK packages
@@ -285,7 +285,7 @@ jobs:
         run: >-
           python3 ../scripts/ci/android_sdk.py --install
           'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator' 'system-images;android-30;google_apis;arm64-v8a'
+          'emulator'
           'system-images;android-30;google_apis;x86_64'
 
       - name: Set up Android SDK
@@ -296,14 +296,13 @@ jobs:
           packages: >-
             platform-tools platforms;android-35 platforms;android-37.0
             build-tools;36.0.0 emulator
-            system-images;android-30;google_apis;arm64-v8a
             system-images;android-30;google_apis;x86_64
 
       - name: Verify Android SDK
         run: >-
           python3 ../scripts/ci/android_sdk.py
           'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator' 'system-images;android-30;google_apis;arm64-v8a'
+          'emulator'
           'system-images;android-30;google_apis;x86_64' --require
 
       - name: Export Android SDK env for emulator
@@ -349,7 +348,7 @@ jobs:
           # v2: fixed snapshot saving for proper AVD caching
           key: avd-30-${{ runner.arch }}-${{ runner.os }}-v2
 
-      - name: Clean stale AVD (self-hosted)
+      - name: Clean uncached AVD
         if: steps.avd-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -360,53 +359,6 @@ jobs:
           echo "Cleaning AVD name: ${AVD_NAME}"
           rm -rf "${AVD_HOME}/${AVD_NAME}.avd" || true
           rm -f "${AVD_HOME}/${AVD_NAME}.ini" || true
-
-      - name: Ensure ADB is healthy (self-hosted)
-        shell: bash
-        run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
-          if [[ -z "${SDK_ROOT}" ]]; then
-            echo "ANDROID_SDK_ROOT/ANDROID_HOME not set" >&2
-            exit 1
-          fi
-
-          # Self-hosted runners can end up with a stuck adb server which breaks
-          # emulator boot detection ("Unable to connect to adb daemon on
-          # port: 5037").
-          echo "Stopping any existing ADB server..."
-          "${SDK_ROOT}/platform-tools/adb" kill-server 2>/dev/null || true
-
-          # Aggressively kill any lingering adb processes
-          echo "Killing lingering adb processes..."
-          pkill -9 -f "adb" 2>/dev/null || true
-
-          # Wait for processes to die and port to be released
-          sleep 2
-
-          # Kill anything still holding port 5037
-          for _ in 1 2 3; do
-            if lsof -ti tcp:5037 >/dev/null 2>&1; then
-              echo "Port 5037 still in use, killing processes..."
-              lsof -ti tcp:5037 | xargs kill -9 2>/dev/null || true
-              sleep 1
-            else
-              break
-            fi
-          done
-
-          # Clean up adb state files
-          rm -f "$HOME/.android/adb"* 2>/dev/null || true
-
-          # Final check - if port is still busy, wait longer
-          if lsof -ti tcp:5037 >/dev/null 2>&1; then
-            echo "Port 5037 still busy after cleanup, waiting..."
-            sleep 5
-          fi
-
-          echo "Starting fresh ADB server..."
-          "${SDK_ROOT}/platform-tools/adb" start-server
-          "${SDK_ROOT}/platform-tools/adb" devices
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -582,7 +534,7 @@ jobs:
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
     name: Android Combined Coverage
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     needs: [test, instrumented-tests]
     if: >-
       always() && (github.event_name == 'workflow_dispatch' ||

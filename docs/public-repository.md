@@ -56,16 +56,19 @@ the existing repository public:
 4. Review existing Actions artifacts and logs before their visibility changes.
 5. Enable GitHub secret scanning and push protection where available.
 
-## Public pull requests and private runners
+## GitHub-hosted runners and public pull requests
+
+All workflows use GitHub-hosted runners: `ubuntu-latest` for Android, API,
+uploads, and metadata; `macos-latest` for iOS builds, signing, and screenshots;
+and `windows-latest` for the manual Windows smoke check. Android screenshots
+use Linux with KVM. Each job gets a fresh machine. Signing and deployment
+credentials remain in GitHub Actions secrets.
 
 External PR builds remain disabled in the mobile and release workflows.
-The preview metadata job also requires a same-repository PR and runs on a
-GitHub-hosted runner. The comment-command dispatcher uses a hosted runner, and
-the self-hosted smoke test is manual only.
+The secret scanner still checks external PRs. The runner smoke workflow is
+manual only.
 
-These workflow conditions do not replace runner isolation: PR authors can
-propose changes to workflow files. Before publication, prevent the public repo
-from scheduling jobs on persistent private runners, for example by moving those
-runners and trusted deployment workflows to a private repo with restricted
-access. Alternatively, use isolated disposable runners. The code changes alone
-do not configure that infrastructure boundary.
+Keep public-repository access disabled on the organization's self-hosted runner
+groups, or remove this repository from their allowed repositories. Workflow
+conditions alone cannot prevent a PR from requesting a self-hosted runner.
+No workflow in the default branch requires access to those runners.

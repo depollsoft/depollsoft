@@ -23,7 +23,7 @@ on:
   schedule:
     - cron: "0 4 * * *"
 
-# Serialize runs per branch on self-hosted runners.
+# Serialize runs per branch.
 # Queue new runs instead of canceling to reduce “superseded” failures.
 concurrency:
   group: >-
@@ -42,8 +42,7 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    # Simulator jobs require the heavy slot; light slots share its process budget.
-    runs-on: [self-hosted, macOS, heavy]
+    runs-on: macos-latest
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -53,7 +52,6 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       # Native timeouts stop hangs; result validation also enforces actual duration.
       IOS_MAX_TEST_SECONDS: '30'
-      IOS_LEGACY_SIMULATOR_UDID: ${{ vars.IOS_LEGACY_SIMULATOR_UDID }}
       # UTF-8 encoding for build tools
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -116,12 +114,16 @@ jobs:
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
           fi
 
-      # These self-hosted runners retain ~/Library/Caches/org.swift.swiftpm.
-      # Restoring the same cache from Actions added four minutes per job.
+      - name: Cache SPM downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: hosted-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
       - name: Resolve SPM dependencies
         run: |
           # SourcePackages/workspace-state.json embeds absolute paths. Never
-          # reuse it across self-hosted runners with different work roots.
+          # reuse it across runners with different work roots.
           rm -rf SourcePackages
           for attempt in 1 2; do
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
@@ -539,8 +541,7 @@ jobs:
     permissions:
       contents: read
       checks: write
-    # Simulator jobs require the heavy slot; light slots share its process budget.
-    runs-on: [self-hosted, macOS, heavy]
+    runs-on: macos-latest
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -591,12 +592,16 @@ jobs:
 
           fi
 
-      # These self-hosted runners retain ~/Library/Caches/org.swift.swiftpm.
-      # Restoring the same cache from Actions added four minutes per job.
+      - name: Cache SPM downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: hosted-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
       - name: Resolve SPM dependencies
         run: |
           # SourcePackages/workspace-state.json embeds absolute paths. Never
-          # reuse it across self-hosted runners with different work roots.
+          # reuse it across runners with different work roots.
           rm -rf SourcePackages
           for attempt in 1 2; do
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
@@ -795,7 +800,7 @@ jobs:
   # Combined coverage summary job - runs after both test types complete
   coverage-summary:
     name: iOS Combined Coverage
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     needs: [test, ui-tests]
     if: >-
       always() && (github.event_name == 'workflow_dispatch' ||

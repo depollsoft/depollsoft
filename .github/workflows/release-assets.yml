@@ -27,7 +27,7 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: [self-hosted, macOS, heavy]
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
@@ -64,6 +64,14 @@ jobs:
         if: inputs.platform == 'android'
         with:
           packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+      - name: Enable KVM for Android capture
+        if: inputs.platform == 'android'
+        run: |
+          sudo tee /etc/udev/rules.d/99-kvm4all.rules <<'RULE'
+          KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"
+          RULE
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Capture Wear OS round
         if: inputs.platform == 'android' && inputs.app == 'pitchperfect'
         run: |

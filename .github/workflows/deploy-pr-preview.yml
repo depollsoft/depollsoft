@@ -57,7 +57,7 @@ permissions:
 jobs:
   validate-pr:
     name: Validate PR source
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
@@ -122,7 +122,7 @@ jobs:
 
   compute-version:
     name: Compute Deploy Build
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     needs: validate-pr
     if: needs.validate-pr.result == 'success'
     permissions:
@@ -198,7 +198,7 @@ jobs:
 
   comment-start:
     name: Update PR deploy comment (start)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     needs: [validate-pr, compute-version]
     if: needs.validate-pr.result == 'success'
     permissions:
@@ -398,7 +398,7 @@ jobs:
 
   deploy-android:
     name: Deploy Android
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     needs: [validate-pr, compute-version, comment-start]
     permissions:
       contents: read
@@ -538,7 +538,7 @@ jobs:
 
   deploy-ios:
     name: Deploy iOS
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     needs: [validate-pr, compute-version, comment-start]
     permissions:
       contents: read
@@ -786,7 +786,7 @@ jobs:
       needs.validate-pr.result == 'success' &&
       needs.deploy-android.result == 'success' &&
       needs.deploy-ios.result == 'success'
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Ensure deployed mobile builds used requested preview SHA
         env:
@@ -815,7 +815,7 @@ jobs:
 
   comment-finish:
     name: Update PR deploy comment (finish)
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     needs:
       - validate-pr
       - compute-version

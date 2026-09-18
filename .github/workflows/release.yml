@@ -25,7 +25,7 @@ jobs:
       actions: read
       pull-requests: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       any: ${{ steps.plan.outputs.any }}
@@ -102,9 +102,6 @@ jobs:
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     strategy:
       fail-fast: false
-      # The heavy runners share one Mac. Competing simulators cause minute-long
-      # XCTest idle waits; complete each capture before starting the next.
-      max-parallel: 1
       matrix: ${{ fromJSON(needs.plan.outputs.captures) }}
     uses: ./.github/workflows/release-assets.yml
     with:
@@ -118,7 +115,7 @@ jobs:
       !cancelled() && needs.plan.result == 'success' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux]
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       pull-requests: write

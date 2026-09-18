@@ -12,7 +12,7 @@ permissions:
 jobs:
   provision:
     if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     timeout-minutes: 30
     concurrency:
       group: release-store-ios-signing

@@ -12,10 +12,9 @@ and unsigned archives produced by the PR workflow.
 
 ## Runner routing
 
-The iOS signing job runs on a self-hosted macOS runner labeled `heavy`. Its
-signed IPA artifact is handed to a separate self-hosted macOS runner labeled
-`light` for the Firebase upload. Metadata, Android, and comment-update jobs use
-self-hosted runners labeled `heavy`.
+The iOS signing job runs on GitHub-hosted `macos-latest`. Its signed IPA
+artifact is handed to a separate `ubuntu-latest` job for the Firebase upload.
+Metadata, Android uploads, and comment updates also use `ubuntu-latest`.
 
 ## Firebase configuration
 
