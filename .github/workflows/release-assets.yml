@@ -27,7 +27,8 @@ permissions:
   contents: read
 jobs:
   capture:
-    runs-on: ${{ inputs.platform == 'ios' && 'macos-latest' || 'ubuntu-latest' }}
+    # iOS simulator startup and captures need the standard Intel runner's 14 GB RAM.
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-26-intel' || 'ubuntu-latest' }}
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}

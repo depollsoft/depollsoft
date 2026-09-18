@@ -42,7 +42,9 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    runs-on: macos-latest
+    # iOS 26 first boot exceeds the 7 GB ARM runner's memory budget.
+    # The standard Intel runner provides 14 GB, without a larger-runner tier.
+    runs-on: macos-26-intel
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -543,7 +545,9 @@ jobs:
     permissions:
       contents: read
       checks: write
-    runs-on: macos-latest
+    # iOS 26 first boot exceeds the 7 GB ARM runner's memory budget.
+    # The standard Intel runner provides 14 GB, without a larger-runner tier.
+    runs-on: macos-26-intel
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
