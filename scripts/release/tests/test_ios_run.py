@@ -153,3 +153,16 @@ class NativeRunnerTests(unittest.TestCase):
                 ios_run.run([sys.executable, '-c', 'raise SystemExit(0)',
                              f'platform=iOS Simulator,id={udid}'])
         shutdown.assert_called_once_with(udid)
+
+    def test_job_managed_simulator_stays_booted_between_targets(self):
+        sys.path.insert(0, str(CI))
+        import ios_run
+        udid = '12345678-1234-1234-1234-123456789ABC'
+        with patch('ios_run.ios_simulator.boot') as boot, \
+             patch('ios_run.ios_simulator.shutdown') as shutdown:
+            for expected in [0, 7]:
+                status = ios_run.run([sys.executable, '-c', f'raise SystemExit({expected})',
+                                      f'platform=iOS Simulator,id={udid}'], keep_simulator_booted=True)
+                self.assertEqual(status, expected)
+        self.assertEqual(boot.call_count, 2)
+        shutdown.assert_not_called()

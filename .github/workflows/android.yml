@@ -408,7 +408,7 @@ jobs:
           disable-animations: true
           working-directory: Android
           script: >
-            bash -lc 'set -euo pipefail; adb wait-for-device;
+            bash -c 'set -euo pipefail; adb wait-for-device;
             echo "Waiting for boot to complete..."; for i in $(seq 1 120); do
             BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null
             | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then

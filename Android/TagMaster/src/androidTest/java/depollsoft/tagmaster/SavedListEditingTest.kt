@@ -610,11 +610,14 @@ class SavedListEditingTest {
             }
             assertOrder(screen, ids)
             onView(withId(R.id.editSavedList)).perform(click())
+            // RecyclerView may replace the holder when editing ends. Inspect the
+            // currently bound row after its pending adapter updates finish.
+            val finished = row(screen, ids.first()).row
             main {
-                assertEquals(View.GONE, moved.dragHandle.visibility)
-                assertEquals(View.GONE, moved.removeControl.visibility)
-                assertFalse(moved.createAccessibilityNodeInfo().actionList.any { it.label == context.getString(R.string.MoveDown) })
-                assertTrue(moved.findViewById<View>(R.id.tagItemView).isClickable)
+                assertEquals(View.GONE, finished.dragHandle.visibility)
+                assertEquals(View.GONE, finished.removeControl.visibility)
+                assertFalse(finished.createAccessibilityNodeInfo().actionList.any { it.label == context.getString(R.string.MoveDown) })
+                assertTrue(finished.findViewById<View>(R.id.tagItemView).isClickable)
             }
         }
 

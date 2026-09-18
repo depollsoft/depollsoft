@@ -171,6 +171,6 @@ ruby scripts/release/tests/test_production.rb
 actionlint .github/workflows/release*.yml
 ```
 
-The unit tests cover isolated app selection, platform versions, initial infrastructure merges, version/build regressions, retries, copy export, and corrupt or incomplete screenshots. Live capture builds and runs the native tests. Signed submission requires store credentials and is exercised by a release PR, not an infrastructure PR.
+The unit tests cover isolated app selection, platform versions, initial infrastructure merges, version/build regressions, retries, copy export, and corrupt or incomplete screenshots. iOS CI keeps its owned simulator running between sequential test targets, then deletes it in the job cleanup step. Live capture builds and runs the native tests. Signed submission requires store credentials and is exercised by a release PR, not an infrastructure PR.
 
 References: [Fastlane App Store delivery](https://docs.fastlane.tools/actions/deliver/), [Fastlane Play delivery](https://docs.fastlane.tools/actions/upload_to_play_store/), and the apps' existing [support](https://apps.depoll.com/) and [privacy](https://apps.depoll.com/privacy/) pages.

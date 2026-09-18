@@ -59,7 +59,8 @@ def signal_command(child, signum):
 
 
 def run(command, *,
-        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15):
+        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15,
+        keep_simulator_booted=False):
     child = None
     # Only explicit iOS Simulator destinations belong to this invocation.
     simulator = next((match[1] for value in command
@@ -162,8 +163,9 @@ def run(command, *,
                 finally:
                     child.stdout.close()
         finally:
-            if simulator:
+            if simulator and not keep_simulator_booted:
                 # A process-signal failure must not skip our device's cleanup.
+                # Jobs keeping the device between targets own its final deletion.
                 ios_simulator.shutdown(simulator)
 
 
@@ -174,7 +176,8 @@ if __name__ == '__main__':
     try:
         # Scheduled UI jobs build before testing; regular CI reuses its build.
         startup = 900 if 'test' in sys.argv[1:] else 300
-        status = run(sys.argv[1:], fail_fast=True, startup_timeout=startup)
+        status = run(sys.argv[1:], fail_fast=True, startup_timeout=startup,
+                     keep_simulator_booted=os.environ.get("IOS_KEEP_SIMULATOR_BOOTED") == "true")
     except KeyboardInterrupt:
         status = 130
     raise SystemExit(status if status >= 0 else 128 - status)

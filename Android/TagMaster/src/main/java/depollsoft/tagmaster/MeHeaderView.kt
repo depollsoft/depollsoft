@@ -176,8 +176,13 @@ class MeHeaderView : LinearLayout {
     private fun showOpenTagDialog() {
         val content = inflate(context, R.layout.dialog_open_tag, null)
         val input = content.findViewById<TextInputEditText>(R.id.openTagIdInput)
+        // Material's 80dp vertical insets leave too little room for a wrapped error
+        // above the keyboard on small screens. Keep a 24dp margin instead.
+        val verticalInset = (24 * resources.displayMetrics.density).toInt()
         val dialog =
             MaterialAlertDialogBuilder(context)
+                .setBackgroundInsetTop(verticalInset)
+                .setBackgroundInsetBottom(verticalInset)
                 .setTitle(R.string.home_enter_tag_id)
                 .setView(content)
                 .setPositiveButton(R.string.home_open, null)

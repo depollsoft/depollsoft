@@ -52,6 +52,8 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       # Native timeouts stop hangs; result validation also enforces actual duration.
       IOS_MAX_TEST_SECONDS: '30'
+      # Reuse this job's device across sequential suites; always delete it below.
+      IOS_KEEP_SIMULATOR_BOOTED: 'true'
       # UTF-8 encoding for build tools
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
