@@ -20,6 +20,7 @@ import icons
 
 sys.path.insert(0, str(ROOT / 'scripts/ci'))
 import ios_simulator
+import ios_run
 
 IOS_DEVICES = {'iphone': ('iPhone 17 Pro Max', {(1320, 2868)}),
                'ipad': ('iPad Pro 13-inch (M5)', {(2064, 2752)})}
@@ -34,6 +35,29 @@ def run(*args, **kwargs):
 
 def output(*args, timeout=300):
     return subprocess.check_output(list(map(str, args)), text=True, timeout=timeout).strip()
+
+
+def run_owned(*args, timeout, env, shutdown_timeout=15):
+    """Stop this command's descendants before returning or retrying."""
+    command = list(map(str, args))
+    print('+ ' + ' '.join(command), flush=True)
+    child = subprocess.Popen(command, start_new_session=True,
+                             env=dict(env, NSUnbufferedIO='YES'))
+    try:
+        status = child.wait(timeout=timeout)
+        if status:
+            raise subprocess.CalledProcessError(status, command)
+    finally:
+        # Even a completed xcodebuild can leave descendants behind. Use the
+        # same permission-safe signaling as CI, restricted to our process group.
+        ios_run.signal_command(child, signal.SIGTERM)
+        try:
+            child.wait(timeout=shutdown_timeout)
+        except subprocess.TimeoutExpired:
+            pass
+        finally:
+            ios_run.signal_command(child, signal.SIGKILL)
+            child.wait(timeout=5)
 
 
 class NativeCaptureError(RuntimeError):
@@ -90,6 +114,30 @@ def ios(app, dest):
     runtime = ios_runtime(sdk, data['runtimes'])
     os.environ['DEVELOPER_DIR'] = developer
     print(f'Capture toolchain: {developer}; runtime: {runtime}', flush=True)
+    build = ['-workspace', ROOT / 'iOS/iOS.xcworkspace', '-scheme', config['ios_scheme'],
+             '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
+             '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
+             '-only-testing:' + app + 'UITests/StoreScreenshotTests',
+             'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', f'ARCHS={os.uname().machine}']
+    timings = []
+
+    def xcode(label, *args, **kwargs):
+        started = time.monotonic()
+        succeeded = False
+        try:
+            # Keep compiler command lines out of the live log so the actual
+            # capture progress remains visible through GitHub's log API.
+            run_owned('xcodebuild', *(['-quiet'] if label == 'build' else []), *args, **kwargs)
+            succeeded = True
+        finally:
+            seconds = round(time.monotonic() - started, 1)
+            timings.append({'stage': label, 'seconds': seconds, 'success': succeeded})
+            write_json(dest / 'capture-timings.json', timings)
+            print(f'{label}: {seconds}s, success={succeeded}', flush=True)
+
+    # Build before booting a simulator, and reuse these products for both sizes.
+    xcode('build', 'build-for-testing', '-jobs', '2', '-destination',
+          'generic/platform=iOS Simulator', *build, env=env, timeout=600)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
@@ -109,26 +157,23 @@ def ios(app, dest):
                 for theme in ('light', 'dark'):
                     def take(attempt):
                         if attempt:
-                            # A failed XCTest service can outlive the app. Reset
-                            # only our disposable simulator before retrying.
+                            # Reset only our device if XCTest becomes unavailable.
                             ios_simulator.shutdown(udid)
                             run('xcrun', 'simctl', 'erase', udid, timeout=60)
-                        # XCTest may shut down its device after a completed tour.
                         ios_simulator.boot(udid)
                         run('xcrun', 'simctl', 'status_bar', udid, 'override', '--time', '9:41',
                             '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3',
                             '--batteryState', 'charged', '--batteryLevel', '100')
-                        subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']], check=False)
+                        subprocess.run(['xcrun', 'simctl', 'uninstall', udid, config['bundle_id']],
+                                       check=False, timeout=30)
                         run('xcrun', 'simctl', 'ui', udid, 'appearance', theme)
                         result = work / f'{family}-{theme}-{attempt}.xcresult'
-                        env = dict(os.environ, TEST_RUNNER_STORE_SCREENSHOTS='1')
-                        run('xcodebuild', 'test', '-jobs', '2', '-workspace', ROOT / 'iOS/iOS.xcworkspace',
-                            '-scheme', config['ios_scheme'], '-destination', f'platform=iOS Simulator,id={udid}',
-                            '-derivedDataPath', ROOT / 'build/release/DerivedData' / app,
-                            '-clonedSourcePackagesDirPath', ROOT / 'build/release/SourcePackages',
-                            '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                            '-only-testing:' + app + 'UITests/StoreScreenshotTests',
-                            'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator', env=env)
+                        # Reuse compiled products while each tour starts with
+                        # fresh app data, matching the original capture behavior.
+                        xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
+                              '-destination', f'platform=iOS Simulator,id={udid}',
+                              '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
+                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=300)
                         return result
                     result = native_capture(app, f'{family}-{theme}', take, simulator=True)
                     attachments = work / f'{family}-{theme}'
