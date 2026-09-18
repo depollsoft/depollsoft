@@ -84,11 +84,11 @@ Build a gallery for a capture bundle:
 
 Open `index.html` inside the bundle to view the newly captured full-size images and contact sheets. Actions builds this gallery without downloading current store screenshots.
 
-For a local comparison, download the current store screenshots into a separate baseline directory:
+For a local comparison, download the current store screenshots into a new, separate baseline directory. The command rejects an existing output directory so screenshots from an earlier download cannot remain in the gallery:
 
 ```sh
 .venv-release/bin/python scripts/release/review.py --app tagmaster \
-  --platform ios --download-current --output build/release/baselines/tagmaster-ios
+  --platform ios --download-current --output "build/release/baselines/tagmaster-ios-$(date +%Y%m%d-%H%M%S)"
 ```
 
 The baseline has its own gallery and `current-store/sources.json` with source URLs and retrieval time. Keep it outside the capture bundle. The public Play page groups multiple device types together; inspect the actual images when mapping coverage.

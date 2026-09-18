@@ -36,6 +36,8 @@ def fetch(url):
 
 
 def current(app, platform, dest):
+    # A reused directory can retain screenshots removed from the store listing.
+    dest.mkdir(parents=True, exist_ok=False)
     bundle = APPS[app]['bundle_id']
     if platform == 'ios':
         source = f'https://itunes.apple.com/lookup?bundleId={bundle}&country=us'
@@ -103,7 +105,7 @@ if __name__ == '__main__':
     parser.add_argument('--platform', required=True, choices=['ios', 'android'])
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--download-current', action='store_true',
-                        help='Download store screenshots into a separate baseline output directory')
+                        help='Download store screenshots into a new, separate baseline output directory')
     args = parser.parse_args()
     if args.download_current:
         current(args.app, args.platform, args.output)
