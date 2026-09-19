@@ -2897,15 +2897,24 @@ TM_CAPTURE_IMPL
             [self settle];
             XCTAssertTrue([host.navigationItem.rightBarButtonItems containsObject:keyItem]);
             UIView *key = keyItem.customView;
-            CGRect face = [key convertRect:key.bounds toView:self.window];
-            CGRect target = CGRectMake(CGRectGetMidX(face) - 22, CGRectGetMidY(face) - 22, 44, 44);
             XCTAssertTrue(self.window.isKeyWindow);
             XCTAssertEqual(key.window, self.window);
-            BOOL hits = YES;
-            for (CGFloat x = CGRectGetMinX(target) + .5; x < CGRectGetMaxX(target); x += 1) for (CGFloat y = CGRectGetMinY(target) + .5; y < CGRectGetMaxY(target); y += 1) {
-                UIView *hit = [self.window hitTest:CGPointMake(x, y) withEvent:nil];
-                if (hit != key && ![hit isDescendantOfView:key]) hits = NO;
-            }
+            UIWindow *window = self.window;
+            BOOL (^hitsAcrossTarget)(void) = ^BOOL{
+                CGRect current = [key convertRect:key.bounds toView:window];
+                CGRect square = CGRectMake(CGRectGetMidX(current) - 22, CGRectGetMidY(current) - 22, 44, 44);
+                for (CGFloat x = CGRectGetMinX(square) + .5; x < CGRectGetMaxX(square); x += 1) for (CGFloat y = CGRectGetMinY(square) + .5; y < CGRectGetMaxY(square); y += 1) {
+                    UIView *hit = [window hitTest:CGPointMake(x, y) withEvent:nil];
+                    if (hit != key && ![hit isDescendantOfView:key]) return NO;
+                }
+                return YES;
+            };
+            // The bar lays the key out over a few run-loop turns after a size change;
+            // wait for the reachable state the assertion below needs rather than for
+            // a fixed delay.
+            TMSpinUntil(5, hitsAcrossTarget);
+            CGRect face = [key convertRect:key.bounds toView:self.window];
+            BOOL hits = hitsAcrossTarget();
             NSLog(@"TM_LAYOUT_PROBE sheet face=%@ nav=%@ target44hits=%d translates=%d intrinsic=%@", NSStringFromCGRect(face), NSStringFromCGRect(navigation.navigationBar.frame), hits, key.translatesAutoresizingMaskIntoConstraints, NSStringFromCGSize(key.intrinsicContentSize));
             XCTAssertGreaterThanOrEqual(key.bounds.size.width, 44);
             XCTAssertTrue(hits, @"Native hit testing must reach the key across a 44pt square, independently of its visible face");
