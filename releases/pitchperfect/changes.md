@@ -13,3 +13,5 @@ fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
 ## Release preparation
 
 The Android store capture fixture records both optional telemetry choices as declined before opening the returning-user scenes, matching the existing iOS fixture.
+
+Restored the Espresso device-test dependency required by the existing privacy consent test, so the store capture APK compiles after the CI migration.
