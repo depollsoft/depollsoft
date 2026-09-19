@@ -2,15 +2,15 @@
   "ios": {
     "name": "Pitch Perfect (Pitch Pipe)",
     "subtitle": "A pitch pipe for singers",
-    "description": "Find your starting note with a digital pitch pipe. Play individual notes or chords, see note names and frequencies, and match major or minor key signatures to their starting pitches.\n\nKeep a song list with the pitches you need for rehearsal. Add songs, choose their keys, and arrange them in the order you sing.\n\nUse the pitch pipe widget to sound a note from your Home Screen. Light and dark appearances keep the controls readable on your phone or tablet.",
+    "description": "Pitch Perfect is a digital pitch pipe for the musically inclined. Find your starting note before a rehearsal, warm up with your choir, or get a song going with friends. Just press and hold a note to hear it.\n\nNot sure which key goes with the sharps or flats on your sheet music? Match the key signature on the page to the one on your screen, then sound its starting pitch. Keep a list of songs and their keys so you're ready for the next one.\n\nWith Pitch Perfect you can:\n- Play individual notes or sound several together as a chord.\n- See note names and frequencies as you play.\n- Find starting pitches from major and minor key signatures.\n- Add songs, save their keys, and drag to arrange your singing order or sort alphabetically.\n- Sound a note from a Home Screen widget.\n- Use light or dark appearance on your phone or tablet.\n\nPitch Perfect generates a simple tone based on a sine wave. The aim is quick, easy access to a reference pitch when you need it.\n\nQuestions, problems, or feature requests? Email support@davidpoll.com.",
     "keywords": "pitch pipe,music,singing,choir,a cappella,notes,key signature,barbershop",
-    "promotional_text": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
+    "promotional_text": "Find your starting pitch, sound chords, and keep your songs and keys ready for rehearsal.",
     "support_url": "https://apps.depoll.com/barbershop/pitch-perfect/",
     "privacy_url": "https://apps.depoll.com/privacy/"
   },
   "android": {
-    "title": "Pitch Perfect",
-    "short_description": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
-    "full_description": "Find your starting note with a digital pitch pipe. Play individual notes or chords, see note names and frequencies, and match major or minor key signatures to their starting pitches.\n\nKeep a song list with the pitches you need for rehearsal. Add songs, choose their keys, and arrange them in the order you sing.\n\nUse the pitch pipe widget to sound a note from your Home Screen. Light and dark appearances keep the controls readable on your phone or tablet."
+    "title": "Pitch Perfect (Pitch Pipe)",
+    "short_description": "Get your starting note, match key signatures, and keep your songs in order.",
+    "full_description": "Pitch Perfect is a digital pitch pipe for the musically inclined. Find your starting note before a rehearsal, warm up with your choir, or get a song going with friends. Just press and hold a note to hear it.\n\nNot sure which key goes with the sharps or flats on your sheet music? Match the key signature on the page to the one on your screen, then sound its starting pitch. Keep a list of songs and their keys so you're ready for the next one.\n\nWith Pitch Perfect you can:\n- Play individual notes or sound several together as a chord.\n- See note names and frequencies as you play.\n- Find starting pitches from major and minor key signatures.\n- Add songs, save their keys, and drag to arrange your singing order or sort alphabetically.\n- Sound a note from a Home Screen widget.\n- Use light or dark appearance on your phone or tablet.\n- Play notes directly on a compatible Wear OS watch.\n\nPitch Perfect generates a simple tone based on a sine wave. The aim is quick, easy access to a reference pitch when you need it.\n\nQuestions, problems, or feature requests? Email support@davidpoll.com."
   }
 }
