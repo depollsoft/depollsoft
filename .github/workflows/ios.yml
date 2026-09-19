@@ -42,9 +42,9 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    # iOS 26 needs more than 7 GB; Intel hosts stalled during first boot.
-    # Native Apple Silicon with 14 GB passed the cold-boot/app-launch probe.
-    runs-on: macos-26-xlarge
+    # Stay on the free standard Apple Silicon tier. Build before booting,
+    # then run compiled test products without resolving packages again.
+    runs-on: macos-26
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -541,9 +541,9 @@ jobs:
     permissions:
       contents: read
       checks: write
-    # iOS 26 needs more than 7 GB; Intel hosts stalled during first boot.
-    # Native Apple Silicon with 14 GB passed the cold-boot/app-launch probe.
-    runs-on: macos-26-xlarge
+    # Stay on the free standard Apple Silicon tier. Build before booting,
+    # then run compiled test products without resolving packages again.
+    runs-on: macos-26
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-

@@ -27,8 +27,8 @@ permissions:
   contents: read
 jobs:
   capture:
-    # iOS 26 captures need the native Apple Silicon runner with 14 GB RAM.
-    runs-on: ${{ inputs.platform == 'ios' && 'macos-26-xlarge' || 'ubuntu-latest' }}
+    # Use the free standard Apple Silicon runner for native iOS captures.
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-26' || 'ubuntu-latest' }}
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
