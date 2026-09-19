@@ -3,17 +3,17 @@
   "app": "pitchperfect",
   "platforms": {
     "ios": {
-      "version": "3.0.0",
-      "build": 1789748893
+      "version": "3.0.1",
+      "build": 1789857723
     },
     "android": {
-      "version": "5.0.0",
-      "build": 1789748893
+      "version": "5.0.1",
+      "build": 1789857723
     }
   },
-  "notes": "A redesigned pitch pipe shows sounding notes and chords. Choose song keys from the key-signature list, organize your rehearsal songs, and sound notes from the refreshed Home Screen widget. Updated light and dark layouts make notes and song lists easier to read.",
+  "notes": "Choose whether to share usage analytics and crash reports, with separate controls that are off until you enable them. Change your choices at any time in Settings.",
   "since": {
-    "ios": "b258d9677b8d37a5ac305f9490a3723c39251f84",
-    "android": "25f4933267001e10997c4b4b9f19d57b94f70039"
+    "ios": "0573576a091fc3c048dc332b263822a6383a19ed",
+    "android": "2c93a61e817e60917167e7269d62a003b886d6e0"
   }
 }
