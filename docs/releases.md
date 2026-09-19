@@ -78,7 +78,7 @@ Tag Master UI suites launch and terminate the app once in class setup before tim
 
 Android CI and preview builds reuse installed SDK packages after checking their tools, platform files, and accepted license file. Missing packages use the installed SDK manager with a four-minute deadline and accept the requested packages' licenses. The pinned setup action is the fallback when command-line tools are absent, with a five-minute deadline. Both paths verify the installed files afterward. They do not run a second license scan and reinstall after setup.
 
-Android instrumented CI runs the two Tag Master fixtures that install process-wide URL handlers in separate instrumentation invocations, plus the controlled loading fixture that needs a fresh background executor, then runs the shared suite without them. `scripts/ci/android_instrumented.sh` retains all JUnit results and coverage data and serializes Gradle projects so they do not compete for the emulator.
+Android screen behaviour is tested on the JVM with Robolectric in `src/test`, which `Android CI` runs on every pull request. `src/androidTest` holds only a device-only residue (pointer drags, IME geometry, `PdfRenderer`, the opt-in store-screenshot capture and the FirebaseUI bytecode-patch check) and has no CI runner; run it against a device or emulator by hand.
 
 The tests use the real native views. Example songs are local to the disposable device; Tag Master's favorites and results load from the live catalog. No account sign-in or remote user-data writes are needed. Missing/deleted catalog entries, empty results, and failed media loads fail capture. Pitch Perfect captures its existing ad-free state on Android. Its iOS debug build suppresses ad requests; production builds have no capture switch.
 
