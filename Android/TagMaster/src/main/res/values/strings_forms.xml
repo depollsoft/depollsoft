@@ -19,4 +19,7 @@
     <string name="forms_clearing_cache">Clearing cache</string>
     <string name="forms_clear_cache_failed">Could not clear the cache. Try again.</string>
     <string name="forms_cache_size_failed">Could not calculate the cache size.</string>
+    <string name="forms_signed_in">Logged in. Your tag lists will sync.</string>
+    <string name="forms_sign_in_failed">Log in didn\'t finish. Check your connection and try again.</string>
+    <string name="forms_sign_in_canceled">Log in canceled.</string>
 </resources>

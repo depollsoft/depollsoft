@@ -2,9 +2,7 @@ package depollsoft.tagmaster
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -12,20 +10,22 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import com.bindroid.BindingMode
 import com.bindroid.converters.BoolConverter
-import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.track
 import com.bindroid.trackable.trackable
 import com.bindroid.ui.CompoundButtonCheckedProperty
 import com.bindroid.ui.UiBinder
 import com.bindroid.utils.bind
 import com.bindroid.utils.compiledProp
+import com.facebook.login.LoginManager
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import depollsoft.lib.auth.SignInOutcome
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.AppLog
 import kotlinx.coroutines.CancellationException
@@ -35,7 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SettingsActivity : AppCompatActivity() {
-    private val RC_SIGN_IN = 123
     private lateinit var minDownloadSpinner: MaterialAutoCompleteTextView
     private lateinit var minRatingSpinner: MaterialAutoCompleteTextView
     private lateinit var sheetMusicSpinner: MaterialAutoCompleteTextView
@@ -47,23 +46,32 @@ class SettingsActivity : AppCompatActivity() {
     var clearingCache: Boolean by trackable(false)
         private set
 
-    private val loginTrackable = Trackable()
-
+    /** Mirrors Firebase's auth state through [AuthState], so it repaints on any auth change. */
     val loggedIn: Boolean
-        get() {
-            loginTrackable.track()
-            return Firebase.auth.currentUser != null
-        }
+        get() = AuthState.isSignedIn
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-    ) {
-        super.onActivityResult(requestCode, resultCode, data)
-        loginTrackable.updateTrackers()
-    }
+    private val signInLauncher =
+        registerForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
+            loggingIn = false
+            val response = result.idpResponse
+            // Firebase's auth state, not FirebaseUI's result code, decides whether the
+            // person is signed in: FirebaseUI can report an error or cancellation after
+            // Firebase has already accepted a Facebook account that has no email address.
+            val outcome =
+                SignInOutcome.resolve(
+                    isSignedIn = Firebase.auth.currentUser != null,
+                    resultOk = result.resultCode == RESULT_OK && response != null,
+                    hasError = response?.error != null,
+                )
+            AuthState.notifyChanged()
+            showMessage(
+                when (outcome) {
+                    SignInOutcome.SIGNED_IN -> R.string.forms_signed_in
+                    SignInOutcome.FAILED -> R.string.forms_sign_in_failed
+                    SignInOutcome.CANCELED -> R.string.forms_sign_in_canceled
+                },
+            )
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,28 +128,14 @@ class SettingsActivity : AppCompatActivity() {
         UiBinder.bind(this, R.id.loginButton, "Visibility", "LoggedIn", BoolConverter.get(true))
         UiBinder.bind(this, R.id.logoutButton, "Visibility", "LoggedIn", BoolConverter.get())
         findViewById<View>(R.id.loginButton).setOnClickListener {
-            startActivityForResult(
-                AuthUI
-                    .getInstance()
-                    .createSignInIntentBuilder()
-                    .setAvailableProviders(
-                        listOf(
-                            AuthUI.IdpConfig
-                                .EmailBuilder()
-                                .setRequireName(false)
-                                .setAllowNewAccounts(true)
-                                .build(),
-                            AuthUI.IdpConfig.GoogleBuilder().build(),
-                            AuthUI.IdpConfig.FacebookBuilder().build(),
-                        ),
-                    ).setTheme(R.style.AppTheme_ActionBar)
-                    .build(),
-                RC_SIGN_IN,
-            )
+            if (loggingIn) return@setOnClickListener
+            loggingIn = true
+            signInLauncher.launch(createSignInIntent())
         }
         findViewById<View>(R.id.logoutButton).setOnClickListener {
+            LoginManager.getInstance().logOut()
             AuthUI.getInstance().signOut(this@SettingsActivity).continueWith {
-                loginTrackable.updateTrackers()
+                AuthState.notifyChanged()
             }
         }
         findViewById<View>(R.id.changelogButton).setOnClickListener {
@@ -272,12 +266,43 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean = keyCode == KeyEvent.KEYCODE_BACK && loggingIn || super.onKeyDown(keyCode, event)
+    override fun onResume() {
+        super.onResume()
+        // The sign-in result, when one arrives, is delivered before onResume; anything that
+        // reaches here without one (process death mid-flow, a lost result) still repaints.
+        loggingIn = false
+        AuthState.notifyChanged()
+    }
 
     override fun onSupportNavigateUp() = navigateUpOrHome()
+
+    private fun createSignInIntent() =
+        AuthUI
+            .getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(SIGN_IN_PROVIDERS)
+            // Credential saving is what crashes FirebaseUI for Facebook accounts without an
+            // email address; the build-time patch in buildSrc guards the rest of that path.
+            .setCredentialManagerEnabled(false)
+            .setTheme(R.style.AppTheme_ActionBar)
+            .build()
+
+    internal companion object {
+        val SIGN_IN_PROVIDERS: List<AuthUI.IdpConfig> by lazy {
+            listOf(
+                AuthUI.IdpConfig
+                    .EmailBuilder()
+                    .setRequireName(false)
+                    .setAllowNewAccounts(true)
+                    .build(),
+                AuthUI.IdpConfig.GoogleBuilder().build(),
+                AuthUI.IdpConfig
+                    .FacebookBuilder()
+                    .setPermissions(listOf("email", "public_profile"))
+                    .build(),
+            )
+        }
+    }
 
     private fun refreshLearningTracksChoice() {
         val index = listOf(null, true, false).indexOf(SettingsModel.randomLearningTracksFilter)
