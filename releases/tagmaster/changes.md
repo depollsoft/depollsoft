@@ -9,3 +9,7 @@ fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
 ebd39ba0 Cut PR CI to unit suites: UI tests to in-process tests, dead jobs removed (#65)
 fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
 987d5efa Android: finish Facebook login without an app restart (#61)
+
+## Release preparation
+
+The Android store capture fixture records both optional telemetry choices as declined before opening the returning-user scenes, matching the existing iOS fixture.

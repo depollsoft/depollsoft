@@ -11,7 +11,7 @@
       "build": 1789857723
     }
   },
-  "notes": "Choose whether to share usage analytics and crash reports, with separate controls that are off until you enable them. Change your choices at any time in Settings. On Android, Facebook sign-in now completes without restarting the app.",
+  "notes": "Choose whether to share usage analytics and crash reports, with separate controls that are off until you enable them. Change your choices at any time in Settings.",
   "since": {
     "ios": "d27ffb0e39626b67f94eeed4b6227dd99c710d7f",
     "android": "2bbe672738f758fcb75bd1e31c0d407c91c7fba4"
