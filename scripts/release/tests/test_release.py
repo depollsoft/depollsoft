@@ -41,6 +41,31 @@ class PlanTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.validate_plan('tagmaster', new, old)
 
+    def test_wear_build_reserves_next_number_and_respects_store_limit(self):
+        old = plan('pitchperfect', {'android': {'version': '5.0.0', 'build': 1800000000}})
+        new = plan('pitchperfect', {'android': {'version': '5.0.1', 'build': 1800000001}})
+        with self.assertRaises(ValueError):
+            release.validate_plan('pitchperfect', new, old)
+        new['platforms']['android']['build'] = 1800000002
+        release.validate_plan('pitchperfect', new, old)
+        new['platforms']['android']['build'] = 2100000000
+        with self.assertRaises(ValueError):
+            release.validate_plan('pitchperfect', new)
+
+    def test_watch_has_its_own_release_notes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'store/pitchperfect').mkdir(parents=True)
+            (root / 'store/pitchperfect/listing.json').write_text((release.ROOT / 'store/pitchperfect/listing.json').read_text())
+            (root / 'releases/pitchperfect').mkdir(parents=True)
+            value = plan('pitchperfect', {'android': {'version': '5.0.0', 'build': 1800000000}})
+            (root / 'releases/pitchperfect/release.json').write_text(json.dumps(value))
+            with patch.object(release, 'ROOT', root):
+                release.export('pitchperfect', 'android', root / 'output')
+            notes = root / 'output/metadata/en-US/changelogs'
+            self.assertEqual((notes / 'default.txt').read_text().strip(), value['notes'])
+            self.assertEqual((notes / '1800000001.txt').read_text().strip(), release.APPS['pitchperfect']['wear']['notes'])
+
     def test_single_app_export_does_not_include_other_app(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

@@ -120,7 +120,7 @@ jobs:
           fi
       - name: Compile production variants
         run: >-
-          ./gradlew :PitchPerfect:compileReleaseKotlin :TagMaster:compileReleaseKotlin
+          ./gradlew :PitchPerfect:compileReleaseKotlin :PitchPerfectWear:compileReleaseJavaWithJavac :TagMaster:compileReleaseKotlin
           --stacktrace --build-cache --console=plain --no-daemon --no-parallel
 
       - name: Upload Gradle profile reports
