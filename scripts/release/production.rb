@@ -117,6 +117,7 @@ platform :ios do
       skip_binary_upload: !existing_build.nil?,
       metadata_path: File.join(assets, 'metadata'), screenshots_path: File.join(assets, 'screenshots'),
       overwrite_screenshots: true, force: true, run_precheck_before_submit: false,
+      submission_information: {export_compliance_uses_encryption: false},
       submit_for_review: true, automatic_release: true,
     )
   end
