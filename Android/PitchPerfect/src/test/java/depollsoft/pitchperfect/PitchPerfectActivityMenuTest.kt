@@ -25,6 +25,10 @@ class PitchPerfectActivityMenuTest {
     @Before
     fun useInMemoryPreferences() {
         Preferences.setTestMode(true)
+        // Another class may have emptied the in-memory store since SettingsModel's `preference`
+        // delegates registered their defaults, which happens only once. Put them back so this
+        // test reads real settings whatever order it runs in.
+        ScreenTestSupport.seedSettingsDefaults()
     }
 
     @After

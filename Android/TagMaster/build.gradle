@@ -49,15 +49,15 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.23.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 
-    // Espresso UI Testing Dependencies
+    // What is left instrumented needs a real device: native pointer drags, the IME window's
+    // on-screen geometry, Android's PDF renderer, store-screenshot capture and the FirebaseUI
+    // bytecode patch as it reaches the packaged app. The screen suites they were extracted from
+    // now run on the JVM under Robolectric in src/test, so the RecyclerView action helpers,
+    // intent-stubbing, activity rules and fragment-testing are no longer used here.
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.7.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.7.0'
     androidTestImplementation 'androidx.test:core:1.7.0'
-    androidTestImplementation 'androidx.test:rules:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
-    androidTestImplementation 'androidx.fragment:fragment-testing:1.9.0'
 }
 
 android {
@@ -116,6 +116,13 @@ android {
 
     testOptions {
         unitTests.includeAndroidResources = true
+
+        // Robolectric holds one sandbox, and one instrumented android-all jar, per distinct
+        // @Config. The migrated screen tests add several, so the default test heap is no longer
+        // enough. This only sizes the test JVM; nothing about the app changes.
+        unitTests.all { test ->
+            test.maxHeapSize = '4g'
+        }
         // Disable animations for faster/more reliable UI tests in CI
         animationsDisabled = true
         

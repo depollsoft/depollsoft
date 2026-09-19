@@ -724,6 +724,14 @@
     });
 }
 
+// Shipping deadline for a timed (accessibility-activated) key note. Only the
+// tests reassign it, and they restore it; the app never calls the setter, so the
+// delay below is the same 1.5 seconds it has always been.
+static NSTimeInterval TMTimedKeyNoteDuration = 1.5;
+
++ (NSTimeInterval)timedKeyNoteDuration { return TMTimedKeyNoteDuration; }
++ (void)setTimedKeyNoteDuration:(NSTimeInterval)duration { TMTimedKeyNoteDuration = duration; }
+
 - (void)cancelTimedKeyNote {
     // UIKit input, note binding and the delayed callback all run on the main queue.
     self.keyActivationGeneration++;
@@ -745,7 +753,7 @@
     DPNote *note = self.tag.keyNote;
     [note play];
     __weak DPTagSummaryController *weakSelf = self;
-    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC);
+    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, DPTagSummaryController.timedKeyNoteDuration * NSEC_PER_SEC);
     dispatch_after(delayTime, dispatch_get_main_queue(), ^{
         DPTagSummaryController *owner = weakSelf;
         // A cancelled/replaced activation no longer owns this shared note's cleanup.

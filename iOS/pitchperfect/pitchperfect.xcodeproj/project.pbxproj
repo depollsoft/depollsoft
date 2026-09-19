@@ -18,13 +18,11 @@
 		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
 		1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */; };
 		1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A3422F533F900EA9F2E /* DPSongsModel.swift */; };
-		1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCE32A18234926C3795761C /* KeySignatureUITests.swift */; };
 		28B4A55B1D1294EE66199306 /* PitchPerfectWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E676252BBFDF4F8F575E325D /* PitchPerfectWidget.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		299FC208CD04C88A41A821FB /* pitchperfectUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */; };
 		2EF6CD82388563FB4E1569A0 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 62DC20AC676D89FAF6306FE2 /* GoogleMobileAds */; };
 		3DDFB0BCB5E994DA2A6FB0E8 /* panobackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B403D31588703200FCA77C /* panobackground.png */; };
 		47172D6AC4A2EE44B24A9BD2 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C312820713220954FBDB7D29 /* Foundation.framework */; };
-		4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB387F /* SettingsUITests.swift */; };
 		4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */; };
 		A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
@@ -131,6 +129,11 @@
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
 		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
+		4E11C49FE3985B4E884CC505 /* PitchPerfectControllerTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */; };
+		EE2907DB0CD15B608722189D /* PitchPerfectNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */; };
+		4C675DB105B35F21BA509DAF /* PitchPerfectNoteAndKeyListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */; };
+		C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */; };
+		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
 		4795F92D712D96A7A68B3E15 /* GoogleUserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = 86AE1D206D6669437FF116A7 /* GoogleUserMessagingPlatform */; };
@@ -333,7 +336,6 @@
 		A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPTestAppDelegate.h; sourceTree = "<group>"; };
 		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
 		A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = pitchperfectUITests.swift; sourceTree = "<group>"; };
-		BDCE32A18234926C3795761C /* KeySignatureUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeySignatureUITests.swift; sourceTree = "<group>"; };
 		BE992AD2E1386173B2838076 /* DPAppLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DPAppLog.swift; path = ../../depolllib/DPAppLog.swift; sourceTree = "<group>"; };
 		BF5A9239DD6F1B199D1E7307 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0AUTH001000000000000003 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -349,7 +351,6 @@
 		C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0050000000000000F5 /* PitchChordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChordTests.swift; sourceTree = "<group>"; };
 		C312820713220954FBDB7D29 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		C486582193CBB54AC3DB387F /* SettingsUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
 		C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DesignTourUITests.swift; sourceTree = "<group>"; };
 		A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetHitTargetUITests.swift; sourceTree = "<group>"; };
 		E676252BBFDF4F8F575E325D /* PitchPerfectWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PitchPerfectWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -358,6 +359,11 @@
 		A7D10A010000000000000001 /* PitchWidgetAudio.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetAudio.swift; sourceTree = "<group>"; };
 		A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PitchPerfectWidget.entitlements; sourceTree = "<group>"; };
 		A7D10A070000000000000007 /* PitchWidgetRangeIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetRangeIntent.swift; sourceTree = "<group>"; };
+		FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectControllerTestCase.swift; sourceTree = "<group>"; };
+		BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNavigationTests.swift; sourceTree = "<group>"; };
+		D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNoteAndKeyListTests.swift; sourceTree = "<group>"; };
+		F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsPresentationTests.swift; sourceTree = "<group>"; };
+		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
 		FD2D9CF23F62F9CB913287A2 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
@@ -462,8 +468,6 @@
 		2F83E4AA7C036637AFBB484D /* pitchperfectUITests */ = {
 			isa = PBXGroup;
 			children = (
-				BDCE32A18234926C3795761C /* KeySignatureUITests.swift */,
-				C486582193CBB54AC3DB387F /* SettingsUITests.swift */,
 				C486582193CBB54AC3DB38A0 /* DesignTourUITests.swift */,
 				A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */,
 				0F8B9AFCD4ED5E9F6865924C /* SongManagementUITests.swift */,
@@ -671,6 +675,11 @@
 				C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */,
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
+				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */,
+				D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */,
+				BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */,
+				FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */,
 				63DC36D4151E9000007C46DB /* Supporting Files */,
 			);
 			path = pitchperfectTests;
@@ -1025,6 +1034,11 @@
 				C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
+				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */,
+				4C675DB105B35F21BA509DAF /* PitchPerfectNoteAndKeyListTests.swift in Sources */,
+				EE2907DB0CD15B608722189D /* PitchPerfectNavigationTests.swift in Sources */,
+				4E11C49FE3985B4E884CC505 /* PitchPerfectControllerTestCase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1032,8 +1046,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1EA67D24AEEB7E04C9502725 /* KeySignatureUITests.swift in Sources */,
-				4F1A765B2B7CD00452603185 /* SettingsUITests.swift in Sources */,
 				4F1A765B2B7CD004526031A0 /* DesignTourUITests.swift in Sources */,
 				A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */,
 				631D517D271DCD9D67FBDBE3 /* SongManagementUITests.swift in Sources */,

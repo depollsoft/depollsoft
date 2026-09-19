@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Compare exported native C7 frames. Requires Pillow; never regenerates UI.
 
-Run native TagLoadingRegressionTest.controlled_pending_to_loaded_capture and
-TMLoadingRegressionTests.testMatchedQuartetNativeFramesAndGlassPendingJourney
-first. Interiors must match exactly. Raster coverage may differ only at a
+Run the two native frame producers first. The Android one is opt-in, so it is
+skipped unless its instrumentation argument is passed:
+
+    ./gradlew :TagMaster:connectedDebugAndroidTest \
+        -Pandroid.testInstrumentationRunnerArguments.quartetFrames=true \
+        -Pandroid.testInstrumentationRunnerArguments.class=\
+depollsoft.tagmaster.TagLoadingRegressionTest#controlled_pending_to_loaded_capture
+
+and then TMLoadingRegressionTests.testMatchedQuartetNativeFramesAndGlassPendingJourney
+on iOS. Interiors must match exactly. Raster coverage may differ only at a
 one-pixel boundary, including the 127/128 half-covered one-pixel ledger.
 """
 import argparse

@@ -9,7 +9,7 @@
     "docker-build": "docker build --tag depollsoft-api .",
     "docker-run": "docker run -it --init --env PORT=$PORT --env-file .env -p $PORT:$PORT depollsoft-api",
     "clean": "rm -rf bin",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsc && node --test \"bin/test/**/*.test.js\"",
     "start": "PORT=8080 npm run docker-run"
   },
   "author": "",

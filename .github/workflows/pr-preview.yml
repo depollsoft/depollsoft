@@ -1,11 +1,27 @@
 # yamllint disable rule:line-length
+#
+# Builds installable preview artifacts for a PR: unsigned Release archives for
+# both iOS apps, and private-flavour APKs published to Play Internal App
+# Sharing. It is the second-largest macOS consumer in the repo (the iOS archive
+# job runs 13 minutes) and it used to run on every push to every PR, in
+# parallel with iOS CI compiling the same source on another macOS runner.
+#
+# HOW TO TRIGGER A PREVIEW BUILD
+#   * Any push to a non-draft PR that touches Android/** or iOS/**.
+#   * Marking a draft PR "Ready for review" (the `ready_for_review` event).
+#   * A draft PR gets no preview. Mark it ready for review to get one.
+#   * To promote a built preview to TestFlight and the Play internal track,
+#     comment `/deploy` on the PR (see preview-deploy-command.yml).
+#
+# Nothing here is deleted or disabled: the only change is that drafts opt in by
+# becoming ready for review.
 name: PR Preview
 
 on:
   pull_request:
     branches:
       - main
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "Android/**"
       - "iOS/**"
@@ -26,8 +42,13 @@ permissions:
 jobs:
   compute-version:
     name: Compute Preview Build
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Draft PRs do not get preview builds. Every other job needs this one, so
+    # skipping it skips the pipeline. Mark the PR ready for review to opt in.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
@@ -81,6 +102,7 @@ jobs:
   comment-initial:
     name: PR Comment (Queued)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
@@ -132,6 +154,7 @@ jobs:
   build-android:
     name: Build Android Preview
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     outputs:
@@ -208,7 +231,12 @@ jobs:
 
   build-ios:
     name: Build iOS Preview
-    runs-on: macos-latest
+    # Pinned to the same image as ios.yml/ios-app-tests.yml and
+    # release-assets.yml: a floating macos-latest silently changes the Xcode
+    # version, and a matching Xcode lets this job share the SPM cache below
+    # with iOS CI instead of keeping a second copy.
+    runs-on: macos-26
+    timeout-minutes: 60
     needs: compute-version
     if: github.event.pull_request.head.repo.full_name == github.repository
     env:
@@ -233,27 +261,62 @@ jobs:
           fi
           echo "DEVELOPER_DIR=$developer_dir" >> "$GITHUB_ENV"
 
+      # The previous step exported DEVELOPER_DIR through $GITHUB_ENV, so
+      # xcodebuild already resolves to the selected toolchain here.
+      - name: Show Xcode version
+        id: xcode
+        run: |
+          xcodebuild -version
+          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+          echo "version=$XCODE_VERSION" >> "$GITHUB_OUTPUT"
+
       - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
         with:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: iOS
 
+      # Same key prefix as ios-app-tests.yml: one shared SPM cache instead of
+      # two, and restore-keys so a Package.resolved bump no longer forces a
+      # fully cold 4 minute resolve.
       - name: Cache SPM dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/Library/Caches/org.swift.swiftpm
           key: >-
-            preview-spm-v3-${{ runner.os }}-${{
+            spm-${{ runner.os }}-${{ runner.arch }}-xcode${{
+              steps.xcode.outputs.version }}-${{
+              hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
+            }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-
+
+      # Same key as ios-app-tests.yml: the resolved checkout with its binary
+      # xcframeworks, so a warm run skips the 2-6 minute re-extraction. The
+      # artifact check below still forces a clean resolve if anything is
+      # missing.
+      - name: Cache resolved SPM checkout
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: iOS/SourcePackages
+          key: >-
+            spm-checkout-${{ runner.os }}-${{ runner.arch }}-xcode${{
+              steps.xcode.outputs.version }}-${{
               hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
             }}
 
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          # SourcePackages/workspace-state.json embeds absolute paths. Never
-          # reuse it across runners with different work roots.
-          rm -rf SourcePackages
+          # SourcePackages/workspace-state.json embeds absolute paths, so a
+          # checkout restored from a runner with a different work root is
+          # unusable. Hosted runners share one root, but verify rather than
+          # assume.
+          if [ -f SourcePackages/workspace-state.json ] \
+            && ! grep -q "\"$PWD/SourcePackages/" SourcePackages/workspace-state.json; then
+            echo "Restored SourcePackages was resolved under another work root; resolving cleanly."
+            rm -rf SourcePackages
+          fi
           for attempt in 1 2; do
             echo "Resolving SPM dependencies (attempt $attempt/2)"
             xcodebuild -resolvePackageDependencies \
@@ -406,7 +469,7 @@ jobs:
             raw_log="$RUNNER_TEMP/$scheme-archive.log"
             set -o pipefail
             for attempt in 1 2; do
-            echo "Resolving SPM dependencies (attempt $attempt/2)"
+              echo "Archiving $scheme (attempt $attempt/2)"
               rm -rf "$archive"
               if xcodebuild archive \
                 -jobs 2 \
@@ -455,6 +518,7 @@ jobs:
   publish-android-sharing:
     name: Publish Android Internal App Sharing
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [compute-version, build-android]
     if: >-
       needs.build-android.result == 'success' &&
@@ -589,6 +653,7 @@ jobs:
   comment-finish:
     name: PR Comment (Complete)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - compute-version
       - comment-initial
