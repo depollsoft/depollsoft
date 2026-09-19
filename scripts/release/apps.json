@@ -3,7 +3,11 @@
     "name": "Pitch Perfect",
     "module": "PitchPerfect",
     "bundle_id": "depollsoft.pitchperfect",
-    "play_retained_version_codes": [220922001],
+    "wear": {
+      "module": "PitchPerfectWear",
+      "track": "wear:production",
+      "notes": "Updated Wear OS support for current watches."
+    },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
       "01-pitch-pipe",
