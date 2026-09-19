@@ -22,6 +22,9 @@ class StoreScreenshotTest {
         // Capture the real ad-free state; never show a debug test advertisement.
         PurchaseService.areAdsRemoved = true
         val instrumentation = InstrumentationRegistry.getInstrumentation()
+        // Capture a returning user's library with optional telemetry declined.
+        depollsoft.lib.privacy.PrivacyChoices(instrumentation.targetContext)
+            .save(analytics = false, crashes = false)
         instrumentation.runOnMainSync {
             val list = SongsModel.get().defaultSongList
             list.resetSongs()
