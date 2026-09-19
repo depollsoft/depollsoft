@@ -329,7 +329,8 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
+        app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists",
+            "<dict><key>favorite</key><array><integer>1809</integer></array></dict>"]
         app.launch()
     }
 
@@ -341,15 +342,14 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
     }
 
     private func openTag() {
-        let row = app.tables.staticTexts["Open Tag"]
-        if !row.isHittable { app.tables.firstMatch.swipeUp() }
-        XCTAssertTrue(row.existsOrWait(timeout: 5))
-        row.tap()
-        let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.existsOrWait(timeout: 3))
-        alert.textFields.firstMatch.tap()
-        alert.textFields.firstMatch.typeText("1809")
-        alert.buttons["Open"].tap()
+        let favorite = app.tables.firstMatch.cells.matching(NSPredicate(
+            format: "label CONTAINS 'Tag ID 1809' OR label == 'Tag 1809. Open to load details.'")).firstMatch
+        XCTAssertTrue(favorite.existsOrWait(timeout: 5))
+        favorite.tap()
+        assertTagLoaded()
+    }
+
+    private func assertTagLoaded() {
         let share = app.navigationBars.buttons["Share"]
         XCTAssertTrue(share.existsOrWait(timeout: 20))
         if !share.isEnabled {
@@ -565,6 +565,18 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         XCTAssertTrue(app.keyboards.firstMatch.existsOrWait(timeout: 5))
         XCTAssertTrue(searchAction.isHittable)
         layoutCapture("search-keyboard-landscape")
+    }
+
+    func testOpenTagByNumber() throws {
+        let row = app.tables.staticTexts["Open Tag"]
+        if !row.isHittable { app.tables.firstMatch.swipeUp() }
+        row.tap()
+        let alert = app.alerts["Open Tag"]
+        XCTAssertTrue(alert.existsOrWait(timeout: 5))
+        alert.textFields.firstMatch.tap()
+        alert.textFields.firstMatch.typeText("1809")
+        alert.buttons["Open"].tap()
+        assertTagLoaded()
     }
 
     func testOpenTagAlertControls() throws {
