@@ -260,6 +260,15 @@
         }
         case 2:
         {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"PrivacyCell"];
+            cell.textLabel.text = @"Privacy choices";
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.accessibilityTraits = UIAccessibilityTraitButton;
+            [cell addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(showPrivacyChoices)]];
+            break;
+        }
+        case 3:
+        {
             if (indexPath.row == 0) {
                 cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"BuildCell"];
                 cell.textLabel.text = @"Private Build";
@@ -349,6 +358,8 @@
         case 1:
             return [FIRAuth auth].currentUser ? 2 : 1;
         case 2:
+            return 1;
+        case 3:
             return [self isPrivateBuild] ? 2 : 0;
         default:
             break;
@@ -357,7 +368,7 @@
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return [self isPrivateBuild] ? 3 : 2;
+    return [self isPrivateBuild] ? 4 : 3;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
@@ -367,6 +378,8 @@
         case 1:
             return @"Account";
         case 2:
+            return @"Privacy";
+        case 3:
             return @"Private Build";
         default:
             break;
@@ -416,6 +429,10 @@
     NSString *metadata = [NSString stringWithFormat:@"Build %@ · PR #%@", [self privateBuildNumber], [self privatePRNumber]];
     [DPAppLog log:@"Settings: copied app logs"];
     [UIPasteboard generalPasteboard].string = [NSString stringWithFormat:@"%@\n\n%@", metadata, [DPAppLog contents]];
+}
+
+- (void)showPrivacyChoices {
+    [TelemetryConsent presentFrom:self];
 }
 
 - (void)complete {

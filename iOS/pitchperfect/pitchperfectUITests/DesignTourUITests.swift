@@ -12,6 +12,7 @@ final class DesignTourUITests: XCTestCase {
     func testWidgetGalleryShowsPitchPipe() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         XCUIDevice.shared.press(.home)
 
@@ -98,6 +99,7 @@ final class DesignTourUITests: XCTestCase {
     func testWidgetRecognizesBarbershopInBothRanges() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         XCUIDevice.shared.press(.home)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
@@ -138,6 +140,7 @@ final class DesignTourUITests: XCTestCase {
     func testCaptureEveryScreen() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
 
         func snap(_ name: String) {
@@ -193,6 +196,7 @@ final class StoreScreenshotTests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         func tab(_ name: String) {
             let candidates = [app.tabBars.buttons[name].firstMatch, app.buttons[name].firstMatch,
@@ -302,6 +306,7 @@ final class StoreScreenshotNotificationTests: XCTestCase {
         wait(for: [authorized], timeout: 5)
         let app = XCUIApplication()
         app.launchEnvironment["STORE_SCREENSHOTS"] = "1"
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         let content = UNMutableNotificationContent()
         content.title = "Store capture notification check"

@@ -147,6 +147,7 @@ static __weak UIResponder *TMRecordedFirstResponder;
 
     [DPAppLog start];
     [FIRApp configure];
+    [TelemetryConsent configure];
 #if HAS_FBSDK
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
@@ -212,6 +213,12 @@ static __weak UIResponder *TMRecordedFirstResponder;
     [self extraInit];
 
     return YES;
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    if (NSClassFromString(@"XCTestCase") == nil) {
+        [TelemetryConsent presentIfNeededFrom:self.window.rootViewController];
+    }
 }
 
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {

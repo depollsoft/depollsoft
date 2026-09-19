@@ -53,10 +53,12 @@ class MeActivity :
 
         this.supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
 
-        val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
-        viewer.setTitle(getString(R.string.home_changelog_title))
-        viewer.setIcon(R.mipmap.ic_launcher)
-        viewer.showIfAppropriate()
+        if (depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) {
+            val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
+            viewer.setTitle(getString(R.string.home_changelog_title))
+            viewer.setIcon(R.mipmap.ic_launcher)
+            viewer.showIfAppropriate()
+        }
 
         findViewById<View>(R.id.searchButton).setOnClickListener {
             val i = Intent(this, TagSearchActivity::class.java)
@@ -129,6 +131,7 @@ class MeActivity :
 
     override fun onResume() {
         super.onResume()
+        depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
         listEditor.resume()
     }
 

@@ -31,6 +31,7 @@ class TagMasterUITestCase: XCTestCase {
         guard !warmedApplication else { return }
         let application = XCUIApplication()
         application.launchArguments = ["--uitesting"]
+        application.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         application.launch()
         application.terminate()
         warmedApplication = true
@@ -94,6 +95,7 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         app = XCUIApplication()
         app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists",
             "<dict><key>favorite</key><array><integer>1809</integer></array></dict>"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
     }
 
@@ -329,6 +331,7 @@ final class StoreScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         func home() {
             app.terminate()
+            app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
             app.launch()
             XCTAssertTrue(app.tables.staticTexts["Browse"].existsOrWait(timeout: 15))
         }

@@ -100,11 +100,15 @@
 
     [DPAppLog start];
     [FIRApp configure];
+    [TelemetryConsent configure];
 #if HAS_FBSDK
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
 #endif
-    [[GADMobileAds sharedInstance] startWithCompletionHandler:nil];
+    // Keep the ad SDK from replacing Crashlytics signal handlers.
+    [[GADMobileAds sharedInstance] disableSDKCrashReporting];
+    [AdConsent configure];
+    AdConsent.onConsentFlowFinished = ^{ [self offerOptionalLogin]; };
     [application registerForRemoteNotifications];
 
     AVAudioSession *session = [AVAudioSession sharedInstance];
@@ -123,8 +127,15 @@
     [DPJsonSerializer registerAlias:@"Double" forObjCType:[NSString stringWithUTF8String:@encode(double)]];
     
     [DPTheme applyStoredAppearance];
+    [self extraInit];
 
+    // Override point for customization after application launch.
+    return YES;
+}
+
+- (void)offerOptionalLogin {
     dispatch_async(dispatch_get_main_queue(), ^{
+        if (![TelemetryConsent hasChosen] || self.window.rootViewController.presentedViewController != nil) return;
         // First launch belongs to the first pitch: the login prompt waits for the next session.
         BOOL firstLaunchEver = ![[NSUserDefaults standardUserDefaults] boolForKey:@"depollsoft.pitchperfect.FirstLaunchSeen"];
         if (firstLaunchEver) {
@@ -141,16 +152,7 @@
                                                        completion:nil];
         }
     });
-    
-    // Facebook SDK initialization removed
-    
-    [self extraInit];
-    
-    // Override point for customization after application launch.
-    return YES;
 }
-
-// Ads removed; no test Ads toggle
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -171,6 +173,9 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
+    if (NSClassFromString(@"XCTestCase") == nil) {
+        [TelemetryConsent presentIfNeededFrom:self.window.rootViewController];
+    }
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
 }
 

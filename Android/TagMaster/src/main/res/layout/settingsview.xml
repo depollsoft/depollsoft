@@ -305,6 +305,15 @@
                     android:textAllCaps="false"
                     android:text="@string/ViewChangelog" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/privacyChoicesButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="48dp"
+                android:textAllCaps="false"
+                android:text="@string/privacy_title" />
+
                 <LinearLayout
                     android:id="@+id/privateBuildDiagnostics"
                     android:layout_width="match_parent"

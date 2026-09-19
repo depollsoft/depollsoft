@@ -37,7 +37,7 @@ final class TMBlockedNetwork {
         TMBlockedNetwork.lock.unlock()
 
         method = class_getClassMethod(DPRemoteLocation.self,
-                                      Selector(("dataWithContentsOfURL:error:")))!
+                                      #selector(DPRemoteLocation.data(withContentsOf:)))!
         let refusal: @convention(block) (AnyObject, NSURL?, NSErrorPointer) -> NSData? = { _, url, errorPointer in
             TMBlockedNetwork.began(url as URL?)
             defer { TMBlockedNetwork.finished() }
