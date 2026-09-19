@@ -200,3 +200,40 @@ Dir.mktmpdir('production-lane-test-') do |directory|
   end
 end
 puts 'PASS: isolated production targets, widget signing, store assets, retries, and capture gate'
+
+Dir.mktmpdir('play-diagnostics-test-') do |directory|
+  path = File.join(directory, 'failure.json')
+  api_error_class = Class.new(StandardError) { attr_accessor :body }
+  api_error = api_error_class.new('Server error')
+  api_error.body = JSON.generate(error: {
+    code: 500, message: 'Internal error', status: 'INTERNAL',
+    details: [{reason: 'TEST_REASON', domain: 'androidpublisher', unknown: 'discard'}],
+    request: 'discard',
+  })
+  wrapped = nil
+  begin
+    with_play_submission_diagnostics(path) do
+      begin
+        raise api_error
+      rescue StandardError
+        wrapped = RuntimeError.new('Fastlane summary')
+        raise wrapped
+      end
+    end
+  rescue StandardError => caught
+    assert(caught.equal?(wrapped), 'Diagnostics replaced the original failure')
+  end
+  report = JSON.parse(File.read(path))
+  assert(report['code'] == 500 && report['details'] == [{
+    'reason' => 'TEST_REASON', 'domain' => 'androidpublisher',
+  }], 'Lost structured Play error details')
+  assert(!report.key?('request'), 'Saved request data')
+  assert(with_play_submission_diagnostics(path) { :success } == :success, 'Changed successful submission')
+  api_error.body = '<html>Unavailable</html>'
+  begin
+    with_play_submission_diagnostics(path) { raise api_error }
+  rescue StandardError => caught
+    assert(caught.equal?(api_error), 'Malformed API response hid the original error')
+  end
+end
+puts 'PASS: Play diagnostics preserve errors and exclude request data'
