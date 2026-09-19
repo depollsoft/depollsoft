@@ -144,14 +144,15 @@ npm run deploy                     # Deploy to Firebase
 
 ### Test Coverage by Platform
 
-- **API**: ⚠️ **NO AUTOMATED TESTS** - Major gap, only placeholder test script
+- **API**: node:test suite in `api/src/test` covering the analytics router (`npm test`); the router takes injected Pub/Sub, BigQuery, JWT and geoip dependencies via `createAnalyticsRouter`
 - **Android**:
   - Bindroid: Well-tested with dedicated test suite
   - depollsoft.lib.kotlin: Has test coverage
+  - TagMaster / PitchPerfect: screen behaviour is tested on the JVM with Robolectric (`src/test`); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI does not run
 - **iOS**:
   - depolllib: Has tests
   - pitchperfectlib: Has tests
-  - tagmaster: Has tests
+  - pitchperfect / tagmaster: behaviour is tested in-process in the hosted `*Tests` bundles (real view controllers in a test `UIWindow`); the `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`), and run only on the weekly extended iOS CI run
 
 ### Running Tests
 
@@ -162,7 +163,8 @@ npm run deploy                     # Deploy to Firebase
 # iOS (from project directory)
 xcodebuild test -workspace ../iOS.xcworkspace -scheme <scheme-name>
 
-# API - NO TESTS AVAILABLE
+# API (from /api)
+npm test
 ```
 
 ## Common Development Workflows
@@ -185,7 +187,7 @@ xcodebuild test -workspace ../iOS.xcworkspace -scheme <scheme-name>
 
 ### Critical Issues
 
-1. **API has NO automated tests** - Be extremely careful with changes
+1. **API tests are unit-level only** - the router is covered, but Cloud Run deploy is still the first integration check
 2. **GeoIP data dependency** - API won't work without downloading this data first
 3. **Manual mobile deployments** - No CI/CD for Android/iOS apps
 4. **Sensitive files in repo** - `.jks` files should be removed

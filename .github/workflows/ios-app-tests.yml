@@ -47,15 +47,17 @@ jobs:
 
           # Pin the active developer directory for subsequent steps.
 
-          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
-          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          echo "$DEVELOPER_DIR/usr/bin" >> "$GITHUB_PATH"
 
           # Expose tool paths as outputs so later steps can call the
           # intended toolchain even if the runner's global developer
           # directory points at CommandLineTools.
-          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
-          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
-          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          {
+            echo "developer_dir=$DEVELOPER_DIR"
+            echo "xcrun=/usr/bin/xcrun"
+            echo "xcodebuild=/usr/bin/xcodebuild"
+          } >> "$GITHUB_OUTPUT"
 
           echo "Selected Xcode: $DEVELOPER_DIR"
 
@@ -66,7 +68,7 @@ jobs:
           XCODE_VERSION=$(
             "${{ steps.select_xcode.outputs.xcodebuild }}" -version \
               | head -1 | sed 's/Xcode //')
-          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$XCODE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install xcpretty
         run: |
@@ -77,18 +79,45 @@ jobs:
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
           fi
 
+      # Key prefix is shared with pr-preview.yml so whichever macOS job runs
+      # first on a branch populates the cache for the others. restore-keys
+      # matters more than the exact key: without them a single Package.resolved
+      # bump forced a fully cold SPM resolve in every macOS job. The Xcode
+      # version is part of the key because a manifest cache built by another
+      # toolchain is not reusable.
       - name: Cache SPM downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/Library/Caches/org.swift.swiftpm
-          key: hosted-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-
+
+      # The resolved checkout itself: 11 binary xcframeworks plus every source
+      # package, which resolving from the shared cache alone re-extracted on
+      # every run (2-6 minutes per job). The key is exact (Package.resolved +
+      # Xcode), so a hit means the same packages at the same versions; the
+      # artifact check below still runs and forces a clean resolve if
+      # anything is missing.
+      - name: Cache resolved SPM checkout
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: iOS/SourcePackages
+          key: spm-checkout-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
 
       - name: Resolve SPM dependencies
         run: |
-          # SourcePackages/workspace-state.json embeds absolute paths. Never
-          # reuse it across runners with different work roots.
-          rm -rf SourcePackages
+          # SourcePackages/workspace-state.json embeds absolute paths, so a
+          # checkout restored from a runner with a different work root is
+          # unusable. Hosted runners share one root, but verify rather than
+          # assume.
+          if [ -f SourcePackages/workspace-state.json ] \
+            && ! grep -q "\"$PWD/SourcePackages/" SourcePackages/workspace-state.json; then
+            echo "Restored SourcePackages was resolved under another work root; resolving cleanly."
+            rm -rf SourcePackages
+          fi
           for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
               -scheme "$IOS_APP" \
@@ -141,6 +170,21 @@ jobs:
               CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
           done
 
+      # The behavioural XCUITest suites were migrated to in-process XCTest
+      # unit tests (pitchperfectTests / tagmasterTests), which run on every
+      # PR above. What remains in the UITests bundles is the residue that
+      # needs a real app launch (launch metrics, software keyboard, rotation
+      # hit targets, system sheets, store screenshot capture). Those run only
+      # as the `pitchperfect-ui` / `tagmaster-ui` suites when `extended-ui`
+      # is set (weekly schedule and workflow_dispatch), so this step only
+      # builds the separate pitchperfectUITests scheme on those runs; the
+      # tagmaster scheme already includes tagmasterUITests as a testable.
+      #
+      # Do NOT delete the pitchperfectUITests scheme or the tagmasterUITests
+      # target: scripts/release/capture.py builds `-scheme pitchperfectUITests`
+      # (scripts/release/apps.json ios_scheme) and runs
+      # `-only-testing:<app>UITests/StoreScreenshotTests` for both apps, so
+      # release-assets.yml -> release.yml depends on them for store screenshots.
       - name: Build optional Pitch Perfect UI tests
         if: inputs.app == 'pitchperfect' && inputs.extended-ui
         run: |
@@ -185,20 +229,26 @@ jobs:
         run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
 
   suites:
-    name: iOS tests (${{ matrix.suite }})
+    name: iOS tests (${{ matrix.job }})
     needs: build
     runs-on: macos-26
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      max-parallel: 3
+      # Keep this >= the largest per-app job count so no job waits for a
+      # second wave (PRs: one job per app; extended runs add one UI job per
+      # app). GitHub's own macOS concurrency limit still
+      # applies on top of this, so raising it can only help, never hurt.
+      max-parallel: 4
       matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       IOS_SIMULATOR_VERSION: '26.5'
       IOS_SIMULATOR_DEVICE: com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation
       IOS_MAX_TEST_SECONDS: ${{ matrix.timeout }}
-      IOS_SUITE: ${{ matrix.suite }}
+      # Space-separated suites that share this runner (scripts/ci/ios_suites.py JOBS).
+      IOS_SUITES: ${{ matrix.suites }}
+      IOS_JOB: ${{ matrix.job }}
       IOS_APP: ${{ inputs.app }}
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -218,26 +268,36 @@ jobs:
       - name: Create owned iOS Simulator
         id: simulator
         run: python3 ../scripts/ci/ios_simulator.py
-      - name: Run native suite
+      - name: Run native suites
         env:
           SIMULATOR_DESTINATION: ${{ steps.simulator.outputs.destination }}
         run: |
           set -o pipefail
-          python3 ../scripts/ci/ios_suites.py run "$IOS_SUITE" "$SIMULATOR_DESTINATION" \
-            | tee "$IOS_SUITE-test.log"
+          for suite in $IOS_SUITES; do
+            echo "::group::$suite"
+            python3 ../scripts/ci/ios_suites.py run "$suite" "$SIMULATOR_DESTINATION" \
+              | tee "$suite-test.log"
+            echo "::endgroup::"
+          done
       - name: Verify actual XCTest results
         if: always()
-        run: python3 ../scripts/ci/ios_test_results.py "$IOS_SUITE"
+        run: |
+          read -ra suites <<< "$IOS_SUITES"
+          python3 ../scripts/ci/ios_test_results.py "${suites[@]}"
       - name: Export suite coverage
         if: always()
         run: |
-          xcrun xccov view --report --json "$IOS_SUITE-results.xcresult" > "$IOS_SUITE-coverage.json"
-          xcrun xccov view --report "$IOS_SUITE-results.xcresult" > "$IOS_SUITE-coverage.txt"
+          for suite in $IOS_SUITES; do
+            if [ -d "$suite-results.xcresult" ]; then
+              xcrun xccov view --report --json "$suite-results.xcresult" > "$suite-coverage.json"
+              xcrun xccov view --report "$suite-results.xcresult" > "$suite-coverage.txt"
+            fi
+          done
       - name: Upload test summaries and diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: ios-test-results-${{ matrix.suite }}
+          name: ios-test-results-${{ matrix.job }}
           path: |
             iOS/*-summary.json
             iOS/*-junit.xml
@@ -249,14 +309,16 @@ jobs:
       - name: Archive raw failure results
         if: failure()
         run: |
-          if [ -d "$IOS_SUITE-results.xcresult" ]; then
-            tar -czf "$IOS_SUITE-xcresults.tgz" "$IOS_SUITE-results.xcresult"
-          fi
+          for suite in $IOS_SUITES; do
+            if [ -d "$suite-results.xcresult" ]; then
+              tar -czf "$suite-xcresults.tgz" "$suite-results.xcresult"
+            fi
+          done
       - name: Upload raw failure results
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: ios-xcresults-${{ matrix.suite }}
+          name: ios-xcresults-${{ matrix.job }}
           path: iOS/*-xcresults.tgz
           retention-days: 7
       - name: Delete owned iOS Simulator

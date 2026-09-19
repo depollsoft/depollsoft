@@ -34,6 +34,10 @@ class SettingsLoginStateTest {
             .apply { isAccessible = true }
             .set(null, RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
+        // SettingsModel's `preference` delegates register their defaults once, into whichever
+        // store was selected at that moment. Another class may since have emptied or swapped that
+        // store, which would leave SettingsActivity reading null here. Put them back.
+        ScreenTestSupport.seedSettingsDefaults()
         AuthState.setTestSource { signedIn }
     }
 
