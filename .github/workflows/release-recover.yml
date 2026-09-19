@@ -1,0 +1,56 @@
+name: Recover one unsubmitted release
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App with an unsubmitted release plan
+        required: true
+        type: choice
+        options: [pitchperfect, tagmaster]
+      platform:
+        description: Platform to recover
+        required: true
+        type: choice
+        options: [ios, android]
+permissions:
+  contents: read
+concurrency:
+  group: release-recovery-${{ inputs.app }}-${{ inputs.platform }}
+  cancel-in-progress: false
+jobs:
+  identity:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      done: ${{ steps.identity.outputs.done }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: identity
+        name: Check existing release record
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_APP: ${{ inputs.app }}
+          RELEASE_PLATFORM: ${{ inputs.platform }}
+        run: python3 scripts/release/publish.py identity
+  assets:
+    needs: identity
+    if: needs.identity.outputs.done != 'true'
+    uses: ./.github/workflows/release-assets.yml
+    with:
+      app: ${{ inputs.app }}
+      platform: ${{ inputs.platform }}
+      source-sha: ${{ github.sha }}
+  deploy:
+    needs: [identity, assets]
+    if: needs.identity.outputs.done != 'true'
+    uses: ./.github/workflows/release-deploy.yml
+    with:
+      app: ${{ inputs.app }}
+      platform: ${{ inputs.platform }}
+      source-sha: ${{ github.sha }}
+    permissions:
+      contents: write
+    secrets: inherit

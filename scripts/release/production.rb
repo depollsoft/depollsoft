@@ -112,7 +112,7 @@ platform :ios do
     end
     upload_to_app_store(
       api_key: api_key, app_identifier: identifier, app_version: version.fetch('version'),
-      build_number: version.fetch('build').to_s, ipa: ipa,
+      **(existing_build ? {build_number: version.fetch('build').to_s} : {ipa: ipa}),
       skip_binary_upload: !existing_build.nil?,
       metadata_path: File.join(assets, 'metadata'), screenshots_path: File.join(assets, 'screenshots'),
       overwrite_screenshots: true, force: true, run_precheck_before_submit: false,

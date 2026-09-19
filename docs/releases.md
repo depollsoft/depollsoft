@@ -167,6 +167,10 @@ For a transient failure, use **Re-run failed jobs** on the original workflow. It
 
 If the source or copy needs correcting after a partial release, prepare a new release plan for only the affected platform with a new version/build. If a later release already shipped, do not rerun an older deployment.
 
+If a platform failed before uploading any binary, its unused version/build can be recovered after merging a build fix. Run `gh workflow run release-recover.yml --ref main -f app=pitchperfect -f platform=android` for only that unsubmitted target. This explicit recovery captures fresh assets from current `main`, validates the existing plan, and deploys only the selected platform. It rejects a release tag from a different source commit and skips a completed release record. Do not use it to replace a binary already uploaded from another commit; use a new release plan in that case. Store-account declaration failures should instead use the original run's failed-job retry after the declaration is completed.
+
+Android CI compiles both production variants in addition to running debug unit tests. This catches missing release resources without requiring signing credentials. Pitch Perfect's production banner ID lives in `src/main/res/values/ad_unit.xml`; debug and private resources override it with Google's test ID.
+
 ## Checks
 
 ```sh
