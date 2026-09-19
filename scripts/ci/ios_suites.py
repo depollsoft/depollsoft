@@ -24,6 +24,13 @@ SUITES = {
 }
 
 
+# Suites that share one runner job. Every job pays for checkout, artifact
+# download and a simulator boot before its first test, so a suite whose tests
+# finish in under a second (pitchperfectlib) rides along with its app's suite
+# instead of occupying a macOS runner of its own.
+JOBS = {'pitchperfectlib': 'pitchperfect'}
+
+
 def is_ui(suite):
     return suite.endswith('-ui')
 
@@ -32,10 +39,22 @@ def case_timeout(suite):
     return 90 if is_ui(suite) else 30
 
 
+def selected(extended=False, app=None):
+    return [suite for suite in SUITES
+            if (extended or not is_ui(suite)) and (app is None or suite.startswith(app))]
+
+
 def matrix(extended=False, app=None):
-    return {'include': [{'suite': suite, 'timeout': case_timeout(suite)} for suite in SUITES
-                        if (extended or not is_ui(suite))
-                        and (app is None or suite.startswith(app))]}
+    jobs = {}
+    for suite in selected(extended, app):
+        jobs.setdefault(JOBS.get(suite, suite), []).append(suite)
+    return {'include': [{'job': job, 'suites': ' '.join(suites),
+                         'timeout': max(case_timeout(suite) for suite in suites)}
+                        for job, suites in jobs.items()]}
+
+
+def suites_in(selection):
+    return [suite for entry in selection['include'] for suite in entry['suites'].split()]
 
 
 def manifest(scheme, products):
@@ -46,7 +65,7 @@ def manifest(scheme, products):
 
 
 def validate_products(selection, products=Path('DerivedData/Build/Products')):
-    for scheme in {SUITES[entry['suite']][0] for entry in selection['include']}:
+    for scheme in {SUITES[suite][0] for suite in suites_in(selection)}:
         path = manifest(scheme, products)
         data = plistlib.loads(path.read_bytes())
         coverage = (data.get('CodeCoverageBuildableInfos') or
@@ -73,8 +92,7 @@ def summarize(directory, expected):
     rows = ['### iOS CI', '', '| Suite | Passed | Skipped | Line coverage |',
             '| --- | ---: | ---: | ---: |']
     errors = []
-    for entry in expected['include']:
-        suite = entry['suite']
+    for suite in suites_in(expected):
         try:
             summary = json.loads((directory / f'{suite}-summary.json').read_text())
             validate(summary)

@@ -7,19 +7,32 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_suites import SUITES, command, matrix, summarize, validate_products, case_timeout
+from ios_suites import JOBS, SUITES, command, matrix, summarize, suites_in, validate_products, case_timeout
 
 
 class ParallelSuiteTests(unittest.TestCase):
     def test_apps_partition_all_suites_and_only_optional_ui_is_added(self):
-        standard = {item['suite'] for item in matrix()['include']}
-        pitch = {item['suite'] for item in matrix(app='pitchperfect')['include']}
-        tag = {item['suite'] for item in matrix(app='tagmaster')['include']}
+        standard = set(suites_in(matrix()))
+        pitch = set(suites_in(matrix(app='pitchperfect')))
+        tag = set(suites_in(matrix(app='tagmaster')))
         self.assertFalse(pitch & tag)
         self.assertEqual(pitch | tag, standard)
-        self.assertEqual({item['suite'] for item in matrix(True)['include']} - standard,
-                         {'pitchperfect-ui', 'tagmaster-ui'})
-        self.assertFalse({item['suite'] for item in matrix()['include'] if item['suite'].endswith('-ui')})
+        self.assertEqual(set(suites_in(matrix(True))) - standard, {'pitchperfect-ui', 'tagmaster-ui'})
+        self.assertFalse({suite for suite in standard if suite.endswith('-ui')})
+
+    def test_every_suite_runs_in_exactly_one_job_and_shared_jobs_keep_the_widest_budget(self):
+        for extended in (False, True):
+            entries = matrix(extended)['include']
+            suites = suites_in(matrix(extended))
+            self.assertEqual(len(suites), len(set(suites)))
+            self.assertEqual(len({entry['job'] for entry in entries}), len(entries))
+            for entry in entries:
+                self.assertEqual(entry['timeout'],
+                                 max(case_timeout(suite) for suite in entry['suites'].split()))
+        pitch = {entry['job']: entry['suites'].split() for entry in matrix(app='pitchperfect')['include']}
+        self.assertEqual(pitch, {'pitchperfect': ['pitchperfect', 'pitchperfectlib']})
+        for suite, job in JOBS.items():
+            self.assertTrue(suite.startswith(job), 'shared jobs must stay within one app')
 
     def test_every_ui_class_including_new_classes_runs_exactly_once(self):
         root = Path(__file__).resolve().parents[3] / 'iOS/tagmaster/tagmasterUITests'
@@ -96,10 +109,10 @@ class ParallelSuiteTests(unittest.TestCase):
     def test_ui_uses_a_bounded_budget_for_native_automation(self):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            expected = {'include': [{'suite': 'tagmaster-ui'}]}
+            expected = {'include': [{'job': 'tagmaster-ui', 'suites': 'tagmaster-ui'}]}
             self.write_result(folder, 'tagmaster-ui', duration=60)
             self.assertFalse(summarize(folder, expected)[1])
             self.write_result(folder, 'tagmaster-ui', duration=91)
             self.assertTrue(summarize(folder, expected)[1])
         for entry in matrix(True)['include']:
-            self.assertEqual(entry['timeout'], 90 if entry['suite'].endswith('-ui') else 30)
+            self.assertEqual(entry['timeout'], 90 if entry['job'].endswith('-ui') else 30)

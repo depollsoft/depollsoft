@@ -291,12 +291,32 @@ jobs:
           restore-keys: |
             spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-
 
+      # Same key as ios-app-tests.yml: the resolved checkout with its binary
+      # xcframeworks, so a warm run skips the 2-6 minute re-extraction. The
+      # artifact check below still forces a clean resolve if anything is
+      # missing.
+      - name: Cache resolved SPM checkout
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: iOS/SourcePackages
+          key: >-
+            spm-checkout-${{ runner.os }}-${{ runner.arch }}-xcode${{
+              steps.xcode.outputs.version }}-${{
+              hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved')
+            }}
+
       - name: Resolve SPM dependencies
         working-directory: iOS
         run: |
-          # SourcePackages/workspace-state.json embeds absolute paths. Never
-          # reuse it across runners with different work roots.
-          rm -rf SourcePackages
+          # SourcePackages/workspace-state.json embeds absolute paths, so a
+          # checkout restored from a runner with a different work root is
+          # unusable. Hosted runners share one root, but verify rather than
+          # assume.
+          if [ -f SourcePackages/workspace-state.json ] \
+            && ! grep -q "\"$PWD/SourcePackages/" SourcePackages/workspace-state.json; then
+            echo "Restored SourcePackages was resolved under another work root; resolving cleanly."
+            rm -rf SourcePackages
+          fi
           for attempt in 1 2; do
             echo "Resolving SPM dependencies (attempt $attempt/2)"
             xcodebuild -resolvePackageDependencies \
