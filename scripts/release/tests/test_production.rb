@@ -48,7 +48,10 @@ def build_app(**options)
   $calls << [:build_ios, options]
   '/test/app.ipa'
 end
-def upload_to_app_store(**options) = $calls << [:upload_ios, options]
+def upload_to_app_store(**options)
+  raise 'Fastlane forbids build_number with ipa' if options[:build_number] && options[:ipa]
+  $calls << [:upload_ios, options]
+end
 def gradle(**options) = $calls << [:build_android, options]
 def upload_to_play_store(**options) = $calls << [:upload_android, options]
 def assert(value, message)
@@ -101,7 +104,13 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       assert($seen_identifier == "depollsoft.#{app}", 'Wrong store app')
       assert($version_query == {filter: {versionString: '2.0.9', platform: 'IOS'}, includes: 'build'}, 'Wrong review version query')
       upload = $calls.assoc(:upload_ios).last
-      assert(upload[:app_version] == '2.0.9' && upload[:build_number] == '1800000000', 'Wrong iOS version')
+      assert(upload[:app_version] == '2.0.9', 'Wrong iOS version')
+      if existing
+        assert(upload[:build_number] == '1800000000' && !upload.key?(:ipa), 'Retry must select the existing build without an IPA')
+      else
+        assert(upload[:ipa] == '/test/app.ipa' && !upload.key?(:build_number), 'New upload must select the IPA without build_number')
+        assert($calls.assoc(:build_ios).last[:xcargs] == 'MARKETING_VERSION=2.0.9 CURRENT_PROJECT_VERSION=1800000000', 'Wrong version embedded in IPA')
+      end
       assert(upload[:skip_binary_upload] == existing, 'Retry did not reuse build')
       assert(upload[:submit_for_review] && upload[:automatic_release] && upload[:overwrite_screenshots], 'Missing store submission/assets')
       unless existing
