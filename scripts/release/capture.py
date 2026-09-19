@@ -140,7 +140,7 @@ def ios(app, dest):
 
     # Build before booting a simulator, and reuse these products for both sizes.
     xcode('build', 'build-for-testing', '-jobs', '2', '-destination',
-          'generic/platform=iOS Simulator', *build, env=env, timeout=600)
+          'generic/platform=iOS Simulator', *build, env=env, timeout=1500)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
