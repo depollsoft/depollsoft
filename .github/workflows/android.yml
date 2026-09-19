@@ -12,7 +12,6 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
-      - "scripts/ci/android_instrumented.sh"
   pull_request:
     branches:
       - main
@@ -20,18 +19,20 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
-      - "scripts/ci/android_instrumented.sh"
   workflow_dispatch:
   schedule:
-    - cron: "0 3 * * *"
+    # Weekly, not nightly: the schedule only adds the JaCoCo/Codecov report,
+    # and coverage cannot move on a day with no commits.
+    - cron: "0 3 * * 1"
 
-# Serialize runs per branch.
-# Queue new runs instead of canceling to reduce “superseded” failures.
+# Serialize runs per branch. Superseded PR pushes are cancelled so a rapid
+# series of pushes does not queue one full run per push. Pushes to main and
+# scheduled runs are never cancelled, so their results stay complete.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event.pull_request.number
     || github.head_ref || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -100,36 +101,31 @@ jobs:
           restore-keys: |
             gradle-unit-${{ runner.os }}-
 
-      - name: Run unit tests (coverage on schedule/manual)
+      # One Gradle invocation. --no-daemon means every extra ./gradlew call
+      # pays another JVM start and another full configuration phase, so the
+      # unit tests, the coverage report and the release compile checks all go
+      # into a single task list.
+      - name: Run unit tests and compile production variants
         env:
           # Increase Gradle memory for containerized runners
           GRADLE_OPTS: >-
             -Xmx2g -XX:MaxMetaspaceSize=512m
             -XX:+HeapDumpOnOutOfMemoryError
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          COMMON_FLAGS=(
-            --stacktrace --build-cache --console=plain
-            --no-daemon --no-parallel
+          tasks=(
+            testDebugUnitTest
+            :PitchPerfect:compileReleaseKotlin
+            :PitchPerfectWear:compileReleaseJavaWithJavac
+            :TagMaster:compileReleaseKotlin
           )
-          if [[ "${{ github.event_name }}" == "schedule" \
-            || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            ./gradlew testDebugUnitTest jacocoTestReport "${COMMON_FLAGS[@]}"
-          else
-            ./gradlew testDebugUnitTest "${COMMON_FLAGS[@]}"
+          # Coverage only feeds the scheduled/manual Codecov upload.
+          if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tasks+=(jacocoTestReport)
           fi
-      - name: Compile production variants
-        run: >-
-          ./gradlew :PitchPerfect:compileReleaseKotlin :PitchPerfectWear:compileReleaseJavaWithJavac :TagMaster:compileReleaseKotlin
-          --stacktrace --build-cache --console=plain --no-daemon --no-parallel
-
-      - name: Upload Gradle profile reports
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: android-gradle-profiles
-          path: Android/**/build/reports/profile/
-          retention-days: 7
+          ./gradlew "${tasks[@]}" \
+            --stacktrace --build-cache --console=plain --no-daemon --no-parallel
 
       - name: Collect coverage + test metrics
         if: always()
@@ -244,384 +240,21 @@ jobs:
           path: Android/**/build/reports/jacoco/
           retention-days: 7
 
-  instrumented-tests:
-    name: Android UI/Instrumented Tests
-    permissions:
-      contents: read
-      checks: write
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    # UI tests are heavier; skip on PRs to keep CI under 30 mins.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          submodules: recursive
-
-      - name: Enable KVM for emulator (Linux only)
-        if: runner.os == 'Linux'
-        run: |
-          sudo tee /etc/udev/rules.d/99-kvm4all.rules <<'RULE'
-          KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"
-          RULE
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Check installed Android SDK
-        id: android-sdk
-        run: >-
-          python3 ../scripts/ci/android_sdk.py
-          'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator'
-          'system-images;android-30;google_apis;x86_64'
-
-      - name: Install missing Android SDK packages
-        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager == 'true'
-        timeout-minutes: 5
-        run: >-
-          python3 ../scripts/ci/android_sdk.py --install
-          'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator'
-          'system-images;android-30;google_apis;x86_64'
-
-      - name: Set up Android SDK
-        if: steps.android-sdk.outputs.available != 'true' && steps.android-sdk.outputs.manager != 'true'
-        timeout-minutes: 5
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
-        with:
-          packages: >-
-            platform-tools platforms;android-35 platforms;android-37.0
-            build-tools;36.0.0 emulator
-            system-images;android-30;google_apis;x86_64
-
-      - name: Verify Android SDK
-        run: >-
-          python3 ../scripts/ci/android_sdk.py
-          'platform-tools' 'platforms;android-35' 'platforms;android-37.0' 'build-tools;36.0.0'
-          'emulator'
-          'system-images;android-30;google_apis;x86_64' --require
-
-      - name: Export Android SDK env for emulator
-        shell: bash
-        run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
-          if [[ -z "${SDK_ROOT}" ]]; then
-            echo "ANDROID_SDK_ROOT/ANDROID_HOME not set" >&2
-            exit 1
-          fi
-
-          {
-            echo "ANDROID_SDK_ROOT=${SDK_ROOT}"
-            echo "ANDROID_HOME=${SDK_ROOT}"
-            echo "ADB=${SDK_ROOT}/platform-tools/adb"
-          } >> "$GITHUB_ENV"
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      # Cache Gradle dependencies and wrapper
-      - name: Cache Gradle
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: >-
-            gradle-instrumented-${{ runner.os }}-${{
-            hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-instrumented-${{ runner.os }}-
-
-      # Cache AVD for faster emulator startup
-      - name: AVD cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          # v2: fixed snapshot saving for proper AVD caching
-          key: avd-30-${{ runner.arch }}-${{ runner.os }}-v2
-
-      - name: Clean uncached AVD
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          AVD_NAME="ci-api30-googleapis-${{ runner.arch }}"
-          AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
-          echo "AVD_HOME=${AVD_HOME}"
-          echo "Cleaning AVD name: ${AVD_NAME}"
-          rm -rf "${AVD_HOME}/${AVD_NAME}.avd" || true
-          rm -f "${AVD_HOME}/${AVD_NAME}.ini" || true
-
-      - name: Create AVD and generate snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        env:
-          ADB: >-
-            ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
-        with:
-          api-level: 30
-          arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
-          target: google_apis
-          force-avd-creation: true
-          avd-name: ci-api30-googleapis-${{ runner.arch }}
-          emulator-boot-timeout: 1800
-          # On macOS runners, Vulkan/SwiftShader can wedge the device/adb.
-          # Disable Vulkan and use software GPU to keep it stable.
-          # Allow snapshot save here so the AVD cache is populated for
-          # future runs.
-          emulator-options: >-
-            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-            -camera-back none -camera-front none -feature -Vulkan
-          disable-animations: true
-          script: echo "Generated AVD snapshot for caching."
-          working-directory: Android
-
-      - name: Run instrumented tests
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        env:
-          ADB: >-
-            ${{ env.ANDROID_SDK_ROOT || env.ANDROID_HOME }}/platform-tools/adb
-          GRADLE_OPTS: >-
-            -Xmx4g -XX:MaxMetaspaceSize=512m
-            -XX:+HeapDumpOnOutOfMemoryError
-        with:
-          api-level: 30
-          arch: ${{ runner.arch == 'ARM64' && 'arm64-v8a' || 'x86_64' }}
-          target: google_apis
-          force-avd-creation: false
-          avd-name: ci-api30-googleapis-${{ runner.arch }}
-          emulator-boot-timeout: 1800
-          emulator-options: >-
-            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-            -camera-back none -camera-front none -no-snapshot-save
-            -feature -Vulkan
-          disable-animations: true
-          working-directory: Android
-          script: >
-            bash -c 'set -euo pipefail; adb wait-for-device;
-            echo "Waiting for boot to complete..."; for i in $(seq 1 120); do
-            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null
-            | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then
-            echo "Boot completed after ${i}s"; break; fi; sleep 1; done;
-            echo "Waiting for package manager..."; for i in $(seq 1 30); do
-            if adb shell pm list packages >/dev/null 2>&1; then
-            echo "Package manager ready after ${i}s"; break; fi; sleep 1; done;
-            adb shell input keyevent KEYCODE_WAKEUP || true;
-            adb shell input keyevent 82 || true;
-            adb shell wm dismiss-keyguard || true;
-            adb shell settings put global stay_on_while_plugged_in 3 || true;
-            adb shell svc power stayon true || true;
-            adb shell settings put global window_animation_scale 0;
-            adb shell settings put global transition_animation_scale 0;
-            adb shell settings put global animator_duration_scale 0;
-            echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2;
-            for attempt in $(seq 1 $MAX_ATTEMPTS); do
-            echo "Test attempt $attempt of $MAX_ATTEMPTS";
-            if bash ../scripts/ci/android_instrumented.sh; then
-            echo "Tests passed on attempt $attempt"; exit 0; fi;
-            if [ $attempt -lt $MAX_ATTEMPTS ]; then
-            echo "Tests failed, retrying..."; sleep 5; fi; done;
-            echo "Tests failed after $MAX_ATTEMPTS attempts"; exit 1;'
-
-      - name: Collect instrumented test results
-        if: always()
-        id: instr_metrics
-        run: |
-          python3 - <<'PY'
-          import glob
-          import os
-          import xml.etree.ElementTree as ET
-
-          # Already in Android directory due to defaults.run.working-directory
-          # Connected device test results location
-          junit_paths = sorted(glob.glob(
-            '**/build/outputs/androidTest-results/connected/**/*.xml',
-            recursive=True))
-
-          total_tests = total_failures = total_errors = total_skipped = 0
-          for p in junit_paths:
-            try:
-              root = ET.parse(p).getroot()
-            except Exception:
-              continue
-            if root.tag == 'testsuite':
-              suites = [root]
-            elif root.tag == 'testsuites':
-              suites = list(root.findall('testsuite'))
-            else:
-              suites = []
-            for s in suites:
-              total_tests += int(s.attrib.get('tests', 0))
-              total_failures += int(s.attrib.get('failures', 0))
-              total_errors += int(s.attrib.get('errors', 0))
-              total_skipped += int(s.attrib.get('skipped', 0))
-
-          # Collect instrumented test coverage from JaCoCo reports
-          # Coverage reports are generated in
-          # build/reports/coverage/androidTest/debug/
-          coverage_paths = sorted(glob.glob(
-            '**/build/reports/coverage/androidTest/debug/report.xml',
-            recursive=True))
-          covered = missed = 0
-          for p in coverage_paths:
-            try:
-              root = ET.parse(p).getroot()
-            except Exception:
-              continue
-            for c in root.findall('.//counter'):
-              if c.attrib.get('type') == 'LINE':
-                missed += int(c.attrib.get('missed', 0))
-                covered += int(c.attrib.get('covered', 0))
-          total_lines = covered + missed
-          coverage_pct = (covered / total_lines * 100.0) if total_lines else 0.0
-
-          out_path = os.environ['GITHUB_OUTPUT']
-          with open(out_path, 'a') as f:
-            f.write(f"instr_tests_total={total_tests}\n")
-            f.write(f"instr_tests_failures={total_failures}\n")
-            f.write(f"instr_tests_errors={total_errors}\n")
-            f.write(f"instr_coverage_pct={coverage_pct:.2f}\n")
-
-          summary = []
-          summary.append('## Android — UI/Instrumented Tests')
-          summary.append('')
-          summary.append(
-            f"- Tests: {total_tests} (failures: {total_failures}, "
-            f"errors: {total_errors}, skipped: {total_skipped})")
-          if total_lines > 0:
-            summary.append(f"- Line coverage: {coverage_pct:.2f}%")
-          summary.append('')
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
-            s.write('\n'.join(summary) + '\n')
-          PY
-
-      - name: Publish instrumented test results (PR check)
-        if: always()
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
-        with:
-          name: Android UI Tests
-          path: Android/**/build/outputs/androidTest-results/**/*.xml
-          reporter: java-junit
-          fail-on-error: true
-
-      - name: Upload instrumented test results
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: android-instrumented-test-results
-          path: Android/**/build/outputs/androidTest-results/
-          retention-days: 7
-
-      - name: Upload instrumented test coverage reports
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: android-instrumented-coverage
-          path: Android/**/build/reports/coverage/
-          retention-days: 7
-
-  # Combined coverage summary job - runs after both test types complete
-  coverage-summary:
-    name: Android Combined Coverage
-    runs-on: ubuntu-latest
-    needs: [test, instrumented-tests]
-    if: >-
-      always() && (github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'schedule')
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: .
-
-    steps:
-      - name: Download unit test coverage
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        continue-on-error: true
-        with:
-          name: android-unit-coverage
-          path: unit-coverage
-
-      - name: Download instrumented test coverage
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        continue-on-error: true
-        with:
-          name: android-instrumented-coverage
-          path: instrumented-coverage
-
-      - name: Generate combined coverage summary
-        run: |
-          python3 - <<'PY'
-          import glob
-          import os
-          import xml.etree.ElementTree as ET
-
-          # Find all JaCoCo coverage reports
-          unit_coverage_paths = sorted(glob.glob(
-            'unit-coverage/**/jacocoTestReport.xml', recursive=True))
-          instr_coverage_paths = sorted(glob.glob(
-            'instrumented-coverage/**/report.xml', recursive=True))
-
-          def parse_jacoco_coverage(paths):
-            covered = missed = 0
-            for p in paths:
-              try:
-                root = ET.parse(p).getroot()
-              except Exception:
-                continue
-              for c in root.findall('.//counter'):
-                if c.attrib.get('type') == 'LINE':
-                  missed += int(c.attrib.get('missed', 0))
-                  covered += int(c.attrib.get('covered', 0))
-            total = covered + missed
-            pct = (covered / total * 100.0) if total else 0.0
-            return covered, missed, total, pct
-
-          unit_covered, unit_missed, unit_total, unit_pct = (
-            parse_jacoco_coverage(unit_coverage_paths))
-          instr_covered, instr_missed, instr_total, instr_pct = (
-            parse_jacoco_coverage(instr_coverage_paths))
-
-          # Best coverage (since they test the same codebase)
-          combined_pct = (
-            max(unit_pct, instr_pct) if (unit_total or instr_total) else 0.0)
-
-          summary = []
-          summary.append('## Android — Combined Coverage Summary')
-          summary.append('')
-          summary.append(
-            '| Test Type | Lines Covered | Total Lines | Coverage |')
-          summary.append(
-            '|-----------|---------------|-------------|----------|')
-          if unit_total:
-            summary.append(
-              f'| Unit Tests | {unit_covered} | {unit_total} '
-              f'| {unit_pct:.2f}% |')
-          if instr_total:
-            summary.append(
-              f'| Instrumented Tests | {instr_covered} | {instr_total} '
-              f'| {instr_pct:.2f}% |')
-          summary.append(
-            f'| **Combined (best)** | - | - | **{combined_pct:.2f}%** |')
-          summary.append('')
-          summary.append(
-            '> Note: Combined shows the better coverage of the two test '
-            'types.')
-          summary.append('')
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
-            s.write('\n'.join(summary) + '\n')
-          PY
+# Removed: the `instrumented-tests` (Espresso/connectedAndroidTest on an
+# emulator) and `coverage-summary` jobs.
+#
+# The instrumented job had failed on every scheduled run for weeks at the
+# "Enable KVM for emulator" step, so the Espresso suites had not actually run
+# anywhere, and "Publish instrumented test results" then failed on empty
+# results. The androidTest suites are being migrated to Robolectric unit tests,
+# which this workflow already runs via `testDebugUnitTest`. `coverage-summary`
+# existed only to merge unit and instrumented coverage and reduces to the unit
+# numbers the `test` job already reports.
+#
+# The Espresso suites that job existed for now run on the JVM under Robolectric
+# in Android/{PitchPerfect,TagMaster}/src/test, via `testDebugUnitTest` above.
+# What remains in src/androidTest is a small device-only residue (native
+# pointer drags, IME window geometry, PdfRenderer, store-screenshot capture and
+# the FirebaseUI bytecode-patch check) with no CI runner; it has to be run on a
+# device or emulator by hand. :bindroid-test in the Bindroid submodule is
+# instrumentation-only too and is likewise not exercised here.

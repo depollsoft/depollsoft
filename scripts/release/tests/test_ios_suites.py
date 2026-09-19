@@ -18,7 +18,8 @@ class ParallelSuiteTests(unittest.TestCase):
         self.assertFalse(pitch & tag)
         self.assertEqual(pitch | tag, standard)
         self.assertEqual({item['suite'] for item in matrix(True)['include']} - standard,
-                         {'pitchperfect-ui'})
+                         {'pitchperfect-ui', 'tagmaster-ui'})
+        self.assertFalse({item['suite'] for item in matrix()['include'] if item['suite'].endswith('-ui')})
 
     def test_every_ui_class_including_new_classes_runs_exactly_once(self):
         root = Path(__file__).resolve().parents[3] / 'iOS/tagmaster/tagmasterUITests'
@@ -29,7 +30,7 @@ class ParallelSuiteTests(unittest.TestCase):
             identifier = f'tagmasterUITests/{name}'
             owners = []
             for suite, (_, only, skip) in SUITES.items():
-                if not suite.startswith('tagmaster-ui-'):
+                if not suite.startswith('tagmaster-ui'):
                     continue
                 matches = lambda choices: any(identifier == item or identifier.startswith(item + '/')
                                                for item in choices)
@@ -95,19 +96,10 @@ class ParallelSuiteTests(unittest.TestCase):
     def test_ui_uses_a_bounded_budget_for_native_automation(self):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            expected = {'include': [{'suite': 'tagmaster-ui-layout'}]}
-            self.write_result(folder, 'tagmaster-ui-layout', duration=60)
+            expected = {'include': [{'suite': 'tagmaster-ui'}]}
+            self.write_result(folder, 'tagmaster-ui', duration=60)
             self.assertFalse(summarize(folder, expected)[1])
-            self.write_result(folder, 'tagmaster-ui-layout', duration=91)
+            self.write_result(folder, 'tagmaster-ui', duration=91)
             self.assertTrue(summarize(folder, expected)[1])
         for entry in matrix(True)['include']:
-            self.assertEqual(entry['timeout'], 90 if '-ui' in entry['suite'] else 30)
-
-    def test_duplicate_ui_cases_cannot_pass_aggregate(self):
-        with tempfile.TemporaryDirectory() as directory:
-            folder = Path(directory)
-            expected = {'include': [{'suite': 'tagmaster-ui-layout'}, {'suite': 'tagmaster-ui-other'}]}
-            for entry in expected['include']:
-                self.write_result(folder, entry['suite'], classname='SameClass')
-            _, errors = summarize(folder, expected)
-            self.assertTrue(any('Duplicate UI test' in error for error in errors))
+            self.assertEqual(entry['timeout'], 90 if entry['suite'].endswith('-ui') else 30)

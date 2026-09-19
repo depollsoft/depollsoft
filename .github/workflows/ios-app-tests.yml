@@ -47,15 +47,17 @@ jobs:
 
           # Pin the active developer directory for subsequent steps.
 
-          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
-          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          echo "$DEVELOPER_DIR/usr/bin" >> "$GITHUB_PATH"
 
           # Expose tool paths as outputs so later steps can call the
           # intended toolchain even if the runner's global developer
           # directory points at CommandLineTools.
-          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
-          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
-          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+          {
+            echo "developer_dir=$DEVELOPER_DIR"
+            echo "xcrun=/usr/bin/xcrun"
+            echo "xcodebuild=/usr/bin/xcodebuild"
+          } >> "$GITHUB_OUTPUT"
 
           echo "Selected Xcode: $DEVELOPER_DIR"
 
@@ -66,7 +68,7 @@ jobs:
           XCODE_VERSION=$(
             "${{ steps.select_xcode.outputs.xcodebuild }}" -version \
               | head -1 | sed 's/Xcode //')
-          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$XCODE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install xcpretty
         run: |
@@ -77,11 +79,19 @@ jobs:
             echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
           fi
 
+      # Key prefix is shared with pr-preview.yml so whichever macOS job runs
+      # first on a branch populates the cache for the others. restore-keys
+      # matters more than the exact key: without them a single Package.resolved
+      # bump forced a fully cold SPM resolve in every macOS job. The Xcode
+      # version is part of the key because a manifest cache built by another
+      # toolchain is not reusable.
       - name: Cache SPM downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/Library/Caches/org.swift.swiftpm
-          key: hosted-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ runner.arch }}-xcode${{ steps.xcode.outputs.version }}-
 
       - name: Resolve SPM dependencies
         run: |
@@ -89,6 +99,7 @@ jobs:
           # reuse it across runners with different work roots.
           rm -rf SourcePackages
           for attempt in 1 2; do
+            echo "Resolving SPM dependencies (attempt $attempt/2)"
             "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
               -workspace iOS.xcworkspace \
               -scheme "$IOS_APP" \
@@ -141,6 +152,21 @@ jobs:
               CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
           done
 
+      # The behavioural XCUITest suites were migrated to in-process XCTest
+      # unit tests (pitchperfectTests / tagmasterTests), which run on every
+      # PR above. What remains in the UITests bundles is the residue that
+      # needs a real app launch (launch metrics, software keyboard, rotation
+      # hit targets, system sheets, store screenshot capture). Those run only
+      # as the `pitchperfect-ui` / `tagmaster-ui` suites when `extended-ui`
+      # is set (weekly schedule and workflow_dispatch), so this step only
+      # builds the separate pitchperfectUITests scheme on those runs; the
+      # tagmaster scheme already includes tagmasterUITests as a testable.
+      #
+      # Do NOT delete the pitchperfectUITests scheme or the tagmasterUITests
+      # target: scripts/release/capture.py builds `-scheme pitchperfectUITests`
+      # (scripts/release/apps.json ios_scheme) and runs
+      # `-only-testing:<app>UITests/StoreScreenshotTests` for both apps, so
+      # release-assets.yml -> release.yml depends on them for store screenshots.
       - name: Build optional Pitch Perfect UI tests
         if: inputs.app == 'pitchperfect' && inputs.extended-ui
         run: |
@@ -191,7 +217,11 @@ jobs:
     timeout-minutes: 25
     strategy:
       fail-fast: false
-      max-parallel: 3
+      # Keep this >= the largest per-app suite count so no suite waits for a
+      # second wave (PRs: 1 tagmaster / 2 pitchperfect suites; extended runs
+      # add one UI suite per app). GitHub's own macOS concurrency limit still
+      # applies on top of this, so raising it can only help, never hurt.
+      max-parallel: 4
       matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer

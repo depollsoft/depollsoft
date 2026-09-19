@@ -12,7 +12,7 @@ on:
       - "iOS/**"
       - ".github/workflows/ios.yml"
       - ".github/workflows/ios-app-tests.yml"
-      - "scripts/ci/**"
+      - "scripts/ci/ios_*.py"
   pull_request:
     branches:
       - main
@@ -20,18 +20,25 @@ on:
       - "iOS/**"
       - ".github/workflows/ios.yml"
       - ".github/workflows/ios-app-tests.yml"
-      - "scripts/ci/**"
+      - "scripts/ci/ios_*.py"
   workflow_dispatch:
   schedule:
-    - cron: "0 4 * * *"
+    # Weekly, not nightly. This schedule is the only thing that sets
+    # extended-ui, i.e. builds and runs the pitchperfectUITests scheme, and
+    # it is the single most expensive recurring item in this repo because
+    # macOS minutes bill at 10x. Nothing changes between nightly runs that
+    # the per-PR and per-push runs do not already cover.
+    - cron: "0 4 * * 1"
 
-# Serialize runs per branch.
-# Queue new runs instead of canceling to reduce “superseded” failures.
+# Serialize runs per branch. Superseded PR pushes are cancelled: this is by
+# far the largest macOS consumer, and queueing a full 21-32 minute run for every
+# intermediate push is the most wasteful thing this repo does. Pushes to main
+# and scheduled runs are never cancelled, so their results stay complete.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event.pull_request.number
     || github.head_ref || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -85,7 +92,8 @@ jobs:
         run: |
           options=()
           if [ "$EXTENDED_UI" = true ]; then options+=(--extended); fi
-          export IOS_TEST_MATRIX="$(python3 scripts/ci/ios_suites.py matrix "${options[@]}")"
+          IOS_TEST_MATRIX="$(python3 scripts/ci/ios_suites.py matrix "${options[@]}")"
+          export IOS_TEST_MATRIX
           python3 scripts/ci/ios_suites.py summarize ios-test-results
           test "$APPS_RESULT" = success
       - name: Publish native test results

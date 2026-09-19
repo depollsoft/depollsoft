@@ -1,0 +1,85 @@
+# yamllint disable rule:line-length
+#
+# Cheap PR gate for the two Node/TypeScript projects that previously had no CI
+# at all: api/ was only ever built inside the Cloud Run deploy on push to main
+# (so a type error reached main before anyone saw it), and
+# Firebase/pitchperfect/functions had no workflow whatsoever despite shipping
+# lint and build scripts.
+#
+# Both jobs are ubuntu-only and finish in about a minute, so this adds a
+# rounding error to the bill while removing the worst feedback loop in the repo.
+name: Node CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "api/**"
+      - "Firebase/pitchperfect/functions/**"
+      - ".github/workflows/node.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "api/**"
+      - "Firebase/pitchperfect/functions/**"
+      - ".github/workflows/node.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.number
+    || github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Node 24 matches api/Dockerfile (node:24-bookworm-slim).
+          - name: api
+            directory: api
+            node-version: "24"
+            scripts: build test
+          # Node 22 matches the "engines" field, which is what Firebase runs.
+          - name: firebase-functions
+            directory: Firebase/pitchperfect/functions
+            node-version: "22"
+            scripts: lint build
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.directory }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        env:
+          PROJECT_SCRIPTS: ${{ matrix.scripts }}
+        run: |
+          set -euo pipefail
+          read -ra scripts <<< "$PROJECT_SCRIPTS"
+          for script in "${scripts[@]}"; do
+            echo "::group::npm run $script"
+            npm run "$script"
+            echo "::endgroup::"
+          done

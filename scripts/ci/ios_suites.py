@@ -10,27 +10,31 @@ import xml.etree.ElementTree as ET
 import ios_run
 from ios_test_results import check_durations, validate
 
-POLISH = 'tagmasterUITests/TagMasterPolishUITests'
-LISTS = ['tagmasterUITests/FavoritesUITests', 'tagmasterUITests/SearchUITests']
+# Unit suites run on every PR. The `-ui` suites are the XCUITest residue that
+# still needs a real app launch (launch metrics, software keyboard, rotation
+# hit targets, system sheets, store screenshot capture); they run only with
+# --extended (weekly schedule and workflow_dispatch). Everything else the UI
+# bundles used to check now lives in the in-process unit targets.
 SUITES = {
     'pitchperfect': ('pitchperfect', ['pitchperfectTests'], []),
     'tagmaster': ('tagmaster', ['tagmasterTests'], []),
     'pitchperfectlib': ('pitchperfectlib', [], []),
-    'tagmaster-ui-layout': ('tagmaster', [POLISH], []),
-    'tagmaster-ui-lists': ('tagmaster', LISTS, []),
-    # The complement includes new classes automatically, exactly once.
-    'tagmaster-ui-other': ('tagmaster', ['tagmasterUITests'], [POLISH, *LISTS]),
+    'tagmaster-ui': ('tagmaster', ['tagmasterUITests'], []),
     'pitchperfect-ui': ('pitchperfectUITests', ['pitchperfectUITests'], []),
 }
 
 
+def is_ui(suite):
+    return suite.endswith('-ui')
+
+
 def case_timeout(suite):
-    return 90 if "-ui" in suite else 30
+    return 90 if is_ui(suite) else 30
 
 
 def matrix(extended=False, app=None):
     return {'include': [{'suite': suite, 'timeout': case_timeout(suite)} for suite in SUITES
-                        if (extended or suite != 'pitchperfect-ui')
+                        if (extended or not is_ui(suite))
                         and (app is None or suite.startswith(app))]}
 
 
@@ -69,7 +73,6 @@ def summarize(directory, expected):
     rows = ['### iOS CI', '', '| Suite | Passed | Skipped | Line coverage |',
             '| --- | ---: | ---: | ---: |']
     errors = []
-    seen_ui = set()
     for entry in expected['include']:
         suite = entry['suite']
         try:
@@ -77,12 +80,6 @@ def summarize(directory, expected):
             validate(summary)
             report = ET.parse(directory / f'{suite}-junit.xml')
             check_durations(report, case_timeout(suite))
-            if '-ui-' in suite or suite.endswith('-ui'):
-                for case in report.findall('.//testcase'):
-                    identity = (suite.split('-ui')[0], case.get('classname'), case.get('name'))
-                    if identity in seen_ui:
-                        raise ValueError(f'Duplicate UI test across groups: {identity}')
-                    seen_ui.add(identity)
             coverage = json.loads((directory / f'{suite}-coverage.json').read_text())
             rows.append(f'| {suite} | {summary["passedTests"]} | '
                         f'{summary.get("skippedTests", 0)} | {coverage["lineCoverage"]:.2%} |')
