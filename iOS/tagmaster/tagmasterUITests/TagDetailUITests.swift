@@ -731,13 +731,11 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         app.buttons["Rate tag"].tap()
         XCTAssertTrue(app.buttons["5 stars"].existsOrWait(timeout: 5))
         capture("rating")
-        if app.buttons["Cancel"].exists {
-            app.buttons["Cancel"].tap()
-        } else {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.75)).tap()
-        }
+        reachLowestRatingAndCancel()
         XCTAssertEqual(app.state, .runningForeground)
-        XCTAssertTrue(app.navigationBars.buttons["Share"].isHittable)
+        let shareReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"),
+                                                   object: app.navigationBars.buttons["Share"])
+        XCTAssertEqual(XCTWaiter.wait(for: [shareReady], timeout: 10), .completed)
     }
 
     func testBrowseRowContentAndSize() throws {
