@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import plistlib
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -29,12 +30,27 @@ def matrix(extended=False, app=None):
                         and (app is None or suite.startswith(app))]}
 
 
-def command(suite, destination, products=Path('DerivedData/Build/Products')):
-    scheme, only, skip = SUITES[suite]
+def manifest(scheme, products):
     runs = list(products.glob(f'{scheme}_*.xctestrun'))
     if len(runs) != 1:
         raise ValueError(f'Expected one {scheme} test configuration, found {len(runs)}')
-    return ['xcodebuild', 'test-without-building', '-xctestrun', str(runs[0]),
+    return runs[0]
+
+
+def validate_products(selection, products=Path('DerivedData/Build/Products')):
+    for scheme in {SUITES[entry['suite']][0] for entry in selection['include']}:
+        path = manifest(scheme, products)
+        data = plistlib.loads(path.read_bytes())
+        coverage = (data.get('CodeCoverageBuildableInfos') or
+                    data.get('__xctestrun_metadata__', {}).get('CodeCoverageBuildableInfos'))
+        if not coverage:
+            raise ValueError(f'{path}: missing coverage metadata; build for a concrete destination with coverage enabled')
+
+
+def command(suite, destination, products=Path('DerivedData/Build/Products')):
+    scheme, only, skip = SUITES[suite]
+    path = manifest(scheme, products)
+    return ['xcodebuild', 'test-without-building', '-xctestrun', str(path),
             '-destination', destination, '-enableCodeCoverage', 'YES',
             '-resultBundlePath', f'{suite}-results.xcresult',
             '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
@@ -80,6 +96,9 @@ def main():
     selection = sub.add_parser('matrix')
     selection.add_argument('--extended', action='store_true')
     selection.add_argument('--app', choices=['pitchperfect', 'tagmaster'])
+    products = sub.add_parser('validate-products')
+    products.add_argument('--app', choices=['pitchperfect', 'tagmaster'], required=True)
+    products.add_argument('--extended', action='store_true')
     runner = sub.add_parser('run')
     runner.add_argument('suite', choices=SUITES)
     runner.add_argument('destination')
@@ -88,6 +107,9 @@ def main():
     args = parser.parse_args()
     if args.action == 'matrix':
         print(json.dumps(matrix(args.extended, args.app)))
+        return 0
+    if args.action == 'validate-products':
+        validate_products(matrix(args.extended, args.app))
         return 0
     if args.action == 'run':
         return ios_run.run(command(args.suite, args.destination), fail_fast=True,

@@ -1,12 +1,13 @@
 from pathlib import Path
 import json
+import plistlib
 import re
 import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_suites import SUITES, command, matrix, summarize
+from ios_suites import SUITES, command, matrix, summarize, validate_products
 
 
 class ParallelSuiteTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class ParallelSuiteTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[3] / 'iOS/tagmaster/tagmasterUITests'
         classes = ['FutureRegressionTests']
         for source in root.glob('*.swift'):
-            classes.extend(re.findall(r'class\s+(\w+)\s*:\s*XCTestCase', source.read_text()))
+            classes.extend(re.findall(r'class\s+(\w+)\s*:\s*(?:XCTestCase|TagMasterUITestCase)', source.read_text()))
         for name in classes:
             identifier = f'tagmasterUITests/{name}'
             owners = []
@@ -49,6 +50,21 @@ class ParallelSuiteTests(unittest.TestCase):
             (products / 'tagmaster_other.xctestrun').touch()
             with self.assertRaises(ValueError):
                 command('tagmaster', 'owned', products)
+
+    def test_generic_builds_without_coverage_metadata_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            path = folder / 'tagmaster_iphonesimulator26.5-arm64.xctestrun'
+            selection = matrix(app='tagmaster')
+            path.write_bytes(plistlib.dumps({'__xctestrun_metadata__': {'FormatVersion': 1}}))
+            with self.assertRaisesRegex(ValueError, 'missing coverage metadata'):
+                validate_products(selection, folder)
+            for data in [
+                {'__xctestrun_metadata__': {'CodeCoverageBuildableInfos': [{'Name': 'App'}]}},
+                {'CodeCoverageBuildableInfos': [{'Name': 'App'}]},
+            ]:
+                path.write_bytes(plistlib.dumps(data))
+                validate_products(selection, folder)
 
     def write_result(self, folder, suite, classname=None, duration=1):
         (folder / f'{suite}-summary.json').write_text(json.dumps({

@@ -4,7 +4,7 @@ import XCTest
  * UI Tests for Favorites functionality in TagMaster.
  * Tests viewing and managing favorite tags.
  */
-class FavoritesUITests: XCTestCase {
+class FavoritesUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     

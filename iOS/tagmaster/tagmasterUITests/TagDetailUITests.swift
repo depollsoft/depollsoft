@@ -8,7 +8,23 @@
 import XCTest
 import UIKit
 
-final class TagDetailUITests: XCTestCase {
+// Prepare the fresh simulator's first app launch before individual case budgets.
+// XCTest still bounds suite startup; every regression retains its 30s limit.
+class TagMasterUITestCase: XCTestCase {
+    private static var warmedApplication = false
+
+    override class func setUp() {
+        super.setUp()
+        guard !warmedApplication else { return }
+        let application = XCUIApplication()
+        application.launchArguments = ["--uitesting"]
+        application.launch()
+        application.terminate()
+        warmedApplication = true
+    }
+}
+
+final class TagDetailUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     
@@ -307,7 +323,7 @@ extension TagMasterPolishUITests {
 
 }
 
-final class TagMasterPolishUITests: XCTestCase {
+final class TagMasterPolishUITests: TagMasterUITestCase {
     private var app: XCUIApplication!
 
     override func setUpWithError() throws {

@@ -120,16 +120,24 @@ jobs:
           echo "SPM binary artifacts are still missing after a clean resolve." >&2
           exit 1
 
+      # A concrete destination makes Xcode include coverage metadata. Do not
+      # boot it; execution happens on independent test runners after packaging.
+      - name: Create build destination
+        id: build_simulator
+        env:
+          IOS_SIMULATOR_VERSION: '26.5'
+        run: python3 ../scripts/ci/ios_simulator.py
+
       - name: Build app test targets
         run: |
           set -o pipefail
           schemes=("$IOS_APP")
           if [ "$IOS_APP" = pitchperfect ]; then schemes+=(pitchperfectlib); fi
           for scheme in "${schemes[@]}"; do
-            xcodebuild build-for-testing -jobs 2 \
+            xcodebuild build-for-testing -enableCodeCoverage YES -jobs 2 \
               -derivedDataPath DerivedData -workspace iOS.xcworkspace \
               -clonedSourcePackagesDirPath SourcePackages -scheme "$scheme" \
-              -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
+              -destination '${{ steps.build_simulator.outputs.destination }}' ARCHS=arm64 \
               CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
           done
 
@@ -137,10 +145,10 @@ jobs:
         if: inputs.app == 'pitchperfect' && inputs.extended-ui
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -jobs 2 \
+          xcodebuild build-for-testing -enableCodeCoverage YES -jobs 2 \
             -derivedDataPath DerivedData -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages -scheme pitchperfectUITests \
-            -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
+            -destination '${{ steps.build_simulator.outputs.destination }}' ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
 
       - name: Select independent test suites
@@ -150,6 +158,7 @@ jobs:
         run: |
           options=()
           if [ "$EXTENDED_UI" = true ]; then options+=(--extended); fi
+          python3 ../scripts/ci/ios_suites.py validate-products --app "$IOS_APP" "${options[@]}"
           echo "matrix=$(python3 ../scripts/ci/ios_suites.py matrix --app "$IOS_APP" "${options[@]}")" >> "$GITHUB_OUTPUT"
 
       - name: Package compiled tests
@@ -167,6 +176,13 @@ jobs:
           retention-days: 7
           compression-level: 0
           if-no-files-found: error
+
+      - name: Delete build destination
+        if: always() && steps.build_simulator.outputs.udid != ''
+        timeout-minutes: 2
+        env:
+          SIMULATOR_UDID: ${{ steps.build_simulator.outputs.udid }}
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
 
   suites:
     name: iOS tests (${{ matrix.suite }})

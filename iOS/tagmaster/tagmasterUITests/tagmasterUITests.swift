@@ -10,7 +10,7 @@ import XCTest
  * - Use waitForExistence with appropriate timeouts
  * - Keep tests focused and independent
  */
-class tagmasterUITests: XCTestCase {
+class tagmasterUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     
@@ -156,7 +156,7 @@ class tagmasterUITests: XCTestCase {
 
 // Launch measurements own app startup. The functional suite's setup launch
 // would add an unmeasured launch before XCTest's warmup and three samples.
-final class TagMasterLaunchPerformanceUITests: XCTestCase {
+final class TagMasterLaunchPerformanceUITests: TagMasterUITestCase {
     func testLaunchPerformance() throws {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
             let options = XCTMeasureOptions()
