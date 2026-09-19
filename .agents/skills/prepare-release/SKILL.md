@@ -1,6 +1,6 @@
 ---
 name: prepare-release
-description: Prepare a Pitch Perfect or Tag Master store release in this repository. Review app-specific changes, refresh listing copy and live screenshots, choose independent iOS and Android versions, validate, and open a release PR that deploys the selected app and platforms when merged.
+description: Prepare a Pitch Perfect or Tag Master store release in this repository. Review app-specific changes, update in-app changelogs, refresh listing copy and live screenshots, choose independent iOS and Android versions, validate, and open a release PR that deploys the selected app and platforms when merged.
 ---
 
 # Prepare a mobile release
@@ -11,9 +11,11 @@ Read [docs/releases.md](../../../docs/releases.md) for commands, prerequisites, 
 
 Resolve the app, `pitchperfect` or `tagmaster`, and the requested platforms from the user's request. Ask only when the choice is missing. If both apps are requested, prepare separate plans in the same PR or separate PRs as requested. Never infer that releasing one app releases the other.
 
-Versions are independent for every app/platform pair. Read `scripts/release/apps.json`, existing `releases/<app>/release.json`, and tags matching `<app>/<platform>/v*`. Confirm the current store version and build when store access is available. Suggest the next patch for each selected platform unless the changes or user call for another version. Android's version is not the iOS version. Use a build number greater than the last uploaded build, including unpublished uploads.
+Versions are independent for every app/platform pair. Read `scripts/release/apps.json`, existing `releases/<app>/release.json`, and tags matching `<app>/<platform>/v*`. Use the authenticated `Check production store history` PR check to confirm the current store version, attached binary version/build, and unpublished uploads. A public listing version can differ from its attached binary version. Suggest the next patch for each selected platform unless the changes or user call for another version. Android's version is not the iOS version. Use a build number greater than the last uploaded build, including unpublished uploads.
 
 For the first release, identify the last shipped commit for each platform from repository and store history. The helper requires an explicit `--since` until a platform has a release tag. Do not use an arbitrary recent commit and present that as the shipped baseline. If baselines differ, pass `--ios-since` and `--android-since` to preserve each baseline.
+
+Inspect the last substantive changelog edit with `git log --follow -p` on the paths in the release guide. Ignore file moves and formatting-only changes. Match the entry's version and changes to store history when identifying a first-release baseline; a changelog edit date alone does not prove which commit shipped.
 
 For an iOS release, inspect the signing repository's profile filenames. If the production profile or Pitch Perfect widget profile is missing, run `release-signing.yml` for the selected app and verify it succeeds before opening the release PR. This provisions signing only. If store permissions or signing-repository write access are missing, report the exact prerequisite; do not merge a release known to be unbuildable.
 
@@ -22,6 +24,8 @@ For an iOS release, inspect the signing repository's profile filenames. If the p
 Inspect the diff and user-facing changes since each selected platform's last release tag. Include the app paths and shared library paths listed in `scripts/release/release.py`. Exclude the other app's changes unless they affect shared functionality. Verify feature claims in the implementation and running app.
 
 Edit `store/<app>/listing.json` when features or wording need updating. Keep platform-specific claims in that platform's copy. Write concrete release notes of at most 500 characters in a temporary text file. Do not publish raw commit messages, internal implementation notes, invented features, or placeholder text. `changes.md` is commit evidence for the PR, not customer-facing notes.
+
+Update the selected app/platform's existing in-app changelog in the same PR. Both Android apps store HTML changelog entries and displayed version strings in their version resource files; see the release guide for exact paths and keys. Prepend an entry for the selected Android version, preserve older entries, and update the displayed version strings to match the release plan. Keep its claims consistent with the Android store notes and implementation. The iOS apps currently have no in-app changelog, so update their App Store release notes without adding a new changelog UI. If one is added later, include it in release preparation.
 
 Run `scripts/release/release.py prepare` with the selected versions and notes. It writes only that app's plan and change evidence. Review those files before committing. Editing listing copy alone does not schedule a release.
 
@@ -35,7 +39,7 @@ Open the generated `index.html`, compare contact sheets with the separate baseli
 
 Inspect every captured PNG at full size. Confirm the intended scene has loaded, text is readable, navigation and media controls are visible, and no alerts, empty loading screens, test ads, or personal information appear. Tag Master captures use the live catalog; network failures must be fixed before proceeding. Update capture tests and scene definitions when product flows change. Do not substitute mock screens, image-generated UI, or stale screenshots.
 
-Generated media stays out of git. Commit the plan, listing copy, change evidence, and any intentional capture-test updates. Run the validation and tests in the release guide. Open the PR with `gh pr create --body-file <file>`, then inspect Actions results and download the artifacts for visual review. Fix failures and refresh artifacts if the source changes. Include asset run links and any unresolved store prerequisite in the PR description.
+Generated media stays out of git. Commit the plan, listing copy, in-app changelogs and version strings, change evidence, and any intentional capture-test updates. Verify that each selected Android app's newest changelog entry and displayed version match its plan, and run the validation and tests in the release guide. Open the PR with `gh pr create --body-file <file>`, then inspect Actions results and download the artifacts for visual review. Fix failures and refresh artifacts if the source changes. Include asset run links and any unresolved store prerequisite in the PR description.
 
 ## Handoff
 

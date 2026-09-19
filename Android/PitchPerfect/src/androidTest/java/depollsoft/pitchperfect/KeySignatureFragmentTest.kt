@@ -37,7 +37,7 @@ class KeySignatureFragmentTest {
     @Before
     fun navigateToKeysTab() {
         // Dismiss any dialogs that may appear on startup (login dialog, changelog dialog)
-        EspressoTestUtils.dismissStartupDialogs(buttonTexts = listOf("Skip", "OK", "Close"))
+        EspressoTestUtils.dismissStartupDialogs()
         
         // Navigate to the keys tab via bottom navigation
         onView(withId(R.id.keys_item))

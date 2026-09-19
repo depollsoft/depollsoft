@@ -128,11 +128,18 @@ platform :android do
     package = config.fetch('bundle_id')
     key = ENV.fetch('PLAY_SERVICE_ACCOUNT_JSON_PATH')
     # Release summaries include pending reviews, which are not yet live.
-    release = production_play_releases(package, key).find do |item|
+    releases = production_play_releases(package, key)
+    release = releases.find do |item|
       item.track == 'production' && Array(item.active_artifacts).any? do |artifact|
         artifact.version_code.to_i == version.fetch('build')
       end
     end
+    # A phone-only upload replaces the track's artifact list. Keep the existing
+    # Wear build while it is still published; never reactivate a retired build.
+    published_codes = releases.select do |item|
+      item.track == 'production' && item.release_lifecycle_state == 'RELEASE_LIFECYCLE_STATE_PUBLISHED'
+    end.flat_map { |item| Array(item.active_artifacts).map { |artifact| artifact.version_code.to_i } }
+    retained_codes = Array(config['play_retained_version_codes']) & published_codes
     if release
       accepted = %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].map { |state| "RELEASE_LIFECYCLE_STATE_#{state}" }
       unless accepted.include?(release.release_lifecycle_state)
@@ -151,6 +158,7 @@ platform :android do
     })
     upload_to_play_store(
       package_name: package, json_key: key, track: 'production', release_status: 'completed',
+      version_codes_to_retain: retained_codes,
       aab: File.join(RELEASE_ROOT, 'Android', config.fetch('module'),
                      'build/outputs/bundle/release', "#{config.fetch('module')}-release.aab"),
       metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,

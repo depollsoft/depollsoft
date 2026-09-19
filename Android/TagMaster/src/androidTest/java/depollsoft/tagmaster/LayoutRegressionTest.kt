@@ -292,7 +292,7 @@ class LayoutRegressionTest {
         waitFor {
             scenario.onActivity {
                 result =
-                    it.supportFragmentManager.fragments
+                    it.detailFragment!!.childFragmentManager.fragments
                         .filterIsInstance<TagTracksFragment>()
                         .firstOrNull { f -> f.view != null }
             }
@@ -574,7 +574,7 @@ class LayoutRegressionTest {
     private fun textFits(text: TextView) {
         assertTrue("Readable width for ${text.text}", text.width > text.compoundPaddingLeft + text.compoundPaddingRight)
         assertTrue(
-            "All lines laid out: ${text.text}",
+            "All lines laid out: ${text.text}; required=${text.layout.height}, available=${text.height - text.compoundPaddingTop - text.compoundPaddingBottom}",
             text.layout.height <= text.height - text.compoundPaddingTop - text.compoundPaddingBottom,
         )
         assertTrue("No ellipsis: ${text.text}", (0 until text.lineCount).all { text.layout.getEllipsisCount(it) == 0 })

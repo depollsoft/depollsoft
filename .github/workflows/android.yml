@@ -12,6 +12,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/android_instrumented.sh"
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/android_instrumented.sh"
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * *"
@@ -406,7 +408,7 @@ jobs:
           disable-animations: true
           working-directory: Android
           script: >
-            bash -lc 'set -euo pipefail; adb wait-for-device;
+            bash -c 'set -euo pipefail; adb wait-for-device;
             echo "Waiting for boot to complete..."; for i in $(seq 1 120); do
             BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null
             | tr -d "\r" || true); if [ "$BOOT" = "1" ]; then
@@ -425,10 +427,7 @@ jobs:
             echo "Waiting for window focus..."; sleep 10; MAX_ATTEMPTS=2;
             for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "Test attempt $attempt of $MAX_ATTEMPTS";
-            if ./gradlew connectedDebugAndroidTest
-            createDebugAndroidTestCoverageReport
-            -Pandroid.testInstrumentationRunnerArguments.coverage=true
-            --build-cache --stacktrace; then
+            if bash ../scripts/ci/android_instrumented.sh; then
             echo "Tests passed on attempt $attempt"; exit 0; fi;
             if [ $attempt -lt $MAX_ATTEMPTS ]; then
             echo "Tests failed, retrying..."; sleep 5; fi; done;

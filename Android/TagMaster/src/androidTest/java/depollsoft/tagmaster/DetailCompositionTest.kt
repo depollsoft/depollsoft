@@ -51,6 +51,11 @@ class DetailCompositionTest {
             sungByWebsite = "https://example.invalid/quartet"
             lyrics = "And I will wait to face the skies,\never roaming in your eyes.\nThere I go lost in your eyes."
             notes = "Hold the last chord."
+            allPartsTrackUri =
+                RemoteLocation().apply {
+                    uri = "https://example.invalid/composition.mp3"
+                    type = "mp3"
+                }
             sheetMusicUri =
                 RemoteLocation().apply {
                     uri = "https://example.invalid/composition.pdf"
@@ -106,13 +111,12 @@ class DetailCompositionTest {
                 )} captionBaseline=${bounds(caption).top + caption.baseline} valueBaseline=${bounds(value).top + value.baseline}",
             )
             assertEquals("Shared value edge", axis, bounds(value).left)
-            assertTrue("Role minimum", pair.height >= pair.rowHeight * pair.resources.displayMetrics.density)
+            assertTrue("Role minimum", pair.height >= (pair.rowHeight * pair.resources.displayMetrics.density).toInt())
             if (mode >= 0 && value is TextView && value.lineCount == 1 && pair.resources.configuration.fontScale == 1f) {
                 assertEquals(
                     "Uniform default role height ${caption.text}",
-                    pair.rowHeight.toFloat(),
-                    pair.height / pair.resources.displayMetrics.density,
-                    .01f,
+                    (pair.rowHeight * pair.resources.displayMetrics.density).toInt(),
+                    pair.height,
                 )
             }
             assertTrue("Useful value width", value.width >= 96 * value.resources.displayMetrics.density)
@@ -218,7 +222,7 @@ class DetailCompositionTest {
                     lateinit var root: View
                     scenario.onActivity { activity ->
                         root =
-                            activity.supportFragmentManager.fragments
+                            activity.detailFragment!!.childFragmentManager.fragments
                                 .filterIsInstance<TagSummaryFragment>()
                                 .single()
                                 .requireView()
@@ -322,7 +326,7 @@ class DetailCompositionTest {
                     settle()
                     scenario.onActivity { activity ->
                         val detail =
-                            activity.supportFragmentManager.fragments
+                            activity.detailFragment!!.childFragmentManager.fragments
                                 .filterIsInstance<TagMiscFragment>()
                                 .single()
                                 .requireView()

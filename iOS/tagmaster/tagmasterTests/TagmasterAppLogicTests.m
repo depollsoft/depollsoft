@@ -524,7 +524,9 @@ TM_CAPTURE_IMPL
     if (condition()) return;
     NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return condition(); }];
     XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:5], XCTWaiterResultCompleted);
+    // UI transactions and main-queue completions can be delayed on standard
+    // hosted simulators. The runner still enforces the 30-second case limit.
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:10], XCTWaiterResultCompleted);
 }
 
 - (void)testSummaryBrandButtonsAndTintChanges {
@@ -3846,7 +3848,7 @@ TM_CAPTURE_IMPL
     IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
         calls++;
         XCTAssertEqualObjects(text, @"Lost"); XCTAssertEqual(number, 20); XCTAssertEqual(start, 0);
-        if (calls == 1) { [entered fulfill]; dispatch_semaphore_wait(gate, dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC)); }
+        if (calls == 1) { [entered fulfill]; dispatch_semaphore_wait(gate, DISPATCH_TIME_FOREVER); }
         if (calls == 2) [NSException raise:@"offline" format:@"fixture"];
         DPTagQueryResult *result = [DPTagQueryResult new];
         result.tags = @[tag]; result.count = 1; result.available = 1; result.start = 0;

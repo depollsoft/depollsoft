@@ -90,9 +90,12 @@ def screenshot_path(app, platform, family, scene):
 
 def ios_runtime(sdk, runtimes):
     sdk_version = tuple(map(int, sdk.split('.')))[:2]
+    requested = os.environ.get('IOS_SIMULATOR_VERSION')
     candidates = []
     for runtime in runtimes:
         version = tuple(map(int, runtime['version'].split('.')))[:2]
+        if requested and version != tuple(map(int, requested.split('.')))[:2]:
+            continue
         if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
             candidates.append((version, runtime['identifier']))
     if not candidates:
@@ -137,7 +140,7 @@ def ios(app, dest):
 
     # Build before booting a simulator, and reuse these products for both sizes.
     xcode('build', 'build-for-testing', '-jobs', '2', '-destination',
-          'generic/platform=iOS Simulator', *build, env=env, timeout=600)
+          'generic/platform=iOS Simulator', *build, env=env, timeout=1500)
     with tempfile.TemporaryDirectory(prefix='store-ios-') as temp:
         work = Path(temp)
         for family, (model, _) in IOS_DEVICES.items():
@@ -170,10 +173,12 @@ def ios(app, dest):
                         result = work / f'{family}-{theme}-{attempt}.xcresult'
                         # Reuse compiled products while each tour starts with
                         # fresh app data, matching the original capture behavior.
+                        # XCTest startup also counts against this process limit;
+                        # the live-catalog tour can take four minutes by itself.
                         xcode(f'{family}-{theme}-{attempt}', 'test-without-building', *build,
                               '-destination', f'platform=iOS Simulator,id={udid}',
                               '-resultBundlePath', result, '-parallel-testing-enabled', 'NO',
-                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=300)
+                              env=dict(env, TEST_RUNNER_STORE_SCREENSHOTS='1'), timeout=600)
                         return result
                     result = native_capture(app, f'{family}-{theme}', take, simulator=True)
                     attachments = work / f'{family}-{theme}'

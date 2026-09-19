@@ -3,6 +3,7 @@
     "name": "Pitch Perfect",
     "module": "PitchPerfect",
     "bundle_id": "depollsoft.pitchperfect",
+    "play_retained_version_codes": [220922001],
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
       "01-pitch-pipe",

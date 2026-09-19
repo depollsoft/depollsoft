@@ -170,6 +170,15 @@ Dir.mktmpdir('production-lane-test-') do |directory|
     $calls = []
     $lanes.fetch([:android, :deploy_production]).call(app: app)
     assert($calls.assoc(:upload_android), 'Wrong track/build suppressed a production submission')
+    $play_releases = [play_release('PUBLISHED', 220922001), play_release('DRAFT', 220925000)]
+    $calls = []
+    $lanes.fetch([:android, :deploy_production]).call(app: app)
+    retained = $calls.assoc(:upload_android).last.fetch(:version_codes_to_retain)
+    assert(retained == (app == 'pitchperfect' ? [220922001] : []), 'Phone release removed Wear or retained another app build')
+    $play_releases = [play_release('DRAFT', 220922001)]
+    $calls = []
+    $lanes.fetch([:android, :deploy_production]).call(app: app)
+    assert($calls.assoc(:upload_android).last.fetch(:version_codes_to_retain).empty?, 'Reactivated an unpublished Wear build')
     $reject_capture = true
     $calls = []
     begin
