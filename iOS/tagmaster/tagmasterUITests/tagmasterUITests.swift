@@ -152,8 +152,11 @@ class tagmasterUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "App should not crash on rapid interaction")
     }
     
-    // MARK: - Performance Tests
-    
+}
+
+// Launch measurements own app startup. The functional suite's setup launch
+// would add an unmeasured launch before XCTest's warmup and three samples.
+final class TagMasterLaunchPerformanceUITests: XCTestCase {
     func testLaunchPerformance() throws {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
             let options = XCTMeasureOptions()
