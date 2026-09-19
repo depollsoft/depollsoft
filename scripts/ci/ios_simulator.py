@@ -181,6 +181,9 @@ def main():
     if not candidates:
         raise RuntimeError('No available iPhone runtime supported by the selected Xcode')
     _, _, model, runtime = max(candidates)
+    # simctl create validates model/runtime compatibility, including models
+    # with no saved device on the runner. Never reuse a pre-existing device.
+    model = os.environ.get("IOS_SIMULATOR_DEVICE", model)
     name = f'Depollsoft-Test-{uuid.uuid4()}'
     udid = create(name, model, runtime, owner_identity(parent=True))
     try:
