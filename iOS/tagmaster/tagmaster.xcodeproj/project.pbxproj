@@ -102,6 +102,11 @@
 		A7C020000000000000000001 /* TMBarberPoleLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C020000000000000000011 /* TMBarberPoleLoadingView.m */; };
 		A7C030000000000000000001 /* TMQuartetArtwork.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C030000000000000000011 /* TMQuartetArtwork.m */; };
 		A7C040000000000000000001 /* TMQuartetStaffView.m in Sources */ = {isa = PBXBuildFile; fileRef = A7C040000000000000000011 /* TMQuartetStaffView.m */; };
+		A227F7054A25174F76DE5AA7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 49E65067B024F5CE1F5B6B77 /* FirebaseCrashlytics */; };
+		FBA1E182FA41DDDD2DBA5807 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8AB12ED67D69BE8D3BE58A93 /* FirebaseAnalyticsCore */; };
+		63E59FDC17ABAD20BA056B59 /* TelemetryConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */; };
+		65091594637A70B5D6F4EA5C /* ConsentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */; };
+		F305FB2DD07B3E2FB1A74A69 /* PrivacyChoicesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -274,6 +279,9 @@
 		A7C030000000000000000011 /* TMQuartetArtwork.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetArtwork.m; sourceTree = "<group>"; };
 		A7C040000000000000000010 /* TMQuartetStaffView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMQuartetStaffView.h; sourceTree = "<group>"; };
 		A7C040000000000000000011 /* TMQuartetStaffView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TMQuartetStaffView.m; sourceTree = "<group>"; };
+		5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PrivacyChoicesTests.swift; path = tagmasterTests/PrivacyChoicesTests.swift; sourceTree = "<group>"; };
+		65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TelemetryConsent.swift; path = ../shared/TelemetryConsent.swift; sourceTree = "<group>"; };
+		8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -309,6 +317,8 @@
 				2FA270FBF561239F254EB350 /* FirebaseFacebookSwiftUI in Frameworks */,
 				2FA270FBF561239F254EB351 /* FirebaseAppleSwiftUI in Frameworks */,
 				C0AUTH001000000000000021 /* FirebasePhoneAuthSwiftUI in Frameworks */,
+				FBA1E182FA41DDDD2DBA5807 /* FirebaseAnalyticsCore in Frameworks */,
+				A227F7054A25174F76DE5AA7 /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +374,9 @@
 		63712EE015130B21007997CC = {
 			isa = PBXGroup;
 			children = (
+				5E07E69E458972825B43D2BF /* PrivacyChoicesTests.swift */,
+				8D43DEC18C63FA36BF5D446B /* ConsentUITests.swift */,
+				65D06CA2A30E2817B10D6A31 /* TelemetryConsent.swift */,
 				1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */,
 				63225BF91A35523100857B44 /* LaunchScreen.xib */,
 				639F2958180125EC00517583 /* wickhop-handwriting.ttf */,
@@ -578,6 +591,7 @@
 				63712EE715130B21007997CC /* Sources */,
 				63712EE815130B21007997CC /* Frameworks */,
 				63712EE915130B21007997CC /* Resources */,
+				4AA1236EB0631895657118D6 /* Upload Crashlytics symbols */,
 			);
 			buildRules = (
 			);
@@ -593,6 +607,8 @@
 				42BE55FE34E9E89B06BE2071 /* FirebaseFacebookSwiftUI */,
 				42BE55FE34E9E89B06BE2072 /* FirebaseAppleSwiftUI */,
 				C0AUTH001000000000000022 /* FirebasePhoneAuthSwiftUI */,
+				8AB12ED67D69BE8D3BE58A93 /* FirebaseAnalyticsCore */,
+				49E65067B024F5CE1F5B6B77 /* FirebaseCrashlytics */,
 			);
 			productName = tagmaster;
 			productReference = 63712EEB15130B21007997CC /* tagmaster.app */;
@@ -739,6 +755,33 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		4AA1236EB0631895657118D6 /* Upload Crashlytics symbols */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics symbols";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/../../scripts/ci/upload_crashlytics_symbols.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		63712EE715130B21007997CC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -781,6 +824,7 @@
 				639F293C1800C45300517583 /* DPTagVideoController.m in Sources */,
 				638E735F17F76B13000FFE53 /* DPTagPageControllerBase.m in Sources */,
 				9D79AFECD87180F39C32C4C9 /* DPAppLog.swift in Sources */,
+				63E59FDC17ABAD20BA056B59 /* TelemetryConsent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -802,6 +846,7 @@
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
+				F305FB2DD07B3E2FB1A74A69 /* PrivacyChoicesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -813,6 +858,7 @@
 				594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */,
 				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
 				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
+				65091594637A70B5D6F4EA5C /* ConsentUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -994,7 +1040,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 43AWMS3YJX;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXCLUDED_ARCHS = "";
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1044,7 +1092,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = tagmaster/tagmaster.entitlements;
 				CURRENT_PROJECT_VERSION = 2.0.5;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 43AWMS3YJX;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXCLUDED_ARCHS = "";
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1252,6 +1302,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E19E9EAF84EEBA3C3ED71DE0 /* XCRemoteSwiftPackageReference "FirebaseUI-iOS" */;
 			productName = FirebasePhoneAuthSwiftUI;
+		};
+		49E65067B024F5CE1F5B6B77 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5341A2FDC2C29E6AA1DDE01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		8AB12ED67D69BE8D3BE58A93 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5341A2FDC2C29E6AA1DDE01 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

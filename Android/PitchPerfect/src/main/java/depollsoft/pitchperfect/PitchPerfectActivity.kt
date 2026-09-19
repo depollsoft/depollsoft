@@ -30,7 +30,9 @@ import com.google.firebase.auth.auth
 import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
 
-class PitchPerfectActivity : AppCompatActivity() {
+class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.TelemetryConsent.Host {
+    private var consentRevision = -1
+    private var startupDialogsShown = false
     private lateinit var bottomNavigation: NavigationBarView
     private lateinit var logInDialog: Dialog
     private var optionsMenu: Menu? = null
@@ -42,7 +44,7 @@ class PitchPerfectActivity : AppCompatActivity() {
     private var adReady = false
     private val adLoadRunnable =
         Runnable {
-            if (isDestroyed || !adsShouldShow || adRequested) return@Runnable
+            if (isDestroyed || !adsShouldShow || adRequested || !AdConsent.canRequestAds(this)) return@Runnable
             adRequested = true
             val startedAt = SystemClock.elapsedRealtime()
             // Initialize on the main thread: it costs one idle-time hitch, but a
@@ -168,17 +170,6 @@ class PitchPerfectActivity : AppCompatActivity() {
             true
         }
 
-        // First launch belongs to the first pitch: the login prompt waits for the next session.
-        val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")
-        if (!isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog")) {
-            logInDialog.show()
-        } else if (!isFirstLaunchEver) {
-            val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
-            viewer.setTitle("Pitch Perfect Changelog")
-            viewer.setIcon(R.mipmap.ic_launcher)
-            viewer.showIfAppropriate()
-        }
-
         PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
 
         reserveBannerSpace()
@@ -278,6 +269,19 @@ class PitchPerfectActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (consentRevision != AdConsent.revision) {
+            val container = findViewById<FrameLayout>(R.id.adContainer)
+            for (index in 0 until container.childCount) (container.getChildAt(index) as? AdView)?.destroy()
+            container.removeAllViews()
+            adRequested = false
+            adReady = false
+            consentRevision = AdConsent.revision
+        }
+        if (depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) {
+            onPrivacyChoicesClosed()
+        } else {
+            depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
+        }
 
         runOnUiThread(
             Runnable {
@@ -295,8 +299,30 @@ class PitchPerfectActivity : AppCompatActivity() {
         }
     }
 
+    override fun onPrivacyChoicesClosed() {
+        if (adsShouldShow) AdConsent.gather(this) {
+            scheduleAdLoadAfterIdle()
+            showStartupDialogs()
+        } else showStartupDialogs()
+    }
+
+    private fun showStartupDialogs() {
+        if (startupDialogsShown || isDestroyed || isFinishing || !depollsoft.lib.privacy.PrivacyChoices(this).hasChosen) return
+        startupDialogsShown = true
+        // First launch belongs to the first pitch: the login prompt waits for the next session.
+        val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")
+        if (!isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog")) {
+            logInDialog.show()
+        } else if (!isFirstLaunchEver) {
+            val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
+            viewer.setTitle("Pitch Perfect Changelog")
+            viewer.setIcon(R.mipmap.ic_launcher)
+            viewer.showIfAppropriate()
+        }
+    }
+
     private fun scheduleAdLoadAfterIdle() {
-        if (adRequested || !adsShouldShow) return
+        if (adRequested || !adsShouldShow || !AdConsent.canRequestAds(this)) return
         window.decorView.removeCallbacks(adLoadRunnable)
         window.decorView.postDelayed(adLoadRunnable, AD_INITIALIZATION_DELAY_MS)
     }
@@ -311,6 +337,7 @@ class PitchPerfectActivity : AppCompatActivity() {
     }
 
     private fun loadBanner() {
+        if (!AdConsent.canRequestAds(this)) return
         val adContainer = findViewById<FrameLayout>(R.id.adContainer)
         adContainer.removeAllViews()
         reserveBannerSpace()

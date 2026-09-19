@@ -15,6 +15,7 @@ class FavoritesUITests: TagMasterUITestCase {
         // launch-only preferences never touch an account or personal device.
         app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists",
             "<dict><key>favorite</key><array><integer>669</integer><integer>1478</integer><integer>122</integer></array></dict>"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
 
     }

@@ -107,6 +107,9 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
             }
         this.title = getString(R.string.Settings)
         this.setContentView(R.layout.settingsview)
+        findViewById<View>(R.id.privacyChoicesButton).setOnClickListener {
+            depollsoft.lib.privacy.TelemetryConsent.show(this)
+        }
         UiBinder.bind(
             this,
             CompoundButtonCheckedProperty(findViewById<View>(R.id.toggleNoteCheckBox) as CompoundButton),

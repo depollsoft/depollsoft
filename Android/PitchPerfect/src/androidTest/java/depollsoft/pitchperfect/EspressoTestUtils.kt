@@ -91,7 +91,7 @@ object EspressoTestUtils {
      */
     fun dismissStartupDialogs(
         maxAttempts: Int = 3,
-        buttonTexts: List<String> = listOf("Not now", "Skip", "OK", "Cancel", "Dismiss", "Later"),
+        buttonTexts: List<String> = listOf("Decline both", "Not now", "Skip", "OK", "Cancel", "Dismiss", "Later"),
     ) {
         val instrumentation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.uiAutomation

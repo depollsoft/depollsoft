@@ -76,6 +76,9 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settingsview)
+        findViewById<View>(R.id.privacyChoicesButton).setOnClickListener {
+            depollsoft.lib.privacy.TelemetryConsent.show(this)
+        }
         setUpToolbar(true)
         findViewById<View>(R.id.scrollView1).applyContentInsets()
 

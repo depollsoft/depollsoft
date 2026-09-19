@@ -32,12 +32,14 @@ dependencies {
     implementation 'com.facebook.android:facebook-android-sdk:18.3.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
     implementation 'com.google.android.gms:play-services-wearable:20.0.1'
     implementation 'androidx.wear:wear-remote-interactions:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'com.google.android.material:material:1.14.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.core:core-ktx:1.19.0"
+    implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-functions'
