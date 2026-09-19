@@ -2,6 +2,7 @@
 require 'json'
 require 'fileutils'
 require 'tmpdir'
+require_relative 'play_diagnostics'
 
 RELEASE_ROOT = File.expand_path('../..', __dir__)
 
@@ -156,14 +157,16 @@ platform :android do
       'DEPOLLSOFT_RELEASE_VERSION' => version.fetch('version'),
       'DEPOLLSOFT_RELEASE_BUILD' => version.fetch('build'),
     })
-    upload_to_play_store(
-      package_name: package, json_key: key, track: 'production', release_status: 'completed',
-      version_codes_to_retain: retained_codes,
-      aab: File.join(RELEASE_ROOT, 'Android', config.fetch('module'),
-                     'build/outputs/bundle/release', "#{config.fetch('module')}-release.aab"),
-      metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,
-      skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false,
-      changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: false,
-    )
+    with_play_submission_diagnostics(File.join(RELEASE_ROOT, 'build/release/play-upload-error.json')) do
+      upload_to_play_store(
+        package_name: package, json_key: key, track: 'production', release_status: 'completed',
+        version_codes_to_retain: retained_codes,
+        aab: File.join(RELEASE_ROOT, 'Android', config.fetch('module'),
+                       'build/outputs/bundle/release', "#{config.fetch('module')}-release.aab"),
+        metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,
+        skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false,
+        changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: false,
+      )
+    end
   end
 end
