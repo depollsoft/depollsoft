@@ -10,7 +10,7 @@ import XCTest
  * - Use waitForExistence with appropriate timeouts
  * - Keep tests focused and independent
  */
-class tagmasterUITests: XCTestCase {
+class tagmasterUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     
@@ -152,12 +152,19 @@ class tagmasterUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "App should not crash on rapid interaction")
     }
     
-    // MARK: - Performance Tests
-    
-    func testLaunchPerformance() throws {
+}
+
+// Keep three launch measurements, each with its own case budget.
+// This class has no per-case setup launch before XCTest's measurement warmup.
+final class TagMasterLaunchPerformanceUITests: TagMasterUITestCase {
+    func testLaunchPerformanceFirstSample() { measureLaunch() }
+    func testLaunchPerformanceSecondSample() { measureLaunch() }
+    func testLaunchPerformanceThirdSample() { measureLaunch() }
+
+    private func measureLaunch() {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
             let options = XCTMeasureOptions()
-            options.iterationCount = 3
+            options.iterationCount = 1
             measure(metrics: [XCTApplicationLaunchMetric()], options: options) {
                 XCUIApplication().launch()
             }

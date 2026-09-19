@@ -28,12 +28,18 @@ android {
         minSdk 26
 
         targetSdk 36
+        def releaseSelected = findProperty('DEPOLLSOFT_RELEASE_APP') == project.name
+        def releaseVersion = releaseSelected ? findProperty('DEPOLLSOFT_RELEASE_VERSION') : null
+        def releaseBuild = releaseSelected ? findProperty('DEPOLLSOFT_RELEASE_BUILD') : null
+        if ((releaseVersion == null) != (releaseBuild == null)) {
+            throw new GradleException('Provide both production version and build')
+        }
         def privateBuildNumber = findProperty('DEPOLLSOFT_PRIVATE_BUILD_NUMBER')
-        versionCode(privateBuildNumber == null
+        versionCode(releaseBuild != null ? (releaseBuild as Integer) : privateBuildNumber == null
                 ? getVersionCode(build: 0, suffix: 1)
                 : (privateBuildNumber as Integer) * 10 + 1)
 
-        versionName "3.0.0"
+        versionName(releaseVersion != null ? releaseVersion.toString() : "3.0.0")
     }
     buildTypes {
         release {

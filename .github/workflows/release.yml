@@ -29,7 +29,6 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       any: ${{ steps.plan.outputs.any }}
-      captures: ${{ steps.plan.outputs.captures }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -57,13 +56,10 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               selected = json.loads(os.environ['MATRIX'])['include']
               f.write('any=' + str(bool(selected)).lower() + '\n')
-              captures = selected or [{'app': app, 'platform': platform}
-                                      for app in ('pitchperfect', 'tagmaster') for platform in ('ios', 'android')]
-              f.write('captures=' + json.dumps({'include': captures}) + '\n')
           PY
       - name: Wait for iOS CI before simulator captures
-        if: github.event_name == 'pull_request'
-        timeout-minutes: 46
+        if: github.event_name == 'pull_request' && steps.plan.outputs.any == 'true'
+        timeout-minutes: 92
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           retries: 3
@@ -75,9 +71,10 @@ jobs:
             // Match ios.yml's path filters. Copy-only release PRs do not run iOS CI.
             const testsExpected = files.some(({filename}) =>
               filename.startsWith('iOS/') || filename.startsWith('scripts/ci/') ||
-              filename === '.github/workflows/ios.yml');
+              filename === '.github/workflows/ios.yml' ||
+              filename === '.github/workflows/ios-app-tests.yml');
             if (!testsExpected) return;
-            for (let attempt = 0; attempt < 90; attempt++) {
+            for (let attempt = 0; attempt < 180; attempt++) {
               const {data} = await github.rest.actions.listWorkflowRuns({
                 ...context.repo, workflow_id: 'ios.yml', event: 'pull_request',
                 head_sha: pr.head.sha, per_page: 100,
@@ -95,14 +92,15 @@ jobs:
               core.info(`Waiting for iOS CI at ${pr.head.sha}: ${run?.status || 'not queued yet'}`);
               await new Promise(resolve => setTimeout(resolve, 30000));
             }
-            throw new Error('iOS CI did not finish within 45 minutes; no capture simulators were started.');
+            throw new Error('iOS CI did not finish within 90 minutes; no capture simulators were started.');
   assets:
     needs: plan
     if: >-
+      needs.plan.outputs.any == 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.captures) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     uses: ./.github/workflows/release-assets.yml
     with:
       app: ${{ matrix.app }}
@@ -113,6 +111,7 @@ jobs:
     needs: [plan, assets]
     if: >-
       !cancelled() && needs.plan.result == 'success' &&
+      needs.plan.outputs.any == 'true' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -122,7 +121,7 @@ jobs:
     steps:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
-          CAPTURE_MATRIX: ${{ needs.plan.outputs.captures }}
+          CAPTURE_MATRIX: ${{ needs.plan.outputs.matrix }}
           CAPTURE_RESULT: ${{ needs.assets.result }}
         with:
           script: |

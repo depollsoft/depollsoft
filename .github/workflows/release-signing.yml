@@ -19,6 +19,7 @@ jobs:
       cancel-in-progress: false
     env:
       RELEASE_APP: ${{ inputs.app }}
+      RELEASE_SIGNING_WRITE: 'true'
       FL_SETUP_CI_KEYCHAIN_NAME: depollsoft-signing-${{ github.run_id }}.keychain
       FL_SETUP_CI_SET_DEFAULT_KEYCHAIN: 'false'
       LANG: en_US.UTF-8
@@ -44,7 +45,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
         run: bundle exec fastlane ios provision_production app:"$RELEASE_APP"
       - name: Remove temporary credentials
         if: always()

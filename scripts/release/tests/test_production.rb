@@ -48,9 +48,15 @@ def build_app(**options)
   $calls << [:build_ios, options]
   '/test/app.ipa'
 end
-def upload_to_app_store(**options) = $calls << [:upload_ios, options]
+def upload_to_app_store(**options)
+  raise 'Fastlane forbids build_number with ipa' if options[:build_number] && options[:ipa]
+  $calls << [:upload_ios, options]
+end
 def gradle(**options) = $calls << [:build_android, options]
-def upload_to_play_store(**options) = $calls << [:upload_android, options]
+def upload_to_play_store(**options)
+  $calls << [:upload_android, options]
+  raise 'Watch submission failed' if options[:track] == $fail_play_track
+end
 def assert(value, message)
   raise(message) unless value
 end
@@ -63,10 +69,16 @@ def play_release(state, code = 1800000000, track = 'production')
     .new(track, [artifact], "RELEASE_LIFECYCLE_STATE_#{state}")
 end
 
-def production_play_releases(package, key)
-  $play_query = [package, key]
-  $play_releases || ($existing_build ? [play_release('PUBLISHED')] : [])
+def production_play_releases(package, key, track = 'production')
+  $play_query = [package, key, track]
+  if track == 'wear:production'
+    $wear_releases || ($existing_build ? [play_release('PUBLISHED', 1800000001, track)] : [])
+  else
+    $play_releases || ($existing_build ? [play_release('PUBLISHED')] : [])
+  end
 end
+
+def production_play_tracks(_package, _key) = $play_tracks || ['production', 'wear:production']
 
 source_root = RELEASE_ROOT
 Object.send(:remove_const, :RELEASE_ROOT)
@@ -95,13 +107,23 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       $existing_build = existing
       $store_version = nil
       $play_releases = nil
+      $wear_releases = nil
+      $play_tracks = nil
       $reject_capture = false
       $calls = []
       $lanes.fetch([:ios, :deploy_production]).call(app: app)
       assert($seen_identifier == "depollsoft.#{app}", 'Wrong store app')
       assert($version_query == {filter: {versionString: '2.0.9', platform: 'IOS'}, includes: 'build'}, 'Wrong review version query')
       upload = $calls.assoc(:upload_ios).last
-      assert(upload[:app_version] == '2.0.9' && upload[:build_number] == '1800000000', 'Wrong iOS version')
+      assert(upload[:app_version] == '2.0.9', 'Wrong iOS version')
+      assert(upload[:submission_information] == {export_compliance_uses_encryption: false},
+             'Missing confirmed export-compliance declaration')
+      if existing
+        assert(upload[:build_number] == '1800000000' && !upload.key?(:ipa), 'Retry must select the existing build without an IPA')
+      else
+        assert(upload[:ipa] == '/test/app.ipa' && !upload.key?(:build_number), 'New upload must select the IPA without build_number')
+        assert($calls.assoc(:build_ios).last[:xcargs] == 'MARKETING_VERSION=2.0.9 CURRENT_PROJECT_VERSION=1800000000', 'Wrong version embedded in IPA')
+      end
       assert(upload[:skip_binary_upload] == existing, 'Retry did not reuse build')
       assert(upload[:submit_for_review] && upload[:automatic_release] && upload[:overwrite_screenshots], 'Missing store submission/assets')
       unless existing
@@ -113,17 +135,31 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       assert(File.read(File.join(project, 'project.pbxproj')) == 'original project', 'Signing changes leaked')
       $calls = []
       $lanes.fetch([:android, :deploy_production]).call(app: app)
-      assert($play_query == ["depollsoft.#{app}", 'test-only'], 'Wrong Play review query')
+      assert($play_query == ["depollsoft.#{app}", 'test-only', 'production'], 'Wrong Play review query')
       if existing
         assert(!$calls.assoc(:build_android) && !$calls.assoc(:upload_android), 'Re-uploaded active Play build')
       else
-        build = $calls.assoc(:build_android).last
+        builds = $calls.select { |call| call.first == :build_android }.map(&:last)
+        build = builds.last
         assert(build[:task] == ":#{app == 'tagmaster' ? 'TagMaster' : 'PitchPerfect'}:bundleRelease", 'Built wrong Gradle module')
         assert(build[:properties]['DEPOLLSOFT_RELEASE_APP'] == (app == 'tagmaster' ? 'TagMaster' : 'PitchPerfect'), 'Version override targets wrong app')
         assert(build[:properties]['DEPOLLSOFT_RELEASE_VERSION'] == '5.2.9', 'Android reused iOS version')
-        upload = $calls.assoc(:upload_android).last
+        uploads = $calls.select { |call| call.first == :upload_android }.map(&:last)
+        upload = uploads.last
         assert(upload[:package_name] == "depollsoft.#{app}" && upload[:track] == 'production', 'Wrong Play target')
         assert(!upload[:skip_upload_metadata] && !upload[:skip_upload_screenshots], 'Skipped store assets')
+        if app == 'pitchperfect'
+          assert(uploads.map { |item| item[:track] } == ['wear:production', 'production'], 'Must submit watch before phone')
+          assert(builds.first[:task] == ':PitchPerfectWear:bundleRelease', 'Missing watch build')
+          assert(builds.first[:properties] == {
+            'DEPOLLSOFT_RELEASE_APP' => 'PitchPerfectWear',
+            'DEPOLLSOFT_RELEASE_VERSION' => '5.2.9',
+            'DEPOLLSOFT_RELEASE_BUILD' => 1800000001,
+          }, 'Wrong watch version or overlapping build number')
+          assert(uploads.first[:aab].end_with?('PitchPerfectWear-release.aab'), 'Uploaded phone bundle to watch track')
+        else
+          assert(uploads.length == 1, 'Tag Master unexpectedly uploaded a watch build')
+        end
       end
     end
     # Store accepted submission, then GitHub release-record publication failed.
@@ -170,6 +206,55 @@ Dir.mktmpdir('production-lane-test-') do |directory|
     $calls = []
     $lanes.fetch([:android, :deploy_production]).call(app: app)
     assert($calls.assoc(:upload_android), 'Wrong track/build suppressed a production submission')
+    $play_releases = [play_release('PUBLISHED', 220922001), play_release('DRAFT', 220925000)]
+    $calls = []
+    $lanes.fetch([:android, :deploy_production]).call(app: app)
+    retained = $calls.assoc(:upload_android).last.fetch(:version_codes_to_retain)
+    assert(retained.empty?, 'Retained obsolete watch bundle on phone track')
+    $play_releases = [play_release('DRAFT', 220922001)]
+    $calls = []
+    $lanes.fetch([:android, :deploy_production]).call(app: app)
+    assert($calls.assoc(:upload_android).last.fetch(:version_codes_to_retain).empty?, 'Reactivated an unpublished Wear build')
+    if app == 'pitchperfect'
+      $play_releases = [play_release('IN_REVIEW')]
+      $wear_releases = []
+      $calls = []
+      $lanes.fetch([:android, :deploy_production]).call(app: app)
+      assert($calls.select { |call| call.first == :upload_android }.map { |call| call.last[:track] } == ['wear:production'],
+             'Retry of missing watch release changed accepted phone release')
+      $wear_releases = [play_release('DRAFT', 1800000001, 'wear:production')]
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise 'Accepted a draft watch release'
+      rescue RuntimeError => error
+        raise unless error.message.include?('requires attention')
+      end
+      assert($calls.all? { |call| call.first == :validate }, 'Modified rejected watch release')
+      $play_tracks = ['production']
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise 'Accepted missing Wear track'
+      rescue RuntimeError => error
+        raise unless error.message.include?('dedicated Wear OS')
+      end
+      assert($calls.all? { |call| call.first == :validate }, 'Built before checking required track')
+      $play_tracks = nil
+      $play_releases = []
+      $wear_releases = []
+      $fail_play_track = 'wear:production'
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise 'Swallowed failed watch submission'
+      rescue RuntimeError => error
+        raise unless error.message == 'Watch submission failed'
+      end
+      assert($calls.select { |call| call.first == :upload_android }.map { |call| call.last[:track] } == ['wear:production'],
+             'Changed phone track after failed watch submission')
+      $fail_play_track = nil
+    end
     $reject_capture = true
     $calls = []
     begin
@@ -182,3 +267,40 @@ Dir.mktmpdir('production-lane-test-') do |directory|
   end
 end
 puts 'PASS: isolated production targets, widget signing, store assets, retries, and capture gate'
+
+Dir.mktmpdir('play-diagnostics-test-') do |directory|
+  path = File.join(directory, 'failure.json')
+  api_error_class = Class.new(StandardError) { attr_accessor :body }
+  api_error = api_error_class.new('Server error')
+  api_error.body = JSON.generate(error: {
+    code: 500, message: 'Internal error', status: 'INTERNAL',
+    details: [{reason: 'TEST_REASON', domain: 'androidpublisher', unknown: 'discard'}],
+    request: 'discard',
+  })
+  wrapped = nil
+  begin
+    with_play_submission_diagnostics(path) do
+      begin
+        raise api_error
+      rescue StandardError
+        wrapped = RuntimeError.new('Fastlane summary')
+        raise wrapped
+      end
+    end
+  rescue StandardError => caught
+    assert(caught.equal?(wrapped), 'Diagnostics replaced the original failure')
+  end
+  report = JSON.parse(File.read(path))
+  assert(report['code'] == 500 && report['details'] == [{
+    'reason' => 'TEST_REASON', 'domain' => 'androidpublisher',
+  }], 'Lost structured Play error details')
+  assert(!report.key?('request'), 'Saved request data')
+  assert(with_play_submission_diagnostics(path) { :success } == :success, 'Changed successful submission')
+  api_error.body = '<html>Unavailable</html>'
+  begin
+    with_play_submission_diagnostics(path) { raise api_error }
+  rescue StandardError => caught
+    assert(caught.equal?(api_error), 'Malformed API response hid the original error')
+  end
+end
+puts 'PASS: Play diagnostics preserve errors and exclude request data'

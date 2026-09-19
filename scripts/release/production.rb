@@ -2,13 +2,25 @@
 require 'json'
 require 'fileutils'
 require 'tmpdir'
+require_relative 'play_diagnostics'
 
 RELEASE_ROOT = File.expand_path('../..', __dir__)
 
-def production_play_releases(package, key)
+def production_play_releases(package, key, track = 'production')
   require 'supply'
   Supply::Client.make_from_config(params: {json_key: key, timeout: 300})
-    .list_track_release_summaries(package, 'production')
+    .list_track_release_summaries(package, track)
+end
+
+def production_play_tracks(package, key)
+  require 'supply'
+  client = Supply::Client.make_from_config(params: {json_key: key, timeout: 300})
+  begin
+    client.begin_edit(package_name: package)
+    client.tracks.map(&:track)
+  ensure
+    client.abort_current_edit if client.current_edit
+  end
 end
 
 def production_plan(options, platform)
@@ -112,10 +124,11 @@ platform :ios do
     end
     upload_to_app_store(
       api_key: api_key, app_identifier: identifier, app_version: version.fetch('version'),
-      build_number: version.fetch('build').to_s, ipa: ipa,
+      **(existing_build ? {build_number: version.fetch('build').to_s} : {ipa: ipa}),
       skip_binary_upload: !existing_build.nil?,
       metadata_path: File.join(assets, 'metadata'), screenshots_path: File.join(assets, 'screenshots'),
       overwrite_screenshots: true, force: true, run_precheck_before_submit: false,
+      submission_information: {export_compliance_uses_encryption: false},
       submit_for_review: true, automatic_release: true,
     )
   end
@@ -127,35 +140,53 @@ platform :android do
     app, config, version, assets = production_plan(options, 'android')
     package = config.fetch('bundle_id')
     key = ENV.fetch('PLAY_SERVICE_ACCOUNT_JSON_PATH')
-    # Release summaries include pending reviews, which are not yet live.
-    release = production_play_releases(package, key).find do |item|
-      item.track == 'production' && Array(item.active_artifacts).any? do |artifact|
-        artifact.version_code.to_i == version.fetch('build')
+    targets = [{module: config.fetch('module'), track: 'production', build: version.fetch('build')}]
+    if (wear = config['wear'])
+      unless production_play_tracks(package, key).include?(wear.fetch('track'))
+        UI.user_error!("Enable Pitch Perfect's dedicated Wear OS release track in Play Console before releasing")
+      end
+      # Submit the replacement watch build before removing the obsolete watch
+      # bundle from the phone track. A retry checks each track independently.
+      targets.unshift(module: wear.fetch('module'), track: wear.fetch('track'), build: version.fetch('build') + 1)
+    end
+    pending = targets.reject do |target|
+      releases = production_play_releases(package, key, target[:track])
+      release = releases.find do |item|
+        item.track == target[:track] && Array(item.active_artifacts).any? do |artifact|
+          artifact.version_code.to_i == target[:build]
+        end
+      end
+      if release
+        accepted = %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].map { |state| "RELEASE_LIFECYCLE_STATE_#{state}" }
+        unless accepted.include?(release.release_lifecycle_state)
+          UI.user_error!("Play #{target[:track]} build #{target[:build]} requires attention: #{release.release_lifecycle_state}")
+        end
+        UI.success("#{app} #{target[:track]} build #{target[:build]} is already submitted (#{release.release_lifecycle_state})")
+        true
+      else
+        false
       end
     end
-    if release
-      accepted = %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].map { |state| "RELEASE_LIFECYCLE_STATE_#{state}" }
-      unless accepted.include?(release.release_lifecycle_state)
-        UI.user_error!("Play build #{version.fetch('build')} requires attention: #{release.release_lifecycle_state}")
+    pending.each do |target|
+      %w[ANDROID_UPLOAD_KEYSTORE_PATH ANDROID_UPLOAD_KEYSTORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD].each do |name|
+        UI.user_error!("Missing #{name}") if ENV[name].to_s.empty?
       end
-      UI.success("#{app} build #{version.fetch('build')} is already submitted (#{release.release_lifecycle_state})")
-      next
+      gradle(task: ":#{target[:module]}:bundleRelease", project_dir: '.', properties: {
+        'DEPOLLSOFT_RELEASE_APP' => target[:module],
+        'DEPOLLSOFT_RELEASE_VERSION' => version.fetch('version'),
+        'DEPOLLSOFT_RELEASE_BUILD' => target[:build],
+      })
+      with_play_submission_diagnostics(File.join(RELEASE_ROOT, 'build/release/play-upload-error.json')) do
+        upload_to_play_store(
+          package_name: package, json_key: key, track: target[:track], release_status: 'completed',
+          version_codes_to_retain: [],
+          aab: File.join(RELEASE_ROOT, 'Android', target[:module],
+                         'build/outputs/bundle/release', "#{target[:module]}-release.aab"),
+          metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,
+          skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false,
+          changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: false,
+        )
+      end
     end
-    %w[ANDROID_UPLOAD_KEYSTORE_PATH ANDROID_UPLOAD_KEYSTORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD].each do |name|
-      UI.user_error!("Missing #{name}") if ENV[name].to_s.empty?
-    end
-    gradle(task: ":#{config.fetch('module')}:bundleRelease", project_dir: '.', properties: {
-      'DEPOLLSOFT_RELEASE_APP' => config.fetch('module'),
-      'DEPOLLSOFT_RELEASE_VERSION' => version.fetch('version'),
-      'DEPOLLSOFT_RELEASE_BUILD' => version.fetch('build'),
-    })
-    upload_to_play_store(
-      package_name: package, json_key: key, track: 'production', release_status: 'completed',
-      aab: File.join(RELEASE_ROOT, 'Android', config.fetch('module'),
-                     'build/outputs/bundle/release', "#{config.fetch('module')}-release.aab"),
-      metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,
-      skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false,
-      changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: false,
-    )
   end
 end

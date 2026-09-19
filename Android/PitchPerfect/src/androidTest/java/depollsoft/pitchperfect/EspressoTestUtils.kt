@@ -7,12 +7,9 @@ import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewInteraction
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.Matcher
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -96,27 +93,25 @@ object EspressoTestUtils {
         maxAttempts: Int = 3,
         buttonTexts: List<String> = listOf("Not now", "Skip", "OK", "Cancel", "Dismiss", "Later"),
     ) {
-        for (attempt in 1..maxAttempts) {
-            var dialogDismissed = false
-
-            for (buttonText in buttonTexts) {
-                try {
-                    onView(withText(buttonText))
-                        .inRoot(isDialog())
-                        .perform(click())
-                    dialogDismissed = true
-                    // Give UI a moment to settle after dismissal
-                    shortWait(50)
-                    break
-                } catch (e: Exception) {
-                    // Button not found, try next
-                }
+        val instrumentation = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        fun dismiss(node: android.view.accessibility.AccessibilityNodeInfo): Boolean {
+            if (node.isVisibleToUser && node.isClickable &&
+                buttonTexts.any { it.equals(node.text?.toString(), ignoreCase = true) }
+            ) {
+                return node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
             }
-
-            if (!dialogDismissed) {
-                // No dialogs found, we're done
-                break
+            for (index in 0 until node.childCount) {
+                val child = node.getChild(index) ?: continue
+                if (dismiss(child)) return true
             }
+            return false
+        }
+        repeat(maxAttempts) {
+            instrumentation.waitForIdleSync()
+            // Espresso waits a minute for a dialog root even when no dialog exists.
+            val root = automation.rootInActiveWindow ?: return
+            if (!dismiss(root)) return
         }
     }
 

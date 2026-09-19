@@ -17,6 +17,7 @@ class TagMasterApplication : RichApplication() {
             "depollsoft.lib.binding.ObservableCollection",
         )
         Firebase.auth.addAuthStateListener {
+            AuthState.notifyChanged()
             ListModel.connectToFirestore()
         }
         AppCompatDelegate.setDefaultNightMode(themeMode)

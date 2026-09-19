@@ -4,14 +4,17 @@ import XCTest
  * UI Tests for Favorites functionality in TagMaster.
  * Tests viewing and managing favorite tags.
  */
-class FavoritesUITests: XCTestCase {
+class FavoritesUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
+        // NSNumber entries match the app's persisted list format. These
+        // launch-only preferences never touch an account or personal device.
+        app.launchArguments = ["--uitesting", "-depollsoft.pitchperfect.lists",
+            "<dict><key>favorite</key><array><integer>669</integer><integer>1478</integer><integer>122</integer></array></dict>"]
         app.launch()
 
     }
@@ -20,6 +23,16 @@ class FavoritesUITests: XCTestCase {
         app = nil
     }
     
+    private var favoriteCells: XCUIElementQuery {
+        app.tables.firstMatch.cells.matching(NSPredicate(
+            format: "label CONTAINS 'Tag ID ' OR label MATCHES 'Tag [0-9]+[.] Open to load details[.]'"))
+    }
+
+    private var backButton: XCUIElement {
+        app.navigationBars.buttons.matching(NSPredicate(
+            format: "identifier == 'BackButton' OR label == 'Home' OR label == 'Back'")).firstMatch
+    }
+
     // MARK: - Favorites Display Tests
     
     func testMainScreenLoads() throws {
@@ -49,8 +62,8 @@ class FavoritesUITests: XCTestCase {
     func testCanTapFavoriteIfExists() throws {
         let table = app.tables.firstMatch
         
-        if table.exists && table.cells.count > 0 {
-            table.cells.element(boundBy: 0).tap()
+        if table.exists && favoriteCells.count > 0 {
+            favoriteCells.element(boundBy: 0).tap()
 
             // Should navigate to detail or perform action
             XCTAssertEqual(app.state, .runningForeground, "Should handle favorite tap")
@@ -78,12 +91,12 @@ class FavoritesUITests: XCTestCase {
     func testSwipeOnFavoriteIfExists() throws {
         let table = app.tables.firstMatch
         
-        guard table.existsOrWait(timeout: 3) && table.cells.count > 0 else {
+        guard table.existsOrWait(timeout: 3) && favoriteCells.count > 0 else {
             throw XCTSkip("No favorites table or cells to test swipe on")
         }
         
         // Only test if we can safely interact with the cell
-        let cell = table.cells.element(boundBy: 0)
+        let cell = favoriteCells.element(boundBy: 0)
         guard cell.isHittable else {
             throw XCTSkip("Cell is not hittable for swipe test")
         }
@@ -100,15 +113,15 @@ class FavoritesUITests: XCTestCase {
     func testCanNavigateBackFromDetail() throws {
         let table = app.tables.firstMatch
         
-        guard table.exists && table.cells.count > 0 else {
+        guard table.exists && favoriteCells.count > 0 else {
             throw XCTSkip("No favorites to navigate from")
         }
         
         // Tap to open detail
-        table.cells.element(boundBy: 0).tap()
+        favoriteCells.element(boundBy: 0).tap()
 
         // Navigate back
-        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        let backButton = self.backButton
         if backButton.exists {
             backButton.tap()
 
@@ -122,15 +135,15 @@ class FavoritesUITests: XCTestCase {
     func testRapidFavoriteInteraction() throws {
         let table = app.tables.firstMatch
         
-        guard table.existsOrWait(timeout: 3) && table.cells.count > 0 else {
+        guard table.existsOrWait(timeout: 3) && favoriteCells.count > 0 else {
             // No table or cells - skip test rather than fail
             throw XCTSkip("No favorites table or cells to test rapid interaction")
         }
         
         // Rapid tapping with proper waits
-        let cellCount = min(3, table.cells.count)
+        let cellCount = min(3, favoriteCells.count)
         for i in 0..<cellCount {
-            let cell = table.cells.element(boundBy: i)
+            let cell = favoriteCells.element(boundBy: i)
             
             // Ensure cell is hittable before tapping
             guard cell.existsOrWait(timeout: 2) && cell.isHittable else {
@@ -140,7 +153,7 @@ class FavoritesUITests: XCTestCase {
             cell.tap()
 
             // Navigate back if we went to detail - wait for back button to be ready
-            let backButton = app.navigationBars.buttons.element(boundBy: 0)
+            let backButton = self.backButton
             if backButton.existsOrWait(timeout: 1) && backButton.isHittable {
                 backButton.tap()
                 // Wait for table to be visible again before next iteration

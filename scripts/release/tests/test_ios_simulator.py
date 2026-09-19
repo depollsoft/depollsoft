@@ -8,15 +8,39 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_simulator import boot, shutdown, delete, clean_abandoned, owner_identity, has_live_owner, process_identity
+from ios_simulator import boot, shutdown, delete, clean_abandoned, owner_identity, has_live_owner, process_identity, main
 
 
 class SimulatorCleanupTests(unittest.TestCase):
+    def test_requested_model_creates_a_new_device_on_the_pinned_runtime(self):
+        runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-26-5'
+        model = 'com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation'
+        existing = {'devices': {runtime: [{
+            'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-16e',
+        }]}}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'output'
+            with patch.dict('os.environ', {'IOS_SIMULATOR_VERSION': '26.5',
+                    'IOS_SIMULATOR_DEVICE': model, 'GITHUB_OUTPUT': str(output)}), \
+                    patch('ios_simulator.subprocess.check_output', side_effect=['26.5', json.dumps(existing)]), \
+                    patch('ios_simulator.owner_identity', return_value={'pid': 123}), \
+                    patch('ios_simulator.create', return_value='new-owned-device') as create:
+                main()
+            self.assertEqual(create.call_args.args[1:3], (model, runtime))
+            self.assertIn('id=new-owned-device', output.read_text())
+
     def test_boot_waits_and_also_handles_an_already_booted_device(self):
-        with patch('ios_simulator.subprocess.run') as run:
+        with patch('ios_simulator.subprocess.run', return_value=subprocess.CompletedProcess(
+                ['simctl'], 0, 'Finished', '')) as run:
             boot('owned-device')
         self.assertEqual(run.call_args.args[0][-3:], ['bootstatus', 'owned-device', '-b'])
-        self.assertEqual(run.call_args.kwargs['timeout'], 180)
+        self.assertEqual(run.call_args.kwargs['timeout'], 600)
+
+    def test_migration_diagnostic_does_not_override_successful_exit(self):
+        result = subprocess.CompletedProcess(['simctl'], 0,
+            'Status=3, isTerminal=YES\nData Migration Failed\n', '')
+        with patch('ios_simulator.subprocess.run', return_value=result):
+            boot('owned-device')
 
     def test_shutdown_accepts_stopped_devices_but_preserves_other_failures(self):
         for error in ['Unable to shutdown device in current state: Shutdown', 'Device unavailable']:

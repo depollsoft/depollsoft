@@ -4,7 +4,7 @@ import XCTest
  * UI Tests for Search functionality in TagMaster.
  * Tests search input, results, and interactions.
  */
-class SearchUITests: XCTestCase {
+class SearchUITests: TagMasterUITestCase {
     
     var app: XCUIApplication!
     

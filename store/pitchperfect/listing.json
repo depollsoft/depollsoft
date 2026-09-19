@@ -1,8 +1,8 @@
 {
   "ios": {
-    "name": "Pitch Perfect",
+    "name": "Pitch Perfect (Pitch Pipe)",
     "subtitle": "A pitch pipe for singers",
-    "description": "Find your starting note with a digital pitch pipe. Play individual notes, match a key signature to its key, and keep a song list with the pitches you need for rehearsal.\n\nUse Pitch Perfect when warming up, rehearsing with your quartet or choir, or starting a song with friends.",
+    "description": "Find your starting note with a digital pitch pipe. Play individual notes or chords, see note names and frequencies, and match major or minor key signatures to their starting pitches.\n\nKeep a song list with the pitches you need for rehearsal. Add songs, choose their keys, and arrange them in the order you sing.\n\nUse the pitch pipe widget to sound a note from your Home Screen. Light and dark appearances keep the controls readable on your phone or tablet.",
     "keywords": "pitch pipe,music,singing,choir,a cappella,notes,key signature,barbershop",
     "promotional_text": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
     "support_url": "https://apps.depoll.com/barbershop/pitch-perfect/",
@@ -11,6 +11,6 @@
   "android": {
     "title": "Pitch Perfect",
     "short_description": "A digital pitch pipe, note selector, and key signatures for your next rehearsal.",
-    "full_description": "Find your starting note with a digital pitch pipe. Play individual notes, match a key signature to its key, and keep a song list with the pitches you need for rehearsal.\n\nUse Pitch Perfect when warming up, rehearsing with your quartet or choir, or starting a song with friends."
+    "full_description": "Find your starting note with a digital pitch pipe. Play individual notes or chords, see note names and frequencies, and match major or minor key signatures to their starting pitches.\n\nKeep a song list with the pitches you need for rehearsal. Add songs, choose their keys, and arrange them in the order you sing.\n\nUse the pitch pipe widget to sound a note from your Home Screen. Light and dark appearances keep the controls readable on your phone or tablet."
   }
 }

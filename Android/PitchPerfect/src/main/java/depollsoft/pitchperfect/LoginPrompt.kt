@@ -18,6 +18,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import depollsoft.lib.auth.SignInOutcome
 
 object LoginPrompt {
     internal const val CREDENTIAL_MANAGER_ENABLED = false
@@ -65,10 +66,20 @@ object LoginPrompt {
 
         val firebaseUiLauncher =
             activity.registerForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
-                if (result.resultCode == RESULT_OK && result.idpResponse != null) {
-                    completeAuthentication(result.idpResponse!!.isNewUser)
-                } else {
-                    reset(if (result.idpResponse?.error != null) R.string.SignInFailed else R.string.SignInCanceled)
+                val response = result.idpResponse
+                // Firebase's auth state, not FirebaseUI's result code, decides whether the
+                // person is signed in: FirebaseUI can report an error or cancellation after
+                // Firebase has already accepted a Facebook account that has no email address.
+                when (
+                    SignInOutcome.resolve(
+                        isSignedIn = Firebase.auth.currentUser != null,
+                        resultOk = result.resultCode == RESULT_OK && response != null,
+                        hasError = response?.error != null,
+                    )
+                ) {
+                    SignInOutcome.SIGNED_IN -> completeAuthentication(response?.isNewUser == true)
+                    SignInOutcome.FAILED -> reset(R.string.SignInFailed)
+                    SignInOutcome.CANCELED -> reset(R.string.SignInCanceled)
                 }
             }
 

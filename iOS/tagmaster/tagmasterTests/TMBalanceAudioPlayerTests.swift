@@ -149,8 +149,12 @@ final class TMBalanceAudioPlayerTests: XCTestCase {
         XCTAssertThrowsError(try TMBalanceAudioPlayer.decode(fileAt: url))
     }
 
-    func testTransportAndSeeking() {
+    func testTransportAndSeeking() throws {
         let player = TMBalanceAudioPlayer()
+        // Transport state does not need a host audio device. Keep the real
+        // engine graph, as in the rendered-signal tests below.
+        let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)!
+        try player.engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
         XCTAssertFalse(player.isLoaded)
         XCTAssertFalse(player.play())
         player.load(stereoTone(seconds: 2))

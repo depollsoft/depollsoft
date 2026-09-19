@@ -56,7 +56,9 @@ def validate_plan(app, plan, previous=None):
             raise ValueError('Each platform needs exactly version and build')
         version(values['version'])
         build = values['build']
-        if type(build) is not int or not 1 <= build <= 2100000000:
+        wear = platform == 'android' and APPS[app].get('wear')
+        maximum = 2099999999 if wear else 2100000000
+        if type(build) is not int or not 1 <= build <= maximum:
             raise ValueError('Build must be a positive store-compatible integer')
         if not re.fullmatch(r'[0-9a-f]{40}', plan['since'][platform]):
             raise ValueError('Changelog baseline must be a full commit SHA')
@@ -65,7 +67,7 @@ def validate_plan(app, plan, previous=None):
             baseline = old['version'] if old else APPS[app]['baseline'][platform]
             if version(values['version']) <= version(baseline):
                 raise ValueError(f'{app}/{platform} version must exceed {baseline}')
-            if old and build <= old['build']:
+            if old and build <= old['build'] + (1 if wear else 0):
                 raise ValueError(f'{app}/{platform} build must increase')
 
 
@@ -113,8 +115,9 @@ def changed_plans(base, head='HEAD'):
                 if version(values['version']) <= tag_version and not same_submission:
                     raise ValueError(f'{app}/{platform}: version already released: {tag}')
                 released = previous_plan(app, tag).get('platforms', {}).get(platform)
-                if released and values['build'] <= released['build'] and not same_submission:
-                    raise ValueError(f'{app}/{platform}: build must exceed {released["build"]}')
+                last_build = released['build'] + (1 if platform == 'android' and APPS[app].get('wear') else 0) if released else None
+                if last_build is not None and values['build'] <= last_build and not same_submission:
+                    raise ValueError(f'{app}/{platform}: build must exceed {last_build}')
             matrix.append({'app': app, 'platform': platform})
     return matrix
 
@@ -137,8 +140,9 @@ def prepare(args):
             if version(platforms[platform]['version']) <= version(tag.rsplit('/v', 1)[1]):
                 raise ValueError(f'{app}/{platform}: version must exceed {tag}')
             published = previous_plan(app, tag).get('platforms', {}).get(platform)
-            if published and platforms[platform]['build'] <= published['build']:
-                raise ValueError(f'{app}/{platform}: build must exceed {published["build"]}')
+            last_build = published['build'] + (1 if platform == 'android' and APPS[app].get('wear') else 0) if published else None
+            if last_build is not None and platforms[platform]['build'] <= last_build:
+                raise ValueError(f'{app}/{platform}: build must exceed {last_build}')
         since[platform] = git('rev-parse', '--verify', f'{baseline}^{{commit}}')
         subprocess.run(['git', 'merge-base', '--is-ancestor', since[platform], 'HEAD'], cwd=ROOT, check=True)
         evidence.append(f'## {platform}: {since[platform]}..HEAD\n\n' +
@@ -169,6 +173,9 @@ def export(app, platform, output, allow_unplanned=False):
     notes_file = folder / ('release_notes.txt' if platform == 'ios' else 'changelogs/default.txt')
     notes_file.parent.mkdir(parents=True, exist_ok=True)
     notes_file.write_text(plan['notes'] + '\n')
+    if platform == 'android' and (wear := APPS[app].get('wear')):
+        wear_build = plan['platforms']['android']['build'] + 1
+        (notes_file.parent / f'{wear_build}.txt').write_text(wear['notes'] + '\n')
 
 
 def fingerprint():

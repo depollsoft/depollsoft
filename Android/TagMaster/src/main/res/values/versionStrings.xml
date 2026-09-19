@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">Version 5.2.1</string>
-    <string name="VersionNumber">5.2.1</string>
+    <string name="app_version">Version 6.0.0</string>
+    <string name="VersionNumber">6.0.0</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 6.0.0</h5>
+                    - Keep tag ID validation visible above the keyboard on small screens.<br />
+                    - Browse tags and view the selected tag side by side on tablets.<br />
+                    - Refreshed light and dark layouts make favorites, search results, sheet music, and learning tracks easier to use.<br />
+                    - Logging in with Facebook now completes without restarting the app.<br />
+            </p>
             <p>
                     <h5>Version 5.2.1</h5>
                     - Fixes a crash when signing in with email address<br />

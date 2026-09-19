@@ -59,7 +59,8 @@ def signal_command(child, signum):
 
 
 def run(command, *,
-        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15):
+        fail_fast=False, startup_timeout=300, test_timeout=30, shutdown_timeout=15,
+        keep_simulator_booted=False):
     child = None
     # Only explicit iOS Simulator destinations belong to this invocation.
     simulator = next((match[1] for value in command
@@ -80,9 +81,6 @@ def run(command, *,
         first_test_seen = False
         active_case = None
         case_started = None
-        sampled_case = False
-        sampler = None
-        sampled_startup = False
         stopping = None
         buffered = ''
         decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
@@ -93,6 +91,11 @@ def run(command, *,
                 print('::error::' + reason, flush=True)
                 stopping = time.monotonic()
                 signal_command(child, signal.SIGINT)
+                if simulator:
+                    # Profiling competes with the simulator on small runners.
+                    # Capture diagnostics only after deciding the run failed.
+                    threading.Thread(target=sample_simulator_apps,
+                                     args=(simulator, child.pid)).start()
 
         # Reading a line directly can block forever when XCTest or an inherited
         # output pipe hangs. Poll both the pipe and the process instead.
@@ -116,7 +119,6 @@ def run(command, *,
                             first_test_seen = True
                             active_case = begin[1]
                             case_started = now
-                            sampled_case = False
                         if end:
                             first_test_seen = True
                             active_case = None
@@ -129,16 +131,6 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
-                    if (simulator and not first_test_seen and not sampled_startup
-                            and now - started >= 120):
-                        sampled_startup = True
-                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator, child.pid))
-                        sampler.start()
-                    if (simulator and active_case and not sampled_case and now - case_started >= 20
-                            and (sampler is None or not sampler.is_alive())):
-                        sampled_case = True
-                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator,))
-                        sampler.start()
                     if not first_test_seen and now - started >= startup_timeout:
                         stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
                     elif active_case and now - case_started >= test_timeout:
@@ -162,8 +154,9 @@ def run(command, *,
                 finally:
                     child.stdout.close()
         finally:
-            if simulator:
+            if simulator and not keep_simulator_booted:
                 # A process-signal failure must not skip our device's cleanup.
+                # Jobs keeping the device between targets own its final deletion.
                 ios_simulator.shutdown(simulator)
 
 
@@ -174,7 +167,8 @@ if __name__ == '__main__':
     try:
         # Scheduled UI jobs build before testing; regular CI reuses its build.
         startup = 900 if 'test' in sys.argv[1:] else 300
-        status = run(sys.argv[1:], fail_fast=True, startup_timeout=startup)
+        status = run(sys.argv[1:], fail_fast=True, startup_timeout=startup,
+                     keep_simulator_booted=os.environ.get("IOS_KEEP_SIMULATOR_BOOTED") == "true")
     except KeyboardInterrupt:
         status = 130
     raise SystemExit(status if status >= 0 else 128 - status)

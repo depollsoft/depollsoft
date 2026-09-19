@@ -10,94 +10,35 @@ import UIKit
 @testable import tagmaster
 
 private final class HomePresentationFixture: DPHomeViewController {
-    var presentationCompleted: (() -> Void)?
-    var appeared: (() -> Void)?
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        let completion = appeared
-        appeared = nil
-        completion?()
-    }
+    var requestedPresentation: UIViewController?
 
     override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
                           completion: (() -> Void)? = nil) {
-        // These unit tests inspect the presented controls. Animation coverage
-        // belongs to the UI suite; wait for the real UIKit completion here.
-        super.present(viewControllerToPresent, animated: false) { [weak self] in
-            completion?()
-            self?.presentationCompleted?()
-        }
+        // Inspect the alert constructed by production code without starting
+        // system keyboard services. The UI suite exercises real presentation.
+        requestedPresentation = viewControllerToPresent
+        completion?()
     }
 }
 
 class DPHomeViewControllerExtensionTests: XCTestCase {
-
-    var homeViewController: DPHomeViewController!
-    var navigationController: UINavigationController!
-    var window: UIWindow!
-    private var animationsWereEnabled = true
+    private var homeViewController: HomePresentationFixture!
 
     override func setUp() {
         super.setUp()
-
-        animationsWereEnabled = UIView.areAnimationsEnabled
-        UIView.setAnimationsEnabled(false)
         homeViewController = HomePresentationFixture(style: .grouped)
-        navigationController = UINavigationController(rootViewController: homeViewController)
-
-    }
-
-    private func mountView() {
-        // Create a window only for tests that actually present an alert.
-        // Property/delegate tests do not need a rendered view hierarchy.
-        // Attach it to the foreground scene when the test host uses scenes.
-        if let windowScene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first(where: { $0.activationState == .foregroundActive }) ?? UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first {
-            window = UIWindow(windowScene: windowScene)
-        } else {
-            window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 812))
-        }
-
-        let appeared = expectation(description: "Home controller attached and appeared")
-        (homeViewController as! HomePresentationFixture).appeared = { appeared.fulfill() }
-        window.rootViewController = navigationController
-        window.makeKeyAndVisible()
-        // Lay out the container first so it installs its child view. Loading
-        // the child's view alone does not attach it to the navigation hierarchy.
-        window.layoutIfNeeded()
-        navigationController.view.layoutIfNeeded()
-        wait(for: [appeared], timeout: 5)
-        XCTAssertTrue(homeViewController.view.window === window)
     }
 
     override func tearDown() {
-        if homeViewController.presentedViewController != nil {
-            let dismissed = expectation(description: "alert dismissed")
-            homeViewController.dismiss(animated: false) { dismissed.fulfill() }
-            wait(for: [dismissed], timeout: 5)
-        }
-        window?.isHidden = true
-        window?.rootViewController = nil
-        window = nil
-        navigationController = nil
+        // Alert action handlers retain their presenting controller.
+        homeViewController.requestedPresentation = nil
         homeViewController = nil
-        UIView.setAnimationsEnabled(animationsWereEnabled)
         super.tearDown()
     }
 
     private func presentOpenTagAlert() {
-        mountView()
-        let presented = expectation(description: "Open Tag presentation completed")
-        (homeViewController as! HomePresentationFixture).presentationCompleted = { presented.fulfill() }
         homeViewController.openTag()
-        wait(for: [presented], timeout: 5)
-        let alert = homeViewController.presentedViewController as? UIAlertController
-        XCTAssertNotNil(alert?.viewIfLoaded?.window,
-                        "Open Tag alert should appear in the test window")
+        XCTAssertTrue(homeViewController.requestedPresentation is UIAlertController)
     }
 
     // MARK: - Open Tag Tests
@@ -110,11 +51,11 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     func testOpenTagPresentsAlertController() {
         presentOpenTagAlert()
 
-        // Verify alert is presented
-        XCTAssertNotNil(homeViewController.presentedViewController)
-        XCTAssertTrue(homeViewController.presentedViewController is UIAlertController)
+        // Verify production code requests presentation of the configured alert
+        XCTAssertNotNil(homeViewController.requestedPresentation)
+        XCTAssertTrue(homeViewController.requestedPresentation is UIAlertController)
 
-        let alert = homeViewController.presentedViewController as? UIAlertController
+        let alert = homeViewController.requestedPresentation as? UIAlertController
         XCTAssertEqual(alert?.title, "Open Tag")
         XCTAssertEqual(alert?.message, "Enter Tag ID")
     }
@@ -122,7 +63,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     func testOpenTagAlertHasTextField() {
         presentOpenTagAlert()
 
-        let alert = homeViewController.presentedViewController as? UIAlertController
+        let alert = homeViewController.requestedPresentation as? UIAlertController
         XCTAssertNotNil(alert?.textFields)
         XCTAssertEqual(alert?.textFields?.count, 1)
         XCTAssertEqual(alert?.textFields?.first?.keyboardType, .decimalPad)
@@ -131,7 +72,7 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     func testOpenTagAlertHasCancelAndOpenActions() {
         presentOpenTagAlert()
 
-        let alert = homeViewController.presentedViewController as? UIAlertController
+        let alert = homeViewController.requestedPresentation as? UIAlertController
         XCTAssertEqual(alert?.actions.count, 2)
 
         let cancelAction = alert?.actions.first { $0.title == "Cancel" }

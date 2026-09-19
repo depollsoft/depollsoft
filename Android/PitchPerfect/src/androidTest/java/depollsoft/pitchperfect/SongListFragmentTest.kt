@@ -1,16 +1,25 @@
 package depollsoft.pitchperfect
 
+import android.os.SystemClock
+import android.view.View
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.viewpager2.widget.ViewPager2
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,18 +57,34 @@ class SongListFragmentTest {
     private fun navigateToSongsTab() {
         onView(withId(R.id.songs_item))
             .perform(click())
-        EspressoTestUtils.shortWait()
+        waitForPagerIdle()
+        EspressoTestUtils.waitForView(allOf(withId(R.id.addSongButton), isDisplayingAtLeast(90)))
+    }
+
+    private fun waitForPagerIdle() {
+        onView(withId(R.id.viewPager)).perform(object : ViewAction {
+            override fun getConstraints(): Matcher<View> = isAssignableFrom(ViewPager2::class.java)
+            override fun getDescription() = "Wait for the page transition to finish"
+            override fun perform(uiController: UiController, view: View) {
+                val pager = view as ViewPager2
+                val deadline = SystemClock.uptimeMillis() + 5000
+                while (pager.scrollState != ViewPager2.SCROLL_STATE_IDLE &&
+                    SystemClock.uptimeMillis() < deadline
+                ) {
+                    uiController.loopMainThreadForAtLeast(16)
+                }
+                check(pager.scrollState == ViewPager2.SCROLL_STATE_IDLE) {
+                    "Page transition did not finish within five seconds"
+                }
+            }
+        })
     }
 
     // ==================== Navigation Tests ====================
 
     @Test
     fun testNavigateToSongsTab() {
-        // Click on songs tab in bottom navigation
-        onView(withId(R.id.songs_item))
-            .perform(click())
-
-        EspressoTestUtils.shortWait()
+        navigateToSongsTab()
 
         // Verify we're on the songs tab by checking for the FAB
         onView(withId(R.id.addSongButton))
@@ -96,7 +121,7 @@ class SongListFragmentTest {
         onView(withId(R.id.addSongButton))
             .perform(click())
 
-        EspressoTestUtils.shortWait()
+        EspressoTestUtils.waitForView(withId(R.id.songTitleEditText))
 
         // Verify the add song dialog is displayed with title input
         onView(withId(R.id.songTitleEditText))
@@ -111,7 +136,7 @@ class SongListFragmentTest {
         onView(withId(R.id.addSongButton))
             .perform(click())
 
-        EspressoTestUtils.shortWait()
+        EspressoTestUtils.waitForView(withId(R.id.songKeyList))
 
         // Verify the key list is displayed
         onView(withId(R.id.songKeyList))
@@ -126,7 +151,7 @@ class SongListFragmentTest {
         onView(withId(R.id.addSongButton))
             .perform(click())
 
-        EspressoTestUtils.shortWait()
+        EspressoTestUtils.waitForView(withId(R.id.songTitleEditText))
 
         // Enter a song title
         onView(withId(R.id.songTitleEditText))
@@ -145,7 +170,7 @@ class SongListFragmentTest {
         onView(withId(R.id.addSongButton))
             .perform(click())
 
-        EspressoTestUtils.shortWait()
+        EspressoTestUtils.waitForView(withId(R.id.songKeyList))
 
         // Tap the list; a row selects without leaving the editor
         onView(withId(R.id.songKeyList))
@@ -168,10 +193,7 @@ class SongListFragmentTest {
 
     @Test
     fun testCanNavigateBetweenTabs() {
-        // Navigate to songs tab
-        onView(withId(R.id.songs_item))
-            .perform(click())
-        EspressoTestUtils.shortWait()
+        navigateToSongsTab()
 
         // Verify we're on songs tab
         onView(withId(R.id.addSongButton))
@@ -180,12 +202,9 @@ class SongListFragmentTest {
         // Navigate to pitch pipe tab
         onView(withId(R.id.pitchpipe_item))
             .perform(click())
-        EspressoTestUtils.shortWait()
+        waitForPagerIdle()
 
-        // Navigate back to songs tab
-        onView(withId(R.id.songs_item))
-            .perform(click())
-        EspressoTestUtils.shortWait()
+        navigateToSongsTab()
 
         // Verify we're back on songs tab
         onView(withId(R.id.addSongButton))

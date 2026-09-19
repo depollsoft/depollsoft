@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "app": "tagmaster",
+  "platforms": {
+    "ios": {
+      "version": "3.0.0",
+      "build": 1789748894
+    },
+    "android": {
+      "version": "6.0.0",
+      "build": 1789748894
+    }
+  },
+  "notes": "Browse tags and view the selected tag side by side on tablets. Refreshed light and dark layouts make favorites, search results, sheet music, and learning tracks easier to use.",
+  "since": {
+    "ios": "75d8daf8f0e45caa68d5bb26ad31c768346d750a",
+    "android": "8ee81c37101780bd59ef29547c3011849018198e"
+  }
+}

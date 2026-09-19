@@ -1,3 +1,7 @@
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationScope
+import depollsoft.instrumentation.FirebaseUiNullEmailClassVisitorFactory
+
 buildscript {
     repositories {
         google()
@@ -32,7 +36,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-crashlytics'
-    implementation 'com.firebaseui:firebase-ui-auth:9.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     implementation 'com.google.android.gms:play-services-auth:22.0.0'
@@ -155,6 +159,19 @@ android {
             buildConfigField "String", "PRIVATE_PR_NUMBER", "\"${privatePr}\""
             matchingFallbacks = ['release']
         }
+    }
+}
+
+// FirebaseUI 9.x builds its credential-save intent with a non-null email parameter even for
+// Facebook accounts that have none, crashing after Firebase has already signed the user in.
+// The shared buildSrc visitor removes only that generated null check; see PitchPerfect.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.instrumentation.transformClassesWith(
+                FirebaseUiNullEmailClassVisitorFactory,
+                InstrumentationScope.ALL) { }
+        variant.instrumentation.setAsmFramesComputationMode(
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
     }
 }
 
