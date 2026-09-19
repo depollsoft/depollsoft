@@ -154,7 +154,7 @@ class tagmasterUITests: TagMasterUITestCase {
     
 }
 
-// Keep three launch measurements, each with its own 30-second case budget.
+// Keep three launch measurements, each with its own case budget.
 // This class has no per-case setup launch before XCTest's measurement warmup.
 final class TagMasterLaunchPerformanceUITests: TagMasterUITestCase {
     func testLaunchPerformanceFirstSample() { measureLaunch() }

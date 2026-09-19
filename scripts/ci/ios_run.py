@@ -81,9 +81,6 @@ def run(command, *,
         first_test_seen = False
         active_case = None
         case_started = None
-        sampled_case = False
-        sampler = None
-        sampled_startup = False
         stopping = None
         buffered = ''
         decoder = codecs.getincrementaldecoder('utf-8')(errors='replace')
@@ -94,6 +91,11 @@ def run(command, *,
                 print('::error::' + reason, flush=True)
                 stopping = time.monotonic()
                 signal_command(child, signal.SIGINT)
+                if simulator:
+                    # Profiling competes with the simulator on small runners.
+                    # Capture diagnostics only after deciding the run failed.
+                    threading.Thread(target=sample_simulator_apps,
+                                     args=(simulator, child.pid)).start()
 
         # Reading a line directly can block forever when XCTest or an inherited
         # output pipe hangs. Poll both the pipe and the process instead.
@@ -117,7 +119,6 @@ def run(command, *,
                             first_test_seen = True
                             active_case = begin[1]
                             case_started = now
-                            sampled_case = False
                         if end:
                             first_test_seen = True
                             active_case = None
@@ -130,16 +131,6 @@ def run(command, *,
                         signal_command(child, signal.SIGKILL)
                         break
                 elif fail_fast:
-                    if (simulator and not first_test_seen and not sampled_startup
-                            and now - started >= 120):
-                        sampled_startup = True
-                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator, child.pid))
-                        sampler.start()
-                    if (simulator and active_case and not sampled_case and now - case_started >= 20
-                            and (sampler is None or not sampler.is_alive())):
-                        sampled_case = True
-                        sampler = threading.Thread(target=sample_simulator_apps, args=(simulator,))
-                        sampler.start()
                     if not first_test_seen and now - started >= startup_timeout:
                         stop(f'XCTest did not start a test within {startup_timeout:g}s. See the raw log above.')
                     elif active_case and now - case_started >= test_timeout:

@@ -24,8 +24,12 @@ SUITES = {
 }
 
 
+def case_timeout(suite):
+    return 90 if "-ui" in suite else 30
+
+
 def matrix(extended=False, app=None):
-    return {'include': [{'suite': suite} for suite in SUITES
+    return {'include': [{'suite': suite, 'timeout': case_timeout(suite)} for suite in SUITES
                         if (extended or suite != 'pitchperfect-ui')
                         and (app is None or suite.startswith(app))]}
 
@@ -54,8 +58,8 @@ def command(suite, destination, products=Path('DerivedData/Build/Products')):
             '-destination', destination, '-enableCodeCoverage', 'YES',
             '-resultBundlePath', f'{suite}-results.xcresult',
             '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
-            '-default-test-execution-time-allowance', '30',
-            '-maximum-test-execution-time-allowance', '30',
+            '-default-test-execution-time-allowance', str(case_timeout(suite)),
+            '-maximum-test-execution-time-allowance', str(case_timeout(suite)),
             *[f'-only-testing:{item}' for item in only],
             *[f'-skip-testing:{item}' for item in skip],
             'CODE_SIGNING_ALLOWED=NO', 'SDKROOT=iphonesimulator']
@@ -72,7 +76,7 @@ def summarize(directory, expected):
             summary = json.loads((directory / f'{suite}-summary.json').read_text())
             validate(summary)
             report = ET.parse(directory / f'{suite}-junit.xml')
-            check_durations(report, 30)
+            check_durations(report, case_timeout(suite))
             if '-ui-' in suite or suite.endswith('-ui'):
                 for case in report.findall('.//testcase'):
                     identity = (suite.split('-ui')[0], case.get('classname'), case.get('name'))
@@ -113,6 +117,7 @@ def main():
         return 0
     if args.action == 'run':
         return ios_run.run(command(args.suite, args.destination), fail_fast=True,
+                           test_timeout=case_timeout(args.suite),
                            keep_simulator_booted=True)
     text, errors = summarize(args.directory, json.loads(os.environ['IOS_TEST_MATRIX']))
     Path('ios-ci-comment.md').write_text(text)

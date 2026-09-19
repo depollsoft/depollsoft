@@ -9,7 +9,7 @@ import XCTest
 import UIKit
 
 // Prepare the fresh simulator's first app launch before individual case budgets.
-// XCTest still bounds suite startup; every regression retains its 30s limit.
+// XCTest bounds suite startup separately from each regression case.
 class TagMasterUITestCase: XCTestCase {
     private static var warmedApplication = false
 

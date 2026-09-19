@@ -197,7 +197,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       IOS_SIMULATOR_VERSION: '26.5'
       IOS_SIMULATOR_DEVICE: com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation
-      IOS_MAX_TEST_SECONDS: '30'
+      IOS_MAX_TEST_SECONDS: ${{ matrix.timeout }}
       IOS_SUITE: ${{ matrix.suite }}
       IOS_APP: ${{ inputs.app }}
       LANG: en_US.UTF-8

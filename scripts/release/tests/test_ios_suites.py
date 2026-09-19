@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'ci'))
-from ios_suites import SUITES, command, matrix, summarize, validate_products
+from ios_suites import SUITES, command, matrix, summarize, validate_products, case_timeout
 
 
 class ParallelSuiteTests(unittest.TestCase):
@@ -47,6 +47,8 @@ class ParallelSuiteTests(unittest.TestCase):
                 self.assertNotIn('-workspace', args)
                 self.assertIn(f'{suite}-results.xcresult', args)
                 self.assertIn('-parallel-testing-enabled', args)
+                self.assertEqual(args[args.index('-maximum-test-execution-time-allowance') + 1],
+                                 str(case_timeout(suite)))
             (products / 'tagmaster_other.xctestrun').touch()
             with self.assertRaises(ValueError):
                 command('tagmaster', 'owned', products)
@@ -89,6 +91,17 @@ class ParallelSuiteTests(unittest.TestCase):
             self.write_result(folder, 'pitchperfectlib', duration=31)
             _, errors = summarize(folder, expected)
             self.assertTrue(errors)
+
+    def test_ui_uses_a_bounded_budget_for_native_automation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            expected = {'include': [{'suite': 'tagmaster-ui-layout'}]}
+            self.write_result(folder, 'tagmaster-ui-layout', duration=60)
+            self.assertFalse(summarize(folder, expected)[1])
+            self.write_result(folder, 'tagmaster-ui-layout', duration=91)
+            self.assertTrue(summarize(folder, expected)[1])
+        for entry in matrix(True)['include']:
+            self.assertEqual(entry['timeout'], 90 if '-ui' in entry['suite'] else 30)
 
     def test_duplicate_ui_cases_cannot_pass_aggregate(self):
         with tempfile.TemporaryDirectory() as directory:

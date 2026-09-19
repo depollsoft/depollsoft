@@ -130,6 +130,24 @@ class NativeRunnerTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertIn('Parent finished', result.stdout)
 
+    def test_diagnostics_start_only_after_a_test_failure(self):
+        sys.path.insert(0, str(CI))
+        import ios_run
+        udid = '12345678-1234-1234-1234-123456789ABC'
+        for outcome in ['passed', 'failed']:
+            with self.subTest(outcome=outcome), \
+                 patch('ios_run.ios_simulator.boot'), \
+                 patch('ios_run.ios_simulator.shutdown'), \
+                 patch('ios_run.threading.Thread') as diagnostics:
+                line = f"Test Case '-[Example testResult]' {outcome} (0.01 seconds)."
+                status = ios_run.run([sys.executable, '-c', f'print({line!r}, flush=True)',
+                                      f'platform=iOS Simulator,id={udid}'], fail_fast=True)
+            self.assertEqual(status, int(outcome == 'failed'))
+            self.assertEqual(diagnostics.call_count, int(outcome == 'failed'))
+            if outcome == 'failed':
+                self.assertEqual(diagnostics.call_args.kwargs['args'][0], udid)
+                diagnostics.return_value.start.assert_called_once()
+
     def test_owned_simulator_stops_on_command_failure(self):
         sys.path.insert(0, str(CI))
         import ios_run
