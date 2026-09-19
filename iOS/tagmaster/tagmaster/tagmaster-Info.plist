@@ -71,8 +71,6 @@
 	<string>296ccf0c53143b18ba166245011235cc</string>
 	<key>FacebookDisplayName</key>
 	<string>Tag Master</string>
-	<key>FirebaseDataCollectionDefaultEnabled</key>
-	<string>NO</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fbapi</string>
