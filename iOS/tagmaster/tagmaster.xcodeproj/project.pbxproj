@@ -24,6 +24,11 @@
 		B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000012 /* TMTrackPlayerView.swift */; };
 		B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */; };
 		B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */; };
+		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
+		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
+		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
+		B4A1A0000000000000000033 /* TagDetailBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000023 /* TagDetailBehaviorTests.swift */; };
+		B4A1A0000000000000000034 /* AppPolishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000024 /* AppPolishTests.swift */; };
 		1E989A2722F3EB4800EA9F2E /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E989A2622F3EB4800EA9F2E /* AVKit.framework */; };
 		1ECAAF8025F05AB300A2A3F1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1ECAAF8225F05AB300A2A3F1 /* Localizable.strings */; };
 		2FA270FBF561239F254EB34E /* FirebaseAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 42BE55FE34E9E89B06BE206F /* FirebaseAuthSwiftUI */; };
@@ -34,7 +39,6 @@
 		4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */; };
 		45BAAFDE745C7B2FAE4B2268 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 231E00AF493A86AC7F8045FD /* FirebaseFirestore */; };
 		4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */; };
-		594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C2841862AFC447839A50EF4 /* SearchUITests.swift */; };
 		595A52E39FA349BD8A4A2D26 /* DPVideoModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */; };
 		63225BFA1A35523100857B44 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63225BF91A35523100857B44 /* LaunchScreen.xib */; };
 		63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63336A3717F586CD00BC1EE2 /* DPBrowseViewController.m */; };
@@ -90,7 +94,6 @@
 		9D79AFECD87180F39C32C4C9 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FC6EEE9DD5603384AEEA366 /* DPAppLog.swift */; };
 		A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */; };
 		A1B2C3D42F8C18B200000001 /* TMTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F8C18B200000000 /* TMTestAppDelegate.m */; };
-		C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */; };
 		C0BEE40E436AC235FE930B8B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F63FCEA8F84786898B2EADF7 /* Foundation.framework */; };
 		C0DEFACE00000000000010B2 /* DPTagXMLParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */; };
 		C0DEFACE00000000000010B3 /* DPRemoteLocationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */; };
@@ -165,6 +168,11 @@
 		B4A1A0000000000000000012 /* TMTrackPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerView.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayerTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerCaptureTests.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000023 /* TagDetailBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailBehaviorTests.swift; sourceTree = "<group>"; };
+		B4A1A0000000000000000024 /* AppPolishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPolishTests.swift; sourceTree = "<group>"; };
 		1E989A2622F3EB4800EA9F2E /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		1ECAAF8125F05AB300A2A3F1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2D04C94D42934A78A791DD26 /* DPVideoModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPVideoModelTests.m; sourceTree = "<group>"; };
@@ -248,7 +256,6 @@
 		63E8667C15DCCBE900E0FC17 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63E8667E15DCCBF500E0FC17 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TagDetailUITests.swift; sourceTree = "<group>"; };
-		7C2841862AFC447839A50EF4 /* SearchUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchUITests.swift; sourceTree = "<group>"; };
 		7F4C96C372184C3895DA500D /* DPSearchViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPSearchViewControllerTests.m; sourceTree = "<group>"; };
 		85FC00CD3DF44A7CBF014280 /* DPTagModelExtendedTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagModelExtendedTests.m; sourceTree = "<group>"; };
 		877D645B24654A1D98693468 /* DPTagNetworkTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagNetworkTests.m; sourceTree = "<group>"; };
@@ -260,7 +267,6 @@
 		C0DEFACE00000000000010A2 /* DPTagXMLParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTagXMLParserTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A3 /* DPRemoteLocationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPRemoteLocationTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000010A4 /* TagmasterModelsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TagmasterModelsTests.m; sourceTree = "<group>"; };
-		C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoritesUITests.swift; sourceTree = "<group>"; };
 		F5BCD0DFDBC06C4180EBF6BC /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F63FCEA8F84786898B2EADF7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F87508481E0BDCF004F43CEA /* tagmasterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = tagmasterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -335,8 +341,6 @@
 		11447BBC18F18E9E2C6F9803 /* tagmasterUITests */ = {
 			isa = PBXGroup;
 			children = (
-				C8EAA603ADC8E36D913DFF25 /* FavoritesUITests.swift */,
-				7C2841862AFC447839A50EF4 /* SearchUITests.swift */,
 				77ECC52AB0226D70124AAFA9 /* TagDetailUITests.swift */,
 				5DC0C8159FE876947BDD64C1 /* tagmasterUITests.swift */,
 				F5BCD0DFDBC06C4180EBF6BC /* Info.plist */,
@@ -517,6 +521,11 @@
 				44A11D000000000000000002 /* TMReviewFeedbackTests.m */,
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */,
+				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */,
+				B4A1A0000000000000000022 /* SearchBehaviorTests.swift */,
+				B4A1A0000000000000000023 /* TagDetailBehaviorTests.swift */,
+				B4A1A0000000000000000024 /* AppPolishTests.swift */,
 				A1A050E3250B4A3600C04990 /* TagmasterAppLogicTests.m */,
 				63712F1415130B21007997CC /* Supporting Files */,
 			);
@@ -801,6 +810,11 @@
 				44A11D000000000000000001 /* TMReviewFeedbackTests.m in Sources */,
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */,
+				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */,
+				B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */,
+				B4A1A0000000000000000033 /* TagDetailBehaviorTests.swift in Sources */,
+				B4A1A0000000000000000034 /* AppPolishTests.swift in Sources */,
 				A1A050E4250B4A3600C04990 /* TagmasterAppLogicTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -809,8 +823,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C09B79BC4C83166B5C875119 /* FavoritesUITests.swift in Sources */,
-				594D5C65F3D2C732DEC0D332 /* SearchUITests.swift in Sources */,
 				4509CDA99C01CCE4D0486639 /* TagDetailUITests.swift in Sources */,
 				8EA8FFA093720EB5D0A6DC19 /* tagmasterUITests.swift in Sources */,
 			);
@@ -1096,6 +1108,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				SWIFT_OBJC_BRIDGING_HEADER = "tagmasterTests/tagmasterTests-Bridging-Header.h";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(CONFIGURATION_TEMP_DIR)/tagmaster.build/DerivedSources",
@@ -1124,6 +1137,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "tagmaster/tagmaster-Prefix.pch";
 				INFOPLIST_FILE = "tagmasterTests/tagmasterTests-Info.plist";
+				SWIFT_OBJC_BRIDGING_HEADER = "tagmasterTests/tagmasterTests-Bridging-Header.h";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(CONFIGURATION_TEMP_DIR)/tagmaster.build/DerivedSources",

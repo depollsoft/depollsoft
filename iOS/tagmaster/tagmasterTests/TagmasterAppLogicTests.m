@@ -32,6 +32,29 @@
 #import "tagmaster-Swift.h"
 #import "TMReviewLoader.h"
 
+// XCTNSPredicateExpectation re-evaluates its predicate on a one-second repeating
+// timer, so every wait whose condition was not already true cost a full second of
+// wall clock even when UIKit had settled microseconds later. This spins the main
+// run loop in short slices instead and returns the instant the condition holds,
+// keeping the same generous ceiling so a genuinely stuck condition still fails.
+static BOOL TMSpinUntil(NSTimeInterval timeout, BOOL (^condition)(void)) {
+    NSDate *limit = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    while (YES) {
+        @autoreleasepool { if (condition()) return YES; }
+        if (limit.timeIntervalSinceNow <= 0) break;
+        // Run the slice to completion rather than returning after one source:
+        // UIKit commits CA transactions and finishes containment transitions from
+        // kCFRunLoopBeforeWaiting observers, which only fire once the loop idles.
+        @autoreleasepool { CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.005, false); }
+    }
+    @autoreleasepool { return condition(); }
+}
+
+// Reports at the caller's line, exactly as the XCTWaiter assertions it replaces.
+#define TMAssertEventually(timeout, conditionBlock) \
+    XCTAssertTrue(TMSpinUntil((timeout), (conditionBlock)), \
+                  @"Condition never held within %g seconds", (double)(timeout))
+
 static NSData *TMSheetMusicFixturePDF(void) {
     UIGraphicsPDFRenderer *renderer = [[UIGraphicsPDFRenderer alloc] initWithBounds:CGRectMake(0, 0, 612, 792)];
     return [renderer PDFDataWithActions:^(UIGraphicsPDFRendererContext *context) {
@@ -521,12 +544,10 @@ TM_CAPTURE_IMPL
 }
 
 - (void)waitUntil:(BOOL (^)(void))condition {
-    if (condition()) return;
-    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return condition(); }];
-    XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:predicate object:nil];
     // UI transactions and main-queue completions can be delayed on standard
-    // hosted simulators. The runner still enforces the 30-second case limit.
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:10], XCTWaiterResultCompleted);
+    // hosted simulators, so the ceiling stays at ten seconds. Polling is now
+    // millisecond-grained rather than the one-second predicate-timer cadence.
+    TMAssertEventually(10, condition);
 }
 
 - (void)testSummaryBrandButtonsAndTintChanges {
@@ -1061,20 +1082,12 @@ TM_CAPTURE_IMPL
     navigation.delegate = observer;
     self.window.rootViewController = navigation;
     [self.window makeKeyAndVisible];
-    XCTNSPredicateExpectation *rootShown = [[XCTNSPredicateExpectation alloc] initWithPredicate:
-        [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == previous; }] object:nil];
-    if (![rootShown.predicate evaluateWithObject:rootShown.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[rootShown] timeout:10], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(10, ^BOOL{ return observer.shown == previous; });
     [navigation pushViewController:detail animated:NO];
     __weak TMPageViewController *weakDetail = detail;
-    XCTNSPredicateExpectation *visible = [[XCTNSPredicateExpectation alloc] initWithPredicate:
-        [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
-            return observer.shown == weakDetail && [[weakDetail valueForKey:@"appeared"] boolValue] && !weakDetail.transitionCoordinator;
-        }] object:nil];
-    if (![visible.predicate evaluateWithObject:visible.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:10], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(10, ^BOOL{
+        return observer.shown == weakDetail && [[weakDetail valueForKey:@"appeared"] boolValue] && !weakDetail.transitionCoordinator;
+    });
     navigation.delegate = nil;
     [self layout];
     return navigation;
@@ -1328,11 +1341,7 @@ TM_CAPTURE_IMPL
         __weak UIViewController *root = nav.viewControllers.firstObject;
         NSLog(@"TM_LAYOUT_PROBE before pop appeared=%@ visible=%@", [detail valueForKey:@"appeared"], [detail valueForKey:@"screenVisible"]);
         [nav popViewControllerAnimated:NO];
-        XCTNSPredicateExpectation *popped = [[XCTNSPredicateExpectation alloc] initWithPredicate:
-            [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == root; }] object:nil];
-        if (![popped.predicate evaluateWithObject:popped.object]) {
-            XCTAssertEqual([XCTWaiter waitForExpectations:@[popped] timeout:3], XCTWaiterResultCompleted);
-        }
+        TMAssertEventually(3, ^BOOL{ return observer.shown == root; });
         nav.delegate = nil;
         [self assertNotes:detail animated:NO];
         XCTAssertEqual(nav.viewControllers.count, 1);
@@ -1388,13 +1397,10 @@ TM_CAPTURE_IMPL
     [self assertNotes:detail animated:NO];
 }
 - (void)checkTabDistribution:(TMPageViewController *)controller {
-    XCTNSPredicateExpectation *settled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+    TMAssertEventually(3, ^BOOL{
         [self layout];
         return [controller.pageTabController.selectedViewController.view isDescendantOfView:controller.rootView] && !controller.pageTabController.transitionCoordinator;
-    }] object:nil];
-    if (![settled.predicate evaluateWithObject:settled.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[settled] timeout:3], XCTWaiterResultCompleted);
-    }
+    });
     UITabBar *bar = controller.tabBar;
     XCTAssertTrue([bar isKindOfClass:UITabBar.class]);
     XCTAssertEqual(bar, controller.pageTabController.tabBar);
@@ -1450,10 +1456,7 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(pages[0].attachments, 1);
     XCTAssertEqual(pages[1].appearances, 0);
     controller.selectedIndex = 1;
-    XCTNSPredicateExpectation *selected = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return pages[1].appearances == 1 && pages[0].disappearances == 1; }] object:nil];
-    if (![selected.predicate evaluateWithObject:selected.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[selected] timeout:3], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(3, ^BOOL{ return pages[1].appearances == 1 && pages[0].disappearances == 1; });
     XCTAssertEqual(pages[0].disappearances, 1);
     XCTAssertEqual(pages[0].detachments, 0);
     XCTAssertEqual(pages[0].parentViewController, controller.pageTabController);
@@ -1463,24 +1466,15 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(pages[1].appearances, 1);
     TMPageLifecycleSpy *cover = [TMPageLifecycleSpy new];
     [nav pushViewController:cover animated:NO];
-    XCTNSPredicateExpectation *covered = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return cover.appearances == 1; }] object:nil];
-    if (![covered.predicate evaluateWithObject:covered.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[covered] timeout:3], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(3, ^BOOL{ return cover.appearances == 1; });
     XCTAssertEqual(pages[1].disappearances, 1);
     [nav popViewControllerAnimated:NO];
-    XCTNSPredicateExpectation *returned = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return pages[1].appearances == 2; }] object:nil];
-    if (![returned.predicate evaluateWithObject:returned.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[returned] timeout:3], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(3, ^BOOL{ return pages[1].appearances == 2; });
     XCTAssertEqual(pages[1].appearances, 2);
     XCTAssertEqual(pages[0].appearances, 1);
     // Removing the selected destination must show a surviving native page.
     controller.viewControllers = @[pages[0], pages[2], pages[3]];
-    XCTNSPredicateExpectation *removed = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !pages[1].view.window && pages[1].disappearances == 2; }] object:nil];
-    if (![removed.predicate evaluateWithObject:removed.object]) {
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[removed] timeout:3], XCTWaiterResultCompleted);
-    }
+    TMAssertEventually(3, ^BOOL{ return !pages[1].view.window && pages[1].disappearances == 2; });
     XCTAssertEqual(pages[1].disappearances, 2);
     UIViewController *survivor = controller.pageTabController.selectedViewController;
     XCTAssertTrue([controller.viewControllers containsObject:survivor]);
@@ -1498,19 +1492,24 @@ TM_CAPTURE_IMPL
     [self checkTabDistribution:detail];
 }
 - (void)exercisePageSelection:(TMPageViewController *)controller {
+    // UIKit animates each tab selection for roughly two thirds of a second and this
+    // loop waits for four of those transitions to fully complete. Run CoreAnimation
+    // on a compressed clock rather than skipping the animation: the same transition
+    // runs, with the same transition coordinator and the same completion callbacks,
+    // so every containment assertion below still observes a genuinely finished
+    // transition. Only the wall clock shrinks.
+    float shippingSpeed = self.window.layer.speed;
+    self.window.layer.speed = 12;
     for (NSUInteger i = 0; i < 4; i++) {
         controller.selectedIndex = i;
-        XCTNSPredicateExpectation *visible = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+        TMAssertEventually(3, ^BOOL{
             [self layout];
             if (![controller.viewControllers[i].view isDescendantOfView:controller.rootView]) return NO;
             for (UIViewController *other in controller.viewControllers) {
                 if (other != controller.viewControllers[i] && other.viewIfLoaded.window && !other.viewIfLoaded.hidden) return NO;
             }
             return YES;
-        }] object:nil];
-        if (![visible.predicate evaluateWithObject:visible.object]) {
-            XCTAssertEqual([XCTWaiter waitForExpectations:@[visible] timeout:3], XCTWaiterResultCompleted);
-        }
+        });
         XCTAssertEqual(controller.selectedIndex, i);
         XCTAssertEqual(controller.tabBar.selectedItem, controller.viewControllers[i].tabBarItem);
         XCTAssertEqual(controller.pageTabController.selectedViewController, controller.viewControllers[i]);
@@ -1525,6 +1524,7 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(controller.selectedIndex, 3);
     controller.selectedIndex = 1;
     XCTAssertEqual(controller.tabBar.selectedItem, controller.tabBar.items[1]);
+    self.window.layer.speed = shippingSpeed;
 }
 - (TMTabletTestSplit *)tabletSplitWithList:(UIViewController *)list {
     for (UIWindow *candidate in UIApplication.sharedApplication.windows) {
@@ -1684,12 +1684,7 @@ TM_CAPTURE_IMPL
         query.hasMoreResults = YES;
         [detail stepToNextTag];
         [self waitForExpectations:@[fetched] timeout:3];
-        XCTNSPredicateExpectation *appended = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
-            return !query.isLoading && query.tags.count == 4 && next.enabled;
-        }] object:nil];
-        if (![appended.predicate evaluateWithObject:appended.object]) {
-            XCTAssertEqual([XCTWaiter waitForExpectations:@[appended] timeout:3], XCTWaiterResultCompleted);
-        }
+        TMAssertEventually(3, ^BOOL{ return !query.isLoading && query.tags.count == 4 && next.enabled; });
         XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
         [detail stepToNextTag];
         XCTAssertEqual(detail.tagId, 100);
@@ -1939,10 +1934,7 @@ TM_CAPTURE_IMPL
         [self exercisePageSelection:controller];
         if (page == 0) {
             for (DPTagQueryViewController *child in controller.viewControllers) {
-                XCTNSPredicateExpectation *loaded = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !child.isLoading && child.tags.count == 1; }] object:nil];
-                if (![loaded.predicate evaluateWithObject:loaded.object]) {
-                    XCTAssertEqual([XCTWaiter waitForExpectations:@[loaded] timeout:3], XCTWaiterResultCompleted);
-                }
+                TMAssertEventually(3, ^BOOL{ return !child.isLoading && child.tags.count == 1; });
             }
         }
         for (NSUInteger variant = 0; variant < 4; variant++) {
@@ -1968,15 +1960,12 @@ TM_CAPTURE_IMPL
             [split setViewController:[[UINavigationController alloc] initWithRootViewController:sidebar] forColumn:UISplitViewControllerColumnPrimary];
             [split setViewController:nav forColumn:UISplitViewControllerColumnSecondary];
             self.window.rootViewController = split;
-            XCTNSPredicateExpectation *tiled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+            TMAssertEventually(3, ^BOOL{
                 [self layout];
                 CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
                 CGRect side = [sidebar.view convertRect:sidebar.view.bounds toView:self.window];
                 return split.displayMode == UISplitViewControllerDisplayModeOneBesideSecondary && CGRectGetMinX(first) >= CGRectGetMaxX(side);
-            }] object:nil];
-            if (![tiled.predicate evaluateWithObject:tiled.object]) {
-                XCTAssertEqual([XCTWaiter waitForExpectations:@[tiled] timeout:3], XCTWaiterResultCompleted);
-            }
+            });
             [self drainUIKit]; [self layout]; [self layout];
             [self checkTabDistribution:controller];
             CGRect first = [controller.tabBar convertRect:controller.tabBar.bounds toView:self.window];
@@ -2224,11 +2213,10 @@ TM_CAPTURE_IMPL
                 if (cycle > 0) {
                     for (NSNumber *index in @[@1, @0]) {
                         detail.selectedIndex = index.unsignedIntegerValue;
-                        XCTNSPredicateExpectation *selected = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+                        TMAssertEventually(3, ^BOOL{
                             [self settleLayout:window];
                             return detail.pageTabController.selectedViewController.view.window == window && !detail.pageTabController.transitionCoordinator;
-                        }] object:nil];
-                        XCTAssertEqual([XCTWaiter waitForExpectations:@[selected] timeout:3], XCTWaiterResultCompleted);
+                        });
                     }
                 }
                 [self checkSummary:summary cycle:cycle];
@@ -2837,8 +2825,7 @@ TM_CAPTURE_IMPL
         for (mode = 0; mode < 3; mode++) {
             DPTagQueryViewController *query = [DPTagQueryViewController new];
             [self mount:query width:393 category:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-            NSPredicate *done = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return !query.isLoading; }];
-            XCTAssertEqual([XCTWaiter waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:done object:nil]] timeout:5], XCTWaiterResultCompleted);
+            TMAssertEventually(5, ^BOOL{ return !query.isLoading; });
             [self settle];
             UITableView *table = [query valueForKey:@"tagTable"];
             XCTAssertEqual([table numberOfRowsInSection:0], mode == 2 ? 1 : 0);
@@ -2880,8 +2867,7 @@ TM_CAPTURE_IMPL
     @try {
         [self mount:summary width:393 category:UIContentSizeCategoryLarge];
         [summary openSheetMusic];
-        NSPredicate *ready = [NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return summary.captured != nil; }];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:ready object:nil]] timeout:5], XCTWaiterResultCompleted);
+        TMAssertEventually(5, ^BOOL{ return summary.captured != nil; });
         // The sheet host carries the bar items; Quick Look rides inside it, pinned to the
         // visible column. Free the host from its modal stack to exercise it in a pushed one.
         UINavigationController *presented = (id)summary.captured;
@@ -2899,18 +2885,15 @@ TM_CAPTURE_IMPL
         TMLayoutNavigationObserver *observer = [TMLayoutNavigationObserver new];
         navigation.delegate = observer;
         [self mount:navigation width:393 category:UIContentSizeCategoryLarge];
-        XCTNSPredicateExpectation *rootReady = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == root; }] object:nil];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[rootReady] timeout:3], XCTWaiterResultCompleted);
+        TMAssertEventually(3, ^BOOL{ return observer.shown == root; });
         [navigation pushViewController:host animated:NO];
-        XCTNSPredicateExpectation *previewReady = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) { return observer.shown == host && !host.transitionCoordinator; }] object:nil];
-        XCTAssertEqual([XCTWaiter waitForExpectations:@[previewReady] timeout:5], XCTWaiterResultCompleted);
+        TMAssertEventually(5, ^BOOL{ return observer.shown == host && !host.transitionCoordinator; });
         for (NSNumber *landscape in @[@NO, @YES]) {
             self.window.frame = landscape.boolValue ? CGRectMake(0, 0, 852, 393) : CGRectMake(0, 0, 393, 852);
             [self settle];
-            XCTNSPredicateExpectation *fitted = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+            TMAssertEventually(5, ^BOOL{
                 return preview.currentPreviewItem != nil && [host.navigationItem.rightBarButtonItems containsObject:keyItem] && keyItem.customView.window == self.window && keyItem.customView.bounds.size.width > 0 && !host.transitionCoordinator;
-            }] object:nil];
-            XCTAssertEqual([XCTWaiter waitForExpectations:@[fitted] timeout:5], XCTWaiterResultCompleted);
+            });
             [self settle];
             XCTAssertTrue([host.navigationItem.rightBarButtonItems containsObject:keyItem]);
             UIView *key = keyItem.customView;
@@ -2970,9 +2953,21 @@ TM_CAPTURE_IMPL
 @interface TMFooterPitchTests : TMPolishRegressionTests
 @property UIWindow *window;
 @property UIWindow *previousWindow;
+@property NSTimeInterval shippingKeyNoteDuration;
 @end
 @implementation TMFooterPitchTests
+- (void)setUp {
+    [super setUp];
+    // The timed-activation deadline is the one thing here that must genuinely
+    // elapse: these cases assert a note is STILL sounding past a *cancelled*
+    // deadline, which no amount of run-loop spinning can prove. Shrink the
+    // production interval instead of waiting out the shipping 1.5 seconds; every
+    // wait below is expressed relative to it, so the margins are unchanged.
+    self.shippingKeyNoteDuration = DPTagSummaryController.timedKeyNoteDuration;
+    DPTagSummaryController.timedKeyNoteDuration = 0.5;
+}
 - (void)tearDown {
+    DPTagSummaryController.timedKeyNoteDuration = self.shippingKeyNoteDuration;
     [DPNote.C4 stop];
     self.window.hidden = YES;
     self.window.rootViewController = nil;
@@ -3337,11 +3332,19 @@ TM_CAPTURE_IMPL
     XCTAssertEqualWithAccuracy(button.layer.borderWidth, 1.5, 0.01);
     XCTAssertEqualWithAccuracy(button.layer.cornerRadius, 8, 0.01);
 }
+// Deliberately real elapsed time: the assertions that follow are negative
+// ("the old deadline did not stop this note"), so the clock has to move. The
+// interval is now derived from the injected deadline rather than the shipping
+// 1.5 seconds, preserving each margin while costing a third of the wall clock.
 - (void)waitForPitchInterval:(NSTimeInterval)interval {
     XCTestExpectation *deadline = [self expectationWithDescription:@"cross timed activation deadline"];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, interval * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [deadline fulfill]; });
     [self waitForExpectations:@[deadline] timeout:interval + 2];
 }
+// 0.15 s past the timed deadline, exactly the grace the hard-coded 1.65 had over 1.5.
+- (NSTimeInterval)pastKeyNoteDeadline { return DPTagSummaryController.timedKeyNoteDuration + 0.15; }
+// 0.1 s short of it, so a re-activation here still owns a later deadline.
+- (NSTimeInterval)beforeKeyNoteDeadline { return DPTagSummaryController.timedKeyNoteDuration - 0.1; }
 - (void)testPitchTimedCancellationCannotStopLaterHold {
     DPTagSummaryController *summary = [DPTagSummaryController new];
     [summary loadViewIfNeeded]; summary.tag = [self tag];
@@ -3359,7 +3362,7 @@ TM_CAPTURE_IMPL
     CGRect idle = button.frame;
     [button sendActionsForControlEvents:UIControlEventTouchDown];
     XCTAssertTrue(pitch.note.isPlaying);
-    [self waitForPitchInterval:1.65];
+    [self waitForPitchInterval:self.pastKeyNoteDeadline];
     [self logPitch:button phase:@"held past cancelled deadline"];
     XCTAssertTrue(pitch.note.isPlaying, @"A cancelled activation must not stop a later same-note hold");
     [self assertKey:button playing:YES];
@@ -3392,7 +3395,7 @@ TM_CAPTURE_IMPL
         UIButton *held = activePitch.button;
         CGRect frame = held.frame;
         [held sendActionsForControlEvents:UIControlEventTouchDown];
-        [self waitForPitchInterval:1.65];
+        [self waitForPitchInterval:self.pastKeyNoteDeadline];
         XCTAssertTrue(activePitch.note.isPlaying, @"%@ must invalidate the previous deadline", interruption);
         [self assertKey:held playing:YES];
         XCTAssertTrue(CGRectEqualToRect(frame, held.frame));
@@ -3408,9 +3411,9 @@ TM_CAPTURE_IMPL
     DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
     UIButton *button = pitch.button;
     XCTAssertTrue([button accessibilityActivate]);
-    [self waitForPitchInterval:0.9];
+    [self waitForPitchInterval:self.beforeKeyNoteDeadline];
     XCTAssertTrue([button accessibilityActivate]);
-    [self waitForPitchInterval:0.75];
+    [self waitForPitchInterval:self.pastKeyNoteDeadline - self.beforeKeyNoteDeadline];
     [self logPitch:button phase:@"reactivated past first deadline"];
     XCTAssertTrue(pitch.note.isPlaying, @"The first activation must not shorten the second activation");
     XCTAssertTrue([[button valueForKey:@"showingPlayback"] boolValue]);

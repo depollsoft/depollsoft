@@ -2,7 +2,20 @@
 //  TagDetailUITests.swift
 //  tagmasterUITests
 //
-//  UI tests for Tag Detail screen in TagMaster
+//  What is left of the XCUITest suites after the behaviour they asserted moved
+//  in-process to tagmasterTests. Only two kinds of test remain here:
+//
+//  1. StoreScreenshotTests, which scripts/release/capture.py drives to produce
+//     the App Store screenshot tour.
+//  2. TagMasterPolishUITests, reduced to the cases that genuinely need a real
+//     app process: the software keyboard, the live sheet-music download, the
+//     accessibility frames of tab targets across a real device rotation, and
+//     the dismissal of system-owned sheets (share and sign-in).
+//
+//  Everything else — the tab bar contract, the detail controls, rating, the
+//  teachable empty state, settings, search and favourites — is now covered by
+//  FavoritesBehaviorTests, SearchBehaviorTests, TagDetailBehaviorTests and
+//  AppPolishTests in the tagmasterTests target.
 //
 
 import XCTest
@@ -21,240 +34,6 @@ class TagMasterUITestCase: XCTestCase {
         application.launch()
         application.terminate()
         warmedApplication = true
-    }
-}
-
-final class TagDetailUITests: TagMasterUITestCase {
-    
-    var app: XCUIApplication!
-    
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
-        app.launch()
-
-    }
-    
-    override func tearDownWithError() throws {
-        app = nil
-    }
-    
-    // MARK: - Helper Methods
-    
-    private func navigateToTagDetail() -> Bool {
-        // Try to navigate to a tag detail by tapping a favorite
-        let table = app.tables.firstMatch
-        
-        if table.exists && table.cells.count > 0 {
-            table.cells.element(boundBy: 0).tap()
-
-            return true
-        }
-        
-        return false
-    }
-    
-    private func openSearchAndFindTag() -> Bool {
-        // Open search
-        if app.navigationBars.buttons["Search"].exists {
-            app.navigationBars.buttons["Search"].tap()
-        } else if app.buttons["magnifyingglass"].exists {
-            app.buttons["magnifyingglass"].tap()
-        } else {
-            return false
-        }
-
-        // Search for something
-        let searchField = app.searchFields.firstMatch.exists ? 
-                         app.searchFields.firstMatch : app.textFields.firstMatch
-        
-        guard searchField.exists else { return false }
-        
-        searchField.tap()
-        searchField.typeText("hello")
-        
-        let searchButton = app.keyboards.buttons["Search"]
-        if searchButton.exists {
-            searchButton.tap()
-        }
-
-        // Tap first result
-        let table = app.tables.firstMatch
-        if table.exists && table.cells.count > 0 {
-            table.cells.element(boundBy: 0).tap()
-
-            return true
-        }
-        
-        return false
-    }
-    
-    // MARK: - Navigation Tests
-    
-    func testCanNavigateToTagDetail() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        if !navigated {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Should be on detail screen
-        XCTAssertEqual(app.state, .runningForeground, "Should show tag detail")
-    }
-    
-    func testTagDetailHasContent() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Should have some content
-        let hasContent = app.staticTexts.count > 0 || 
-                        app.tables.firstMatch.exists ||
-                        app.segmentedControls.firstMatch.exists
-        
-        XCTAssertTrue(hasContent, "Tag detail should have content")
-    }
-    
-    func testCanNavigateBackFromDetail() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Navigate back
-        let backButton = app.navigationBars.buttons.element(boundBy: 0)
-        if backButton.exists {
-            backButton.tap()
-
-        }
-        
-        XCTAssertEqual(app.state, .runningForeground, "Should navigate back from detail")
-    }
-    
-    // MARK: - Tab Navigation Tests (if tabs exist in detail)
-    
-    func testDetailTabsIfExist() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        let segmentedControl = app.segmentedControls.firstMatch
-        
-        if segmentedControl.exists {
-            let segmentCount = segmentedControl.buttons.count
-            
-            // Tap each segment
-            for index in 0..<segmentCount {
-                segmentedControl.buttons.element(boundBy: index).tap()
-
-            }
-        }
-        
-        XCTAssertEqual(app.state, .runningForeground, "Should handle tab navigation")
-    }
-    
-    // MARK: - Action Tests
-    
-    func testFavoriteButtonIfExists() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Look for favorite button
-        let favoriteButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[cd] 'favorite' OR label CONTAINS[cd] 'heart' OR label CONTAINS[cd] 'star'")).firstMatch
-        
-        if favoriteButton.exists {
-            favoriteButton.tap()
-
-            // Tap again to toggle
-            favoriteButton.tap()
-
-        }
-        
-        XCTAssertEqual(app.state, .runningForeground, "Should handle favorite toggle")
-    }
-    
-    func testShareButtonIfExists() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Look for share button
-        let shareButton = app.buttons["Share"]
-        let shareIcon = app.buttons["square.and.arrow.up"]
-        
-        if shareButton.exists {
-            shareButton.tap()
-
-            // Dismiss share sheet
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
-        } else if shareIcon.exists {
-            shareIcon.tap()
-
-            // Dismiss share sheet
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
-        }
-
-        XCTAssertEqual(app.state, .runningForeground, "Should handle share action")
-    }
-    
-    // MARK: - Scrolling Tests
-    
-    func testCanScrollDetailContent() throws {
-        let navigated = navigateToTagDetail() || openSearchAndFindTag()
-        
-        guard navigated else {
-            throw XCTSkip("Could not navigate to tag detail")
-        }
-        
-        // Try scrolling
-        let scrollView = app.scrollViews.firstMatch
-        let table = app.tables.firstMatch
-        
-        if scrollView.exists {
-            scrollView.swipeUp()
-
-            scrollView.swipeDown()
-        } else if table.exists {
-            table.swipeUp()
-
-            table.swipeDown()
-        }
-        
-        XCTAssertEqual(app.state, .runningForeground, "Should handle scrolling")
-    }
-    
-    // MARK: - App Stability Tests
-    
-    func testRapidDetailNavigation() throws {
-        // Navigate to detail and back multiple times
-        for _ in 0..<3 {
-            let navigated = navigateToTagDetail()
-            
-            if navigated {
-
-                // Navigate back
-                let backButton = app.navigationBars.buttons.element(boundBy: 0)
-                if backButton.exists {
-                    backButton.tap()
-
-                }
-            } else {
-                break
-            }
-        }
-        
-        XCTAssertEqual(app.state, .runningForeground, "Should handle rapid navigation")
     }
 }
 
@@ -305,22 +84,6 @@ extension TagMasterPolishUITests {
         }
     }
 
-    private func captureNativeGlass(_ page: String) {
-        let image = XCUIScreen.main.screenshot().image
-        let scale = min(1, 800 / max(image.size.width, image.size.height))
-        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let reduced = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
-        }
-        let attachment = XCTAttachment(data: reduced.jpegData(compressionQuality: 0.85)!, uniformTypeIdentifier: "public.jpeg")
-        let device = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "phone"
-        attachment.name = "tagmaster-ios-native-glass-\(device)-\(page)"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
-
 }
 
 final class TagMasterPolishUITests: TagMasterUITestCase {
@@ -360,24 +123,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         XCTAssertTrue(app.buttons["Rate tag"].existsOrWait(timeout: 5))
     }
 
-    func testDetailTabSelection() throws {
-        let orientation = XCUIDevice.shared.orientation
-        defer { XCUIDevice.shared.orientation = orientation }
-        XCUIDevice.shared.orientation = .portrait
-        openTag()
-        let detail = ["Summary", "Details", "Tracks", "Videos"]
-        try assertNativeTabs(detail)
-        captureNativeGlass("detail")
-        for title in detail {
-            let button = app.buttons["page-\(title)"]
-            button.tap()
-            XCTAssertTrue(button.isSelected)
-        }
-        app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
-        captureNativeGlass("detail-details")
-    }
-
     func testDetailTabsInPortraitAndLandscape() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
@@ -385,23 +130,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         openTag()
         app.buttons["page-Details"].tap()
         try assertTabsSurviveRotation(["Summary", "Details", "Tracks", "Videos"], selected: "Details")
-    }
-
-    func testBrowseTabSelection() throws {
-        let orientation = XCUIDevice.shared.orientation
-        defer { XCUIDevice.shared.orientation = orientation }
-        XCUIDevice.shared.orientation = .portrait
-        app.tables.staticTexts["Browse"].tap()
-        let browse = ["Latest", "Rating", "Downloads", "Classic"]
-        XCTAssertTrue(app.tables.cells.firstMatch.existsOrWait(timeout: 30))
-        try assertNativeTabs(browse)
-        captureNativeGlass("browse")
-        for title in browse {
-            let button = app.buttons["page-\(title)"]
-            button.tap()
-            XCTAssertTrue(button.isSelected)
-        }
-        captureNativeGlass("browse-classic")
     }
 
     func testBrowseTabsInPortraitAndLandscape() throws {
@@ -477,24 +205,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         reachLowestRatingAndCancel()
     }
 
-    func testLayoutNativeEmptyTeachableBrowseReachable() throws {
-        XCTAssertTrue(app.navigationBars.buttons["Search"].existsOrWait(timeout: 10))
-        let row = app.tables.staticTexts["Teachable Tags"]
-        for _ in 0..<6 { if row.isHittable { break }; app.tables.firstMatch.swipeUp() }
-        XCTAssertTrue(row.isHittable)
-        row.tap()
-        XCTAssertTrue(app.staticTexts["No teachable tags yet"].existsOrWait(timeout: 5), "Requires the original empty list; never clears a populated list")
-        let browse = app.buttons["teachable.browse"]
-        let list = app.tables.containing(.button, identifier: "teachable.browse").firstMatch
-        XCTAssertTrue(list.exists, "Scroll the Teachable table, not the other pane of an iPad split view")
-        for _ in 0..<6 { if browse.isHittable { break }; list.swipeUp() }
-        XCTAssertEqual(browse.label, "Browse Tags")
-        XCTAssertTrue(browse.isHittable)
-        XCTAssertGreaterThanOrEqual(browse.frame.height, 44)
-        browse.tap()
-        XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 10))
-    }
-
     func testLayoutNativeSheetKeyTarget() throws {
         let orientation = XCUIDevice.shared.orientation
         defer { XCUIDevice.shared.orientation = orientation }
@@ -567,64 +277,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         layoutCapture("search-keyboard-landscape")
     }
 
-    func testOpenTagByNumber() throws {
-        let row = app.tables.staticTexts["Open Tag"]
-        if !row.isHittable { app.tables.firstMatch.swipeUp() }
-        row.tap()
-        let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.existsOrWait(timeout: 5))
-        alert.textFields.firstMatch.tap()
-        alert.textFields.firstMatch.typeText("1809")
-        alert.buttons["Open"].tap()
-        assertTagLoaded()
-    }
-
-    func testOpenTagAlertControls() throws {
-        let open = app.tables.staticTexts["Open Tag"]
-        if !open.isHittable { app.tables.firstMatch.swipeUp() }
-        open.tap()
-        let alert = app.alerts["Open Tag"]
-        XCTAssertTrue(alert.existsOrWait(timeout: 5))
-        XCTAssertTrue(alert.buttons["Cancel"].isHittable)
-        XCTAssertTrue(alert.buttons["Open"].isHittable)
-        XCTAssertTrue(alert.textFields.firstMatch.isHittable)
-        layoutCapture("open-tag")
-        alert.buttons["Cancel"].tap()
-    }
-
-    func testDetailLayoutInPortrait() throws {
-        try assertDetailLayout(orientation: .portrait, capture: "details")
-    }
-
-    func testDetailLayoutInLandscape() throws {
-        try assertDetailLayout(orientation: .landscapeLeft, capture: "details-landscape")
-    }
-
-    private func assertDetailLayout(orientation: UIDeviceOrientation, capture name: String) throws {
-        let previous = XCUIDevice.shared.orientation
-        defer { XCUIDevice.shared.orientation = previous }
-        XCUIDevice.shared.orientation = .portrait
-        openTag()
-        app.buttons["page-Details"].tap()
-        XCUIDevice.shared.orientation = orientation
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
-        try assertNativeTabs(["Summary", "Details", "Tracks", "Videos"])
-        layoutCapture(name)
-    }
-
-    func testRatingAfterReturningFromDetails() throws {
-        openTag()
-        app.buttons["page-Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
-        app.buttons["page-Summary"].tap()
-        let rate = app.buttons["Rate tag"]
-        for _ in 0..<8 { if rate.isHittable { break }; app.scrollViews.firstMatch.swipeUp() }
-        XCTAssertTrue(rate.isHittable)
-        rate.tap()
-        XCTAssertTrue(app.buttons["5 stars"].existsOrWait(timeout: 5))
-        reachLowestRatingAndCancel()
-    }
-
     func testSettingsLoginDismissal() throws {
         let settings = app.tables.staticTexts["Settings"]
         if !settings.isHittable { app.tables.firstMatch.swipeUp() }
@@ -639,77 +291,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         layoutCapture("login-entry")
         app.buttons["Close"].tap()
         XCTAssertTrue(app.tables.staticTexts["Log In"].existsOrWait(timeout: 5))
-    }
-
-    func testSummaryLyricsRemainReachableAfterChangingPages() throws {
-        openTag()
-        app.buttons["Details"].tap()
-        app.buttons["Summary"].tap()
-        let lyrics = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'And I will wait to face the skies'")).firstMatch
-        XCTAssertTrue(lyrics.exists)
-        for _ in 0..<6 {
-            if lyrics.isHittable { break }
-            app.scrollViews.firstMatch.swipeUp()
-        }
-        XCTAssertTrue(lyrics.isHittable, "Lyrics must remain reachable even if the legacy grid leaves excess spacing")
-    }
-
-    func testSearchFiltersAndKeyboard() throws {
-        XCTAssertTrue(app.navigationBars.buttons["Search"].existsOrWait(timeout: 10))
-        XCTAssertTrue(app.tables.staticTexts["Teachable Tags"].exists)
-        capture("home")
-        app.navigationBars.buttons["Search"].tap()
-        XCTAssertTrue(app.searchFields.firstMatch.existsOrWait(timeout: 5))
-        let sheetFilter = app.segmentedControls["Sheet Music"].exists ? app.segmentedControls["Sheet Music"] : app.buttons["Sheet Music"]
-        XCTAssertTrue(sheetFilter.exists)
-        XCTAssertGreaterThanOrEqual(sheetFilter.frame.height, 44)
-        capture("search")
-        app.searchFields.firstMatch.tap()
-        app.searchFields.firstMatch.typeText("love")
-        XCTAssertTrue(app.keyboards.firstMatch.exists)
-        capture("search-keyboard")
-    }
-
-    func testSettingsFilters() throws {
-        let settings = app.tables.staticTexts["Settings"]
-        if !settings.isHittable { app.tables.firstMatch.swipeUp() }
-        settings.tap()
-        XCTAssertTrue(app.staticTexts["Log in to back up and synchronize your tag lists."].existsOrWait(timeout: 5))
-        capture("settings")
-        app.swipeUp()
-        let minimumRating = app.segmentedControls["Minimum Rating"].exists ? app.segmentedControls["Minimum Rating"] : app.buttons["Minimum Rating"]
-        XCTAssertTrue(minimumRating.existsOrWait(timeout: 5))
-        capture("settings-filters")
-    }
-
-    func testDetailContentControls() throws {
-        openTag()
-        XCTAssertTrue(app.navigationBars.buttons["Favorite and Teachable options"].exists)
-        XCTAssertTrue(app.navigationBars.buttons["Refresh"].exists)
-        let pitch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Play key note'")).firstMatch
-        XCTAssertTrue(pitch.exists)
-        XCTAssertGreaterThanOrEqual(pitch.frame.height, 44)
-        for title in ["Summary", "Details", "Tracks", "Videos"] {
-            let tab = app.buttons[title]
-            XCTAssertTrue(tab.exists)
-            XCTAssertGreaterThanOrEqual(tab.frame.height, 44)
-            XCTAssertTrue(tab.isHittable)
-        }
-    }
-
-    func testDetailMediaTabs() throws {
-        openTag()
-        app.buttons["Details"].tap()
-        XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
-        app.buttons["Tracks"].tap()
-        let emptyTracks = app.staticTexts["Sorry, no tracks could be found for this tag."]
-        XCTAssertTrue(app.tables.firstMatch.exists || emptyTracks.existsOrWait(timeout: 5))
-        capture("tracks")
-        app.buttons["Videos"].tap()
-        XCTAssertTrue(app.tables.firstMatch.existsOrWait(timeout: 5))
-        capture("videos")
-        app.buttons["Summary"].tap()
-        capture("detail")
     }
 
     func testDetailShareDismissal() throws {
@@ -736,19 +317,6 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
         let shareReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"),
                                                    object: app.navigationBars.buttons["Share"])
         XCTAssertEqual(XCTWaiter.wait(for: [shareReady], timeout: 10), .completed)
-    }
-
-    func testBrowseRowContentAndSize() throws {
-        app.tables.staticTexts["Browse"].tap()
-        XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 30))
-        let cell = app.tables.cells.firstMatch
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: cell)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
-        let snapshot = try cell.snapshot()
-        XCTAssertGreaterThan(snapshot.frame.height, 100)
-        XCTAssertLessThan(snapshot.frame.height, 2000)
-        XCTAssertTrue(snapshot.label.contains("Sheet music"))
-        capture("browse-rows")
     }
 }
 

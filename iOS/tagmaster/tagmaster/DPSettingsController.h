@@ -19,5 +19,8 @@
 + (NSNumber *)learningTracks;
 
 - (void)refreshLoginButton;
+/// Whether an account is signed in. Declared here only so tests can substitute a
+/// signed-out account without configuring Firebase; the implementation is unchanged.
+- (BOOL)isSignedIn;
 
 @end
