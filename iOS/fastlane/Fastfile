@@ -369,6 +369,7 @@ platform :ios do
       api_key: api_key,
       app_identifier: "depollsoft.pitchperfect.private",
       ipa: File.join(IOS_ROOT, "build", "PitchPerfect-private.ipa"),
+      uses_non_exempt_encryption: false,
       skip_waiting_for_build_processing: false,
       distribute_external: false,
       localized_app_info: {
@@ -384,6 +385,7 @@ platform :ios do
       api_key: api_key,
       app_identifier: "depollsoft.tagmaster.private",
       ipa: File.join(IOS_ROOT, "build", "TagMaster-private.ipa"),
+      uses_non_exempt_encryption: false,
       skip_waiting_for_build_processing: false,
       distribute_external: false,
       localized_app_info: {

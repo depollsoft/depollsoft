@@ -105,6 +105,8 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       assert($version_query == {filter: {versionString: '2.0.9', platform: 'IOS'}, includes: 'build'}, 'Wrong review version query')
       upload = $calls.assoc(:upload_ios).last
       assert(upload[:app_version] == '2.0.9', 'Wrong iOS version')
+      assert(upload[:submission_information] == {export_compliance_uses_encryption: false},
+             'Missing confirmed export-compliance declaration')
       if existing
         assert(upload[:build_number] == '1800000000' && !upload.key?(:ipa), 'Retry must select the existing build without an IPA')
       else
