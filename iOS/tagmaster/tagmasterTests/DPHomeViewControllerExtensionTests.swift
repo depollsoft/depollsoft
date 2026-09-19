@@ -30,6 +30,8 @@ class DPHomeViewControllerExtensionTests: XCTestCase {
     }
 
     override func tearDown() {
+        // Alert action handlers retain their presenting controller.
+        homeViewController.requestedPresentation = nil
         homeViewController = nil
         super.tearDown()
     }
