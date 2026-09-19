@@ -17,6 +17,7 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
     TMSettingsSectionAccount,
     TMSettingsSectionLists,
     TMSettingsSectionRandomFilters,
+    TMSettingsSectionPrivacy,
     TMSettingsSectionPrivateBuild
 };
 
@@ -112,7 +113,7 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
 #pragma mark - Table view
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return [self isPrivateBuild] ? 4 : 3;
+    return [self isPrivateBuild] ? 5 : 4;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -120,6 +121,7 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
         case TMSettingsSectionAccount: return 1;
         case TMSettingsSectionLists: return 2;
         case TMSettingsSectionRandomFilters: return self.filterTitles.count;
+        case TMSettingsSectionPrivacy: return 1;
         case TMSettingsSectionPrivateBuild: return 2;
     }
     return 0;
@@ -130,6 +132,7 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
         case TMSettingsSectionAccount: return @"Account";
         case TMSettingsSectionLists: return @"Saved Tags";
         case TMSettingsSectionRandomFilters: return @"Random Tag Filters";
+        case TMSettingsSectionPrivacy: return @"Privacy";
         case TMSettingsSectionPrivateBuild: return @"Private Build";
     }
     return nil;
@@ -140,6 +143,7 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
         case TMSettingsSectionAccount: return @"Log in to back up and synchronize your tag lists.";
         case TMSettingsSectionLists: return @"Clearing a list removes every tag from it on this device and, when logged in, on your other devices.";
         case TMSettingsSectionRandomFilters: return @"Random Tag only picks tags that match these filters.";
+        case TMSettingsSectionPrivacy: return nil;
         case TMSettingsSectionPrivateBuild: return nil;
     }
     return nil;
@@ -176,6 +180,8 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
         }
         case TMSettingsSectionRandomFilters:
             return [self makeFormCellWithHeader:self.filterTitles[indexPath.row] control:self.filterControls[indexPath.row]];
+        case TMSettingsSectionPrivacy:
+            return [self actionCellWithTitle:@"Privacy choices" detail:nil destructive:NO enabled:YES];
         case TMSettingsSectionPrivateBuild: {
             if (indexPath.row == 0) {
                 UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
@@ -202,6 +208,9 @@ typedef NS_ENUM(NSInteger, TMSettingsSection) {
             if (indexPath.row == 0) [self clearFavorites]; else [self clearTeachable];
             break;
         case TMSettingsSectionRandomFilters:
+            break;
+        case TMSettingsSectionPrivacy:
+            [TelemetryConsent presentFrom:self];
             break;
         case TMSettingsSectionPrivateBuild:
             if (indexPath.row == 1) [self copyLogs];

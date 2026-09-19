@@ -96,7 +96,7 @@
     "data goes where you go."
     "</p>"
     "<p>"
-    "Pitch Perfect does not collect any of your personal data for this free service."
+    "Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices."
     "</p>";
     NSAttributedString *explanationText = [[NSAttributedString alloc] initWithData:[explanationHtml dataUsingEncoding:NSUTF8StringEncoding]
                                                                            options:@{NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType}

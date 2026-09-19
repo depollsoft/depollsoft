@@ -1,5 +1,10 @@
 package depollsoft.tagmaster
 
+import depollsoft.lib.privacy.PrivacyChoices
+import depollsoft.lib.privacy.TelemetryConsent
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+
 import androidx.appcompat.app.AppCompatDelegate
 import com.bindroid.trackable.TrackableCollection
 import com.google.firebase.Firebase
@@ -12,6 +17,21 @@ import depollsoft.lib.util.Preferences
 class TagMasterApplication : RichApplication() {
     override fun onCreate() {
         super.onCreate()
+        val choices = PrivacyChoices(this)
+        TelemetryConsent.applyChoices = { analytics, crashes ->
+            val sdk = FirebaseAnalytics.getInstance(this)
+            sdk.setConsent(mapOf(
+                FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (analytics) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED,
+            ))
+            sdk.setAnalyticsCollectionEnabled(analytics)
+            if (!analytics) sdk.resetAnalyticsData()
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(crashes)
+            if (!crashes) FirebaseCrashlytics.getInstance().deleteUnsentReports()
+        }
+        TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
         JsonSerializer.registerAlias(
             TrackableCollection::class.java,
             "depollsoft.lib.binding.ObservableCollection",
@@ -22,7 +42,7 @@ class TagMasterApplication : RichApplication() {
         }
         AppCompatDelegate.setDefaultNightMode(themeMode)
 
-        Analytics.default.logEvent(
+        if (choices.analytics) Analytics.default.logEvent(
             Analytics.APP_OPEN,
             tags = setOfNotNull(if (Firebase.auth.currentUser != null) "logged_in" else null),
         )

@@ -18,6 +18,7 @@ final class PitchPerfectUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
     }
     
@@ -369,6 +370,7 @@ final class PitchPerfectUITests: XCTestCase {
         app.launchArguments = [
             "-depollsoft.pitchperfect.LoginShown", "NO",
         ]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
 
         let loginButton = app.buttons["Sign up or log in"]
@@ -403,6 +405,7 @@ final class PitchPerfectUITests: XCTestCase {
         app.launchArguments = [
             "-depollsoft.pitchperfect.LoginShown", "NO",
         ]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
 
         let loginButton = app.buttons["Sign up or log in"]

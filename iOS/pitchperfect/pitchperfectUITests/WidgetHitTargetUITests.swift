@@ -77,6 +77,7 @@ final class WidgetHitTargetUITests: XCTestCase {
     func testEveryCellHasItsOwnCompactHitTarget() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchArguments += ["-telemetry.chosen", "YES", "-telemetry.analytics", "NO", "-telemetry.crashes", "NO"]
         app.launch()
         XCUIDevice.shared.press(.home)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")

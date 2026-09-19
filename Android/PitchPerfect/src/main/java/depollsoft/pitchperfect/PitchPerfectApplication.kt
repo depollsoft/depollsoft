@@ -1,5 +1,10 @@
 package depollsoft.pitchperfect
 
+import depollsoft.lib.privacy.PrivacyChoices
+import depollsoft.lib.privacy.TelemetryConsent
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+
 import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
@@ -16,6 +21,21 @@ class PitchPerfectApplication : RichApplication() {
     override fun onCreate() {
         val startedAt = SystemClock.elapsedRealtime()
         super.onCreate()
+        val choices = PrivacyChoices(this)
+        TelemetryConsent.applyChoices = { analytics, crashes ->
+            val sdk = FirebaseAnalytics.getInstance(this)
+            sdk.setConsent(mapOf(
+                FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE to if (analytics) FirebaseAnalytics.ConsentStatus.GRANTED else FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
+                FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED,
+            ))
+            sdk.setAnalyticsCollectionEnabled(analytics)
+            if (!analytics) sdk.resetAnalyticsData()
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(crashes)
+            if (!crashes) FirebaseCrashlytics.getInstance().deleteUnsentReports()
+        }
+        TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
         PerformanceDiagnostics.startMainThreadMonitor()
         val isDebugSigned = false
         Note.setPlayer(WidgetAwareNotePlayer(Note.DEFAULT_PLAYER) { PitchPipeAppWidget.updateWidgets() })
@@ -63,7 +83,9 @@ class PitchPerfectApplication : RichApplication() {
         if (Firebase.auth.currentUser != null) {
             tags.add("logged_in")
         }
-        Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
+        if (PrivacyChoices(this).analytics) {
+            Analytics.default.logEvent(Analytics.APP_OPEN, tags = tags)
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

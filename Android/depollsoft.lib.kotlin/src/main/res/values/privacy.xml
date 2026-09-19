@@ -1,0 +1,12 @@
+<resources>
+    <string name="privacy_title">Privacy choices</string>
+    <string name="privacy_intro">Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings.</string>
+    <string name="privacy_analytics">Usage analytics</string>
+    <string name="privacy_analytics_detail">Share screens visited, sessions, and app and device information with Google Analytics and DepollSoft to understand app usage.</string>
+    <string name="privacy_crashes">Crash reports</string>
+    <string name="privacy_crashes_detail">Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_ads">Ad privacy choices</string>
+    <string name="privacy_save">Save choices</string>
+    <string name="privacy_decline">Decline both</string>
+</resources>

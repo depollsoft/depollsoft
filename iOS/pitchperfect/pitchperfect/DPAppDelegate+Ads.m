@@ -1,4 +1,5 @@
 #import "DPAppDelegate+Ads.h"
+#import "pitchperfect-Swift.h"
 #import "GoogleMobileAdsStub.h"
 
 @implementation DPAppDelegate (Ads)
@@ -43,7 +44,9 @@
         return;
     }
 #endif
-    [bannerView loadRequest:[self adRequest]];
+    if ([AdConsent canRequestAds]) {
+        [bannerView loadRequest:[self adRequest]];
+    }
 }
 
 + (NSString *)bannerAdUnitID {
