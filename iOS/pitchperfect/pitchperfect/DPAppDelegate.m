@@ -104,6 +104,8 @@
     [[FBSDKApplicationDelegate sharedInstance] application:application
                              didFinishLaunchingWithOptions:launchOptions];
 #endif
+    // Keep the ad SDK from replacing Crashlytics signal handlers.
+    [[GADMobileAds sharedInstance] disableSDKCrashReporting];
     [[GADMobileAds sharedInstance] startWithCompletionHandler:nil];
     [application registerForRemoteNotifications];
 
