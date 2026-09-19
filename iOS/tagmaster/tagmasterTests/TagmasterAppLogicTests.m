@@ -2158,6 +2158,12 @@ TM_CAPTURE_IMPL
         // Both the first and last lines can be scrolled into the viewport.
         for (NSNumber *position in @[@(CGRectGetMinY(text)), @(CGRectGetMaxY(text) - 1)]) {
             CGRect line = CGRectMake(text.origin.x, position.doubleValue, 1, 1);
+            // A scroll issued while the content size is still growing lands short, so
+            // re-issue it until the viewport holds the line, then assert that it does.
+            TMSpinUntil(3, ^BOOL{
+                [scroll scrollRectToVisible:line animated:NO];
+                return CGRectContainsRect(CGRectInset(scroll.bounds, -0.5, -0.5), line);
+            });
             [scroll scrollRectToVisible:line animated:NO];
             // Scroll offsets round to device pixels; allow half a point at the edge.
             XCTAssertTrue(CGRectContainsRect(CGRectInset(scroll.bounds, -0.5, -0.5), line), @"%@ must remain reachable: viewport %@, line %@", name, NSStringFromCGRect(scroll.bounds), NSStringFromCGRect(line));
@@ -2299,8 +2305,38 @@ TM_CAPTURE_IMPL
     [self.window layoutIfNeeded];
     [CATransaction commit];
     [CATransaction flush];
-    XCTAssertEqual([XCTWaiter waitForExpectations:@[transaction] timeout:3], XCTWaiterResultCompleted);
+    // Generous ceiling: a hosted runner under load can take seconds to land the
+    // commit, and this only bounds how long a stuck transaction can hang a test.
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[transaction] timeout:15], XCTWaiterResultCompleted);
     [self.window layoutIfNeeded];
+}
+// A table realizes and sizes a row over several passes after a width, edit-mode or
+// data change, so a scroll issued against the interim geometry lands short and the
+// row the caller wants is left outside the viewport. Re-issue the scroll until the
+// row is realized and its edge is inside the viewport, or until scrolling a settled
+// table twice produces identical geometry, and hand back the realized cell. The
+// caller's assertions are unchanged: a row that never comes to rest still fails.
+- (UITableViewCell *)scrollRow:(NSIndexPath *)path in:(UITableView *)table position:(UITableViewScrollPosition)position {
+    __block UITableViewCell *cell = nil;
+    __block NSString *previous = nil;
+    TMSpinUntil(3, ^BOOL{
+        [table scrollToRowAtIndexPath:path atScrollPosition:position animated:NO];
+        [self settle];
+        cell = [table cellForRowAtIndexPath:path];
+        if (!cell || cell.layer.needsLayout) { previous = nil; return NO; }
+        CGRect row = [table rectForRowAtIndexPath:path];
+        CGFloat edgeY = position == UITableViewScrollPositionBottom ? CGRectGetMaxY(row) - 1
+                      : position == UITableViewScrollPositionTop ? CGRectGetMinY(row) : CGRectGetMidY(row);
+        if (CGRectContainsRect(table.bounds, CGRectMake(CGRectGetMidX(row), edgeY, 1, 1))) return YES;
+        // A row taller than the viewport can never be contained; stop once scrolling
+        // an already-settled table changes nothing rather than burning the ceiling.
+        NSString *state = [NSString stringWithFormat:@"%@|%@|%@", NSStringFromCGRect(row),
+                           NSStringFromCGRect(table.bounds), NSStringFromCGSize(table.contentSize)];
+        BOOL settled = [state isEqualToString:previous];
+        previous = state;
+        return settled;
+    });
+    return cell;
 }
 - (void)mount:(UIViewController *)controller width:(CGFloat)width category:(UIContentSizeCategory)category {
     if (!self.previousWindow) for (UIWindow *candidate in UIApplication.sharedApplication.windows) if (candidate.isKeyWindow) self.previousWindow = candidate;
@@ -2322,6 +2358,9 @@ TM_CAPTURE_IMPL
     [self settle];
     UIView *wrapper = [search valueForKey:@"filterControls"][3];
     UISegmentedControl *parts = [search valueForKey:@"parts"];
+    // The wrapper reaches its real width only once the scrolled-to row has been laid
+    // out, and an unlaid-out wrapper is trivially narrower than 308pt.
+    TMSpinUntil(3, ^BOOL{ return wrapper.bounds.size.width > 0 && !wrapper.layer.needsLayout; });
     NSLog(@"TM_LAYOUT_PROBE Parts wrapper=%.1f segments=%.1f count=%ld hidden=%d", wrapper.bounds.size.width, parts.bounds.size.width, (long)parts.numberOfSegments, parts.hidden);
     XCTAssertLessThan(wrapper.bounds.size.width, 308);
     XCTAssertTrue(parts.hidden, @"Seven 44pt targets cannot fit below 308pt");
@@ -2384,6 +2423,12 @@ TM_CAPTURE_IMPL
             UIStackView *root = [details valueForKey:@"metadataStack"];
             UIScrollView *scroll = (id)root.superview.superview;
             NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
+            // Everything below reads geometry at the new width; the stack and its
+            // scroll view must have adopted it before the first pair is measured.
+            TMSpinUntil(3, ^BOOL{
+                return details.view.bounds.size.width == width.doubleValue && root.bounds.size.width > 0
+                    && !root.layer.needsLayout && !scroll.layer.needsLayout;
+            });
             CGFloat lastBottom = 0;
             for (TMDetailPair *pair in pairs) {
                 UILabel *caption = [pair valueForKey:@"caption"];
@@ -2407,6 +2452,11 @@ TM_CAPTURE_IMPL
             XCTAssertGreaterThan(identifier.text.length, 0);
             XCTAssertLessThanOrEqual(identifier.bounds.size.height, identifier.font.lineHeight + 1);
             CGRect lastLine = CGRectMake(0, lastBottom - 1, 1, 1);
+            TMSpinUntil(3, ^BOOL{
+                [scroll scrollRectToVisible:lastLine animated:NO];
+                [self settle];
+                return CGRectContainsRect(CGRectInset(scroll.bounds, -.5, -.5), lastLine);
+            });
             [scroll scrollRectToVisible:lastLine animated:NO];
             XCTAssertTrue(CGRectContainsRect(CGRectInset(scroll.bounds, -.5, -.5), lastLine));
             CGFloat full = scroll.contentSize.height;
@@ -2415,8 +2465,12 @@ TM_CAPTURE_IMPL
             // Nine pairs without Tag ID: posted by, arranged by, year arranged, sung by, year sung hide.
             XCTAssertEqual(pairs.count, 9);
             for (NSNumber *index in @[@3, @5, @6, @7, @8]) XCTAssertTrue(pairs[index.integerValue].hidden);
+            // A collapsed section shrinks the content size a pass or two after the
+            // rows themselves hide; measure the settled size, not the interim one.
+            TMSpinUntil(3, ^BOOL{ return scroll.contentSize.height < full; });
             XCTAssertLessThan(scroll.contentSize.height, full);
             details.tag = tag; [self settle];
+            TMSpinUntil(3, ^BOOL{ return fabs(scroll.contentSize.height - full) <= 1; });
             XCTAssertEqualWithAccuracy(scroll.contentSize.height, full, 1);
         }
     }
@@ -2569,8 +2623,18 @@ TM_CAPTURE_IMPL
             XCTAssertTrue(CGRectEqualToRect(keyFrame, [pitch.button convertRect:pitch.button.bounds toView:root]));
         }
         [self captureComposition:[NSString stringWithFormat:@"ordinary-%@-summary", dark.boolValue ? @"dark" : @"light"]];
-        detail.selectedIndex = 1; [self settle];
+        // A native tab switch cross-fades for two thirds of a second, and the
+        // geometry below belongs to the settled page, not to a frame midway
+        // through that fade. Switch without the animation so the page is final
+        // when it lands; the wait after it still covers a runner slow enough to
+        // leave the transition in flight.
+        [UIView performWithoutAnimation:^{ detail.selectedIndex = 1; }]; [self settle];
         DPTagDetailController *details = [detail valueForKey:@"detailController"];
+        // Measure the page that has actually been presented and finished its transition.
+        TMSpinUntil(3, ^BOOL{
+            return details.view.window == self.window && !detail.pageTabController.transitionCoordinator
+                && !details.view.layer.needsLayout;
+        });
         NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
         CGFloat axis = -1, previousBaseline = -1;
         for (TMDetailPair *pair in pairs) {
@@ -2608,6 +2672,12 @@ TM_CAPTURE_IMPL
             [detail setValue:tag forKey:@"tag"]; [self settle];
             DPTagSummaryController *summary = [detail valueForKey:@"summaryController"];
             UIView *root = [summary valueForKey:@"grid"];
+            // The window was just resized and the tag just set; read the grid only
+            // once the presented page has adopted both.
+            TMSpinUntil(3, ^BOOL{
+                return summary.view.window == self.window && root.bounds.size.width > 0
+                    && !root.layer.needsLayout && !detail.pageTabController.transitionCoordinator;
+            });
             UIStackView *lyrics = [summary valueForKey:@"lyricsSection"];
             UIStackView *columns = (UIStackView *)lyrics.superview.superview;
             BOOL wide = root.bounds.size.width >= 560 * [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:self.window.traitCollection].pointSize / 17 + 16;
@@ -2636,8 +2706,12 @@ TM_CAPTURE_IMPL
             UIScrollView *scroll = (id)root.superview.superview;
             if (captureLarge) [scroll scrollRectToVisible:[sheet convertRect:sheet.bounds toView:scroll] animated:NO];
             if (captureLarge || captureWide) [self captureComposition:captureLarge ? @"large-summary" : @"wide-summary"];
-            detail.selectedIndex = 1; [self settle];
+            [UIView performWithoutAnimation:^{ detail.selectedIndex = 1; }]; [self settle];
             DPTagDetailController *details = [detail valueForKey:@"detailController"];
+            TMSpinUntil(3, ^BOOL{
+                return details.view.window == self.window && !detail.pageTabController.transitionCoordinator
+                    && !details.view.layer.needsLayout;
+            });
             NSArray<TMDetailPair *> *pairs = [details valueForKey:@"metadataPairs"];
             CGFloat axis = -1;
             for (TMDetailPair *pair in pairs) {
@@ -2656,7 +2730,10 @@ TM_CAPTURE_IMPL
                 [scroller scrollRectToVisible:[last convertRect:last.bounds toView:scroller] animated:NO];
                 [self captureComposition:@"large-details-last-link"];
             }
-            detail.selectedIndex = 0; [self settle];
+            [UIView performWithoutAnimation:^{ detail.selectedIndex = 0; }]; [self settle];
+            TMSpinUntil(3, ^BOOL{
+                return summary.view.window == self.window && !detail.pageTabController.transitionCoordinator;
+            });
             tag.sheetMusicUri = nil; tag.writtenKey = nil; tag.alternativeTitle = @""; tag.lyrics = nil; tag.notes = nil;
             [summary refreshView]; [self settle];
             XCTAssertTrue(lyrics.superview.hidden);
@@ -2695,8 +2772,7 @@ TM_CAPTURE_IMPL
             XCTAssertEqual([home.tableView numberOfRowsInSection:1], count.integerValue);
             if (count.integerValue > 0) {
                 NSIndexPath *last = [NSIndexPath indexPathForRow:count.integerValue - 1 inSection:1];
-                [home.tableView scrollToRowAtIndexPath:last atScrollPosition:UITableViewScrollPositionMiddle animated:NO]; [self settle];
-                UITableViewCell *cell = [home.tableView cellForRowAtIndexPath:last];
+                UITableViewCell *cell = [self scrollRow:last in:home.tableView position:UITableViewScrollPositionMiddle];
                 XCTAssertNotNil(cell); XCTAssertGreaterThan(cell.bounds.size.height, 44);
                 [self checkLabelsIn:cell.contentView];
             }
@@ -2712,25 +2788,52 @@ TM_CAPTURE_IMPL
                 XCTAssertEqualObjects(browse.currentTitle, @"Browse Tags");
                 for (NSNumber *width in @[@320, @834, @320]) {
                     self.window.frame = CGRectMake(0, 0, width.doubleValue, 568); [self settle];
+                    UITableView *emptyTable = teachableController.tableView;
+                    UIWindow *window = self.window;
+                    // The empty-state header restacks over several passes after a width
+                    // change, so a scroll issued against the interim rect lands short.
+                    // Wait for the reachable state the assertions below read.
+                    TMSpinUntil(3, ^BOOL{
+                        [emptyTable scrollRectToVisible:[browse convertRect:browse.bounds toView:emptyTable] animated:NO];
+                        [self settle];
+                        CGRect reachable = UIEdgeInsetsInsetRect(emptyTable.bounds, emptyTable.adjustedContentInset);
+                        return browse.bounds.size.height >= 44
+                            && CGRectContainsRect(reachable, [browse convertRect:browse.bounds toView:emptyTable]);
+                    });
                     [self checkLabelsIn:header];
                     XCTAssertGreaterThanOrEqual(browse.bounds.size.height, 44);
                     CGRect target = [browse convertRect:browse.bounds toView:teachableController.tableView];
                     [teachableController.tableView scrollRectToVisible:target animated:NO]; [self settle];
                     CGRect visible = UIEdgeInsetsInsetRect(teachableController.tableView.bounds, teachableController.tableView.adjustedContentInset);
                     XCTAssertTrue(CGRectContainsRect(visible, target), @"Full Browse action reachable at %@pt: %@ in %@", width, NSStringFromCGRect(target), NSStringFromCGRect(visible));
+                    // Hit testing reaches the button only once the header has finished
+                    // placing it in the window; wait for that, not for a delay.
+                    TMSpinUntil(3, ^BOOL{
+                        CGPoint point = [browse convertPoint:CGPointMake(CGRectGetMidX(browse.bounds), CGRectGetMidY(browse.bounds)) toView:window];
+                        UIView *candidate = [window hitTest:point withEvent:nil];
+                        return candidate == browse || [candidate isDescendantOfView:browse];
+                    });
                     CGPoint center = [browse convertPoint:CGPointMake(CGRectGetMidX(browse.bounds), CGRectGetMidY(browse.bounds)) toView:self.window];
                     UIView *hit = [self.window hitTest:center withEvent:nil];
                     XCTAssertTrue(hit == browse || [hit isDescendantOfView:browse]);
                     UILabel *heading = (id)stack.arrangedSubviews.firstObject;
+                    TMSpinUntil(3, ^BOOL{
+                        CGRect current = [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:emptyTable];
+                        [emptyTable scrollRectToVisible:current animated:NO];
+                        [self settle];
+                        return CGRectIntersectsRect(emptyTable.bounds, [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:emptyTable]);
+                    });
                     CGRect firstLine = [heading convertRect:CGRectMake(0, 0, heading.bounds.size.width, heading.font.lineHeight) toView:teachableController.tableView];
                     [teachableController.tableView scrollRectToVisible:firstLine animated:NO]; [self settle];
                     XCTAssertTrue(CGRectIntersectsRect(teachableController.tableView.bounds, firstLine));
                     NSLog(@"TM_LAYOUT_PROBE empty width=%@ content=%.1f browse=%@ reachable=1", width, teachableController.tableView.contentSize.height, NSStringFromCGRect(target));
                 }
                 ids = @[@1809]; [teachableController.tableView reloadData]; [self settle];
+                TMSpinUntil(3, ^BOOL{ return teachableController.tableView.tableHeaderView == nil; });
                 XCTAssertNil(teachableController.tableView.tableHeaderView);
                 XCTAssertEqual([teachableController.tableView numberOfRowsInSection:0], 1);
                 ids = @[]; [teachableController.tableView reloadData]; [self settle];
+                TMSpinUntil(3, ^BOOL{ return teachableController.tableView.tableHeaderView != nil; });
                 XCTAssertNotNil(teachableController.tableView.tableHeaderView);
             } else {
                 XCTAssertNil(teachableController.tableView.tableHeaderView);
@@ -2738,8 +2841,7 @@ TM_CAPTURE_IMPL
                 for (NSNumber *width in @[@320, @834, @320]) for (NSNumber *editing in @[@YES, @NO, @YES]) {
                     self.window.frame = CGRectMake(0, 0, width.doubleValue, 852);
                     [teachableController setEditing:editing.boolValue animated:NO]; [self settle];
-                    [teachableController.tableView scrollToRowAtIndexPath:last atScrollPosition:UITableViewScrollPositionBottom animated:NO]; [self settle];
-                    UITableViewCell *cell = [teachableController.tableView cellForRowAtIndexPath:last];
+                    UITableViewCell *cell = [self scrollRow:last in:teachableController.tableView position:UITableViewScrollPositionBottom];
                     XCTAssertNotNil(cell); XCTAssertEqual(cell.editing, editing.boolValue);
                     XCTAssertTrue([teachableController tableView:teachableController.tableView canMoveRowAtIndexPath:last]);
                     [self checkLabelsIn:cell.contentView];
@@ -2753,8 +2855,7 @@ TM_CAPTURE_IMPL
                 self.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategoryLarge;
                 self.window.frame = CGRectMake(0, 0, 393, 852);
                 [teachableController setEditing:NO animated:NO]; [self settle];
-                [teachableController.tableView scrollToRowAtIndexPath:last atScrollPosition:UITableViewScrollPositionBottom animated:NO]; [self settle];
-                UITableViewCell *dense = [teachableController.tableView cellForRowAtIndexPath:last];
+                UITableViewCell *dense = [self scrollRow:last in:teachableController.tableView position:UITableViewScrollPositionBottom];
                 XCTAssertNotNil(dense);
                 [self checkLabelsIn:dense.contentView];
                 XCTAssertLessThan(dense.bounds.size.height, 260, @"Default catalog rows stay dense");
@@ -2791,8 +2892,7 @@ TM_CAPTURE_IMPL
             [self checkLabelsIn:table.tableHeaderView];
             XCTAssertEqual([[tracks valueForKey:@"apology"] isHidden], populated.boolValue);
             if (populated.boolValue) {
-                [table scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:5 inSection:0] atScrollPosition:UITableViewScrollPositionBottom animated:NO]; [self settle];
-                XCTAssertNotNil([table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:5 inSection:0]]);
+                XCTAssertNotNil([self scrollRow:[NSIndexPath indexPathForRow:5 inSection:0] in:table position:UITableViewScrollPositionBottom]);
             }
             [self captureLayout:populated.boolValue ? @"tracks-long-ax5" : @"tracks-empty-ax5"];
             DPTagVideoController *videos = [DPTagVideoController new]; videos.tag = tag;
@@ -2801,8 +2901,7 @@ TM_CAPTURE_IMPL
             XCTAssertEqual(videoTable.numberOfSections, populated.boolValue ? 2 : 1);
             if (populated.boolValue) {
                 for (NSIndexPath *path in @[[NSIndexPath indexPathForRow:0 inSection:0], [NSIndexPath indexPathForRow:0 inSection:1], [NSIndexPath indexPathForRow:1 inSection:1]]) {
-                    [videoTable scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionTop animated:NO]; [self settle];
-                    UITableViewCell *cell = [videoTable cellForRowAtIndexPath:path]; XCTAssertNotNil(cell);
+                    UITableViewCell *cell = [self scrollRow:path in:videoTable position:UITableViewScrollPositionTop]; XCTAssertNotNil(cell);
                     [self checkLabelsIn:cell.contentView];
                     if (path.section == 1 && path.row == 0) [self captureLayout:@"videos-long-ax5"];
                 }
@@ -2835,13 +2934,21 @@ TM_CAPTURE_IMPL
                 XCTAssertEqual(retry.hidden, mode == 0);
                 self.window.frame = CGRectMake(0, 0, 852, 393); [self settle];
                 if (mode == 1) {
+                    // The error view places its button a few passes after the landscape
+                    // resize; scroll until that placement has come to rest.
+                    TMSpinUntil(5, ^BOOL{
+                        [table scrollRectToVisible:[retry convertRect:retry.bounds toView:table] animated:NO];
+                        [self settle];
+                        return retry.bounds.size.height >= 44
+                            && CGRectContainsRect(CGRectInset(table.bounds, -.5, -.5), [retry convertRect:retry.bounds toView:table]);
+                    });
                     CGRect rect = [retry convertRect:retry.bounds toView:table];
                     [table scrollRectToVisible:rect animated:NO];
                     XCTAssertTrue(CGRectContainsRect(CGRectInset(table.bounds, -.5, -.5), rect));
                     XCTAssertGreaterThanOrEqual(retry.bounds.size.height, 44);
                     [self captureLayout:@"query-error-landscape-ax5"];
                 }
-            } else [self checkLabelsIn:[table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]].contentView];
+            } else [self checkLabelsIn:[self scrollRow:[NSIndexPath indexPathForRow:0 inSection:0] in:table position:UITableViewScrollPositionTop].contentView];
         }
     } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
 }
@@ -2912,7 +3019,11 @@ TM_CAPTURE_IMPL
             // The bar lays the key out over a few run-loop turns after a size change;
             // wait for the reachable state the assertion below needs rather than for
             // a fixed delay.
-            TMSpinUntil(5, hitsAcrossTarget);
+            TMSpinUntil(5, ^BOOL{
+                return key.bounds.size.width >= 44 && hitsAcrossTarget()
+                    && CGRectContainsRect(window.bounds, [key convertRect:key.bounds toView:window])
+                    && preview.view.bounds.size.height > 200;
+            });
             CGRect face = [key convertRect:key.bounds toView:self.window];
             BOOL hits = hitsAcrossTarget();
             NSLog(@"TM_LAYOUT_PROBE sheet face=%@ nav=%@ target44hits=%d translates=%d intrinsic=%@", NSStringFromCGRect(face), NSStringFromCGRect(navigation.navigationBar.frame), hits, key.translatesAutoresizingMaskIntoConstraints, NSStringFromCGSize(key.intrinsicContentSize));
@@ -2939,7 +3050,11 @@ TM_CAPTURE_IMPL
         self.window.overrideUserInterfaceStyle = large.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
         [detail setValue:tag forKey:@"tag"]; [self settle];
         [self captureLayout:large.boolValue ? @"summary-long-dark-ax5" : @"summary-light-default"];
-        detail.selectedIndex = 1; [self settle];
+        [UIView performWithoutAnimation:^{ detail.selectedIndex = 1; }]; [self settle];
+        TMSpinUntil(3, ^BOOL{
+            return detail.pageTabController.selectedViewController.view.window == self.window
+                && !detail.pageTabController.transitionCoordinator;
+        });
         [self captureLayout:large.boolValue ? @"details-dark-ax5" : @"details-light-default"];
         if (large.boolValue) {
             DPTagDetailController *details = [detail valueForKey:@"detailController"];
