@@ -52,6 +52,7 @@ jobs:
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      IOS_SIMULATOR_VERSION: '26.2'
       # Native timeouts stop hangs; result validation also enforces actual duration.
       IOS_MAX_TEST_SECONDS: '30'
       # Reuse this job's device across sequential suites; always delete it below.
@@ -174,6 +175,7 @@ jobs:
         run: |
           set -o pipefail
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
+            -derivedDataPath DerivedData \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfect \
@@ -182,6 +184,7 @@ jobs:
             SDKROOT=iphonesimulator \
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
+            -derivedDataPath DerivedData \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme tagmaster \
@@ -190,6 +193,7 @@ jobs:
             SDKROOT=iphonesimulator \
             | xcpretty --color
           "${{ steps.select_xcode.outputs.xcodebuild }}" build-for-testing -jobs 2 \
+            -derivedDataPath DerivedData \
             -workspace iOS.xcworkspace \
             -clonedSourcePackagesDirPath SourcePackages \
             -scheme pitchperfectlib \
@@ -205,9 +209,7 @@ jobs:
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme pitchperfect \
+            -xctestrun DerivedData/Build/Products/pitchperfect_*.xctestrun \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfect-results.xcresult \
@@ -225,9 +227,7 @@ jobs:
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme tagmaster \
+            -xctestrun DerivedData/Build/Products/tagmaster_*.xctestrun \
             -only-testing:tagmasterTests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -246,9 +246,7 @@ jobs:
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme pitchperfectlib \
+            -xctestrun DerivedData/Build/Products/pitchperfectlib_*.xctestrun \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
             -resultBundlePath pitchperfectlib-results.xcresult \
@@ -266,9 +264,7 @@ jobs:
         run: |
           set -o pipefail
           python3 ../scripts/ci/ios_run.py "${{ steps.select_xcode.outputs.xcodebuild }}" test-without-building \
-            -workspace iOS.xcworkspace \
-            -clonedSourcePackagesDirPath SourcePackages \
-            -scheme tagmaster \
+            -xctestrun DerivedData/Build/Products/tagmaster_*.xctestrun \
             -only-testing:tagmasterUITests \
             -destination '${{ steps.simulator.outputs.destination }}' \
             -enableCodeCoverage YES \
@@ -555,6 +551,7 @@ jobs:
       github.event_name == 'schedule'
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      IOS_SIMULATOR_VERSION: '26.2'
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
 
@@ -817,6 +814,7 @@ jobs:
         working-directory: .
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      IOS_SIMULATOR_VERSION: '26.2'
 
     steps:
       - name: Download unit test results

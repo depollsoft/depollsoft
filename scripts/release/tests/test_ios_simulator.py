@@ -13,10 +13,18 @@ from ios_simulator import boot, shutdown, delete, clean_abandoned, owner_identit
 
 class SimulatorCleanupTests(unittest.TestCase):
     def test_boot_waits_and_also_handles_an_already_booted_device(self):
-        with patch('ios_simulator.subprocess.run') as run:
+        with patch('ios_simulator.subprocess.run', return_value=subprocess.CompletedProcess(
+                ['simctl'], 0, 'Finished', '')) as run:
             boot('owned-device')
         self.assertEqual(run.call_args.args[0][-3:], ['bootstatus', 'owned-device', '-b'])
         self.assertEqual(run.call_args.kwargs['timeout'], 600)
+
+    def test_terminal_migration_failure_is_not_a_successful_boot(self):
+        result = subprocess.CompletedProcess(['simctl'], 0,
+            'Status=3, isTerminal=YES\nData Migration Failed\n', '')
+        with patch('ios_simulator.subprocess.run', return_value=result), \
+                self.assertRaisesRegex(RuntimeError, 'failed initial data migration'):
+            boot('owned-device')
 
     def test_shutdown_accepts_stopped_devices_but_preserves_other_failures(self):
         for error in ['Unable to shutdown device in current state: Shutdown', 'Device unavailable']:

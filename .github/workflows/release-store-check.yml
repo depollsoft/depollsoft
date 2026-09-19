@@ -1,0 +1,46 @@
+name: Check production store history
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'releases/**/release.json'
+      - 'scripts/release/store_check.rb'
+      - '.github/workflows/release-store-check.yml'
+permissions:
+  contents: read
+jobs:
+  stores:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: iOS
+      - name: Check selected production apps and unpublished builds
+        working-directory: iOS
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mapfile -t apps < <(git diff --name-only "$BASE_SHA" HEAD -- '../releases/*/release.json' | sed -n 's@^releases/\([^/]*\)/release.json$@\1@p')
+          if [ "${#apps[@]}" -eq 0 ]; then
+            echo 'No release plans changed.'
+            exit 0
+          fi
+          bundle exec ruby ../scripts/release/store_check.rb "${apps[@]}"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: production-store-history
+          path: build/release/store-history.json
+          if-no-files-found: ignore

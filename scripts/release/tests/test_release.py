@@ -154,6 +154,14 @@ class CaptureTests(unittest.TestCase):
                     for version in ['26.0', '26.2', '26.4']]
         self.assertEqual(capture.ios_runtime('26.2', runtimes), '26.2')
 
+    def test_runtime_override_is_exact_and_never_silently_falls_forward(self):
+        runtimes = [{'name': 'iOS ' + v, 'version': v, 'identifier': v, 'isAvailable': True}
+                    for v in ['26.2', '26.5']]
+        with patch.dict(capture.os.environ, {'IOS_SIMULATOR_VERSION': '26.2'}):
+            self.assertEqual(capture.ios_runtime('26.5', runtimes), '26.2')
+            with self.assertRaises(ValueError):
+                capture.ios_runtime('26.5', runtimes[1:])
+
     def test_missing_compatible_runtime_requires_explicit_setup(self):
         runtimes = [{'name': 'iOS 26.4', 'version': '26.4', 'identifier': '26.4', 'isAvailable': True}]
         with self.assertRaisesRegex(ValueError, 'selected Xcode'):

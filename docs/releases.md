@@ -43,7 +43,7 @@ For first-release history, use `git log --follow -p -- <resource-file>` to find 
 
 ## Generate assets locally
 
-Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. The script uses `DEVELOPER_DIR` or the runner’s selected Xcode and picks its newest compatible iOS 26 runtime. It never probes other Xcode installations because switching CoreSimulator versions can disrupt other jobs sharing that user’s simulator service. Actions uses GitHub-hosted `macos-latest` for iOS and `ubuntu-latest` with KVM for Android. Each capture job has its own machine. On a custom machine, install the selected Xcode's simulator platform with `xcodebuild -downloadPlatform iOS` if needed; `simctl` listing an older runtime alone does not guarantee that Xcode can run tests. Capture retries a stalled simulator boot once, with a three-minute limit per attempt. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
+Use Python 3.10 or later, Xcode with the iOS 26 simulator runtime, and JDK 17 plus the Android SDK used by CI. The capture script creates and deletes its own iOS simulators: iPhone 17 Pro Max and iPad Pro 13-inch M5. Both device types must be installed. The script uses `DEVELOPER_DIR` or the runner’s selected Xcode and picks its newest compatible iOS 26 runtime. It never probes other Xcode installations because switching CoreSimulator versions can disrupt other jobs sharing that user’s simulator service. Actions uses GitHub-hosted `macos-26-intel` for iOS and `ubuntu-latest` with KVM for Android. Each capture job has its own machine. On a custom machine, install the selected Xcode's simulator platform with `xcodebuild -downloadPlatform iOS` if needed; `simctl` listing an older runtime alone does not guarantee that Xcode can run tests. Capture retries a stalled simulator boot once, with a ten-minute limit per attempt. Android captures use a disposable emulator with the production package ID and clear its app data. Do not point the script at your everyday emulator.
 
 ```sh
 python3 -m venv .venv-release
@@ -65,6 +65,8 @@ Choose a fresh output directory for each capture. Android emits phone and 10-inc
 | --- | --- |
 | Pitch Perfect | Pitch pipe, notes, keys, populated songs, editing/reordering, song editor |
 | Tag Master | Populated favorites, classic browsing, search filters, search results, summary, details, loaded learning tracks, videos |
+
+Hosted iOS simulator CI and asset capture pin `IOS_SIMULATOR_VERSION=26.2` to avoid terminal data-migration failures seen on fresh iOS 26.5 devices. A missing pinned runtime fails explicitly; local captures use the newest compatible runtime unless this variable is set. Prebuilt CI suites run their `.xctestrun` files directly so test startup does not resolve packages again.
 
 iOS simulator CI and asset capture use the standard `macos-26-intel` runner with 14 GB of RAM. The 7 GB ARM runner experienced severe memory pressure during iOS 26 first boot before XCTest could start.
 
@@ -131,6 +133,8 @@ After capture finishes, Actions adds or updates a PR comment with download links
 On merge, `Release mobile apps` regenerates screenshots from the merged commit, then downloads only artifacts from that run. Each production lane validates the capture identity before exporting copy and building its binary. No rolling `latest` asset bundle is shared between apps. Apple uploads replace screenshots for the captured device classes; Play uploads include copy, screenshots, release notes, the app bundle, and for Pitch Perfect the listing icon, which `scripts/release/icons.py` derives from the launcher icon at capture time so the two never drift. Feature graphics and Tag Master's icon remain managed in the stores.
 
 ## Store access and first-use setup
+
+`Check production store history` inspects changed release plans on same-repository PRs using the existing store credentials. It records App Store versions and all uploaded builds, plus Play tracks, production release lifecycle states, APKs, and bundles in the `production-store-history` artifact. Planned build numbers must exceed uploaded builds. The Play inspection edit is deleted without committing any changes. Use this authenticated evidence with repository/changelog history to identify the shipped baselines.
 
 The workflows reuse the preview credentials:
 

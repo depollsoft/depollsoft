@@ -134,7 +134,14 @@ def boot(udid):
     # -b boots a stopped device and also succeeds when it is already running.
     # A fresh iOS 26 device can spend several minutes in LaunchServices
     # data migration on hosted runners, before any app or test can start.
-    subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True, timeout=600)
+    result = subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True,
+                            timeout=600, capture_output=True, text=True)
+    print(result.stdout, end='', flush=True)
+    # CoreSimulator can report terminal migration failure with exit status zero.
+    if 'Data Migration Failed' in result.stdout:
+        raise RuntimeError(f'Simulator {udid} failed initial data migration')
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, flush=True)
 
 
 def shutdown(udid):
@@ -154,12 +161,15 @@ def main():
         return subprocess.check_output([xcrun, *args], text=True, timeout=60).strip()
 
     sdk = tuple(map(int, output('--sdk', 'iphonesimulator', '--show-sdk-version').split('.')))[:2]
+    requested = os.environ.get('IOS_SIMULATOR_VERSION')
     devices = json.loads(output('simctl', 'list', 'devices', 'available', '-j'))['devices']
     candidates = []
     for runtime, available in devices.items():
         if '.iOS-' not in runtime:
             continue
         version = tuple(map(int, runtime.rsplit('iOS-', 1)[1].split('-')))[:2]
+        if requested and version != tuple(map(int, requested.split('.')))[:2]:
+            continue
         if version > sdk:
             continue
         for device in available:

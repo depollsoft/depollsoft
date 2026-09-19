@@ -90,9 +90,12 @@ def screenshot_path(app, platform, family, scene):
 
 def ios_runtime(sdk, runtimes):
     sdk_version = tuple(map(int, sdk.split('.')))[:2]
+    requested = os.environ.get('IOS_SIMULATOR_VERSION')
     candidates = []
     for runtime in runtimes:
         version = tuple(map(int, runtime['version'].split('.')))[:2]
+        if requested and version != tuple(map(int, requested.split('.')))[:2]:
+            continue
         if runtime.get('isAvailable') and 'iOS' in runtime['name'] and (26, 0) <= version <= sdk_version:
             candidates.append((version, runtime['identifier']))
     if not candidates:

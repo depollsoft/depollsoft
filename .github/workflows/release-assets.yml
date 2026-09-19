@@ -97,6 +97,7 @@ jobs:
         env:
           # Match ios.yml, including when the machine-wide xcode-select differs.
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+          IOS_SIMULATOR_VERSION: '26.2'
         run: |
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"
