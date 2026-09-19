@@ -154,13 +154,17 @@ class tagmasterUITests: TagMasterUITestCase {
     
 }
 
-// Launch measurements own app startup. The functional suite's setup launch
-// would add an unmeasured launch before XCTest's warmup and three samples.
+// Keep three launch measurements, each with its own 30-second case budget.
+// This class has no per-case setup launch before XCTest's measurement warmup.
 final class TagMasterLaunchPerformanceUITests: TagMasterUITestCase {
-    func testLaunchPerformance() throws {
+    func testLaunchPerformanceFirstSample() { measureLaunch() }
+    func testLaunchPerformanceSecondSample() { measureLaunch() }
+    func testLaunchPerformanceThirdSample() { measureLaunch() }
+
+    private func measureLaunch() {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
             let options = XCTMeasureOptions()
-            options.iterationCount = 3
+            options.iterationCount = 1
             measure(metrics: [XCTApplicationLaunchMetric()], options: options) {
                 XCUIApplication().launch()
             }
