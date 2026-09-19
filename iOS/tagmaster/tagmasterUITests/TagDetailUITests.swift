@@ -742,11 +742,14 @@ final class TagMasterPolishUITests: TagMasterUITestCase {
 
     func testBrowseRowContentAndSize() throws {
         app.tables.staticTexts["Browse"].tap()
+        XCTAssertTrue(app.buttons["page-Latest"].existsOrWait(timeout: 30))
         let cell = app.tables.cells.firstMatch
-        XCTAssertTrue(cell.existsOrWait(timeout: 30))
-        XCTAssertGreaterThan(cell.frame.height, 100)
-        XCTAssertLessThan(cell.frame.height, 2000)
-        XCTAssertTrue(cell.label.contains("Sheet music"))
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: cell)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+        let snapshot = try cell.snapshot()
+        XCTAssertGreaterThan(snapshot.frame.height, 100)
+        XCTAssertLessThan(snapshot.frame.height, 2000)
+        XCTAssertTrue(snapshot.label.contains("Sheet music"))
         capture("browse-rows")
     }
 }
