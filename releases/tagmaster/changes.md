@@ -1,12 +1,12 @@
 # Tag Master 3.0.0 for iOS and 6.0.0 for Android
 
-## Baseline evidence and remaining checks
+## Verified store baseline and source-review boundary
 
-These first-release baselines are inferred from repository changes and public store history; they are not verified against archived store binaries.
+Authenticated [App Store Connect and Google Play history](https://github.com/depollsoft/depollsoft/actions/runs/35408894261) was checked on September 18, 2026. The report lists all uploaded production-app builds, including unpublished builds. No newer upload exists beyond the shipped builds below. Repository commits are used as conservative review boundaries because the old uploads do not record a Git SHA; release-time version edits were sometimes committed after upload.
 
-- iOS: `75d8daf8` set version 2.0.2 on August 3, 2021. The public App Store listing is 2.0.2, released August 4, 2021. Subsequent commits before that release affected Android, not the iOS app or its shared library.
-- Android: `8ee81c37` is the last substantive changelog edit, dated August 22, 2022. It adds the 5.2.1 email-sign-in fix named in the public Play listing's notes. Play reports August 21, 2022 as its update date, so the version and content match but the dates differ by one day. The January 2026 changelog move preserved the contents.
-- Confirm these inferred baselines and the new build number against store records, including unpublished uploads, before submission. Store console access was unavailable during preparation.
+- iOS: App Store Connect confirms live version 2.0.2 / build 2.0.5, uploaded August 4, 2021. `75d8daf8` set version 2.0.2 / build 2.0.4 on August 3. The final build-number edit first appears in `517d3332` on August 5, after upload. Keep `75d8daf8` as the conservative review boundary so the later shared busy-indicator change is reviewed too; do not claim the upload has a verified Git SHA.
+- Android: Play confirms published version 5.2.1 / build 68. `8ee81c37` contains that exact manifest version code and is the last substantive changelog edit, dated August 22, 2022. It adds the 5.2.1 email-sign-in fix named in the public Play listing's notes. Play reports August 21, 2022 as its update date, so the version and content match but the dates differ by one day. The January 2026 changelog move preserved the contents.
+- The planned build number exceeds every authenticated upload: the latest are iOS build 2.0.5 and Android build 68. All four store checks passed; no production-app upload from the 2026 preview work appears in these records.
 - [Tag Master signing provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35379275553) passed after the repository credential was updated. Verified the production Tag Master, Pitch Perfect, and Pitch Perfect widget profile filenames in the signing repository.
 
 Public listings: [App Store](https://apps.apple.com/us/app/tag-master/id721186126), [Google Play](https://play.google.com/store/apps/details?id=depollsoft.tagmaster).

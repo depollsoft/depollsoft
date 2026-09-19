@@ -94,7 +94,7 @@ Pitch Perfect Android also requires round and square Wear OS captures. Boot disp
   --output build/release/pitchperfect-android
 ```
 
-Each watch capture holds the C4 cell so the instrument is shown sounding. The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Actions creates and captures the watch emulators automatically and deletes each before starting the next device. Wear OS images can require larger partitions than the requested 2 GB; provision sufficient free disk space on capture runners. The workflow never removes host SDKs.
+Each watch capture holds the C4 cell so the instrument is shown sounding. The watch images must match the current source and actual display shapes. The Play lane uploads them through `wearScreenshots`; it still does not release a Wear binary. Pitch Perfect retains the already published Wear build listed in `play_retained_version_codes`; retention is limited to builds that remain published, so a removed build is never reactivated. Update this mapping when a future Wear release replaces that build. Actions creates and captures the watch emulators automatically and deletes each before starting the next device. Wear OS images can require larger partitions than the requested 2 GB; provision sufficient free disk space on capture runners. The workflow never removes host SDKs.
 
 Build a gallery for a capture bundle:
 

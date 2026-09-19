@@ -1,12 +1,12 @@
 # Pitch Perfect 3.0.0 for iOS and 5.0.0 for Android
 
-## Baseline evidence and remaining checks
+## Verified store baseline and source-review boundary
 
-These first-release baselines are inferred from repository changes and public store history; they are not verified against archived store binaries.
+Authenticated [App Store Connect and Google Play history](https://github.com/depollsoft/depollsoft/actions/runs/35408894261) was checked on September 18, 2026. The report lists all uploaded production-app builds, including unpublished builds. No newer upload exists beyond the shipped builds below. Repository commits are used as conservative review boundaries because the old uploads do not record a Git SHA; release-time version edits were sometimes committed after upload.
 
-- iOS: `b258d967` added account deletion on September 15, 2022 while the marketing version was 2.0.1. The public App Store listing is 2.0.1, released September 19, 2022, and its notes include account deletion. Later source-only version bumps to 2.0.2 and 2.0.3 are not treated as shipped releases.
-- Android: the last substantive 4.0.0 changelog edit was `a383c41a` on August 24, 2022. The selected baseline is the later `25f49332` widget/settings fix on September 25, 2022, matching the public Play listing's update date and version 4.0.0. The January 2026 changelog move preserved the contents.
-- Confirm these inferred baselines and the new build number against store records, including unpublished uploads, before submission. Store console access was unavailable during preparation.
+- iOS: the live store listing is 2.0.1, attached to binary version 2.0.3 / build 2.0.4, uploaded September 19, 2022. This resolves the public/source version mismatch: source 2.0.3 did ship under the 2.0.1 listing. `74740add`, committed September 21, records the matching binary version/build and a pitch-button title fix. Since it postdates the upload, the review conservatively starts at the earlier `b258d967` account-deletion change, retaining all potentially unshipped changes rather than assuming the whole later commit was in the binary.
+- Android: Play confirms published phone version 4.0.0 / build 220925000 and Wear build 220922001. `25f49332` is the September 25, 2022 phone source baseline. The last substantive 4.0.0 changelog edit was `a383c41a` on August 24, 2022; the January 2026 move preserved it. The production lane retains published Wear build 220922001 while replacing the phone build. The old draft also references 220922001; there is no newer uploaded code.
+- The planned build number exceeds every authenticated upload: the latest are iOS build 2.0.4 and Android build 220925000. All four store checks passed; no production-app upload from the 2026 preview work appears in these records.
 - [Tag Master signing provisioning](https://github.com/depollsoft/depollsoft/actions/runs/35379275553) passed after the repository credential was updated. Verified the production Tag Master, Pitch Perfect, and Pitch Perfect widget profile filenames in the signing repository.
 
 Public listings: [App Store](https://apps.apple.com/us/app/pitch-perfect-pitch-pipe/id539417298), [Google Play](https://play.google.com/store/apps/details?id=depollsoft.pitchperfect).
