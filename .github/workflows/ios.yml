@@ -42,9 +42,9 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    # iOS 26 first boot exceeds the 7 GB ARM runner's memory budget.
-    # The standard Intel runner provides 14 GB, without a larger-runner tier.
-    runs-on: macos-26-intel
+    # iOS 26 needs more than 7 GB; Intel hosts stalled during first boot.
+    # Native Apple Silicon with 14 GB passed the cold-boot/app-launch probe.
+    runs-on: macos-26-xlarge
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -52,7 +52,7 @@ jobs:
     env:
       # Set Xcode path - will be refined in Select Xcode version step
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      IOS_SIMULATOR_VERSION: '26.2'
+      IOS_SIMULATOR_VERSION: '26.5'
       # Native timeouts stop hangs; result validation also enforces actual duration.
       IOS_MAX_TEST_SECONDS: '30'
       # Reuse this job's device across sequential suites; always delete it below.
@@ -541,9 +541,9 @@ jobs:
     permissions:
       contents: read
       checks: write
-    # iOS 26 first boot exceeds the 7 GB ARM runner's memory budget.
-    # The standard Intel runner provides 14 GB, without a larger-runner tier.
-    runs-on: macos-26-intel
+    # iOS 26 needs more than 7 GB; Intel hosts stalled during first boot.
+    # Native Apple Silicon with 14 GB passed the cold-boot/app-launch probe.
+    runs-on: macos-26-xlarge
     timeout-minutes: 45
     # UI tests are heavier; skip on PRs to keep CI under 30 mins.
     if: >-
@@ -551,7 +551,7 @@ jobs:
       github.event_name == 'schedule'
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      IOS_SIMULATOR_VERSION: '26.2'
+      IOS_SIMULATOR_VERSION: '26.5'
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
 
@@ -814,7 +814,7 @@ jobs:
         working-directory: .
     env:
       DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-      IOS_SIMULATOR_VERSION: '26.2'
+      IOS_SIMULATOR_VERSION: '26.5'
 
     steps:
       - name: Download unit test results

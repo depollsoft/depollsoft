@@ -27,8 +27,8 @@ permissions:
   contents: read
 jobs:
   capture:
-    # iOS simulator startup and captures need the standard Intel runner's 14 GB RAM.
-    runs-on: ${{ inputs.platform == 'ios' && 'macos-26-intel' || 'ubuntu-latest' }}
+    # iOS 26 captures need the native Apple Silicon runner with 14 GB RAM.
+    runs-on: ${{ inputs.platform == 'ios' && 'macos-26-xlarge' || 'ubuntu-latest' }}
     timeout-minutes: 90
     concurrency:
       group: release-capture-${{ inputs.app }}-${{ inputs.platform }}
@@ -97,7 +97,7 @@ jobs:
         env:
           # Match ios.yml, including when the machine-wide xcode-select differs.
           DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-          IOS_SIMULATOR_VERSION: '26.2'
+          IOS_SIMULATOR_VERSION: '26.5'
         run: |
           "$RUNNER_TEMP/release-python/bin/python" scripts/release/capture.py \
             --app "$RELEASE_APP" --platform ios --output "build/release/assets/$RELEASE_APP/ios"

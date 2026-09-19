@@ -137,9 +137,11 @@ def boot(udid):
     result = subprocess.run([xcrun, 'simctl', 'bootstatus', udid, '-b'], check=True,
                             timeout=600, capture_output=True, text=True)
     print(result.stdout, end='', flush=True)
-    # CoreSimulator can report terminal migration failure with exit status zero.
+    # CoreSimulator can report migration failure with exit status zero even
+    # when native apps launch successfully. Let actual test/capture readiness
+    # checks decide success; preserve this diagnostic instead of rejecting it.
     if 'Data Migration Failed' in result.stdout:
-        raise RuntimeError(f'Simulator {udid} failed initial data migration')
+        print('CoreSimulator reported migration errors; native tests will verify readiness', flush=True)
     if result.stderr:
         print(result.stderr, file=sys.stderr, flush=True)
 

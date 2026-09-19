@@ -19,11 +19,10 @@ class SimulatorCleanupTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[0][-3:], ['bootstatus', 'owned-device', '-b'])
         self.assertEqual(run.call_args.kwargs['timeout'], 600)
 
-    def test_terminal_migration_failure_is_not_a_successful_boot(self):
+    def test_migration_diagnostic_does_not_override_successful_exit(self):
         result = subprocess.CompletedProcess(['simctl'], 0,
             'Status=3, isTerminal=YES\nData Migration Failed\n', '')
-        with patch('ios_simulator.subprocess.run', return_value=result), \
-                self.assertRaisesRegex(RuntimeError, 'failed initial data migration'):
+        with patch('ios_simulator.subprocess.run', return_value=result):
             boot('owned-device')
 
     def test_shutdown_accepts_stopped_devices_but_preserves_other_failures(self):
