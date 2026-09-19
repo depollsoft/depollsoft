@@ -1,0 +1,251 @@
+name: Build and test one iOS app
+on:
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        required: true
+      extended-ui:
+        type: boolean
+        default: false
+permissions:
+  contents: read
+defaults:
+  run:
+    working-directory: iOS
+jobs:
+  build:
+    name: Build iOS test products
+    runs-on: macos-26
+    timeout-minutes: 35
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      IOS_APP: ${{ inputs.app }}
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - name: Checkout
+
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode version
+        id: select_xcode
+        run: |
+          DEVELOPER_DIR="$(xcode-select -p 2>/dev/null || true)"
+          if [ -z "$DEVELOPER_DIR" ] || [ ! -d "$DEVELOPER_DIR" ]; then
+            DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+          fi
+          if [ ! -d "$DEVELOPER_DIR" ]; then
+            echo "No Xcode installation found!"
+            exit 1
+          fi
+
+
+          # Pin the active developer directory for subsequent steps.
+
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> $GITHUB_ENV
+          echo "$DEVELOPER_DIR/usr/bin" >> $GITHUB_PATH
+
+          # Expose tool paths as outputs so later steps can call the
+          # intended toolchain even if the runner's global developer
+          # directory points at CommandLineTools.
+          echo "developer_dir=$DEVELOPER_DIR" >> $GITHUB_OUTPUT
+          echo "xcrun=/usr/bin/xcrun" >> $GITHUB_OUTPUT
+          echo "xcodebuild=/usr/bin/xcodebuild" >> $GITHUB_OUTPUT
+
+          echo "Selected Xcode: $DEVELOPER_DIR"
+
+      - name: Show Xcode version
+        id: xcode
+        run: |
+          "${{ steps.select_xcode.outputs.xcodebuild }}" -version
+          XCODE_VERSION=$(
+            "${{ steps.select_xcode.outputs.xcodebuild }}" -version \
+              | head -1 | sed 's/Xcode //')
+          echo "version=$XCODE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install xcpretty
+        run: |
+          if ! command -v xcpretty >/dev/null 2>&1; then
+            gem install xcpretty --user-install --no-document
+            USER_GEM_BIN="$(ruby -e 'puts Gem.user_dir')/bin"
+
+            echo "$USER_GEM_BIN" >> "$GITHUB_PATH"
+          fi
+
+      - name: Cache SPM downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: hosted-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('iOS/iOS.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Resolve SPM dependencies
+        run: |
+          # SourcePackages/workspace-state.json embeds absolute paths. Never
+          # reuse it across runners with different work roots.
+          rm -rf SourcePackages
+          for attempt in 1 2; do
+            "${{ steps.select_xcode.outputs.xcodebuild }}" -resolvePackageDependencies \
+              -workspace iOS.xcworkspace \
+              -scheme "$IOS_APP" \
+              -clonedSourcePackagesDirPath SourcePackages
+            missing=0
+            for artifact in \
+              facebook-ios-sdk/FBSDKCoreKit/FBSDKCoreKit.xcframework \
+              facebook-ios-sdk/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.xcframework \
+              facebook-ios-sdk/FBAEMKit/FBAEMKit.xcframework \
+              facebook-ios-sdk/FBSDKLoginKit/FBSDKLoginKit.xcframework \
+              firebase-ios-sdk/FirebaseFirestoreInternal/FirebaseFirestoreInternal.xcframework \
+              swift-package-manager-google-mobile-ads/GoogleMobileAds/GoogleMobileAds.xcframework \
+              swift-package-manager-google-user-messaging-platform/UserMessagingPlatform/UserMessagingPlatform.xcframework \
+              grpc-binary/grpc/grpc.xcframework \
+              grpc-binary/grpcpp/grpcpp.xcframework \
+              grpc-binary/openssl_grpc/openssl_grpc.xcframework \
+              abseil-cpp-binary/absl/absl.xcframework; do
+              if [ ! -f "SourcePackages/artifacts/$artifact/Info.plist" ]; then
+                echo "Missing SPM binary artifact: $artifact"
+                missing=1
+              fi
+            done
+            if [ "$missing" -eq 0 ]; then
+              exit 0
+            fi
+            echo "SPM binary artifacts are incomplete; resolving cleanly."
+            rm -rf SourcePackages
+          done
+          echo "SPM binary artifacts are still missing after a clean resolve." >&2
+          exit 1
+
+      - name: Build app test targets
+        run: |
+          set -o pipefail
+          schemes=("$IOS_APP")
+          if [ "$IOS_APP" = pitchperfect ]; then schemes+=(pitchperfectlib); fi
+          for scheme in "${schemes[@]}"; do
+            xcodebuild build-for-testing -jobs 2 \
+              -derivedDataPath DerivedData -workspace iOS.xcworkspace \
+              -clonedSourcePackagesDirPath SourcePackages -scheme "$scheme" \
+              -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
+              CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
+          done
+
+      - name: Build optional Pitch Perfect UI tests
+        if: inputs.app == 'pitchperfect' && inputs.extended-ui
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -jobs 2 \
+            -derivedDataPath DerivedData -workspace iOS.xcworkspace \
+            -clonedSourcePackagesDirPath SourcePackages -scheme pitchperfectUITests \
+            -destination 'generic/platform=iOS Simulator' ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO SDKROOT=iphonesimulator | xcpretty --color
+
+      - name: Select independent test suites
+        id: matrix
+        env:
+          EXTENDED_UI: ${{ inputs.extended-ui }}
+        run: |
+          options=()
+          if [ "$EXTENDED_UI" = true ]; then options+=(--extended); fi
+          echo "matrix=$(python3 ../scripts/ci/ios_suites.py matrix --app "$IOS_APP" "${options[@]}")" >> "$GITHUB_OUTPUT"
+
+      - name: Package compiled tests
+        run: |
+          xcodebuild -version > xcode-version.txt
+          # Tar preserves executable modes and framework symlinks across runners.
+          tar -czf ios-test-products.tar.gz -C DerivedData/Build Products
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ios-test-products-${{ inputs.app }}
+          path: |
+            iOS/ios-test-products.tar.gz
+            iOS/xcode-version.txt
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  suites:
+    name: iOS tests (${{ matrix.suite }})
+    needs: build
+    runs-on: macos-26
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      IOS_SIMULATOR_VERSION: '26.5'
+      IOS_MAX_TEST_SECONDS: '30'
+      IOS_SUITE: ${{ matrix.suite }}
+      IOS_APP: ${{ inputs.app }}
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: ios-test-products-${{ inputs.app }}
+          path: iOS
+      - name: Restore matching native test products
+        run: |
+          diff -u xcode-version.txt <(xcodebuild -version)
+          mkdir -p DerivedData/Build
+          tar -xzf ios-test-products.tar.gz -C DerivedData/Build
+      - name: Create owned iOS Simulator
+        id: simulator
+        run: python3 ../scripts/ci/ios_simulator.py
+      - name: Run native suite
+        env:
+          SIMULATOR_DESTINATION: ${{ steps.simulator.outputs.destination }}
+        run: |
+          set -o pipefail
+          python3 ../scripts/ci/ios_suites.py run "$IOS_SUITE" "$SIMULATOR_DESTINATION" \
+            | tee "$IOS_SUITE-test.log"
+      - name: Verify actual XCTest results
+        if: always()
+        run: python3 ../scripts/ci/ios_test_results.py "$IOS_SUITE"
+      - name: Export suite coverage
+        if: always()
+        run: |
+          xcrun xccov view --report --json "$IOS_SUITE-results.xcresult" > "$IOS_SUITE-coverage.json"
+          xcrun xccov view --report "$IOS_SUITE-results.xcresult" > "$IOS_SUITE-coverage.txt"
+      - name: Upload test summaries and diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ios-test-results-${{ matrix.suite }}
+          path: |
+            iOS/*-summary.json
+            iOS/*-junit.xml
+            iOS/*-coverage.json
+            iOS/*-coverage.txt
+            iOS/*-test.log
+            iOS/simulator-*.txt
+          retention-days: 14
+      - name: Archive raw failure results
+        if: failure()
+        run: |
+          if [ -d "$IOS_SUITE-results.xcresult" ]; then
+            tar -czf "$IOS_SUITE-xcresults.tgz" "$IOS_SUITE-results.xcresult"
+          fi
+      - name: Upload raw failure results
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ios-xcresults-${{ matrix.suite }}
+          path: iOS/*-xcresults.tgz
+          retention-days: 7
+      - name: Delete owned iOS Simulator
+        if: always() && steps.simulator.outputs.udid != ''
+        timeout-minutes: 2
+        env:
+          SIMULATOR_UDID: ${{ steps.simulator.outputs.udid }}
+        run: python3 ../scripts/ci/ios_simulator.py --delete "$SIMULATOR_UDID"
+

@@ -71,7 +71,8 @@ jobs:
             // Match ios.yml's path filters. Copy-only release PRs do not run iOS CI.
             const testsExpected = files.some(({filename}) =>
               filename.startsWith('iOS/') || filename.startsWith('scripts/ci/') ||
-              filename === '.github/workflows/ios.yml');
+              filename === '.github/workflows/ios.yml' ||
+              filename === '.github/workflows/ios-app-tests.yml');
             if (!testsExpected) return;
             for (let attempt = 0; attempt < 180; attempt++) {
               const {data} = await github.rest.actions.listWorkflowRuns({

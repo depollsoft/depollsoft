@@ -654,7 +654,7 @@ final class TagMasterPolishUITests: XCTestCase {
         capture("settings-filters")
     }
 
-    func testDetailContentAndMediaTabs() throws {
+    func testDetailContentControls() throws {
         openTag()
         XCTAssertTrue(app.navigationBars.buttons["Favorite and Teachable options"].exists)
         XCTAssertTrue(app.navigationBars.buttons["Refresh"].exists)
@@ -667,6 +667,10 @@ final class TagMasterPolishUITests: XCTestCase {
             XCTAssertGreaterThanOrEqual(tab.frame.height, 44)
             XCTAssertTrue(tab.isHittable)
         }
+    }
+
+    func testDetailMediaTabs() throws {
+        openTag()
         app.buttons["Details"].tap()
         XCTAssertTrue(app.staticTexts["Last Refreshed"].existsOrWait(timeout: 5))
         app.buttons["Tracks"].tap()
