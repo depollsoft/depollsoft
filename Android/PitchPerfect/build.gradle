@@ -44,7 +44,11 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-functions'
     implementation 'com.google.firebase:firebase-crashlytics'
-    implementation 'com.google.android.gms:play-services-auth:22.0.0'
+    // play-services-auth 22.0.0 removed the legacy GoogleSignIn API that firebase-ui-auth 9.x
+    // still calls from GoogleSignInHandler, so tapping "Sign in with Google" crashed with
+    // NoClassDefFoundError (Crashlytics issue 588e5ce8). Stay on the last 21.x until FirebaseUI
+    // moves Google sign-in to Credential Manager.
+    implementation 'com.google.android.gms:play-services-auth:21.6.0'
     implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'

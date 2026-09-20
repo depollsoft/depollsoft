@@ -274,6 +274,13 @@ internal object ScreenTestSupport {
      * tests do not run because the module's `robolectric.properties` uses a plain `Application` to
      * keep Firebase and account startup out of unit tests. `Tag`'s disk cache reads that context,
      * so it is set directly, exactly as the existing `TabletListDetailTest` does.
+     *
+     * No test in this module may call `FirebaseApp.initializeApp(context)`: that reads the real
+     * `google-services.json`, and a PitchPerfect Robolectric run once uploaded a crash to the
+     * *production* Crashlytics project that way. Tests that need auth or Firestore mock the
+     * statics (see `SavedListReorderTest`); a test that genuinely needs a `FirebaseApp` must build
+     * one from synthetic options and disable collection, as PitchPerfect's `ensureFirebaseApp`
+     * does.
      */
     fun startClean() {
         blockNetwork()
