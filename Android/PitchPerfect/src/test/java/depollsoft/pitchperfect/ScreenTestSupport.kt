@@ -1,10 +1,14 @@
 package depollsoft.pitchperfect
 
+import android.content.Context
 import android.graphics.Rect
 import android.os.Looper
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import depollsoft.lib.util.Preferences
 import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
@@ -92,12 +96,6 @@ internal object ScreenTestSupport {
     }
 
     /**
-     * Robolectric does not run `FirebaseInitProvider`, so the default app that the real process has
-     * by the time any activity starts has to be created explicitly. It is built from the same
-     * generated `google-services.json` resources the packaged app reads, so the signed-out
-     * `Firebase.auth.currentUser == null` path the screens take is the production one.
-     */
-    /**
      * Undo a screen test without stranding work for the next one.
      *
      * Two things outlive a naive teardown. `AppCompatDelegate.setDefaultNightMode` posts a
@@ -118,9 +116,37 @@ internal object ScreenTestSupport {
         startFromFirstLaunch()
     }
 
+    /**
+     * Robolectric does not run `FirebaseInitProvider`, so the default app that the real process has
+     * by the time any activity starts has to be created explicitly.
+     *
+     * It is deliberately built from synthetic options instead of the generated
+     * `google-services.json` values. A Robolectric run once uploaded a
+     * `PackageManager$NameNotFoundException`, thrown by firebase-sessions on a Firebase background
+     * thread, to the *production* Crashlytics project: the manifest's
+     * `firebase_crashlytics_collection_enabled=false` is read through the same package-manager
+     * lookup that fails under Robolectric, so the SDK fell back to "collection enabled". Fake
+     * credentials mean no unit test can address a real Firebase project even if that happens again,
+     * and collection is additionally switched off explicitly so firebase-sessions never starts
+     * publishing. `Firebase.auth.currentUser` is still null with these options, which is exactly the
+     * signed-out path the screens take.
+     */
     fun ensureFirebaseApp() {
-        if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
-            FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        if (FirebaseApp.getApps(context).isEmpty()) {
+            FirebaseApp.initializeApp(context, UNIT_TEST_FIREBASE_OPTIONS)
         }
+        // The nullable overload; the primitive-boolean one is deprecated.
+        FirebaseApp.getInstance().setDataCollectionDefaultEnabled(false as Boolean?)
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false)
+        FirebaseAnalytics.getInstance(context).setAnalyticsCollectionEnabled(false)
     }
+
+    /** Well-formed but meaningless credentials: they belong to no Firebase project at all. */
+    private val UNIT_TEST_FIREBASE_OPTIONS =
+        FirebaseOptions.Builder()
+            .setApplicationId("1:000000000000:android:0000000000000000")
+            .setApiKey("AIzaSyUnitTestUnitTestUnitTestUnitTestUnit")
+            .setProjectId("pitchperfect-unit-test")
+            .build()
 }
