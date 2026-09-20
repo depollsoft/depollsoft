@@ -146,7 +146,8 @@ internal object ScreenTestSupport {
     private val UNIT_TEST_FIREBASE_OPTIONS =
         FirebaseOptions.Builder()
             .setApplicationId("1:000000000000:android:0000000000000000")
-            .setApiKey("AIzaSyUnitTestUnitTestUnitTestUnitTestUnit")
+            // Shaped like a real key (`A[\w-]{38}`) so Firebase Installations accepts it offline.
+            .setApiKey("AIzaSyUnitTestUnitTestUnitTestUnitTest0")
             .setProjectId("pitchperfect-unit-test")
             .build()
 }
