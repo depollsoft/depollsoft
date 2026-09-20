@@ -2,18 +2,13 @@
   "schema": 1,
   "app": "pitchperfect",
   "platforms": {
-    "ios": {
-      "version": "3.0.1",
-      "build": 1789857723
-    },
     "android": {
-      "version": "5.0.1",
-      "build": 1789857723
+      "version": "5.0.2",
+      "build": 1789881733
     }
   },
-  "notes": "Choose whether to share usage analytics and crash reports, with separate controls that are off until you enable them. Change your choices at any time in Settings.",
+  "notes": "Fixes a crash when choosing Sign in with Google.",
   "since": {
-    "ios": "0573576a091fc3c048dc332b263822a6383a19ed",
-    "android": "2c93a61e817e60917167e7269d62a003b886d6e0"
+    "android": "752891caaf56c933bd50aa3f4be7abb2c28aff8c"
   }
 }
