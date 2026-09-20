@@ -21,6 +21,7 @@ import depollsoft.tagmaster.ScreenTestSupport.idle
 import depollsoft.tagmaster.ScreenTestSupport.scrollTo
 import org.junit.After
 import org.junit.Assert.assertEquals
+import androidx.appcompat.widget.Toolbar
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -483,6 +484,38 @@ class TagDetailActivityScreenTest {
             "the picker shows the new list, checked",
             rows(picker).single { it.rowName() == "Afterglow set" }.rowChecked(),
         )
+    }
+
+    /** The toolbar's own, prepared menu: what the user sees, not a freshly inflated copy. */
+    private fun TagDetailActivity.toolbarMenu(): Menu = findViewById<Toolbar>(R.id.toolbar).menu
+
+    @Test
+    fun theToolbarHeartFollowsAFavoriteAddedFromThePicker() {
+        val activity = launch()
+        assertTrue(activity.toolbarMenu().findItem(R.id.addFavoriteMenuItem).isVisible)
+
+        rows(openPicker(activity)).single { it.rowName() == activity.getString(R.string.Favorites) }.performClick()
+        idle()
+
+        assertTrue(activity.toolbarMenu().findItem(R.id.removeFavoriteMenuItem).isVisible)
+        assertFalse(activity.toolbarMenu().findItem(R.id.addFavoriteMenuItem).isVisible)
+    }
+
+    @Test
+    fun theToolbarPeopleIconFollowsTeachableChangedFromThePicker() {
+        val activity = launch()
+        assertTrue(activity.toolbarMenu().findItem(R.id.addTeachableTagMenuItem).isVisible)
+
+        val dialog = openPicker(activity)
+        rows(dialog).single { it.rowName() == activity.getString(R.string.TeachableTags) }.performClick()
+        idle()
+        assertTrue(activity.toolbarMenu().findItem(R.id.removeTeachableTagMenuItem).isVisible)
+
+        // And back again, still from the picker rather than the toolbar itself.
+        rows(dialog).single { it.rowName() == activity.getString(R.string.TeachableTags) }.performClick()
+        idle()
+        assertTrue(activity.toolbarMenu().findItem(R.id.addTeachableTagMenuItem).isVisible)
+        assertFalse(activity.toolbarMenu().findItem(R.id.removeTeachableTagMenuItem).isVisible)
     }
 
     @Test

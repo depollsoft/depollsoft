@@ -275,6 +275,11 @@
 }
 
 - (void)sourceListMayHaveChanged:(NSNotification *)notification {
+    if ([notification.name isEqualToString:@"tagmaster.userDataChanged"]) {
+        // The picker, a chip, a list screen or another device can change which lists this tag is
+        // in; the heart and people buttons must follow whether or not a list opened this tag.
+        [self refreshSavedStateButtons];
+    }
     if (!self.source) return;
     if ([notification.name isEqualToString:TMTagListDidChangeNotification] && notification.object != self.source) return;
     [self updateLoadingState];

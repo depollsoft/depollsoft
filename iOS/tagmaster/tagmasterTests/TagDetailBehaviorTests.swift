@@ -161,6 +161,27 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertNotNil(item?.image)
     }
 
+    func testTheWideLayoutHeartAndPeopleButtonsFollowChangesMadeFromThePickerOrElsewhere() throws {
+        seedCachedTag(id: 1809)
+        let detail = loadedDetail(tagId: 1809)
+        let heart = try XCTUnwrap(detail.value(forKey: "favoriteBarButton") as? UIBarButtonItem)
+        let people = try XCTUnwrap(detail.value(forKey: "teachableBarButton") as? UIBarButtonItem)
+        XCTAssertEqual(heart.accessibilityLabel, "Add Favorite")
+        XCTAssertEqual(people.accessibilityLabel, "Mark as Teachable")
+
+        // The picker, a chip or another device adds the tag: no toolbar toggle is involved.
+        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
+        TMTagLists.add(1809, to: TMTagLists.teachableKey)
+        settle()
+        XCTAssertEqual(heart.accessibilityLabel, "Remove Favorite")
+        XCTAssertEqual(people.accessibilityLabel, "Unmark as Teachable")
+
+        TMTagLists.remove(1809, from: TMTagLists.favoriteKey)
+        settle()
+        XCTAssertEqual(heart.accessibilityLabel, "Add Favorite")
+        XCTAssertEqual(people.accessibilityLabel, "Unmark as Teachable")
+    }
+
     // MARK: - The chips under a tag's title
 
     private func chips(in summary: DPTagSummaryController) -> TMListChipsView {
