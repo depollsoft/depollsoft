@@ -63,10 +63,10 @@ dependencies {
     testImplementation 'androidx.test:runner:1.7.0'
     testImplementation 'androidx.fragment:fragment-testing:1.9.0'
 
-    // The instrumented residue is the store-screenshot capture pass and the FirebaseUI
-    // bytecode-patch check, which need a real device. Neither uses Espresso, activity rules or
-    // fragment-testing any more: those suites now run on the JVM under Robolectric in src/test.
+    // Store captures, FirebaseUI compatibility, and privacy consent still run on a device.
+    // PrivacyConsentTest uses Espresso to exercise the consent controls.
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     androidTestImplementation 'androidx.test:core:1.7.0'
     androidTestImplementation 'androidx.test:runner:1.7.0'
     

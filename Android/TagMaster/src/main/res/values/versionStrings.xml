@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">Version 6.0.0</string>
-    <string name="VersionNumber">6.0.0</string>
+    <string name="app_version">Version 6.0.1</string>
+    <string name="VersionNumber">6.0.1</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 6.0.1</h5>
+                    - Choose whether to share usage analytics and crash reports. Both are off until you enable them.<br />
+                    - Change either choice at any time in Settings.<br />
+                    - Facebook sign-in now completes without restarting the app.<br />
+            </p>
             <p>
                     <h5>Version 6.0.0</h5>
                     - Keep tag ID validation visible above the keyboard on small screens.<br />

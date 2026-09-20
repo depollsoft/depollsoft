@@ -32,6 +32,8 @@ class StoreScreenshotTest {
     @Test fun captureStoreScreenshots() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("storeScreenshots") == "true")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
+        // Capture a returning user's library with optional telemetry declined.
+        depollsoft.lib.privacy.PrivacyChoices(context).save(analytics = false, crashes = false)
         // Store scenes show a returning user's library, after viewing the changelog.
         depollsoft.lib.util.Preferences.set("depollsoft.lib.LastVersionSeen",
             context.packageManager.getPackageInfo(context.packageName, 0).versionCode)
