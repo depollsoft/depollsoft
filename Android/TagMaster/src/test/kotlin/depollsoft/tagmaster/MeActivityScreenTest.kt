@@ -2,7 +2,10 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import com.google.android.material.textfield.TextInputEditText
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.trackable.TrackableCollection
@@ -20,6 +23,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 
 /**
  * The Home screen, migrated from the instrumented `MeActivityTest` and `FavoritesFlowTest`.
@@ -341,6 +345,133 @@ class MeActivityScreenTest {
         idle()
         assertOpened(created.get(), TagSearchActivity::class.java)
         assertFalse("Home stays open behind Search", created.get().isFinishing)
+    }
+
+    // ==================== The Lists group ====================
+
+    private fun MeActivity.listsContainer(): ViewGroup = header().findViewById(R.id.listsContainer)
+
+    private fun MeActivity.listRows(): List<View> =
+        listsContainer().let { group -> (0 until group.childCount).map { group.getChildAt(it) } }
+
+    private fun View.listName(): String = findViewById<TextView>(R.id.listRowName).text.toString()
+
+    private fun View.listDetail(): String = findViewById<TextView>(R.id.listRowDetail).text.toString()
+
+    @Test
+    fun theListsGroupHeadsTheTeachableListAndTheUsersOwn() {
+        val key = TagLists.create("Afterglow set")
+        ListModel(key).add(fixture.id)
+        val activity = launch()
+        assertDisplayed("the Lists heading", activity.header().findViewById(R.id.listsHeading))
+        assertEquals(
+            activity.getString(R.string.lists_heading),
+            activity.header().findViewById<TextView>(R.id.listsHeading).text.toString(),
+        )
+        assertDisplayed("the teachable row", activity.header().findViewById(R.id.teachableButton))
+        assertDisplayed("the new-list row", activity.header().findViewById(R.id.newListButton))
+        assertEquals(listOf("Afterglow set"), activity.listRows().map { it.listName() })
+        assertEquals("1 tag", activity.listRows().single().listDetail())
+    }
+
+    @Test
+    fun aListRowCountsItsTagsAsTheyChange() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        assertEquals("0 tags", activity.listRows().single().listDetail())
+        ListModel(key).add(fixture.id)
+        ListModel(key).add(fixture.id + 1)
+        idle()
+        assertEquals("2 tags", activity.listRows().single().listDetail())
+    }
+
+    @Test
+    fun theListsGroupFollowsCreationsRenamesAndDeletions() {
+        val activity = launch()
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
+
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        idle()
+        assertEquals(listOf("Afterglow set", "Chorus warmups"), activity.listRows().map { it.listName() })
+
+        TagLists.rename(first, "Afterglow")
+        idle()
+        assertEquals(listOf("Afterglow", "Chorus warmups"), activity.listRows().map { it.listName() })
+
+        TagLists.moveDown(first)
+        idle()
+        assertEquals(listOf("Chorus warmups", "Afterglow"), activity.listRows().map { it.listName() })
+
+        TagLists.delete(second)
+        idle()
+        assertEquals(listOf("Afterglow"), activity.listRows().map { it.listName() })
+    }
+
+    @Test
+    fun aListRowOpensThatList() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        activity.listRows().single().performClick()
+        idle()
+        val started = requireNotNull(shadowOf(activity).nextStartedActivity)
+        assertEquals(TagListActivity::class.java.name, started.component!!.className)
+        assertEquals(key, started.getStringExtra(TagListActivity.EXTRA_LIST_KEY))
+    }
+
+    @Test
+    fun theNewListRowNamesAndCreatesAList() {
+        val activity = launch()
+        activity.header().findViewById<View>(R.id.newListButton).performClick()
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        requireNotNull(dialog.findViewById<TextInputEditText>(R.id.listNameInput)).setText("Afterglow set")
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+        assertEquals("Afterglow set", TagLists.name(TagLists.customKeys.single()))
+        assertEquals(listOf("Afterglow set"), activity.listRows().map { it.listName() })
+    }
+
+    @Test
+    fun everyRowActionIsAlsoAnAccessibilityAction() {
+        TagLists.create("Afterglow set")
+        TagLists.create("Chorus warmups")
+        val activity = launch()
+        val labels =
+            activity.listRows().map { row ->
+                row.createAccessibilityNodeInfo()!!.actionList.mapNotNull { it.label?.toString() }
+            }
+        assertTrue("the first list can move down but not up", labels[0].contains(activity.getString(R.string.MoveDown)))
+        assertFalse(labels[0].contains(activity.getString(R.string.MoveUp)))
+        assertTrue(labels[1].contains(activity.getString(R.string.MoveUp)))
+        assertFalse("the last list cannot move down", labels[1].contains(activity.getString(R.string.MoveDown)))
+        for (row in labels) {
+            assertTrue(row.contains(activity.getString(R.string.list_row_rename)))
+            assertTrue(row.contains(activity.getString(R.string.list_row_delete)))
+        }
+        assertTrue("and a long press opens the same menu", activity.listRows().first().isLongClickable)
+    }
+
+    @Test
+    fun deletingAListFromHomeConfirmsWithItsTagCount() {
+        val key = TagLists.create("Afterglow set")
+        ListModel(key).add(fixture.id)
+        val activity = launch()
+        val delete =
+            activity
+                .listRows()
+                .single()
+                .createAccessibilityNodeInfo()!!
+                .actionList
+                .single { it.label == activity.getString(R.string.list_row_delete) }
+        assertTrue(androidx.core.view.ViewCompat.performAccessibilityAction(activity.listRows().single(), delete.id, null))
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message)!!.text.toString().contains("1 tag"))
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+        assertTrue(TagLists.customKeys.isEmpty())
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
     }
 
     @Test

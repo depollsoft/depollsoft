@@ -3,12 +3,12 @@ package depollsoft.tagmaster
 import com.bindroid.trackable.*
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import depollsoft.lib.util.Preferences
-import java.lang.ref.WeakReference
 
 class ListModel private constructor(
     val listName: String,
@@ -108,10 +108,11 @@ class ListModel private constructor(
                 mapOf(
                     "lists" to
                         mapOf(
-                            listName to if (ids.isEmpty()) FieldValue.delete() else ids,
+                            listName to if (ids.isEmpty()) FieldValue.delete() else ids.toList(),
                         ),
                 ),
-                SetOptions.mergeFields("lists.$listName"),
+                // A FieldPath keeps list keys with dots or other punctuation intact.
+                SetOptions.mergeFieldPaths(listOf(FieldPath.of("lists", listName))),
             )
         }
     }
@@ -143,16 +144,12 @@ class ListModel private constructor(
             }
         }
 
-        private val modelInstances: MutableMap<String, WeakReference<ListModel>> = mutableMapOf()
+        // Held strongly: a model is tiny, there is one per list, and observers track its `ids`
+        // collection. A weak cache let an empty list (no stored preference) be rebuilt around a
+        // fresh collection once the old model was collected, silently orphaning those observers.
+        private val modelInstances: MutableMap<String, ListModel> = mutableMapOf()
 
-        operator fun invoke(listName: String): ListModel {
-            var model = modelInstances[listName]?.get()
-            if (model == null) {
-                model = ListModel(listName)
-                modelInstances[listName] = WeakReference(model)
-            }
-            return model
-        }
+        operator fun invoke(listName: String): ListModel = modelInstances.getOrPut(listName) { ListModel(listName) }
 
         private fun migrateOldFavorites() {
             val favoritesKey = "tagmaster.Favorites"
@@ -180,7 +177,27 @@ class ListModel private constructor(
             }
         }
 
-        private var shouldStore = true
+        internal var shouldStore = true
+            private set
+
+        /** The keys of every list with at least one tag on this device. */
+        internal fun storedKeys(): Set<String> = preferences.keys.toSet()
+
+        /**
+         * Empties [listName] on this device without writing to Firestore. [TagLists.delete] uses it
+         * and then deletes the cloud field together with the list's metadata in one write.
+         */
+        internal fun discard(listName: String) {
+            val wasStoring = shouldStore
+            shouldStore = false
+            try {
+                ListModel.invoke(listName).ids.clear()
+            } finally {
+                shouldStore = wasStoring
+            }
+            preferences.remove(listName)
+            storeValue(false)
+        }
 
         /**
          * For testing: disable Firebase storage to allow unit testing without Firebase initialization.
@@ -191,7 +208,10 @@ class ListModel private constructor(
             shouldStore = !enabled
         }
 
-        private fun fromFirestore(data: Map<*, *>) {
+        private fun fromFirestore(
+            data: Map<*, *>,
+            info: Map<*, *>?,
+        ) {
             shouldStore = false
             try {
                 // Remove lists that aren't in the data
@@ -216,6 +236,7 @@ class ListModel private constructor(
                         cur.ids.replaceBackingStore(newValue)
                     }
                 }
+                TagLists.applyRemote(info, data.keys.filterIsInstance<String>())
             } finally {
                 shouldStore = true
             }
@@ -228,7 +249,8 @@ class ListModel private constructor(
                 val userDoc = Firebase.firestore.document("users/${user.uid}")
                 userDoc.set(
                     mapOf(
-                        "lists" to preferences,
+                        "lists" to preferences.mapValues { it.value.toList() },
+                        "listInfo" to TagLists.remoteInfo(),
                     ),
                     SetOptions.merge(),
                 )
@@ -256,6 +278,7 @@ class ListModel private constructor(
 
                         fromFirestore(
                             snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>(),
+                            snapshot.get("listInfo") as? Map<*, *>,
                         )
                     }
             }

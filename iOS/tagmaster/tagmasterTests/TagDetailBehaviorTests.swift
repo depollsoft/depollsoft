@@ -105,7 +105,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         detail.perform(Selector(("showActions")))
         let sheet = try? XCTUnwrap(detail.presented.last as? UIAlertController)
         XCTAssertEqual(sheet?.actions.map { $0.title ?? "" },
-                       ["Add Favorite", "Mark as Teachable", "Cancel"])
+                       ["Add Favorite", "Mark as Teachable", "Add to List…", "Cancel"])
         XCTAssertEqual(sheet?.actions.last?.style, .cancel)
 
         detail.perform(Selector(("toggleFavorite")))
@@ -115,7 +115,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         detail.perform(Selector(("showActions")))
         let afterFavoriting = try? XCTUnwrap(detail.presented.last as? UIAlertController)
         XCTAssertEqual(afterFavoriting?.actions.map { $0.title ?? "" },
-                       ["Remove Favorite", "Mark as Teachable", "Cancel"])
+                       ["Remove Favorite", "Mark as Teachable", "Add to List…", "Cancel"])
 
         detail.perform(Selector(("toggleFavorite")))
         XCTAssertEqual(DPAppDelegate.favorites(), [])
@@ -129,6 +129,175 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(DPAppDelegate.teachable(), [1809])
         detail.perform(Selector(("toggleTeachable")))
         XCTAssertEqual(DPAppDelegate.teachable(), [])
+    }
+
+    // MARK: - Add to list
+
+    func testTheTagActionsOpenTheListPicker() {
+        seedCachedTag(id: 1809)
+        let detail = TMPresentationCapturingDetail()
+        detail.tagId = 1809
+        mountInNavigation(detail)
+        waitUntil("detail loads") { detail.value(forKey: "tag") != nil }
+        settle()
+
+        detail.perform(Selector(("showActions")))
+        let sheet = try? XCTUnwrap(detail.presented.last as? UIAlertController)
+        sheet?.tm_fire("Add to List…")
+
+        let picker = (detail.presented.last as? UINavigationController)?.viewControllers.first
+        XCTAssertTrue(picker is TMListPickerController)
+        XCTAssertEqual((picker as? TMListPickerController)?.tagId, 1809)
+        detail.presented.removeAll()
+    }
+
+    func testTheDetailCarriesAnAddToListButtonForTheWideLayout() {
+        seedCachedTag(id: 1809)
+        let detail = loadedDetail(tagId: 1809)
+        let item = try? XCTUnwrap(detail.value(forKey: "addToListBarButton") as? UIBarButtonItem)
+
+        XCTAssertEqual(item?.accessibilityLabel, "Add to list")
+        XCTAssertEqual(item?.isEnabled, true)
+        XCTAssertNotNil(item?.image)
+    }
+
+    // MARK: - The chips under a tag's title
+
+    private func chips(in summary: DPTagSummaryController) -> TMListChipsView {
+        summary.value(forKey: "listChips") as! TMListChipsView
+    }
+
+    private func chipTitles(_ view: TMListChipsView) -> [String] {
+        view.subviews.compactMap { ($0 as? UIButton)?.configuration?.title }
+    }
+
+    private func chip(_ view: TMListChipsView, identifier: String) -> UIButton? {
+        view.subviews.first { $0.accessibilityIdentifier == identifier } as? UIButton
+    }
+
+    func testTheChipsNameEveryListTheTagIsOnAndAlwaysOfferToAddAnother() {
+        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        let tag = seedCachedTag(id: 1809, title: "Lost")
+        let summary = self.summary(for: tag)
+        let chips = self.chips(in: summary)
+
+        XCTAssertEqual(chipTitles(chips), ["Favorites", "Afterglow set", "Add to list"])
+        XCTAssertEqual(chips.accessibilityLabel, "In lists")
+        XCTAssertEqual(chips.accessibilityIdentifier, "summary.chips")
+        XCTAssertNotNil(chip(chips, identifier: "summary.chip.favorite"))
+        XCTAssertNotNil(chip(chips, identifier: "summary.chip.afterglow-set-k3f9"))
+        XCTAssertNotNil(chip(chips, identifier: "summary.chip.add"))
+        for capsule in chips.subviews {
+            XCTAssertGreaterThanOrEqual(capsule.bounds.height, 44, "Every chip is a full touch target")
+        }
+    }
+
+    func testATagOnNoListStillOffersAddToList() {
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+        XCTAssertEqual(chipTitles(chips), ["Add to list"])
+        XCTAssertFalse(chips.isHidden)
+    }
+
+    func testTheChipsFollowChangesMadeAnywhereElse() {
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+
+        DPAppDelegate.addTeachable(1809)
+        XCTAssertEqual(chipTitles(chips), ["Teachable Tags", "Add to list"])
+
+        DPAppDelegate.removeTeachable(1809)
+        XCTAssertEqual(chipTitles(chips), ["Add to list"])
+    }
+
+    func testTappingAChipOpensThatList() {
+        seedLists(teachable: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        let tag = seedCachedTag(id: 1809)
+        let summary = DPTagSummaryController()
+        summary.busyIndicator = DPBusyIndicator()
+        summary.tag = tag
+        let navigation = mountCapturingPushes(summary)
+        settle()
+        let chips = self.chips(in: summary)
+
+        chip(chips, identifier: "summary.chip.teachable")?.sendActions(for: .touchUpInside)
+        XCTAssertTrue(navigation.pushed.last is DPTeachableTagsController)
+
+        chip(chips, identifier: "summary.chip.afterglow-set-k3f9")?.sendActions(for: .touchUpInside)
+        XCTAssertEqual((navigation.pushed.last as? TMTagListController)?.listKey, "afterglow-set-k3f9")
+    }
+
+    func testAChipRemovesItsTagFromThatListThroughItsAccessibilityAction() {
+        seedLists(favorite: [1809])
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+        let favorite = try? XCTUnwrap(chip(chips, identifier: "summary.chip.favorite"))
+
+        let action = try? XCTUnwrap(favorite?.accessibilityCustomActions?.first)
+        XCTAssertEqual(action?.name, "Remove from Favorites")
+        _ = action?.actionHandler?(action!)
+
+        XCTAssertEqual(DPAppDelegate.favorites(), [])
+        XCTAssertEqual(chipTitles(chips), ["Add to list"])
+    }
+
+    func testTheFavoritesChipGoesBackToHomeWhereFavoritesLive() {
+        seedLists(favorite: [1809])
+        let tag = seedCachedTag(id: 1809)
+        let home = DPHomeViewController(style: .grouped)
+        let summary = DPTagSummaryController()
+        summary.busyIndicator = DPBusyIndicator()
+        summary.tag = tag
+        let navigation = UINavigationController(rootViewController: home)
+        navigation.pushViewController(summary, animated: false)
+        mount(navigation)
+        settle()
+
+        let chips = self.chips(in: summary)
+        chip(chips, identifier: "summary.chip.favorite")?.sendActions(for: .touchUpInside)
+        waitUntil("Home comes back to the top of the stack") { navigation.topViewController === home }
+    }
+
+    func testTheAddChipOpensThePicker() {
+        let tag = seedCachedTag(id: 1809)
+        let summary = TMPresentationCapturingSummary()
+        summary.busyIndicator = DPBusyIndicator()
+        summary.tag = tag
+        mountInNavigation(summary)
+        settle()
+
+        let chips = summary.value(forKey: "listChips") as! TMListChipsView
+        (chips.subviews.first { $0.accessibilityIdentifier == "summary.chip.add" } as? UIButton)?
+            .sendActions(for: .touchUpInside)
+
+        let picker = (summary.presented.last as? UINavigationController)?.viewControllers.first
+        XCTAssertEqual((picker as? TMListPickerController)?.tagId, 1809)
+        summary.presented.removeAll()
+    }
+
+    func testTheChipsWrapOntoMoreThanOneLineWhenTheyHaveTo() {
+        seedLists(favorite: [1809], teachable: [1809], lists: [
+            (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809]),
+            (key: "chorus-warmups-aa12", name: "Chorus warmups for Tuesday evening", ids: [1809])
+        ])
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+
+        XCTAssertEqual(chipTitles(chips).count, 5)
+        let lines = Set(chips.subviews.map { $0.frame.minY })
+        XCTAssertGreaterThan(lines.count, 1, "Five capsules do not fit one phone-width line")
+        for capsule in chips.subviews {
+            XCTAssertLessThanOrEqual(capsule.frame.maxX, chips.bounds.width + 0.5, "No capsule overflows the row")
+        }
+        XCTAssertGreaterThan(chips.bounds.height, 44, "The row grew to hold both lines")
+    }
+
+    func testCaptureTheSummaryChips() {
+        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        let tag = seedCachedTag(id: 1809, title: "Lost")
+        let summary = self.summary(for: tag)
+        capture("ios-summary-chips")
+        XCTAssertFalse(self.chips(in: summary).isHidden)
     }
 
     // MARK: - Share

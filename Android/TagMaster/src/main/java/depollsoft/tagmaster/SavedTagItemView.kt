@@ -99,7 +99,7 @@ abstract class SavedTagItemView :
         private set
     private var editingPosition = 0
     private var editingCount = 0
-    private var editingList = ""
+    private var editingList: CharSequence = ""
     private val editingActions = mutableListOf<Int>()
     val dragHandle: View get() = findViewById(R.id.savedTagDragHandle)
     val removeControl: View get() = findViewById(R.id.savedTagRemove)
@@ -111,7 +111,7 @@ abstract class SavedTagItemView :
         editing: Boolean,
         position: Int,
         count: Int,
-        list: String,
+        list: CharSequence,
         remove: () -> Unit,
         move: (Int) -> Boolean,
         startDrag: () -> Unit,

@@ -303,9 +303,9 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
     (void)home.view;
     
     UITableView *table = home.tableView;
-    XCTAssertEqual([home numberOfSectionsInTableView:table], 2);
-    XCTAssertEqual([home tableView:table numberOfRowsInSection:1], 1);
-    UITableViewCell *favoriteCell = [home tableView:table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:1]];
+    XCTAssertEqual([home numberOfSectionsInTableView:table], 3);
+    XCTAssertEqual([home tableView:table numberOfRowsInSection:TMHomeFavoritesSection], 1);
+    UITableViewCell *favoriteCell = [home tableView:table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeFavoritesSection]];
     XCTAssertNotNil(favoriteCell);
     
     NSArray *items = [home navigationItems];
@@ -832,7 +832,7 @@ TM_CAPTURE_IMPL
     XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music unavailable"]);
     XCTAssertTrue([cell.accessibilityLabel containsString:@"Learning tracks unavailable"]);
     DPHomeViewController *home = [DPHomeViewController new]; [home loadViewIfNeeded];
-    XCTAssertEqual([home tableView:home.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:1]], UITableViewAutomaticDimension);
+    XCTAssertEqual([home tableView:home.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeFavoritesSection]], UITableViewAutomaticDimension);
 }
 
 - (void)testTeachableAlwaysDiscoverableAndEmptyGuidance {
@@ -840,7 +840,9 @@ TM_CAPTURE_IMPL
     @try {
         [DPAppDelegate setTeachable:@[]];
         DPHomeViewController *home = [DPHomeViewController new]; [home loadViewIfNeeded];
-        XCTAssertTrue([[[home navigationItems] valueForKey:@"title"] containsObject:@"Teachable Tags"]);
+        UITableViewCell *teachableRow = [home tableView:home.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:TMHomeListsSection]];
+        XCTAssertEqualObjects(teachableRow.textLabel.text, @"Teachable Tags");
+        XCTAssertEqualObjects([home tableView:home.tableView titleForHeaderInSection:TMHomeListsSection], @"Lists");
         DPTeachableTagsController *teachable = [DPTeachableTagsController new]; [teachable loadViewIfNeeded];
         XCTAssertEqual([teachable tableView:teachable.tableView numberOfRowsInSection:0], 0);
         UIView *header = teachable.tableView.tableHeaderView;
@@ -1577,13 +1579,14 @@ TM_CAPTURE_IMPL
     [detail loadViewIfNeeded];
     [self finish:0 tag:[self tag:1809]];
     // Beside a list the bar reads, leading to trailing: previous, next, favorite, teachable,
-    // refresh, share — direct toggles like Android's pane, not the phone's action sheet.
+    // add to list, refresh, share — direct toggles like Android's pane, not the phone's action sheet.
     NSArray<UIBarButtonItem *> *items = detail.navigationItem.rightBarButtonItems;
     UIBarButtonItem *favorite = [detail valueForKey:@"favoriteBarButton"];
     UIBarButtonItem *teachable = [detail valueForKey:@"teachableBarButton"];
-    XCTAssertEqual(items.count, 6);
-    XCTAssertEqualObjects([items subarrayWithRange:NSMakeRange(2, 4)],
-                          (@[teachable, favorite, [detail valueForKey:@"nextTagBarButton"], [detail valueForKey:@"previousTagBarButton"]]));
+    XCTAssertEqual(items.count, 7);
+    XCTAssertEqualObjects([items subarrayWithRange:NSMakeRange(2, 5)],
+                          (@[[detail valueForKey:@"addToListBarButton"], teachable, favorite,
+                             [detail valueForKey:@"nextTagBarButton"], [detail valueForKey:@"previousTagBarButton"]]));
     XCTAssertFalse([items containsObject:[detail valueForKey:@"actionBarButton"]]);
     XCTAssertEqualObjects(favorite.accessibilityLabel, @"Add Favorite");
     XCTAssertEqualObjects(teachable.accessibilityLabel, @"Mark as Teachable");
@@ -1750,7 +1753,7 @@ TM_CAPTURE_IMPL
             XCTAssertEqualObjects([list tm_listedTagIds], (@[@42, @99]));
             [list.tableView reloadData];
             [list performSelector:@selector(tm_syncSelectionForSplit)];
-            NSIndexPath *selected = [NSIndexPath indexPathForRow:0 inSection:list == home ? 1 : 0];
+            NSIndexPath *selected = [NSIndexPath indexPathForRow:0 inSection:list == home ? TMHomeFavoritesSection : 0];
             XCTAssertEqualObjects(list.tableView.indexPathForSelectedRow, selected);
             XCTAssertFalse(list.clearsSelectionOnViewWillAppear);
             [[self tabletDetail:split] stepToNextTag];
@@ -2091,7 +2094,7 @@ TM_CAPTURE_IMPL
     UIScrollView *scroll = (UIScrollView *)grid.superview.superview;
     XCTAssertTrue([scroll isKindOfClass:UIScrollView.class]);
     CGFloat expectedHeight = 8; // Scroll content's top/bottom inset.
-    for (NSString *key in @[@"titleLabel", @"akaLabel", @"versionLabel", @"savedStatusLabel", @"tagIdLabel", @"partsLabel", @"typeLabel",
+    for (NSString *key in @[@"titleLabel", @"akaLabel", @"versionLabel", @"tagIdLabel", @"partsLabel", @"typeLabel",
                              @"classicTagNumberLabel", @"lyricsLabel", @"notesLabel"]) {
         UILabel *label = [summary valueForKey:key];
         BOOL hidden = NO;
@@ -2108,9 +2111,9 @@ TM_CAPTURE_IMPL
         expectedHeight += ceil(textHeight);
     }
     // Allow the rating, key and sheet controls plus ordinary padding, not viewport-sized slack.
-    for (NSString *key in @[@"ratingButton", @"keyButton", @"sheetMusicButton"]) {
+    for (NSString *key in @[@"ratingButton", @"keyButton", @"sheetMusicButton", @"listChips"]) {
         UIView *control = [summary valueForKey:key];
-        if ([control isDescendantOfView:grid]) expectedHeight += control.bounds.size.height;
+        if ([control isDescendantOfView:grid] && !control.hidden) expectedHeight += control.bounds.size.height;
     }
     DPPitchPipeButton *pitch = [summary valueForKey:@"keyButton"];
     CGFloat keyHeight = [pitch.button sizeThatFits:CGSizeMake(pitch.button.bounds.size.width, CGFLOAT_MAX)].height;
@@ -2139,7 +2142,7 @@ TM_CAPTURE_IMPL
         if (!hidden) expectedHeight += ceil([header sizeThatFits:CGSizeMake(header.bounds.size.width, CGFLOAT_MAX)].height);
     }
     // Nine section/pair gaps (Tag ID joined the facts), five within-block gaps, and the 8pt identity-to-facts gap.
-    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 9 * 16 + 5 * 4 + 8);
+    XCTAssertLessThanOrEqual(scroll.contentSize.height, expectedHeight + 9 * 16 + 6 * 4 + 8);
     for (NSString *name in @[@"lyrics", @"notes"]) {
         UILabel *header = [summary valueForKey:[name stringByAppendingString:@"Header"]];
         UILabel *body = [summary valueForKey:[name stringByAppendingString:@"Label"]];
@@ -2769,9 +2772,9 @@ TM_CAPTURE_IMPL
             ids = items;
             DPHomeViewController *home = [DPHomeViewController new];
             [self mount:home width:393 category:UIContentSizeCategoryLarge];
-            XCTAssertEqual([home.tableView numberOfRowsInSection:1], count.integerValue);
+            XCTAssertEqual([home.tableView numberOfRowsInSection:TMHomeFavoritesSection], count.integerValue);
             if (count.integerValue > 0) {
-                NSIndexPath *last = [NSIndexPath indexPathForRow:count.integerValue - 1 inSection:1];
+                NSIndexPath *last = [NSIndexPath indexPathForRow:count.integerValue - 1 inSection:TMHomeFavoritesSection];
                 UITableViewCell *cell = [self scrollRow:last in:home.tableView position:UITableViewScrollPositionMiddle];
                 XCTAssertNotNil(cell); XCTAssertGreaterThan(cell.bounds.size.height, 44);
                 [self checkLabelsIn:cell.contentView];
@@ -3352,7 +3355,7 @@ TM_CAPTURE_IMPL
             [home.tableView scrollRectToVisible:footer.frame animated:NO]; [self settle];
             NSArray<UIButton *> *links = [self links:footer];
             XCTAssertEqual(links.count, 4);
-            XCTAssertEqual([home.tableView numberOfRowsInSection:1], 1);
+            XCTAssertEqual([home.tableView numberOfRowsInSection:TMHomeFavoritesSection], 1);
             NSLog(@"TM_FOOTER after width=%.0f large=%@ dark=%@ height=%.1f", width, large, dark, footer.bounds.size.height);
             if (!large.boolValue && width > 320) {
                 XCTAssertGreaterThanOrEqual(footer.bounds.size.height, 110);

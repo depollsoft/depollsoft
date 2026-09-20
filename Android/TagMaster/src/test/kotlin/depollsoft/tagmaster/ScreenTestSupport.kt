@@ -302,6 +302,22 @@ internal object ScreenTestSupport {
         ListModel.setTestMode(true)
         FavoritesModel.favoriteIds = com.bindroid.trackable.TrackableCollection()
         TeachableTagsModel.teachableTagIds = com.bindroid.trackable.TrackableCollection()
+        resetLists()
+    }
+
+    /**
+     * Forget every user-defined list, in both halves of the store.
+     *
+     * `TagLists` keeps its registry in memory and in `Preferences`, and `ListModel` keeps the tags
+     * of every list in a process-wide map that Robolectric shares between test classes. Resetting
+     * only the registry would leave a list created by an earlier test to be rediscovered from its
+     * stored tags, so the tags go first and the registry second.
+     */
+    fun resetLists() {
+        ListModel.storedKeys().filter { TagLists.isCustom(it) }.forEach { ListModel.discard(it) }
+        TagLists.resetForTest()
+        Preferences.setAsync("tagmaster.listNames", null)
+        Preferences.setAsync("tagmaster.listOrder", null)
     }
 
     /**
@@ -367,6 +383,7 @@ internal object ScreenTestSupport {
         // Deliberately no rebind here: forcing a re-bind on the way out would hand the next class
         // a brand-new, empty SharedPreferences and strand its settings reads. Binding is corrected
         // on the way in instead.
+        resetLists()
         ListModel.setTestMode(false)
     }
 

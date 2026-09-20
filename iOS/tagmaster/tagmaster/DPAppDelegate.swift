@@ -17,67 +17,44 @@ public extension Notification.Name {
 }
 
 public extension DPAppDelegate {
-    private static var userDoc: DocumentReference? = nil
-    private static let listsKey = "depollsoft.pitchperfect.lists"
-    
     @objc static func setTeachable(_ teachables: [Int]) {
         setTeachable(teachables, doSave: true)
     }
-    
+
     @objc static func setTeachable(_ teachables: [Int], doSave: Bool) {
-        let oldTeachables = DPAppDelegate.teachable()
-        var lists = UserDefaults.standard.dictionary(forKey: listsKey) ?? [:]
-        lists["teachable"] = teachables
-        UserDefaults.standard.set(lists, forKey: listsKey)
-        if !oldTeachables.elementsEqual(teachables) {
-            if doSave && userDoc != nil {
-                userDoc?.setData(["lists": ["teachable": teachables]], mergeFields: ["lists.teachable"])
-            }
-            NotificationCenter.default.post(name: .userDataChanged, object: nil)
-        }
+        TMTagLists.setIds(teachables, for: TMTagLists.teachableKey, doSave: doSave)
     }
-    
+
     @objc static func teachable() -> [Int] {
-        let dict = UserDefaults.standard.dictionary(forKey: listsKey)
-        return dict?["teachable"] as? [Int] ?? []
+        TMTagLists.ids(for: TMTagLists.teachableKey)
     }
-    
+
     static func oldTeachable() -> [Int]? {
         guard let array = UserDefaults.standard.array(forKey: "teachable") else {
             return nil
         }
         return array.compactMap { ($0 as? NSNumber)?.intValue }
     }
-    
+
     @objc static func setFavorites(_ favorites: [Int]) {
         setFavorites(favorites, doSave: true)
     }
-    
+
     @objc static func setFavorites(_ favorites: [Int], doSave: Bool) {
-        let oldFavorites = DPAppDelegate.favorites()
-        var lists = UserDefaults.standard.dictionary(forKey: listsKey) ?? [:]
-        lists["favorite"] = favorites
-        UserDefaults.standard.set(lists, forKey: listsKey)
-        if !oldFavorites.elementsEqual(favorites) {
-            if doSave && userDoc != nil {
-                userDoc?.setData(["lists": ["favorite": favorites]], mergeFields: ["lists.favorite"])
-            }
-            NotificationCenter.default.post(name: .userDataChanged, object: nil)
-        }
+        TMTagLists.setIds(favorites, for: TMTagLists.favoriteKey, doSave: doSave)
     }
-    
+
     @objc static func favorites() -> [Int] {
-        let dict = UserDefaults.standard.dictionary(forKey: listsKey)
-        return dict?["favorite"] as? [Int] ?? []
+        TMTagLists.ids(for: TMTagLists.favoriteKey)
     }
-    
+
     static func oldFavorites() -> [Int]? {
         guard let array = UserDefaults.standard.array(forKey: "favorites") else {
             return nil
         }
         return array.compactMap { ($0 as? NSNumber)?.intValue }
     }
-    
+
     private static func migrateOldLists() {
         if let oldTeachable = oldTeachable() {
             setTeachable(oldTeachable)
@@ -88,7 +65,39 @@ public extension DPAppDelegate {
             UserDefaults.standard.removeObject(forKey: "favorites")
         }
     }
-        
+
+    /// Mirrors the signed-in user's document into the local lists. Exposed so an integration test
+    /// can drive it against the Firestore emulator; the app calls it from `extraInit`.
+    @discardableResult
+    static func connectLists(to userDoc: DocumentReference) -> ListenerRegistration {
+        TMTagLists.userDoc = userDoc
+        return userDoc.addSnapshotListener { (snapshot, error) in
+            if let error = error {
+                print(error)
+                return
+            }
+            guard let snapshot = snapshot else { return }
+            if !snapshot.exists {
+                // There was no existing user, so initialize the user from this device.
+                userDoc.setData(TMTagLists.remotePayload(), merge: true)
+                return
+            }
+            let allIds = TMTagLists.applyRemote(
+                lists: snapshot.get("lists") as? [String: Any],
+                info: snapshot.get("listInfo") as? [String: Any]
+            )
+
+            // Prefetch tags
+            DispatchQueue.global().async {
+                DPTag.query(byIds: allIds.map { NSNumber(value: $0) }, cache: true)
+            }
+        }
+    }
+
+    static func disconnectLists() {
+        TMTagLists.userDoc = nil
+    }
+
     @objc func extraInit() {
         DPAppDelegate.migrateOldLists()
 
@@ -100,44 +109,12 @@ public extension DPAppDelegate {
         
         var registration: ListenerRegistration? = nil
         _ = Auth.auth().addStateDidChangeListener { (_, user) in
-            if registration != nil {
-                registration?.remove()
-            }
-            if user != nil {
-                DPAppDelegate.userDoc = Firestore.firestore().document("users/\(user!.uid)")
-                registration = DPAppDelegate.userDoc!.addSnapshotListener { (snapshot, error) in
-                    if error != nil {
-                        print(error!)
-                        return
-                    }
-                    let oldTeachable = DPAppDelegate.teachable()
-                    let oldFavorites = DPAppDelegate.favorites()
-                    if !snapshot!.exists {
-                        // There was no existing user, so initialize the user
-                        DPAppDelegate.userDoc?.setData([
-                            "lists": ["favorite": oldFavorites, "teachable": oldTeachable]
-                        ], merge:true)
-                        return
-                    }
-                    
-                    let teachableIds = (snapshot?.get("lists.teachable") as? [Any])?.compactMap {
-                        ($0 as? NSNumber)?.intValue
-                    } ?? oldTeachable
-                    let favoriteIds = (snapshot?.get("lists.favorite") as? [Any])?.compactMap {
-                        ($0 as? NSNumber)?.intValue
-                    } ?? oldFavorites
-                                        
-                    // Don't try to write these back to the server -- they're already there.
-                    DPAppDelegate.setTeachable(teachableIds, doSave: false)
-                    DPAppDelegate.setFavorites(favoriteIds, doSave: false)
-                    
-                    // Prefetch tags
-                    DispatchQueue.global().async {
-                        DPTag.query(byIds: (teachableIds + favoriteIds).map { NSNumber(value: $0) }, cache: true)
-                    }
-                }
+            registration?.remove()
+            registration = nil
+            if let user = user {
+                registration = DPAppDelegate.connectLists(to: Firestore.firestore().document("users/\(user.uid)"))
             } else {
-                DPAppDelegate.userDoc = nil
+                DPAppDelegate.disconnectLists()
             }
         }
     }

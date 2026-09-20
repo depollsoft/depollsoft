@@ -145,6 +145,7 @@ npm run deploy                     # Deploy to Firebase
 ### Test Coverage by Platform
 
 - **API**: node:test suite in `api/src/test` covering the analytics router (`npm test`); the router takes injected Pub/Sub, BigQuery, JWT and geoip dependencies via `createAnalyticsRouter`
+- **Tag Master list sync**: `TagListSyncEmulatorTest` (Android, run the class on its own) and `TMListSyncEmulatorTests` (iOS) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh`, and skip when none is running; see `docs/tag-lists.md`
 - **Android**:
   - Bindroid: Well-tested with dedicated test suite
   - depollsoft.lib.kotlin: Has test coverage

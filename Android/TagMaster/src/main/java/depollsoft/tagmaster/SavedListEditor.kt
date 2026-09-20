@@ -4,21 +4,45 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-/** Shared editing behavior for Home's favorites section and the standalone teachable list. */
+/**
+ * Shared editing behavior for Home's favorites section, the teachable list and every user-defined
+ * list.
+ *
+ * The label names the list in the spoken strings. A built-in list passes its string resource; a
+ * user-defined one passes its current name, which [listLabel] follows when the user renames it.
+ */
 class SavedListEditor(
     private val activity: AppCompatActivity,
     private val model: ListModel,
     private val adapter: SavedTagListAdapter,
     private val list: RecyclerView,
-    private val listLabel: Int,
+    listLabel: CharSequence,
     savedState: Bundle?,
 ) {
+    constructor(
+        activity: AppCompatActivity,
+        model: ListModel,
+        adapter: SavedTagListAdapter,
+        list: RecyclerView,
+        @StringRes listLabel: Int,
+        savedState: Bundle?,
+    ) : this(activity, model, adapter, list, activity.getString(listLabel), savedState)
+
+    /** The list's name, as the remove, drag and position announcements say it. */
+    var listLabel: CharSequence = listLabel
+        set(value) {
+            if (field == value) return
+            field = value
+            updateVisibleRows()
+        }
+
     var isEditing = savedState?.getBoolean(STATE_EDITING) == true && model.ids.isNotEmpty()
         private set
     private var drag: ListModel.Snapshot? = null
@@ -102,7 +126,7 @@ class SavedListEditor(
             isEditing,
             position,
             adapter.itemCount,
-            activity.getString(listLabel),
+            listLabel,
             remove = { if (valid(holder)) confirmRemove(id, holder.row.displayName) },
             move = { delta ->
                 if (!isEditing || !active || !valid(holder) || drag != null) {
@@ -156,7 +180,7 @@ class SavedListEditor(
         confirmation?.dismiss()
         confirmation =
             MaterialAlertDialogBuilder(activity)
-                .setTitle(activity.getString(R.string.saved_list_remove_title, activity.getString(listLabel)))
+                .setTitle(activity.getString(R.string.saved_list_remove_title, listLabel))
                 .setMessage(activity.getString(R.string.saved_list_remove_message, name))
                 .setNegativeButton(R.string.home_cancel, null)
                 .setPositiveButton(R.string.saved_list_remove) { _, _ ->

@@ -30,6 +30,7 @@
 #import "DPBarbershop.h"
 #import "DPHomeViewController.h"
 #import "DPBrowseViewController.h"
+#import "DPTeachableTagsController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "TMQuartetStaffView.h"
@@ -300,6 +301,39 @@ static __weak UIResponder *TMRecordedFirstResponder;
     [navigation pushViewController:controller animated:YES];
 }
 
+/// The stack a list belongs on: the primary column beside an open tag, the
+/// current stack everywhere else.
++ (UINavigationController *)primaryNavigationFor:(UIViewController *)sender {
+    UISplitViewController *split = sender.splitViewController;
+    if (split && !split.isCollapsed) {
+        UIViewController *primary = [split viewControllerForColumn:UISplitViewControllerColumnPrimary];
+        if ([primary isKindOfClass:UINavigationController.class]) return (UINavigationController *)primary;
+    }
+    return sender.navigationController ?: [(DPAppDelegate *)UIApplication.sharedApplication.delegate navigationController];
+}
+
++ (void)showListWithKey:(NSString *)key from:(UIViewController *)sender {
+    UINavigationController *navigation = [self primaryNavigationFor:sender];
+    UISplitViewController *split = sender.splitViewController;
+    BOOL expanded = split && !split.isCollapsed;
+    if ([key isEqualToString:[TMTagLists favoriteKey]]) {
+        // Favorites is a section of Home rather than a screen of its own.
+        for (UIViewController *controller in navigation.viewControllers) {
+            if ([controller isKindOfClass:DPHomeViewController.class]) {
+                [navigation popToViewController:controller animated:YES];
+                if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
+                return;
+            }
+        }
+        return;
+    }
+    UIViewController *destination = [key isEqualToString:[TMTagLists teachableKey]]
+        ? (UIViewController *)[[DPTeachableTagsController alloc] init]
+        : (UIViewController *)[[TMTagListController alloc] initWithListKey:key];
+    [navigation pushViewController:destination animated:YES];
+    if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
+}
+
 #pragma mark - Keyboard stepping from either column
 
 /// The detail showing beside a list, or nil when there is no expanded split or no tag yet.
@@ -484,7 +518,9 @@ static __weak UIResponder *TMRecordedFirstResponder;
                                 @"tag": @"Favorite and Teachable options",
                                 @"arrow.clockwise": @"Refresh",
                                 @"chevron.up": @"Previous tag",
-                                @"chevron.down": @"Next tag"}[systemName];
+                                @"chevron.down": @"Next tag",
+                                @"text.badge.plus": @"Add to list",
+                                @"ellipsis.circle": @"List options"}[systemName];
     return item;
 }
 

@@ -21,9 +21,18 @@
 		1E927AF222AC6A260018E370 /* DPTeachableTagsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */; };
 		1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */; };
 		B4A1A0000000000000000001 /* TMBalanceAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */; };
+		B4A1B0000000000000000001 /* TMTagLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000000 /* TMTagLists.swift */; };
+		B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000004 /* TMListNamePrompt.swift */; };
+		B4A1B0000000000000000007 /* TMListPickerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000006 /* TMListPickerController.swift */; };
+		B4A1B0000000000000000009 /* TMListChipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000008 /* TMListChipsView.swift */; };
+		B4A1B000000000000000000B /* TMTagListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B000000000000000000A /* TMTagListController.swift */; };
 		B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000012 /* TMTrackPlayerView.swift */; };
 		B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */; };
 		B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */; };
+		B4A1B0000000000000000003 /* TMTagListsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000002 /* TMTagListsTests.swift */; };
+		B4A1B000000000000000000D /* TMListSyncEmulatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B000000000000000000C /* TMListSyncEmulatorTests.swift */; };
+		B4A1B000000000000000000F /* TagListBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B000000000000000000E /* TagListBehaviorTests.swift */; };
+		B4A1B0000000000000000011 /* ListPickerBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -170,9 +179,18 @@
 		1E927AF122AC6A260018E370 /* DPTeachableTagsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTeachableTagsController.swift; sourceTree = "<group>"; };
 		1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPTagTracksController.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayer.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000000 /* TMTagLists.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagLists.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000004 /* TMListNamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListNamePrompt.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000006 /* TMListPickerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListPickerController.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000008 /* TMListChipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListChipsView.swift; sourceTree = "<group>"; };
+		B4A1B000000000000000000A /* TMTagListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagListController.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000012 /* TMTrackPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerView.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayerTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerCaptureTests.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000002 /* TMTagListsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagListsTests.swift; sourceTree = "<group>"; };
+		B4A1B000000000000000000C /* TMListSyncEmulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListSyncEmulatorTests.swift; sourceTree = "<group>"; };
+		B4A1B000000000000000000E /* TagListBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagListBehaviorTests.swift; sourceTree = "<group>"; };
+		B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListPickerBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
@@ -490,6 +508,11 @@
 				1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */,
 				B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */,
 				B4A1A0000000000000000012 /* TMTrackPlayerView.swift */,
+				B4A1B000000000000000000A /* TMTagListController.swift */,
+				B4A1B0000000000000000008 /* TMListChipsView.swift */,
+				B4A1B0000000000000000006 /* TMListPickerController.swift */,
+				B4A1B0000000000000000004 /* TMListNamePrompt.swift */,
+				B4A1B0000000000000000000 /* TMTagLists.swift */,
 				639F293A1800C45300517583 /* DPTagVideoController.h */,
 				639F293B1800C45300517583 /* DPTagVideoController.m */,
 				63336A4317F6342400BC1EE2 /* DPTagViewController.h */,
@@ -535,6 +558,10 @@
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */,
 				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */,
+				B4A1B000000000000000000E /* TagListBehaviorTests.swift */,
+				B4A1B000000000000000000C /* TMListSyncEmulatorTests.swift */,
+				B4A1B0000000000000000002 /* TMTagListsTests.swift */,
 				B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */,
 				B4A1A0000000000000000022 /* SearchBehaviorTests.swift */,
 				B4A1A0000000000000000023 /* TagDetailBehaviorTests.swift */,
@@ -821,6 +848,11 @@
 				1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */,
 				B4A1A0000000000000000001 /* TMBalanceAudioPlayer.swift in Sources */,
 				B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */,
+				B4A1B000000000000000000B /* TMTagListController.swift in Sources */,
+				B4A1B0000000000000000009 /* TMListChipsView.swift in Sources */,
+				B4A1B0000000000000000007 /* TMListPickerController.swift in Sources */,
+				B4A1B0000000000000000005 /* TMListNamePrompt.swift in Sources */,
+				B4A1B0000000000000000001 /* TMTagLists.swift in Sources */,
 				E47100000000000000000003 /* TMPageViewController.m in Sources */,
 				63336A3817F586CD00BC1EE2 /* DPBrowseViewController.m in Sources */,
 				638E73A417F7F8B3000FFE53 /* DPTeachableTagsController.m in Sources */,
@@ -855,6 +887,10 @@
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				B4A1B0000000000000000011 /* ListPickerBehaviorTests.swift in Sources */,
+				B4A1B000000000000000000F /* TagListBehaviorTests.swift in Sources */,
+				B4A1B000000000000000000D /* TMListSyncEmulatorTests.swift in Sources */,
+				B4A1B0000000000000000003 /* TMTagListsTests.swift in Sources */,
 				B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */,
 				B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */,
 				B4A1A0000000000000000033 /* TagDetailBehaviorTests.swift in Sources */,

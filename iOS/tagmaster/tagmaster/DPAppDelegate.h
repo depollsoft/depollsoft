@@ -59,6 +59,9 @@ FOUNDATION_EXPORT NSNotificationName const TMTagSelectionDidChangeNotification;
 /// Opens a tag from any screen: the secondary column on a regular-width iPad,
 /// a push on the current navigation stack everywhere else.
 + (void)showTagWithId:(int)tagId from:(UIViewController *)sender;
+/// Opens any tag list from any screen: Favorites returns to Home, Teachable Tags
+/// and the user's own lists push onto the primary column's stack.
++ (void)showListWithKey:(NSString *)key from:(UIViewController *)sender;
 + (UIBarButtonItem *)barButtonItemWithSystemName:(NSString *)systemName
                                           target:(id)target
                                           action:(SEL)action;

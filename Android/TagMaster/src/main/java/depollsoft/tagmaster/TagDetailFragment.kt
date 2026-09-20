@@ -355,6 +355,7 @@ class TagDetailFragment : Fragment() {
                     R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(current.id)
                     R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(current.id)
                     R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(current.id)
+                    R.id.addToListMenuItem -> ListPickerDialog.show(requireActivity().supportFragmentManager, current.id)
                     R.id.shareMenuItem -> startActivity(shareIntent)
                     R.id.refreshMenuItem -> {
                         loadQueryItem(true)

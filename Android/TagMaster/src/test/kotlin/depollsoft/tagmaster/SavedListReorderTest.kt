@@ -36,6 +36,8 @@ class SavedListReorderTest {
             .getDeclaredField("initialized")
             .apply { isAccessible = true }
             .setBoolean(null, false)
+        // The list registry is a process-wide object; make every test start from stored state.
+        TagLists.resetForTest()
     }
 
     private fun model() =
@@ -77,13 +79,19 @@ class SavedListReorderTest {
                 try {
                     val fromFirestore =
                         ListModel.Companion::class.java
-                            .getDeclaredMethod("fromFirestore", Map::class.java)
+                            .getDeclaredMethod("fromFirestore", Map::class.java, Map::class.java)
                             .apply { isAccessible = true }
-                    fromFirestore.invoke(ListModel.Companion, mapOf("reorder-test" to listOf(9L, 3L, 2L, 1L)))
+                    // A snapshot with no `listInfo`: the registry keeps the list under its key.
+                    fromFirestore.invoke(ListModel.Companion, mapOf("reorder-test" to listOf(9L, 3L, 2L, 1L)), null)
                     assertEquals(listOf(9, 3, 2, 1), model.ids.toList())
                     assertFalse(model.reorder(baseline, listOf(4, 3, 2, 1)))
                     auth.verifyNoInteractions()
                     prefs.verify({ Preferences.setAsync(eq("tagmaster.lists"), any()) }, times(1))
+                    // Applying the snapshot reloads and rewrites the list registry, and nothing else.
+                    prefs.verify({ Preferences.get<Any>(eq("tagmaster.listNames")) }, times(1))
+                    prefs.verify({ Preferences.get<Any>(eq("tagmaster.listOrder")) }, times(1))
+                    prefs.verify({ Preferences.setAsync(eq("tagmaster.listNames"), any()) }, times(1))
+                    prefs.verify({ Preferences.setAsync(eq("tagmaster.listOrder"), any()) }, times(1))
                     prefs.verifyNoMoreInteractions()
                 } finally {
                     ListModel.setTestMode(true)
@@ -206,7 +214,8 @@ class SavedListReorderTest {
                         assertTrue(model.reorder(baseline, listOf(4, 2, 3, 1)))
                         prefs.verify({ Preferences.setAsync(eq("tagmaster.lists"), any()) }, times(1))
                         verify(document, times(1)).set(
-                            mapOf("lists" to mapOf("reorder-test" to model.ids)),
+                            // The write sends a snapshot of the ids, not the live collection.
+                            mapOf("lists" to mapOf("reorder-test" to model.ids.toList())),
                             SetOptions.mergeFields("lists.reorder-test"),
                         )
                         assertFalse(model.reorder(model.snapshot(), model.ids.toList()))

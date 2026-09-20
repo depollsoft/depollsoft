@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Overflow actions for one user-defined list, beside @menu/savedlistmenu's Edit/Done. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/renameListMenuItem"
+        android:title="@string/list_rename_action"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/deleteListMenuItem"
+        android:title="@string/list_delete_action"
+        app:showAsAction="never" />
+</menu>

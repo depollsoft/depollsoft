@@ -240,6 +240,7 @@ class TagPaneController(
                 R.id.removeFavoriteMenuItem,
                 R.id.addTeachableTagMenuItem,
                 R.id.removeTeachableTagMenuItem,
+                R.id.addToListMenuItem,
                 R.id.refreshMenuItem,
                 R.id.shareMenuItem,
             )

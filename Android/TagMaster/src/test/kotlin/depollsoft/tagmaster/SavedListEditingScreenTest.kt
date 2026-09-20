@@ -75,15 +75,39 @@ class SavedListEditingScreenTest {
         ScreenTestSupport.clearTagCaches()
     }
 
-    /** The two saved-list screens, with the same editor behind different lists. */
+    /** Which saved-list screen a case is running against. */
+    private enum class Kind { HOME, TEACHABLE, CUSTOM }
+
+    /** The three saved-list screens, with the same editor behind different lists. */
     private inner class Screen(
         val activity: AppCompatActivity,
-        val home: Boolean,
+        val kind: Kind,
+        val key: String,
     ) {
-        val list: RecyclerView = activity.findViewById(if (home) R.id.homeList else R.id.teachableTagsItemsControl)
-        val adapter get() = if (home) (activity as MeActivity).favoritesAdapter else (activity as TeachableTagsActivity).teachableAdapter
-        val editor get() = if (home) (activity as MeActivity).listEditor else (activity as TeachableTagsActivity).listEditor
-        val model get() = ListModel(if (home) "favorite" else "teachable")
+        /** Home is the one screen whose rows share their list with a static header. */
+        val home get() = kind == Kind.HOME
+
+        val list: RecyclerView =
+            activity.findViewById(
+                when (kind) {
+                    Kind.HOME -> R.id.homeList
+                    Kind.TEACHABLE -> R.id.teachableTagsItemsControl
+                    Kind.CUSTOM -> R.id.tagListItemsControl
+                },
+            )
+        val adapter get() =
+            when (kind) {
+                Kind.HOME -> (activity as MeActivity).favoritesAdapter
+                Kind.TEACHABLE -> (activity as TeachableTagsActivity).teachableAdapter
+                Kind.CUSTOM -> (activity as TagListActivity).listAdapter
+            }
+        val editor get() =
+            when (kind) {
+                Kind.HOME -> (activity as MeActivity).listEditor
+                Kind.TEACHABLE -> (activity as TeachableTagsActivity).listEditor
+                Kind.CUSTOM -> (activity as TagListActivity).listEditor
+            }
+        val model get() = ListModel(key)
 
         /** Home puts a static header at position 0; the teachable list starts at its rows. */
         fun positionOf(id: Int) = adapter.currentList.indexOf(id) + if (home) 1 else 0
@@ -145,22 +169,41 @@ class SavedListEditingScreenTest {
         }
     }
 
-    /** Run [block] against Home and then the Teachable list, as the instrumented original did. */
+    /**
+     * Run [block] against Home, the Teachable list and one of the user's own lists.
+     *
+     * The instrumented original ran the first two; a user-defined list is the same editor over an
+     * arbitrary key, so every case here is a case there too.
+     */
     private fun screens(block: (ActivityController<out AppCompatActivity>, Screen) -> Unit) {
-        for (home in listOf(true, false)) {
+        for (kind in Kind.entries) {
             FavoritesModel.favoriteIds = TrackableCollection(ids.toMutableList())
             TeachableTagsModel.teachableTagIds = TrackableCollection(ids.toMutableList())
+            val key =
+                when (kind) {
+                    Kind.HOME -> "favorite"
+                    Kind.TEACHABLE -> "teachable"
+                    Kind.CUSTOM ->
+                        TagLists.create("Afterglow set").also {
+                            ListModel(it).ids = TrackableCollection(ids.toMutableList())
+                        }
+                }
             val created =
-                if (home) {
-                    ScreenTestSupport.build(MeActivity::class.java)
-                } else {
-                    ScreenTestSupport.build(TeachableTagsActivity::class.java)
+                when (kind) {
+                    Kind.HOME -> ScreenTestSupport.build(MeActivity::class.java)
+                    Kind.TEACHABLE -> ScreenTestSupport.build(TeachableTagsActivity::class.java)
+                    Kind.CUSTOM ->
+                        ScreenTestSupport.build(
+                            TagListActivity::class.java,
+                            Intent(RuntimeEnvironment.getApplication(), TagListActivity::class.java)
+                                .putExtra(TagListActivity.EXTRA_LIST_KEY, key),
+                        )
                 }
             controller = created
             created.setup()
             idle()
-            if (home) ScreenTestSupport.dismissChangelog()
-            val screen = Screen(created.get(), home)
+            if (kind == Kind.HOME) ScreenTestSupport.dismissChangelog()
+            val screen = Screen(created.get(), kind, key)
             assertEquals(
                 "every saved id should be bound before editing",
                 screen.model.ids.size,
@@ -169,11 +212,12 @@ class SavedListEditingScreenTest {
             try {
                 block(created, screen)
             } catch (error: Throwable) {
-                throw AssertionError("home=$home", error)
+                throw AssertionError("screen=$kind", error)
             } finally {
                 created.close()
                 idle()
                 controller = null
+                if (kind == Kind.CUSTOM) ScreenTestSupport.resetLists()
             }
         }
     }
@@ -387,7 +431,7 @@ class SavedListEditingScreenTest {
             screen.edit()
             created.recreate()
             idle()
-            val restored = Screen(created.get() as AppCompatActivity, screen.home)
+            val restored = Screen(created.get() as AppCompatActivity, screen.kind, screen.key)
             if (restored.home) ScreenTestSupport.dismissChangelog()
             assertTrue("editing survives recreation", restored.editor.isEditing)
             assertTrue(

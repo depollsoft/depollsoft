@@ -5,21 +5,27 @@ import android.content.Context
 import android.content.Intent
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.bindroid.converters.BoolConverter
+import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.TrackableBoolean
+import com.bindroid.trackable.Tracker
 import com.bindroid.ui.UiBinder
+import com.bindroid.utils.Function
 import com.bindroid.utils.bindTo
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -50,6 +56,20 @@ class MeHeaderView : LinearLayout {
 
     private var requestScope: CoroutineScope? = null
     private var openTagDialog: AlertDialog? = null
+    private var released = false
+
+    // Bindroid registrations are one-shot and each Trackable.track call adds another, so the
+    // header keeps exactly one and renews it only once it has fired.
+    private var listsTracking = false
+    private val trackedLists = mutableListOf<ListModel>()
+    private val listsTracker =
+        object : Tracker {
+            override fun update() {
+                listsTracking = false
+                if (released) return
+                post { rebuildLists() }
+            }
+        }
 
     // This view is a RecyclerView item on the home screen, so it can be detached while the user
     // scrolls. In-flight work is therefore tied to the host activity's lifecycle, not to attachment.
@@ -77,6 +97,7 @@ class MeHeaderView : LinearLayout {
             R.id.teachableButton,
             R.id.randomTagButton,
             R.id.openByIdButton,
+            R.id.newListButton,
         )) {
             ViewCompat.setAccessibilityDelegate(
                 findViewById(id),
@@ -98,10 +119,52 @@ class MeHeaderView : LinearLayout {
         findViewById<View>(R.id.browseButton).setOnClickListener {
             context.startActivity(Intent(context, TagBrowserActivity::class.java))
         }
+        bindTo(R.id.teachableCount, "Text", { listCountText(context, TagLists.TEACHABLE) })
         findViewById<View>(R.id.teachableButton).setOnClickListener {
             context.startActivity(Intent(context, TeachableTagsActivity::class.java))
         }
         findViewById<View>(R.id.openByIdButton).setOnClickListener { showOpenTagDialog() }
+        findViewById<View>(R.id.newListButton).setOnClickListener {
+            host()?.let { ListNameDialog.create(it.supportFragmentManager) }
+        }
+        rebuildLists()
+    }
+
+    private fun host(): FragmentActivity? =
+        (context as? FragmentActivity)?.takeIf { !it.isFinishing && !it.isDestroyed }
+
+    /**
+     * Rebuilds the Lists group from [TagLists] and re-registers for the next change.
+     *
+     * The rows are plain views rather than another adapter: there are only ever a handful, and
+     * this way their name and tag count are ordinary Bindroid bindings that follow a rename or an
+     * added tag without anyone rebuilding anything.
+     */
+    private fun rebuildLists() {
+        if (released || isInEditMode) return
+        val container = findViewById<LinearLayout>(R.id.listsContainer) ?: return
+        val read = Function<List<String>> { TagLists.customKeys.toList() }
+        val keys =
+            if (listsTracking) {
+                read.evaluate()
+            } else {
+                Trackable.track(listsTracker, read).also { listsTracking = true }
+            }
+        container.removeAllViews()
+        // Keep the models whose counts these rows bind to, so the tracked collections are exactly
+        // the ones the next rebuild reads.
+        trackedLists.clear()
+        keys.mapTo(trackedLists) { ListModel(it) }
+        val inflater = LayoutInflater.from(context)
+        for (key in keys) {
+            val row = inflater.inflate(R.layout.list_row, container, false)
+            row.findViewById<AppCompatImageView>(R.id.listRowIcon).setImageResource(listIconRes(key))
+            row.bindTo(R.id.listRowName, "Text", { TagLists.name(key) })
+            row.bindTo(R.id.listRowDetail, "Text", { listCountText(context, key) })
+            row.setOnClickListener { context.startActivity(TagListActivity.intent(context, key)) }
+            host()?.let { ListRowMenu.install(it, row, key) }
+            container.addView(row)
+        }
     }
 
     private fun loadRandomTag() {
@@ -234,6 +297,12 @@ class MeHeaderView : LinearLayout {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        // A recycled header that was released while its host was alive starts observing again.
+        if (released && host() != null) {
+            released = false
+            listsTracking = false
+            rebuildLists()
+        }
         val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
         if (lifecycle !== observedLifecycle) {
             observedLifecycle?.removeObserver(lifecycleObserver)
@@ -250,6 +319,7 @@ class MeHeaderView : LinearLayout {
     }
 
     private fun release() {
+        released = true
         requestScope?.cancel()
         requestScope = null
         loading.set(false)

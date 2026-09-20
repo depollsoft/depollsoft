@@ -1,12 +1,21 @@
 package depollsoft.tagmaster
 
 import android.app.Application
+import android.app.Dialog
 import android.content.Intent
+import android.view.Menu
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ListView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.PopupMenu
 import androidx.viewpager2.widget.ViewPager2
+import com.bindroid.trackable.TrackableCollection
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.textfield.TextInputEditText
 import depollsoft.tagmaster.ScreenTestSupport.assertDisplayed
 import depollsoft.tagmaster.ScreenTestSupport.idle
 import depollsoft.tagmaster.ScreenTestSupport.scrollTo
@@ -19,8 +28,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 
 /**
  * The tag detail screen with a cached tag, migrated from the instrumented `TagDetailActivityTest`.
@@ -301,5 +312,186 @@ class TagDetailActivityScreenTest {
             "Fixture arranger",
             (created.get().page().findViewById(R.id.arrangedByTextView) as TextView).text.toString(),
         )
+    }
+
+    // ==================== Lists: the chips row and the Add to list picker ====================
+
+    private fun TagDetailActivity.menu(): Menu {
+        val menu = PopupMenu(this, findViewById(android.R.id.content)).menu
+        menuInflater.inflate(R.menu.tagdetailmenu, menu)
+        return menu
+    }
+
+    private fun TagDetailActivity.chips(): ChipGroup = findViewById(R.id.savedStatusLayout)
+
+    private fun ChipGroup.labels(): List<String> = (0 until childCount).map { (getChildAt(it) as Chip).text.toString() }
+
+    private fun ChipGroup.chip(label: String): Chip =
+        (0 until childCount)
+            .map { getChildAt(it) as Chip }
+            .single { it.text.toString() == label }
+
+    private fun openPicker(activity: TagDetailActivity): AlertDialog {
+        // Only refresh reports itself handled; every other tag action returns false and acts.
+        activity.onOptionsItemSelected(activity.menu().findItem(R.id.addToListMenuItem))
+        idle()
+        return requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog) { "the picker should be showing" }
+    }
+
+    private fun rows(dialog: Dialog): List<View> {
+        val found = mutableListOf<View>()
+
+        fun walk(view: View) {
+            if (view.id == R.id.listRow) found.add(view)
+            if (view is ViewGroup) for (index in 0 until view.childCount) walk(view.getChildAt(index))
+        }
+        walk(dialog.window!!.decorView)
+        return found
+    }
+
+    private fun View.rowName(): String = findViewById<TextView>(R.id.listRowName).text.toString()
+
+    private fun View.rowChecked(): Boolean = findViewById<View>(R.id.listRowCheck).visibility == View.VISIBLE
+
+    // ==================== The chips under the title ====================
+
+    @Test
+    fun aTagInNoListStillOffersAddToList() {
+        val activity = launch()
+        assertEquals(listOf(activity.getString(R.string.list_add_to_list)), activity.chips().labels())
+    }
+
+    @Test
+    fun everyListTheTagIsInGetsAChipInDisplayOrder() {
+        val custom = TagLists.create("Afterglow set")
+        FavoritesModel.addFavorite(fixture.id)
+        TeachableTagsModel.addTeachableTag(fixture.id)
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        assertEquals(
+            listOf(
+                activity.getString(R.string.Favorites),
+                activity.getString(R.string.list_chip_teachable),
+                "Afterglow set",
+                activity.getString(R.string.list_add_to_list),
+            ),
+            activity.chips().labels(),
+        )
+    }
+
+    @Test
+    fun aChipAppearsAndDisappearsWithMembership() {
+        val custom = TagLists.create("Afterglow set")
+        val activity = launch()
+        ListModel(custom).add(fixture.id)
+        idle()
+        assertTrue(activity.chips().labels().contains("Afterglow set"))
+        ListModel(custom).remove(fixture.id)
+        idle()
+        assertFalse(activity.chips().labels().contains("Afterglow set"))
+    }
+
+    @Test
+    fun aChipOpensTheListItNames() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        activity.chips().chip("Afterglow set").performClick()
+        idle()
+        val started = requireNotNull(shadowOf(activity).nextStartedActivity)
+        assertEquals(TagListActivity::class.java.name, started.component!!.className)
+        assertEquals(custom, started.getStringExtra(TagListActivity.EXTRA_LIST_KEY))
+    }
+
+    @Test
+    fun theCloseIconRemovesTheTagAndUndoPutsItBackWhereItWas() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).ids = TrackableCollection(mutableListOf(1, fixture.id, 2))
+        val activity = launch()
+        val chip = activity.chips().chip("Afterglow set")
+        assertEquals(
+            activity.getString(R.string.list_chip_remove, "Afterglow set"),
+            chip.closeIconContentDescription?.toString(),
+        )
+        chip.performCloseIconClick()
+        idle()
+        assertEquals(listOf(1, 2), ListModel(custom).ids.toList())
+
+        val undo =
+            requireNotNull(
+                activity.findViewById<android.widget.Button>(com.google.android.material.R.id.snackbar_action),
+            ) { "an Undo action should be offered" }
+        assertEquals(activity.getString(R.string.list_undo), undo.text.toString())
+        undo.performClick()
+        idle()
+        assertEquals("undo restores the original position", listOf(1, fixture.id, 2), ListModel(custom).ids.toList())
+    }
+
+    // ==================== The picker ====================
+
+    @Test
+    fun thePickerNamesEveryListAndMarksTheOnesTheTagIsIn() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        val rows = rows(openPicker(activity))
+        assertEquals(
+            listOf(
+                activity.getString(R.string.Favorites),
+                activity.getString(R.string.TeachableTags),
+                "Afterglow set",
+                activity.getString(R.string.list_new_row),
+            ),
+            rows.map { it.rowName() },
+        )
+        assertEquals(listOf(false, false, true, false), rows.map { it.rowChecked() })
+    }
+
+    @Test
+    fun aPickerRowTogglesMembershipStraightAway() {
+        val custom = TagLists.create("Afterglow set")
+        val activity = launch()
+        val dialog = openPicker(activity)
+        rows(dialog).single { it.rowName() == "Afterglow set" }.performClick()
+        idle()
+        assertEquals(listOf(fixture.id), ListModel(custom).ids.toList())
+        assertTrue("the row marks itself", rows(dialog).single { it.rowName() == "Afterglow set" }.rowChecked())
+        assertTrue("and the chips behind follow", activity.chips().labels().contains("Afterglow set"))
+
+        rows(dialog).single { it.rowName() == "Afterglow set" }.performClick()
+        idle()
+        assertTrue(ListModel(custom).ids.isEmpty())
+        assertFalse(rows(dialog).single { it.rowName() == "Afterglow set" }.rowChecked())
+    }
+
+    @Test
+    fun theNewListRowMakesTheListAndPutsTheTagInIt() {
+        val activity = launch()
+        val picker = openPicker(activity)
+        rows(picker).single { it.rowName() == activity.getString(R.string.list_new_row) }.performClick()
+        idle()
+
+        val name = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        requireNotNull(name.findViewById<TextInputEditText>(R.id.listNameInput)).setText("Afterglow set")
+        name.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+
+        val created = TagLists.customKeys.single()
+        assertEquals("Afterglow set", TagLists.name(created))
+        assertEquals(listOf(fixture.id), ListModel(created).ids.toList())
+        assertTrue(
+            "the picker shows the new list, checked",
+            rows(picker).single { it.rowName() == "Afterglow set" }.rowChecked(),
+        )
+    }
+
+    @Test
+    fun theFavoritesRowInThePickerIsTheSameFavoritesTheHeartToggles() {
+        val activity = launch()
+        val dialog = openPicker(activity)
+        rows(dialog).single { it.rowName() == activity.getString(R.string.Favorites) }.performClick()
+        idle()
+        assertTrue(FavoritesModel.getIsFavorite(fixture.id))
+        assertTrue(activity.chips().labels().contains(activity.getString(R.string.Favorites)))
     }
 }
