@@ -1,15 +1,3 @@
-## ios: d27ffb0e39626b67f94eeed4b6227dd99c710d7f..HEAD
+## android: 752891caaf56c933bd50aa3f4be7abb2c28aff8c..HEAD
 
-ebd39ba0 Cut PR CI to unit suites: UI tests to in-process tests, dead jobs removed (#65)
-fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
-987d5efa Android: finish Facebook login without an app restart (#61)
-
-## android: 2bbe672738f758fcb75bd1e31c0d407c91c7fba4..HEAD
-
-ebd39ba0 Cut PR CI to unit suites: UI tests to in-process tests, dead jobs removed (#65)
-fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
-987d5efa Android: finish Facebook login without an app restart (#61)
-
-## Release preparation
-
-The Android store capture fixture records both optional telemetry choices as declined before opening the returning-user scenes, matching the existing iOS fixture.
+fb13cb6f Android: fix Google sign-in crash and stop unit tests reporting to Crashlytics (#67)

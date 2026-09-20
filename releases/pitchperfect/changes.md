@@ -1,17 +1,3 @@
-## ios: 0573576a091fc3c048dc332b263822a6383a19ed..HEAD
+## android: 752891caaf56c933bd50aa3f4be7abb2c28aff8c..HEAD
 
-ebd39ba0 Cut PR CI to unit suites: UI tests to in-process tests, dead jobs removed (#65)
-fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
-2c93a61e release: publish updated Pitch Perfect Wear OS companion (#62)
-987d5efa Android: finish Facebook login without an app restart (#61)
-
-## android: 2c93a61e817e60917167e7269d62a003b886d6e0..HEAD
-
-ebd39ba0 Cut PR CI to unit suites: UI tests to in-process tests, dead jobs removed (#65)
-fd8e2d70 Restore mobile Analytics and Crashlytics with opt-in consent (#63)
-
-## Release preparation
-
-The Android store capture fixture records both optional telemetry choices as declined before opening the returning-user scenes, matching the existing iOS fixture.
-
-Restored the Espresso device-test dependency required by the existing privacy consent test, so the store capture APK compiles after the CI migration.
+fb13cb6f Android: fix Google sign-in crash and stop unit tests reporting to Crashlytics (#67)
