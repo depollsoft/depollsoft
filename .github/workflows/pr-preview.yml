@@ -7,7 +7,10 @@
 # parallel with iOS CI compiling the same source on another macOS runner.
 #
 # HOW TO TRIGGER A PREVIEW BUILD
-#   * Any push to a non-draft PR that touches Android/** or iOS/**.
+#   * Any push to a non-draft PR that touches Android/** or iOS/**. Only the
+#     apps and platforms the PR changes are built (scripts/ci/changed_apps.py):
+#     a file under one app's own module builds that app, shared code builds
+#     both, and a platform the PR does not touch is skipped entirely.
 #   * Marking a draft PR "Ready for review" (the `ready_for_review` event).
 #   * A draft PR gets no preview. Mark it ready for review to get one.
 #   * To promote a built preview to TestFlight and the Play internal track,
@@ -27,6 +30,7 @@ on:
       - "iOS/**"
       - ".github/workflows/pr-preview.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/changed_apps.py"
       - ".github/workflows/preview-deploy-command.yml"
       - ".github/workflows/deploy-pr-preview.yml"
 
@@ -52,9 +56,48 @@ jobs:
     outputs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
+      android-any: ${{ steps.changes.outputs.android-any }}
+      android-modules: ${{ steps.changes.outputs.android-modules }}
+      android-pitchperfect: ${{ steps.changes.outputs.android-pitchperfect }}
+      android-tagmaster: ${{ steps.changes.outputs.android-tagmaster }}
+      ios-any: ${{ steps.changes.outputs.ios-any }}
+      ios-pitchperfect: ${{ steps.changes.outputs.ios-pitchperfect }}
+      ios-tagmaster: ${{ steps.changes.outputs.ios-tagmaster }}
     steps:
       - id: version
         run: echo "build-number=$(( $(date +%s) / 10 ))" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          sparse-checkout: |
+            scripts/ci
+            scripts/release/tests
+
+      - name: Verify the selector
+        run: python3 -m unittest scripts.release.tests.test_changed_apps
+
+      # Which apps this PR touches. The selection is also uploaded as a
+      # manifest so firebase-app-distribution.yml publishes only the apps
+      # that were actually built.
+      - name: Select changed apps
+        id: changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/ci/changed_apps.py > preview-manifest.json
+
+      - name: Upload preview manifest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: >-
+            ${{ format(
+              'preview-manifest-{0}-{1}',
+              github.event.pull_request.number,
+              steps.version.outputs.build-number
+            ) }}
+          path: preview-manifest.json
+          if-no-files-found: error
 
       - name: List PR commits
         id: commits
@@ -132,8 +175,8 @@ jobs:
             | **PR** | #${{ github.event.pull_request.number }} |
             | **Preview SHA** | `${{ github.event.pull_request.head.sha }}` |
             | **Build** | `${{ needs.compute-version.outputs.build-number }}` |
-            | **Android Status** | ⏳ Building |
-            | **iOS Status** | ⏳ Building |
+            | **Android Status** | ${{ needs.compute-version.outputs.android-any == 'true' && '⏳ Building' || '⏭️ Unchanged in this PR' }} |
+            | **iOS Status** | ${{ needs.compute-version.outputs.ios-any == 'true' && '⏳ Building' || '⏭️ Unchanged in this PR' }} |
 
             ### Install
             | Platform | Link |
@@ -156,7 +199,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: compute-version
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.compute-version.outputs.android-any == 'true'
     outputs:
       artifact-id: ${{ steps.upload_apks.outputs.artifact-id }}
     steps:
@@ -189,23 +234,25 @@ jobs:
       - name: Verify Android SDK
         run: python3 scripts/ci/android_sdk.py --require
 
+      # Only the modules of the apps this PR changes; shared code builds all.
       - name: Build private preview APKs
         working-directory: Android
-        run: >-
-          ./gradlew
-          :PitchPerfect:assemblePrivate
-          :PitchPerfectWear:assemblePrivate
-          :TagMaster:assemblePrivate
-          -PDEPOLLSOFT_PRIVATE_DEBUG_SIGNING=true
-          "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m"
-          --max-workers=2
-          -PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=${{
-            needs.compute-version.outputs.build-number
-          }}
-          -PDEPOLLSOFT_PRIVATE_PR_NUMBER=${{
-            github.event.pull_request.number
-          }}
-          --stacktrace --console=plain --no-daemon
+        env:
+          MODULES: ${{ needs.compute-version.outputs.android-modules }}
+          BUILD_NUMBER: ${{ needs.compute-version.outputs.build-number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          tasks=()
+          for module in $MODULES; do tasks+=(":$module:assemblePrivate"); done
+          echo "Gradle tasks: ${tasks[*]}"
+          ./gradlew "${tasks[@]}" \
+            -PDEPOLLSOFT_PRIVATE_DEBUG_SIGNING=true \
+            "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" \
+            --max-workers=2 \
+            "-PDEPOLLSOFT_PRIVATE_BUILD_NUMBER=$BUILD_NUMBER" \
+            "-PDEPOLLSOFT_PRIVATE_PR_NUMBER=$PR_NUMBER" \
+            --stacktrace --console=plain --no-daemon
 
       - name: Collect preview APKs
         run: |
@@ -238,7 +285,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     needs: compute-version
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.compute-version.outputs.ios-any == 'true'
     env:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
@@ -356,6 +405,8 @@ jobs:
           PRIVATE_BUILD_NUMBER: >-
             ${{ needs.compute-version.outputs.build-number }}
           PRIVATE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          IOS_PITCHPERFECT: ${{ needs.compute-version.outputs.ios-pitchperfect }}
+          IOS_TAGMASTER: ${{ needs.compute-version.outputs.ios-tagmaster }}
         run: |
           set -euo pipefail
           artifact_dir="$GITHUB_WORKSPACE/preview-artifacts/ios"
@@ -500,8 +551,13 @@ jobs:
             rm -rf "$archive"
           }
 
-          archive_app pitchperfect PitchPerfect-private
-          archive_app tagmaster TagMaster-private
+          # Only the apps this PR changes; shared code archives both.
+          if [ "$IOS_PITCHPERFECT" = true ]; then
+            archive_app pitchperfect PitchPerfect-private
+          fi
+          if [ "$IOS_TAGMASTER" = true ]; then
+            archive_app tagmaster TagMaster-private
+          fi
 
       - name: Upload unsigned iOS archives
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -605,6 +661,9 @@ jobs:
       - name: Upload preview APKs to Internal App Sharing
         id: upload
         working-directory: Android
+        env:
+          ANDROID_PITCHPERFECT: ${{ needs.compute-version.outputs.android-pitchperfect }}
+          ANDROID_TAGMASTER: ${{ needs.compute-version.outputs.android-tagmaster }}
         run: |
           set -euo pipefail
 
@@ -633,18 +692,23 @@ jobs:
             echo "${output_name}=${url}" >> "$GITHUB_OUTPUT"
           }
 
-          upload_apk \
-            pitchperfect-url \
-            depollsoft.pitchperfect.private \
-            PitchPerfect-private.apk
-          upload_apk \
-            wear-url \
-            depollsoft.pitchperfect.private \
-            PitchPerfectWear-private.apk
-          upload_apk \
-            tagmaster-url \
-            depollsoft.tagmaster.private \
-            TagMaster-private.apk
+          # Only the apps this PR built (see compute-version).
+          if [ "$ANDROID_PITCHPERFECT" = true ]; then
+            upload_apk \
+              pitchperfect-url \
+              depollsoft.pitchperfect.private \
+              PitchPerfect-private.apk
+            upload_apk \
+              wear-url \
+              depollsoft.pitchperfect.private \
+              PitchPerfectWear-private.apk
+          fi
+          if [ "$ANDROID_TAGMASTER" = true ]; then
+            upload_apk \
+              tagmaster-url \
+              depollsoft.tagmaster.private \
+              TagMaster-private.apk
+          fi
 
       - name: Clean up Play credentials
         if: always()
@@ -720,7 +784,7 @@ jobs:
                 case 'cancelled':
                   return '⛔ Cancelled';
                 case 'skipped':
-                  return '⏭️ Skipped';
+                  return '⏭️ Unchanged in this PR';
                 default:
                   return '❌ Failed';
               }

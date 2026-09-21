@@ -12,6 +12,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/changed_apps.py"
   pull_request:
     branches:
       - main
@@ -19,6 +20,7 @@ on:
       - "Android/**"
       - ".github/workflows/android.yml"
       - "scripts/ci/android_sdk.py"
+      - "scripts/ci/changed_apps.py"
   workflow_dispatch:
   schedule:
     # Weekly, not nightly: the schedule only adds the JaCoCo/Codecov report,
@@ -39,6 +41,41 @@ defaults:
     working-directory: Android
 
 jobs:
+  # Which apps this change touches (scripts/ci/changed_apps.py). A file under
+  # an app's own module selects that app; anything else under Android/ is
+  # shared code and selects both. Manual and scheduled runs select both.
+  changes:
+    name: Select changed Android apps
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    defaults:
+      run:
+        working-directory: .
+    outputs:
+      any: ${{ steps.changes.outputs.android-any }}
+      all: ${{ steps.changes.outputs.android-all }}
+      modules: ${{ steps.changes.outputs.android-modules }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/ci
+            scripts/release/tests
+      - name: Verify the selector
+        run: python3 -m unittest scripts.release.tests.test_changed_apps
+      - name: Select apps
+        id: changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/ci/changed_apps.py
+
   test:
     name: Android Unit Tests & Coverage
     permissions:
@@ -46,9 +83,8 @@ jobs:
       checks: write
       pull-requests: write
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
     timeout-minutes: 45
 
     steps:
@@ -105,6 +141,9 @@ jobs:
       # pays another JVM start and another full configuration phase, so the
       # unit tests, the coverage report and the release compile checks all go
       # into a single task list.
+      #
+      # Shared code runs every module's unit tests; an app-only change runs
+      # just that app's modules and compiles just its release variant.
       - name: Run unit tests and compile production variants
         env:
           # Increase Gradle memory for containerized runners
@@ -112,14 +151,27 @@ jobs:
             -Xmx2g -XX:MaxMetaspaceSize=512m
             -XX:+HeapDumpOnOutOfMemoryError
           EVENT_NAME: ${{ github.event_name }}
+          ALL_APPS: ${{ needs.changes.outputs.all }}
+          MODULES: ${{ needs.changes.outputs.modules }}
         run: |
           set -euo pipefail
-          tasks=(
-            testDebugUnitTest
-            :PitchPerfect:compileReleaseKotlin
-            :PitchPerfectWear:compileReleaseJavaWithJavac
-            :TagMaster:compileReleaseKotlin
-          )
+          read -ra modules <<< "$MODULES"
+          tasks=()
+          if [[ "$ALL_APPS" == true ]]; then
+            tasks+=(testDebugUnitTest)
+          else
+            for module in "${modules[@]}"; do
+              tasks+=(":$module:testDebugUnitTest")
+            done
+          fi
+          for module in "${modules[@]}"; do
+            if [[ "$module" == PitchPerfectWear ]]; then
+              tasks+=(":$module:compileReleaseJavaWithJavac")
+            else
+              tasks+=(":$module:compileReleaseKotlin")
+            fi
+          done
+          echo "Gradle tasks: ${tasks[*]}"
           # Coverage only feeds the scheduled/manual Codecov upload.
           if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
             tasks+=(jacocoTestReport)
