@@ -31,6 +31,10 @@ class ParallelSuiteTests(unittest.TestCase):
                                  max(case_timeout(suite) for suite in entry['suites'].split()))
         pitch = {entry['job']: entry['suites'].split() for entry in matrix(app='pitchperfect')['include']}
         self.assertEqual(pitch, {'pitchperfect': ['pitchperfect', 'pitchperfectlib']})
+        self.assertEqual(matrix(app=['pitchperfect']), matrix(app='pitchperfect'))
+        self.assertEqual(matrix(app=['tagmaster', 'pitchperfect']), matrix())
+        self.assertEqual(matrix(True, app=['tagmaster']), matrix(True, app='tagmaster'))
+        self.assertEqual(matrix(app=[]), {'include': []})
         for suite, job in JOBS.items():
             self.assertTrue(suite.startswith(job), 'shared jobs must stay within one app')
 

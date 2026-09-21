@@ -1,10 +1,16 @@
 # Firebase App Distribution for pull requests
 
 PR updates run the secretless `PR Preview` workflow. It builds private Android
-APKs and unsigned iOS archives with the shared epoch-based preview build number.
-After that workflow succeeds, `.github/workflows/firebase-app-distribution.yml`
-runs from the trusted default branch, downloads those artifacts, signs the iOS
-archives, and uploads all four apps to Firebase App Distribution.
+APKs and unsigned iOS archives with the shared epoch-based preview build number,
+but only for the apps and platforms the PR changes: `scripts/ci/changed_apps.py`
+maps a file under one app's own module to that app and any other file under
+`Android/` or `iOS/` (shared libraries, Bindroid, depolllib, the workspace,
+Fastlane) to both apps on that platform. The selection is uploaded as a
+`preview-manifest-<pr>-<build>` artifact. After that workflow succeeds,
+`.github/workflows/firebase-app-distribution.yml` runs from the trusted default
+branch, reads the manifest, downloads the matching artifacts, signs the iOS
+archives, and uploads only the apps that were built to Firebase App
+Distribution. A platform the PR did not touch is skipped, not failed.
 
 Contributor-controlled Gradle, CocoaPods, and Fastlane code never runs in a job
 that has signing or Firebase credentials. Distribution only consumes the APKs

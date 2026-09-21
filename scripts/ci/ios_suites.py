@@ -40,8 +40,10 @@ def case_timeout(suite):
 
 
 def selected(extended=False, app=None):
+    """Suites for one app (str), several apps (list) or every app (None)."""
+    apps = None if app is None else tuple([app] if isinstance(app, str) else app)
     return [suite for suite in SUITES
-            if (extended or not is_ui(suite)) and (app is None or suite.startswith(app))]
+            if (extended or not is_ui(suite)) and (apps is None or suite.startswith(apps))]
 
 
 def matrix(extended=False, app=None):
@@ -114,7 +116,8 @@ def main():
     sub = parser.add_subparsers(dest='action', required=True)
     selection = sub.add_parser('matrix')
     selection.add_argument('--extended', action='store_true')
-    selection.add_argument('--app', choices=['pitchperfect', 'tagmaster'])
+    selection.add_argument('--app', choices=['pitchperfect', 'tagmaster'], action='append',
+                           help='repeat to select several apps; omit for every app')
     products = sub.add_parser('validate-products')
     products.add_argument('--app', choices=['pitchperfect', 'tagmaster'], required=True)
     products.add_argument('--extended', action='store_true')
