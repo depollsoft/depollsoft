@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_version">Version 6.0.2</string>
-    <string name="VersionNumber">6.0.2</string>
+    <string name="app_version">Version 6.1.0</string>
+    <string name="VersionNumber">6.1.0</string>
     <string name="Changelog">        <![CDATA[Thank you for using Tag Master!  Here\'s what has changed since you last used the app:
+            <p>
+                    <h5>Version 6.1.0</h5>
+                    - Organize tags into your own lists, such as \"Easy tags\" or \"High and lows\", alongside Favorites and Teachable Tags.<br />
+                    - Every tag shows the lists it belongs to, and Add to list puts it in any of them or a new one.<br />
+                    - Rename, reorder, and delete lists from Home; reorder or remove tags inside a list.<br />
+                    - Lists sync with your account across devices, and signing in never mixes one account\'s lists with another\'s.<br />
+            </p>
             <p>
                     <h5>Version 6.0.2</h5>
                     - Fixes a crash when choosing Sign in with Google.<br />
