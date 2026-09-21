@@ -309,7 +309,7 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
     XCTAssertNotNil(favoriteCell);
     
     NSArray *items = [home navigationItems];
-    XCTAssertTrue(items.count >= 4);
+    XCTAssertTrue(items.count >= 3);
     
     NSUInteger randomIndex = [items indexOfObjectPassingTest:^BOOL(NSDictionary *obj, NSUInteger idx, BOOL *stop) {
         return [obj[@"title"] isEqualToString:@"Random Tag"];

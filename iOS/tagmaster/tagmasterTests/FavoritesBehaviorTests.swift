@@ -68,7 +68,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         let home = self.home()
         XCTAssertEqual(home.numberOfSections(in: home.tableView), 3)
         XCTAssertEqual(rowTitles(home, section: navigationSection),
-                       ["Browse", "Random Tag", "Open Tag", "Settings"])
+                       ["Browse", "Random Tag", "Open Tag"])
     }
 
     func testHomeNamesItsGroups() {
@@ -391,6 +391,20 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(home.navigationItem.leftBarButtonItem, home.editButtonItem)
     }
 
+    func testHomeOffersSettingsAsAnIconBesideSearchNotAsARow() {
+        let home = self.home()
+        let labels = home.navigationItem.rightBarButtonItems?.map { $0.accessibilityLabel ?? "" }
+        XCTAssertEqual(labels, ["Search", "Settings"])
+        XCTAssertFalse(rowTitles(home, section: 0).contains("Settings"))
+    }
+
+    func testTappingTheSettingsIconOpensSettings() {
+        let home = self.home()
+        let settings = home.navigationItem.rightBarButtonItems!.last!
+        _ = settings.target?.perform(settings.action, with: settings)
+        XCTAssertTrue(navigation.pushed.last is DPSettingsController)
+    }
+
     func testTappingSearchOpensTheSearchScreen() {
         let home = self.home()
         let search = home.navigationItem.rightBarButtonItem!
@@ -402,9 +416,9 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
     func testEachNavigationRowOpensItsOwnScreen() {
         let home = self.home()
+        // Settings lives in the navigation bar now, so Browse is the only row that pushes a screen.
         let expected: [(row: Int, destination: AnyClass)] = [
-            (0, DPBrowseViewController.self),
-            (3, DPSettingsController.self)
+            (0, DPBrowseViewController.self)
         ]
         for (row, destination) in expected {
             home.tableView(home.tableView, didSelectRowAt: IndexPath(row: row, section: navigationSection))

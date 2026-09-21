@@ -514,6 +514,7 @@ static __weak UIResponder *TMRecordedFirstResponder;
                                            target:target
                                            action:action];
     item.accessibilityLabel = @{@"magnifyingglass": @"Search",
+                                @"gearshape": @"Settings",
                                 @"square.and.arrow.up": @"Share",
                                 @"tag": @"Favorite and Teachable options",
                                 @"arrow.clockwise": @"Refresh",

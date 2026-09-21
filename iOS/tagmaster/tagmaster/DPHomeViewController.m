@@ -125,10 +125,12 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     self.navigationItem.backBarButtonItem.title = @"Home";
     
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    self.navigationItem.rightBarButtonItem =
-        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
-                                             target:self
-                                             action:@selector(search)];
+    // Search stays outermost; Settings sits beside it as an icon, as on Android, rather than
+    // spending a row of the table.
+    self.navigationItem.rightBarButtonItems = @[
+        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass" target:self action:@selector(search)],
+        [DPAppDelegate barButtonItemWithSystemName:@"gearshape" target:self action:@selector(openSettings)]
+    ];
     // The favorites row for the tag open beside this list stays selected
     // instead of clearing when the screen reappears in an expanded split.
     self.clearsSelectionOnViewWillAppear = !(self.splitViewController && !self.splitViewController.isCollapsed);
@@ -281,14 +283,11 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     }
                      }];
 
-    [arr addObject:@{
-                     @"title": @"Settings",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
-    }
-                     }];
-
     return arr;
+}
+
+- (void)openSettings {
+    [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
 }
 
 - (NSIndexPath *)randomTagIndexPath {
