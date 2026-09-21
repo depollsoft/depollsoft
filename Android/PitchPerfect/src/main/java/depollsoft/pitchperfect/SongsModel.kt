@@ -310,14 +310,17 @@ class SongsModel private constructor() {
 
     private fun nextOrder(): Long = songLists.values.count { it.id != DEFAULT_ID }.toLong()
 
+    /** "<name> copy", then "copy 2", "copy 3" …, each trimmed to fit the name limit. */
     private fun copyNameFor(base: String): String {
-        var candidate = "$base copy"
+        fun candidate(suffix: String): String =
+            normalizeName(base.take(MAX_NAME_LENGTH - suffix.length)) + suffix
+        var name = candidate(" copy")
         var index = 2
-        while (songLists.values.any { displayName(it).equals(candidate, ignoreCase = true) }) {
-            candidate = "$base copy $index"
+        while (songLists.values.any { displayName(it).equals(name, ignoreCase = true) }) {
+            name = candidate(" copy $index")
             index++
         }
-        return candidate
+        return name
     }
 
     // MARK: - Firestore
@@ -425,6 +428,9 @@ class SongsModel private constructor() {
                         }
 
                         DocumentChange.Type.REMOVED -> {
+                            // Flagged first: an editor still holding the list would otherwise
+                            // store it back and recreate the document the other device deleted.
+                            updatedLists[id]?.discardLocally()
                             updatedLists = updatedLists - id
                             mapChanged = true
                         }

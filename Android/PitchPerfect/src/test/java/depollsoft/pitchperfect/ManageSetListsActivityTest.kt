@@ -9,6 +9,7 @@ import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -138,6 +139,27 @@ class ManageSetListsActivityTest {
     }
 
     // ==================== Row actions ====================
+
+    @Test
+    fun customRowsOfferMoveUpAndMoveDownToScreenReaders() {
+        val first = model.createList("Saturday show")
+        val second = model.createList("Afterglow")
+        val activity = launch()
+
+        fun actionNames(position: Int): List<String> =
+            activity.rows().rowView(position).createAccessibilityNodeInfo().actionList
+                .mapNotNull { it.label?.toString() }
+        assertTrue("My Songs never moves", actionNames(0).none { it == "Move Up" || it == "Move Down" })
+        assertEquals(listOf("Move Down"), actionNames(1).filter { it == "Move Up" || it == "Move Down" })
+        assertEquals(listOf("Move Up"), actionNames(2).filter { it == "Move Up" || it == "Move Down" })
+
+        assertTrue(activity.moveList(model.songLists[second]!!, -1))
+        idle()
+        assertEquals(listOf(SongsModel.DEFAULT_ID, second, first), model.orderedLists.map { it.id })
+        assertEquals(0L, model.songLists[second]!!.order)
+        assertEquals(1L, model.songLists[first]!!.order)
+        assertFalse("nothing above the first custom row", activity.moveList(model.songLists[second]!!, -1))
+    }
 
     @Test
     fun tappingARowSwitchesToItAndReturnsToSongs() {

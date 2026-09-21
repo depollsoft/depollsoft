@@ -19,9 +19,29 @@ esac
 shift
 
 # firebase-tools starts the Firestore emulator through a bundled JAR and needs a
-# JDK 21 or newer; the system Java on these machines is older.
-# (JAVA_HOME is overridden unconditionally: the shell profile here points at JDK 17.)
-export JAVA_HOME="/opt/homebrew/opt/openjdk@21"
+# JDK 21 or newer. The caller's JAVA_HOME is kept when it already is one;
+# otherwise the usual JDK 21 locations are tried, since the shell profile on
+# the development Macs points at JDK 17 for Gradle.
+java_major() { "$1/bin/java" -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p' | head -1; }
+jdk_ok() { [ -x "$1/bin/java" ] && [ "$(java_major "$1")" -ge 21 ] 2>/dev/null; }
+if ! jdk_ok "${JAVA_HOME:-}"; then
+  for candidate in \
+    /opt/homebrew/opt/openjdk@21 \
+    /usr/local/opt/openjdk@21 \
+    "$( [ -x /usr/libexec/java_home ] && /usr/libexec/java_home -v 21 2>/dev/null )" \
+    /usr/lib/jvm/java-21-openjdk-amd64 \
+    /usr/lib/jvm/java-21-openjdk \
+    /usr/lib/jvm/temurin-21-jdk-amd64; do
+    if [ -n "$candidate" ] && jdk_ok "$candidate"; then
+      export JAVA_HOME="$candidate"
+      break
+    fi
+  done
+fi
+if ! jdk_ok "${JAVA_HOME:-}"; then
+  echo "firestore-emulator.sh: no JDK 21 or newer found; set JAVA_HOME to one" >&2
+  exit 1
+fi
 export PATH="$JAVA_HOME/bin:$PATH:$HOME/.local/bin"
 
 cd "$(dirname "$0")/../Firebase/$app"

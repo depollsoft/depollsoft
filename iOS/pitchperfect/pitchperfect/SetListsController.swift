@@ -163,6 +163,9 @@ final class SetListRowCell: UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: SetListRowCell.identifier, for: indexPath)
         DPTheme.styleListCell(cell)
         if let row = cell as? SetListRowCell, let list = list(at: indexPath) {
+            // The reorder control is a drag; VoiceOver and Switch Control reorder
+            // through named actions instead, one row at a time.
+            row.accessibilityCustomActions = isHome(list) ? nil : moveActions(for: list)
             let current = list.id == model.currentListId
             row.show(name: model.displayName(for: list),
                      songCount: list.songs.count,
@@ -186,6 +189,36 @@ final class SetListRowCell: UITableViewCell {
     }
 
     // MARK: - Reordering
+
+    private var customLists: [DPSongList] { lists.filter { !isHome($0) } }
+
+    private func moveActions(for list: DPSongList) -> [UIAccessibilityCustomAction] {
+        var actions: [UIAccessibilityCustomAction] = []
+        let index = customLists.firstIndex { $0 === list } ?? 0
+        if index > 0 {
+            actions.append(UIAccessibilityCustomAction(name: "Move up") { [weak self] _ in
+                self?.move(list, by: -1) ?? false
+            })
+        }
+        if index < customLists.count - 1 {
+            actions.append(UIAccessibilityCustomAction(name: "Move down") { [weak self] _ in
+                self?.move(list, by: 1) ?? false
+            })
+        }
+        return actions
+    }
+
+    /// Moves `list` one step among the custom lists and commits at once.
+    @discardableResult
+    @objc public func move(_ list: DPSongList, by delta: Int) -> Bool {
+        var custom = customLists
+        guard let from = custom.firstIndex(where: { $0 === list }) else { return false }
+        let to = from + delta
+        guard custom.indices.contains(to) else { return false }
+        custom.insert(custom.remove(at: from), at: to)
+        model.reorderLists(custom.map(\.id))
+        return true
+    }
 
     override public func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
         list(at: indexPath).map { !isHome($0) } ?? false

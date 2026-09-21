@@ -11,6 +11,7 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -243,7 +244,41 @@ class ManageSetListsActivity : AppCompatActivity() {
             holder.itemView.setOnClickListener { switchTo(list) }
             holder.overflow.contentDescription = getString(R.string.SetListRowOverflow, name)
             holder.overflow.setOnClickListener { showRowMenu(it, list) }
+            // The drag handle is a touch gesture; screen readers and switch access reorder
+            // through named actions instead, one row at a time.
+            holder.detachAccessibilityActions()
+            if (custom) {
+                val customIndex = customRows().indexOf(list)
+                if (customIndex > 0) {
+                    holder.accessibilityActions += ViewCompat.addAccessibilityAction(
+                        holder.itemView,
+                        getString(R.string.MoveUp),
+                    ) { _, _ -> moveList(list, -1) }
+                }
+                if (customIndex in 0 until customRows().size - 1) {
+                    holder.accessibilityActions += ViewCompat.addAccessibilityAction(
+                        holder.itemView,
+                        getString(R.string.MoveDown),
+                    ) { _, _ -> moveList(list, 1) }
+                }
+            }
         }
+    }
+
+    private fun customRows(): List<SongList> = rows.filter { it.id != SongsModel.DEFAULT_ID }
+
+    /** Moves [list] one step among the custom lists and commits at once. Visible for tests. */
+    internal fun moveList(
+        list: SongList,
+        delta: Int,
+    ): Boolean {
+        val custom = customRows().toMutableList()
+        val from = custom.indexOf(list)
+        val to = from + delta
+        if (from < 0 || to !in custom.indices) return false
+        custom.add(to, custom.removeAt(from))
+        model.reorderLists(custom.map { it.id })
+        return true
     }
 
     private fun showRowMenu(
@@ -275,6 +310,13 @@ class ManageSetListsActivity : AppCompatActivity() {
     private class RowHolder(
         view: View,
     ) : RecyclerView.ViewHolder(view) {
+        val accessibilityActions = mutableListOf<Int>()
+
+        fun detachAccessibilityActions() {
+            accessibilityActions.forEach { ViewCompat.removeAccessibilityAction(itemView, it) }
+            accessibilityActions.clear()
+        }
+
         val name: TextView = view.findViewById(R.id.setListRowName)
         val count: TextView = view.findViewById(R.id.setListRowCount)
         val overflow: ImageButton = view.findViewById(R.id.setListRowOverflow)

@@ -264,6 +264,22 @@ class SongsModelSetListsTest {
         assertEquals(SongsModel.DEFAULT_ID, model.currentListId)
     }
 
+    @Test
+    fun aCopyOfAMaximumLengthNameStillFitsTheLimit() {
+        val longest = "S".repeat(60)
+        val id = model.createList(longest)
+        val copy = model.duplicateList(id)!!
+        val copyName = model.displayName(copy)
+        assertEquals(60, copyName.length)
+        assertTrue(copyName.endsWith(" copy"))
+        assertNull("a generated name passes the same validation as a typed one", model.validateName(copyName, copy))
+
+        val second = model.duplicateList(id)!!
+        val secondName = model.displayName(second)
+        assertEquals(60, secondName.length)
+        assertTrue(secondName.endsWith(" copy 2"))
+    }
+
     // ==================== Signing in ====================
 
     @Test

@@ -187,6 +187,9 @@ public struct DPAddableSongs {
                 case .modified:
                     self.songLists[change.document.documentID]?.restore(snapshot: change.document)
                 case .removed:
+                    // Flagged first: an editor still holding the list would otherwise
+                    // store it back and recreate the document the other device deleted.
+                    self.songLists[change.document.documentID]?.discardLocally()
                     self.removeSongList(forKey: change.document.documentID)
                 }
             }
@@ -476,13 +479,20 @@ public struct DPAddableSongs {
         return list
     }
 
+    /// "<name> copy", then "copy 2", "copy 3" …, each trimmed to fit the name limit.
     private func copyName(of name: String) -> String {
         let taken = Set(songLists.values.map { displayName(for: $0).lowercased() })
-        let base = "\(name) copy"
-        if !taken.contains(base.lowercased()) { return base }
+        func candidate(_ suffix: String) -> String {
+            let room = max(1, DPSongsModel.nameLengthLimit - suffix.count)
+            return DPSongsModel.normalizeName(String(name.prefix(room))) + suffix
+        }
+        var result = candidate(" copy")
         var index = 2
-        while taken.contains("\(base) \(index)".lowercased()) { index += 1 }
-        return "\(base) \(index)"
+        while taken.contains(result.lowercased()) {
+            result = candidate(" copy \(index)")
+            index += 1
+        }
+        return result
     }
 
     /// Song ids are identity inside one list; a copy is an independent song.

@@ -285,10 +285,12 @@ class SongListSyncEmulatorTest {
         // Deleting the list this device is showing falls the tab back to My Songs.
         model.currentListId = "remote-list-abcd"
         assertEquals("remote-list-abcd", model.currentListId)
+        val removed = model.songLists["remote-list-abcd"]!!
         await(remoteLists.document("remote-list-abcd").delete())
         pumpUntil("the remote deletion to reach this device") {
             !model.songLists.containsKey("remote-list-abcd")
         }
+        assertTrue("a list deleted elsewhere can never be stored back from here", removed.isDeleted)
         assertEquals(SongsModel.DEFAULT_ID, model.currentListId)
         assertEquals(SongsModel.DEFAULT_ID, model.currentList.id)
         assertFalse(model.songLists.containsKey("remote-list-abcd"))

@@ -334,6 +334,20 @@ final class DPSongsModelSetListsTests: XCTestCase {
         XCTAssertEqual(reloaded.songLists[second.id]?.songs.map(\.name), ["Lida Rose"])
     }
 
+    func testACopyOfAMaximumLengthNameStillFitsTheLimit() throws {
+        let model = DPSongsModel()
+        let longest = String(repeating: "S", count: DPSongsModel.nameLengthLimit)
+        let list = try XCTUnwrap(model.createList(named: longest))
+        let copy = try XCTUnwrap(model.duplicateList(list))
+        XCTAssertEqual(copy.name.count, DPSongsModel.nameLengthLimit)
+        XCTAssertTrue(copy.name.hasSuffix(" copy"))
+        XCTAssertNil(model.validateName(copy.name, excluding: copy.id),
+                     "a generated name passes the same validation as a typed one")
+        let second = try XCTUnwrap(model.duplicateList(list))
+        XCTAssertEqual(second.name.count, DPSongsModel.nameLengthLimit)
+        XCTAssertTrue(second.name.hasSuffix(" copy 2"))
+    }
+
     func testRemoteWinsKeepsMySongsAndTheAccountsListsOnly() throws {
         let model = DPSongsModel()
         let kept = try XCTUnwrap(model.createList(named: "Saturday show"))

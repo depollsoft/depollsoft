@@ -451,6 +451,17 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
             XCTAssertFalse(manage.tableView(manageTable, canMoveRowAt: IndexPath(row: 0, section: 0)),
                            "My Songs never moves")
             XCTAssertTrue(manage.tableView(manageTable, canMoveRowAt: IndexPath(row: 1, section: 0)))
+            // Reordering without a drag: named actions for VoiceOver and Switch Control.
+            XCTAssertNil(home.accessibilityCustomActions, "My Songs never moves")
+            XCTAssertEqual(custom.accessibilityCustomActions?.map(\.name), ["Move down"])
+            let last = manage.tableView(manageTable, cellForRowAt: IndexPath(row: 2, section: 0))
+            XCTAssertEqual(last.accessibilityCustomActions?.map(\.name), ["Move up"])
+            XCTAssertTrue(manage.move(second, by: -1))
+            XCTAssertEqual(model.orderedLists.map(\.id), ["default", second.id, first.id])
+            XCTAssertFalse(manage.move(second, by: -1), "nothing above the first custom row")
+            XCTAssertTrue(manage.move(second, by: 1))
+            XCTAssertEqual(model.orderedLists.map(\.id), ["default", first.id, second.id])
+            manageTable.reloadData()
             XCTAssertEqual(manage.tableView(manageTable,
                                             targetIndexPathForMoveFromRowAt: IndexPath(row: 2, section: 0),
                                             toProposedIndexPath: IndexPath(row: 0, section: 0)),

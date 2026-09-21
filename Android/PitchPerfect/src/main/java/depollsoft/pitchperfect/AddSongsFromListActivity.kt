@@ -35,8 +35,12 @@ class AddSongsFromListActivity : AppCompatActivity() {
     private var confirmMenuItem: MenuItem? = null
     private var selectAllMenuItem: MenuItem? = null
 
-    /** The songs ticked so far; [PitchedSong] equality is by id, which is unique per song. */
-    private val selection = linkedSetOf<PitchedSong>()
+    /**
+     * The songs ticked so far, by identity: song ids are only promised unique within one list,
+     * and two source lists could carry the same id.
+     */
+    private val selection: MutableSet<PitchedSong> =
+        java.util.Collections.newSetFromMap(java.util.IdentityHashMap())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

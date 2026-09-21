@@ -243,12 +243,14 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
         // without taking the Songs tab anywhere.
         model.currentListId = local.id
         XCTAssertEqual(model.currentListId, local.id)
+        let removed = model.songLists[local.id]
         awaitError("the other device to delete its list") {
             self.remoteDoc.collection("songLists").document(local.id).delete(completion: $0)
         }
         spinUntil("the remote deletion to reach this device") {
             self.model.songLists[local.id] == nil
         }
+        XCTAssertTrue(removed?.isDeleted == true, "a list deleted elsewhere can never be stored back from here")
         XCTAssertEqual(model.currentListId, "default")
         XCTAssertTrue(model.currentList === model.defaultSongList)
         let stored = UserDefaults.standard.dictionary(forKey: DPSongsModel.songListsKey)
