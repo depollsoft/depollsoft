@@ -60,6 +60,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "402153260205-en3m0n5ge0q5fbfgf25ko41bif6uugrm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.pitchperfect.private",
+            "certificate_hash": "64036581a6ca82ce7fe1eec1f8cdc85f2d1f3584"
+          }
+        },
+        {
+          "client_id": "402153260205-nc1e5vffikkfnhgtm6aflpskqgs1d7ih.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.pitchperfect.private",
+            "certificate_hash": "bf3645782e76153e5ed7a8d79b38470ec81072da"
+          }
+        },
+        {
           "client_id": "402153260205-453pemhue4nhrejah7mjtgbdhslta2iv.apps.googleusercontent.com",
           "client_type": 3
         }

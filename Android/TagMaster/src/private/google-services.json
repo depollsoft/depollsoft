@@ -68,6 +68,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "572337670650-cs9ifs8ehnv29tdvcgajrrtslart5f9a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.tagmaster.private",
+            "certificate_hash": "9c2e02136c049ace573c9c66b23ea87e344ec1e2"
+          }
+        },
+        {
+          "client_id": "572337670650-ddrpe4ff6fgtt4eavo0f9ais95grtae8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "depollsoft.tagmaster.private",
+            "certificate_hash": "bf3645782e76153e5ed7a8d79b38470ec81072da"
+          }
+        },
+        {
           "client_id": "572337670650-5mh6j8nvkglmsm3gqeh6s9ah8e7vhvn6.apps.googleusercontent.com",
           "client_type": 3
         }
