@@ -139,6 +139,7 @@
 		C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */; };
 		ABBB0000000000000000B009 /* DPSongsModelSetListsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */; };
 		ABBB0000000000000000B00B /* DPSongListSyncEmulatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */; };
+		ABBB0000000000000000B00D /* DPSongsModelInitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
@@ -375,6 +376,7 @@
 		F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsPresentationTests.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelSetListsTests.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListSyncEmulatorTests.swift; sourceTree = "<group>"; };
+		ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelInitTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -692,6 +694,7 @@
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */,
 				ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */,
 				ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */,
 				F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */,
@@ -1057,6 +1060,7 @@
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				ABBB0000000000000000B00D /* DPSongsModelInitTests.swift in Sources */,
 				ABBB0000000000000000B00B /* DPSongListSyncEmulatorTests.swift in Sources */,
 				ABBB0000000000000000B009 /* DPSongsModelSetListsTests.swift in Sources */,
 				C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */,
