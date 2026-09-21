@@ -68,9 +68,7 @@ public struct DPAddableSongs {
 
         if let serializedSongs = UserDefaults.standard.dictionary(forKey: DPSongsModel.legacySongsKey),
            let songs = DPJsonSerializer.deserializeDictionary(serializedSongs) as? [DPPitchedSong] {
-            let defaultList = DPSongList(id: DPSongsModel.defaultListId)
-            defaultList.name = "Default"
-            defaultList.songs = songs
+            let defaultList = DPSongList(id: DPSongsModel.defaultListId, name: "Default", songs: songs)
             self.songLists[DPSongsModel.defaultListId] = defaultList
 
             self.storeAll()
@@ -86,17 +84,16 @@ public struct DPAddableSongs {
                 let songs = serializedSongs.compactMap {
                     DPJsonSerializer.deserializeDictionary($0) as? DPPitchedSong
                 }
-                let songList = DPSongList(id: id)
-                songList.name = castList["name"] as? String ?? id
-                songList.order = (castList["order"] as? NSNumber)?.intValue
-                songList.songs = songs
+                let songList = DPSongList(id: id,
+                                          name: castList["name"] as? String ?? id,
+                                          order: (castList["order"] as? NSNumber)?.intValue,
+                                          songs: songs)
                 self.songLists[id] = songList
             }
         }
 
         if self.songLists[DPSongsModel.defaultListId] == nil {
-            let defaultList = DPSongList(id: DPSongsModel.defaultListId)
-            defaultList.name = "Default"
+            let defaultList = DPSongList(id: DPSongsModel.defaultListId, name: "Default")
             self.songLists[DPSongsModel.defaultListId] = defaultList
         }
     }
@@ -522,6 +519,20 @@ public struct DPAddableSongs {
         super.init()
     }
 
+    /// Builds a list with its contents in place. Assigning `name` or `songs`
+    /// after construction posts `.songsChanged`, which the Songs screen answers
+    /// by reading `DPSongsModel.sharedInstance`; while that singleton is still
+    /// being initialised the read re-enters its initialiser and the app traps.
+    /// The model's own initialiser therefore builds every list this way.
+    convenience init(id: String, name: String, order: Int? = nil, songs: [DPPitchedSong] = []) {
+        self.init(id: id)
+        announcesChanges = false
+        self.name = name
+        self.order = order
+        self.songs = songs
+        announcesChanges = true
+    }
+
     init(snapshot: DocumentSnapshot) {
         self.id = snapshot.documentID
         self.reference = snapshot.reference
@@ -531,9 +542,12 @@ public struct DPAddableSongs {
     }
 
     @objc public let id: String
+    /// False only while `init(id:name:order:songs:)` fills the list in, so the
+    /// observers below stay quiet for a list nobody can see yet.
+    private var announcesChanges = true
     public var name: String {
         didSet {
-            NotificationCenter.default.post(name: .songsChanged, object: self)
+            if announcesChanges { NotificationCenter.default.post(name: .songsChanged, object: self) }
         }
     }
     /// Position among custom lists, 0-based. Ignored for `default`, which is
@@ -541,7 +555,7 @@ public struct DPAddableSongs {
     public var order: Int?
     @objc public var songs: [DPPitchedSong] = [] {
         didSet {
-            NotificationCenter.default.post(name: .songsChanged, object: self)
+            if announcesChanges { NotificationCenter.default.post(name: .songsChanged, object: self) }
         }
     }
 
