@@ -228,9 +228,11 @@ final class StoreScreenshotTests: XCTestCase {
                 // Let SwiftUI receive the complete title before Return dismisses
                 // focus. Sending both in one keyboard batch can submit a prefix.
                 if field.value as? String != title {
+                    // A loaded hosted runner can take well over five seconds to deliver a
+                    // typed title to the SwiftUI field; the wait only bounds a stall.
                     let entered = XCTNSPredicateExpectation(
                         predicate: NSPredicate(format: "value == %@", title), object: field)
-                    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed)
+                    XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 30), .completed)
                 }
                 XCTAssertEqual(field.value as? String, title)
                 // Return works with both software and connected hardware keyboards.
