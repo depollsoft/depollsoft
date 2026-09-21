@@ -213,6 +213,26 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
             resolveSongListFragment()?.sortSongs()
             true
         }
+        menu.findItem(R.id.addFromListMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.openAddSongsFromList()
+            true
+        }
+        menu.findItem(R.id.renameListMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.promptRenameSetList()
+            true
+        }
+        menu.findItem(R.id.duplicateListMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.duplicateCurrentList()
+            true
+        }
+        menu.findItem(R.id.deleteListMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.confirmDeleteCurrentList()
+            true
+        }
+        menu.findItem(R.id.manageListsMenuItem).setOnMenuItemClickListener {
+            resolveSongListFragment()?.openManageSetLists()
+            true
+        }
         optionsMenu = menu
         syncSongMenuItems(menu)
         return super.onCreateOptionsMenu(menu)
@@ -228,7 +248,8 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         val editItem = menu?.findItem(R.id.editSongsMenuItem) ?: return
         val sortItem = menu.findItem(R.id.sortMenuItem) ?: return
         val onSongs = selectedPage == 3
-        val editing = onSongs && resolveSongListFragment()?.isEditingSongs() == true
+        val fragment = resolveSongListFragment()
+        val editing = onSongs && fragment?.isEditingSongs() == true
         val title = getString(if (editing) R.string.StopEditing else R.string.EditSongList)
         if (editItem.title?.toString() != title) {
             editItem.title = title
@@ -236,6 +257,27 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         }
         if (editItem.isVisible != onSongs) editItem.isVisible = onSongs
         if (sortItem.isVisible != editing) sortItem.isVisible = editing
+
+        // The set list is managed from edit mode, exactly where Sort already lives.
+        setVisible(menu, R.id.addFromListMenuItem, editing)
+        setVisible(menu, R.id.renameListMenuItem, editing)
+        setVisible(menu, R.id.duplicateListMenuItem, editing)
+        setVisible(menu, R.id.manageListsMenuItem, editing)
+        // Never for `default`: My Songs is always present.
+        setVisible(menu, R.id.deleteListMenuItem, editing && fragment?.canDeleteCurrentList() == true)
+        val canAdd = editing && fragment?.canAddSongsFromOtherLists() == true
+        menu.findItem(R.id.addFromListMenuItem)?.let {
+            if (it.isEnabled != canAdd) it.isEnabled = canAdd
+        }
+    }
+
+    private fun setVisible(
+        menu: Menu,
+        itemId: Int,
+        visible: Boolean,
+    ) {
+        val item = menu.findItem(itemId) ?: return
+        if (item.isVisible != visible) item.isVisible = visible
     }
 
     override fun onStart() {

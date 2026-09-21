@@ -15,6 +15,15 @@ class SongList constructor() {
     lateinit var id: String
     var name: String by trackable("")
     var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection<PitchedSong>())
+
+    /**
+     * Position among the custom lists, 0-based, or null on a list that has never been ordered.
+     *
+     * Deliberately outside the store-on-change tracker below: a drag rewrites `order` on every
+     * custom list, and the design contract commits the new sequence once on drop rather than once
+     * per step.
+     */
+    var order: Long? by trackable()
     val isRestoring =
         object : ThreadLocal<Boolean>() {
             override fun initialValue(): Boolean = false
@@ -55,6 +64,7 @@ class SongList constructor() {
             // straight back into Firestore before songs have been restored.
             isRestoring.set(true)
             name = snapshot.getString("name")!!
+            order = snapshot.getLong("order")
             val newSongs =
                 rawSongs.map {
                     @Suppress("UNCHECKED_CAST")
@@ -127,16 +137,33 @@ class SongList constructor() {
         songs.updateTrackers()
     }
 
+    /**
+     * Set once the list has been deleted. A stale holder — an editor opened on one of its songs,
+     * an adapter not yet swapped — can still mutate it afterwards, and the store-on-change tracker
+     * would otherwise put the list straight back into the map and recreate its document.
+     */
+    var isDeleted: Boolean = false
+        private set
+
+    /** Removes this list's document and refuses every later write. The local map is the caller's business. */
+    fun deleteRemote() {
+        isDeleted = true
+        reference?.delete()
+    }
+
     fun storeValue() {
-        if (!this::id.isInitialized || !SongsModel.isInitialized) {
+        if (isDeleted || !this::id.isInitialized || !SongsModel.isInitialized) {
             return
         }
         SongsModel.get().songLists = SongsModel.get().songLists + (id to this)
         val dict =
-            mapOf(
+            mutableMapOf<String, Any>(
                 "name" to name,
                 "songs" to songs.map { JsonSerializer.serialize(it).toMap() },
             )
+        // Left out rather than written as null: the write is a merge, and an older app version
+        // that stores only {name, songs} must not be able to erase an order this one set.
+        order?.let { dict["order"] = it }
         reference?.set(dict, SetOptions.merge())
     }
 }

@@ -173,8 +173,10 @@ static const CGFloat DPSongKeySize = 18;
 @property (nonatomic, strong) GADBannerView *bannerView;
 @property (nonatomic, strong) UILabel *emptyStateLabel;
 @property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) SetListSelectorView *setListSelector;
 @property (nonatomic, strong) UIBarButtonItem *editItem;
-@property (nonatomic, strong) UIBarButtonItem *sortItem;
+@property (nonatomic, strong) UIBarButtonItem *moreItem;
+@property (nonatomic, copy) NSString *moreMenuSignature;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
 @property (nonatomic, strong) UIBarButtonItem *addItem;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
@@ -184,7 +186,13 @@ static const CGFloat DPSongKeySize = 18;
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, editItem, doneItem, sortItem, addItem, addButton, settingsButton;
+@synthesize bannerView, tableView, setListSelector, editItem, doneItem, moreItem, moreMenuSignature, addItem, addButton, settingsButton;
+
+// Every song operation targets the list the selector is showing, whichever
+// device or screen last changed it.
+- (DPSongList *)currentList {
+    return [DPSongsModel sharedInstance].currentList;
+}
 
 - (void)viewDidLoad
 {
@@ -194,11 +202,14 @@ static const CGFloat DPSongKeySize = 18;
     
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
+    // The selector rides in its own row above the song rows: 12 above, 40 tall,
+    // 8 below, so the score keeps running underneath all three.
     rootLayout.rowDimensions = @[
+                                 [DPGridDimension dimensionWithSize:60],
                                  [DPGridDimension dimensionWithStars:1],
                                  [DPGridDimension dimension]
                                  ];
-    
+
 	// Do any additional setup after loading the view, typically from a nib.
     bannerView = [[GADBannerView alloc] init];
     bannerView.adUnitID = [DPAppDelegate bannerAdUnitID];
@@ -210,7 +221,7 @@ static const CGFloat DPSongKeySize = 18;
     bannerView.rootViewController = self;
     bannerView.delegate = (id<GADBannerViewDelegate>)UIApplication.sharedApplication.delegate;
     
-    [rootLayout addSubview:bannerView row:1 column:0];
+    [rootLayout addSubview:bannerView row:2 column:0];
     
     UIScrollView *background = [[UIScrollView alloc] init];
     background.scrollEnabled = NO;
@@ -253,8 +264,6 @@ static const CGFloat DPSongKeySize = 18;
     self.emptyStateLabel.textColor = DPTheme.plateInkSecondary;
     self.emptyStateLabel.font = [UIFont fontWithName:@"Oswald-Medium" size:15]
         ?: [UIFont preferredFontForTextStyle:UIFontTextStyleCallout];
-    self.emptyStateLabel.text = @"NO SONGS ON FILE\n\nTap + to add your first song and its key";
-    self.emptyStateLabel.accessibilityLabel = @"No songs on file. Tap Add to add your first song and its key.";
     [tableBackground addSubview:self.emptyStateLabel];
     [NSLayoutConstraint activateConstraints:@[
         [self.emptyStateLabel.leadingAnchor constraintGreaterThanOrEqualToAnchor:tableBackground.leadingAnchor constant:32],
@@ -262,9 +271,29 @@ static const CGFloat DPSongKeySize = 18;
         [self.emptyStateLabel.centerXAnchor constraintEqualToAnchor:tableBackground.centerXAnchor],
         [self.emptyStateLabel.topAnchor constraintEqualToAnchor:tableBackground.topAnchor constant:48],
     ]];
-    [rootLayout addSubview:tableView row:0 column:0];
-    
-    
+    [rootLayout addSubview:tableView row:1 column:0];
+
+    UIView *selectorRow = [[UIView alloc] init];
+    selectorRow.backgroundColor = UIColor.clearColor;
+    setListSelector = [[SetListSelectorView alloc] initWithFrame:CGRectZero];
+    setListSelector.translatesAutoresizingMaskIntoConstraints = NO;
+    [selectorRow addSubview:setListSelector];
+    [NSLayoutConstraint activateConstraints:@[
+        [setListSelector.leadingAnchor constraintEqualToAnchor:selectorRow.leadingAnchor constant:16],
+        [setListSelector.trailingAnchor constraintEqualToAnchor:selectorRow.trailingAnchor constant:-16],
+        [setListSelector.topAnchor constraintEqualToAnchor:selectorRow.topAnchor constant:12],
+        [setListSelector.heightAnchor constraintEqualToConstant:40],
+    ]];
+    __weak DPSongListViewController *weakSelf = self;
+    setListSelector.onSelect = ^(NSString *listId) {
+        [weakSelf switchToListWithId:listId];
+    };
+    setListSelector.onCreate = ^{
+        [weakSelf promptNewSetList];
+    };
+    [rootLayout addSubview:selectorRow row:0 column:0];
+
+
     settingsButton = [DPCommon getSettingsButtonWithTarget:self selector:@selector(openSettings)];
 
     addButton = [DPCommon barButtonWithSystemName:@"plus"
@@ -274,22 +303,23 @@ static const CGFloat DPSongKeySize = 18;
     editItem = [DPCommon barButtonWithSystemName:@"pencil"
                                             target:self
                                           selector:@selector(edit)];
-    
-    sortItem = [[UIBarButtonItem alloc] initWithTitle:@"Sort Alphabetically" style:UIBarButtonItemStylePlain target:self action:@selector(sort)];
-    
+
     doneItem = [DPCommon barButtonWithSystemName:@"checkmark"
                                             target:self
                                           selector:@selector(doneEditing)];
-    
+
     navigationItem.title = @"Songs";
     navigationItem.leftBarButtonItem = editItem;
     navigationItem.rightBarButtonItem = settingsButton;
-    
+
+    // Any list may become the current one, so every change is interesting.
     [NSNotificationCenter.defaultCenter addObserver:self
                                            selector:@selector(songsChanged)
                                                name:[DPSongsModel songsChangedNotificationName]
-                                             object:[DPSongsModel sharedInstance].defaultSongList];
-    
+                                             object:nil];
+    [self renderSelector];
+    [self refreshEmptyState];
+
     rootLayout.translatesAutoresizingMaskIntoConstraints = NO;
     
     [self.view addSubview:rootLayout];
@@ -321,17 +351,22 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (void)sort {
-    [[DPSongsModel sharedInstance].defaultSongList sortSongs];
-    [[DPSongsModel sharedInstance].defaultSongList storeValue];
+    [self.currentList sortSongs];
+    [self.currentList storeValue];
     [tableView reloadData];
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
-    for (int x = 0; x < [DPSongsModel sharedInstance].defaultSongList.songs.count; x++) {
+- (void)stopSoundingRows {
+    DPSongList *list = self.currentList;
+    for (int x = 0; x < list.songs.count; x++) {
         [[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:x inSection:0]] setHighlighted:NO animated:NO];
-        DPPitchedSong *song = [[DPSongsModel sharedInstance].defaultSongList.songs objectAtIndex:x];
+        DPPitchedSong *song = [list.songs objectAtIndex:x];
         [song.key.note stop];
     }
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [self stopSoundingRows];
     [super viewDidDisappear:animated];
 }
 
@@ -344,7 +379,7 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    DPPitchedSong *song = [[[DPSongsModel sharedInstance].defaultSongList songs] objectAtIndex:indexPath.row];
+    DPPitchedSong *song = [[self.currentList songs] objectAtIndex:indexPath.row];
     DPSongCell *cell = [[DPSongCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"Cell"];
     [DPTheme styleListCell:cell];
     UIButton *disclosureButton = [UIButton buttonWithType:UIButtonTypeDetailDisclosure];
@@ -358,7 +393,7 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSInteger count = [[DPSongsModel sharedInstance].defaultSongList songs].count;
+    NSInteger count = [[self.currentList songs] count];
     self.emptyStateLabel.hidden = count > 0;
     return count;
 }
@@ -372,16 +407,17 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
-    DPPitchedSong * song = [DPSongsModel sharedInstance].defaultSongList.songs[sourceIndexPath.row];
-    [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:sourceIndexPath.row];
-    [[DPSongsModel sharedInstance].defaultSongList addSong:song atIndex:destinationIndexPath.row];
-    [[DPSongsModel sharedInstance].defaultSongList storeValue];
+    DPSongList *list = self.currentList;
+    DPPitchedSong * song = list.songs[sourceIndexPath.row];
+    [list removeSongAtIndex:sourceIndexPath.row];
+    [list addSong:song atIndex:destinationIndexPath.row];
+    [list storeValue];
 }
 
 - (void)tableView:(UITableView *)view commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        [[DPSongsModel sharedInstance].defaultSongList removeSongAtIndex:indexPath.row];
-        [[DPSongsModel sharedInstance].defaultSongList storeValue];
+        [self.currentList removeSongAtIndex:indexPath.row];
+        [self.currentList storeValue];
         [tableView reloadData];
     }
 }
@@ -392,15 +428,176 @@ static const CGFloat DPSongKeySize = 18;
 
 - (void)edit {
     [tableView setEditing:YES animated:YES];
-    [self.topNavigationItem setLeftBarButtonItems:@[doneItem, sortItem]
-                                         animated:YES];
-    [self.topNavigationItem setRightBarButtonItem:addButton animated:YES];
+    [self.topNavigationItem setLeftBarButtonItems:@[doneItem] animated:YES];
+    moreMenuSignature = nil;
+    [self refreshEditingBarAnimated:YES];
 }
 
 - (void)doneEditing {
     [tableView setEditing:NO animated:YES];
-    [self.topNavigationItem setLeftBarButtonItem:editItem animated:YES];
-    [self.topNavigationItem setRightBarButtonItem:settingsButton animated:YES];
+    [self.topNavigationItem setLeftBarButtonItems:@[editItem] animated:YES];
+    [self.topNavigationItem setRightBarButtonItems:@[settingsButton] animated:YES];
+}
+
+// The menu is built fresh whenever edit mode starts or the lists change, so a
+// list added or emptied elsewhere never leaves a stale action behind.
+- (void)refreshEditingBarAnimated:(BOOL)animated {
+    if (!tableView.isEditing) {
+        return;
+    }
+    // Only the current list, its deletability and whether anything is addable
+    // shape the menu. Rebuilding for every song change would replace the bar
+    // item under an open menu.
+    DPSongsModel *model = [DPSongsModel sharedInstance];
+    DPSongList *list = model.currentList;
+    NSString *signature = [NSString stringWithFormat:@"%@|%d", list.id, [model hasAddableSongsFor:list]];
+    if (moreItem != nil && [signature isEqualToString:moreMenuSignature]) {
+        return;
+    }
+    moreMenuSignature = signature;
+    moreItem = [DPCommon menuBarButtonWithSystemName:@"ellipsis.circle" menu:[self buildSetListMenu]];
+    [self.topNavigationItem setRightBarButtonItems:@[addButton, moreItem] animated:animated];
+}
+
+- (UIMenu *)buildSetListMenu {
+    DPSongsModel *model = [DPSongsModel sharedInstance];
+    DPSongList *list = model.currentList;
+    __weak DPSongListViewController *weakSelf = self;
+    NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
+
+    [items addObject:[UIAction actionWithTitle:@"Sort Alphabetically"
+                                         image:nil
+                                    identifier:nil
+                                       handler:^(__kindof UIAction *action) { [weakSelf sort]; }]];
+
+    UIAction *addFrom = [UIAction actionWithTitle:@"Add songs from another set list…"
+                                            image:nil
+                                       identifier:nil
+                                          handler:^(__kindof UIAction *action) { [weakSelf addSongsFromAnotherSetList]; }];
+    if (![model hasAddableSongsFor:list]) {
+        addFrom.attributes = UIMenuElementAttributesDisabled;
+    }
+    [items addObject:addFrom];
+
+    [items addObject:[UIAction actionWithTitle:@"Rename set list…"
+                                         image:nil
+                                    identifier:nil
+                                       handler:^(__kindof UIAction *action) { [weakSelf promptRenameSetList]; }]];
+
+    [items addObject:[UIAction actionWithTitle:@"Duplicate set list"
+                                         image:nil
+                                    identifier:nil
+                                       handler:^(__kindof UIAction *action) { [weakSelf duplicateSetList]; }]];
+
+    if (![list.id isEqualToString:DPSongsModel.defaultListId]) {
+        UIAction *delete = [UIAction actionWithTitle:@"Delete set list…"
+                                               image:nil
+                                          identifier:nil
+                                             handler:^(__kindof UIAction *action) { [weakSelf confirmDeleteSetList]; }];
+        delete.attributes = UIMenuElementAttributesDestructive;
+        [items addObject:delete];
+    }
+
+    [items addObject:[UIAction actionWithTitle:@"Manage set lists…"
+                                         image:nil
+                                    identifier:nil
+                                       handler:^(__kindof UIAction *action) { [weakSelf manageSetLists]; }]];
+
+    return [UIMenu menuWithTitle:@"" children:items];
+}
+
+// MARK: - Set lists
+
+- (void)renderSelector {
+    [setListSelector renderWithModel:[DPSongsModel sharedInstance]];
+}
+
+- (void)refreshEmptyState {
+    if ([self.currentList.id isEqualToString:DPSongsModel.defaultListId]) {
+        self.emptyStateLabel.text = @"NO SONGS ON FILE\n\nTap + to add your first song and its key";
+        self.emptyStateLabel.accessibilityLabel =
+            @"No songs on file. Tap Add to add your first song and its key.";
+    } else {
+        self.emptyStateLabel.text =
+            @"NOTHING IN THIS SET LIST\n\nTap + to add a song, or tap the pencil to add songs from another set list";
+        self.emptyStateLabel.accessibilityLabel =
+            @"Nothing in this set list. Tap Add to add a song, or tap Edit to add songs from another set list.";
+    }
+}
+
+- (void)switchToListWithId:(NSString *)listId {
+    DPSongsModel *model = [DPSongsModel sharedInstance];
+    if ([model.currentListId isEqualToString:listId]) {
+        return;
+    }
+    [self stopSoundingRows];
+    model.currentListId = listId;
+}
+
+- (void)promptNewSetList {
+    __weak DPSongListViewController *weakSelf = self;
+    UIAlertController *alert = [SetListPrompts createAlertWithCommit:^(NSString *name) {
+        DPSongsModel *model = [DPSongsModel sharedInstance];
+        DPSongList *created = [model createListNamed:name];
+        if (created == nil) {
+            return;
+        }
+        [weakSelf stopSoundingRows];
+        model.currentListId = created.id;
+        [weakSelf doneEditing];
+    }];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)promptRenameSetList {
+    DPSongList *list = self.currentList;
+    UIAlertController *alert = [SetListPrompts renameAlertFor:list commit:^(NSString *name) {
+        [[DPSongsModel sharedInstance] renameList:list to:name];
+    }];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)duplicateSetList {
+    DPSongsModel *model = [DPSongsModel sharedInstance];
+    DPSongList *copy = [model duplicateList:self.currentList];
+    if (copy == nil) {
+        return;
+    }
+    [self stopSoundingRows];
+    // The natural next step is pruning the copy, so edit mode stays on.
+    model.currentListId = copy.id;
+    UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification,
+                                    [NSString stringWithFormat:@"Duplicated as %@",
+                                     [model displayNameFor:copy]]);
+}
+
+- (void)confirmDeleteSetList {
+    DPSongList *list = self.currentList;
+    if ([list.id isEqualToString:DPSongsModel.defaultListId]) {
+        return;
+    }
+    __weak DPSongListViewController *weakSelf = self;
+    UIAlertController *alert = [SetListPrompts deleteAlertFor:list confirm:^{
+        [weakSelf stopSoundingRows];
+        [[DPSongsModel sharedInstance] deleteList:list];
+        [weakSelf doneEditing];
+    }];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)manageSetLists {
+    SetListsController *lists = [[SetListsController alloc] init];
+    [self.navigationController pushViewController:lists animated:YES];
+}
+
+- (void)addSongsFromAnotherSetList {
+    AddSongsFromListController *picker =
+        [[AddSongsFromListController alloc] initWithTarget:self.currentList];
+    __weak DPSongListViewController *weakSelf = self;
+    picker.onFinish = ^(NSInteger added) {
+        [weakSelf.tableView reloadData];
+    };
+    [self presentViewController:[picker embeddedInNavigation] animated:YES completion:nil];
 }
 
 - (void)openSettings {
@@ -415,10 +612,11 @@ static const CGFloat DPSongKeySize = 18;
     navigationController.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
     navigationController.modalPresentationStyle = UIModalPresentationAutomatic;
     editor.song = song;
+    DPSongList *list = self.currentList;
     editor.completionCallback = ^(BOOL cancelled) {
         if (!cancelled) {
             [self->tableView reloadData];
-            [[DPSongsModel sharedInstance].defaultSongList storeValue];
+            [list storeValue];
         }
     };
     [self presentViewController:navigationController animated:YES completion:nil];
@@ -434,21 +632,27 @@ static const CGFloat DPSongKeySize = 18;
     DPPitchedSong *newSong = [[DPPitchedSong alloc] init];
     newSong.key = [[DPKey majorKeys] objectAtIndex:[DPKey majorKeys].count / 2];
     editor.song = newSong;
+    DPSongList *list = self.currentList;
     editor.completionCallback = ^(BOOL cancelled) {
         if (!cancelled) {
-            [[DPSongsModel sharedInstance].defaultSongList addSong:newSong];
-            [[DPSongsModel sharedInstance].defaultSongList storeValue];
+            [list addSong:newSong];
+            [list storeValue];
             [self->tableView reloadData];
-            [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:[DPSongsModel sharedInstance].defaultSongList.songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+            [self->tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:list.songs.count - 1 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
         } else {
-            [[DPSongsModel sharedInstance].defaultSongList removeSong:newSong];
-            [[DPSongsModel sharedInstance].defaultSongList storeValue];
+            [list removeSong:newSong];
+            [list storeValue];
         }
     };
     [self presentViewController:navigationController animated:YES completion:nil];
 }
 
 - (void)songsChanged {
+    // The current list can disappear under the UI; `currentList` falls back to
+    // My Songs on its own, so the tab re-renders rather than leaving.
+    [self renderSelector];
+    [self refreshEmptyState];
+    [self refreshEditingBarAnimated:NO];
     [tableView reloadData];
 }
 

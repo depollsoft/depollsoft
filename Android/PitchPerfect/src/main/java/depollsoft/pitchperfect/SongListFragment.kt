@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.view.*
 import android.view.View.OnClickListener
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -15,18 +16,32 @@ import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
 import com.bindroid.trackable.track
 import com.bindroid.utils.bindTo
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 
 class SongListFragment : Fragment() {
     val model: SongsModel by TrackableField(SongsModel.get())
     var editing: Boolean by TrackableField(false)
     private var fab: FloatingActionButton? = null
     private var adapter: SongListAdapter? = null
+    private var selector: SetListSelectorView? = null
+    private var sorryText: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         this.activity?.volumeControlStream = AudioManager.STREAM_MUSIC
+        parentFragmentManager.setFragmentResultListener(NAME_REQUEST, this) { _, result ->
+            val listId = result.getString(SetListNameDialog.RESULT_LIST_ID) ?: return@setFragmentResultListener
+            if (result.getBoolean(SetListNameDialog.RESULT_CREATED)) {
+                // Creating switches the tab to the new (empty) list and leaves edit mode.
+                if (editing) toggleEditingSongs()
+                switchToList(listId)
+            } else {
+                renderLists()
+            }
+        }
     }
 
     override fun onCreateView(
@@ -37,15 +52,23 @@ class SongListFragment : Fragment() {
         val rootView = inflater.inflate(R.layout.songlistview, container, false)
 
         fab = rootView.findViewById(R.id.addSongButton)
+        sorryText = rootView.findViewById(R.id.sorryText)
 
         val recycler = rootView.findViewById<RecyclerView>(R.id.songListView)
-        val songAdapter = SongListAdapter(model.defaultSongList)
+        val songAdapter = SongListAdapter(model.currentList)
         songAdapter.also { adapter = it }
         recycler.layoutManager = LinearLayoutManager(context)
         recycler.adapter = songAdapter
         val divider = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(requireContext(), R.drawable.divider_hairline)?.let { divider.setDrawable(it) }
         recycler.addItemDecoration(divider)
+
+        selector =
+            rootView.findViewById<SetListSelectorView>(R.id.setListSelector)?.also { part ->
+                part.onSelect = { listId -> switchToList(listId) }
+                part.onCreate = { promptNewSetList() }
+                part.render()
+            }
 
         val touchHelper =
             ItemTouchHelper(
@@ -101,7 +124,7 @@ class SongListFragment : Fragment() {
         rootView.bindTo(
             R.id.sorryText,
             "Visibility",
-            { model.defaultSongList.songs[0] },
+            { model.currentList.songs[0] },
             BoolConverter.get(true, true),
         )
 
@@ -109,11 +132,13 @@ class SongListFragment : Fragment() {
         fab?.setOnClickListener(
             OnClickListener {
                 val i = Intent(this@SongListFragment.context, AddSongActivity::class.java)
+                i.putExtra(AddSongActivity.LIST_EXTRA, model.currentListId)
                 this@SongListFragment.startActivityForResult(i, 1)
             },
         )
         fab?.show()
 
+        applyEmptyStateCopy()
         return rootView
     }
 
@@ -127,7 +152,7 @@ class SongListFragment : Fragment() {
         // onCreateView runs before Fragment.view is assigned. Subscribing there
         // caused the one-shot Bindroid tracker to stop before Firestore could
         // deliver its first change.
-        track({ model.defaultSongList.songs.track() }) {
+        track({ model.currentList.songs.track() }) {
             if (this@SongListFragment.view === view && adapter === songAdapter) {
                 if (!songAdapter.dragging) {
                     activity?.runOnUiThread {
@@ -142,13 +167,57 @@ class SongListFragment : Fragment() {
                 keepTracking
             }
         }
+
+        // The set of lists, their names, their orders and the current list can all change under
+        // the tab — a rename on another device, a list deleted, a position tapped here.
+        track({ model.trackLists() }) {
+            if (this@SongListFragment.view === view) {
+                activity?.runOnUiThread {
+                    if (this@SongListFragment.view === view) renderLists()
+                }
+                keepTracking
+            }
+        }
     }
 
     override fun onDestroyView() {
         adapter = null
         fab = null
+        selector = null
+        sorryText = null
         super.onDestroyView()
     }
+
+    // MARK: - The current list
+
+    val currentListId: String
+        get() = model.currentListId
+
+    private fun switchToList(listId: String) {
+        if (model.currentListId == listId) return
+        stopPlaying()
+        model.currentListId = listId
+        renderLists()
+    }
+
+    private fun renderLists() {
+        adapter?.songList = model.currentList
+        selector?.render()
+        applyEmptyStateCopy()
+        activity?.invalidateOptionsMenu()
+    }
+
+    private fun applyEmptyStateCopy() {
+        sorryText?.setText(
+            if (model.currentListId == SongsModel.DEFAULT_ID) {
+                R.string.NoSongsInList
+            } else {
+                R.string.NoSongsInSetList
+            },
+        )
+    }
+
+    // MARK: - Edit mode
 
     fun isEditingSongs(): Boolean = editing
 
@@ -159,7 +228,76 @@ class SongListFragment : Fragment() {
     }
 
     fun sortSongs() {
-        model.defaultSongList.sortSongs()
+        model.currentList.sortSongs()
+    }
+
+    /** "Add songs from another set list…" is disabled when nothing is addable. */
+    fun canAddSongsFromOtherLists(): Boolean = model.hasAddableSongs(model.currentListId)
+
+    /** The default list is never deletable. */
+    fun canDeleteCurrentList(): Boolean = model.currentListId != SongsModel.DEFAULT_ID
+
+    fun promptNewSetList() {
+        SetListNameDialog.create(parentFragmentManager, NAME_REQUEST)
+    }
+
+    fun promptRenameSetList() {
+        SetListNameDialog.rename(parentFragmentManager, model.currentListId, NAME_REQUEST)
+    }
+
+    /** No prompt: the copy is made, shown, and announced; edit mode stays on to prune it. */
+    fun duplicateCurrentList() {
+        val newId = model.duplicateList(model.currentListId) ?: return
+        model.currentListId = newId
+        renderLists()
+        val root = view ?: return
+        Snackbar
+            .make(
+                root,
+                getString(R.string.SetListDuplicatedAnnouncement, model.displayName(newId)),
+                Snackbar.LENGTH_SHORT,
+            ).show()
+    }
+
+    fun confirmDeleteCurrentList() {
+        val list = model.currentList
+        if (list.id == SongsModel.DEFAULT_ID) return
+        val count = list.songs.size
+        val message =
+            if (count == 0) {
+                getString(R.string.SetListDeleteMessageEmpty)
+            } else {
+                getString(
+                    R.string.SetListDeleteMessage,
+                    resources.getQuantityString(R.plurals.SetListDeleteSongs, count, count),
+                )
+            }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.SetListDeleteTitle, model.displayName(list)))
+            .setMessage(message)
+            .setPositiveButton(R.string.SetListDelete) { _, _ -> deleteCurrentList() }
+            .setNegativeButton(R.string.Cancel, null)
+            .show()
+    }
+
+    /** Exposed for the screen tests, which cannot press a platform dialog's button. */
+    internal fun deleteCurrentList() {
+        val id = model.currentListId
+        if (id == SongsModel.DEFAULT_ID) return
+        stopPlaying()
+        model.deleteList(id)
+        if (editing) toggleEditingSongs()
+        renderLists()
+    }
+
+    fun openAddSongsFromList() {
+        val intent = Intent(requireContext(), AddSongsFromListActivity::class.java)
+        intent.putExtra(AddSongsFromListActivity.LIST_EXTRA, model.currentListId)
+        startActivity(intent)
+    }
+
+    fun openManageSetLists() {
+        startActivity(Intent(requireContext(), ManageSetListsActivity::class.java))
     }
 
     @Deprecated("Deprecated in Java")
@@ -173,9 +311,15 @@ class SongListFragment : Fragment() {
     }
 
     private fun stopPlaying() {
-        for (song in this.model.defaultSongList.songs) {
+        for (song in this.model.currentList.songs) {
             song.stop()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // A list may have been renamed, created or deleted on the screens this tab opens.
+        renderLists()
     }
 
     override fun onPause() {
@@ -192,5 +336,9 @@ class SongListFragment : Fragment() {
         } else {
             fab?.hide()
         }
+    }
+
+    companion object {
+        private const val NAME_REQUEST = "depollsoft.pitchperfect.songs.setListName"
     }
 }

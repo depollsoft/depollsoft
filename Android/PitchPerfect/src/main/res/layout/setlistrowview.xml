@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:background="@drawable/row_lit"
+              android:gravity="center_vertical"
+              android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/setListRowName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif-condensed"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:textColor="@color/pitch_button_text"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/setListRowCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:fontFamily="monospace"
+        android:letterSpacing="0.06"
+        android:textColor="@color/pitch_row_secondary"
+        android:textSize="14sp" />
+
+    <ImageButton
+        android:id="@+id/setListRowOverflow"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:contentDescription="@string/SetListRowActions"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:padding="10dp"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/ic_more_vert"
+        app:tint="@color/plate_ink_secondary" />
+
+    <ImageView
+        android:id="@+id/setListRowDragHandle"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:contentDescription="@string/SetListReorder"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/ic_drag_handle"
+        app:tint="@color/plate_ink_secondary" />
+</LinearLayout>

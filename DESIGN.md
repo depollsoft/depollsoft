@@ -150,9 +150,17 @@ Machined-part geometry. Circles for cells and indicator dots; near-square 2dp co
 
 - 56–64dp fully transparent rows over the full-bleed score (lists themselves carry the score pattern on iOS and sit transparent on Android), with 1px hairline dividers. An empty song list uses the same engraved "NO SONGS ON FILE" prompt on both platforms and points directly to Add. Primary text condensed 20–24sp ink; trailing datum mono 14–18sp secondary. Android song titles keep a 20dp leading inset and song keys use the 18sp ceiling. Pressed state = the lit treatment (`row_lit.xml`: background flips to `plate-lit`, text to `plate-on-lit` via `pitch_button_text` / `pitch_row_secondary` selectors) — a row lights the way a cell does.
 
+### Set List Selector (machined)
+
+- The Songs tab opens with the set list selector above the rows: one round-rect frame (5px radius, 1.5px hairline) holding one position per set list plus a trailing "+", split by 1px interior hairlines, exactly the range selector's construction. 40dp tall, 16dp side margins, 12dp above and 8dp below; positions scroll horizontally inside the fixed frame and the current one is scrolled into view.
+- Positions are engraved labels: the list's display name uppercased in Oswald Medium 13sp with 0.16 tracking, 14dp side padding, truncated at 180dp. The current list carries a 10%-ink wash, full-ink text and the range selector's 6dp `plate-lit` dot 8dp inside its leading edge; the others sit in secondary ink at 75% alpha. Tapping a position switches the rows immediately with the selection tick; "+" opens the New set list prompt. `SetListSelectorView` on both platforms (`Android/.../SetListSelectorView.kt`, `iOS/.../SetListSelectorView.swift`).
+- The home list (`default`) shows as **My Songs**, is always first and can never be deleted. Every other list is a set list with `name`, `songs` and `order`; the contract is `docs/pitchperfect-set-lists.md`.
+
 ### Song Editing
 
 - Android normal mode keeps rows clean. **Edit Songs** is a title-bar action (pencil) that flips to a Done checkmark, reveals each row's pencil and drag handle, and surfaces Sort beside it; Settings folds into the overflow while on Songs. Dragging uses RecyclerView/ItemTouchHelper and persists once on drop.
+- Edit mode is also where the current set list is managed. Android puts **Add songs from another set list…**, **Rename set list…**, **Duplicate set list**, **Delete set list…** (never for My Songs) and **Manage set lists…** in the overflow while editing; iOS shows Done alone on the left and Add plus a More (`ellipsis.circle`) menu on the right carrying Sort Alphabetically and the same five actions. Rename and New use a name prompt with inline validation; Delete confirms with the song count; Duplicate needs no prompt, names the copy "<name> copy", switches to it and stays in edit mode.
+- **Add songs** is a sectioned checklist (one engraved section header per other list, rows in the song-row typography, songs the current list already has left out) confirmed by "Add N songs". **Set Lists** is the manage screen: name plus mono count per row, drag handles on custom rows only, tap to rename, row overflow / swipe for Duplicate and Delete, "+" for a new list.
 - Add/Edit Song keeps the one-tap app-bar checkmark and also supplies a full-width **Save Song** button. Empty titles are blocked inline.
 - iOS uses its native Edit/Done table mode. In the song editor, Return is Done, a keyboard accessory Done button is always present, and tapping outside dismisses the keyboard so the key picker is never trapped.
 
@@ -185,7 +193,7 @@ Phone and watch launcher icons are adaptive foregrounds on the shared #474747 pl
 
 ### Settings Controls
 
-- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. Because FirebaseUI Credential Manager is disabled, logout immediately detaches sync, clears Facebook SDK and Firebase Auth state, and refreshes controls instead of waiting several seconds for credential-state clearing. iOS keeps native switches and its segmented theme control. Destructive/account treatment stays grayscale and never spends the sounding-note glow.
+- Android Settings uses full-width 56dp Material switches, 48dp steel-surface outlined actions, 16sp body copy, and the shared engraved section headers. **Clear all songs** empties My Songs and deletes every other set list after a confirmation that says so. Because FirebaseUI Credential Manager is disabled, logout immediately detaches sync, clears Facebook SDK and Firebase Auth state, and refreshes controls instead of waiting several seconds for credential-state clearing. iOS keeps native switches and its segmented theme control. Destructive/account treatment stays grayscale and never spends the sounding-note glow.
 
 ### Authentication
 

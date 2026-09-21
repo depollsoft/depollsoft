@@ -46,6 +46,12 @@
         </activity>
         <activity android:name=".AddSongActivity"/>
         <activity
+            android:name=".AddSongsFromListActivity"
+            android:label="@string/AddSongsTitle"/>
+        <activity
+            android:name=".ManageSetListsActivity"
+            android:label="@string/ManageSetListsTitle"/>
+        <activity
             android:name=".SettingsActivity"
             android:label="@string/app_name"/>
         <activity

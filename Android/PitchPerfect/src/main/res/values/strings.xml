@@ -24,7 +24,6 @@
     <string name="NoSongsInList">NO SONGS ON FILE\n\nPress + to add your first song and its key</string>
     <string name="Settings">Settings</string>
     <string name="HomePage">apps.depoll.com</string>
-    <string name="ClearSongList">Clear Song List</string>
     <string name="NotesToggle">Notes play until pressed again</string>
     <string name="Purchase">Purchase to remove ads</string>
     <string name="Purchased">(Licensed)</string>
@@ -83,4 +82,56 @@
     <string name="SectionAccount">Account</string>
     <string name="SectionAppearance">Appearance</string>
     <string name="SectionAbout">About</string>
+    <!-- Set lists -->
+    <string name="SetListDefaultName">My Songs</string>
+    <string name="SetListSelectorDescription">Set lists</string>
+    <string name="SetListAddGlyph">+</string>
+    <string name="SetListNew">New set list</string>
+    <string name="SetListNewTitle">New set list</string>
+    <string name="SetListRenameTitle">Rename set list</string>
+    <string name="SetListCreate">Create</string>
+    <string name="SetListRename">Rename</string>
+    <string name="SetListNameLabel">Set list name</string>
+    <string name="SetListNameHint">For example \u201CSaturday show\u201D</string>
+    <string name="SetListNameErrorEmpty">Give the set list a name.</string>
+    <string name="SetListNameErrorTooLong">Keep the name under 61 characters.</string>
+    <string name="SetListNameErrorReserved">That name is reserved.</string>
+    <string name="SetListNameErrorDuplicate">You already have a set list with that name.</string>
+    <string name="SetListAddFrom">Add songs from another set list\u2026</string>
+    <string name="SetListRenameAction">Rename set list\u2026</string>
+    <string name="SetListDuplicateAction">Duplicate set list</string>
+    <string name="SetListDeleteAction">Delete set list\u2026</string>
+    <string name="SetListManageAction">Manage set lists\u2026</string>
+    <string name="SetListDuplicatedAnnouncement">Duplicated as %1$s</string>
+    <string name="SetListDeleteTitle">Delete \u201C%1$s\u201D?</string>
+    <string name="SetListDeleteMessageEmpty">This set list is empty. My Songs is not affected.</string>
+    <string name="SetListDeleteMessage">This removes the set list and %1$s. My Songs is not affected.</string>
+    <string name="SetListDelete">Delete</string>
+    <string name="NoSongsInSetList">NOTHING IN THIS SET LIST\n\nPress + to add a song, or tap the pencil to add songs from another set list</string>
+    <string name="AddSongsTitle">Add songs</string>
+    <string name="NoSongsToAdd">NOTHING TO ADD\n\nEvery song in your other set lists is already here</string>
+    <string name="AddSongsConfirm">Add</string>
+    <string name="ManageSetListsTitle">Set Lists</string>
+    <string name="SetListRowActions">Set list actions</string>
+    <string name="SetListRowOverflow">More actions for %1$s</string>
+    <string name="SetListReorder">Drag to reorder</string>
+    <string name="ClearAllSongs">Clear all songs</string>
+    <string name="ClearAllSongsConfirmation">This empties My Songs and deletes your other set lists on every synced device.</string>
+    <string name="ClearAllSongsDone">Songs cleared.</string>
+
+    <plurals name="SongCount">
+        <item quantity="one">%1$d song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+    <plurals name="SetListDeleteSongs">
+        <item quantity="one">its %1$d song</item>
+        <item quantity="other">its %1$d songs</item>
+    </plurals>
+    <plurals name="AddSongsCount">
+        <item quantity="one">Add %1$d song</item>
+        <item quantity="other">Add %1$d songs</item>
+    </plurals>
+    <string name="NoSongsCount">No songs</string>
+    <string name="SetListPositionDescription">%1$s, %2$s</string>
+    <string name="NoSongsAccessibility">no songs</string>
 </resources>

@@ -9,12 +9,17 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
         XCTAssertEqual(songs.navigationItem.rightBarButtonItem?.accessibilityLabel, "Settings")
         try press(songs.navigationItem.leftBarButtonItem)
         XCTAssertTrue(try table(in: songs).isEditing)
-        let items = try XCTUnwrap(songs.navigationItem.leftBarButtonItems)
-        XCTAssertEqual(items.count, 2)
-        XCTAssertEqual(items.first?.accessibilityLabel, "Done")
-        XCTAssertEqual(items.last?.title, "Sort Alphabetically")
-        XCTAssertEqual(songs.navigationItem.rightBarButtonItem?.accessibilityLabel, "Add")
-        XCTAssertEqual(songs.navigationItem.rightBarButtonItem?.accessibilityIdentifier, "plus")
+        // Edit mode: Done alone on the left; Add and the set-list menu on the right.
+        let left = try XCTUnwrap(songs.navigationItem.leftBarButtonItems)
+        XCTAssertEqual(left.count, 1)
+        XCTAssertEqual(left.first?.accessibilityLabel, "Done")
+        let right = try XCTUnwrap(songs.navigationItem.rightBarButtonItems)
+        XCTAssertEqual(right.count, 2)
+        XCTAssertEqual(right.first?.accessibilityLabel, "Add")
+        XCTAssertEqual(right.first?.accessibilityIdentifier, "plus")
+        XCTAssertEqual(right.last?.accessibilityLabel, "More")
+        XCTAssertEqual(right.last?.accessibilityIdentifier, "ellipsis.circle")
+        XCTAssertNotNil(right.last?.menu)
     }
 
     private func openEditor(_ songs: DPSongListViewController) throws -> DPSongEditorViewController {
@@ -128,5 +133,284 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
                 XCTAssertEqual(table.numberOfRows(inSection: 0), 40)
             }
         }
+    }
+
+    // MARK: - Set lists
+
+    private func selector(in songs: DPSongListViewController) throws -> SetListSelectorView {
+        let view = try XCTUnwrap(songs.value(forKey: "setListSelector") as? SetListSelectorView)
+        view.layoutIfNeeded()
+        return view
+    }
+
+    private func positions(in songs: DPSongListViewController) throws -> [UIButton] {
+        try selector(in: songs).positionButtons
+    }
+
+    private func position(_ identifier: String, in songs: DPSongListViewController) throws -> UIButton {
+        try XCTUnwrap(try positions(in: songs).first { $0.accessibilityIdentifier == identifier })
+    }
+
+    private func alert(from songs: DPSongListViewController) throws -> UIAlertController {
+        settle { songs.presentedViewController != nil }
+        return try XCTUnwrap(songs.presentedViewController as? UIAlertController)
+    }
+
+    private func perform(_ selectorName: String, on songs: DPSongListViewController) {
+        songs.perform(NSSelectorFromString(selectorName))
+    }
+
+    private func customList(named name: String) throws -> DPSongList {
+        try XCTUnwrap(DPSongsModel.sharedInstance.createList(named: name))
+    }
+
+    private func menuTitles(_ songs: DPSongListViewController) throws -> [String] {
+        let more = try XCTUnwrap(songs.navigationItem.rightBarButtonItems?.last)
+        let menu = try XCTUnwrap(more.menu)
+        return menu.children.compactMap { ($0 as? UIAction)?.title }
+    }
+
+    func testTheSelectorShowsMySongsAndANewSetListPosition() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            let buttons = try positions(in: songs)
+            XCTAssertEqual(buttons.map(\.accessibilityIdentifier), ["setlist.default", "setlist.new"])
+            XCTAssertEqual(buttons.first?.accessibilityLabel, "My Songs, 1 song")
+            XCTAssertTrue(buttons.first?.accessibilityTraits.contains(.selected) == true)
+            XCTAssertEqual(buttons.last?.accessibilityLabel, "New set list")
+        }
+    }
+
+    func testPressingPlusNamesAndCreatesASetListAndSwitchesToIt() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try position("setlist.new", in: songs).sendActions(for: .touchUpInside)
+
+            let prompt = try alert(from: songs)
+            XCTAssertEqual(prompt.title, "New set list")
+            XCTAssertEqual(prompt.message, "For example “Saturday show”")
+            XCTAssertEqual(prompt.actions.map { $0.title ?? "" }, ["Cancel", "Create"])
+            let create = try XCTUnwrap(prompt.actions.last)
+            XCTAssertFalse(create.isEnabled, "an empty field cannot create a set list")
+
+            prompt.pp_type("My Songs")
+            XCTAssertFalse(create.isEnabled)
+            XCTAssertEqual(prompt.message, "You already have a set list with that name.")
+
+            prompt.pp_type("Saturday show")
+            XCTAssertTrue(create.isEnabled)
+            prompt.pp_fire("Create")
+            songs.dismiss(animated: false)
+            settle { songs.presentedViewController == nil }
+
+            let model = DPSongsModel.sharedInstance
+            let created = try XCTUnwrap(model.songLists.values.first { $0.name == "Saturday show" })
+            XCTAssertEqual(model.currentListId, created.id)
+            XCTAssertEqual(try positions(in: songs).map(\.accessibilityIdentifier),
+                           ["setlist.default", "setlist.\(created.id)", "setlist.new"])
+            XCTAssertFalse(try table(in: songs).isEditing, "creating leaves edit mode")
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 0)
+        }
+    }
+
+    func testTappingAPositionSwapsTheSongRowsAndTheEmptyState() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies", "Shenandoah"])
+            let list = try customList(named: "Saturday show")
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 2)
+
+            try position("setlist.\(list.id)", in: songs).sendActions(for: .touchUpInside)
+            XCTAssertEqual(DPSongsModel.sharedInstance.currentListId, list.id)
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 0)
+            let empty = try XCTUnwrap(songs.value(forKey: "emptyStateLabel") as? UILabel)
+            XCTAssertFalse(empty.isHidden)
+            XCTAssertEqual(empty.text?.hasPrefix("NOTHING IN THIS SET LIST"), true)
+
+            try position("setlist.default", in: songs).sendActions(for: .touchUpInside)
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 2)
+            XCTAssertEqual(empty.text?.hasPrefix("NO SONGS ON FILE"), true)
+        }
+    }
+
+    func testTheMoreMenuOffersEveryListActionAndHidesDeleteForMySongs() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try enterEditing(songs)
+            XCTAssertEqual(try menuTitles(songs),
+                           ["Sort Alphabetically", "Add songs from another set list…",
+                            "Rename set list…", "Duplicate set list", "Manage set lists…"],
+                           "My Songs cannot be deleted, so the action is not offered")
+            let more = try XCTUnwrap(songs.navigationItem.rightBarButtonItems?.last)
+            let addFrom = try XCTUnwrap(more.menu?.children[1] as? UIAction)
+            XCTAssertTrue(addFrom.attributes.contains(.disabled),
+                          "nothing is addable while there is only one set list")
+
+            let list = try customList(named: "Saturday show")
+            DPSongsModel.sharedInstance.currentListId = list.id
+            let titles = try menuTitles(songs)
+            XCTAssertEqual(titles.last, "Manage set lists…")
+            XCTAssertTrue(titles.contains("Delete set list…"))
+            let deleteAction = try XCTUnwrap(
+                songs.navigationItem.rightBarButtonItems?.last?.menu?.children
+                    .compactMap { $0 as? UIAction }
+                    .first { $0.title == "Delete set list…" })
+            XCTAssertTrue(deleteAction.attributes.contains(.destructive))
+            let addNow = try XCTUnwrap(
+                songs.navigationItem.rightBarButtonItems?.last?.menu?.children
+                    .compactMap { $0 as? UIAction }
+                    .first { $0.title == "Add songs from another set list…" })
+            XCTAssertFalse(addNow.attributes.contains(.disabled),
+                           "My Songs now has a song this list lacks")
+        }
+    }
+
+    func testDeletingTheCurrentSetListConfirmsAndReturnsToMySongs() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let list = try customList(named: "Saturday show")
+            let model = DPSongsModel.sharedInstance
+            model.copySongs(model.defaultSongList.songs, to: list)
+            model.currentListId = list.id
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try enterEditing(songs)
+
+            perform("confirmDeleteSetList", on: songs)
+            let confirmation = try alert(from: songs)
+            XCTAssertEqual(confirmation.title, "Delete “Saturday show”?")
+            XCTAssertEqual(confirmation.message,
+                           "This removes the set list and its 1 song. My Songs is not affected.")
+            XCTAssertEqual(confirmation.actions.last?.style, .destructive)
+            confirmation.pp_fire("Delete")
+            songs.dismiss(animated: false)
+            settle { songs.presentedViewController == nil }
+
+            XCTAssertNil(model.songLists[list.id])
+            XCTAssertEqual(model.currentListId, "default")
+            XCTAssertEqual(try positions(in: songs).map(\.accessibilityIdentifier),
+                           ["setlist.default", "setlist.new"])
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 1)
+            XCTAssertFalse(try table(in: songs).isEditing, "deleting leaves edit mode")
+        }
+    }
+
+    func testAddingSongsFromAnotherSetListAppendsCopies() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies", "Shenandoah"])
+            let model = DPSongsModel.sharedInstance
+            let list = try customList(named: "Saturday show")
+            model.currentListId = list.id
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try enterEditing(songs)
+
+            perform("addSongsFromAnotherSetList", on: songs)
+            settle { songs.presentedViewController != nil }
+            let navigation = try XCTUnwrap(songs.presentedViewController as? UINavigationController)
+            let picker = try XCTUnwrap(navigation.topViewController as? AddSongsFromListController)
+            picker.loadViewIfNeeded()
+            let pickerTable = try XCTUnwrap(picker.value(forKey: "tableView") as? UITableView)
+            pickerTable.reloadData()
+
+            XCTAssertEqual(picker.navigationItem.title, "Add songs")
+            XCTAssertEqual(picker.navigationItem.leftBarButtonItem?.accessibilityLabel, "Close")
+            let confirm = try XCTUnwrap(picker.navigationItem.rightBarButtonItem)
+            XCTAssertEqual(confirm.title, "Add")
+            XCTAssertFalse(confirm.isEnabled)
+
+            let expected = model.addableSongs(for: list)
+            XCTAssertEqual(expected.count, 1)
+            XCTAssertEqual(pickerTable.numberOfSections, 1)
+            XCTAssertEqual(pickerTable.numberOfRows(inSection: 0), 2)
+            XCTAssertEqual(picker.tableView(pickerTable, titleForHeaderInSection: 0), "My Songs")
+            let firstRow = picker.tableView(pickerTable, cellForRowAt: IndexPath(row: 0, section: 0))
+            XCTAssertTrue(labels(in: firstRow).contains("Blue Skies"))
+
+            picker.tableView(pickerTable, didSelectRowAt: IndexPath(row: 0, section: 0))
+            XCTAssertEqual(confirm.title, "Add 1 song")
+            picker.tableView(pickerTable, didSelectRowAt: IndexPath(row: 1, section: 0))
+            XCTAssertEqual(confirm.title, "Add 2 songs")
+            XCTAssertTrue(confirm.isEnabled)
+
+            try press(confirm)
+            settle { songs.presentedViewController == nil }
+
+            XCTAssertEqual(list.songs.map(\.name), ["Blue Skies", "Shenandoah"])
+            XCTAssertTrue(Set(list.songs.map(\.id))
+                .isDisjoint(with: Set(model.defaultSongList.songs.map(\.id))),
+                          "the picker appends copies, not the same songs")
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 2)
+        }
+    }
+
+    func testTheManageScreenListsEverySetListAndPersistsAReorder() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies", "Shenandoah"])
+            let model = DPSongsModel.sharedInstance
+            let first = try customList(named: "Saturday show")
+            let second = try customList(named: "Afterglow")
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try enterEditing(songs)
+
+            perform("manageSetLists", on: songs)
+            let navigation = try XCTUnwrap(songs.navigationController)
+            settle { navigation.topViewController is SetListsController }
+            let manage = try XCTUnwrap(navigation.topViewController as? SetListsController)
+            manage.loadViewIfNeeded()
+            let manageTable = try XCTUnwrap(manage.value(forKey: "tableView") as? UITableView)
+            manageTable.reloadData()
+
+            XCTAssertEqual(manage.navigationItem.title, "Set Lists")
+            XCTAssertEqual(manageTable.numberOfRows(inSection: 0), 3)
+            let home = manage.tableView(manageTable, cellForRowAt: IndexPath(row: 0, section: 0))
+            XCTAssertTrue(labels(in: home).contains("My Songs"))
+            XCTAssertTrue(labels(in: home).contains("2 songs"))
+            let custom = manage.tableView(manageTable, cellForRowAt: IndexPath(row: 1, section: 0))
+            XCTAssertTrue(labels(in: custom).contains("Saturday show"))
+            XCTAssertTrue(labels(in: custom).contains("No songs"))
+
+            XCTAssertFalse(manage.tableView(manageTable, canMoveRowAt: IndexPath(row: 0, section: 0)),
+                           "My Songs never moves")
+            XCTAssertTrue(manage.tableView(manageTable, canMoveRowAt: IndexPath(row: 1, section: 0)))
+            XCTAssertEqual(manage.tableView(manageTable,
+                                            targetIndexPathForMoveFromRowAt: IndexPath(row: 2, section: 0),
+                                            toProposedIndexPath: IndexPath(row: 0, section: 0)),
+                           IndexPath(row: 1, section: 0))
+
+            manage.tableView(manageTable,
+                             moveRowAt: IndexPath(row: 2, section: 0),
+                             to: IndexPath(row: 1, section: 0))
+            XCTAssertEqual(second.order, 0)
+            XCTAssertEqual(first.order, 1)
+            XCTAssertEqual(model.orderedLists.map(\.id), ["default", second.id, first.id])
+            navigation.popViewController(animated: false)
+        }
+    }
+}
+
+extension UIAlertController {
+    /// Types into the alert's field the way the keyboard would, so the
+    /// validation that gates the confirming action actually runs.
+    func pp_type(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        guard let field = textFields?.first else {
+            return XCTFail("This alert has no text field", file: file, line: line)
+        }
+        field.text = text
+        field.sendActions(for: .editingChanged)
+    }
+
+    /// Runs the handler of the named action, the way tapping it would.
+    func pp_fire(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        guard let action = actions.first(where: { $0.title == title }) else {
+            return XCTFail("No “\(title)” action in this alert", file: file, line: line)
+        }
+        XCTAssertTrue(action.isEnabled, "“\(title)” is disabled", file: file, line: line)
+        typealias Handler = @convention(block) (UIAlertAction) -> Void
+        guard action.responds(to: Selector(("handler"))), let raw = action.value(forKey: "handler") else {
+            return XCTFail("UIAlertAction no longer exposes its handler", file: file, line: line)
+        }
+        unsafeBitCast(raw as AnyObject, to: Handler.self)(action)
     }
 }

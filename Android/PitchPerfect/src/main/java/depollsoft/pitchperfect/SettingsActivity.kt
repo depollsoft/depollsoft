@@ -199,13 +199,14 @@ class SettingsActivity(private val watchNodeSource: WatchNodeSource? = null) : A
         clearSongListButton.setOnClickListener {
             val builder = AlertDialog.Builder(this@SettingsActivity)
             builder
-                .setMessage("Are you sure you want to clear your song list?")
-                .setPositiveButton("Yes") { dialog, which ->
-                    SongsModel.get().defaultSongList.resetSongs()
+                .setTitle(R.string.ClearAllSongs)
+                .setMessage(R.string.ClearAllSongsConfirmation)
+                .setPositiveButton(R.string.Yes) { dialog, which ->
+                    SongsModel.get().clearAll()
                     Toast
-                        .makeText(this@SettingsActivity, "Song list cleared.", Toast.LENGTH_SHORT)
+                        .makeText(this@SettingsActivity, R.string.ClearAllSongsDone, Toast.LENGTH_SHORT)
                         .show()
-                }.setNegativeButton("No") { dialog, which -> }
+                }.setNegativeButton(R.string.No) { dialog, which -> }
                 .show()
         }
         findViewById<View>(R.id.changelogButton).setOnClickListener {
