@@ -31,7 +31,9 @@ import depollsoft.pitchperfect.lib.PitchedSong;
 
 public class AddSongActivity extends AppCompatActivity {
     public static final String ID_EXTRA = "depollsoft.pitchperfect.AddSong.id";
+    public static final String LIST_EXTRA = "depollsoft.pitchperfect.AddSong.listId";
     private boolean editing;
+    private SongList targetList;
     private PitchedSong toEdit;
     private TrackableField<PitchedSong> song = new TrackableField<PitchedSong>();
     private SongKeyListAdapter keyList;
@@ -51,13 +53,17 @@ public class AddSongActivity extends AppCompatActivity {
 
         this.setContentView(R.layout.addsongview);
 
+        // Every song operation targets the list the Songs tab is showing, not the default one.
+        this.targetList = SongsModel.get().listOrCurrent(
+                this.getIntent().getStringExtra(AddSongActivity.LIST_EXTRA));
+
         String id = this.getIntent().getStringExtra(AddSongActivity.ID_EXTRA);
         if (id != null) {
             PitchedSong toFind = new PitchedSong();
             toFind.setId(id);
-            int index = SongsModel.get().getDefaultSongList().getSongs().indexOf(toFind);
+            int index = this.targetList.getSongs().indexOf(toFind);
             if (index >= 0) {
-                this.toEdit = SongsModel.get().getDefaultSongList().getSongs().get(index);
+                this.toEdit = this.targetList.getSongs().get(index);
                 this.setSong(new PitchedSong());
                 this.getSong().setName(this.toEdit.getName());
                 this.getSong().setKey(this.toEdit.getKey());
@@ -140,9 +146,9 @@ public class AddSongActivity extends AppCompatActivity {
         if (this.editing) {
             this.toEdit.setName(this.getSong().getName());
             this.toEdit.setKey(this.getSong().getKey());
-            SongsModel.get().getDefaultSongList().notifyOfChange();
+            this.targetList.notifyOfChange();
         } else {
-            SongsModel.get().getDefaultSongList().addSong(this.getSong());
+            this.targetList.addSong(this.getSong());
         }
         View feedbackView = this.findViewById(R.id.saveSongButton);
         int feedback = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
@@ -170,7 +176,7 @@ public class AddSongActivity extends AppCompatActivity {
         menu.findItem(R.id.removeSongMenuItem).setOnMenuItemClickListener(
                 item -> {
                     if (this.editing) {
-                        SongsModel.get().getDefaultSongList().removeSong(this.toEdit);
+                        this.targetList.removeSong(this.toEdit);
                     }
                     this.setResult(1);
                     PitchPerfectActivity.handlingResult = true;

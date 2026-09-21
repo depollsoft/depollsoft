@@ -27,6 +27,7 @@
         <item name="actionBarTheme">@style/ThemeOverlay.Plate.ActionBar</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
         <item name="alertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Plate.Dialog</item>
     </style>
 
     <style name="AuthTheme" parent="AppTheme">
@@ -109,6 +110,29 @@
         <item name="android:textColorPrimary">@color/plate_ink</item>
     </style>
 
+    <!-- Material dialogs take their button ink from colorPrimary, which the plate theme sets to the
+         surface tone for the bars; on a surface-toned dialog that made the buttons vanish. -->
+    <style name="ThemeOverlay.Plate.Dialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/plate_ink</item>
+        <item name="colorAccent">@color/plate_ink</item>
+        <item name="colorSurface">@color/plate_surface</item>
+        <item name="colorOnSurface">@color/plate_ink</item>
+        <item name="colorControlActivated">@color/plate_ink</item>
+        <!-- Errors are engraved in ink like everything else; the plate has no red. -->
+        <item name="colorError">@color/plate_ink</item>
+        <item name="colorOnError">@color/plate_ground</item>
+        <!-- Material's elevation overlay would lift the dialog to a cast card; it is etched. -->
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="android:textColorPrimary">@color/plate_ink</item>
+        <item name="android:textColorSecondary">@color/plate_ink_secondary</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.Plate.Title</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Plate</item>
+    </style>
+
+    <style name="MaterialAlertDialog.Plate.Title" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/plate_ink</item>
+    </style>
+
     <style name="ShapeAppearance.Plate" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">2dp</item>
@@ -142,8 +166,8 @@
         <item name="android:fontFamily">@font/oswald_medium</item>
         <item name="android:letterSpacing">0.12</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/plate_on_accent</item>
-        <item name="backgroundTint">@color/plate_accent</item>
+        <item name="android:textColor">@color/plate_button_text</item>
+        <item name="backgroundTint">@color/plate_button_fill</item>
         <item name="cornerRadius">2dp</item>
         <item name="elevation">0dp</item>
     </style>

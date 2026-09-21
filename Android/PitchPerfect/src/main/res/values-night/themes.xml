@@ -23,6 +23,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="bottomNavigationStyle">@style/Widget.Plate.BottomNavigation</item>
         <item name="alertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Plate.Dialog</item>
         <item name="actionBarStyle">@style/Widget.Plate.ActionBar</item>
         <item name="actionBarTheme">@style/ThemeOverlay.Plate.ActionBar</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Dark</item>

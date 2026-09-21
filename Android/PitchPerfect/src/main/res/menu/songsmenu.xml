@@ -16,4 +16,16 @@
         app:showAsAction="always">
     </item>
 
+    <item
+        android:id="@+id/addFromListMenuItem"
+        android:title="@string/SetListAddFrom"
+        app:showAsAction="never">
+    </item>
+
+    <item
+        android:id="@+id/manageListsMenuItem"
+        android:title="@string/SetListManageAction"
+        app:showAsAction="never">
+    </item>
+
 </menu>

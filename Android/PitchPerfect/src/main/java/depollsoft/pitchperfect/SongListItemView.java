@@ -71,6 +71,7 @@ public class SongListItemView extends LinearLayout implements
             AddSongActivity.class);
         i.putExtra(AddSongActivity.ID_EXTRA, SongListItemView.this.getSong()
             .getId());
+        i.putExtra(AddSongActivity.LIST_EXTRA, SongsModel.get().getCurrentListId());
         SongListItemView.this.getContext().startActivity(i);
       }
     });
@@ -95,6 +96,8 @@ public class SongListItemView extends LinearLayout implements
                 AddSongActivity.class);
             i.putExtra(AddSongActivity.ID_EXTRA, SongListItemView.this
                 .getSong().getId());
+            i.putExtra(AddSongActivity.LIST_EXTRA, SongsModel.get()
+                .getCurrentListId());
             SongListItemView.this.getContext().startActivity(i);
             return true;
           }
@@ -103,7 +106,7 @@ public class SongListItemView extends LinearLayout implements
         new OnMenuItemClickListener() {
           @Override
           public boolean onMenuItemClick(MenuItem item) {
-            SongsModel.get().getDefaultSongList().removeSong(SongListItemView.this.getSong());
+            SongsModel.get().getCurrentList().removeSong(SongListItemView.this.getSong());
             return true;
           }
         });
@@ -111,27 +114,27 @@ public class SongListItemView extends LinearLayout implements
         new OnMenuItemClickListener() {
           @Override
           public boolean onMenuItemClick(MenuItem item) {
-            SongsModel.get().getDefaultSongList().sortSongs();
+            SongsModel.get().getCurrentList().sortSongs();
             return true;
           }
         });
     menu.findItem(R.id.moveDownMenuItem).setVisible(
-        SongsModel.get().getDefaultSongList().canMoveDown(this.getSong()));
+        SongsModel.get().getCurrentList().canMoveDown(this.getSong()));
     menu.findItem(R.id.moveDownMenuItem).setOnMenuItemClickListener(
         new OnMenuItemClickListener() {
           @Override
           public boolean onMenuItemClick(MenuItem item) {
-            SongsModel.get().getDefaultSongList().moveDown(SongListItemView.this.getSong());
+            SongsModel.get().getCurrentList().moveDown(SongListItemView.this.getSong());
             return true;
           }
         });
     menu.findItem(R.id.moveUpMenuItem).setVisible(
-        SongsModel.get().getDefaultSongList().canMoveUp(this.getSong()));
+        SongsModel.get().getCurrentList().canMoveUp(this.getSong()));
     menu.findItem(R.id.moveUpMenuItem).setOnMenuItemClickListener(
         new OnMenuItemClickListener() {
           @Override
           public boolean onMenuItemClick(MenuItem item) {
-            SongsModel.get().getDefaultSongList().moveUp(SongListItemView.this.getSong());
+            SongsModel.get().getCurrentList().moveUp(SongListItemView.this.getSong());
             return true;
           }
         });
@@ -175,7 +178,7 @@ public class SongListItemView extends LinearLayout implements
   }
 
   private void play() {
-    for (PitchedSong song : SongsModel.get().getDefaultSongList().getSongs())
+    for (PitchedSong song : SongsModel.get().getCurrentList().getSongs())
       song.stop();
     this.getSong().play();
   }

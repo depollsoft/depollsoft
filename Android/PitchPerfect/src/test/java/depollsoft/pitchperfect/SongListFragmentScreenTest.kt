@@ -123,6 +123,29 @@ class SongListFragmentScreenTest {
         assertDisplayed("addSongButton", activity.findViewById<FloatingActionButton>(R.id.addSongButton))
     }
 
+    @Test
+    fun theSetListSelectorSitsAboveTheRows() {
+        val activity = launch()
+        val fragment = activity.goToSongs()
+        val part = fragment.requireView().findViewById<SetListSelectorView>(R.id.setListSelector)
+        assertDisplayed("setListSelector", part)
+        assertNotNull("My Songs is always a position", part.positionView(SongsModel.DEFAULT_ID))
+        assertNotNull("the + is how the feature is found", part.addPositionView)
+    }
+
+    @Test
+    fun theEditorIsOpenedForTheCurrentList() {
+        val activity = launch()
+        activity.goToSongs()
+        activity.findViewById<FloatingActionButton>(R.id.addSongButton).performClick()
+        idle()
+        assertEquals(
+            SongsModel.DEFAULT_ID,
+            shadowOf(activity).nextStartedActivityForResult.intent
+                .getStringExtra(AddSongActivity.LIST_EXTRA),
+        )
+    }
+
     // ==================== Song editor ====================
 
     @Test

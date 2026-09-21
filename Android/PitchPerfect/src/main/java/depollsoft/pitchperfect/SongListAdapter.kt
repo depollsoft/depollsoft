@@ -5,8 +5,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.trackable.transaction
 
 class SongListAdapter(
-    private val songList: SongList,
+    songList: SongList,
 ) : RecyclerView.Adapter<SongListAdapter.SongHolder>() {
+    /** The list being shown. Swapping it is how the set list selector changes the rows. */
+    var songList: SongList = songList
+        set(value) {
+            if (field === value) return
+            field = value
+            dragging = false
+            notifyDataSetChanged()
+        }
+
     class SongHolder(
         val songView: SongListItemView,
     ) : RecyclerView.ViewHolder(songView)

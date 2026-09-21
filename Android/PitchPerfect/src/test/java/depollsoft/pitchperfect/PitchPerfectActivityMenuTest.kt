@@ -58,11 +58,47 @@ class PitchPerfectActivityMenuTest {
         assertTrue("edit action appears after the animated switch", edit.isVisible)
         assertFalse(sort.isVisible)
         assertEquals(activity.getString(R.string.EditSongList), edit.title.toString())
+        // The set list actions live in edit mode, exactly where Sort does.
+        SET_LIST_ITEMS.forEach {
+            assertFalse("$it stays hidden outside edit mode", menu.findItem(it).isVisible)
+        }
+
+        val songs = activity.supportFragmentManager.fragments.filterIsInstance<SongListFragment>().single()
+        songs.toggleEditingSongs()
+        activity.syncSongMenuItems(menu)
+        assertTrue(sort.isVisible)
+        SET_LIST_ITEMS.forEach {
+            assertTrue("$it appears in edit mode", menu.findItem(it).isVisible)
+        }
+        assertFalse(
+            "there is no other list to copy from",
+            menu.findItem(R.id.addFromListMenuItem).isEnabled,
+        )
+        assertEquals(
+            "a disabled item says why",
+            activity.getString(R.string.SetListAddFromNothing),
+            menu.findItem(R.id.addFromListMenuItem).title.toString(),
+        )
+        songs.toggleEditingSongs()
+        activity.syncSongMenuItems(menu)
 
         // Leaving the page hides them again; the menu is never re-inflated.
         pager.setCurrentItem(1, false)
         shadowOf(Looper.getMainLooper()).idle()
+        // Toggling edit mode invalidates the activity's own menu, which re-points the activity at
+        // it; this detached copy is the one under test, so it is synced explicitly.
+        activity.syncSongMenuItems(menu)
         assertFalse(edit.isVisible)
-        assertEquals(3, menu.size())
+        SET_LIST_ITEMS.forEach { assertFalse(menu.findItem(it).isVisible) }
+        assertEquals(5, menu.size())
+    }
+
+    private companion object {
+        /** The edit-mode overflow: the list's contents, not the list itself. */
+        val SET_LIST_ITEMS =
+            listOf(
+                R.id.addFromListMenuItem,
+                R.id.manageListsMenuItem,
+            )
     }
 }
