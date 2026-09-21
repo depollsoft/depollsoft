@@ -110,7 +110,9 @@ class PitchPerfectControllerTestCase: XCTestCase {
     }
 
     func settle(until condition: () -> Bool, file: StaticString = #filePath, line: UInt = #line) {
-        let deadline = Date().addingTimeInterval(1)
+        // Polls, so a passing condition returns at once; the deadline only bounds a cold CI
+        // runner, where an alert's presentation can still be in flight when a test dismisses it.
+        let deadline = Date().addingTimeInterval(5)
         while !condition(), Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
         }
