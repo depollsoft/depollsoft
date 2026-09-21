@@ -31,38 +31,61 @@ import Foundation
         navigationController.navigationBar.tintColor = .label
     }
 
+    private static let barButtonLabels = [
+        "checkmark": "Done",
+        "xmark": "Close",
+        "gearshape": "Settings",
+        "plus": "Add",
+        "pencil": "Edit",
+        "square.and.arrow.up": "Share",
+        "magnifyingglass": "Search",
+        "arrow.clockwise": "Refresh",
+        "ellipsis.circle": "More",
+        "list.bullet": "Set lists",
+    ]
+
+    private static func barButtonImage(_ systemName: String) -> UIImage? {
+        UIImage(
+            systemName: systemName,
+            withConfiguration: UIImage.SymbolConfiguration(
+                pointSize: 17,
+                weight: .regular,
+                scale: .medium
+            )
+        )
+    }
+
+    private static func label(_ item: UIBarButtonItem, systemName: String) -> UIBarButtonItem {
+        item.accessibilityIdentifier = systemName
+        item.accessibilityLabel = barButtonLabels[systemName] ?? systemName
+        return item
+    }
+
     @objc public static func barButton(
         systemName: String,
         target: Any,
         selector: Selector
     ) -> UIBarButtonItem {
-        let configuration = UIImage.SymbolConfiguration(
-            pointSize: 17,
-            weight: .regular,
-            scale: .medium
+        label(
+            UIBarButtonItem(
+                image: barButtonImage(systemName),
+                style: .plain,
+                target: target,
+                action: selector
+            ),
+            systemName: systemName
         )
-        let image = UIImage(
-            systemName: systemName,
-            withConfiguration: configuration
+    }
+
+    /// The same bar button, but presenting a menu instead of firing an action.
+    @objc public static func menuBarButton(
+        systemName: String,
+        menu: UIMenu
+    ) -> UIBarButtonItem {
+        label(
+            UIBarButtonItem(image: barButtonImage(systemName), menu: menu),
+            systemName: systemName
         )
-        let item = UIBarButtonItem(
-            image: image,
-            style: .plain,
-            target: target,
-            action: selector
-        )
-        item.accessibilityIdentifier = systemName
-        item.accessibilityLabel = [
-            "checkmark": "Done",
-            "xmark": "Close",
-            "gearshape": "Settings",
-            "plus": "Add",
-            "pencil": "Edit",
-            "square.and.arrow.up": "Share",
-            "magnifyingglass": "Search",
-            "arrow.clockwise": "Refresh",
-        ][systemName] ?? systemName
-        return item
     }
 
     @objc public static func getSettingsButton(target: Any, selector: Selector) -> UIBarButtonItem {

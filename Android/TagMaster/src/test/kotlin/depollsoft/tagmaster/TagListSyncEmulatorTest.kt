@@ -37,7 +37,7 @@ import java.net.URL
  * [ListModel.connectToFirestore] listener, [TagLists] edits, and the `users/{uid}` document that
  * comes back out the other side.
  *
- * Start the emulators with `scripts/firestore-emulator.sh`. Without them the whole class skips
+ * Start the emulators with `scripts/firestore-emulator.sh tagmaster`. Without them the whole class skips
  * rather than fails, so an ordinary `:TagMaster:testDebugUnitTest` run is unaffected.
  *
  * Two clients are used: the app's default [FirebaseApp], and a second app signed in as the same
@@ -58,7 +58,7 @@ class TagListSyncEmulatorTest {
     fun setUp() {
         Assume.assumeTrue(
             "the Firestore emulator is not listening on $HOST:$FIRESTORE_PORT " +
-                "(start it with scripts/firestore-emulator.sh)",
+                "(start it with scripts/firestore-emulator.sh tagmaster)",
             isListening(FIRESTORE_PORT) && isListening(AUTH_PORT),
         )
         Assume.assumeTrue(

@@ -26,6 +26,7 @@ final class TMTagListsTests: XCTestCase {
         TMTagLists.userDoc = nil
         UserDefaults.standard.removeObject(forKey: TMTagLists.listsDefaultsKey)
         UserDefaults.standard.removeObject(forKey: TMTagLists.infoDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: TMTagLists.syncedUidDefaultsKey)
     }
 
     // MARK: - Names
@@ -326,14 +327,77 @@ final class TMTagListsTests: XCTestCase {
         XCTAssertEqual(TMTagLists.name(for: TMTagLists.favoriteKey), "Favorites")
     }
 
-    func testApplyRemoteKeepsLocalBuiltInListsTheRemoteDoesNotMention() {
+    func testApplyRemoteEmptiesBuiltInListsTheRemoteDoesNotMention() {
+        // An account whose favorites emptied has no lists.favorite field at all; signing in
+        // must not resurrect this device's favorites into it.
         TMTagLists.add(1809, to: TMTagLists.favoriteKey)
         TMTagLists.add(42, to: TMTagLists.teachableKey)
         TMTagLists.applyRemote(lists: ["remote-key": [7]],
                                info: ["remote-key": ["name": "Remote", "order": 0]])
-        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [1809])
-        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [42])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.teachableKey), [])
         XCTAssertEqual(TMTagLists.ids(for: "remote-key"), [7])
+    }
+
+    // MARK: - Sign-in snapshots
+
+    func testPrepareLocalListsKeepsListsForTheSameAccountAndDropsThemForAnotherAccount() {
+        let local = TMTagLists.createList(named: "Local only")!
+        TMTagLists.add(9, to: local)
+        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
+
+        // First sign-in on this device: device-only data stays and now belongs to "a".
+        XCTAssertFalse(TMTagLists.prepareLocalLists(forUid: "a"))
+        XCTAssertEqual(TMTagLists.customKeys(), [local])
+        // Signing out and back in as the same account keeps everything.
+        XCTAssertFalse(TMTagLists.prepareLocalLists(forUid: "a"))
+        XCTAssertEqual(TMTagLists.ids(for: local), [9])
+
+        // A different account: nothing here may leak into it.
+        XCTAssertTrue(TMTagLists.prepareLocalLists(forUid: "b"))
+        XCTAssertEqual(TMTagLists.customKeys(), [])
+        XCTAssertEqual(TMTagLists.ids(for: local), [])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
+        XCTAssertFalse(TMTagLists.prepareLocalLists(forUid: "b"))
+    }
+
+    func testRenameIgnoresAListThatNoLongerExists() {
+        let key = TMTagLists.createList(named: "Gone soon")!
+        TMTagLists.deleteList(key)
+        XCTAssertFalse(TMTagLists.renameList(key, to: "Back again"))
+        XCTAssertEqual(TMTagLists.customKeys(), [])
+    }
+
+    func testACacheMissNeitherSeedsTheAccountNorClearsLocalLists() {
+        let local = TMTagLists.createList(named: "Local only")!
+        TMTagLists.add(9, to: local)
+        var seeded = 0
+        DPAppDelegate.handleUserSnapshot(exists: false, fromCache: true, lists: nil, info: nil) { seeded += 1 }
+        XCTAssertEqual(seeded, 0)
+        XCTAssertEqual(TMTagLists.customKeys(), [local])
+        XCTAssertEqual(TMTagLists.ids(for: local), [9])
+    }
+
+    func testTheServerConfirmingNoDocumentSeedsABrandNewAccountFromThisDevice() {
+        let local = TMTagLists.createList(named: "Local only")!
+        var seeded = 0
+        DPAppDelegate.handleUserSnapshot(exists: false, fromCache: false, lists: nil, info: nil) { seeded += 1 }
+        XCTAssertEqual(seeded, 1)
+        XCTAssertEqual(TMTagLists.customKeys(), [local])
+    }
+
+    func testAnExistingAccountReplacesEveryLocalList() {
+        let local = TMTagLists.createList(named: "Local only")!
+        TMTagLists.add(9, to: local)
+        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
+        var seeded = 0
+        DPAppDelegate.handleUserSnapshot(exists: true, fromCache: false,
+                                         lists: ["remote-key": [7]],
+                                         info: ["remote-key": ["name": "Remote", "order": 0]]) { seeded += 1 }
+        XCTAssertEqual(seeded, 0)
+        XCTAssertEqual(TMTagLists.customKeys(), ["remote-key"])
+        XCTAssertEqual(TMTagLists.ids(for: TMTagLists.favoriteKey), [])
+        XCTAssertEqual(TMTagLists.ids(for: local), [])
     }
 
     func testApplyRemoteReplacesBuiltInListsTheRemoteDoesMention() {

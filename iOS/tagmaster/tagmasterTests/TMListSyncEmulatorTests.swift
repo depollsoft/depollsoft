@@ -5,7 +5,7 @@
 //  The real sync path against the Firestore and Auth emulators: `DPAppDelegate.connectLists(to:)`,
 //  `TMTagLists` edits, and the `users/{uid}` document that comes back out the other side.
 //
-//  Start the emulators with `scripts/firestore-emulator.sh`. Without them the whole class skips
+//  Start the emulators with `scripts/firestore-emulator.sh tagmaster`. Without them the whole class skips
 //  rather than fails, so an ordinary `xcodebuild test` run is unaffected.
 //
 //  Two clients are used: this device, and a second app signed in as the same user, which stands in
@@ -41,7 +41,7 @@ final class TMListSyncEmulatorTests: TMBehaviorTestCase {
             TMListSyncEmulatorTests.isListening(TMListSyncEmulatorTests.firestorePort)
                 && TMListSyncEmulatorTests.isListening(TMListSyncEmulatorTests.authPort),
             "the Firestore emulator is not listening on \(TMListSyncEmulatorTests.host):"
-                + "\(TMListSyncEmulatorTests.firestorePort) (start it with scripts/firestore-emulator.sh)"
+                + "\(TMListSyncEmulatorTests.firestorePort) (start it with scripts/firestore-emulator.sh tagmaster)"
         )
     }
 

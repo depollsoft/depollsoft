@@ -397,6 +397,42 @@ class TagDetailActivityScreenTest {
     }
 
     @Test
+    fun aChipFollowsARenameOfTheListItNames() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        assertTrue(activity.chips().labels().contains("Afterglow set"))
+
+        // A rename moves nothing but the registry, so the chip has to be watching that too.
+        TagLists.rename(custom, "Afterglow, later")
+        idle()
+
+        assertTrue(activity.chips().labels().contains("Afterglow, later"))
+        assertFalse(activity.chips().labels().contains("Afterglow set"))
+    }
+
+    @Test
+    fun chipsFollowTheOrderTheListsAreIn() {
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        ListModel(first).add(fixture.id)
+        ListModel(second).add(fixture.id)
+        val activity = launch()
+        assertEquals(
+            listOf("Afterglow set", "Chorus warmups", activity.getString(R.string.list_add_to_list)),
+            activity.chips().labels(),
+        )
+
+        assertTrue(TagLists.moveUp(second))
+        idle()
+
+        assertEquals(
+            listOf("Chorus warmups", "Afterglow set", activity.getString(R.string.list_add_to_list)),
+            activity.chips().labels(),
+        )
+    }
+
+    @Test
     fun aChipOpensTheListItNames() {
         val custom = TagLists.create("Afterglow set")
         ListModel(custom).add(fixture.id)

@@ -249,7 +249,9 @@ final class StoreScreenshotTests: XCTestCase {
                 XCTAssertTrue(app.navigationBars.buttons["Add"].readyForCapture(timeout: 10))
             }
         }
-        app.navigationBars.buttons["Sort Alphabetically"].tap()
+        // Sort now lives in the edit-mode set-list menu.
+        app.navigationBars.buttons["More"].tap()
+        app.buttons["Sort Alphabetically"].tap()
         app.navigationBars.buttons["Done"].tap()
         snap("04-songs")
         app.navigationBars.buttons["Edit"].tap()

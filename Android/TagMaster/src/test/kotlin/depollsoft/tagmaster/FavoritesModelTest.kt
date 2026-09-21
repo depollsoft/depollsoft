@@ -3,6 +3,7 @@ package depollsoft.tagmaster
 import com.bindroid.trackable.TrackableCollection
 import depollsoft.lib.activity.RichApplication
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,8 +20,16 @@ import java.lang.reflect.Field
 @Config(manifest = Config.NONE)
 class FavoritesModelTest {
 
+    @After
+    fun tearDown() {
+        ListModel.setTestMode(false)
+    }
+
     @Before
     fun setUp() {
+        // The wrappers write through to Firestore whenever a user is signed in; there is no
+        // FirebaseApp in a unit test, so cloud writes are switched off here.
+        ListModel.setTestMode(true)
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
         val contextField = RichApplication::class.java.getDeclaredField("context")

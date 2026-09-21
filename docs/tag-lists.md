@@ -31,6 +31,19 @@ listInfo: { "<key>": { name: "Afterglow set", order: 0 }, ... }
 Names are trimmed and whitespace-collapsed, capped at 60 characters, and rejected when they
 duplicate another list (case-insensitively) or match a built-in name.
 
+**Signing in.** The device remembers which account last synced its lists (`tagmaster.syncedUid`
+/ `depollsoft.tagmaster.syncedUid`). Signing in as a *different* account drops the local lists
+first, so one user's lists are never uploaded into another user's brand-new document; signing out
+keeps them, and the same account signing back in finds them untouched. Then the account's document
+is the truth. Its lists replace whatever the device had,
+including the built-in ones (a built-in list the document does not mention is empty), so a device's
+local-only lists never leak into an existing account. The one time the device's lists are uploaded
+is when the *server* confirms the account has no document yet, which is a brand-new account. A
+snapshot served from the local cache (an offline start with a cache miss) decides nothing: it
+neither seeds the document nor clears the local lists. Both listeners subscribe with metadata
+changes included so that server confirmation always arrives (`ListModel.applyUserSnapshot`,
+`DPAppDelegate.handleUserSnapshot`).
+
 Locally the same data is cached per platform:
 
 | | Android (`Preferences`) | iOS (`UserDefaults`) |
@@ -49,7 +62,7 @@ legacy `DPAppDelegate.favorites()` family and `FavoritesModel` / `TeachableTagsM
 The sync tests talk to the Firestore and Auth emulators, never to a real Firebase project:
 
 ```bash
-scripts/firestore-emulator.sh
+scripts/firestore-emulator.sh tagmaster
 ```
 
 Firestore listens on `localhost:8080`, Auth on `localhost:9099`; the ports and the disabled

@@ -357,6 +357,79 @@ class TagListsTest {
         assertEquals(mapOf("name" to "legacy-key", "order" to 0), TagLists.remoteInfo()["legacy-key"])
     }
 
+    // ==================== Sign-in snapshots ====================
+
+    @Test
+    fun prepareLocalLists_keepsListsForTheSameAccountAndDropsThemForAnotherAccount() {
+        val local = TagLists.create("Local only")
+        ListModel(local).add(9)
+        FavoritesModel.addFavorite(1809)
+
+        // First sign-in on this device: device-only data stays and now belongs to "a".
+        assertFalse(ListModel.prepareLocalLists(forUid = "a"))
+        assertEquals(listOf(local), TagLists.customKeys.toList())
+        // Signing out and back in as the same account keeps everything.
+        assertFalse(ListModel.prepareLocalLists(forUid = "a"))
+        assertEquals(listOf(9), ListModel(local).ids.toList())
+
+        // A different account: nothing here may leak into it.
+        assertTrue(ListModel.prepareLocalLists(forUid = "b"))
+        assertTrue(TagLists.customKeys.isEmpty())
+        assertTrue(ListModel(local).ids.isEmpty())
+        assertTrue(FavoritesModel.favoriteIds.isEmpty())
+        assertFalse(ListModel.prepareLocalLists(forUid = "b"))
+    }
+
+    @Test
+    fun rename_ignoresAListThatNoLongerExists() {
+        val key = TagLists.create("Gone soon")
+        TagLists.delete(key)
+        TagLists.rename(key, "Back again")
+        assertTrue(TagLists.customKeys.isEmpty())
+        assertEquals(key, TagLists.name(key))
+    }
+
+    @Test
+    fun applyUserSnapshot_seedsTheAccountOnlyWhenTheServerSaysThereIsNoDocument() {
+        val local = TagLists.create("Local only")
+        ListModel(local).add(9)
+        var seeded = 0
+
+        // A cache miss (an offline start) must not upload this device's lists over the account's.
+        ListModel.applyUserSnapshot(exists = false, fromCache = true, lists = null, info = null) { seeded++ }
+        assertEquals(0, seeded)
+        assertEquals(listOf(local), TagLists.customKeys.toList())
+        assertEquals(listOf(9), ListModel(local).ids.toList())
+
+        // The server confirming there is no document means a brand-new account: upload, keep local.
+        ListModel.applyUserSnapshot(exists = false, fromCache = false, lists = null, info = null) { seeded++ }
+        assertEquals(1, seeded)
+        assertEquals(listOf(local), TagLists.customKeys.toList())
+        assertEquals(listOf(9), ListModel(local).ids.toList())
+    }
+
+    @Test
+    fun applyUserSnapshot_existingAccountReplacesEveryLocalListIncludingEmptyBuiltIns() {
+        val local = TagLists.create("Local only")
+        ListModel(local).add(9)
+        FavoritesModel.addFavorite(1809)
+        var seeded = 0
+
+        // The account has one custom list and no favorites field (an emptied list has none).
+        ListModel.applyUserSnapshot(
+            exists = true,
+            fromCache = false,
+            lists = mapOf("remote-key" to listOf(7L)),
+            info = mapOf("remote-key" to mapOf("name" to "Remote", "order" to 0L)),
+        ) { seeded++ }
+
+        assertEquals(0, seeded)
+        assertEquals(listOf("remote-key"), TagLists.customKeys.toList())
+        assertEquals(listOf(7), ListModel("remote-key").ids.toList())
+        assertTrue(ListModel(local).ids.isEmpty())
+        assertTrue(FavoritesModel.favoriteIds.isEmpty())
+    }
+
     @Test
     fun applyRemote_ordersByOrderThenName() {
         TagLists.create("Local only")

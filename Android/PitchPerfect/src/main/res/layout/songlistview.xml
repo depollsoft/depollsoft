@@ -9,13 +9,24 @@
         android:layout_height="fill_parent"
         android:orientation="vertical">
 
+        <depollsoft.pitchperfect.SetListSelectorView
+            android:id="@+id/setListSelector"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="@string/SetListSelectorDescription"
+            android:scrollbars="none" />
+
         <TextView
             android:id="@+id/sorryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginEnd="32dp"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="36dp"
             android:fontFamily="@font/oswald_medium"
             android:gravity="center"
             android:letterSpacing="0.12"

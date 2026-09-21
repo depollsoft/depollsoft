@@ -145,11 +145,12 @@ npm run deploy                     # Deploy to Firebase
 ### Test Coverage by Platform
 
 - **API**: node:test suite in `api/src/test` covering the analytics router (`npm test`); the router takes injected Pub/Sub, BigQuery, JWT and geoip dependencies via `createAnalyticsRouter`
-- **Tag Master list sync**: `TagListSyncEmulatorTest` (Android, run the class on its own) and `TMListSyncEmulatorTests` (iOS) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh`, and skip when none is running; see `docs/tag-lists.md`
+- **Tag Master list sync**: `TagListSyncEmulatorTest` (Android, run the class on its own) and `TMListSyncEmulatorTests` (iOS) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh tagmaster`, and skip when none is running; see `docs/tag-lists.md`
 - **Android**:
   - Bindroid: Well-tested with dedicated test suite
   - depollsoft.lib.kotlin: Has test coverage
   - TagMaster / PitchPerfect: screen behaviour is tested on the JVM with Robolectric (`src/test`); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI does not run
+- **Pitch Perfect set list sync**: `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS, needs a signed build) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh pitchperfect`, and skip when none is running; see `docs/pitchperfect-set-lists.md`
 - **iOS**:
   - depolllib: Has tests
   - pitchperfectlib: Has tests
