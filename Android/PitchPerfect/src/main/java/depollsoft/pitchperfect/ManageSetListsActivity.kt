@@ -163,6 +163,12 @@ class ManageSetListsActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged()
     }
 
+    /** Makes [list] current and returns to the Songs tab. Visible for the screen tests. */
+    internal fun switchTo(list: SongList) {
+        model.currentListId = list.id
+        finish()
+    }
+
     internal fun promptRename(list: SongList) {
         SetListNameDialog.rename(supportFragmentManager, list.id, NAME_REQUEST)
     }
@@ -216,10 +222,14 @@ class ManageSetListsActivity : AppCompatActivity() {
         ) {
             val list = rows[position]
             val custom = list.id != SongsModel.DEFAULT_ID
+            val current = list.id == model.currentListId
             val name = model.displayName(list)
             holder.itemView.tag = list.id
             holder.name.text = name
             holder.count.text = countLabel(list.songs.size)
+            holder.currentDot.visibility = if (current) View.VISIBLE else View.INVISIBLE
+            holder.itemView.contentDescription =
+                if (current) getString(R.string.SetListCurrentDescription, name) else null
             holder.handle.visibility = if (custom) View.VISIBLE else View.INVISIBLE
             holder.handle.setOnTouchListener { _, event ->
                 if (custom && event.actionMasked == MotionEvent.ACTION_DOWN) {
@@ -229,7 +239,8 @@ class ManageSetListsActivity : AppCompatActivity() {
                     false
                 }
             }
-            holder.itemView.setOnClickListener { promptRename(list) }
+            // A tap on a list switches to it, here as everywhere; Rename lives in the row menu.
+            holder.itemView.setOnClickListener { switchTo(list) }
             holder.overflow.contentDescription = getString(R.string.SetListRowOverflow, name)
             holder.overflow.setOnClickListener { showRowMenu(it, list) }
         }
@@ -268,6 +279,7 @@ class ManageSetListsActivity : AppCompatActivity() {
         val count: TextView = view.findViewById(R.id.setListRowCount)
         val overflow: ImageButton = view.findViewById(R.id.setListRowOverflow)
         val handle: ImageView = view.findViewById(R.id.setListRowDragHandle)
+        val currentDot: View = view.findViewById(R.id.setListRowCurrentDot)
     }
 
     companion object {

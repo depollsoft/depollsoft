@@ -151,6 +151,11 @@ class SongList constructor() {
         reference?.delete()
     }
 
+    /** Lets an undone delete write again. */
+    fun undelete() {
+        isDeleted = false
+    }
+
     fun storeValue() {
         if (isDeleted || !this::id.isInitialized || !SongsModel.isInitialized) {
             return

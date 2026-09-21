@@ -217,18 +217,6 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
             resolveSongListFragment()?.openAddSongsFromList()
             true
         }
-        menu.findItem(R.id.renameListMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.promptRenameSetList()
-            true
-        }
-        menu.findItem(R.id.duplicateListMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.duplicateCurrentList()
-            true
-        }
-        menu.findItem(R.id.deleteListMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.confirmDeleteCurrentList()
-            true
-        }
         menu.findItem(R.id.manageListsMenuItem).setOnMenuItemClickListener {
             resolveSongListFragment()?.openManageSetLists()
             true
@@ -258,16 +246,16 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         if (editItem.isVisible != onSongs) editItem.isVisible = onSongs
         if (sortItem.isVisible != editing) sortItem.isVisible = editing
 
-        // The set list is managed from edit mode, exactly where Sort already lives.
+        // Edit mode carries the list's contents actions; the list itself is managed from a long
+        // press on its selector position and from the Set Lists screen.
         setVisible(menu, R.id.addFromListMenuItem, editing)
-        setVisible(menu, R.id.renameListMenuItem, editing)
-        setVisible(menu, R.id.duplicateListMenuItem, editing)
         setVisible(menu, R.id.manageListsMenuItem, editing)
-        // Never for `default`: My Songs is always present.
-        setVisible(menu, R.id.deleteListMenuItem, editing && fragment?.canDeleteCurrentList() == true)
         val canAdd = editing && fragment?.canAddSongsFromOtherLists() == true
         menu.findItem(R.id.addFromListMenuItem)?.let {
             if (it.isEnabled != canAdd) it.isEnabled = canAdd
+            // A disabled item says why, instead of leaving the person to guess.
+            val title = getString(if (canAdd || !editing) R.string.SetListAddFrom else R.string.SetListAddFromNothing)
+            if (it.title?.toString() != title) it.title = title
         }
     }
 

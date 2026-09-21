@@ -10,6 +10,7 @@ import depollsoft.pitchperfect.lib.PitchedSong
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -139,13 +140,23 @@ class ManageSetListsActivityTest {
     // ==================== Row actions ====================
 
     @Test
-    fun tappingARowOpensTheRenamePrompt() {
-        model.createList("Saturday show")
+    fun tappingARowSwitchesToItAndReturnsToSongs() {
+        val other = model.createList("Saturday show")
         val activity = launch()
+        assertEquals(
+            View.VISIBLE,
+            activity.rows().rowView(0).findViewById<View>(R.id.setListRowCurrentDot).visibility,
+        )
+        assertEquals(
+            View.INVISIBLE,
+            activity.rows().rowView(1).findViewById<View>(R.id.setListRowCurrentDot).visibility,
+        )
         activity.rows().rowView(1).performClick()
         idle()
-        assertNotNull(
-            "a row tap asks for a new name",
+        assertEquals("a row tap makes the list current", other, model.currentListId)
+        assertTrue("and returns to the Songs tab", activity.isFinishing)
+        assertNull(
+            "renaming is the row menu's job",
             activity.supportFragmentManager.findFragmentByTag(SetListNameDialog.FRAGMENT_TAG),
         )
     }

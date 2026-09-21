@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.view.*
 import android.view.View.OnClickListener
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -12,10 +13,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableField
 import com.bindroid.trackable.track
-import com.bindroid.utils.bindTo
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -67,6 +66,7 @@ class SongListFragment : Fragment() {
             rootView.findViewById<SetListSelectorView>(R.id.setListSelector)?.also { part ->
                 part.onSelect = { listId -> switchToList(listId) }
                 part.onCreate = { promptNewSetList() }
+                part.onLongPress = { anchor, listId -> showListMenu(anchor, listId) }
                 part.render()
             }
 
@@ -121,13 +121,6 @@ class SongListFragment : Fragment() {
         touchHelper.attachToRecyclerView(recycler)
         songAdapter.onStartDrag = { holder -> touchHelper.startDrag(holder) }
 
-        rootView.bindTo(
-            R.id.sorryText,
-            "Visibility",
-            { model.currentList.songs[0] },
-            BoolConverter.get(true, true),
-        )
-
         fab = rootView.findViewById(R.id.addSongButton)
         fab?.setOnClickListener(
             OnClickListener {
@@ -161,6 +154,7 @@ class SongListFragment : Fragment() {
                             !songAdapter.dragging
                         ) {
                             songAdapter.notifyDataSetChanged()
+                            applyEmptyStateCopy()
                         }
                     }
                 }
@@ -207,14 +201,20 @@ class SongListFragment : Fragment() {
         activity?.invalidateOptionsMenu()
     }
 
+    /**
+     * The empty state is set here, not through a binding: the current list is a plain
+     * preference, so a one-time binding on its songs would never notice a switch to another list.
+     */
     private fun applyEmptyStateCopy() {
+        val list = model.currentList
         sorryText?.setText(
-            if (model.currentListId == SongsModel.DEFAULT_ID) {
+            if (list.id == SongsModel.DEFAULT_ID) {
                 R.string.NoSongsInList
             } else {
                 R.string.NoSongsInSetList
             },
         )
+        sorryText?.visibility = if (list.songs.isEmpty()) View.VISIBLE else View.GONE
     }
 
     // MARK: - Edit mode
@@ -241,13 +241,16 @@ class SongListFragment : Fragment() {
         SetListNameDialog.create(parentFragmentManager, NAME_REQUEST)
     }
 
-    fun promptRenameSetList() {
-        SetListNameDialog.rename(parentFragmentManager, model.currentListId, NAME_REQUEST)
+    fun promptRenameSetList(listId: String = model.currentListId) {
+        SetListNameDialog.rename(parentFragmentManager, listId, NAME_REQUEST)
     }
 
     /** No prompt: the copy is made, shown, and announced; edit mode stays on to prune it. */
-    fun duplicateCurrentList() {
-        val newId = model.duplicateList(model.currentListId) ?: return
+    fun duplicateCurrentList() = duplicateList(model.currentListId)
+
+    fun duplicateList(listId: String) {
+        val newId = model.duplicateList(listId) ?: return
+        stopPlaying()
         model.currentListId = newId
         renderLists()
         val root = view ?: return
@@ -259,8 +262,36 @@ class SongListFragment : Fragment() {
             ).show()
     }
 
-    fun confirmDeleteCurrentList() {
-        val list = model.currentList
+    fun confirmDeleteCurrentList() = confirmDeleteList(model.currentListId)
+
+    /**
+     * Long-pressing a selector position offers the list's own actions — rename, duplicate, delete
+     * and the manage screen — without first entering edit mode. Visible for the screen tests.
+     */
+    internal fun showListMenu(
+        anchor: View,
+        listId: String,
+    ) {
+        val popup = PopupMenu(requireContext(), anchor)
+        // The menu names the list it acts on: a long press on one position while another is
+        // current would otherwise look exactly like the current list's menu.
+        popup.menu.add(Menu.NONE, HEADER_ITEM_ID, Menu.NONE, model.displayName(listId)).isEnabled = false
+        popup.menuInflater.inflate(R.menu.setlistselectormenu, popup.menu)
+        popup.menu.findItem(R.id.deleteSetListMenuItem).isVisible = listId != SongsModel.DEFAULT_ID
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.renameSetListMenuItem -> promptRenameSetList(listId)
+                R.id.duplicateSetListMenuItem -> duplicateList(listId)
+                R.id.deleteSetListMenuItem -> confirmDeleteList(listId)
+                R.id.manageSetListsMenuItem -> openManageSetLists()
+            }
+            true
+        }
+        popup.show()
+    }
+
+    fun confirmDeleteList(listId: String) {
+        val list = model.songLists[listId] ?: return
         if (list.id == SongsModel.DEFAULT_ID) return
         val count = list.songs.size
         val message =
@@ -275,19 +306,33 @@ class SongListFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.SetListDeleteTitle, model.displayName(list)))
             .setMessage(message)
-            .setPositiveButton(R.string.SetListDelete) { _, _ -> deleteCurrentList() }
+            .setPositiveButton(R.string.SetListDelete) { _, _ -> deleteList(listId) }
             .setNegativeButton(R.string.Cancel, null)
             .show()
     }
 
     /** Exposed for the screen tests, which cannot press a platform dialog's button. */
-    internal fun deleteCurrentList() {
-        val id = model.currentListId
-        if (id == SongsModel.DEFAULT_ID) return
-        stopPlaying()
-        model.deleteList(id)
-        if (editing) toggleEditingSongs()
+    internal fun deleteCurrentList() = deleteList(model.currentListId)
+
+    internal fun deleteList(listId: String) {
+        val list = model.songLists[listId] ?: return
+        if (listId == SongsModel.DEFAULT_ID) return
+        val wasCurrent = listId == model.currentListId
+        if (wasCurrent) stopPlaying()
+        val name = model.displayName(list)
+        model.deleteList(listId)
+        if (wasCurrent && editing) toggleEditingSongs()
         renderLists()
+        // The only irreversible action in the feature gets the same undo Duplicate's Snackbar
+        // slot already occupies; the list comes back with its songs and its id.
+        val root = view ?: return
+        Snackbar
+            .make(root, getString(R.string.SetListDeletedAnnouncement, name), Snackbar.LENGTH_LONG)
+            .setAction(R.string.Undo) {
+                model.restoreList(list)
+                if (wasCurrent) model.currentListId = listId
+                renderLists()
+            }.show()
     }
 
     fun openAddSongsFromList() {
@@ -340,5 +385,6 @@ class SongListFragment : Fragment() {
 
     companion object {
         private const val NAME_REQUEST = "depollsoft.pitchperfect.songs.setListName"
+        internal const val HEADER_ITEM_ID = 1
     }
 }

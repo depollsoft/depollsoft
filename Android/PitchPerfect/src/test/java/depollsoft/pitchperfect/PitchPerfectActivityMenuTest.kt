@@ -71,12 +71,13 @@ class PitchPerfectActivityMenuTest {
             assertTrue("$it appears in edit mode", menu.findItem(it).isVisible)
         }
         assertFalse(
-            "My Songs can never be deleted",
-            menu.findItem(R.id.deleteListMenuItem).isVisible,
-        )
-        assertFalse(
             "there is no other list to copy from",
             menu.findItem(R.id.addFromListMenuItem).isEnabled,
+        )
+        assertEquals(
+            "a disabled item says why",
+            activity.getString(R.string.SetListAddFromNothing),
+            menu.findItem(R.id.addFromListMenuItem).title.toString(),
         )
         songs.toggleEditingSongs()
         activity.syncSongMenuItems(menu)
@@ -89,16 +90,14 @@ class PitchPerfectActivityMenuTest {
         activity.syncSongMenuItems(menu)
         assertFalse(edit.isVisible)
         SET_LIST_ITEMS.forEach { assertFalse(menu.findItem(it).isVisible) }
-        assertEquals(8, menu.size())
+        assertEquals(5, menu.size())
     }
 
     private companion object {
-        /** The edit-mode overflow, minus Delete, which has a rule of its own. */
+        /** The edit-mode overflow: the list's contents, not the list itself. */
         val SET_LIST_ITEMS =
             listOf(
                 R.id.addFromListMenuItem,
-                R.id.renameListMenuItem,
-                R.id.duplicateListMenuItem,
                 R.id.manageListsMenuItem,
             )
     }

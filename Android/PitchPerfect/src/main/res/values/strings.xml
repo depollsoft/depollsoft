@@ -98,6 +98,10 @@
     <string name="SetListNameErrorReserved">That name is reserved.</string>
     <string name="SetListNameErrorDuplicate">You already have a set list with that name.</string>
     <string name="SetListAddFrom">Add songs from another set list\u2026</string>
+    <string name="SetListAddFromNothing">Nothing to add from other set lists</string>
+    <string name="SetListDeletedAnnouncement">Deleted \u201C%1$s\u201D</string>
+    <string name="Undo">Undo</string>
+    <string name="SetListCurrentDescription">%1$s, current set list</string>
     <string name="SetListRenameAction">Rename set list\u2026</string>
     <string name="SetListDuplicateAction">Duplicate set list</string>
     <string name="SetListDeleteAction">Delete set list\u2026</string>

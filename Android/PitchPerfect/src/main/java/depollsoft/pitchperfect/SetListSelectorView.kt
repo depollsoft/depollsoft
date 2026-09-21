@@ -18,6 +18,7 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.content.res.ResourcesCompat
 
 /**
@@ -42,6 +43,9 @@ class SetListSelectorView
         /** Called when the trailing "+" is tapped. */
         var onCreate: (() -> Unit)? = null
 
+        /** Called with the position view and its list id when a position is long-pressed. */
+        var onLongPress: ((View, String) -> Unit)? = null
+
         private val model get() = SongsModel.get()
         private val row = LinearLayout(context)
         private val hairline = colorOrFallback(R.color.plate_hairline, "#2C2F33")
@@ -64,6 +68,9 @@ class SetListSelectorView
         init {
             isHorizontalScrollBarEnabled = false
             isFillViewport = true
+            // A position half out of the frame fades toward the plate: that is the scroll cue.
+            isHorizontalFadingEdgeEnabled = true
+            setFadingEdgeLength(dp(FADE_DP).toInt())
             clipToOutline = true
             outlineProvider =
                 object : ViewOutlineProvider() {
@@ -119,12 +126,30 @@ class SetListSelectorView
                                 onSelect?.invoke(list.id)
                             }
                         }
+                        // The list's own actions, without entering edit mode first.
+                        setOnLongClickListener { view ->
+                            val handler = onLongPress ?: return@setOnLongClickListener false
+                            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            handler(view, list.id)
+                            true
+                        }
+                        // The long press, as a named action for screen readers.
+                        ViewCompat.addAccessibilityAction(
+                            this,
+                            context.getString(R.string.SetListRowActions),
+                        ) { view, _ ->
+                            onLongPress?.invoke(view, list.id)
+                            true
+                        }
                     }
+                // Positions share the whole part between them, so a single list is never a label
+                // floating in an empty frame; once they overflow, the weights have nothing to give.
                 row.addView(
                     position,
                     LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
+                        1f,
                     ),
                 )
             }
@@ -171,9 +196,12 @@ class SetListSelectorView
 
         override fun draw(canvas: Canvas) {
             super.draw(canvas)
-            // Painted last and in unscrolled coordinates: the frame belongs to the part, not to
-            // the strip of positions sliding through it.
+            // Painted last, in viewport coordinates: a scrolling view draws its own content
+            // scrolled along with its children, so the frame is translated back to stay put on
+            // the plate while the positions slide through it.
             val inset = dp(FRAME_STROKE_DP) / 2f
+            canvas.save()
+            canvas.translate(scrollX.toFloat(), 0f)
             canvas.drawRoundRect(
                 inset,
                 inset,
@@ -183,6 +211,7 @@ class SetListSelectorView
                 dp(FRAME_RADIUS_DP),
                 framePaint,
             )
+            canvas.restore()
         }
 
         private fun dp(value: Float): Float =
@@ -223,6 +252,7 @@ class SetListSelectorView
                 ellipsize = android.text.TextUtils.TruncateAt.END
                 maxWidth = dp(MAX_POSITION_WIDTH_DP).toInt()
                 isClickable = true
+                isLongClickable = true
                 isFocusable = true
                 background = null
                 applyMetrics()
@@ -232,11 +262,14 @@ class SetListSelectorView
                 if (isAddPosition) {
                     gravity = Gravity.CENTER
                     setPadding(0, 0, 0, 0)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, ADD_GLYPH_SIZE_SP)
+                    letterSpacing = 0f
                     setTextColor(inkSecondary)
                 } else {
                     gravity = Gravity.CENTER_VERTICAL or Gravity.START
-                    val side = dp(SIDE_PADDING_DP).toInt()
-                    setPadding(side, 0, side, 0)
+                    // Room for the dot before the label on every position, so the label never
+                    // shifts when the selection moves.
+                    setPadding(dp(LEADING_PADDING_DP).toInt(), 0, dp(SIDE_PADDING_DP).toInt(), 0)
                 }
             }
 
@@ -290,6 +323,9 @@ class SetListSelectorView
             private const val FRAME_RADIUS_DP = 5f
             private const val FRAME_STROKE_DP = 1.5f
             private const val SIDE_PADDING_DP = 14f
+            private const val LEADING_PADDING_DP = 20f
+            private const val FADE_DP = 24f
+            private const val ADD_GLYPH_SIZE_SP = 20f
             private const val DOT_INSET_DP = 8f
             private const val DOT_SIZE_DP = 6f
             private const val ADD_WIDTH_DP = 44f

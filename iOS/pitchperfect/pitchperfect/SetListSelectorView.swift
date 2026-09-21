@@ -14,11 +14,14 @@ import UIKit
 
 @objc public class SetListSelectorView: UIView {
     /// Machined-part geometry, shared with the range selector.
-    private static let height: CGFloat = 40
+    static let height: CGFloat = 48
     private static let cornerRadius: CGFloat = 5
     private static let frameStroke: CGFloat = 1.5
     private static let labelSize: CGFloat = 13
-    private static let sidePadding: CGFloat = 14
+    /// The label always starts clear of the indicator dot, lit or not, so a
+    /// name never shifts sideways when its position becomes the current one.
+    private static let labelLeading: CGFloat = 20
+    private static let labelTrailing: CGFloat = 14
     private static let dotDiameter: CGFloat = 6
     private static let dotInset: CGFloat = 8
     private static let maximumLabelWidth: CGFloat = 180
@@ -28,6 +31,8 @@ import UIKit
     @objc public var onSelect: ((String) -> Void)?
     /// Called when the trailing "+" is pressed.
     @objc public var onCreate: (() -> Void)?
+    /// Supplies the menu a long press on a position shows: the list's own actions.
+    @objc public var menuForList: ((String) -> UIMenu?)?
 
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
@@ -56,6 +61,9 @@ import UIKit
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .horizontal
         stack.alignment = .fill
+        // Proportional, so two or three positions share the whole frame instead
+        // of huddling at its leading edge; overflow still scrolls.
+        stack.distribution = .fillProportionally
         stack.spacing = 0
         scrollView.addSubview(stack)
 
@@ -115,6 +123,9 @@ import UIKit
             )
             button.tag = index
             button.addTarget(self, action: #selector(positionPressed(_:)), for: .touchUpInside)
+            // A tap still switches; the menu is the long press, exactly as UIKit does it.
+            button.menu = menuForList?(list.id)
+            button.showsMenuAsPrimaryAction = false
             stack.addArrangedSubview(button)
             positionButtons.append(button)
             if selected { selectedButton = button }
@@ -152,7 +163,7 @@ import UIKit
     }
 
     private func makePosition(title: String, songCount: Int, identifier: String, selected: Bool) -> UIButton {
-        let button = UIButton(type: .custom)
+        let button = SetListPositionButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = selected
             ? DPTheme.plateInk.withAlphaComponent(0.10)
@@ -176,12 +187,20 @@ import UIKit
         button.addSubview(label)
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: button.leadingAnchor,
-                                           constant: SetListSelectorView.sidePadding),
-            label.trailingAnchor.constraint(equalTo: button.trailingAnchor,
-                                            constant: -SetListSelectorView.sidePadding),
+                                           constant: SetListSelectorView.labelLeading),
+            // Not an equality: a proportionally stretched position keeps its
+            // label where it started instead of growing past the truncation.
+            label.trailingAnchor.constraint(lessThanOrEqualTo: button.trailingAnchor,
+                                            constant: -SetListSelectorView.labelTrailing),
             label.centerYAnchor.constraint(equalTo: button.centerYAnchor),
             label.widthAnchor.constraint(lessThanOrEqualToConstant: SetListSelectorView.maximumLabelWidth),
         ])
+        // The natural width the stack shares out: the label plus its paddings.
+        button.naturalSize = CGSize(
+            width: min(label.intrinsicContentSize.width, SetListSelectorView.maximumLabelWidth).rounded(.up)
+                + SetListSelectorView.labelLeading + SetListSelectorView.labelTrailing,
+            height: SetListSelectorView.height
+        )
 
         if selected {
             // The range selector's indicator, seated inside the leading edge.
@@ -216,9 +235,12 @@ import UIKit
     }
 
     private func makeNewPosition() -> UIButton {
-        let button = UIButton(type: .custom)
+        let button = SetListPositionButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .clear
+        // Fixed: the "+" is a control, not a name, so it never stretches.
+        button.naturalSize = CGSize(width: SetListSelectorView.newPositionWidth,
+                                    height: SetListSelectorView.height)
         button.widthAnchor.constraint(equalToConstant: SetListSelectorView.newPositionWidth).isActive = true
         button.setAttributedTitle(
             NSAttributedString(
@@ -249,4 +271,12 @@ import UIKit
     @objc private func newPressed() {
         onCreate?()
     }
+}
+
+/// A position that reports the width it would like, so `fillProportionally`
+/// has something to divide: a plain button carrying only a subview label has
+/// no intrinsic size of its own.
+private final class SetListPositionButton: UIButton {
+    var naturalSize: CGSize = .zero
+    override var intrinsicContentSize: CGSize { naturalSize }
 }

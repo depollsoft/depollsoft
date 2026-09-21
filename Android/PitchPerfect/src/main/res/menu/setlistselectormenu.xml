@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/renameSetListMenuItem"
+        android:title="@string/SetListRenameAction" />
+
+    <item
+        android:id="@+id/duplicateSetListMenuItem"
+        android:title="@string/SetListDuplicateAction" />
+
+    <item
+        android:id="@+id/deleteSetListMenuItem"
+        android:title="@string/SetListDeleteAction" />
+
+    <item
+        android:id="@+id/manageSetListsMenuItem"
+        android:title="@string/SetListManageAction" />
+</menu>

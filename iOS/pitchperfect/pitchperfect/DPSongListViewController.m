@@ -202,10 +202,10 @@ static const CGFloat DPSongKeySize = 18;
     
 	// Do any additional setup after loading the view.
     DPGridLayout *rootLayout = [[DPGridLayout alloc] init];
-    // The selector rides in its own row above the song rows: 12 above, 40 tall,
+    // The selector rides in its own row above the song rows: 12 above, 48 tall,
     // 8 below, so the score keeps running underneath all three.
     rootLayout.rowDimensions = @[
-                                 [DPGridDimension dimensionWithSize:60],
+                                 [DPGridDimension dimensionWithSize:68],
                                  [DPGridDimension dimensionWithStars:1],
                                  [DPGridDimension dimension]
                                  ];
@@ -282,7 +282,7 @@ static const CGFloat DPSongKeySize = 18;
         [setListSelector.leadingAnchor constraintEqualToAnchor:selectorRow.leadingAnchor constant:16],
         [setListSelector.trailingAnchor constraintEqualToAnchor:selectorRow.trailingAnchor constant:-16],
         [setListSelector.topAnchor constraintEqualToAnchor:selectorRow.topAnchor constant:12],
-        [setListSelector.heightAnchor constraintEqualToConstant:40],
+        [setListSelector.heightAnchor constraintEqualToConstant:48],
     ]];
     __weak DPSongListViewController *weakSelf = self;
     setListSelector.onSelect = ^(NSString *listId) {
@@ -290,6 +290,9 @@ static const CGFloat DPSongKeySize = 18;
     };
     setListSelector.onCreate = ^{
         [weakSelf promptNewSetList];
+    };
+    setListSelector.menuForList = ^UIMenu *(NSString *listId) {
+        return [weakSelf listMenuForId:listId];
     };
     [rootLayout addSubview:selectorRow row:0 column:0];
 
@@ -459,6 +462,9 @@ static const CGFloat DPSongKeySize = 18;
     [self.topNavigationItem setRightBarButtonItems:@[addButton, moreItem] animated:animated];
 }
 
+// Editing a set list's songs, and nothing else: whose list this is already
+// shows in the selector, so renaming, duplicating and deleting it belong to
+// its own position and to the Set Lists screen, not to this menu.
 - (UIMenu *)buildSetListMenu {
     DPSongsModel *model = [DPSongsModel sharedInstance];
     DPSongList *list = model.currentList;
@@ -466,44 +472,69 @@ static const CGFloat DPSongKeySize = 18;
     NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
 
     [items addObject:[UIAction actionWithTitle:@"Sort Alphabetically"
-                                         image:nil
+                                         image:[UIImage systemImageNamed:@"textformat.abc"]
                                     identifier:nil
                                        handler:^(__kindof UIAction *action) { [weakSelf sort]; }]];
 
     UIAction *addFrom = [UIAction actionWithTitle:@"Add songs from another set list…"
-                                            image:nil
+                                            image:[UIImage systemImageNamed:@"text.badge.plus"]
                                        identifier:nil
                                           handler:^(__kindof UIAction *action) { [weakSelf addSongsFromAnotherSetList]; }];
     if (![model hasAddableSongsFor:list]) {
+        // Disabled alone reads as a bug; the subtitle says why.
         addFrom.attributes = UIMenuElementAttributesDisabled;
+        addFrom.subtitle = @"Nothing to add";
     }
     [items addObject:addFrom];
 
-    [items addObject:[UIAction actionWithTitle:@"Rename set list…"
-                                         image:nil
+    [items addObject:[UIAction actionWithTitle:@"Manage set lists…"
+                                         image:[UIImage systemImageNamed:@"list.bullet"]
                                     identifier:nil
-                                       handler:^(__kindof UIAction *action) { [weakSelf promptRenameSetList]; }]];
+                                       handler:^(__kindof UIAction *action) { [weakSelf manageSetLists]; }]];
+    return [UIMenu menuWithTitle:@"" children:items];
+}
+
+// Rename, Duplicate, Delete (never for My Songs) and Manage — the actions a
+// list has where it is named: a long press on its position, and the Set Lists
+// screen's own rows.
+- (NSArray<UIMenuElement *> *)listActionsFor:(DPSongList *)list {
+    __weak DPSongListViewController *weakSelf = self;
+    NSMutableArray<UIMenuElement *> *items = [NSMutableArray array];
+    [items addObject:[UIAction actionWithTitle:@"Rename set list…"
+                                         image:[UIImage systemImageNamed:@"pencil"]
+                                    identifier:nil
+                                       handler:^(__kindof UIAction *action) { [weakSelf promptRenameSetList:list]; }]];
 
     [items addObject:[UIAction actionWithTitle:@"Duplicate set list"
-                                         image:nil
+                                         image:[UIImage systemImageNamed:@"plus.square.on.square"]
                                     identifier:nil
-                                       handler:^(__kindof UIAction *action) { [weakSelf duplicateSetList]; }]];
+                                       handler:^(__kindof UIAction *action) { [weakSelf duplicateSetList:list]; }]];
 
     if (![list.id isEqualToString:DPSongsModel.defaultListId]) {
         UIAction *delete = [UIAction actionWithTitle:@"Delete set list…"
-                                               image:nil
+                                               image:[UIImage systemImageNamed:@"trash"]
                                           identifier:nil
-                                             handler:^(__kindof UIAction *action) { [weakSelf confirmDeleteSetList]; }];
+                                             handler:^(__kindof UIAction *action) { [weakSelf confirmDeleteSetList:list]; }];
         delete.attributes = UIMenuElementAttributesDestructive;
         [items addObject:delete];
     }
 
     [items addObject:[UIAction actionWithTitle:@"Manage set lists…"
-                                         image:nil
+                                         image:[UIImage systemImageNamed:@"list.bullet"]
                                     identifier:nil
                                        handler:^(__kindof UIAction *action) { [weakSelf manageSetLists]; }]];
+    return items;
+}
 
-    return [UIMenu menuWithTitle:@"" children:items];
+// Titled with the list it acts on, so a long press never leaves the user
+// guessing which position their finger landed on.
+- (UIMenu *)listMenuForId:(NSString *)listId {
+    DPSongsModel *model = [DPSongsModel sharedInstance];
+    DPSongList *list = model.songLists[listId];
+    if (list == nil) {
+        return nil;
+    }
+    return [UIMenu menuWithTitle:[model displayNameFor:list] children:[self listActionsFor:list]];
 }
 
 // MARK: - Set lists
@@ -550,7 +581,10 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (void)promptRenameSetList {
-    DPSongList *list = self.currentList;
+    [self promptRenameSetList:self.currentList];
+}
+
+- (void)promptRenameSetList:(DPSongList *)list {
     UIAlertController *alert = [SetListPrompts renameAlertFor:list commit:^(NSString *name) {
         [[DPSongsModel sharedInstance] renameList:list to:name];
     }];
@@ -558,8 +592,12 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (void)duplicateSetList {
+    [self duplicateSetList:self.currentList];
+}
+
+- (void)duplicateSetList:(DPSongList *)list {
     DPSongsModel *model = [DPSongsModel sharedInstance];
-    DPSongList *copy = [model duplicateList:self.currentList];
+    DPSongList *copy = [model duplicateList:list];
     if (copy == nil) {
         return;
     }
@@ -572,15 +610,26 @@ static const CGFloat DPSongKeySize = 18;
 }
 
 - (void)confirmDeleteSetList {
-    DPSongList *list = self.currentList;
+    [self confirmDeleteSetList:self.currentList];
+}
+
+- (void)confirmDeleteSetList:(DPSongList *)list {
     if ([list.id isEqualToString:DPSongsModel.defaultListId]) {
         return;
     }
     __weak DPSongListViewController *weakSelf = self;
     UIAlertController *alert = [SetListPrompts deleteAlertFor:list confirm:^{
-        [weakSelf stopSoundingRows];
-        [[DPSongsModel sharedInstance] deleteList:list];
-        [weakSelf doneEditing];
+        DPSongsModel *model = [DPSongsModel sharedInstance];
+        BOOL wasCurrent = [model.currentListId isEqualToString:list.id];
+        if (wasCurrent) {
+            [weakSelf stopSoundingRows];
+        }
+        [model deleteList:list];
+        // Deleting the list on screen leaves edit mode; deleting another one
+        // from its position leaves the tab as it was.
+        if (wasCurrent) {
+            [weakSelf doneEditing];
+        }
     }];
     [self presentViewController:alert animated:YES completion:nil];
 }

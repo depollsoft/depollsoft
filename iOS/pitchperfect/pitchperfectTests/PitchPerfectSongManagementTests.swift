@@ -235,36 +235,77 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
         }
     }
 
-    func testTheMoreMenuOffersEveryListActionAndHidesDeleteForMySongs() throws {
+    func testTheMoreMenuKeepsOnlyTheSongActionsAndSaysWhenNothingIsAddable() throws {
         try withApp { tabs in
             seedSongs(["Blue Skies"])
             let songs = try select(3, in: tabs, as: DPSongListViewController.self)
             try enterEditing(songs)
             XCTAssertEqual(try menuTitles(songs),
                            ["Sort Alphabetically", "Add songs from another set list…",
-                            "Rename set list…", "Duplicate set list", "Manage set lists…"],
-                           "My Songs cannot be deleted, so the action is not offered")
+                            "Manage set lists…"],
+                           "renaming, duplicating and deleting belong to the list itself")
             let more = try XCTUnwrap(songs.navigationItem.rightBarButtonItems?.last)
-            let addFrom = try XCTUnwrap(more.menu?.children[1] as? UIAction)
+            let children = try XCTUnwrap(more.menu?.children.compactMap { $0 as? UIAction })
+            XCTAssertEqual(children.filter { $0.image != nil }.count, 3, "every action is illustrated")
+            let addFrom = try XCTUnwrap(children.first { $0.title.hasPrefix("Add songs") })
             XCTAssertTrue(addFrom.attributes.contains(.disabled),
                           "nothing is addable while there is only one set list")
+            XCTAssertEqual(addFrom.subtitle, "Nothing to add", "disabled alone would read as a fault")
 
             let list = try customList(named: "Saturday show")
             DPSongsModel.sharedInstance.currentListId = list.id
-            let titles = try menuTitles(songs)
-            XCTAssertEqual(titles.last, "Manage set lists…")
-            XCTAssertTrue(titles.contains("Delete set list…"))
-            let deleteAction = try XCTUnwrap(
-                songs.navigationItem.rightBarButtonItems?.last?.menu?.children
-                    .compactMap { $0 as? UIAction }
-                    .first { $0.title == "Delete set list…" })
-            XCTAssertTrue(deleteAction.attributes.contains(.destructive))
+            XCTAssertEqual(try menuTitles(songs),
+                           ["Sort Alphabetically", "Add songs from another set list…",
+                            "Manage set lists…"],
+                           "the menu does not grow for a deletable list")
             let addNow = try XCTUnwrap(
                 songs.navigationItem.rightBarButtonItems?.last?.menu?.children
                     .compactMap { $0 as? UIAction }
-                    .first { $0.title == "Add songs from another set list…" })
+                    .first { $0.title.hasPrefix("Add songs") })
             XCTAssertFalse(addNow.attributes.contains(.disabled),
                            "My Songs now has a song this list lacks")
+            XCTAssertNil(addNow.subtitle)
+        }
+    }
+
+    func testLongPressingAPositionOffersTheListsOwnActions() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let list = try customList(named: "Saturday show")
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+
+            let home = try position("setlist.default", in: songs)
+            XCTAssertFalse(home.showsMenuAsPrimaryAction, "a tap still switches; the menu is the long press")
+            let homeMenu = try XCTUnwrap(home.menu)
+            XCTAssertEqual(homeMenu.title, "My Songs", "the menu names the list it acts on")
+            XCTAssertEqual(homeMenu.children.compactMap { ($0 as? UIAction)?.title },
+                           ["Rename set list…", "Duplicate set list", "Manage set lists…"],
+                           "My Songs cannot be deleted")
+            XCTAssertEqual(homeMenu.children.compactMap { ($0 as? UIAction)?.image }.count, 3,
+                           "every action is illustrated")
+
+            let custom = try position("setlist.\(list.id)", in: songs)
+            let customMenu = try XCTUnwrap(custom.menu)
+            XCTAssertEqual(customMenu.title, "Saturday show")
+            XCTAssertEqual(customMenu.children.compactMap { ($0 as? UIAction)?.title },
+                           ["Rename set list…", "Duplicate set list", "Delete set list…", "Manage set lists…"])
+            let deleteAction = try XCTUnwrap(customMenu.children[2] as? UIAction)
+            XCTAssertTrue(deleteAction.attributes.contains(.destructive))
+            XCTAssertNotNil(deleteAction.image)
+            XCTAssertNil(try position("setlist.new", in: songs).menu, "the + has no list to act on")
+
+            // Deleting a list that is not on screen leaves the tab where it was.
+            XCTAssertEqual(DPSongsModel.sharedInstance.currentListId, "default")
+            songs.perform(NSSelectorFromString("confirmDeleteSetList:"), with: list)
+            let confirmation = try alert(from: songs)
+            XCTAssertEqual(confirmation.title, "Delete “Saturday show”?")
+            confirmation.pp_fire("Delete")
+            songs.dismiss(animated: false)
+            settle { songs.presentedViewController == nil }
+            XCTAssertNil(DPSongsModel.sharedInstance.songLists[list.id])
+            XCTAssertEqual(DPSongsModel.sharedInstance.currentListId, "default")
+            XCTAssertEqual(try positions(in: songs).map(\.accessibilityIdentifier),
+                           ["setlist.default", "setlist.new"])
         }
     }
 
@@ -386,6 +427,87 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
             XCTAssertEqual(first.order, 1)
             XCTAssertEqual(model.orderedLists.map(\.id), ["default", second.id, first.id])
             navigation.popViewController(animated: false)
+        }
+    }
+
+    func testTheManageScreenSwitchesListsAndCarriesEachRowsActions() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            let model = DPSongsModel.sharedInstance
+            let list = try customList(named: "Saturday show")
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            try enterEditing(songs)
+
+            perform("manageSetLists", on: songs)
+            let navigation = try XCTUnwrap(songs.navigationController)
+            settle { navigation.topViewController is SetListsController }
+            let manage = try XCTUnwrap(navigation.topViewController as? SetListsController)
+            manage.loadViewIfNeeded()
+            let manageTable = try XCTUnwrap(manage.value(forKey: "tableView") as? UITableView)
+            manageTable.reloadData()
+
+            // The current list wears the selector's indicator here too.
+            let home = manage.tableView(manageTable, cellForRowAt: IndexPath(row: 0, section: 0))
+            XCTAssertEqual(home.accessibilityIdentifier, "setlist.row.default.current")
+            XCTAssertTrue(home.accessibilityTraits.contains(.selected))
+            XCTAssertEqual(home.accessibilityLabel, "My Songs, 1 song, current")
+            let custom = manage.tableView(manageTable, cellForRowAt: IndexPath(row: 1, section: 0))
+            XCTAssertEqual(custom.accessibilityIdentifier, "setlist.row.\(list.id)")
+            XCTAssertFalse(custom.accessibilityTraits.contains(.selected))
+
+            // Each row carries the list's own actions, headed by its name.
+            let rowMenuButton = try XCTUnwrap(descendants(of: UIButton.self, in: custom)
+                .first { $0.accessibilityIdentifier == "setlist.row.menu.\(list.id)" })
+            XCTAssertTrue(rowMenuButton.showsMenuAsPrimaryAction)
+            let rowMenu = try XCTUnwrap(rowMenuButton.menu)
+            XCTAssertEqual(rowMenu.title, "Saturday show")
+            XCTAssertEqual(rowMenu.children.compactMap { ($0 as? UIAction)?.title },
+                           ["Rename set list…", "Duplicate set list", "Delete set list…"])
+            XCTAssertTrue(try XCTUnwrap(rowMenu.children.last as? UIAction)
+                .attributes.contains(.destructive))
+            XCTAssertEqual(manage.menu(forRowAt: IndexPath(row: 0, section: 0))?
+                            .children.compactMap { ($0 as? UIAction)?.title },
+                           ["Rename set list…", "Duplicate set list"],
+                           "My Songs cannot be deleted")
+
+            // Swipe still reaches the same actions, Rename included.
+            let swipe = manage.tableView(manageTable,
+                                         trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 1, section: 0))
+            XCTAssertEqual(swipe?.actions.compactMap(\.title), ["Delete", "Duplicate", "Rename"])
+            XCTAssertNil(manage.tableView(manageTable,
+                                          trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0)),
+                         "My Songs neither moves nor leaves")
+
+            // Tapping a row switches to that list and hands the Songs tab back.
+            manage.tableView(manageTable, didSelectRowAt: IndexPath(row: 1, section: 0))
+            XCTAssertEqual(model.currentListId, list.id)
+            // The pop is animated, so the Songs view is back only once it lands.
+            settle { navigation.topViewController === songs && songs.view.window != nil }
+            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 0)
+            XCTAssertNil(songs.presentedViewController, "tapping switches; it no longer renames")
+        }
+    }
+
+    func testTheSelectorSharesItsWholeFrameAndKeepsEveryLabelInPlace() throws {
+        try withApp { tabs in
+            seedSongs(["Blue Skies"])
+            _ = try customList(named: "Saturday show")
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            let machine = try selector(in: songs)
+            machine.layoutIfNeeded()
+            XCTAssertEqual(machine.bounds.height, 48, accuracy: 0.5)
+
+            let buttons = try positions(in: songs)
+            let plus = try XCTUnwrap(buttons.last)
+            XCTAssertEqual(plus.bounds.width, 44, accuracy: 0.5, "the + is a control, not a name")
+            XCTAssertEqual(plus.convert(plus.bounds, to: machine).maxX, machine.bounds.width,
+                           accuracy: 1, "the positions divide the whole frame")
+            for position in buttons.dropLast() {
+                let label = try XCTUnwrap(descendants(of: UILabel.self, in: position).first)
+                XCTAssertEqual(label.frame.minX, 20, accuracy: 0.5,
+                               "every label clears the indicator, lit or not")
+                XCTAssertGreaterThan(position.bounds.width, label.bounds.width + 20)
+            }
         }
     }
 }

@@ -220,8 +220,6 @@ class SetListSelectorTest {
 
         listOf(
             R.id.addFromListMenuItem,
-            R.id.renameListMenuItem,
-            R.id.duplicateListMenuItem,
             R.id.manageListsMenuItem,
         ).forEach { assertFalse(menu.findItem(it).isVisible) }
 
@@ -230,26 +228,30 @@ class SetListSelectorTest {
 
         listOf(
             R.id.addFromListMenuItem,
-            R.id.renameListMenuItem,
-            R.id.duplicateListMenuItem,
             R.id.manageListsMenuItem,
         ).forEach { assertTrue("$it should be visible in edit mode", menu.findItem(it).isVisible) }
+        // The list itself is managed from its selector position and the Set Lists screen.
+        assertNull(menu.findItem(R.id.renameSetListMenuItem))
+        assertNull(menu.findItem(R.id.deleteSetListMenuItem))
     }
 
     @Test
-    fun deleteIsHiddenForMySongsAndShownForACustomList() {
+    fun switchingToAnEmptyListShowsItsEmptyState() {
+        model.defaultSongList.addSong(song("Blue Skies"))
         val other = model.createList("Saturday show")
         val activity = launch()
         val fragment = activity.goToSongs()
-        fragment.toggleEditingSongs()
-        val menu = songsMenu(activity)
-        activity.syncSongMenuItems(menu)
-        assertFalse("My Songs can never be deleted", menu.findItem(R.id.deleteListMenuItem).isVisible)
+        val empty = fragment.requireView().findViewById<TextView>(R.id.sorryText)
+        assertEquals(View.GONE, empty.visibility)
 
         fragment.selector().positionView(other)!!.performClick()
         idle()
-        activity.syncSongMenuItems(menu)
-        assertTrue(menu.findItem(R.id.deleteListMenuItem).isVisible)
+        assertEquals("an empty list must say so after a switch", View.VISIBLE, empty.visibility)
+        assertEquals(activity.getString(R.string.NoSongsInSetList), empty.text.toString())
+
+        fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performClick()
+        idle()
+        assertEquals(View.GONE, empty.visibility)
     }
 
     @Test
@@ -269,6 +271,50 @@ class SetListSelectorTest {
         model.defaultSongList.addSong(song("Blue Skies"))
         activity.syncSongMenuItems(menu)
         assertTrue(menu.findItem(R.id.addFromListMenuItem).isEnabled)
+    }
+
+    @Test
+    fun longPressingAPositionOffersTheListsOwnActions() {
+        val activity = launch()
+        val fragment = activity.goToSongs()
+        val other = SongsModel.get().createList("Saturday show")
+        ScreenTestSupport.idle()
+
+        // My Songs: everything but Delete.
+        assertTrue(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performLongClick())
+        ScreenTestSupport.idle()
+        var popup = org.robolectric.shadows.ShadowPopupMenu.getLatestPopupMenu()
+        assertNotNull("a long press shows the list's actions", popup)
+        var menu = popup.menu
+        assertEquals("the menu names the list it acts on", "My Songs", menu.getItem(0).title.toString())
+        assertFalse(menu.getItem(0).isEnabled)
+        assertTrue(menu.findItem(R.id.renameSetListMenuItem).isVisible)
+        assertTrue(menu.findItem(R.id.duplicateSetListMenuItem).isVisible)
+        assertFalse("My Songs cannot be deleted", menu.findItem(R.id.deleteSetListMenuItem).isVisible)
+        assertTrue(menu.findItem(R.id.manageSetListsMenuItem).isVisible)
+        popup.dismiss()
+
+        // A custom list offers Delete too, and deleting one that is not on screen leaves the
+        // tab on My Songs.
+        assertTrue(fragment.selector().positionView(other)!!.performLongClick())
+        ScreenTestSupport.idle()
+        popup = org.robolectric.shadows.ShadowPopupMenu.getLatestPopupMenu()
+        menu = popup.menu
+        assertEquals("Saturday show", menu.getItem(0).title.toString())
+        assertTrue(menu.findItem(R.id.deleteSetListMenuItem).isVisible)
+        popup.dismiss()
+        val deleted = SongsModel.get().songLists[other]!!
+        fragment.deleteList(other)
+        ScreenTestSupport.idle()
+        assertNull(fragment.selector().positionView(other))
+        assertEquals(SongsModel.DEFAULT_ID, SongsModel.get().currentListId)
+        assertTrue(fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.isSelected)
+
+        // The Snackbar's Undo brings the list back under the same id.
+        SongsModel.get().restoreList(deleted)
+        ScreenTestSupport.idle()
+        assertNotNull(fragment.selector().positionView(other))
+        assertFalse(deleted.isDeleted)
     }
 
     @Test

@@ -4,19 +4,28 @@
 //
 //  "Set Lists": the manage screen pushed onto the Songs navigation stack.
 //  My Songs is the first row and never moves or leaves; every custom row
-//  carries a drag handle, renames on tap, and duplicates or deletes by swipe.
+//  carries a drag handle and a swipe. Tapping a row switches to that list and
+//  returns to Songs — the same thing tapping its position in the selector does
+//  — so the list's own actions live in the row's trailing "…" menu instead.
 //  Rows are transparent over the score, separated by hairlines, as everywhere.
 //
 
 import Foundation
 import UIKit
 
-/// One manage row: the list's display name and how many songs it holds.
+/// One manage row: the list's display name, how many songs it holds, the
+/// selector's lit indicator when it is the current list, and a "…" menu.
 final class SetListRowCell: UITableViewCell {
     static let identifier = "SetListRow"
+    /// The indicator, drawn exactly as the selector draws it.
+    private static let dotDiameter: CGFloat = 6
+    private static let dotInset: CGFloat = 8
 
     private let nameLabel = UILabel()
     private let countLabel = UILabel()
+    private let currentDot = UIView()
+    /// The row's own actions, shown on press; also what the tests read.
+    let menuButton = UIButton(type: .system)
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -35,25 +44,57 @@ final class SetListRowCell: UITableViewCell {
         countLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         countLabel.setContentHuggingPriority(.required, for: .horizontal)
 
+        currentDot.translatesAutoresizingMaskIntoConstraints = false
+        currentDot.backgroundColor = DPTheme.plateLit
+        currentDot.layer.cornerRadius = SetListRowCell.dotDiameter / 2
+        currentDot.isUserInteractionEnabled = false
+        currentDot.isHidden = true
+
+        menuButton.translatesAutoresizingMaskIntoConstraints = false
+        menuButton.setImage(UIImage(systemName: "ellipsis.circle"), for: .normal)
+        menuButton.tintColor = DPTheme.plateInkSecondary
+        menuButton.showsMenuAsPrimaryAction = true
+        menuButton.accessibilityLabel = "More"
+        menuButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        contentView.addSubview(currentDot)
         contentView.addSubview(nameLabel)
         contentView.addSubview(countLabel)
+        contentView.addSubview(menuButton)
         NSLayoutConstraint.activate([
-            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            currentDot.leadingAnchor.constraint(equalTo: contentView.leadingAnchor,
+                                                constant: SetListRowCell.dotInset),
+            currentDot.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor),
+            currentDot.widthAnchor.constraint(equalToConstant: SetListRowCell.dotDiameter),
+            currentDot.heightAnchor.constraint(equalToConstant: SetListRowCell.dotDiameter),
+            // Always clear of the dot, lit or not, so a name never shifts.
+            nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 26),
             nameLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 14),
             nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -14),
             countLabel.leadingAnchor.constraint(greaterThanOrEqualTo: nameLabel.trailingAnchor, constant: 16),
-            countLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             countLabel.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor),
+            menuButton.leadingAnchor.constraint(equalTo: countLabel.trailingAnchor, constant: 8),
+            menuButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
+            menuButton.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor),
+            menuButton.widthAnchor.constraint(equalToConstant: 44),
+            menuButton.heightAnchor.constraint(equalToConstant: 44),
         ])
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    func show(name: String, songCount: Int) {
+    func show(name: String, songCount: Int, isCurrent: Bool, menu: UIMenu, menuIdentifier: String) {
         nameLabel.text = name
         countLabel.text = SetListsController.countLabel(songCount)
-        accessibilityLabel = "\(name), \(SetListSelectorView.songCountPhrase(songCount))"
+        currentDot.isHidden = !isCurrent
+        menuButton.menu = menu
+        menuButton.accessibilityIdentifier = menuIdentifier
+        menuButton.accessibilityLabel = "Actions for \(name)"
+        accessibilityLabel = isCurrent
+            ? "\(name), \(SetListSelectorView.songCountPhrase(songCount)), current"
+            : "\(name), \(SetListSelectorView.songCountPhrase(songCount))"
+        accessibilityTraits = isCurrent ? [.button, .selected] : .button
     }
 }
 
@@ -122,8 +163,16 @@ final class SetListRowCell: UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: SetListRowCell.identifier, for: indexPath)
         DPTheme.styleListCell(cell)
         if let row = cell as? SetListRowCell, let list = list(at: indexPath) {
-            row.show(name: model.displayName(for: list), songCount: list.songs.count)
-            row.accessibilityIdentifier = "setlist.row.\(list.id)"
+            let current = list.id == model.currentListId
+            row.show(name: model.displayName(for: list),
+                     songCount: list.songs.count,
+                     isCurrent: current,
+                     menu: rowMenu(for: list),
+                     menuIdentifier: "setlist.row.menu.\(list.id)")
+            // The current row says so in its identifier as well as its traits.
+            row.accessibilityIdentifier = current
+                ? "setlist.row.\(list.id).current"
+                : "setlist.row.\(list.id)"
         }
         return cell
     }
@@ -178,10 +227,40 @@ final class SetListRowCell: UITableViewCell {
 
     // MARK: - Row actions
 
+    /// Tapping a row does what tapping its position does: it switches to that
+    /// list and hands the Songs tab back. Renaming lives in the row's menu.
     override public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: false)
         guard let list = list(at: indexPath) else { return }
-        promptRename(list)
+        model.currentListId = list.id
+        navigationController?.popViewController(animated: true)
+    }
+
+    /// The actions a row offers, headed by the list they act on. Also what the
+    /// trailing "…" button presents.
+    @objc public func menu(forRowAt indexPath: IndexPath) -> UIMenu? {
+        list(at: indexPath).map { rowMenu(for: $0) }
+    }
+
+    private func rowMenu(for list: DPSongList) -> UIMenu {
+        var actions: [UIMenuElement] = [
+            UIAction(title: "Rename set list…",
+                     image: UIImage(systemName: "pencil")) { [weak self] _ in
+                self?.promptRename(list)
+            },
+            UIAction(title: "Duplicate set list",
+                     image: UIImage(systemName: "plus.square.on.square")) { [weak self] _ in
+                self?.duplicateSetList(list)
+            },
+        ]
+        if !isHome(list) {
+            actions.append(UIAction(title: "Delete set list…",
+                                    image: UIImage(systemName: "trash"),
+                                    attributes: .destructive) { [weak self] _ in
+                self?.confirmDelete(list)
+            })
+        }
+        return UIMenu(title: model.displayName(for: list), children: actions)
     }
 
     override public func tableView(
@@ -197,7 +276,11 @@ final class SetListRowCell: UITableViewCell {
             self?.confirmDelete(list)
             done(true)
         }
-        return UISwipeActionsConfiguration(actions: [delete, duplicate])
+        let rename = UIContextualAction(style: .normal, title: "Rename") { [weak self] _, _, done in
+            self?.promptRename(list)
+            done(true)
+        }
+        return UISwipeActionsConfiguration(actions: [delete, duplicate, rename])
     }
 
     // MARK: - Commands

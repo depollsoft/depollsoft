@@ -226,6 +226,16 @@ class SongsModel private constructor() {
         listsTrackable.updateTrackers()
     }
 
+    /** Puts a deleted list back, songs, order and id intact, here and on the server. */
+    fun restoreList(list: SongList) {
+        if (list.id == DEFAULT_ID || songLists.containsKey(list.id)) return
+        list.undelete()
+        userDoc?.let { list.setParent(it) }
+        songLists = songLists + (list.id to list)
+        list.storeValue()
+        listsTrackable.updateTrackers()
+    }
+
     /** Rewrites `order` densely over every custom list, [ids] first, and stores each one once. */
     fun reorderLists(ids: List<String>) {
         val custom = orderedLists.filter { it.id != DEFAULT_ID }

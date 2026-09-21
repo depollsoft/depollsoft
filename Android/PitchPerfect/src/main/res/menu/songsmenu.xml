@@ -23,24 +23,6 @@
     </item>
 
     <item
-        android:id="@+id/renameListMenuItem"
-        android:title="@string/SetListRenameAction"
-        app:showAsAction="never">
-    </item>
-
-    <item
-        android:id="@+id/duplicateListMenuItem"
-        android:title="@string/SetListDuplicateAction"
-        app:showAsAction="never">
-    </item>
-
-    <item
-        android:id="@+id/deleteListMenuItem"
-        android:title="@string/SetListDeleteAction"
-        app:showAsAction="never">
-    </item>
-
-    <item
         android:id="@+id/manageListsMenuItem"
         android:title="@string/SetListManageAction"
         app:showAsAction="never">

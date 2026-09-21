@@ -97,24 +97,35 @@ Shared by create and rename, on both platforms, in this order:
 One machined part with N positions, drawn exactly like the instrument's range
 selector: a single round-rect frame (5px radius, 1.5px `plate-hairline`
 stroke) whose positions are split by 1px interior hairlines. It sits above the
-song rows with 16dp side margins, 12dp above and 8dp below, and is 40dp tall.
-It scrolls horizontally inside the frame when the positions overflow; the
-selected position is scrolled into view whenever it changes.
+song rows with 16dp side margins, 12dp above and 8dp below, and is 48dp tall.
+Positions share the whole frame between them while they fit (so one list is
+never a label in an empty frame); once they overflow they scroll inside the
+frame, which stays put, with the ends fading toward the plate as the scroll
+cue. The selected position is scrolled into view whenever it changes.
 
 - **Position label**: the list's display name, uppercased, in Oswald Medium
-  13sp with 0.16em tracking, 14dp side padding, single line, truncated with an
-  ellipsis at 180dp.
+  13sp with 0.16em tracking, 20dp leading and 14dp trailing padding (room for
+  the dot, so labels never shift), single line, truncated with an ellipsis at
+  180dp.
 - **Selected**: 10% `plate-ink` wash, full `plate-ink` text, and a 6dp
   `plate-lit` dot 8dp inside the leading edge (the range selector's indicator,
   which the design system already permits).
 - **Unselected**: `plate-ink-secondary` text at 75% alpha, no wash.
-- **Last position**: a "+" glyph (`plate-ink-secondary`), 44dp wide. Tap →
-  New set list.
+- **Last position**: a "+" glyph (`plate-ink-secondary`, 20sp), 44dp wide.
+  Tap → New set list.
 - Tapping a position switches the current list immediately: the song rows
   swap, every sounding note stops, the FAB/+ now adds to that list. A selection
   tick haptic accompanies the switch (the same one the range selector uses).
 - Accessibility: each position is a button named "<name>, N songs" (or "no
   songs"), reporting selected state; "+" is "New set list".
+- Long-pressing a position is where a list is managed: a menu **titled with
+  the list's name** offering Rename set list…, Duplicate set list, Delete set
+  list… (omitted for `default`), Manage set lists…. Android shows a popup
+  menu anchored to the position (the name is its first, inert row); iOS uses
+  the button's native menu with SF Symbols (tap still switches). Deleting a
+  list that is not on screen leaves the tab where it was. On Android the
+  delete Snackbar offers Undo, which restores the list under its id.
+- Screen readers get the same menu as a named custom action on the position.
 - Always visible, even with only My Songs: the "+" is how the feature is found.
 
 ### Song rows, FAB, editor
@@ -134,16 +145,15 @@ editor opened for an existing song looks that song up in the current list.
 ### Edit mode
 
 The pencil already flips to a Done checkmark, reveals per-row pencil and drag
-handle, and surfaces Sort. Edit mode is also where the **current list is
-managed**. Everything list-level lives in one place:
+handle, and surfaces Sort. Edit mode is about the list's **contents**; the
+list itself (rename, duplicate, delete) has exactly two homes, the selector
+long-press and the Set Lists screen, so the same verbs never appear in three
+places.
 
 | action | Android (edit mode) | iOS (edit mode) |
 |---|---|---|
 | Sort all songs by title | sort icon action (as today) | in the More menu |
 | Add songs from another set list… | overflow | More menu |
-| Rename set list… | overflow | More menu |
-| Duplicate set list | overflow | More menu |
-| Delete set list… | overflow, hidden for `default` | More menu, destructive, hidden for `default` |
 | Manage set lists… | overflow | More menu |
 
 - Android: overflow items are only visible while editing on the Songs page,
@@ -152,7 +162,9 @@ managed**. Everything list-level lives in one place:
   (`ellipsis.circle`, `UIMenu`). Outside edit mode the bar is unchanged (Edit
   left, Settings right).
 - "Add songs from another set list…" is disabled when no other list has a
-  song that the current list lacks.
+  song that the current list lacks, and says why: Android retitles it
+  "Nothing to add from other set lists"; iOS keeps the title and adds the
+  subtitle "Nothing to add".
 
 ### New / Rename
 
@@ -203,12 +215,16 @@ navigation stack). Rows: list display name (condensed 20sp) with the song count
 (mono 14sp, secondary: "12 songs", "1 song", "No songs"). Hairline dividers,
 transparent rows over the score, as every other list.
 
-- My Songs is the first row, has no drag handle, cannot be deleted.
+- My Songs is the first row, has no drag handle, cannot be deleted. The
+  current list's row carries the selector's lit dot at its leading edge.
 - Custom rows have a trailing drag handle; dropping persists the new order
   once (`order` rewritten for every custom list).
-- Tap a row → Rename prompt.
-- Row overflow / iOS swipe: Duplicate, Delete (with the same confirmation).
-  Android: a per-row overflow button (⋮) with Rename / Duplicate / Delete.
+- Tap a row → it becomes the current list and the screen returns to Songs,
+  the same tap-to-switch as everywhere else.
+- Each row has a trailing menu button (⋮ on Android, `ellipsis.circle` on
+  iOS) titled with the list's name: Rename / Duplicate / Delete (with the
+  same confirmation; Delete omitted for My Songs). iOS also keeps swipe
+  actions. Row controls are 48dp.
 - A "+" (Android FAB, iOS bar button) opens New set list.
 - Live: remote changes re-render the rows.
 

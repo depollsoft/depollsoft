@@ -10,6 +10,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -115,6 +118,8 @@ class AddSongsFromListActivity : AppCompatActivity() {
         confirmButton?.isEnabled = count > 0
         confirmMenuItem?.isEnabled = count > 0
         confirmMenuItem?.title = label
+        // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
+        confirmMenuItem?.icon?.alpha = if (count > 0) 255 else DISABLED_ICON_ALPHA
     }
 
     private fun buildRows(): List<Row> =
@@ -172,6 +177,22 @@ class AddSongsFromListActivity : AppCompatActivity() {
                     songHolder.itemView.isSelected = ticked
                     songHolder.itemView.tag = song.id
                     songHolder.itemView.setOnClickListener { toggle(song) }
+                    // A row is a checkbox to a screen reader: it has a checked state, not a
+                    // selected one, and toggling it announces the change.
+                    ViewCompat.setAccessibilityDelegate(
+                        songHolder.itemView,
+                        object : AccessibilityDelegateCompat() {
+                            override fun onInitializeAccessibilityNodeInfo(
+                                host: View,
+                                info: AccessibilityNodeInfoCompat,
+                            ) {
+                                super.onInitializeAccessibilityNodeInfo(host, info)
+                                info.className = android.widget.CheckBox::class.java.name
+                                info.isCheckable = true
+                                info.isChecked = song in selection
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -193,6 +214,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
 
     companion object {
         const val LIST_EXTRA = "depollsoft.pitchperfect.AddSongsFromList.listId"
+        private const val DISABLED_ICON_ALPHA = 97
         private const val TYPE_SECTION = 0
         private const val TYPE_SONG = 1
     }
