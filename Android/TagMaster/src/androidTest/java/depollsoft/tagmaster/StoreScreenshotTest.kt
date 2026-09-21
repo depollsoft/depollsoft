@@ -119,8 +119,13 @@ class StoreScreenshotTest {
             lateinit var activity: MeActivity
             scenario.onActivity { activity = it }
             awaitContent("favorite tag rows") {
+                // Home now shows the Lists group above Favorites, so not every favorite fits on a
+                // phone's first screen: every favorite row that is on screen must have loaded, and
+                // the favorites adapter must hold all three.
                 val list = activity.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.homeList)
-                (0 until list.childCount).map { list.getChildAt(it) }.filterIsInstance<SavedTagItemView>().let { rows -> rows.size == 3 && rows.all { it.tag != null && !it.isLoading && !it.failedToLoad } }
+                val rows = (0 until list.childCount).map { list.getChildAt(it) }.filterIsInstance<SavedTagItemView>()
+                activity.favoritesAdapter.itemCount == 3 && rows.isNotEmpty() &&
+                    rows.all { it.tag != null && !it.isLoading && !it.failedToLoad }
             }
             if (activity.hasDetailPane) {
                 main { activity.showTag(122) }
