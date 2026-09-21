@@ -188,12 +188,18 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         summary.value(forKey: "listChips") as! TMListChipsView
     }
 
-    private func chipTitles(_ view: TMListChipsView) -> [String] {
-        view.subviews.compactMap { ($0 as? UIButton)?.configuration?.title }
+    private func capsules(_ view: TMListChipsView) -> [TMListChipView] {
+        view.subviews.compactMap { $0 as? TMListChipView }
     }
 
+    private func chipTitles(_ view: TMListChipsView) -> [String] {
+        capsules(view).map(\.title)
+    }
+
+    /// A capsule is two controls now - the name opens the list, the button beside
+    /// it removes the tag - so a chip is found by descending into it.
     private func chip(_ view: TMListChipsView, identifier: String) -> UIButton? {
-        view.subviews.first { $0.accessibilityIdentifier == identifier } as? UIButton
+        firstDescendant(of: view) { $0.accessibilityIdentifier == identifier } as? UIButton
     }
 
     func testTheChipsNameEveryListTheTagIsOnAndAlwaysOfferToAddAnother() {
@@ -288,8 +294,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         settle()
 
         let chips = summary.value(forKey: "listChips") as! TMListChipsView
-        (chips.subviews.first { $0.accessibilityIdentifier == "summary.chip.add" } as? UIButton)?
-            .sendActions(for: .touchUpInside)
+        chip(chips, identifier: "summary.chip.add")?.sendActions(for: .touchUpInside)
 
         let picker = (summary.presented.last as? UINavigationController)?.viewControllers.first
         XCTAssertEqual((picker as? TMListPickerController)?.tagId, 1809)
@@ -311,6 +316,105 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
             XCTAssertLessThanOrEqual(capsule.frame.maxX, chips.bounds.width + 0.5, "No capsule overflows the row")
         }
         XCTAssertGreaterThan(chips.bounds.height, 44, "The row grew to hold both lines")
+    }
+
+    func testEveryMembershipChipCarriesItsOwnVisibleRemoveButton() throws {
+        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+
+        for (key, name) in [("favorite", "Favorites"), ("afterglow-set-k3f9", "Afterglow set")] {
+            let remove = try XCTUnwrap(chip(chips, identifier: "summary.chip.\(key).remove"),
+                                       "\(name) needs a remove button anyone can see")
+            XCTAssertEqual(remove.accessibilityLabel, "Remove from \(name)")
+            XCTAssertFalse(remove.isHidden)
+            XCTAssertEqual(remove.alpha, 1)
+            XCTAssertNotNil(remove.configuration?.image)
+            XCTAssertGreaterThanOrEqual(remove.bounds.width, 44, "A remove button is a full target")
+            XCTAssertGreaterThanOrEqual(remove.bounds.height, 44)
+        }
+        XCTAssertNil(chip(chips, identifier: "summary.chip.add.remove"),
+                     "Nothing is removed from the assist chip")
+    }
+
+    func testTheRemoveButtonTakesTheTagOutOfThatListAndUndoPutsItBackWhereItWas() throws {
+        seedLists(lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [669, 1809, 122])])
+        let tag = seedCachedTag(id: 1809)
+        let summary = self.summary(for: tag)
+        let chips = self.chips(in: summary)
+
+        let remove = try XCTUnwrap(chip(chips, identifier: "summary.chip.afterglow-set-k3f9.remove"))
+        remove.sendActions(for: .touchUpInside)
+
+        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 122])
+        XCTAssertEqual(chipTitles(chips), ["Add to list"])
+
+        let undo = try XCTUnwrap(summary.undoManager)
+        XCTAssertTrue(undo.canUndo, "A removal is undoable")
+        XCTAssertEqual(undo.undoActionName, "Remove from Afterglow set")
+
+        undo.undo()
+        settle()
+        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 1809, 122],
+                       "The tag comes back at the position it held")
+        XCTAssertEqual(chipTitles(chips), ["Afterglow set", "Add to list"])
+        XCTAssertTrue(undo.canRedo, "And can be taken out again")
+    }
+
+    func testAMembershipChipStillOffersItsRemovalOnALongPress() throws {
+        seedLists(favorite: [1809])
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+        let capsule = try XCTUnwrap(capsules(chips).first { $0.listKey == "favorite" })
+        let interaction = try XCTUnwrap(capsule.interactions.compactMap { $0 as? UIContextMenuInteraction }.first)
+
+        XCTAssertNotNil(chips.contextMenuInteraction(interaction, configurationForMenuAtLocation: .zero),
+                        "The long press still offers Remove from Favorites")
+        let add = try XCTUnwrap(capsules(chips).first { $0.listKey == nil })
+        XCTAssertTrue(add.interactions.compactMap { $0 as? UIContextMenuInteraction }.isEmpty,
+                      "There is nothing to remove from the assist chip")
+    }
+
+    func testMembershipChipsAreOutlinedAndNeutralWhileOnlyTheAddChipTakesTheAccent() throws {
+        seedLists(favorite: [1809])
+        let tag = seedCachedTag(id: 1809)
+        let chips = self.chips(in: self.summary(for: tag))
+
+        for capsule in capsules(chips) {
+            XCTAssertEqual(capsule.layer.borderWidth, 1, "Every capsule is outlined, none of them filled")
+            XCTAssertEqual(capsule.layer.borderColor,
+                           UIColor.separator.resolvedColor(with: capsule.traitCollection).cgColor)
+            XCTAssertEqual(capsule.layer.cornerRadius, capsule.bounds.height / 2)
+            XCTAssertEqual(capsule.nameButton.configuration?.background.backgroundColor, .clear,
+                           "A capsule has no fill behind its name")
+        }
+        let favorite = try XCTUnwrap(chip(chips, identifier: "summary.chip.favorite"))
+        XCTAssertEqual(favorite.configuration?.baseForegroundColor, .label)
+        let add = try XCTUnwrap(chip(chips, identifier: "summary.chip.add"))
+        XCTAssertEqual(add.configuration?.baseForegroundColor, DPAppDelegate.accentColor())
+    }
+
+    func testTheChipsStayInsideTheRowAndStayTargetsAtAnAccessibilityTextSize() {
+        seedLists(favorite: [1809], teachable: [1809],
+                  lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        let tag = seedCachedTag(id: 1809)
+        let summary = self.summary(for: tag)
+        window.traitOverrides.preferredContentSizeCategory = .accessibilityExtraExtraExtraLarge
+        settle()
+        let chips = self.chips(in: summary)
+
+        XCTAssertEqual(chipTitles(chips).count, 4)
+        for capsule in capsules(chips) {
+            XCTAssertLessThanOrEqual(capsule.frame.maxX, chips.bounds.width + 0.5,
+                                     "\(capsule.title) overflows the row at the largest text size")
+            XCTAssertGreaterThanOrEqual(capsule.bounds.height, 44)
+            guard let remove = capsule.removeButton else { continue }
+            XCTAssertGreaterThanOrEqual(remove.bounds.width, 44)
+            XCTAssertGreaterThanOrEqual(remove.bounds.height, 44)
+            XCTAssertGreaterThan(capsule.nameButton.bounds.width, 0,
+                                 "The name keeps room of its own next to the remove button")
+        }
+        window.traitOverrides.preferredContentSizeCategory = .large
     }
 
     func testCaptureTheSummaryChips() {

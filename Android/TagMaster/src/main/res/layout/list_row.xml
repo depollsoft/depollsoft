@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One user-defined list: on Home (icon, name, tag count) and in the add-to-list picker (the
-     same row with a checkmark). Matches the 56dp action rows of @layout/meviewheader. -->
+<!-- One user-defined list: on Home (icon, name, tag count, and in edit mode a remove circle and a
+     drag handle) and in the add-to-list picker (the same row with a checkmark). Matches the 56dp
+     action rows of @layout/meviewheader and the editing controls of @layout/savedtagitemview. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/listRow"
@@ -16,6 +17,19 @@
     android:paddingEnd="16dp"
     android:paddingTop="12dp"
     android:paddingBottom="12dp">
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/listRowRemove"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/list_row_delete"
+        android:padding="12dp"
+        android:scaleType="center"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_remove_circle_outline"
+        app:tint="?attr/colorPrimary" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/listRowIcon"
@@ -38,7 +52,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <TextView
@@ -60,5 +74,18 @@
         android:visibility="gone"
         app:srcCompat="@drawable/ic_check"
         app:tint="?attr/colorPrimary" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/listRowDragHandle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/saved_list_drag"
+        android:padding="12dp"
+        android:scaleType="center"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_drag_handle"
+        app:tint="?attr/colorOnSurfaceVariant" />
 
 </LinearLayout>

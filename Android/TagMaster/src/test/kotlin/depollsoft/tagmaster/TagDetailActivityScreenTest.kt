@@ -10,6 +10,8 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.ViewCompat
+import androidx.core.widget.NestedScrollView
 import androidx.viewpager2.widget.ViewPager2
 import com.bindroid.trackable.TrackableCollection
 import com.google.android.material.chip.Chip
@@ -23,6 +25,8 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import androidx.appcompat.widget.Toolbar
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -372,7 +376,7 @@ class TagDetailActivityScreenTest {
         assertEquals(
             listOf(
                 activity.getString(R.string.Favorites),
-                activity.getString(R.string.list_chip_teachable),
+                activity.getString(R.string.TeachableTags),
                 "Afterglow set",
                 activity.getString(R.string.list_add_to_list),
             ),
@@ -429,6 +433,122 @@ class TagDetailActivityScreenTest {
     }
 
     // ==================== The picker ====================
+
+    @Test
+    fun aMembershipChipKeepsAFullTouchTargetForItsRemoveControl() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        val chip = activity.chips().chip("Afterglow set")
+        val density = activity.resources.displayMetrics.density
+        // Material lays those bounds out from the chip's end across the whole chip height, so the
+        // width is the one this has to buy and the height is the chip's own.
+        val bounds = android.graphics.RectF()
+        (chip.chipDrawable as com.google.android.material.chip.ChipDrawable).getCloseIconTouchBounds(bounds)
+        assertTrue(
+            "the remove control keeps a 48dp wide touch target: $bounds",
+            bounds.width() >= 48 * density - 1,
+        )
+        assertTrue("and the chip is 48dp tall: ${chip.height}", chip.height >= 48 * density - 1)
+        assertTrue("and the icon is not a speck", chip.closeIconSize >= 24 * density - 1)
+    }
+
+    @Test
+    fun chipsAreOutlinedAndOnlyAddToListTakesTheAccent() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        val membership = activity.chips().chip("Afterglow set")
+        val add = activity.chips().chip(activity.getString(R.string.list_add_to_list))
+        for (chip in listOf(membership, add)) {
+            assertTrue("an outline, not a fill", chip.chipStrokeWidth > 0f)
+            assertEquals(
+                "a neutral capsule",
+                android.graphics.Color.TRANSPARENT,
+                chip.chipBackgroundColor!!.defaultColor,
+            )
+        }
+        val accent =
+            com.google.android.material.color.MaterialColors.getColor(
+                activity,
+                androidx.appcompat.R.attr.colorPrimary,
+                android.graphics.Color.GRAY,
+            )
+        assertEquals("only Add to list is accented", accent, add.currentTextColor)
+        assertNotEquals(accent, membership.currentTextColor)
+    }
+
+    @Test
+    fun aChipWidensWithTheReadersTextSize() {
+        val custom = TagLists.create("A list with a name that is much too long to fit on one line")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        val normal = activity.chips().chip(TagLists.name(custom)).maxWidth
+
+        val configuration = android.content.res.Configuration(activity.resources.configuration)
+        configuration.fontScale = 1.3f
+        @Suppress("DEPRECATION")
+        activity.resources.updateConfiguration(configuration, activity.resources.displayMetrics)
+        try {
+            ListModel(custom).remove(fixture.id)
+            ListModel(custom).add(fixture.id)
+            idle()
+            assertTrue(
+                "the chip cap follows the font scale: $normal then " +
+                    activity.chips().chip(TagLists.name(custom)).maxWidth,
+                activity.chips().chip(TagLists.name(custom)).maxWidth > normal,
+            )
+        } finally {
+            configuration.fontScale = 1f
+            @Suppress("DEPRECATION")
+            activity.resources.updateConfiguration(configuration, activity.resources.displayMetrics)
+        }
+    }
+
+    // ==================== The picker ====================
+
+    @Test
+    fun thePickerBodyScrolls() {
+        repeat(8) { TagLists.create("List number $it") }
+        val activity = launch()
+        val dialog = openPicker(activity)
+        val rows = rows(dialog)
+        assertEquals("every list and the New list row", 11, rows.size)
+        var ancestor = rows.last().parent
+        while (ancestor != null && ancestor !is android.widget.ScrollView && ancestor !is NestedScrollView) {
+            ancestor = ancestor.parent
+        }
+        assertNotNull("the picker body scrolls, so the last row is always reachable", ancestor)
+    }
+
+    @Test
+    fun everyPickerRowSaysWhatItIsAndWhetherTheTagIsInIt() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        ListModel(custom).add(fixture.id + 1)
+        val activity = launch()
+        val dialog = openPicker(activity)
+        val row = rows(dialog).single { it.rowName() == "Afterglow set" }
+        assertEquals(
+            activity.getString(R.string.list_row_label, "Afterglow set", "2 tags"),
+            row.contentDescription.toString(),
+        )
+        assertEquals("2 tags", row.findViewById<TextView>(R.id.listRowDetail).text.toString())
+        assertEquals(
+            activity.getString(R.string.list_state_in),
+            ViewCompat.getStateDescription(row).toString(),
+        )
+        assertTrue("membership is a checked state", row.createAccessibilityNodeInfo()!!.isChecked)
+
+        row.performClick()
+        idle()
+        val after = rows(dialog).single { it.rowName() == "Afterglow set" }
+        assertEquals(
+            activity.getString(R.string.list_state_not_in),
+            ViewCompat.getStateDescription(after).toString(),
+        )
+        assertFalse(after.createAccessibilityNodeInfo()!!.isChecked)
+    }
 
     @Test
     fun thePickerNamesEveryListAndMarksTheOnesTheTagIsIn() {

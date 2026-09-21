@@ -78,9 +78,9 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
 
         XCTAssertEqual(list.tableView.numberOfRows(inSection: 0), 0)
         let header = try? XCTUnwrap(list.tableView.tableHeaderView)
-        XCTAssertNotNil(header.flatMap { label(in: $0, text: "Nothing in Afterglow set yet.") })
+        XCTAssertNotNil(header.flatMap { label(in: $0, text: "No tags in Afterglow set yet.") })
         XCTAssertNotNil(header.flatMap {
-            label(in: $0, text: "Open a tag and choose Add to list to build this list.")
+            label(in: $0, text: "Open any tag and choose Add to list.")
         })
 
         let browse = try? XCTUnwrap(header.flatMap { button(in: $0, identifier: "list.browse") })
@@ -187,7 +187,8 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     func testAnEmptyListSaysSoInItsDeleteConfirmation() {
         let list = self.list(ids: [])
         list.confirmDelete()
-        XCTAssertEqual((list.presented.last as? UIAlertController)?.message, "This list is empty.")
+        XCTAssertEqual((list.presented.last as? UIAlertController)?.message,
+                       "“Afterglow set” has no tags. It will be removed from your lists.")
         list.presented.removeAll()
     }
 
@@ -231,7 +232,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         let create = alert.actions.first { $0.title == "Create" }!
 
         XCTAssertFalse(create.isEnabled, "An empty field cannot create a list")
-        XCTAssertEqual(alert.message, "For example “Afterglow set”", "…but is not yet an error")
+        XCTAssertEqual(alert.message, "For example “Easy tags” or “High and lows”", "…but is not yet an error")
 
         for (typed, problem) in [("   ", "Give the list a name."),
                                  ("Afterglow set", "You already have a list with that name."),
@@ -242,12 +243,12 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
             type(typed, into: alert)
             XCTAssertFalse(create.isEnabled, "“\(typed)” must not be creatable")
             XCTAssertEqual(alert.message, typed.trimmingCharacters(in: .whitespaces).isEmpty
-                           ? "For example “Afterglow set”" : problem)
+                           ? "For example “Easy tags” or “High and lows”" : problem)
         }
 
         type("Chorus warmups", into: alert)
         XCTAssertTrue(create.isEnabled)
-        XCTAssertEqual(alert.message, "For example “Afterglow set”", "A usable name shows the hint again")
+        XCTAssertEqual(alert.message, "For example “Easy tags” or “High and lows”", "A usable name shows the hint again")
     }
 
     func testRenamingAListMayKeepItsOwnName() {

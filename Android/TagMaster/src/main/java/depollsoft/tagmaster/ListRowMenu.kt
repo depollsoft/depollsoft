@@ -3,6 +3,7 @@ package depollsoft.tagmaster
 import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.AlertDialog
@@ -27,43 +28,63 @@ object ListRowMenu {
     private const val ITEM_MOVE_DOWN = 3
     private const val ITEM_DELETE = 4
 
-    /** Wires [row] (a list row for [key]) to the popup and the equivalent custom actions. */
+    /**
+     * Wires [row] (a list row for [key]) to the popup and the equivalent custom actions.
+     *
+     * The rows are recycled, so the actions this added last time are named in [actionIds] and
+     * retired first: a row that has since become the last list must stop offering Move down.
+     */
     fun install(
         activity: FragmentActivity,
         row: View,
         key: String,
+        actionIds: MutableList<Int>,
+        allowLongPress: Boolean = true,
         request: String = ListNameDialog.REQUEST_DEFAULT,
     ) {
-        row.isLongClickable = true
+        actionIds.forEach { ViewCompat.removeAccessibilityAction(row, it) }
+        actionIds.clear()
         row.setOnLongClickListener {
+            if (!allowLongPress) return@setOnLongClickListener false
             show(activity, row, key, request)
             true
         }
-        ViewCompat.addAccessibilityAction(row, activity.getString(R.string.list_row_rename)) { _, _ ->
-            rename(activity, key, request)
-            true
-        }
+        // setOnLongClickListener makes a view long-clickable; in edit mode the row is not.
+        row.isLongClickable = allowLongPress
+        actionIds +=
+            ViewCompat.addAccessibilityAction(row, activity.getString(R.string.list_row_rename)) { _, _ ->
+                rename(activity, key, request)
+                true
+            }
         if (TagLists.canMoveUp(key)) {
-            ViewCompat.addAccessibilityAction(row, activity.getString(R.string.MoveUp)) { _, _ -> TagLists.moveUp(key) }
+            actionIds +=
+                ViewCompat.addAccessibilityAction(row, activity.getString(R.string.MoveUp)) { _, _ -> TagLists.moveUp(key) }
         }
         if (TagLists.canMoveDown(key)) {
-            ViewCompat.addAccessibilityAction(row, activity.getString(R.string.MoveDown)) { _, _ -> TagLists.moveDown(key) }
+            actionIds +=
+                ViewCompat.addAccessibilityAction(row, activity.getString(R.string.MoveDown)) { _, _ -> TagLists.moveDown(key) }
         }
-        ViewCompat.addAccessibilityAction(row, activity.getString(R.string.list_row_delete)) { _, _ ->
-            confirmDelete(activity, key)
-            true
-        }
+        actionIds +=
+            ViewCompat.addAccessibilityAction(row, activity.getString(R.string.list_row_delete)) { _, _ ->
+                confirmDelete(activity, key)
+                true
+            }
     }
 
-    /** Opens the actions for [key] anchored to [anchor]. */
+    /**
+     * Opens the actions for [key] anchored to the trailing end of [anchor].
+     *
+     * Anchored to the row itself the menu hugged the screen edge and covered the next row; END
+     * puts it where the thumb that opened it already is.
+     */
     fun show(
         activity: FragmentActivity,
         anchor: View,
         key: String,
         request: String = ListNameDialog.REQUEST_DEFAULT,
-    ) {
-        if (!TagLists.customKeys.contains(key)) return
-        val popup = PopupMenu(anchor.context, anchor)
+    ): PopupMenu? {
+        if (!TagLists.customKeys.contains(key)) return null
+        val popup = PopupMenu(anchor.context, anchor, Gravity.END)
         popup.menu.add(Menu.NONE, ITEM_RENAME, 0, R.string.list_row_rename)
         if (TagLists.canMoveUp(key)) popup.menu.add(Menu.NONE, ITEM_MOVE_UP, 1, R.string.MoveUp)
         if (TagLists.canMoveDown(key)) popup.menu.add(Menu.NONE, ITEM_MOVE_DOWN, 2, R.string.MoveDown)
@@ -79,6 +100,7 @@ object ListRowMenu {
             true
         }
         popup.show()
+        return popup
     }
 
     fun rename(
@@ -106,7 +128,7 @@ class ListDeleteDialog : DialogFragment() {
         val count = ListModel(key).ids.size
         val message =
             if (count == 0) {
-                getString(R.string.list_delete_message_empty)
+                getString(R.string.list_delete_message_empty, TagLists.name(key))
             } else {
                 resources.getQuantityString(R.plurals.list_delete_message, count, count)
             }

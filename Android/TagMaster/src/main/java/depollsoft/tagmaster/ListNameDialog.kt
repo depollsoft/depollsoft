@@ -90,6 +90,17 @@ class ListNameDialog : DialogFragment() {
                 false
             }
         }
+        // The field wraps a long name onto a second line, so the editor owns the Enter key and
+        // would insert a newline into a name. Enter still means "that's the name".
+        input.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && !event.isShiftPressed) {
+                if (event.action == KeyEvent.ACTION_DOWN) submit()
+                // Consumed either way: a rejected name keeps the dialog open, never a newline.
+                true
+            } else {
+                false
+            }
+        }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { submit() }
             input.requestFocus()

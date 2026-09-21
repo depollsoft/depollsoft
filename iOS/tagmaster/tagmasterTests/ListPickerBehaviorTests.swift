@@ -74,14 +74,38 @@ final class ListPickerBehaviorTests: TMBehaviorTestCase {
                         "picker.row.\(ListPickerBehaviorTests.warmups)", "picker.row.new"])
     }
 
-    func testTheCheckedRowsAreAlsoMarkedSelectedForVoiceOver() {
+    func testEveryRowWearsItsListsIconAndSaysHowBigThatListIs() {
+        seedTwoLists(favorite: [1809])
+        let picker = self.picker()
+        let table = picker.tableView!
+        let cells = (0..<5).map { picker.tableView(table, cellForRowAt: IndexPath(row: $0, section: 0)) }
+
+        XCTAssertEqual(cells.map { $0.detailTextLabel?.text },
+                       ["1 tag", "0 tags", "1 tag", "0 tags", nil])
+        XCTAssertEqual(cells.map { $0.imageView?.image },
+                       [UIImage(systemName: "heart.fill"),
+                        UIImage(systemName: "person.2.fill"),
+                        UIImage(systemName: "list.bullet"),
+                        UIImage(systemName: "list.bullet"),
+                        UIImage(systemName: "plus.circle")])
+        XCTAssertEqual(cells.last?.imageView?.tintColor, DPAppDelegate.accentColor(),
+                       "Only New list… is in the accent")
+    }
+
+    func testEachRowReadsAsItsNameItsSizeAndWhetherTheTagIsInIt() {
         seedTwoLists(favorite: [1809])
         let picker = self.picker()
         let favorites = picker.tableView(picker.tableView, cellForRowAt: IndexPath(row: 0, section: 0))
         let teachable = picker.tableView(picker.tableView, cellForRowAt: IndexPath(row: 1, section: 0))
 
+        XCTAssertEqual(favorites.accessibilityLabel, "Favorites")
+        XCTAssertEqual(favorites.accessibilityValue, "1 tag")
         XCTAssertTrue(favorites.accessibilityTraits.contains(.selected))
-        XCTAssertFalse(teachable.accessibilityTraits.contains(.selected))
+
+        XCTAssertEqual(teachable.accessibilityLabel, "Teachable Tags")
+        XCTAssertEqual(teachable.accessibilityValue, "0 tags")
+        XCTAssertFalse(teachable.accessibilityTraits.contains(.selected),
+                       "Membership is a state, not a word tacked onto the name")
     }
 
     func testThePickerOffersDoneToClose() {

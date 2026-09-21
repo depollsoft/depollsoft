@@ -506,9 +506,15 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     if (indexPath.section == TMHomeListsSection) {
         NSString *key = [self listKeyForRow:indexPath.row];
         if (!key) return;
-        // Deleting a list is never silent; the swipe closes behind the confirmation.
-        [self confirmDeleteList:key];
-        [tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+        // Deleting a list is never silent, and the half-open swipe is the user's
+        // place in the gesture: it stays put under the confirmation and closes
+        // only once that is answered. Reloading the row here instead would snap
+        // it shut first and read as a swipe that failed.
+        BOOL swiped = !self.editing;
+        __weak DPHomeViewController *weakSelf = self;
+        [self confirmDeleteList:key settled:^{
+            if (swiped) [weakSelf.tableView setEditing:NO animated:YES];
+        }];
         return;
     }
     NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];

@@ -300,6 +300,7 @@
 @property (nonatomic, strong) UILabel *akaLabel;
 @property (nonatomic, strong) UILabel *versionLabel;
 @property (nonatomic, strong) TMListChipsView *listChips;
+@property (nonatomic, strong) NSUndoManager *listUndoManager;
 @property (nonatomic, strong) UILabel *tagIdHeader;
 @property (nonatomic, strong) UILabel *tagIdLabel;
 @property (nonatomic, strong) UIProgressView *ratingBar;
@@ -346,11 +347,31 @@
     return self;
 }
 
+/// Removing a tag from a list through a chip is undoable, so this screen owns
+/// an undo manager rather than borrowing whatever the responder chain happens to
+/// hold — UIKit hands out none of its own on iOS.
+- (NSUndoManager *)undoManager {
+    if (!self.listUndoManager) self.listUndoManager = [[NSUndoManager alloc] init];
+    return self.listUndoManager;
+}
+
+/// Shake-to-undo asks the first responder for its undo manager, so this screen
+/// takes the role while it is on screen; it has no text input to take it from.
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self becomeFirstResponder];
+}
+
 /// A capsule per list this tag belongs to, under the title, and the assist chip
 /// that adds it to another. Shown from the moment the tag is available.
 - (void)refreshSavedStatus {
     if (!self.listChips) return;
     self.listChips.host = self;
+    self.listChips.undoHost = self;
     self.listChips.tagId = self.tag ? self.tag.tagId : 0;
     [self.listChips reload];
 }
@@ -479,6 +500,7 @@
     self.versionLabel.textColor = [UIColor secondaryLabelColor];
     self.listChips = [[TMListChipsView alloc] initWithFrame:CGRectZero];
     self.listChips.host = self;
+    self.listChips.undoHost = self;
     self.tagIdHeader = [self makeHeader:@"Tag ID"];
     self.tagIdLabel = [self makeBodyLabel];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(savedListsChanged:) name:@"tagmaster.userDataChanged" object:nil];

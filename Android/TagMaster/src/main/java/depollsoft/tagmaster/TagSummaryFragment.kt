@@ -35,6 +35,18 @@ class TagSummaryFragment : Fragment() {
     private companion object {
         /** A chip shortens past this, instead of crowding out the ones beside it. */
         const val CHIP_MAX_WIDTH_DP = 220
+
+        /** The chip's own height, and the width its remove control needs, to stay tappable. */
+        const val CHIP_TOUCH_TARGET_DP = 48
+        const val CHIP_CLOSE_ICON_DP = 24
+
+        /**
+         * Material lays the close icon's touch bounds out as
+         * `chipEndPadding + closeIconEndPadding + closeIconSize + closeIconStartPadding +
+         * textEndPadding`, so these four paddings around a 24dp icon make it exactly 48dp wide.
+         */
+        const val CHIP_CLOSE_PADDING_DP = 8
+        const val CHIP_END_PADDING_DP = 4
     }
 
     // The pages sit inside TagDetailFragment (full-screen on phones, in the detail pane on
@@ -243,25 +255,54 @@ class TagSummaryFragment : Fragment() {
         group.addView(addToListChip(host, tagId))
     }
 
+    /**
+     * Every chip is an outlined, neutral capsule; only the trailing Add to list chip takes the
+     * accent, so the lists this tag is in read as facts and the one action reads as an action.
+     */
     private fun styleChip(
         host: FragmentActivity,
         chip: Chip,
         iconRes: Int,
+        accent: Boolean = false,
     ) {
-        val foreground =
-            ColorStateList.valueOf(
-                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY),
+        val density = resources.displayMetrics.density
+        val label =
+            MaterialColors.getColor(
+                host,
+                if (accent) {
+                    androidx.appcompat.R.attr.colorPrimary
+                } else {
+                    com.google.android.material.R.attr.colorOnSurface
+                },
+                Color.GRAY,
             )
+        val icon =
+            if (accent) {
+                label
+            } else {
+                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY)
+            }
         chip.chipIcon = AppCompatResources.getDrawable(host, iconRes)
-        chip.chipIconTint = foreground
+        chip.chipIconTint = ColorStateList.valueOf(icon)
         chip.isChipIconVisible = true
+        chip.setTextColor(label)
+        chip.chipBackgroundColor = ColorStateList.valueOf(Color.TRANSPARENT)
+        chip.chipStrokeWidth = density
+        chip.chipStrokeColor =
+            ColorStateList.valueOf(
+                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOutlineVariant, Color.GRAY),
+            )
         chip.isCheckable = false
         chip.isClickable = true
         chip.isFocusable = true
-        // A long list name shortens rather than pushing the row off the screen.
+        // A long list name shortens rather than pushing the row off the screen, and the room it is
+        // given grows with the text the reader asked for.
         chip.isSingleLine = true
         chip.ellipsize = TextUtils.TruncateAt.END
-        chip.maxWidth = (CHIP_MAX_WIDTH_DP * resources.displayMetrics.density).toInt()
+        chip.maxWidth = (CHIP_MAX_WIDTH_DP * density * resources.configuration.fontScale).toInt()
+        chip.chipMinHeight = CHIP_TOUCH_TARGET_DP * density
+        chip.chipEndPadding = CHIP_END_PADDING_DP * density
+        chip.textEndPadding = CHIP_END_PADDING_DP * density
         chip.setEnsureMinTouchTargetSize(true)
     }
 
@@ -272,14 +313,20 @@ class TagSummaryFragment : Fragment() {
         tagId: Int,
     ): Chip {
         val name = TagLists.displayName(host, key)
+        val density = resources.displayMetrics.density
         val chip = Chip(host)
-        chip.text = if (key == TagLists.TEACHABLE) getString(R.string.list_chip_teachable) else name
+        // Every list is named the way the rest of the app names it, Teachable Tags included.
+        chip.text = name
         styleChip(host, chip, listIconRes(key))
         chip.closeIcon = AppCompatResources.getDrawable(host, R.drawable.ic_clear)
         chip.closeIconTint =
             ColorStateList.valueOf(
                 MaterialColors.getColor(host, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY),
             )
+        // Removing a tag from a list is a one-tap action, so it gets a full 48dp of its own.
+        chip.closeIconSize = CHIP_CLOSE_ICON_DP * density
+        chip.closeIconStartPadding = CHIP_CLOSE_PADDING_DP * density
+        chip.closeIconEndPadding = CHIP_CLOSE_PADDING_DP * density
         chip.isCloseIconVisible = true
         val removeLabel = getString(R.string.list_chip_remove, name)
         chip.closeIconContentDescription = removeLabel
@@ -300,7 +347,7 @@ class TagSummaryFragment : Fragment() {
     ): Chip {
         val chip = Chip(host)
         chip.setText(R.string.list_add_to_list)
-        styleChip(host, chip, R.drawable.ic_add)
+        styleChip(host, chip, R.drawable.ic_add, accent = true)
         chip.setOnClickListener { ListPickerDialog.show(host.supportFragmentManager, tagId) }
         return chip
     }

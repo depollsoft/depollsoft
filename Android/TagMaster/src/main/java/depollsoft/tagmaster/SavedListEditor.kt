@@ -17,6 +17,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  *
  * The label names the list in the spoken strings. A built-in list passes its string resource; a
  * user-defined one passes its current name, which [listLabel] follows when the user renames it.
+ *
+ * [companion] names rows that share this screen's Edit action without being tags of [model] —
+ * Home's list rows. Edit is offered, and stays on, while either has something to edit.
  */
 class SavedListEditor(
     private val activity: AppCompatActivity,
@@ -25,6 +28,7 @@ class SavedListEditor(
     private val list: RecyclerView,
     listLabel: CharSequence,
     savedState: Bundle?,
+    private val companion: () -> Boolean = { false },
 ) {
     constructor(
         activity: AppCompatActivity,
@@ -33,7 +37,8 @@ class SavedListEditor(
         list: RecyclerView,
         @StringRes listLabel: Int,
         savedState: Bundle?,
-    ) : this(activity, model, adapter, list, activity.getString(listLabel), savedState)
+        companion: () -> Boolean = { false },
+    ) : this(activity, model, adapter, list, activity.getString(listLabel), savedState, companion)
 
     /** The list's name, as the remove, drag and position announcements say it. */
     var listLabel: CharSequence = listLabel
@@ -43,8 +48,19 @@ class SavedListEditor(
             updateVisibleRows()
         }
 
-    var isEditing = savedState?.getBoolean(STATE_EDITING) == true && model.ids.isNotEmpty()
-        private set
+    /** Whether this screen has anything to edit at all: its own rows, or the ones that share Edit. */
+    private val canEdit: Boolean
+        get() = model.ids.isNotEmpty() || companion()
+
+    /** Told whenever edit mode turns on or off, so rows outside this adapter can follow. */
+    var onEditingChanged: ((Boolean) -> Unit)? = null
+
+    var isEditing = savedState?.getBoolean(STATE_EDITING) == true && (model.ids.isNotEmpty() || companion())
+        private set(value) {
+            if (field == value) return
+            field = value
+            onEditingChanged?.invoke(value)
+        }
     private var drag: ListModel.Snapshot? = null
     private var confirmation: AlertDialog? = null
     private var active = true
@@ -105,7 +121,7 @@ class SavedListEditor(
         adapter.sourceChanged = {
             val interrupted = drag != null
             cancelDrag()
-            if (model.ids.isEmpty()) isEditing = false
+            if (!canEdit) isEditing = false
             activity.invalidateOptionsMenu()
             list.post { updateVisibleRows() }
             if (interrupted) list.announceForAccessibility(activity.getString(R.string.saved_list_changed))
@@ -157,15 +173,24 @@ class SavedListEditor(
     fun prepareMenu(menu: Menu) {
         menu.findItem(R.id.editSavedList)?.apply {
             setTitle(if (isEditing) R.string.saved_list_done else R.string.saved_list_edit)
-            isEnabled = model.ids.isNotEmpty()
+            isEnabled = canEdit
         }
+    }
+
+    /**
+     * Re-checks Edit after the rows that only share it changed (a list created or deleted on Home).
+     */
+    fun contentChanged() {
+        if (!canEdit) isEditing = false
+        activity.invalidateOptionsMenu()
+        list.post { updateVisibleRows() }
     }
 
     fun selectMenu(item: MenuItem): Boolean {
         if (item.itemId != R.id.editSavedList) return false
         cancelDrag()
         confirmation?.dismiss()
-        isEditing = !isEditing && model.ids.isNotEmpty()
+        isEditing = !isEditing && canEdit
         updateVisibleRows()
         activity.invalidateOptionsMenu()
         return true

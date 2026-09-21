@@ -9,6 +9,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
@@ -94,11 +97,30 @@ class ListPickerDialog : DialogFragment() {
             val name = TagLists.displayName(activity, key)
             row.findViewById<AppCompatImageView>(R.id.listRowIcon).setImageResource(listIconRes(key))
             row.findViewById<TextView>(R.id.listRowName).text = name
-            row.findViewById<TextView>(R.id.listRowDetail).text = listCountText(activity, key)
+            val count = listCountText(activity, key)
+            row.findViewById<TextView>(R.id.listRowDetail).text = count
             val checked = ListModel(key).contains(tagId)
             row.findViewById<View>(R.id.listRowCheck).visibility = if (checked) View.VISIBLE else View.GONE
-            row.contentDescription =
-                getString(if (checked) R.string.list_in_list else R.string.list_not_in_list, name)
+            // The name and the count are what the row is; being in the list is a state, and a
+            // checked one at that, so a screen reader can announce the change on its own.
+            row.contentDescription = getString(R.string.list_row_label, name, count)
+            ViewCompat.setStateDescription(
+                row,
+                getString(if (checked) R.string.list_state_in else R.string.list_state_not_in),
+            )
+            ViewCompat.setAccessibilityDelegate(
+                row,
+                object : AccessibilityDelegateCompat() {
+                    override fun onInitializeAccessibilityNodeInfo(
+                        host: View,
+                        info: AccessibilityNodeInfoCompat,
+                    ) {
+                        super.onInitializeAccessibilityNodeInfo(host, info)
+                        info.isCheckable = true
+                        info.isChecked = checked
+                    }
+                },
+            )
             row.setOnClickListener {
                 val model = ListModel(key)
                 if (model.contains(tagId)) model.remove(tagId) else model.add(tagId)

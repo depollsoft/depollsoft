@@ -109,8 +109,9 @@
 
     </LinearLayout>
 
-    <!-- The Lists group: the built-in Teachable Tags list, then the user's own lists, then the
-         row that makes another one. MeHeaderView fills listsContainer from TagLists. -->
+    <!-- The Lists group opens here: its heading and the built-in Teachable Tags row. The user's
+         own lists follow as their own adapter (ListRowsAdapter), so they can be dragged in edit
+         mode, and @layout/meviewlists_footer closes the group with the New list… row. -->
     <TextView
         android:id="@+id/listsHeading"
         android:layout_width="match_parent"
@@ -169,67 +170,4 @@
         </LinearLayout>
 
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/listsContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
-
-    <LinearLayout
-        android:id="@+id/newListButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:importantForAccessibility="no"
-            app:srcCompat="@drawable/ic_add"
-            app:tint="?attr/colorPrimary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/list_new_row"
-            android:fontFamily="sans-serif-medium"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:accessibilityHeading="true"
-        android:text="@string/Favorites"
-        android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-    <TextView
-        android:id="@+id/favoritesEmptyText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/home_favorites_empty"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:visibility="gone" />
 </LinearLayout>

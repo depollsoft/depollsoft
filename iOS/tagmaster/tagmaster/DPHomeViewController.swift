@@ -72,7 +72,13 @@ extension DPHomeViewController: UITextFieldDelegate {
     }
 
     @objc func confirmDeleteList(_ key: String) {
-        present(TMListDeletePrompt.alert(for: key) { [weak self] in
+        confirmDeleteList(key, settled: nil)
+    }
+
+    /// `settled` runs once the alert is answered either way, so a swipe that
+    /// opened this confirmation can close itself only then.
+    @objc func confirmDeleteList(_ key: String, settled: (() -> Void)?) {
+        present(TMListDeletePrompt.alert(for: key, settled: settled) { [weak self] in
             guard let self else { return }
             let row = self.listsRow(of: key)
             self.tm_applyingLocalListChange = true

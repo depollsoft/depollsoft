@@ -21,7 +21,7 @@
     <string name="list_new_row">New list…</string>
     <string name="list_new_title">New list</string>
     <string name="list_name_hint">List name</string>
-    <string name="list_name_helper">For example “Afterglow set”</string>
+    <string name="list_name_helper">For example “Easy tags” or “High and lows”</string>
     <string name="list_create">Create</string>
     <string name="list_rename_title">Rename list</string>
     <string name="list_rename">Rename</string>
@@ -34,13 +34,12 @@
         <item quantity="one">This removes the list and its 1 tag from your lists. Tags stay in the catalog.</item>
         <item quantity="other">This removes the list and its %1$d tags from your lists. Tags stay in the catalog.</item>
     </plurals>
-    <string name="list_delete_message_empty">This list is empty.</string>
+    <string name="list_delete_message_empty">“%1$s” has no tags. It will be removed from your lists.</string>
     <string name="list_delete">Delete</string>
-    <string name="list_empty_title">Nothing in %1$s yet.</string>
-    <string name="list_empty_hint">Open a tag and choose Add to list to build this list.</string>
+    <string name="list_empty_title">No tags in %1$s yet.</string>
+    <string name="list_empty_hint">Open any tag and choose Add to list.</string>
     <string name="list_empty_browse">Browse Tags</string>
     <string name="list_chips_label">In lists</string>
-    <string name="list_chip_teachable">Teachable</string>
     <string name="list_chip_remove">Remove from %1$s</string>
     <string name="list_add_to_list">Add to list</string>
     <string name="list_picker_done">Done</string>
@@ -51,6 +50,11 @@
     <string name="list_delete_action">Delete list…</string>
     <string name="list_row_rename">Rename…</string>
     <string name="list_row_delete">Delete…</string>
-    <string name="list_in_list">In %1$s</string>
-    <string name="list_not_in_list">Not in %1$s</string>
+    <!-- Spoken as a state, beside the row's name and count, rather than folded into its label. -->
+    <string name="list_state_in">In list</string>
+    <string name="list_state_not_in">Not in list</string>
+    <string name="list_row_label">%1$s, %2$s</string>
+    <string name="list_row_remove_named">Delete %1$s</string>
+    <string name="list_row_drag_named">Reorder %1$s, list %2$d of %3$d. Drag or use Alt + arrow keys.</string>
+    <string name="list_row_position">%1$s, %2$s, list %3$d of %4$d</string>
 </resources>

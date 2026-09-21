@@ -24,9 +24,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
-            android:inputType="textCapSentences"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLines="2"
             android:minHeight="56dp"
-            android:singleLine="true"
             android:textAppearance="?attr/textAppearanceBodyLarge" />
     </com.google.android.material.textfield.TextInputLayout>
 </FrameLayout>

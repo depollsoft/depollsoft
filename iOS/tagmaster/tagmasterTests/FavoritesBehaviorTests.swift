@@ -194,6 +194,48 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         home.requestedPresentation = nil
     }
 
+    func testASwipedListRowStaysOpenUnderTheConfirmationAndClosesOnlyOnce() throws {
+        let home = HomePresentationFixture(style: .grouped)
+        seedLists(lists: FavoritesBehaviorTests.twoLists)
+        mountCapturingPushes(home)
+        home.viewDidAppear(false)
+        settle()
+        // What a swipe leaves behind: the table is editing a row although the
+        // screen as a whole is not.
+        home.tableView.setEditing(true, animated: false)
+
+        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: listsSection))
+        XCTAssertTrue(home.tableView.isEditing,
+                      "The swipe holds its place while the confirmation is up")
+        XCTAssertFalse(home.isEditing)
+
+        let alert = try XCTUnwrap(home.requestedPresentation as? UIAlertController)
+        alert.tm_fire("Cancel")
+        settle()
+        XCTAssertFalse(home.tableView.isEditing, "Answering the alert closes the swipe")
+        XCTAssertEqual(TMTagLists.customKeys().count, 2, "Cancel keeps the list")
+        home.requestedPresentation = nil
+    }
+
+    func testDeletingFromTheEditButtonLeavesEditModeAlone() throws {
+        let home = HomePresentationFixture(style: .grouped)
+        seedLists(lists: FavoritesBehaviorTests.twoLists)
+        mountCapturingPushes(home)
+        home.viewDidAppear(false)
+        settle()
+        home.setEditing(true, animated: false)
+
+        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: listsSection))
+        let alert = try XCTUnwrap(home.requestedPresentation as? UIAlertController)
+        alert.tm_fire("Delete")
+        settle()
+
+        XCTAssertTrue(home.isEditing, "A red-circle delete does not end the edit session")
+        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-aa12"])
+        home.setEditing(false, animated: false)
+        home.requestedPresentation = nil
+    }
+
     func testAListRowOffersRenameAndDeleteFromItsContextMenu() {
         let home = self.home(lists: FavoritesBehaviorTests.twoLists)
         XCTAssertNotNil(home.tableView(home.tableView,
@@ -221,7 +263,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 1, section: listsSection))
         let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
         XCTAssertEqual(alert?.title, "New list")
-        XCTAssertEqual(alert?.message, "For example “Afterglow set”")
+        XCTAssertEqual(alert?.message, "For example “Easy tags” or “High and lows”")
         XCTAssertEqual(alert?.textFields?.first?.placeholder, "List name")
         XCTAssertEqual(alert?.actions.map { $0.title ?? "" }, ["Cancel", "Create"])
 

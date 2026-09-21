@@ -139,7 +139,7 @@ public class TMTagListController: UITableViewController, TMTagListSource {
 
     private func makeEmptyHeader() -> UIView {
         // The empty state names this list, so a rename rewrites it in place.
-        let title = "Nothing in \(TMTagLists.name(for: listKey)) yet."
+        let title = "No tags in \(TMTagLists.name(for: listKey)) yet."
         if let emptyHeader {
             emptyHeading?.text = title
             return emptyHeader
@@ -152,7 +152,7 @@ public class TMTagListController: UITableViewController, TMTagListSource {
         heading.accessibilityTraits.insert(.header)
         heading.accessibilityIdentifier = "list.empty.title"
         let guidance = UILabel()
-        guidance.text = "Open a tag and choose Add to list to build this list."
+        guidance.text = "Open any tag and choose Add to list."
         guidance.font = .preferredFont(forTextStyle: .body)
         guidance.textColor = .secondaryLabel
         for label in [heading, guidance] {

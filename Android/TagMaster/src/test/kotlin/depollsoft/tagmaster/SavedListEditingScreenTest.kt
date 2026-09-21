@@ -109,8 +109,12 @@ class SavedListEditingScreenTest {
             }
         val model get() = ListModel(key)
 
-        /** Home puts a static header at position 0; the teachable list starts at its rows. */
-        fun positionOf(id: Int) = adapter.currentList.indexOf(id) + if (home) 1 else 0
+        /**
+         * Home's favourites follow the header, the user's list rows and the row that closes the
+         * Lists group; the teachable and custom list screens start at their rows.
+         */
+        fun positionOf(id: Int) =
+            adapter.currentList.indexOf(id) + if (home) (activity as MeActivity).favoritesStartPosition else 0
 
         fun row(id: Int): SavedTagItemView {
             list.scrollToPosition(positionOf(id))

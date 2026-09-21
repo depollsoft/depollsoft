@@ -62,23 +62,52 @@ public class TMListPickerController: UITableViewController {
         keys.count + 1
     }
 
+    /// The symbol a list wears everywhere it appears: the chips, Home and here.
+    static func symbolName(for key: String) -> String {
+        switch key {
+        case TMTagLists.favoriteKey: return "heart.fill"
+        case TMTagLists.teachableKey: return "person.2.fill"
+        default: return "list.bullet"
+        }
+    }
+
+    private static func countText(_ count: Int) -> String {
+        count == 1 ? "1 tag" : "\(count) tags"
+    }
+
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
+        let newList = indexPath.row >= keys.count
+        let cell = UITableViewCell(style: newList ? .default : .value1, reuseIdentifier: nil)
         cell.textLabel?.font = .preferredFont(forTextStyle: .body)
         cell.textLabel?.adjustsFontForContentSizeCategory = true
         cell.textLabel?.numberOfLines = 0
-        guard indexPath.row < keys.count else {
+        guard !newList else {
             cell.textLabel?.text = "New list…"
             cell.imageView?.image = UIImage(systemName: "plus.circle")
             cell.imageView?.tintColor = DPAppDelegate.accentColor()
             cell.accessibilityIdentifier = "picker.row.new"
+            cell.accessibilityTraits = .button
             return cell
         }
         let key = keys[indexPath.row]
         let member = TMTagLists.contains(Int(tagId), in: key)
-        cell.textLabel?.text = TMTagLists.name(for: key)
+        let name = TMTagLists.name(for: key)
+        let count = TMTagLists.ids(for: key).count
+        cell.textLabel?.text = name
+        // Every row is told apart by its icon and sized by its count, the same
+        // way Home shows the very same lists.
+        cell.imageView?.image = UIImage(systemName: TMListPickerController.symbolName(for: key))
+        cell.imageView?.tintColor = .secondaryLabel
+        cell.detailTextLabel?.text = TMListPickerController.countText(count)
+        cell.detailTextLabel?.font = .preferredFont(forTextStyle: .body)
+        cell.detailTextLabel?.adjustsFontForContentSizeCategory = true
+        cell.detailTextLabel?.textColor = .secondaryLabel
         cell.accessoryType = member ? .checkmark : .none
         cell.accessibilityIdentifier = "picker.row.\(key)"
+        // VoiceOver reads the name, then how big the list is, and says whether
+        // the tag is in it through the selected state rather than a stray word.
+        cell.accessibilityLabel = name
+        cell.accessibilityValue = TMListPickerController.countText(count)
         cell.accessibilityTraits = member ? [.button, .selected] : .button
         return cell
     }

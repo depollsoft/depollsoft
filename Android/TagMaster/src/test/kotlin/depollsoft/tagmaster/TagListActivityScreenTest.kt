@@ -190,7 +190,7 @@ class TagListActivityScreenTest {
         val activity = launch(key)
         activity.choose(R.id.deleteListMenuItem)
         assertEquals(
-            activity.getString(R.string.list_delete_message_empty),
+            activity.getString(R.string.list_delete_message_empty, TagLists.name(key)),
             latestDialog().findViewById<TextView>(android.R.id.message)!!.text.toString(),
         )
     }

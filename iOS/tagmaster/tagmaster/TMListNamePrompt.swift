@@ -17,7 +17,7 @@ import UIKit
 
 public final class TMListNamePrompt: NSObject {
     /// Shown under the field of the new-list alert until the name needs correcting.
-    public static let exampleHint = "For example “Afterglow set”"
+    public static let exampleHint = "For example “Easy tags” or “High and lows”"
 
     /// Address-only key for the association that keeps a validator alive.
     private static var validatorKey: UInt8 = 0
@@ -103,11 +103,15 @@ public final class TMListNamePrompt: NSObject {
 /// The confirmation every delete of a custom list goes through, naming the list
 /// and how many tags leave the user's lists with it.
 public final class TMListDeletePrompt: NSObject {
-    public static func alert(for key: String, confirm: @escaping () -> Void) -> UIAlertController {
+    /// `settled` runs whichever way the alert goes, for the caller that has a
+    /// half-open swipe waiting on the answer.
+    public static func alert(for key: String,
+                             settled: (() -> Void)? = nil,
+                             confirm: @escaping () -> Void) -> UIAlertController {
         let count = TMTagLists.ids(for: key).count
         let message: String
         switch count {
-        case 0: message = "This list is empty."
+        case 0: message = "“\(TMTagLists.name(for: key))” has no tags. It will be removed from your lists."
         case 1: message = "This removes the list and its 1 tag from your lists. Tags stay in the catalog."
         default: message = "This removes the list and its \(count) tags from your lists. Tags stay in the catalog."
         }
@@ -115,8 +119,11 @@ public final class TMListDeletePrompt: NSObject {
                                       message: message,
                                       preferredStyle: .alert)
         alert.view.accessibilityIdentifier = "list.delete.alert"
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in confirm() })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in settled?() })
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+            confirm()
+            settled?()
+        })
         return alert
     }
 }
