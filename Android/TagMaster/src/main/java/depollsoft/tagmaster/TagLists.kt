@@ -154,6 +154,8 @@ object TagLists {
     ) {
         ensureLoaded()
         require(isCustom(key)) { "The $key list cannot be renamed" }
+        // A list deleted elsewhere while its rename dialog was open must not come back.
+        if (key !in customKeys) return
         val normalized = normalizeName(name)
         validateName(normalized, excludingKey = key)?.let { throw IllegalArgumentException("Invalid list name: $it") }
         if (names[key] == normalized) return

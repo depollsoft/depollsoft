@@ -182,6 +182,16 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     [self updateInlineTitleVisibility];
 }
 
+// A change that arrived mid-scroll was held back rather than dropped; the table
+// is settled enough to take it as soon as the finger and the momentum are gone.
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (!decelerate) [self tm_applyPendingRefreshIfIdle];
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    [self tm_applyPendingRefreshIfIdle];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     UINavigationBar *bar = self.navigationController.navigationBar;
@@ -229,6 +239,8 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
+    // This reload shows whatever was waiting, so nothing is left pending.
+    self.tm_pendingListRefresh = NO;
     [self updateEditButton];
     [self tm_syncSelectionForSplit];
 }
@@ -521,6 +533,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
     }
     [self updateEditButton];
+    [self tm_applyPendingRefreshIfIdle];
 }
 
 - (UIMenu *)tm_menuForListKey:(NSString *)key {
@@ -578,6 +591,11 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
         self.tm_applyingLocalListChange = YES;
         [TMTagLists moveListFrom:fromIndexPath.row - 1 to:toIndexPath.row - 1];
         self.tm_applyingLocalListChange = NO;
+        // The drag is over and the rows already match the registry; anything
+        // that arrived from elsewhere while it ran is shown on the next turn,
+        // once the table has finished committing this move.
+        __weak DPHomeViewController *weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf tm_applyPendingRefreshIfIdle]; });
         return;
     }
     [DPAppDelegate moveFavoriteAt:fromIndexPath.row to:toIndexPath.row];

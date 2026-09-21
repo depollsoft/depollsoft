@@ -66,8 +66,8 @@ public class TMTagListController: UITableViewController, TMTagListSource {
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        tableView.reloadData()
-        tm_syncSelectionForSplit()
+        // This reload shows whatever was waiting, so nothing is left pending.
+        reloadForUserData()
     }
 
     public override func viewDidLayoutSubviews() {
@@ -87,6 +87,10 @@ public class TMTagListController: UITableViewController, TMTagListSource {
 
     // MARK: - Reacting to changes
 
+    /// A membership change that arrived while the table was busy and still has
+    /// to be shown.
+    private var pendingRefresh = false
+
     @objc private func onUserDataChanged() {
         guard isViewLoaded else { return }
         // Gone from another device (or just deleted here): this screen has nothing left to show.
@@ -95,15 +99,55 @@ public class TMTagListController: UITableViewController, TMTagListSource {
             return
         }
         refreshTitleAndMenu()
-        // Reloading mid-drag would cancel the gesture and snap the row back.
-        guard !tableView.hasUncommittedUpdates && !tableView.isDragging else { return }
+        // Reloading mid-drag would cancel the gesture and snap the row back, so
+        // the change waits for the table instead of being dropped.
+        guard tableIsIdle else {
+            pendingRefresh = true
+            return
+        }
+        reloadForUserData()
+    }
+
+    /// True when the table has no batch update open and the user is neither
+    /// dragging it nor watching it coast.
+    private var tableIsIdle: Bool {
+        !tableView.hasUncommittedUpdates && !tableView.isDragging && !tableView.isDecelerating
+    }
+
+    private func reloadForUserData() {
+        pendingRefresh = false
         tableView.reloadData()
         tm_syncSelectionForSplit()
     }
 
+    /// Replays a change that arrived while the table was busy, once it is not.
+    private func applyPendingRefreshIfIdle() {
+        guard pendingRefresh, tableIsIdle else { return }
+        reloadForUserData()
+    }
+
+    public override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate { applyPendingRefreshIfIdle() }
+    }
+
+    public override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        applyPendingRefreshIfIdle()
+    }
+
+    /// Takes this screen out of the stack. `popViewController` would remove
+    /// whatever is on top, which on a phone is the tag detail pushed from one of
+    /// these rows, so only the top of the stack is popped; deeper down, this one
+    /// controller is lifted out and everything above it stays where it is.
     private func popSelf() {
-        guard let navigation = navigationController, navigation.viewControllers.contains(self) else { return }
-        navigation.popViewController(animated: !UIAccessibility.isReduceMotionEnabled)
+        guard let navigation = navigationController else { return }
+        var stack = navigation.viewControllers
+        guard let index = stack.firstIndex(of: self) else { return }
+        if index == stack.count - 1 {
+            navigation.popViewController(animated: !UIAccessibility.isReduceMotionEnabled)
+        } else {
+            stack.remove(at: index)
+            navigation.setViewControllers(stack, animated: false)
+        }
     }
 
     private func refreshTitleAndMenu() {
@@ -242,13 +286,17 @@ public class TMTagListController: UITableViewController, TMTagListSource {
         let ids = tagIds
         guard indexPath.row < ids.count else { return }
         TMTagLists.remove(ids[indexPath.row], from: listKey)
-        tableView.reloadData()
+        reloadForUserData()
     }
 
     public override func tableView(_ tableView: UITableView,
                                    moveRowAt sourceIndexPath: IndexPath,
                                    to destinationIndexPath: IndexPath) {
         TMTagLists.move(in: listKey, from: sourceIndexPath.row, to: destinationIndexPath.row)
+        // The rows already show this order; anything that arrived from another
+        // device during the drag lands on the next turn, once the table has
+        // finished committing the move.
+        DispatchQueue.main.async { [weak self] in self?.applyPendingRefreshIfIdle() }
     }
 
     // MARK: - TMTagListSource

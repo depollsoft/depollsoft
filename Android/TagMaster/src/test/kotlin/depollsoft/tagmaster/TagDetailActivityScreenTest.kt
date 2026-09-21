@@ -674,6 +674,103 @@ class TagDetailActivityScreenTest {
         assertFalse(activity.toolbarMenu().findItem(R.id.removeTeachableTagMenuItem).isVisible)
     }
 
+    // ============ The picker while the lists change underneath it ============
+
+    @Test
+    fun thePickerShowsAListCreatedWhileItIsOpen() {
+        val activity = launch()
+        val dialog = openPicker(activity)
+        assertEquals(3, rows(dialog).size)
+
+        val custom = TagLists.create("Afterglow set")
+        idle()
+
+        assertEquals(
+            listOf(
+                activity.getString(R.string.Favorites),
+                activity.getString(R.string.TeachableTags),
+                "Afterglow set",
+                activity.getString(R.string.list_new_row),
+            ),
+            rows(dialog).map { it.rowName() },
+        )
+        assertFalse(rows(dialog).single { it.rowName() == "Afterglow set" }.rowChecked())
+        assertTrue(ListModel(custom).ids.isEmpty())
+    }
+
+    @Test
+    fun thePickerFollowsARenameWhileItIsOpen() {
+        val custom = TagLists.create("Afterglow set")
+        val activity = launch()
+        val dialog = openPicker(activity)
+        assertTrue(rows(dialog).any { it.rowName() == "Afterglow set" })
+
+        TagLists.rename(custom, "Afterglow, later")
+        idle()
+
+        assertTrue(rows(dialog).any { it.rowName() == "Afterglow, later" })
+        assertFalse(rows(dialog).any { it.rowName() == "Afterglow set" })
+    }
+
+    @Test
+    fun aPickerRowChecksItselfWhenTheTagIsAddedElsewhere() {
+        val custom = TagLists.create("Afterglow set")
+        val activity = launch()
+        val dialog = openPicker(activity)
+        assertFalse(rows(dialog).single { it.rowName() == "Afterglow set" }.rowChecked())
+
+        // What a sync from another device looks like from here.
+        ListModel(custom).add(fixture.id)
+        idle()
+
+        val row = rows(dialog).single { it.rowName() == "Afterglow set" }
+        assertTrue("the checkmark follows without reopening", row.rowChecked())
+        assertEquals("1 tag", row.findViewById<TextView>(R.id.listRowDetail).text.toString())
+        assertEquals(
+            activity.getString(R.string.list_state_in),
+            ViewCompat.getStateDescription(row).toString(),
+        )
+    }
+
+    @Test
+    fun thePickerDropsAListDeletedWhileItIsOpen() {
+        val custom = TagLists.create("Afterglow set")
+        ListModel(custom).add(fixture.id)
+        val activity = launch()
+        val dialog = openPicker(activity)
+        assertTrue(rows(dialog).single { it.rowName() == "Afterglow set" }.rowChecked())
+
+        TagLists.delete(custom)
+        idle()
+
+        assertEquals(
+            listOf(
+                activity.getString(R.string.Favorites),
+                activity.getString(R.string.TeachableTags),
+                activity.getString(R.string.list_new_row),
+            ),
+            rows(dialog).map { it.rowName() },
+        )
+    }
+
+    @Test
+    fun tappingARowWhoseListIsAlreadyGoneDoesNotResurrectIt() {
+        val custom = TagLists.create("Afterglow set")
+        val activity = launch()
+        val dialog = openPicker(activity)
+        val stale = rows(dialog).single { it.rowName() == "Afterglow set" }
+
+        // Deleted elsewhere, and tapped before this dialog has had a chance to redraw: the row on
+        // screen is the one the user is looking at, so the write has to be refused here.
+        TagLists.delete(custom)
+        stale.performClick()
+        idle()
+
+        assertTrue("no list came back", TagLists.customKeys.isEmpty())
+        assertTrue("and no raw key was written", ListModel(custom).ids.isEmpty())
+        assertFalse(rows(dialog).any { it.rowName() == "Afterglow set" })
+    }
+
     @Test
     fun theFavoritesRowInThePickerIsTheSameFavoritesTheHeartToggles() {
         val activity = launch()

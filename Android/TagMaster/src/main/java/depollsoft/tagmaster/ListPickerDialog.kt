@@ -2,7 +2,10 @@ package depollsoft.tagmaster
 
 import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -15,6 +18,9 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import com.bindroid.trackable.Trackable
+import com.bindroid.trackable.Tracker
+import com.bindroid.utils.Function
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** The icon that stands for a list everywhere it is named: Home, the chips, and the picker. */
@@ -40,12 +46,45 @@ internal fun listCountText(
  *
  * Rows toggle immediately rather than committing on Done, so the chips behind the dialog update
  * as the user works and Done never has to mean anything but "I'm finished".
+ *
+ * The dialog can stay open for a while, and the lists it is showing are shared state: another
+ * device (or another screen of this one) can create, rename, delete or fill a list underneath it.
+ * So the rows are rendered from a single Bindroid registration over the registry and every list's
+ * ids, and a row only writes once it has re-checked that its list is still there.
  */
 class ListPickerDialog : DialogFragment() {
+    /** One row, as it is shown: everything a render reads about a list. */
+    private data class Row(
+        val key: String,
+        val name: String,
+        val detail: String,
+        val checked: Boolean,
+    )
+
     private val tagId: Int
         get() = requireArguments().getInt(ARG_TAG_ID)
 
     private var rows: LinearLayout? = null
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    // The models whose ids the rows read are held for as long as the dialog is up, so the tracked
+    // collections are exactly the ones the next render registers on.
+    private val trackedLists = mutableListOf<ListModel>()
+
+    // Bindroid registrations are one-shot and each Trackable.track adds another, so the dialog
+    // holds exactly one and renews it only once it has fired.
+    private var tracking = false
+    private var gone = false
+
+    private val tracker =
+        object : Tracker {
+            override fun update() {
+                tracking = false
+                if (gone) return
+                mainHandler.post { if (!gone) render() }
+            }
+        }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
@@ -59,6 +98,8 @@ class ListPickerDialog : DialogFragment() {
                     )
             }
         rows = column
+        gone = false
+        tracking = false
         val scroll = NestedScrollView(context).apply { addView(column) }
 
         // The name dialog opens on top of this one; its result comes back here, so a rotation in
@@ -87,19 +128,39 @@ class ListPickerDialog : DialogFragment() {
         render()
     }
 
+    /**
+     * What the rows should say right now.
+     *
+     * Every read a row depends on happens here, inside the one tracked function: the registry
+     * version (a create, rename, delete or reorder moves only that), the ordered keys, and each
+     * list's ids, which carry both the count and whether this tag is in it.
+     */
+    private fun currentRows(context: Context): List<Row> {
+        trackedLists.clear()
+        TagLists.version
+        return TagLists.allKeys().map { key ->
+            val model = ListModel(key)
+            trackedLists.add(model)
+            Row(key, TagLists.displayName(context, key), listCountText(context, key), model.contains(tagId))
+        }
+    }
+
     private fun render() {
         val column = rows ?: return
         val activity = activity ?: return
+        val snapshot =
+            if (tracking) {
+                currentRows(activity)
+            } else {
+                Trackable.track(tracker, Function<List<Row>> { currentRows(activity) }).also { tracking = true }
+            }
         column.removeAllViews()
         val inflater = layoutInflater
-        for (key in TagLists.allKeys()) {
+        for ((key, name, count, checked) in snapshot) {
             val row = inflater.inflate(R.layout.list_row, column, false)
-            val name = TagLists.displayName(activity, key)
             row.findViewById<AppCompatImageView>(R.id.listRowIcon).setImageResource(listIconRes(key))
             row.findViewById<TextView>(R.id.listRowName).text = name
-            val count = listCountText(activity, key)
             row.findViewById<TextView>(R.id.listRowDetail).text = count
-            val checked = ListModel(key).contains(tagId)
             row.findViewById<View>(R.id.listRowCheck).visibility = if (checked) View.VISIBLE else View.GONE
             // The name and the count are what the row is; being in the list is a state, and a
             // checked one at that, so a screen reader can announce the change on its own.
@@ -122,6 +183,12 @@ class ListPickerDialog : DialogFragment() {
                 },
             )
             row.setOnClickListener {
+                // The list may have been deleted since this row was drawn; adding to it here would
+                // write `lists.<key>` back with no metadata and resurrect it under its raw slug.
+                if (key !in TagLists.allKeys()) {
+                    render()
+                    return@setOnClickListener
+                }
                 val model = ListModel(key)
                 if (model.contains(tagId)) model.remove(tagId) else model.add(tagId)
                 render()
@@ -137,9 +204,26 @@ class ListPickerDialog : DialogFragment() {
         column.addView(newRow)
     }
 
+    override fun onDismiss(dialog: DialogInterface) {
+        stopTracking()
+        super.onDismiss(dialog)
+    }
+
     override fun onDestroyView() {
         rows = null
+        stopTracking()
         super.onDestroyView()
+    }
+
+    /**
+     * Bindroid registrations are one-shot, so nothing has to be unsubscribed; what matters is that
+     * the last one is never renewed and never touches a dialog that has gone away.
+     */
+    private fun stopTracking() {
+        gone = true
+        tracking = false
+        mainHandler.removeCallbacksAndMessages(null)
+        trackedLists.clear()
     }
 
     companion object {

@@ -23,6 +23,10 @@ typedef NS_ENUM(NSInteger, TMHomeSection) {
 /// (or underneath an in-progress drag).
 @property (nonatomic) BOOL tm_applyingLocalListChange;
 
+/// Set when a user-data change arrived while the table was busy, so the reload
+/// it asked for is replayed once the table is idle rather than dropped.
+@property (nonatomic) BOOL tm_pendingListRefresh;
+
 /// Re-selects the favorites row for the tag currently open in an expanded
 /// split, or deselects when collapsed. Exposed for the Swift user-data-changed
 /// hook, which also reloads the table.

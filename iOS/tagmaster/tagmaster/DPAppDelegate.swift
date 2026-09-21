@@ -71,26 +71,46 @@ public extension DPAppDelegate {
     @discardableResult
     static func connectLists(to userDoc: DocumentReference) -> ListenerRegistration {
         TMTagLists.userDoc = userDoc
-        return userDoc.addSnapshotListener { (snapshot, error) in
+        // Metadata changes are included so the server's confirmation of a missing document
+        // arrives even when nothing else changed; see handleUserSnapshot.
+        return userDoc.addSnapshotListener(includeMetadataChanges: true) { (snapshot, error) in
             if let error = error {
                 print(error)
                 return
             }
             guard let snapshot = snapshot else { return }
-            if !snapshot.exists {
-                // There was no existing user, so initialize the user from this device.
-                userDoc.setData(TMTagLists.remotePayload(), merge: true)
-                return
-            }
-            let allIds = TMTagLists.applyRemote(
+            handleUserSnapshot(
+                exists: snapshot.exists,
+                fromCache: snapshot.metadata.isFromCache,
                 lists: snapshot.get("lists") as? [String: Any],
-                info: snapshot.get("listInfo") as? [String: Any]
+                info: snapshot.get("listInfo") as? [String: Any],
+                seed: { userDoc.setData(TMTagLists.remotePayload(), merge: true) }
             )
+        }
+    }
 
-            // Prefetch tags
-            DispatchQueue.global().async {
-                DPTag.query(byIds: allIds.map { NSNumber(value: $0) }, cache: true)
-            }
+    /// One user-document snapshot after sign-in.
+    ///
+    /// The account's document is the truth: its lists replace whatever this device had, so
+    /// signing in never carries local-only lists into an existing account. The one time this
+    /// device's lists are uploaded is when the server says the account has no document yet,
+    /// which is a brand-new account. A cache miss says nothing about the account (it is what an
+    /// offline start looks like), so it neither seeds the document nor clears the local lists;
+    /// the server-confirmed snapshot that follows decides.
+    static func handleUserSnapshot(exists: Bool,
+                                   fromCache: Bool,
+                                   lists: [String: Any]?,
+                                   info: [String: Any]?,
+                                   seed: () -> Void) {
+        if !exists {
+            if !fromCache { seed() }
+            return
+        }
+        let allIds = TMTagLists.applyRemote(lists: lists, info: info)
+
+        // Prefetch tags
+        DispatchQueue.global().async {
+            DPTag.query(byIds: allIds.map { NSNumber(value: $0) }, cache: true)
         }
     }
 
@@ -112,6 +132,7 @@ public extension DPAppDelegate {
             registration?.remove()
             registration = nil
             if let user = user {
+                TMTagLists.prepareLocalLists(forUid: user.uid)
                 registration = DPAppDelegate.connectLists(to: Firestore.firestore().document("users/\(user.uid)"))
             } else {
                 DPAppDelegate.disconnectLists()

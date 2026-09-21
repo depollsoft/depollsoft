@@ -444,6 +444,51 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(home.tm_listedTagIds().map(\.intValue), [669, 1478, 122])
     }
 
+    func testAListArrivingWhileHomeIsBusyIsShownAsSoonAsItIsNot() {
+        let home = self.home(lists: [FavoritesBehaviorTests.twoLists[0]])
+        let listsRows = { home.tableView.numberOfRows(inSection: listsSection) }
+        XCTAssertEqual(listsRows(), 3)
+
+        // A sync from another device lands while Home is animating a change of
+        // its own, the one moment a reload would fight that animation.
+        home.tm_applyingLocalListChange = true
+        _ = TMTagLists.createList(named: "Chorus warmups")
+        home.tm_applyingLocalListChange = false
+        settle()
+        XCTAssertEqual(listsRows(), 3, "Home leaves its table alone while it is busy")
+        XCTAssertTrue(home.tm_pendingListRefresh, "…but remembers what it has not shown")
+
+        // Any moment the table is settled again replays it; a scroll ending is one.
+        (home as UIScrollViewDelegate).scrollViewDidEndDragging?(home.tableView, willDecelerate: false)
+        settle()
+        XCTAssertFalse(home.tm_pendingListRefresh)
+        XCTAssertEqual(rowTitles(home, section: listsSection),
+                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
+    }
+
+    func testHomesOwnListChangeLeavesNothingWaitingBehindIt() {
+        let home = HomePresentationFixture(style: .grouped)
+        seedLists(lists: [FavoritesBehaviorTests.twoLists[0]])
+        mountCapturingPushes(home)
+        home.viewDidAppear(false)
+        settle()
+
+        // Creating a list posts the same notification a remote change does; the
+        // row animation runs, and its completion settles what that notification
+        // left pending.
+        home.promptNewList()
+        let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
+        alert?.tm_type("Chorus warmups")
+        alert?.tm_fire("Create")
+        settle()
+
+        XCTAssertFalse(home.tm_pendingListRefresh, "The completion cleared it")
+        XCTAssertEqual(home.tableView.numberOfRows(inSection: listsSection), 4)
+        XCTAssertEqual(rowTitles(home, section: listsSection),
+                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
+        home.requestedPresentation = nil
+    }
+
     func testAListAddedElsewhereAppearsOnHome() {
         let home = self.home(lists: [FavoritesBehaviorTests.twoLists[0]])
         _ = TMTagLists.createList(named: "Chorus warmups")

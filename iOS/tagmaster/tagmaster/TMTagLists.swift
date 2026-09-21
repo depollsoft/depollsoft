@@ -37,6 +37,8 @@ public final class TMTagLists: NSObject {
     static let listsDefaultsKey = "depollsoft.pitchperfect.lists"
     /// UserDefaults key of the `[key: ["name": String, "order": Int]]` dictionary of custom-list metadata.
     static let infoDefaultsKey = "depollsoft.tagmaster.listInfo"
+    /// UserDefaults key of the uid whose account this device's lists belong to.
+    static let syncedUidDefaultsKey = "depollsoft.tagmaster.syncedUid"
 
     /// The signed-in user's document while a Firestore listener is attached; nil when signed out.
     static var userDoc: DocumentReference?
@@ -190,7 +192,8 @@ public final class TMTagLists: NSObject {
 
     @discardableResult
     public static func renameList(_ key: String, to name: String) -> Bool {
-        guard isCustom(key) else { return false }
+        // A list deleted elsewhere while its rename alert was open must not come back.
+        guard isCustom(key), customKeys().contains(key) else { return false }
         let normalized = normalizeName(name)
         guard validateName(normalized, excluding: key) == .none else { return false }
         var info = storedInfo()
@@ -247,15 +250,38 @@ public final class TMTagLists: NSObject {
 
     // MARK: - Cloud sync
 
-    /// Replaces the local copy with a cloud snapshot. Missing built-in lists keep their local ids;
-    /// custom lists follow the cloud exactly. Returns the ids of every list, for prefetching.
+    /// Drops every list on this device without touching the cloud. Used when a different
+    /// account signs in: the lists here belong to the account that last synced them.
+    static func forgetLocal() {
+        UserDefaults.standard.removeObject(forKey: listsDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: infoDefaultsKey)
+        NotificationCenter.default.post(name: .userDataChanged, object: nil)
+    }
+
+    /// Records which account this device's lists belong to. Signing in as a different account
+    /// than the one that last synced here drops the local lists first, so one user's lists are
+    /// never uploaded into another user's brand-new document. Signing out keeps the lists, and
+    /// the same account signing back in finds them untouched. Returns whether lists were dropped.
+    @discardableResult
+    static func prepareLocalLists(forUid uid: String) -> Bool {
+        let synced = UserDefaults.standard.string(forKey: syncedUidDefaultsKey)
+        UserDefaults.standard.set(uid, forKey: syncedUidDefaultsKey)
+        guard let synced, synced != uid else { return false }
+        forgetLocal()
+        return true
+    }
+
+    /// Replaces the local copy with a cloud snapshot. Every list follows the cloud exactly: a
+    /// built-in list the document does not mention is empty (Android deletes the field when a
+    /// list empties), so signing in never keeps this device's tags in an account that has none.
+    /// Returns the ids of every list, for prefetching.
     @discardableResult
     static func applyRemote(lists remoteLists: [String: Any]?, info remoteInfo: [String: Any]?) -> [Int] {
         let oldLists = storedLists()
         let oldInfo = storedInfo()
         var lists: [String: [Int]] = [:]
         for key in reservedKeys {
-            lists[key] = ids(from: remoteLists?[key]) ?? ids(for: key)
+            lists[key] = ids(from: remoteLists?[key]) ?? []
         }
         for (key, value) in remoteLists ?? [:] where isCustom(key) {
             lists[key] = ids(from: value) ?? []

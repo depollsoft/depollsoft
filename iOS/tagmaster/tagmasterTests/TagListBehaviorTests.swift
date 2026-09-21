@@ -22,6 +22,25 @@ final class ListPresentationFixture: TMTagListController {
     }
 }
 
+/// A list screen whose table can be told it is mid-scroll, the way a finger on
+/// the screen leaves it while a sync from another device arrives.
+final class ScrollingListFixture: TMTagListController {
+    final class ScrollStateTable: UITableView {
+        var scrolling = false
+        override var isDragging: Bool { scrolling }
+    }
+
+    let scrollingTable = ScrollStateTable(frame: CGRect(origin: .zero, size: TMBehaviorTestCase.portrait),
+                                          style: .plain)
+
+    override func loadView() {
+        super.loadView()
+        scrollingTable.dataSource = self
+        scrollingTable.delegate = self
+        tableView = scrollingTable
+    }
+}
+
 final class TagListBehaviorTests: TMBehaviorTestCase {
 
     private static let key = "afterglow-set-k3f9"
@@ -197,6 +216,56 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         // As a sync from another device would: straight through the registry.
         TMTagLists.deleteList(TagListBehaviorTests.key)
         waitUntil("the screen leaves") { !self.navigation.viewControllers.contains(list) }
+    }
+
+    func testATagAddedElsewhereMidScrollAppearsOnceTheScrollStops() {
+        seedAfterglow(ids: [669])
+        seedCachedTag(id: 1478, title: "Tag 1478")
+        let list = ScrollingListFixture(listKey: TagListBehaviorTests.key)
+        let stack = PushCapturingNavigation(rootViewController: UIViewController())
+        stack.pushViewController(list, animated: false)
+        mount(stack)
+        stack.capturing = true
+        navigation = stack
+        list.viewWillAppear(false)
+        list.viewDidAppear(false)
+        settle()
+        XCTAssertEqual(list.tableView.numberOfRows(inSection: 0), 1)
+
+        list.scrollingTable.scrolling = true
+        TMTagLists.add(1478, to: TagListBehaviorTests.key)
+        settle()
+        XCTAssertEqual(list.tableView.numberOfRows(inSection: 0), 1,
+                       "Reloading mid-scroll would cancel the gesture")
+
+        list.scrollingTable.scrolling = false
+        (list as UIScrollViewDelegate).scrollViewDidEndDragging?(list.tableView, willDecelerate: false)
+        settle()
+        XCTAssertEqual(list.tableView.numberOfRows(inSection: 0), 2,
+                       "The change waited for the table rather than being dropped")
+        XCTAssertEqual(list.tm_listedTagIds().map(\.intValue), [669, 1478])
+    }
+
+    func testDeletingTheListElsewhereLeavesTheTagOpenedFromItOnTop() {
+        seedAfterglow()
+        let list = ListPresentationFixture(listKey: TagListBehaviorTests.key)
+        let root = UIViewController()
+        let stack = PushCapturingNavigation(rootViewController: root)
+        stack.pushViewController(list, animated: false)
+        // What tapping a row does on a phone: the tag's detail sits above the list.
+        let detail = UIViewController()
+        stack.pushViewController(detail, animated: false)
+        mount(stack)
+        navigation = stack
+        list.loadViewIfNeeded()
+        settle()
+
+        TMTagLists.deleteList(TagListBehaviorTests.key)
+        waitUntil("the list leaves the stack") { !stack.viewControllers.contains(list) }
+
+        XCTAssertEqual(stack.topViewController, detail,
+                       "The tag the user is reading stays put; only its list goes")
+        XCTAssertEqual(stack.viewControllers, [root, detail])
     }
 
     func testAListRenamedElsewhereRetitlesTheScreen() {

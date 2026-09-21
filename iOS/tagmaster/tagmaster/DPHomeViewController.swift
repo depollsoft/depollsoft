@@ -22,12 +22,39 @@ extension DPHomeViewController: UITextFieldDelegate {
     
     @objc func onUserDataChanged() {
         // Home animates the change it made itself; a reload here would replace
-        // that animation, or cancel a drag still in progress.
-        guard !self.tm_applyingLocalListChange else { return }
-        guard !self.tableView.hasUncommittedUpdates && !self.tableView.isDragging else { return }
+        // that animation, or cancel a drag still in progress. The change is not
+        // lost: it is remembered and replayed the moment the table is idle, so
+        // a rename, reorder or deletion from another device still lands.
+        guard tm_tableIsIdle else {
+            self.tm_pendingListRefresh = true
+            return
+        }
+        self.tm_reloadForUserData()
+    }
+
+    /// True when the table can take a full reload: Home is not mid-animation of
+    /// a change of its own, has no batch update open, and the user is not still
+    /// scrolling it.
+    private var tm_tableIsIdle: Bool {
+        !self.tm_applyingLocalListChange
+            && !self.tableView.hasUncommittedUpdates
+            && !self.tableView.isDragging
+            && !self.tableView.isDecelerating
+    }
+
+    private func tm_reloadForUserData() {
+        self.tm_pendingListRefresh = false
         self.tableView.reloadData()
         self.updateEditButton()
         self.tm_syncSelectionForSplit()
+    }
+
+    /// Replays a change that arrived while the table was busy. The table calls
+    /// this when a scroll ends, and each local change calls it once its own row
+    /// animation has finished.
+    @objc public func tm_applyPendingRefreshIfIdle() {
+        guard self.tm_pendingListRefresh, tm_tableIsIdle else { return }
+        self.tm_reloadForUserData()
     }
 
     // MARK: - Managing lists from Home
@@ -40,17 +67,20 @@ extension DPHomeViewController: UITextFieldDelegate {
     @objc func promptNewList() {
         present(TMListNamePrompt.createAlert { [weak self] name in
             guard let self else { return }
+            // A change from elsewhere that the table has not shown yet leaves it
+            // a row behind, so animating one more row into it would not add up.
+            let stale = self.tm_pendingListRefresh
             self.tm_applyingLocalListChange = true
             let key = TMTagLists.createList(named: name)
             self.tm_applyingLocalListChange = false
-            guard let key, let row = self.listsRow(of: key) else {
-                self.tableView.reloadData()
+            guard !stale, let key, let row = self.listsRow(of: key) else {
+                self.tm_reloadForUserData()
                 return
             }
-            self.tableView.performBatchUpdates {
+            self.tableView.performBatchUpdates({
                 self.tableView.insertRows(at: [IndexPath(row: row, section: tmHomeListsSection)],
                                           with: .automatic)
-            }
+            }, completion: { [weak self] _ in self?.tm_applyPendingRefreshIfIdle() })
             self.updateEditButton()
             UIAccessibility.post(notification: .layoutChanged, argument: nil)
         }, animated: true)
@@ -59,14 +89,17 @@ extension DPHomeViewController: UITextFieldDelegate {
     @objc func promptRenameList(_ key: String) {
         present(TMListNamePrompt.renameAlert(for: key) { [weak self] name in
             guard let self else { return }
+            let stale = self.tm_pendingListRefresh
             self.tm_applyingLocalListChange = true
             TMTagLists.renameList(key, to: name)
             self.tm_applyingLocalListChange = false
-            if let row = self.listsRow(of: key) {
-                self.tableView.reloadRows(at: [IndexPath(row: row, section: tmHomeListsSection)],
-                                          with: .automatic)
+            if let row = self.listsRow(of: key), !stale {
+                self.tableView.performBatchUpdates({
+                    self.tableView.reloadRows(at: [IndexPath(row: row, section: tmHomeListsSection)],
+                                              with: .automatic)
+                }, completion: { [weak self] _ in self?.tm_applyPendingRefreshIfIdle() })
             } else {
-                self.tableView.reloadData()
+                self.tm_reloadForUserData()
             }
         }, animated: true)
     }
@@ -81,16 +114,17 @@ extension DPHomeViewController: UITextFieldDelegate {
         present(TMListDeletePrompt.alert(for: key, settled: settled) { [weak self] in
             guard let self else { return }
             let row = self.listsRow(of: key)
+            let stale = self.tm_pendingListRefresh
             self.tm_applyingLocalListChange = true
             TMTagLists.deleteList(key)
             self.tm_applyingLocalListChange = false
-            if let row {
-                self.tableView.performBatchUpdates {
+            if let row, !stale {
+                self.tableView.performBatchUpdates({
                     self.tableView.deleteRows(at: [IndexPath(row: row, section: tmHomeListsSection)],
                                               with: .automatic)
-                }
+                }, completion: { [weak self] _ in self?.tm_applyPendingRefreshIfIdle() })
             } else {
-                self.tableView.reloadData()
+                self.tm_reloadForUserData()
             }
             self.updateEditButton()
             UIAccessibility.post(notification: .layoutChanged, argument: nil)

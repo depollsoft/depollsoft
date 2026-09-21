@@ -232,6 +232,9 @@ class TagSummaryFragment : Fragment() {
             Function<List<String>?> {
                 val current = parent.tag
                 trackedLists.clear()
+                // A rename or a reorder leaves the keys and the memberships exactly as they were
+                // and moves only the registry version, so the chips read it too.
+                TagLists.version
                 current?.let { tag ->
                     TagLists.allKeys().filter { key ->
                         ListModel(key).also(trackedLists::add).contains(tag.id)

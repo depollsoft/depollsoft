@@ -6,6 +6,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import depollsoft.lib.util.Preferences
@@ -132,6 +133,7 @@ class ListModel private constructor(
 
     companion object {
         private const val LISTS_KEY = "tagmaster.lists"
+        private const val SYNCED_UID_KEY = "tagmaster.syncedUid"
 
         private val preferences: MutableMap<String, TrackableCollection<Int>> by lazy {
             Preferences.get(LISTS_KEY) ?: mutableMapOf()
@@ -187,6 +189,37 @@ class ListModel private constructor(
          * Empties [listName] on this device without writing to Firestore. [TagLists.delete] uses it
          * and then deletes the cloud field together with the list's metadata in one write.
          */
+        /**
+         * Drops every list on this device without touching the cloud. Used when a different
+         * account signs in: the lists here belong to the account that last synced them.
+         */
+        internal fun forgetLocalLists() {
+            val wasStoring = shouldStore
+            shouldStore = false
+            try {
+                (preferences.keys + TagLists.RESERVED).toSet().forEach { ListModel.invoke(it).ids.clear() }
+                preferences.clear()
+                TagLists.resetLocal()
+            } finally {
+                shouldStore = wasStoring
+            }
+            storeValue(false)
+        }
+
+        /**
+         * Records which account this device's lists belong to. Signing in as a different account
+         * than the one that last synced here drops the local lists first, so one user's lists are
+         * never uploaded into another user's brand-new document. Signing out keeps the lists, and
+         * the same account signing back in finds them untouched. Returns whether lists were dropped.
+         */
+        internal fun prepareLocalLists(forUid: String): Boolean {
+            val synced = Preferences.get<String>(SYNCED_UID_KEY)
+            Preferences.set(SYNCED_UID_KEY, forUid)
+            if (synced == null || synced == forUid) return false
+            forgetLocalLists()
+            return true
+        }
+
         internal fun discard(listName: String) {
             val wasStoring = shouldStore
             shouldStore = false
@@ -212,6 +245,9 @@ class ListModel private constructor(
             data: Map<*, *>,
             info: Map<*, *>?,
         ) {
+            // Restored rather than forced on: a snapshot applied while storing is off (test mode)
+            // must not switch cloud writes back on behind the caller's back.
+            val wasStoring = shouldStore
             shouldStore = false
             try {
                 // Remove lists that aren't in the data
@@ -238,7 +274,7 @@ class ListModel private constructor(
                 }
                 TagLists.applyRemote(info, data.keys.filterIsInstance<String>())
             } finally {
-                shouldStore = true
+                shouldStore = wasStoring
             }
             storeValue(false)
         }
@@ -263,25 +299,48 @@ class ListModel private constructor(
             registration?.remove()
             val user = Firebase.auth.currentUser
             if (user != null) {
+                prepareLocalLists(forUid = user.uid)
                 val userDoc = Firebase.firestore.document("users/${user.uid}")
+                // Metadata changes are included so the server's confirmation of a missing
+                // document arrives even when nothing else changed; see applyUserSnapshot.
                 registration =
-                    userDoc.addSnapshotListener { snapshot, error ->
+                    userDoc.addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                         if (error != null) {
                             print(error)
                             return@addSnapshotListener
                         }
-
-                        if (!snapshot!!.exists()) {
-                            // There was no existing user, so initialize the user
-                            toFirestore()
-                        }
-
-                        fromFirestore(
-                            snapshot.get("lists") as? Map<*, *> ?: mutableMapOf<String, List<Long>>(),
-                            snapshot.get("listInfo") as? Map<*, *>,
+                        applyUserSnapshot(
+                            exists = snapshot!!.exists(),
+                            fromCache = snapshot.metadata.isFromCache,
+                            lists = snapshot.get("lists") as? Map<*, *>,
+                            info = snapshot.get("listInfo") as? Map<*, *>,
                         )
                     }
             }
+        }
+
+        /**
+         * One user-document snapshot after sign-in.
+         *
+         * The account's document is the truth: its lists replace whatever this device had, so
+         * signing in never carries local-only lists into an existing account. The one time this
+         * device's lists are uploaded is when the server says the account has no document yet,
+         * which is a brand-new account. A cache miss says nothing about the account (it is what an
+         * offline start looks like), so it neither seeds the document nor clears the local lists;
+         * the server-confirmed snapshot that follows decides.
+         */
+        internal fun applyUserSnapshot(
+            exists: Boolean,
+            fromCache: Boolean,
+            lists: Map<*, *>?,
+            info: Map<*, *>?,
+            seed: () -> Unit = ::toFirestore,
+        ) {
+            if (!exists) {
+                if (!fromCache) seed()
+                return
+            }
+            fromFirestore(lists ?: emptyMap<String, List<Long>>(), info)
         }
 
         init {
