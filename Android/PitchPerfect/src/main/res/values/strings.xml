@@ -115,6 +115,8 @@
     <string name="AddSongsTitle">Add songs</string>
     <string name="NoSongsToAdd">NOTHING TO ADD\n\nEvery song in your other set lists is already here</string>
     <string name="AddSongsConfirm">Add</string>
+    <string name="AddSongsSelectAll">Select all</string>
+    <string name="AddSongsClearSelection">Clear selection</string>
     <string name="ManageSetListsTitle">Set Lists</string>
     <string name="SetListRowActions">Set list actions</string>
     <string name="SetListRowOverflow">More actions for %1$s</string>

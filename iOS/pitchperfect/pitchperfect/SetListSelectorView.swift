@@ -180,7 +180,7 @@ import UIKit
                 .font: DPTheme.condensedFont(size: SetListSelectorView.labelSize),
                 .foregroundColor: selected
                     ? DPTheme.plateInk
-                    : DPTheme.plateInkSecondary.withAlphaComponent(0.75),
+                    : DPTheme.plateInkSecondary,
                 .kern: SetListSelectorView.labelSize * 0.16,
             ]
         )

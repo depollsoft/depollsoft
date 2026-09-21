@@ -7,4 +7,9 @@
         android:icon="@drawable/ic_check"
         android:title="@string/AddSongsConfirm"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/selectAllSongsMenuItem"
+        android:title="@string/AddSongsSelectAll"
+        app:showAsAction="never" />
 </menu>

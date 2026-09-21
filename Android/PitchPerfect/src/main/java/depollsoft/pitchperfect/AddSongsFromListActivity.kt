@@ -33,6 +33,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
     private lateinit var adapter: AddableAdapter
     private var confirmButton: MaterialButton? = null
     private var confirmMenuItem: MenuItem? = null
+    private var selectAllMenuItem: MenuItem? = null
 
     /** The songs ticked so far; [PitchedSong] equality is by id, which is unique per song. */
     private val selection = linkedSetOf<PitchedSong>()
@@ -68,6 +69,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.addsongsmenu, menu)
         confirmMenuItem = menu.findItem(R.id.confirmAddSongsMenuItem)
+        selectAllMenuItem = menu.findItem(R.id.selectAllSongsMenuItem)
         syncConfirmAction()
         return super.onCreateOptionsMenu(menu)
     }
@@ -76,6 +78,11 @@ class AddSongsFromListActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.confirmAddSongsMenuItem -> {
                 confirm()
+                true
+            }
+
+            R.id.selectAllSongsMenuItem -> {
+                toggleSelectAll()
                 true
             }
 
@@ -100,6 +107,15 @@ class AddSongsFromListActivity : AppCompatActivity() {
     /** The current tick count, for the screen tests. */
     internal val selectedCount: Int get() = selection.size
 
+    /** Ticks every offered song, or clears the ticks once they are all in. */
+    internal fun toggleSelectAll() {
+        val all = adapter.songRows().map { it.song }
+        if (all.isEmpty()) return
+        if (selection.size == all.size) selection.clear() else selection.addAll(all)
+        adapter.notifyDataSetChanged()
+        syncConfirmAction()
+    }
+
     internal fun toggle(song: PitchedSong) {
         if (!selection.remove(song)) selection.add(song)
         adapter.notifyDataSetChanged()
@@ -120,6 +136,11 @@ class AddSongsFromListActivity : AppCompatActivity() {
         confirmMenuItem?.title = label
         // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
         confirmMenuItem?.icon?.alpha = if (count > 0) 255 else DISABLED_ICON_ALPHA
+        val total = adapter.songRows().size
+        selectAllMenuItem?.isVisible = total > 0
+        selectAllMenuItem?.setTitle(
+            if (total > 0 && count == total) R.string.AddSongsClearSelection else R.string.AddSongsSelectAll,
+        )
     }
 
     private fun buildRows(): List<Row> =

@@ -110,7 +110,9 @@ cue. The selected position is scrolled into view whenever it changes.
 - **Selected**: 10% `plate-ink` wash, full `plate-ink` text, and a 6dp
   `plate-lit` dot 8dp inside the leading edge (the range selector's indicator,
   which the design system already permits).
-- **Unselected**: `plate-ink-secondary` text at 75% alpha, no wash.
+- **Unselected**: `plate-ink-secondary` text, no wash. (The range selector's
+  75% alpha reads at its size; at 13sp it falls under AA, so the labels keep
+  full secondary ink.)
 - **Last position**: a "+" glyph (`plate-ink-secondary`, 20sp), 44dp wide.
   Tap → New set list.
 - Tapping a position switches the current list immediately: the song rows
@@ -202,7 +204,9 @@ a navigation controller, sheet on iPhone, popover/form sheet on iPad) titled
   already exist in the current list (title compared case-insensitively) are
   **omitted**.
 - The confirming action reads "Add" and is disabled until something is
-  selected; "Add 3 songs" once selected (singular "Add 1 song"). Android: a
+  selected; "Add 3 songs" once selected (singular "Add 1 song"). A "Select
+  all" action (Android overflow, iOS bar item beside Close) ticks every
+  offered song and becomes "Clear selection" / "Clear" once they all are. Android: a
   full-width bottom button, plus a checkmark app-bar action; iOS: the right bar
   item. Cancel/Close on the left.
 - On confirm: deep copies appended to the current list, screen closes, the

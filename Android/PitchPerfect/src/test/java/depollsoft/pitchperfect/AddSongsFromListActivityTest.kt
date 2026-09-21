@@ -133,6 +133,29 @@ class AddSongsFromListActivityTest {
     // ==================== Selection ====================
 
     @Test
+    fun selectAllTicksEveryOfferedSongAndThenClears() {
+        model.defaultSongList.addSong(song("Blue Skies"))
+        model.defaultSongList.addSong(song("Shenandoah", 3))
+        val activity = launch()
+        val button = activity.findViewById<MaterialButton>(R.id.addSongsConfirmButton)
+        val menu = PopupMenu(activity, button).menu
+        activity.onCreateOptionsMenu(menu)
+        val selectAll = menu.findItem(R.id.selectAllSongsMenuItem)
+        assertEquals("Select all", selectAll.title.toString())
+
+        activity.toggleSelectAll()
+        idle()
+        assertEquals(2, activity.selectedCount)
+        assertEquals("Add 2 songs", button.text.toString())
+        assertEquals("Clear selection", selectAll.title.toString())
+
+        activity.toggleSelectAll()
+        idle()
+        assertEquals(0, activity.selectedCount)
+        assertEquals("Select all", selectAll.title.toString())
+    }
+
+    @Test
     fun theConfirmActionCountsTheSelection() {
         model.defaultSongList.addSong(song("Blue Skies"))
         model.defaultSongList.addSong(song("Shenandoah", 3))

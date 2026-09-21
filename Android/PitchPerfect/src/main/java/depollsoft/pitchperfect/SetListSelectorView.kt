@@ -276,9 +276,9 @@ class SetListSelectorView
             override fun setSelected(selected: Boolean) {
                 super.setSelected(selected)
                 if (isAddPosition) return
-                // 75% alpha on the unselected label; full ink when this position is the current
-                // list, exactly as the range selector reads.
-                setTextColor(if (selected) ink else withAlpha(inkSecondary, UNSELECTED_ALPHA))
+                // Secondary ink on the unselected label (the range selector's 75% alpha reads at
+                // its size, but falls under AA at 13sp), full ink on the current list.
+                setTextColor(if (selected) ink else inkSecondary)
                 invalidate()
             }
 
@@ -333,6 +333,5 @@ class SetListSelectorView
             private const val LABEL_SIZE_SP = 13f
             private const val LABEL_TRACKING = 0.16f
             private const val WASH_ALPHA = 26
-            private const val UNSELECTED_ALPHA = 191
         }
     }

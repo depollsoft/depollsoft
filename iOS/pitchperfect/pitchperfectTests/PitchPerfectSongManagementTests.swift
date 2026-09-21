@@ -375,6 +375,15 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
             XCTAssertEqual(confirm.title, "Add 2 songs")
             XCTAssertTrue(confirm.isEnabled)
 
+            // Select all toggles to Clear once everything is ticked, and back.
+            let selectAll = try XCTUnwrap(picker.navigationItem.leftBarButtonItems?.last)
+            XCTAssertEqual(selectAll.title, "Clear")
+            picker.toggleSelectAll()
+            XCTAssertEqual(confirm.title, "Add")
+            XCTAssertEqual(selectAll.title, "Select all")
+            picker.toggleSelectAll()
+            XCTAssertEqual(confirm.title, "Add 2 songs")
+
             try press(confirm)
             settle { songs.presentedViewController == nil }
 

@@ -126,6 +126,7 @@ final class PlateSectionHeader: UITableViewHeaderFooterView {
     private var groups: [DPAddableSongs] = []
     private var chosen: Set<ObjectIdentifier> = []
     private var addItem: UIBarButtonItem?
+    private var selectAllItem: UIBarButtonItem?
 
     /// Called with the number of songs appended once the picker closes.
     @objc public var onFinish: ((Int) -> Void)?
@@ -165,9 +166,14 @@ final class PlateSectionHeader: UITableViewHeaderFooterView {
         tableView.separatorColor = DPTheme.plateHairline
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
 
-        navigationItem.leftBarButtonItem = DPCommon.barButton(
-            systemName: "xmark", target: self, selector: #selector(close)
-        )
+        let selectAll = UIBarButtonItem(title: "Select all", style: .plain,
+                                        target: self, action: #selector(toggleSelectAll))
+        selectAll.accessibilityIdentifier = "setlist.addSongs.selectAll"
+        selectAllItem = selectAll
+        navigationItem.leftBarButtonItems = [
+            DPCommon.barButton(systemName: "xmark", target: self, selector: #selector(close)),
+            selectAll,
+        ]
         let add = UIBarButtonItem(title: "Add", style: .done, target: self, action: #selector(confirm))
         add.accessibilityIdentifier = "setlist.addSongs.confirm"
         addItem = add
@@ -177,6 +183,9 @@ final class PlateSectionHeader: UITableViewHeaderFooterView {
 
     private func refreshAddItem() {
         let count = chosen.count
+        let total = groups.reduce(0) { $0 + $1.songs.count }
+        selectAllItem?.isEnabled = total > 0
+        selectAllItem?.title = total > 0 && count == total ? "Clear" : "Select all"
         addItem?.isEnabled = count > 0
         switch count {
         case 0: addItem?.title = "Add"
@@ -234,6 +243,15 @@ final class PlateSectionHeader: UITableViewHeaderFooterView {
     }
 
     // MARK: - Commands
+
+    /// Ticks every offered song, or clears the ticks once they are all in.
+    @objc public func toggleSelectAll() {
+        let all = groups.flatMap(\.songs).map(ObjectIdentifier.init)
+        guard !all.isEmpty else { return }
+        chosen = chosen.count == all.count ? [] : Set(all)
+        tableView.reloadData()
+        refreshAddItem()
+    }
 
     @objc public func close() {
         finish(added: 0)
