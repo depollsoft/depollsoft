@@ -57,7 +57,7 @@ jobs:
       build-number: ${{ steps.version.outputs.build-number }}
       commits-list: ${{ steps.commits.outputs.list }}
       android-any: ${{ steps.changes.outputs.android-any }}
-      android-modules: ${{ steps.changes.outputs.android-modules }}
+      android-modules: ${{ steps.changes.outputs.android-preview-modules }}
       android-pitchperfect: ${{ steps.changes.outputs.android-pitchperfect }}
       android-tagmaster: ${{ steps.changes.outputs.android-tagmaster }}
       ios-any: ${{ steps.changes.outputs.ios-any }}
@@ -235,6 +235,7 @@ jobs:
         run: python3 scripts/ci/android_sdk.py --require
 
       # Only the modules of the apps this PR changes; shared code builds all.
+      # PitchPerfectLicense has no private flavour and is never previewed.
       - name: Build private preview APKs
         working-directory: Android
         env:

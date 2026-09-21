@@ -99,7 +99,14 @@ jobs:
     # Keep the existing aggregate check name for branch protection.
     name: iOS Unit Tests & Coverage
     needs: [changes, apps]
-    if: always() && needs.changes.outputs.any == 'true'
+    # This is the required check. A skipped required job counts as passing,
+    # so it must not be skipped just because the selection failed: it runs
+    # (and fails below) unless a successful selection found no iOS work.
+    if: >-
+      !cancelled() &&
+      (github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository) &&
+      (needs.changes.result != 'success' || needs.changes.outputs.any == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -110,6 +117,13 @@ jobs:
       run:
         working-directory: .
     steps:
+      - name: Require a successful app selection
+        if: needs.changes.result != 'success'
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+        run: |
+          echo "::error::Selecting changed apps ended with '$CHANGES_RESULT'; refusing to skip iOS tests."
+          exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false

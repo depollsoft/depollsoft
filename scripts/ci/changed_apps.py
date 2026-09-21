@@ -8,8 +8,8 @@ every app on that platform. The platform's workflow files and CI scripts are
 shared too. A few files select everything on both platforms.
 
 Android CI, iOS CI and PR Preview all run this before their expensive jobs.
-Manual and scheduled runs, and any push whose diff cannot be fetched, select
-every app so nothing is silently skipped.
+Manual and scheduled runs, and any push whose diff cannot be fetched in
+full, select every app so nothing is silently skipped.
 """
 import argparse
 import json
@@ -49,20 +49,35 @@ EVERYTHING = ('scripts/ci/changed_apps.py', '.github/workflows/pr-preview.yml',
               '.github/workflows/preview-deploy-command.yml',
               '.github/workflows/deploy-pr-preview.yml')
 
-# Gradle modules that make up each Android app, in the order they are built.
-ANDROID_MODULES = {
+# Gradle application modules per Android app. CI compiles every module's
+# release variant; PR Preview packages only the modules with a `private`
+# flavour (PitchPerfectLicense has none).
+ANDROID_CI_MODULES = {
+    'pitchperfect': ('PitchPerfect', 'PitchPerfectWear', 'PitchPerfectLicense'),
+    'tagmaster': ('TagMaster',),
+}
+ANDROID_PREVIEW_MODULES = {
     'pitchperfect': ('PitchPerfect', 'PitchPerfectWear'),
     'tagmaster': ('TagMaster',),
 }
 
+# The compare API caps its file list; a response this long may be truncated.
+COMPARE_FILE_LIMIT = 300
+
 
 def everything():
-    return {platform: list(APPS) for platform in PLATFORMS}
+    return {**{platform: list(APPS) for platform in PLATFORMS}, 'shared': list(PLATFORMS)}
 
 
 def select(paths):
-    """Map changed paths to {platform: [apps]} with apps in canonical order."""
+    """Map changed paths to {platform: [apps], 'shared': [platforms]}.
+
+    `shared` lists the platforms where shared code changed, which is a
+    stronger statement than both apps being selected: a change to one owned
+    file in each app selects both apps but touches no shared library.
+    """
     chosen = {platform: set() for platform in PLATFORMS}
+    shared = set()
     for path in paths:
         if path.startswith(EVERYTHING):
             return everything()
@@ -75,8 +90,10 @@ def select(paths):
                 chosen[platform].add(owner)
             elif path.startswith(SHARED[platform]):
                 chosen[platform].update(APPS)
-    return {platform: [app for app in APPS if app in chosen[platform]]
-            for platform in PLATFORMS}
+                shared.add(platform)
+    return {**{platform: [app for app in APPS if app in chosen[platform]]
+               for platform in PLATFORMS},
+            'shared': [platform for platform in PLATFORMS if platform in shared]}
 
 
 def outputs(selection):
@@ -86,11 +103,13 @@ def outputs(selection):
         apps = selection[platform]
         result[platform] = json.dumps(apps)
         result[f'{platform}-any'] = str(bool(apps)).lower()
-        result[f'{platform}-all'] = str(set(apps) == set(APPS)).lower()
+        result[f'{platform}-shared'] = str(platform in selection['shared']).lower()
         for app in APPS:
             result[f'{platform}-{app}'] = str(app in apps).lower()
-    result['android-modules'] = ' '.join(
-        module for app in selection['android'] for module in ANDROID_MODULES[app])
+    result['android-ci-modules'] = ' '.join(
+        module for app in selection['android'] for module in ANDROID_CI_MODULES[app])
+    result['android-preview-modules'] = ' '.join(
+        module for app in selection['android'] for module in ANDROID_PREVIEW_MODULES[app])
     return result
 
 
@@ -105,6 +124,7 @@ def pull_request_files(repository, number):
 
 
 def push_files(repository, before, after):
+    """Paths changed by a push, or None when the list may be incomplete."""
     if not before or set(before) == {'0'}:
         return None
     try:
@@ -112,7 +132,10 @@ def push_files(repository, before, after):
                    '--paginate', '--jq', '.files[] | .filename, (.previous_filename // empty)')
     except subprocess.CalledProcessError:
         return None
-    return names.split()
+    files = names.split()
+    if len({name for name in files}) >= COMPARE_FILE_LIMIT:
+        return None
+    return files
 
 
 def changed_files(event_name, event, repository):
@@ -128,7 +151,8 @@ def summary(selection, paths):
     lines = ['### Apps selected by this change', '']
     for platform in PLATFORMS:
         apps = ', '.join(selection[platform]) or 'none'
-        lines.append(f'- {platform}: {apps}')
+        note = ' (shared code changed)' if platform in selection['shared'] else ''
+        lines.append(f'- {platform}: {apps}{note}')
     if paths is None:
         lines.append('- reason: every app runs for this event')
     else:

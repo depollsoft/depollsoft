@@ -59,8 +59,8 @@ jobs:
         working-directory: .
     outputs:
       any: ${{ steps.changes.outputs.android-any }}
-      all: ${{ steps.changes.outputs.android-all }}
-      modules: ${{ steps.changes.outputs.android-modules }}
+      shared: ${{ steps.changes.outputs.android-shared }}
+      modules: ${{ steps.changes.outputs.android-ci-modules }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -84,10 +84,25 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.any == 'true'
+    # This is the required check. A skipped required job counts as passing,
+    # so it must not be skipped just because the selection failed: it runs
+    # (and fails below) unless a successful selection found no Android work.
+    if: >-
+      !cancelled() &&
+      (github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository) &&
+      (needs.changes.result != 'success' || needs.changes.outputs.any == 'true')
     timeout-minutes: 45
 
     steps:
+      - name: Require a successful app selection
+        if: needs.changes.result != 'success'
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+        run: |
+          echo "::error::Selecting changed apps ended with '$CHANGES_RESULT'; refusing to skip Android tests."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -142,8 +157,9 @@ jobs:
       # unit tests, the coverage report and the release compile checks all go
       # into a single task list.
       #
-      # Shared code runs every module's unit tests; an app-only change runs
-      # just that app's modules and compiles just its release variant.
+      # Shared code runs every module's unit tests (the root alias covers the
+      # libraries too); app-only changes run just the selected apps' modules
+      # and compile just their release variants.
       - name: Run unit tests and compile production variants
         env:
           # Increase Gradle memory for containerized runners
@@ -151,13 +167,13 @@ jobs:
             -Xmx2g -XX:MaxMetaspaceSize=512m
             -XX:+HeapDumpOnOutOfMemoryError
           EVENT_NAME: ${{ github.event_name }}
-          ALL_APPS: ${{ needs.changes.outputs.all }}
+          SHARED: ${{ needs.changes.outputs.shared }}
           MODULES: ${{ needs.changes.outputs.modules }}
         run: |
           set -euo pipefail
           read -ra modules <<< "$MODULES"
           tasks=()
-          if [[ "$ALL_APPS" == true ]]; then
+          if [[ "$SHARED" == true ]]; then
             tasks+=(testDebugUnitTest)
           else
             for module in "${modules[@]}"; do
@@ -165,11 +181,13 @@ jobs:
             done
           fi
           for module in "${modules[@]}"; do
-            if [[ "$module" == PitchPerfectWear ]]; then
-              tasks+=(":$module:compileReleaseJavaWithJavac")
-            else
-              tasks+=(":$module:compileReleaseKotlin")
-            fi
+            case "$module" in
+              # Java-only application modules have no Kotlin compile task.
+              PitchPerfectWear|PitchPerfectLicense)
+                tasks+=(":$module:compileReleaseJavaWithJavac") ;;
+              *)
+                tasks+=(":$module:compileReleaseKotlin") ;;
+            esac
           done
           echo "Gradle tasks: ${tasks[*]}"
           # Coverage only feeds the scheduled/manual Codecov upload.
