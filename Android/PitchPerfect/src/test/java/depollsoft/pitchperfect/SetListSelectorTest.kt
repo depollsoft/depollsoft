@@ -236,6 +236,34 @@ class SetListSelectorTest {
     }
 
     @Test
+    fun eachListKeepsItsOwnScrollPosition() {
+        repeat(40) { model.defaultSongList.addSong(song("Song $it")) }
+        val other = model.createList("Saturday show")
+        repeat(40) { model.songLists[other]!!.addSong(song("Other $it")) }
+        val activity = launch()
+        val fragment = activity.goToSongs()
+        val list = fragment.requireView().findViewById<RecyclerView>(R.id.songListView)
+
+        list.scrollToPosition(30)
+        idle()
+        assertTrue("My Songs is scrolled down", fragment.firstVisibleSongPosition() >= 20)
+
+        fragment.selector().positionView(other)!!.performClick()
+        idle()
+        assertEquals("a list shown for the first time starts at the top", 0, fragment.firstVisibleSongPosition())
+
+        list.scrollToPosition(35)
+        idle()
+        fragment.selector().positionView(SongsModel.DEFAULT_ID)!!.performClick()
+        idle()
+        assertTrue("My Songs comes back where it was left", fragment.firstVisibleSongPosition() >= 20)
+
+        fragment.selector().positionView(other)!!.performClick()
+        idle()
+        assertTrue("and so does the other list", fragment.firstVisibleSongPosition() >= 25)
+    }
+
+    @Test
     fun switchingToAnEmptyListShowsItsEmptyState() {
         model.defaultSongList.addSong(song("Blue Skies"))
         val other = model.createList("Saturday show")

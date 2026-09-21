@@ -56,8 +56,14 @@ Rules:
 - The current list id is stored locally under `depollsoft.pitchperfect.CurrentSongList`
   and falls back to `default` when missing or when it names a list that no
   longer exists.
-- Remote wins on sign-in, as today. A remote `REMOVED` change drops the list
-  locally; a remote `MODIFIED` change restores name, songs, and order.
+- Remote wins on sign-in, as today: the first server-confirmed snapshot after
+  signing in to an **existing** account settles the set of lists, and any list
+  on the device that the account does not have is discarded (My Songs is
+  always kept; its songs are replaced by the account's, as before). A
+  brand-new account (created by this sign-in, which Firebase's creation and
+  last-sign-in stamps reveal) uploads the device's lists instead. A cached
+  snapshot never prunes. A remote `REMOVED` change drops the list locally; a
+  remote `MODIFIED` change restores name, songs, and order.
 - Older app versions read only `default` and write `{name, songs}` with merge,
   so `order` survives on the default document (where it is ignored anyway) and
   custom lists are untouched.
@@ -118,6 +124,8 @@ cue. The selected position is scrolled into view whenever it changes.
 - Tapping a position switches the current list immediately: the song rows
   swap, every sounding note stops, the FAB/+ now adds to that list. A selection
   tick haptic accompanies the switch (the same one the range selector uses).
+  Each list keeps its own scroll position for the life of the screen; a list
+  shown for the first time starts at the top.
 - Accessibility: each position is a button named "<name>, N songs" (or "no
   songs"), reporting selected state; "+" is "New set list".
 - Long-pressing a position is where a list is managed: a menu **titled with

@@ -156,6 +156,11 @@ class SongList constructor() {
         isDeleted = false
     }
 
+    /** Drops the list from this device without touching the server: it was never there. */
+    fun discardLocally() {
+        isDeleted = true
+    }
+
     fun storeValue() {
         if (isDeleted || !this::id.isInitialized || !SongsModel.isInitialized) {
             return

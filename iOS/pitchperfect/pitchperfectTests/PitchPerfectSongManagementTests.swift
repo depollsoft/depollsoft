@@ -309,6 +309,33 @@ final class PitchPerfectSongManagementTests: PitchPerfectControllerTestCase {
         }
     }
 
+    func testEachListKeepsItsOwnScrollPosition() throws {
+        try withApp { tabs in
+            seedSongs((0..<40).map { "Song \($0)" })
+            let model = DPSongsModel.sharedInstance
+            let list = try customList(named: "Saturday show")
+            model.copySongs(model.defaultSongList.songs, to: list)
+            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
+            let table = try table(in: songs)
+            let top = -table.adjustedContentInset.top
+
+            table.scrollToRow(at: IndexPath(row: 39, section: 0), at: .bottom, animated: false)
+            table.layoutIfNeeded()
+            let scrolled = table.contentOffset.y
+            XCTAssertGreaterThan(scrolled, top + 100, "My Songs is scrolled down")
+
+            try position("setlist.\(list.id)", in: songs).sendActions(for: .touchUpInside)
+            table.layoutIfNeeded()
+            XCTAssertEqual(table.contentOffset.y, top, accuracy: 1,
+                           "a list shown for the first time starts at the top")
+
+            try position("setlist.default", in: songs).sendActions(for: .touchUpInside)
+            table.layoutIfNeeded()
+            XCTAssertEqual(table.contentOffset.y, scrolled, accuracy: 1,
+                           "My Songs comes back where it was left")
+        }
+    }
+
     func testDeletingTheCurrentSetListConfirmsAndReturnsToMySongs() throws {
         try withApp { tabs in
             seedSongs(["Blue Skies"])

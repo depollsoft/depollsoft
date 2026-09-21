@@ -147,6 +147,29 @@ final class DPSongListSyncEmulatorTests: XCTestCase {
 
     // MARK: - Tests
 
+    func testSigningInToAnExistingAccountDropsListsTheAccountDoesNotHave() throws {
+        // The account already has a list of its own …
+        write("remote-set", ["name": "Remote set", "songs": [], "order": 0])
+        awaitList("remote-set") { $0.exists }
+        // … and this device made one while signed out.
+        model.detachFromFirestore()
+        let localOnly = try XCTUnwrap(model.createList(named: "Made offline"))
+        model.currentListId = localOnly.id
+
+        model.attachToFirestore(userDoc: localDoc, store: false, remoteWins: true)
+
+        spinUntil("the account's list to arrive and the local-only one to go", timeout: 30) {
+            self.model.songLists["remote-set"] != nil && self.model.songLists[localOnly.id] == nil
+        }
+        XCTAssertEqual(model.currentListId, DPSongsModel.defaultListId, "the tab falls back to My Songs")
+        XCTAssertTrue(localOnly.isDeleted)
+        // The discarded list was never uploaded.
+        let listed: QuerySnapshot? = awaitCallback("list the account's set lists") {
+            self.remoteDoc.collection("songLists").getDocuments(source: .server, completion: $0)
+        }
+        XCTAssertFalse((listed?.documents ?? []).contains { $0.documentID == localOnly.id })
+    }
+
     func testLocalEditsProduceTheDocumentedDocuments() {
         guard model != nil else { return }
         let list = try! XCTUnwrap(model.createList(named: "Saturday show"))

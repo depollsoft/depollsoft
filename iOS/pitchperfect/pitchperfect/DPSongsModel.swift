@@ -102,14 +102,39 @@ public struct DPAddableSongs {
     }
 
     @objc public func attachToFirestore(store: Bool = false) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        attachToFirestore(userDoc: Firestore.firestore().document("/users/\(uid)"), store: store)
+        guard let user = Auth.auth().currentUser else { return }
+        // A brand-new account keeps what this device has (the login flow uploads it);
+        // signing in to an existing account means the account's lists replace the local ones.
+        let remoteWins = !store
+            && !DPSongsModel.isNewAccount(createdAt: user.metadata.creationDate,
+                                          lastSignInAt: user.metadata.lastSignInDate)
+        attachToFirestore(userDoc: Firestore.firestore().document("/users/\(user.uid)"),
+                          store: store, remoteWins: remoteWins)
     }
+
+    /// Whether the account was created by the sign-in that just happened: Firebase
+    /// stamps both times in the same request, so they differ by no more than it took.
+    static func isNewAccount(createdAt: Date?, lastSignInAt: Date?) -> Bool {
+        guard let createdAt, let lastSignInAt else { return false }
+        return abs(lastSignInAt.timeIntervalSince(createdAt)) < 60
+    }
+
+    /// Set while a sign-in is waiting for its first server snapshot to decide which lists stay.
+    private var pruneOnServerSnapshot = false
 
     /// The attachment the emulator tests drive: every Firestore path this model
     /// takes hangs off one injected user document.
     @objc public func attachToFirestore(userDoc: DocumentReference, store: Bool = false) {
+        attachToFirestore(userDoc: userDoc, store: store, remoteWins: !store)
+    }
+
+    /// With `remoteWins`, the first snapshot confirmed by the server decides the
+    /// set of lists: any list on this device that the account does not have is
+    /// dropped, exactly as the account's default list has always replaced the
+    /// local one.
+    public func attachToFirestore(userDoc: DocumentReference, store: Bool, remoteWins: Bool) {
         self.userDoc = userDoc
+        pruneOnServerSnapshot = remoteWins && !store
         for (_, list) in self.songLists {
             list.setParent(userRef: userDoc)
         }
@@ -119,10 +144,34 @@ public struct DPAddableSongs {
         listenForSongLists()
     }
 
+    /// Remote wins: keeps the default list and every list the account has and
+    /// discards the rest, marking them so a stale holder cannot write them back.
+    /// Returns the ids that were dropped.
+    @discardableResult
+    func applyRemoteWins(remoteIds: Set<String>) -> [String] {
+        let dropped = songLists.keys.filter { $0 != DPSongsModel.defaultListId && !remoteIds.contains($0) }
+        guard !dropped.isEmpty else { return [] }
+        for id in dropped {
+            songLists[id]?.discardLocally()
+            removeSongList(forKey: id)
+        }
+        if let stored = UserDefaults.standard.string(forKey: DPSongsModel.currentListKey), dropped.contains(stored) {
+            UserDefaults.standard.set(DPSongsModel.defaultListId, forKey: DPSongsModel.currentListKey)
+        }
+        return dropped
+    }
+
     private func listenForSongLists() {
         guard let userDoc else { return }
-        allListeners.append(userDoc.collection("songLists").addSnapshotListener({ (snapshot, error) in
+        // Metadata changes are included so the moment the server confirms the
+        // cached view is reported even when no document changed: that
+        // confirmation is what settles a sign-in (see `pruneOnServerSnapshot`).
+        allListeners.append(userDoc.collection("songLists").addSnapshotListener(includeMetadataChanges: true) { (snapshot, error) in
             if error != nil {
+                return
+            }
+            let settlesSignIn = self.pruneOnServerSnapshot && snapshot.map { !$0.metadata.isFromCache } == true
+            if (snapshot?.documentChanges.isEmpty ?? true) && !settlesSignIn {
                 return
             }
             self.applyingSnapshot = true
@@ -141,16 +190,24 @@ public struct DPAddableSongs {
                     self.removeSongList(forKey: change.document.documentID)
                 }
             }
+            // The first server-confirmed snapshot of a sign-in settles which lists
+            // exist here. A cached (possibly empty) snapshot must not: it says
+            // nothing about the account.
+            if self.pruneOnServerSnapshot, let snapshot, !snapshot.metadata.isFromCache {
+                self.pruneOnServerSnapshot = false
+                self.applyRemoteWins(remoteIds: Set(snapshot.documents.map(\.documentID)))
+            }
             // A list deleted above is gone from `songLists`, so this only
             // rewrites what survived — locally, never back to the server.
             self.storeAll()
             self.applyingSnapshot = false
             self.postChanged()
-        }))
+        })
     }
 
     @objc public func detachFromFirestore() {
         userDoc = nil
+        pruneOnServerSnapshot = false
         for listener in allListeners {
             listener.remove()
         }
@@ -532,6 +589,11 @@ public struct DPAddableSongs {
     func deleteRemote() {
         isDeleted = true
         reference?.delete()
+    }
+
+    /// Drops the list from this device without touching the server: it was never there.
+    func discardLocally() {
+        isDeleted = true
     }
 
     @objc public func storeValue() {

@@ -334,6 +334,30 @@ final class DPSongsModelSetListsTests: XCTestCase {
         XCTAssertEqual(reloaded.songLists[second.id]?.songs.map(\.name), ["Lida Rose"])
     }
 
+    func testRemoteWinsKeepsMySongsAndTheAccountsListsOnly() throws {
+        let model = DPSongsModel()
+        let kept = try XCTUnwrap(model.createList(named: "Saturday show"))
+        let dropped = try XCTUnwrap(model.createList(named: "Made offline"))
+        model.currentListId = dropped.id
+
+        let gone = model.applyRemoteWins(remoteIds: [kept.id, "unknown-elsewhere"])
+
+        XCTAssertEqual(gone, [dropped.id])
+        XCTAssertEqual(Set(model.songLists.keys), [DPSongsModel.defaultListId, kept.id])
+        XCTAssertTrue(dropped.isDeleted, "a discarded list can never write itself back")
+        XCTAssertFalse(kept.isDeleted)
+        XCTAssertEqual(model.currentListId, DPSongsModel.defaultListId)
+        let stored = defaults.dictionary(forKey: DPSongsModel.songListsKey) ?? [:]
+        XCTAssertNil(stored[dropped.id])
+    }
+
+    func testAnAccountCreatedByThisSignInIsNew() {
+        let created = Date()
+        XCTAssertTrue(DPSongsModel.isNewAccount(createdAt: created, lastSignInAt: created.addingTimeInterval(0.8)))
+        XCTAssertFalse(DPSongsModel.isNewAccount(createdAt: created, lastSignInAt: created.addingTimeInterval(120)))
+        XCTAssertFalse(DPSongsModel.isNewAccount(createdAt: nil, lastSignInAt: created), "unknown stamps never count as new")
+    }
+
     func testADeletedListNeverWritesItselfBack() throws {
         let model = DPSongsModel()
         let stale = try XCTUnwrap(model.createList(named: "Saturday show"))

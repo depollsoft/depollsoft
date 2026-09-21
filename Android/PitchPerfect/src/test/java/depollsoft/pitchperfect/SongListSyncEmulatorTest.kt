@@ -128,6 +128,33 @@ class SongListSyncEmulatorTest {
         Preferences.clearTestValues()
     }
 
+    // ==================== Signing in ====================
+
+    @Test
+    fun signingInToAnExistingAccountDropsListsTheAccountDoesNotHave() {
+        // The account already has a list of its own …
+        await(
+            remoteLists.document("remote-set").set(
+                mapOf("name" to "Remote set", "songs" to emptyList<Any>(), "order" to 0L),
+            ),
+        )
+        // … and this device made one while signed out.
+        model.detachFromFirestore()
+        val localOnly = model.createList("Made offline")
+        model.currentListId = localOnly
+
+        model.attachToFirestore(localStore!!.document("users/$uid"), uid, store = false, remoteWins = true)
+
+        pumpUntil("the account's list to arrive and the local-only one to go") {
+            "remote-set" in model.songLists && localOnly !in model.songLists
+        }
+        assertEquals("the tab falls back to My Songs", SongsModel.DEFAULT_ID, model.currentListId)
+        assertEquals("Remote set", model.displayName("remote-set"))
+        // The discarded list was never uploaded.
+        val documents = awaitRemote("the account's lists") { "remote-set" in it }
+        assertFalse(localOnly in documents)
+    }
+
     // ==================== Local edits ====================
 
     @Test

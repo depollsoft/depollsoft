@@ -177,6 +177,10 @@ static const CGFloat DPSongKeySize = 18;
 @property (nonatomic, strong) UIBarButtonItem *editItem;
 @property (nonatomic, strong) UIBarButtonItem *moreItem;
 @property (nonatomic, copy) NSString *moreMenuSignature;
+/// The list the rows are showing, so a switch can be told apart from a change within it.
+@property (nonatomic, copy) NSString *shownListId;
+/// Each list keeps its own place; the table would otherwise carry one scroll across all of them.
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSValue *> *scrollOffsets;
 @property (nonatomic, strong) UIBarButtonItem *doneItem;
 @property (nonatomic, strong) UIBarButtonItem *addItem;
 @property (nonatomic, strong) UIBarButtonItem *addButton;
@@ -186,7 +190,7 @@ static const CGFloat DPSongKeySize = 18;
 
 @implementation DPSongListViewController
 
-@synthesize bannerView, tableView, setListSelector, editItem, doneItem, moreItem, moreMenuSignature, addItem, addButton, settingsButton;
+@synthesize bannerView, tableView, setListSelector, editItem, doneItem, moreItem, moreMenuSignature, addItem, addButton, settingsButton, shownListId, scrollOffsets;
 
 // Every song operation targets the list the selector is showing, whichever
 // device or screen last changed it.
@@ -320,6 +324,8 @@ static const CGFloat DPSongKeySize = 18;
                                            selector:@selector(songsChanged)
                                                name:[DPSongsModel songsChangedNotificationName]
                                              object:nil];
+    scrollOffsets = [NSMutableDictionary dictionary];
+    shownListId = [DPSongsModel sharedInstance].currentListId;
     [self renderSelector];
     [self refreshEmptyState];
 
@@ -699,10 +705,30 @@ static const CGFloat DPSongKeySize = 18;
 - (void)songsChanged {
     // The current list can disappear under the UI; `currentList` falls back to
     // My Songs on its own, so the tab re-renders rather than leaving.
+    NSString *listId = [DPSongsModel sharedInstance].currentListId;
+    BOOL switched = shownListId != nil && ![shownListId isEqualToString:listId];
+    if (switched) {
+        scrollOffsets[shownListId] = [NSValue valueWithCGPoint:tableView.contentOffset];
+    }
     [self renderSelector];
     [self refreshEmptyState];
     [self refreshEditingBarAnimated:NO];
     [tableView reloadData];
+    if (switched) {
+        shownListId = listId;
+        [self restoreScrollFor:listId];
+    }
+}
+
+// A list comes back where it was left; a list never shown starts at the top.
+- (void)restoreScrollFor:(NSString *)listId {
+    [tableView layoutIfNeeded];
+    CGFloat top = -tableView.adjustedContentInset.top;
+    CGFloat bottom = MAX(top, tableView.contentSize.height - tableView.bounds.size.height
+                                  + tableView.adjustedContentInset.bottom);
+    NSValue *saved = scrollOffsets[listId];
+    CGFloat y = saved != nil ? MIN(MAX(saved.CGPointValue.y, top), bottom) : top;
+    [tableView setContentOffset:CGPointMake(0, y) animated:NO];
 }
 
 @end

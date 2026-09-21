@@ -26,6 +26,13 @@ class SongListFragment : Fragment() {
     private var adapter: SongListAdapter? = null
     private var selector: SetListSelectorView? = null
     private var sorryText: TextView? = null
+    private var recycler: RecyclerView? = null
+
+    /** The list the rows are showing, so a switch can be told apart from a change within it. */
+    private var shownListId: String? = null
+
+    /** Each list keeps its own place; the rows would otherwise carry one scroll across all of them. */
+    private val scrollStates = mutableMapOf<String, android.os.Parcelable>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +61,8 @@ class SongListFragment : Fragment() {
         sorryText = rootView.findViewById(R.id.sorryText)
 
         val recycler = rootView.findViewById<RecyclerView>(R.id.songListView)
+        this.recycler = recycler
+        shownListId = model.currentListId
         val songAdapter = SongListAdapter(model.currentList)
         songAdapter.also { adapter = it }
         recycler.layoutManager = LinearLayoutManager(context)
@@ -179,6 +188,8 @@ class SongListFragment : Fragment() {
         fab = null
         selector = null
         sorryText = null
+        recycler = null
+        shownListId = null
         super.onDestroyView()
     }
 
@@ -195,11 +206,34 @@ class SongListFragment : Fragment() {
     }
 
     private fun renderLists() {
+        val listId = model.currentListId
+        val switched = shownListId != null && shownListId != listId
+        if (switched) rememberScroll()
         adapter?.songList = model.currentList
+        if (switched) {
+            shownListId = listId
+            restoreScroll(listId)
+        }
         selector?.render()
         applyEmptyStateCopy()
         activity?.invalidateOptionsMenu()
     }
+
+    private fun rememberScroll() {
+        val id = shownListId ?: return
+        recycler?.layoutManager?.onSaveInstanceState()?.let { scrollStates[id] = it }
+    }
+
+    /** A list comes back where it was left; a list never shown starts at the top. */
+    private fun restoreScroll(listId: String) {
+        val layout = recycler?.layoutManager ?: return
+        val saved = scrollStates[listId]
+        if (saved != null) layout.onRestoreInstanceState(saved) else layout.scrollToPosition(0)
+    }
+
+    /** The row index at the top of the list, for the screen tests. */
+    internal fun firstVisibleSongPosition(): Int =
+        (recycler?.layoutManager as? LinearLayoutManager)?.findFirstVisibleItemPosition() ?: -1
 
     /**
      * The empty state is set here, not through a binding: the current list is a plain

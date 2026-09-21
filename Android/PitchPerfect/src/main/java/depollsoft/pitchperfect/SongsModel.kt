@@ -9,6 +9,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.firestore
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
@@ -323,22 +324,51 @@ class SongsModel private constructor() {
 
     fun attachToFirestore(store: Boolean = false) {
         val user = Firebase.auth.currentUser ?: return
-        attachToFirestore(Firebase.firestore.document("/users/${user.uid}"), user.uid, store)
+        // A brand-new account keeps what this device has (the login flow uploads it); signing
+        // in to an existing account means the account's lists replace the local ones.
+        val remoteWins = !store && !isNewAccount(user.metadata?.creationTimestamp, user.metadata?.lastSignInTimestamp)
+        attachToFirestore(Firebase.firestore.document("/users/${user.uid}"), user.uid, store, remoteWins)
     }
 
-    /** The injectable seam the emulator tests use: a user document and the uid that owns it. */
+    /**
+     * Whether the account was created by the sign-in that just happened: Firebase stamps both
+     * times in the same request, so they differ by no more than the request took.
+     */
+    internal fun isNewAccount(
+        createdAt: Long?,
+        lastSignInAt: Long?,
+    ): Boolean {
+        if (createdAt == null || lastSignInAt == null) return false
+        return kotlin.math.abs(lastSignInAt - createdAt) < NEW_ACCOUNT_WINDOW_MS
+    }
+
+    /** Set while a sign-in is waiting for its first server snapshot to decide which lists stay. */
+    private var pruneOnServerSnapshot = false
+
+    /**
+     * The injectable seam the emulator tests use: a user document and the uid that owns it.
+     *
+     * With [remoteWins], the first snapshot confirmed by the server decides the set of lists:
+     * any list on this device that the account does not have is dropped, exactly as the
+     * account's default list has always replaced the local one.
+     */
     internal fun attachToFirestore(
         userDoc: DocumentReference,
         uid: String,
         store: Boolean,
+        remoteWins: Boolean = !store,
     ) {
         if (attachment.isConnectedTo(uid, allListeners.isNotEmpty())) {
-            if (store) storeAll()
+            if (store) {
+                pruneOnServerSnapshot = false
+                storeAll()
+            }
             return
         }
         detachFromFirestore()
         attachment.connect(uid)
         this.userDoc = userDoc
+        pruneOnServerSnapshot = remoteWins
         songLists.values.forEach { it.setParent(userDoc) }
         if (store) {
             storeAll()
@@ -346,13 +376,33 @@ class SongsModel private constructor() {
         listenForSongLists(uid)
     }
 
+    /**
+     * Remote wins: keeps the default list and every list the account has; discards the rest.
+     * Returns the surviving map, and marks the discarded lists so a stale holder cannot write
+     * them back.
+     */
+    internal fun localListsAfterRemoteWins(
+        lists: Map<String, SongList>,
+        remoteIds: Set<String>,
+    ): Map<String, SongList> {
+        val survivors = lists.filter { (id, _) -> id == DEFAULT_ID || id in remoteIds }
+        lists.values.filter { it.id !in survivors }.forEach { it.discardLocally() }
+        return survivors
+    }
+
     private fun listenForSongLists(userId: String) {
         val listener =
-            userDoc?.collection("songLists")?.addSnapshotListener { snapshot, error ->
+            // Metadata changes are included so the moment the server confirms the cached view
+            // is reported even when no document changed: that confirmation is what settles a
+            // sign-in (see `pruneOnServerSnapshot`).
+            userDoc?.collection("songLists")?.addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null || Firebase.auth.currentUser?.uid != userId) {
                     return@addSnapshotListener
                 }
                 val changes = snapshot?.documentChanges ?: return@addSnapshotListener
+                if (changes.isEmpty() && !(pruneOnServerSnapshot && !snapshot.metadata.isFromCache)) {
+                    return@addSnapshotListener
+                }
                 val startedAt = SystemClock.elapsedRealtime()
                 var updatedLists = songLists
                 var mapChanged = false
@@ -380,6 +430,19 @@ class SongsModel private constructor() {
                         }
                     }
                 }
+                // The first server-confirmed snapshot of a sign-in settles which lists exist
+                // here. A cached (possibly empty) snapshot must not: it says nothing about the
+                // account.
+                if (pruneOnServerSnapshot && snapshot.metadata.isFromCache.not()) {
+                    pruneOnServerSnapshot = false
+                    val remoteIds = snapshot.documents.map { it.id }.toSet()
+                    val pruned = localListsAfterRemoteWins(updatedLists, remoteIds)
+                    if (pruned.size != updatedLists.size) {
+                        updatedLists = pruned
+                        mapChanged = true
+                        if (storedCurrentListId !in pruned) storedCurrentListId = DEFAULT_ID
+                    }
+                }
                 // Persist the map once per snapshot, not once per added/removed
                 // document. This avoids quadratic JSON serialization at login.
                 if (mapChanged) songLists = updatedLists
@@ -399,6 +462,7 @@ class SongsModel private constructor() {
         allListeners.forEach { it.remove() }
         allListeners.clear()
         userDoc = null
+        pruneOnServerSnapshot = false
         attachment.clear()
     }
 
@@ -419,6 +483,7 @@ class SongsModel private constructor() {
         private const val SONG_LISTS_KEY = "depollsoft.pitchperfect.SongLists"
         private const val CURRENT_LIST_KEY = "depollsoft.pitchperfect.CurrentSongList"
         private const val MAX_NAME_LENGTH = 60
+        private const val NEW_ACCOUNT_WINDOW_MS = 60_000L
         private const val MAX_SLUG_LENGTH = 40
         private const val SUFFIX_LENGTH = 4
         private const val BASE36 = "abcdefghijklmnopqrstuvwxyz0123456789"

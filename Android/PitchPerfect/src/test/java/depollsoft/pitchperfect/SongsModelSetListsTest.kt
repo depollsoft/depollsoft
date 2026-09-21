@@ -264,6 +264,29 @@ class SongsModelSetListsTest {
         assertEquals(SongsModel.DEFAULT_ID, model.currentListId)
     }
 
+    // ==================== Signing in ====================
+
+    @Test
+    fun remoteWinsKeepsMySongsAndTheAccountsListsOnly() {
+        val kept = model.createList("Saturday show")
+        val dropped = model.createList("Made offline")
+        val droppedList = model.songLists[dropped]!!
+        model.currentListId = dropped
+
+        val survivors = model.localListsAfterRemoteWins(model.songLists, setOf(kept, "unknown-elsewhere"))
+
+        assertEquals(setOf(SongsModel.DEFAULT_ID, kept), survivors.keys)
+        assertTrue("a discarded list can never write itself back", droppedList.isDeleted)
+        assertFalse(model.songLists[kept]!!.isDeleted)
+    }
+
+    @Test
+    fun anAccountCreatedByThisSignInIsNew() {
+        assertTrue(model.isNewAccount(createdAt = 1_000L, lastSignInAt = 1_800L))
+        assertFalse(model.isNewAccount(createdAt = 1_000L, lastSignInAt = 1_000L + 120_000L))
+        assertFalse("unknown stamps never count as new", model.isNewAccount(null, 5L))
+    }
+
     // ==================== Addable songs ====================
 
     @Test
