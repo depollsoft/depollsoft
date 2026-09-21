@@ -3,6 +3,8 @@ package depollsoft.tagmaster
 import android.app.Application
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import com.google.android.material.textfield.TextInputEditText
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bindroid.trackable.TrackableCollection
@@ -20,6 +22,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 
 /**
  * The Home screen, migrated from the instrumented `MeActivityTest` and `FavoritesFlowTest`.
@@ -118,14 +121,24 @@ class MeActivityScreenTest {
     }
 
     @Test
-    fun homeListIsAHeaderThenFavouritesThenAFooter() {
+    fun homeListIsAHeaderThenListsThenFavouritesThenAFooter() {
+        TagLists.create("Afterglow set")
         val activity = launch()
         val concat = activity.list().adapter as ConcatAdapter
-        assertEquals(3, concat.adapters.size)
-        assertTrue("a static header", concat.adapters.first() is StaticViewAdapter)
-        assertTrue("a static footer", concat.adapters.last() is StaticViewAdapter)
+        assertEquals(
+            listOf(
+                StaticViewAdapter::class.java,
+                ListRowsAdapter::class.java,
+                StaticViewAdapter::class.java,
+                SavedTagListAdapter::class.java,
+                StaticViewAdapter::class.java,
+            ),
+            concat.adapters.map { it.javaClass },
+        )
+        assertEquals(1, activity.listsAdapter.itemCount)
         assertEquals(activity.favoriteIds.size, activity.favoritesAdapter.itemCount)
-        assertEquals(activity.favoriteIds.size + 2, concat.itemCount)
+        assertEquals("header, one list, the New list row, favourites, footer", 4, concat.itemCount)
+        assertEquals(3, activity.favoritesStartPosition)
     }
 
     @Test
@@ -158,7 +171,7 @@ class MeActivityScreenTest {
         FavoritesModel.favoriteIds = TrackableCollection(mutableListOf(fixture.id))
         val activity = launch()
         assertEquals(1, activity.favoritesAdapter.itemCount)
-        val row = awaitFavourite(activity.rowAt(1))
+        val row = awaitFavourite(activity.rowAt(activity.favoritesStartPosition))
         assertEquals(fixture.id, row.tagId)
         assertEquals(
             "the row resolves its tag from the disk cache",
@@ -176,7 +189,7 @@ class MeActivityScreenTest {
     fun favouriteRowsCarryTheirMarkersAndRating() {
         FavoritesModel.favoriteIds = TrackableCollection(mutableListOf(fixture.id))
         val activity = launch()
-        val row = awaitFavourite(activity.rowAt(1))
+        val row = awaitFavourite(activity.rowAt(activity.favoritesStartPosition))
         // The instrumented originals allowed either visibility for each of these, which nothing
         // could fail. Two of them — favoriteMarkerTextView and teachableMarkerTextView — live in
         // tagsummaryview, the detail screen's summary page, and are never part of a Home row at
@@ -321,7 +334,7 @@ class MeActivityScreenTest {
         val restored = created.get()
         assertEquals(before, restored.favoriteIds.toList())
         assertEquals(restored.favoriteIds.size, restored.favoritesAdapter.itemCount)
-        assertEquals(restored.favoriteIds.size + 2, restored.list().adapter!!.itemCount)
+        assertEquals(restored.favoriteIds.size + 3, restored.list().adapter!!.itemCount)
         assertDisplayed("searchButton after recreation", restored.findViewById(R.id.searchButton))
     }
 
@@ -341,6 +354,462 @@ class MeActivityScreenTest {
         idle()
         assertOpened(created.get(), TagSearchActivity::class.java)
         assertFalse("Home stays open behind Search", created.get().isFinishing)
+    }
+
+    // ==================== The Lists group ====================
+
+    /** The user's list rows: their own adapter, between the header and the New list… row. */
+    private fun MeActivity.listRows(): List<View> = (0 until listsAdapter.itemCount).map { rowAt(it + 1) }
+
+    /** The static row that closes the Lists group, with the Favorites heading under it. */
+    private fun MeActivity.listsFooter(): View = rowAt(1 + listsAdapter.itemCount)
+
+    private fun View.listName(): String = findViewById<TextView>(R.id.listRowName).text.toString()
+
+    private fun View.listDetail(): String = findViewById<TextView>(R.id.listRowDetail).text.toString()
+
+    @Test
+    fun theListsGroupHeadsTheTeachableListAndTheUsersOwn() {
+        val key = TagLists.create("Afterglow set")
+        ListModel(key).add(fixture.id)
+        val activity = launch()
+        assertDisplayed("the Lists heading", activity.header().findViewById(R.id.listsHeading))
+        assertEquals(
+            activity.getString(R.string.lists_heading),
+            activity.header().findViewById<TextView>(R.id.listsHeading).text.toString(),
+        )
+        assertDisplayed("the teachable row", activity.header().findViewById(R.id.teachableButton))
+        assertDisplayed("the new-list row", activity.listsFooter().findViewById(R.id.newListButton))
+        assertEquals(listOf("Afterglow set"), activity.listRows().map { it.listName() })
+        assertEquals("1 tag", activity.listRows().single().listDetail())
+    }
+
+    @Test
+    fun aListRowCountsItsTagsAsTheyChange() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        assertEquals("0 tags", activity.listRows().single().listDetail())
+        ListModel(key).add(fixture.id)
+        ListModel(key).add(fixture.id + 1)
+        idle()
+        assertEquals("2 tags", activity.listRows().single().listDetail())
+    }
+
+    @Test
+    fun theListsGroupFollowsCreationsRenamesAndDeletions() {
+        val activity = launch()
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
+
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        idle()
+        assertEquals(listOf("Afterglow set", "Chorus warmups"), activity.listRows().map { it.listName() })
+
+        TagLists.rename(first, "Afterglow")
+        idle()
+        assertEquals(listOf("Afterglow", "Chorus warmups"), activity.listRows().map { it.listName() })
+
+        TagLists.moveDown(first)
+        idle()
+        assertEquals(listOf("Chorus warmups", "Afterglow"), activity.listRows().map { it.listName() })
+
+        TagLists.delete(second)
+        idle()
+        assertEquals(listOf("Afterglow"), activity.listRows().map { it.listName() })
+    }
+
+    @Test
+    fun aListRowOpensThatList() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        activity.listRows().single().performClick()
+        idle()
+        val started = requireNotNull(shadowOf(activity).nextStartedActivity)
+        assertEquals(TagListActivity::class.java.name, started.component!!.className)
+        assertEquals(key, started.getStringExtra(TagListActivity.EXTRA_LIST_KEY))
+    }
+
+    @Test
+    fun theNewListRowNamesAndCreatesAList() {
+        val activity = launch()
+        activity.listsFooter().findViewById<View>(R.id.newListButton).performClick()
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        requireNotNull(dialog.findViewById<TextInputEditText>(R.id.listNameInput)).setText("Afterglow set")
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+        assertEquals("Afterglow set", TagLists.name(TagLists.customKeys.single()))
+        assertEquals(listOf("Afterglow set"), activity.listRows().map { it.listName() })
+    }
+
+    // ==================== The rows follow the lists, on this run of the screen ====================
+    //
+    // These are the cases the rows-inside-the-static-header version could not have failed: it grew
+    // a LinearLayout inside a header item the RecyclerView never re-measured, so the views existed
+    // (which is all a childCount check asks) while nothing on screen moved until the next launch.
+    // Asserting each row is laid out and displayed, and that the rows under it shift, is what makes
+    // these device claims rather than tree claims.
+
+    @Test
+    fun aListCreatedFromHomeAppearsWithoutRestartingTheScreen() {
+        val activity = launch()
+        val favoritesHeadingBefore = activity.listsFooter().top
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
+
+        activity.listsFooter().findViewById<View>(R.id.newListButton).performClick()
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        requireNotNull(dialog.findViewById<TextInputEditText>(R.id.listNameInput)).setText("Afterglow set")
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+
+        assertEquals(1, activity.listsAdapter.itemCount)
+        val row = activity.listRows().single()
+        assertDisplayed("the new list's row", row)
+        assertEquals("Afterglow set", row.listName())
+        assertEquals("0 tags", row.listDetail())
+        assertTrue("the row takes up real space", row.height > 0)
+        assertTrue(
+            "and the rest of the screen moves down for it",
+            activity.listsFooter().top > favoritesHeadingBefore,
+        )
+    }
+
+    @Test
+    fun renamingAListFromHomeRetitlesItsRowWithoutRestartingTheScreen() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        assertDisplayed("the list's row", activity.listRows().single())
+
+        ListRowMenu.rename(activity, key)
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        val field = requireNotNull(dialog.findViewById<TextInputEditText>(R.id.listNameInput))
+        assertEquals("the field starts from the current name", "Afterglow set", field.text.toString())
+        field.setText("Afterglow")
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+
+        val row = activity.listRows().single()
+        assertDisplayed("the renamed row", row)
+        assertEquals("Afterglow", row.listName())
+    }
+
+    @Test
+    fun aTagAddedElsewhereChangesTheRowsCountWithoutRestartingTheScreen() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        assertEquals("0 tags", activity.listRows().single().listDetail())
+
+        // What the Add to list chip on a tag does, from outside this screen.
+        ListModel(key).add(fixture.id)
+        idle()
+        assertDisplayed("the row", activity.listRows().single())
+        assertEquals("1 tag", activity.listRows().single().listDetail())
+    }
+
+    @Test
+    fun aListDeletedFromHomeLeavesTheScreenWithoutRestartingIt() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        val favoritesHeadingWithARow = activity.listsFooter().top
+
+        ListRowMenu.confirmDelete(activity, key)
+        idle()
+        requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            .performClick()
+        idle()
+
+        assertEquals(0, activity.listsAdapter.itemCount)
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
+        assertTrue(
+            "and the screen closes up behind it",
+            activity.listsFooter().top < favoritesHeadingWithARow,
+        )
+    }
+
+    @Test
+    fun aDraggedOrderIsStillThereOnTheNextVisitToHome() {
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        val activity = launch()
+        activity.toggleEdit()
+        activity.listRows().first().handle().dispatch(android.view.MotionEvent.ACTION_DOWN)
+        activity.listsAdapter.previewMove(0, 1)
+        val up = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_UP, 0f, 0f, 0)
+        try {
+            activity.dispatchTouchEvent(up)
+        } finally {
+            up.recycle()
+        }
+        idle()
+        controller!!.close()
+        idle()
+
+        val reopened = ScreenTestSupport.build(MeActivity::class.java)
+        controller = reopened
+        reopened.setup()
+        idle()
+        ScreenTestSupport.dismissChangelog()
+        assertEquals(listOf(second, first), TagLists.customKeys.toList())
+        assertEquals(
+            listOf("Chorus warmups", "Afterglow set"),
+            reopened.get().listRows().map { it.listName() },
+        )
+    }
+
+    @Test
+    fun everyRowActionIsAlsoAnAccessibilityAction() {
+        TagLists.create("Afterglow set")
+        TagLists.create("Chorus warmups")
+        val activity = launch()
+        val labels =
+            activity.listRows().map { row ->
+                row.createAccessibilityNodeInfo()!!.actionList.mapNotNull { it.label?.toString() }
+            }
+        assertTrue("the first list can move down but not up", labels[0].contains(activity.getString(R.string.MoveDown)))
+        assertFalse(labels[0].contains(activity.getString(R.string.MoveUp)))
+        assertTrue(labels[1].contains(activity.getString(R.string.MoveUp)))
+        assertFalse("the last list cannot move down", labels[1].contains(activity.getString(R.string.MoveDown)))
+        for (row in labels) {
+            assertTrue(row.contains(activity.getString(R.string.list_row_rename)))
+            assertTrue(row.contains(activity.getString(R.string.list_row_delete)))
+        }
+        assertTrue("and a long press opens the same menu", activity.listRows().first().isLongClickable)
+    }
+
+    @Test
+    fun deletingAListFromHomeConfirmsWithItsTagCount() {
+        val key = TagLists.create("Afterglow set")
+        ListModel(key).add(fixture.id)
+        val activity = launch()
+        val delete =
+            activity
+                .listRows()
+                .single()
+                .createAccessibilityNodeInfo()!!
+                .actionList
+                .single { it.label == activity.getString(R.string.list_row_delete) }
+        assertTrue(androidx.core.view.ViewCompat.performAccessibilityAction(activity.listRows().single(), delete.id, null))
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message)!!.text.toString().contains("1 tag"))
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+        assertTrue(TagLists.customKeys.isEmpty())
+        assertEquals(emptyList<String>(), activity.listRows().map { it.listName() })
+    }
+
+    // ==================== The Lists group in edit mode ====================
+
+    private fun MeActivity.toggleEdit() {
+        val menu = androidx.appcompat.widget.PopupMenu(this, list()).menu
+        menuInflater.inflate(R.menu.savedlistmenu, menu)
+        assertTrue("Edit should be handled", listEditor.selectMenu(menu.findItem(R.id.editSavedList)))
+        idle()
+    }
+
+    private fun MeActivity.editMenu(): android.view.MenuItem {
+        val menu = androidx.appcompat.widget.PopupMenu(this, list()).menu
+        menuInflater.inflate(R.menu.savedlistmenu, menu)
+        listEditor.prepareMenu(menu)
+        return menu.findItem(R.id.editSavedList)
+    }
+
+    private fun View.handle(): View = findViewById(R.id.listRowDragHandle)
+
+    private fun View.remove(): View = findViewById(R.id.listRowRemove)
+
+    private fun View.dispatch(action: Int) {
+        val event = android.view.MotionEvent.obtain(0, 0, action, width / 2f, height / 2f, 0)
+        try {
+            dispatchTouchEvent(event)
+        } finally {
+            event.recycle()
+        }
+    }
+
+    @Test
+    fun editModeGivesEveryListRowAHandleAndARemoveControl() {
+        TagLists.create("Afterglow set")
+        TagLists.create("Chorus warmups")
+        val activity = launch()
+        for (row in activity.listRows()) {
+            assertEquals(View.GONE, row.handle().visibility)
+            assertEquals(View.GONE, row.remove().visibility)
+            assertTrue("a list row opens its list", row.isClickable)
+        }
+
+        activity.toggleEdit()
+        val density = activity.resources.displayMetrics.density
+        for (row in activity.listRows()) {
+            assertDisplayed("the drag handle", row.handle())
+            assertDisplayed("the remove control", row.remove())
+            assertFalse("an editing row does not open its list", row.isClickable)
+            assertFalse("nor does it long-press", row.isLongClickable)
+            for (control in listOf(row.handle(), row.remove())) {
+                assertTrue("a 48dp touch target", control.width >= 48 * density - 1)
+                assertTrue("a 48dp touch target", control.height >= 48 * density - 1)
+            }
+        }
+
+        activity.toggleEdit()
+        for (row in activity.listRows()) {
+            assertEquals(View.GONE, row.handle().visibility)
+            assertEquals(View.GONE, row.remove().visibility)
+            assertTrue(row.isClickable)
+        }
+    }
+
+    @Test
+    fun draggingAListRowCommitsTheNewOrderOnTheWayUp() {
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        val activity = launch()
+        activity.toggleEdit()
+
+        // The handle starts the drag, exactly as a finger does; the pointer stream itself belongs
+        // to the instrumented suite, so the move it would make is previewed directly.
+        activity.listRows().first().handle().dispatch(android.view.MotionEvent.ACTION_DOWN)
+        assertTrue("the preview moves the row", activity.listsAdapter.previewMove(0, 1))
+        assertEquals(listOf(second, first), activity.listsAdapter.keys)
+        assertEquals("nothing is committed mid-drag", listOf(first, second), TagLists.customKeys.toList())
+
+        val up = android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_UP, 0f, 0f, 0)
+        try {
+            activity.dispatchTouchEvent(up)
+        } finally {
+            up.recycle()
+        }
+        idle()
+        assertEquals(listOf(second, first), TagLists.customKeys.toList())
+        assertEquals(listOf("Chorus warmups", "Afterglow set"), activity.listRows().map { it.listName() })
+    }
+
+    @Test
+    fun altArrowsAndAccessibilityActionsReorderListRows() {
+        val first = TagLists.create("Afterglow set")
+        val second = TagLists.create("Chorus warmups")
+        val activity = launch()
+        activity.toggleEdit()
+
+        assertTrue(
+            "Alt+Down on the handle moves the list down",
+            activity
+                .listRows()
+                .first()
+                .handle()
+                .dispatchKeyEvent(
+                    android.view.KeyEvent(
+                        0,
+                        0,
+                        android.view.KeyEvent.ACTION_DOWN,
+                        android.view.KeyEvent.KEYCODE_DPAD_DOWN,
+                        0,
+                        android.view.KeyEvent.META_ALT_ON,
+                    ),
+                ),
+        )
+        idle()
+        assertEquals(listOf(second, first), TagLists.customKeys.toList())
+
+        val row = activity.listRows().last()
+        val up =
+            row.createAccessibilityNodeInfo()!!.actionList.single {
+                it.label == activity.getString(R.string.MoveUp)
+            }
+        assertTrue(androidx.core.view.ViewCompat.performAccessibilityAction(row, up.id, null))
+        idle()
+        assertEquals(listOf(first, second), TagLists.customKeys.toList())
+    }
+
+    @Test
+    fun theRemoveControlOnAListRowAsksBeforeDeletingIt() {
+        val key = TagLists.create("Afterglow set")
+        ListModel(key).add(fixture.id)
+        val activity = launch()
+        activity.toggleEdit()
+        activity.listRows().single().remove().performClick()
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        assertTrue(dialog.findViewById<TextView>(android.R.id.message)!!.text.toString().contains("1 tag"))
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        idle()
+        assertTrue(TagLists.customKeys.isEmpty())
+    }
+
+    @Test
+    fun anEmptyListStillSaysWhatDeletingItDoes() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        ListRowMenu.confirmDelete(activity, key)
+        idle()
+        val dialog = requireNotNull(ShadowDialog.getLatestDialog() as? AlertDialog)
+        assertEquals(
+            activity.getString(R.string.list_delete_message_empty, "Afterglow set"),
+            dialog.findViewById<TextView>(android.R.id.message)!!.text.toString(),
+        )
+    }
+
+    @Test
+    fun editIsOfferedForListsEvenWithNoFavourites() {
+        val activity = launch()
+        assertTrue("nothing to edit yet", activity.favoriteIds.isEmpty())
+        assertFalse(activity.editMenu().isEnabled)
+
+        TagLists.create("Afterglow set")
+        idle()
+        assertTrue("a list is editable on its own", activity.editMenu().isEnabled)
+
+        activity.toggleEdit()
+        assertTrue(activity.listEditor.isEditing)
+        assertTrue(activity.listsAdapter.isEditing)
+
+        TagLists.delete(TagLists.customKeys.single())
+        idle()
+        assertFalse("the last list going ends editing", activity.listEditor.isEditing)
+        assertFalse(activity.listsAdapter.isEditing)
+        assertFalse(activity.editMenu().isEnabled)
+    }
+
+    @Test
+    fun editModeOverListRowsSurvivesRecreation() {
+        TagLists.create("Afterglow set")
+        val created = ScreenTestSupport.build(MeActivity::class.java)
+        controller = created
+        created.setup()
+        idle()
+        ScreenTestSupport.dismissChangelog()
+        created.get().toggleEdit()
+
+        created.recreate()
+        idle()
+        ScreenTestSupport.dismissChangelog()
+
+        val restored = created.get()
+        assertTrue("editing survives recreation", restored.listEditor.isEditing)
+        assertTrue("and the list rows come back editing", restored.listsAdapter.isEditing)
+        assertDisplayed("the drag handle after recreation", restored.listRows().single().handle())
+    }
+
+    @Test
+    fun theRowMenuOpensAtTheRowsTrailingEnd() {
+        val key = TagLists.create("Afterglow set")
+        val activity = launch()
+        val popup = requireNotNull(ListRowMenu.show(activity, activity.listRows().single(), key))
+        assertEquals(
+            "the menu hangs off the end of the row, not the screen edge",
+            android.view.Gravity.END,
+            popup.gravity,
+        )
+        assertEquals(
+            listOf(
+                activity.getString(R.string.list_row_rename),
+                activity.getString(R.string.list_row_delete),
+            ),
+            (0 until popup.menu.size()).map { popup.menu.getItem(it).title.toString() },
+        )
     }
 
     @Test

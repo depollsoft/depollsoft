@@ -39,39 +39,6 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/teachableButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="56dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true">
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:importantForAccessibility="no"
-            app:srcCompat="@drawable/ic_people"
-            app:tint="?attr/colorPrimary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/TeachableTags"
-            android:fontFamily="sans-serif-medium"
-            android:textAppearance="?attr/textAppearanceTitleLarge" />
-
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/randomTagButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -142,8 +109,11 @@
 
     </LinearLayout>
 
+    <!-- The Lists group opens here: its heading and the built-in Teachable Tags row. The user's
+         own lists follow as their own adapter (ListRowsAdapter), so they can be dragged in edit
+         mode, and @layout/meviewlists_footer closes the group with the New list… row. -->
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/listsHeading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -151,18 +121,53 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:accessibilityHeading="true"
-        android:text="@string/Favorites"
+        android:text="@string/lists_heading"
         android:textAppearance="?attr/textAppearanceTitleLarge" />
 
-    <TextView
-        android:id="@+id/favoritesEmptyText"
+    <LinearLayout
+        android:id="@+id/teachableButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:text="@string/home_favorites_empty"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:visibility="gone" />
+        android:minHeight="56dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="16dp"
+            android:importantForAccessibility="no"
+            app:srcCompat="@drawable/ic_people"
+            app:tint="?attr/colorPrimary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/TeachableTags"
+                android:fontFamily="sans-serif-medium"
+                android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+            <TextView
+                android:id="@+id/teachableCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+    </LinearLayout>
 </LinearLayout>

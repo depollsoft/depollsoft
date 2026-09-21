@@ -3,24 +3,52 @@ package depollsoft.tagmaster
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface.OnDismissListener
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.MimeTypeMap
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.bindroid.converters.BoolConverter
 import com.bindroid.converters.ToStringConverter
+import com.bindroid.trackable.Trackable
 import com.bindroid.trackable.TrackableBoolean
+import com.bindroid.trackable.Tracker
 import com.bindroid.utils.*
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.lib.RatingConverter
 import java.util.*
 
 class TagSummaryFragment : Fragment() {
+    private companion object {
+        /** A chip shortens past this, instead of crowding out the ones beside it. */
+        const val CHIP_MAX_WIDTH_DP = 220
+
+        /** The chip's own height, and the width its remove control needs, to stay tappable. */
+        const val CHIP_TOUCH_TARGET_DP = 48
+        const val CHIP_CLOSE_ICON_DP = 24
+
+        /**
+         * Material lays the close icon's touch bounds out as
+         * `chipEndPadding + closeIconEndPadding + closeIconSize + closeIconStartPadding +
+         * textEndPadding`, so these four paddings around a 24dp icon make it exactly 48dp wide.
+         */
+        const val CHIP_CLOSE_PADDING_DP = 8
+        const val CHIP_END_PADDING_DP = 4
+    }
+
     // The pages sit inside TagDetailFragment (full-screen on phones, in the detail pane on
     // tablets). Fragment.getTag() is final, so the host they bind through is its TagDetailModel.
     val parent: TagDetailHost
@@ -153,25 +181,7 @@ class TagSummaryFragment : Fragment() {
             BoolConverter.get(),
         )
 
-        rootView.bindTo(
-            R.id.favoriteMarkerTextView,
-            "Visibility",
-            { parent.tag?.let { FavoritesModel.getIsFavorite(it.id) } ?: false },
-            BoolConverter.get(),
-        )
-        rootView.bindTo(
-            R.id.teachableMarkerTextView,
-            "Visibility",
-            { parent.tag?.let { TeachableTagsModel.getIsTeachableTag(it.id) } ?: false },
-            BoolConverter.get(),
-        )
-
-        rootView.bindTo(
-            R.id.savedStatusLayout,
-            "Visibility",
-            { parent.tag?.let { FavoritesModel.getIsFavorite(it.id) || TeachableTagsModel.getIsTeachableTag(it.id) } ?: false },
-            BoolConverter.get(),
-        )
+        renderChips(rootView)
         rootView.findViewById<View>(R.id.sheetMusicLink).setOnClickListener {
             loadSheetMusic(rootView)
         }
@@ -191,6 +201,197 @@ class TagSummaryFragment : Fragment() {
         }
 
         return rootView
+    }
+
+    // Bindroid registrations are one-shot and each Trackable.track call adds another, so the page
+    // holds exactly one and renews it only once it has fired.
+    private var chipsTracking = false
+    private val trackedLists = mutableListOf<ListModel>()
+    private val chipsTracker =
+        object : Tracker {
+            override fun update() {
+                chipsTracking = false
+                view?.post { view?.let { renderChips(it) } }
+            }
+        }
+
+    /**
+     * The lists this tag is in, as chips, with Add to list at the end.
+     *
+     * Every chip is rebuilt on every change rather than diffed: a tag belongs to a handful of
+     * lists at most, and a rename, a removal elsewhere or a sync from another device all arrive
+     * as the same "the membership changed" signal.
+     */
+    private fun renderChips(rootView: View) {
+        val host = activity ?: return
+        val group = rootView.findViewById<ChipGroup>(R.id.savedStatusLayout) ?: return
+        // Null means no tag has loaded yet; an empty list means a tag that is in no list.
+        // The models whose ids this registers on are kept for as long as the chips are on screen,
+        // so the tracked collections are exactly the ones the next render reads.
+        val read =
+            Function<List<String>?> {
+                val current = parent.tag
+                trackedLists.clear()
+                // A rename or a reorder leaves the keys and the memberships exactly as they were
+                // and moves only the registry version, so the chips read it too.
+                TagLists.version
+                current?.let { tag ->
+                    TagLists.allKeys().filter { key ->
+                        ListModel(key).also(trackedLists::add).contains(tag.id)
+                    }
+                }
+            }
+        val keys =
+            if (chipsTracking) {
+                read.evaluate()
+            } else {
+                Trackable.track(chipsTracker, read).also { chipsTracking = true }
+            }
+        group.removeAllViews()
+        val tagId = parent.tag?.id
+        if (keys == null || tagId == null) {
+            group.visibility = View.GONE
+            return
+        }
+        group.visibility = View.VISIBLE
+        for (key in keys) group.addView(membershipChip(host, rootView, key, tagId))
+        group.addView(addToListChip(host, tagId))
+    }
+
+    /**
+     * Every chip is an outlined, neutral capsule; only the trailing Add to list chip takes the
+     * accent, so the lists this tag is in read as facts and the one action reads as an action.
+     */
+    private fun styleChip(
+        host: FragmentActivity,
+        chip: Chip,
+        iconRes: Int,
+        accent: Boolean = false,
+    ) {
+        val density = resources.displayMetrics.density
+        val label =
+            MaterialColors.getColor(
+                host,
+                if (accent) {
+                    androidx.appcompat.R.attr.colorPrimary
+                } else {
+                    com.google.android.material.R.attr.colorOnSurface
+                },
+                Color.GRAY,
+            )
+        val icon =
+            if (accent) {
+                label
+            } else {
+                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY)
+            }
+        chip.chipIcon = AppCompatResources.getDrawable(host, iconRes)
+        chip.chipIconTint = ColorStateList.valueOf(icon)
+        chip.isChipIconVisible = true
+        chip.setTextColor(label)
+        chip.chipBackgroundColor = ColorStateList.valueOf(Color.TRANSPARENT)
+        chip.chipStrokeWidth = density
+        chip.chipStrokeColor =
+            ColorStateList.valueOf(
+                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOutlineVariant, Color.GRAY),
+            )
+        chip.isCheckable = false
+        chip.isClickable = true
+        chip.isFocusable = true
+        // A long list name shortens rather than pushing the row off the screen, and the room it is
+        // given grows with the text the reader asked for.
+        chip.isSingleLine = true
+        chip.ellipsize = TextUtils.TruncateAt.END
+        chip.maxWidth = (CHIP_MAX_WIDTH_DP * density * resources.configuration.fontScale).toInt()
+        chip.chipMinHeight = CHIP_TOUCH_TARGET_DP * density
+        chip.chipEndPadding = CHIP_END_PADDING_DP * density
+        chip.textEndPadding = CHIP_END_PADDING_DP * density
+        chip.setEnsureMinTouchTargetSize(true)
+    }
+
+    private fun membershipChip(
+        host: FragmentActivity,
+        rootView: View,
+        key: String,
+        tagId: Int,
+    ): Chip {
+        val name = TagLists.displayName(host, key)
+        val density = resources.displayMetrics.density
+        val chip = Chip(host)
+        // Every list is named the way the rest of the app names it, Teachable Tags included.
+        chip.text = name
+        styleChip(host, chip, listIconRes(key))
+        chip.closeIcon = AppCompatResources.getDrawable(host, R.drawable.ic_clear)
+        chip.closeIconTint =
+            ColorStateList.valueOf(
+                MaterialColors.getColor(host, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY),
+            )
+        // Removing a tag from a list is a one-tap action, so it gets a full 48dp of its own.
+        chip.closeIconSize = CHIP_CLOSE_ICON_DP * density
+        chip.closeIconStartPadding = CHIP_CLOSE_PADDING_DP * density
+        chip.closeIconEndPadding = CHIP_CLOSE_PADDING_DP * density
+        chip.isCloseIconVisible = true
+        val removeLabel = getString(R.string.list_chip_remove, name)
+        chip.closeIconContentDescription = removeLabel
+        chip.setOnClickListener { openList(host, key) }
+        chip.setOnCloseIconClickListener { removeFromList(rootView, key, tagId, name) }
+        // The close icon is not a separate node for a screen reader, so the same action is offered
+        // on the chip itself.
+        ViewCompat.addAccessibilityAction(chip, removeLabel) { _, _ ->
+            removeFromList(rootView, key, tagId, name)
+            true
+        }
+        return chip
+    }
+
+    private fun addToListChip(
+        host: FragmentActivity,
+        tagId: Int,
+    ): Chip {
+        val chip = Chip(host)
+        chip.setText(R.string.list_add_to_list)
+        styleChip(host, chip, R.drawable.ic_add, accent = true)
+        chip.setOnClickListener { ListPickerDialog.show(host.supportFragmentManager, tagId) }
+        return chip
+    }
+
+    private fun openList(
+        host: FragmentActivity,
+        key: String,
+    ) {
+        val intent =
+            when (key) {
+                // Home is the root of the task; return to it rather than stacking another copy.
+                TagLists.FAVORITE ->
+                    Intent(host, MeActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                TagLists.TEACHABLE -> Intent(host, TeachableTagsActivity::class.java)
+                else -> TagListActivity.intent(host, key)
+            }
+        startActivity(intent)
+    }
+
+    /** Removes the tag from [key], offering the place it came from back for a few seconds. */
+    private fun removeFromList(
+        rootView: View,
+        key: String,
+        tagId: Int,
+        name: String,
+    ) {
+        val model = ListModel(key)
+        val index = model.ids.indexOf(tagId)
+        if (index < 0) return
+        model.remove(tagId)
+        if (!isUsable(rootView)) return
+        Snackbar
+            .make(rootView, getString(R.string.list_removed_from, name), Snackbar.LENGTH_LONG)
+            .setAction(R.string.list_undo) {
+                val current = ListModel(key)
+                if (current.contains(tagId)) return@setAction
+                // ListModel has no insert-at, so the tag goes back on the end and then home.
+                current.add(tagId)
+                if (index < current.ids.size) current.move(tagId, index)
+            }.show()
     }
 
     private fun isUsable(rootView: View): Boolean {
@@ -280,6 +481,7 @@ class TagSummaryFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        chipsTracking = false
         ratingsPopup?.setOnDismissListener(null)
         ratingsPopup?.dismiss()
         ratingsPopup = null

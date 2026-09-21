@@ -8,10 +8,15 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableCollection
+import com.bindroid.utils.bindTo
 import depollsoft.lib.compat.ui.MenuItems
 import depollsoft.lib.ui.ChangelogViewer
 
@@ -28,8 +33,19 @@ class MeActivity :
     lateinit var favoritesAdapter: SavedTagListAdapter
         private set
 
+    /** The user's own lists, between the header and the New list… row; exposed for tests. */
+    lateinit var listsAdapter: ListRowsAdapter
+        private set
+
     lateinit var listEditor: SavedListEditor
         private set
+
+    /**
+     * Where the favorites rows start in the home list: the header, the user's lists, then the row
+     * that closes the Lists group.
+     */
+    val favoritesStartPosition: Int
+        get() = 2 + listsAdapter.itemCount
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,17 +55,35 @@ class MeActivity :
 
         favoritesAdapter = SavedTagListAdapter({ FavoritesModel.favoriteIds }) { FavoriteTagItemView(it) }
         val header = layoutInflater.inflate(R.layout.meviewheader_item, null)
+        val listsFooter = layoutInflater.inflate(R.layout.meviewlists_footer, null)
         val list = findViewById<RecyclerView>(R.id.homeList)
         list.applyContentInsets()
         list.layoutManager = LinearLayoutManager(this)
+        // The user's lists are their own adapter so edit mode can drag them; the header ends at the
+        // Teachable Tags row and this footer picks the group back up at New list….
+        listsAdapter = ListRowsAdapter(this, list) { listsChanged() }
         list.adapter =
             ConcatAdapter(
                 StaticViewAdapter(view = header),
+                listsAdapter,
+                StaticViewAdapter(view = listsFooter),
                 favoritesAdapter,
                 StaticViewAdapter(R.layout.meviewfooter),
             )
         list.addItemDecoration(SavedTagListAdapter.RowDivider(this))
-        listEditor = SavedListEditor(this, ListModel("favorite"), favoritesAdapter, list, R.string.Favorites, savedInstanceState)
+        setUpListsFooter(listsFooter)
+        listEditor =
+            SavedListEditor(
+                this,
+                ListModel("favorite"),
+                favoritesAdapter,
+                list,
+                R.string.Favorites,
+                savedInstanceState,
+                companion = { TagLists.customKeys.isNotEmpty() },
+            )
+        listEditor.onEditingChanged = { editing -> listsAdapter.isEditing = editing }
+        listsAdapter.isEditing = listEditor.isEditing
 
         this.supportActionBar?.title = getString(R.string.home_title).makeTitleString(this)
 
@@ -69,13 +103,36 @@ class MeActivity :
             TagPaneController(
                 activity = this,
                 listedIds = { FavoritesModel.favoriteIds.toList() },
-                // The header occupies the first row of the ConcatAdapter.
                 reveal = { id ->
                     val index = favoritesAdapter.currentList.indexOf(id)
-                    if (index >= 0) list.smoothScrollToPosition(index + 1)
+                    if (index >= 0) list.smoothScrollToPosition(index + favoritesStartPosition)
                 },
             )
         tagPane.onCreate(savedInstanceState)
+    }
+
+    /** The New list… row and the Favorites heading that close the Lists group. */
+    private fun setUpListsFooter(footer: View) {
+        footer.bindTo(R.id.favoritesEmptyText, "Visibility", { FavoritesModel.favoriteIds.size == 0 }, BoolConverter.get())
+        val newList = footer.findViewById<View>(R.id.newListButton)
+        ViewCompat.setAccessibilityDelegate(
+            newList,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View,
+                    info: AccessibilityNodeInfoCompat,
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    info.className = android.widget.Button::class.java.name
+                }
+            },
+        )
+        newList.setOnClickListener { ListNameDialog.create(supportFragmentManager) }
+    }
+
+    /** A list created, deleted or renamed changes what Edit applies to. */
+    private fun listsChanged() {
+        if (::listEditor.isInitialized) listEditor.contentChanged()
     }
 
     override val hasDetailPane: Boolean
@@ -120,6 +177,7 @@ class MeActivity :
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         val handled = super.dispatchTouchEvent(event)
         if (::listEditor.isInitialized) listEditor.afterTouchEvent(event)
+        if (::listsAdapter.isInitialized) listsAdapter.afterTouchEvent(event)
         return handled
     }
 
@@ -133,15 +191,18 @@ class MeActivity :
         super.onResume()
         depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
         listEditor.resume()
+        listsAdapter.resume()
     }
 
     override fun onPause() {
         listEditor.pause()
+        listsAdapter.pause()
         super.onPause()
     }
 
     override fun onDestroy() {
         listEditor.destroy()
+        listsAdapter.dispose()
         super.onDestroy()
     }
 

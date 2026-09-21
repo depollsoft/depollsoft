@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.bindroid.converters.BoolConverter
 import com.bindroid.trackable.TrackableBoolean
@@ -50,6 +51,7 @@ class MeHeaderView : LinearLayout {
 
     private var requestScope: CoroutineScope? = null
     private var openTagDialog: AlertDialog? = null
+    private var released = false
 
     // This view is a RecyclerView item on the home screen, so it can be detached while the user
     // scrolls. In-flight work is therefore tied to the host activity's lifecycle, not to attachment.
@@ -91,18 +93,21 @@ class MeHeaderView : LinearLayout {
                 },
             )
         }
-        bindTo(R.id.favoritesEmptyText, "Visibility", { FavoritesModel.favoriteIds.size == 0 }, BoolConverter.get())
         UiBinder.bind(this, R.id.randomTagProgress, "Loading", "IsLoading")
         UiBinder.bind(this, R.id.randomTagButton, "Enabled", "IsLoading", BoolConverter.get(true))
         findViewById<View>(R.id.randomTagButton).setOnClickListener { loadRandomTag() }
         findViewById<View>(R.id.browseButton).setOnClickListener {
             context.startActivity(Intent(context, TagBrowserActivity::class.java))
         }
+        bindTo(R.id.teachableCount, "Text", { listCountText(context, TagLists.TEACHABLE) })
         findViewById<View>(R.id.teachableButton).setOnClickListener {
             context.startActivity(Intent(context, TeachableTagsActivity::class.java))
         }
         findViewById<View>(R.id.openByIdButton).setOnClickListener { showOpenTagDialog() }
     }
+
+    private fun host(): FragmentActivity? =
+        (context as? FragmentActivity)?.takeIf { !it.isFinishing && !it.isDestroyed }
 
     private fun loadRandomTag() {
         if (isLoading || !canShowFeedback) return
@@ -234,6 +239,8 @@ class MeHeaderView : LinearLayout {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        // A recycled header that was released while its host was alive starts observing again.
+        if (released && host() != null) released = false
         val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
         if (lifecycle !== observedLifecycle) {
             observedLifecycle?.removeObserver(lifecycleObserver)
@@ -250,6 +257,7 @@ class MeHeaderView : LinearLayout {
     }
 
     private fun release() {
+        released = true
         requestScope?.cancel()
         requestScope = null
         loading.set(false)

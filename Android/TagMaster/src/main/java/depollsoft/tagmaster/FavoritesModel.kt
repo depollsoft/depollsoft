@@ -3,7 +3,10 @@ package depollsoft.tagmaster
 import com.bindroid.trackable.TrackableCollection
 
 object FavoritesModel {
-    private val model = ListModel("favorite")
+    // Resolved on every use so this wrapper and ListModel("favorite") can never drift apart, even
+    // when a test resets the model cache.
+    private val model: ListModel
+        get() = ListModel(TagLists.FAVORITE)
     var favoriteIds: TrackableCollection<Int>
         get() = model.ids
         set(value) {

@@ -89,6 +89,11 @@ final class TMBlockedNetwork {
 /// writing the key here reproduces that fixture exactly.
 let TMListsDefaultsKey = "depollsoft.pitchperfect.lists"
 
+/// The sibling key holding every custom list's name and position. Nothing wrote
+/// it before user-defined lists existed, so a test that leaves it behind would
+/// hand the next one a registry full of lists it never seeded.
+let TMListsInfoDefaultsKey = "depollsoft.tagmaster.listInfo"
+
 class TMBehaviorTestCase: XCTestCase {
     var window: UIWindow!
     private var previousKeyWindow: UIWindow?
@@ -175,16 +180,52 @@ class TMBehaviorTestCase: XCTestCase {
 
     func clearLists() {
         UserDefaults.standard.removeObject(forKey: TMListsDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: TMListsInfoDefaultsKey)
     }
 
     /// Writes the favourites/teachable lists exactly as the UI tests' launch
     /// argument did, through UserDefaults rather than through the setters, so
     /// the read path under test is the production one.
-    func seedLists(favorite: [Int] = [], teachable: [Int] = []) {
-        var lists: [String: Any] = [:]
-        if !favorite.isEmpty { lists["favorite"] = favorite }
-        if !teachable.isEmpty { lists["teachable"] = teachable }
-        UserDefaults.standard.set(lists, forKey: TMListsDefaultsKey)
+    /// `lists` seeds user-created lists in the given order, writing the same two
+    /// defaults keys `TMTagLists` reads, so the registry is exercised for real.
+    func seedLists(favorite: [Int] = [],
+                   teachable: [Int] = [],
+                   lists: [(key: String, name: String, ids: [Int])] = []) {
+        var stored: [String: Any] = [:]
+        if !favorite.isEmpty { stored["favorite"] = favorite }
+        if !teachable.isEmpty { stored["teachable"] = teachable }
+        var info: [String: [String: Any]] = [:]
+        for (order, list) in lists.enumerated() {
+            info[list.key] = ["name": list.name, "order": order]
+            // An empty list is legal: it exists in listInfo with no ids.
+            if !list.ids.isEmpty { stored[list.key] = list.ids }
+        }
+        UserDefaults.standard.set(stored, forKey: TMListsDefaultsKey)
+        if info.isEmpty {
+            UserDefaults.standard.removeObject(forKey: TMListsInfoDefaultsKey)
+        } else {
+            UserDefaults.standard.set(info, forKey: TMListsInfoDefaultsKey)
+        }
+    }
+
+    // MARK: - Screenshots
+
+    /// Writes a PNG of the mounted window, but only when the run names a
+    /// directory to put it in (`TM_CAPTURE_DIR`, or `TEST_RUNNER_TM_CAPTURE_DIR`
+    /// as xcodebuild forwards it). Ordinary runs capture nothing.
+    func capture(_ name: String) {
+        let environment = ProcessInfo.processInfo.environment
+        let directory = environment["TM_CAPTURE_DIR"] ?? environment["TEST_RUNNER_TM_CAPTURE_DIR"]
+        guard let directory, !directory.isEmpty, let window else { return }
+        settle()
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 2
+        let image = UIGraphicsImageRenderer(size: window.bounds.size, format: format).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let folder = URL(fileURLWithPath: directory)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        XCTAssertNoThrow(try image.pngData()!.write(to: folder.appendingPathComponent("\(name).png")))
     }
 
     // MARK: - Mounting

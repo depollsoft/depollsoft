@@ -1,0 +1,6 @@
+# Test fixture list keys ("chorus-warmups-aa12") in early commits of PR #69 that the
+# generic-api-key rule mistook for credentials. The fixture was renamed on the branch;
+# these fingerprints only cover the historical commits.
+df38527c0b5298a5f0ed5afb0d36db5f0e491dff:iOS/tagmaster/tagmasterTests/FavoritesBehaviorTests.swift:generic-api-key:59
+df38527c0b5298a5f0ed5afb0d36db5f0e491dff:iOS/tagmaster/tagmasterTests/FavoritesBehaviorTests.swift:generic-api-key:125
+df38527c0b5298a5f0ed5afb0d36db5f0e491dff:iOS/tagmaster/tagmasterTests/TagDetailBehaviorTests.swift:generic-api-key:281

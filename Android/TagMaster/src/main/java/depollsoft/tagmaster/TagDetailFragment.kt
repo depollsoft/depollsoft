@@ -18,7 +18,10 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import bolts.Task
 import com.bindroid.trackable.ComparingTrackableField
+import com.bindroid.trackable.Trackable
+import com.bindroid.trackable.Tracker
 import com.bindroid.trackable.trackable
+import com.bindroid.utils.Function
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -138,6 +141,35 @@ class TagDetailFragment : Fragment() {
         } else {
             loadQueryItem(false)
         }
+        observeMembership(refreshChrome = false)
+    }
+
+    // The heart and people actions in the toolbar mirror the favorite and teachable lists, but
+    // those lists also change from the picker, a chip, the list screens and other devices. This
+    // tracker re-registers on every change and asks the host to rebuild its chrome, so the toolbar
+    // never lags the lists.
+    private var membershipTracking = false
+    private val membershipTracker =
+        object : Tracker {
+            override fun update() {
+                membershipTracking = false
+                view?.post { observeMembership(refreshChrome = true) }
+            }
+        }
+
+    private fun observeMembership(refreshChrome: Boolean) {
+        if (view == null || membershipTracking) return
+        Trackable.track(
+            membershipTracker,
+            Function<Boolean> {
+                val id = model.tag?.id
+                id != null && (FavoritesModel.getIsFavorite(id) || TeachableTagsModel.getIsTeachableTag(id))
+            },
+        )
+        membershipTracking = true
+        if (!refreshChrome) return
+        activity?.let { Activities.invalidateOptionsMenu(it) }
+        onStateChanged?.invoke()
     }
 
     /** Switches the pane to another tag, keeping the pager (and so the open page) in place. */
@@ -313,6 +345,7 @@ class TagDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         ++requestGeneration
+        membershipTracking = false
         refreshError?.dismiss()
         refreshError = null
         view?.findViewById<TagLoadingView>(R.id.quartetIllustration)?.apply {
@@ -355,6 +388,7 @@ class TagDetailFragment : Fragment() {
                     R.id.removeFavoriteMenuItem -> FavoritesModel.removeFavorite(current.id)
                     R.id.addTeachableTagMenuItem -> TeachableTagsModel.addTeachableTag(current.id)
                     R.id.removeTeachableTagMenuItem -> TeachableTagsModel.removeTeachableTag(current.id)
+                    R.id.addToListMenuItem -> ListPickerDialog.show(requireActivity().supportFragmentManager, current.id)
                     R.id.shareMenuItem -> startActivity(shareIntent)
                     R.id.refreshMenuItem -> {
                         loadQueryItem(true)

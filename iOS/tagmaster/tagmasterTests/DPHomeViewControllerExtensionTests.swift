@@ -9,17 +9,8 @@ import XCTest
 import UIKit
 @testable import tagmaster
 
-private final class HomePresentationFixture: DPHomeViewController {
-    var requestedPresentation: UIViewController?
-
-    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
-                          completion: (() -> Void)? = nil) {
-        // Inspect the alert constructed by production code without starting
-        // system keyboard services. The UI suite exercises real presentation.
-        requestedPresentation = viewControllerToPresent
-        completion?()
-    }
-}
+// HomePresentationFixture (in FavoritesBehaviorTests) inspects the alerts
+// production code builds without starting system keyboard services.
 
 class DPHomeViewControllerExtensionTests: XCTestCase {
     private var homeViewController: HomePresentationFixture!

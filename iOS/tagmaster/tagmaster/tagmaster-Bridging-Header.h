@@ -9,5 +9,7 @@
 #import "DPTagTracksController.h"
 #import "TMBarberPoleLoadingView.h"
 #import "DPTagViewController.h"
+#import "DPBrowseViewController.h"
+#import "DPTagCell.h"
 #import "DPFileCache.h"
 #import "DPRemoteLocation.h"

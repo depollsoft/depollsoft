@@ -11,4 +11,50 @@
     <string name="saved_list_remove_title">Remove from %1$s?</string>
     <string name="saved_list_remove_message">%1$s will be removed from this list, not from the tag catalog.</string>
     <string name="saved_list_changed">List updated. Drag canceled.</string>
+
+    <!-- User-defined lists: the Lists group on Home, the list screen, and the add-to-list picker. -->
+    <string name="lists_heading">Lists</string>
+    <plurals name="list_tag_count">
+        <item quantity="one">1 tag</item>
+        <item quantity="other">%1$d tags</item>
+    </plurals>
+    <string name="list_new_row">New list…</string>
+    <string name="list_new_title">New list</string>
+    <string name="list_name_hint">List name</string>
+    <string name="list_name_helper">For example “Easy tags” or “High and lows”</string>
+    <string name="list_create">Create</string>
+    <string name="list_rename_title">Rename list</string>
+    <string name="list_rename">Rename</string>
+    <string name="list_name_error_empty">Give the list a name.</string>
+    <string name="list_name_error_duplicate">You already have a list with that name.</string>
+    <string name="list_name_error_reserved">That name is used by a built-in list.</string>
+    <string name="list_name_error_too_long">Keep the name under 61 characters.</string>
+    <string name="list_delete_title">Delete “%1$s”?</string>
+    <plurals name="list_delete_message">
+        <item quantity="one">This removes the list and its 1 tag from your lists. Tags stay in the catalog.</item>
+        <item quantity="other">This removes the list and its %1$d tags from your lists. Tags stay in the catalog.</item>
+    </plurals>
+    <string name="list_delete_message_empty">“%1$s” has no tags. It will be removed from your lists.</string>
+    <string name="list_delete">Delete</string>
+    <string name="list_empty_title">No tags in %1$s yet.</string>
+    <string name="list_empty_hint">Open any tag and choose Add to list.</string>
+    <string name="list_empty_browse">Browse Tags</string>
+    <string name="list_chips_label">In lists</string>
+    <string name="list_chip_remove">Remove from %1$s</string>
+    <string name="list_add_to_list">Add to list</string>
+    <string name="list_picker_done">Done</string>
+    <string name="list_removed_from">Removed from %1$s</string>
+    <string name="list_undo">Undo</string>
+    <string name="list_added_to">Added to %1$s</string>
+    <string name="list_rename_action">Rename list…</string>
+    <string name="list_delete_action">Delete list…</string>
+    <string name="list_row_rename">Rename…</string>
+    <string name="list_row_delete">Delete…</string>
+    <!-- Spoken as a state, beside the row's name and count, rather than folded into its label. -->
+    <string name="list_state_in">In list</string>
+    <string name="list_state_not_in">Not in list</string>
+    <string name="list_row_label">%1$s, %2$s</string>
+    <string name="list_row_remove_named">Delete %1$s</string>
+    <string name="list_row_drag_named">Reorder %1$s, list %2$d of %3$d. Drag or use Alt + arrow keys.</string>
+    <string name="list_row_position">%1$s, %2$s, list %3$d of %4$d</string>
 </resources>

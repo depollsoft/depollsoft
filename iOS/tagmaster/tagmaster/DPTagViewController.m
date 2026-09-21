@@ -16,6 +16,7 @@
 #import "DPTagTracksController.h"
 #import "DPTagVideoController.h"
 #import "DPAppDelegate.h"
+#import "tagmaster-Swift.h"
 #import <MessageUI/MessageUI.h>
 
 @interface DPTagViewController () <UIActionSheetDelegate, MFMessageComposeViewControllerDelegate, MFMailComposeViewControllerDelegate, UIScrollViewDelegate>
@@ -33,6 +34,7 @@
 @property (nonatomic, strong) UIBarButtonItem *loadingBarButton;
 @property (nonatomic, strong) UIBarButtonItem *favoriteBarButton;
 @property (nonatomic, strong) UIBarButtonItem *teachableBarButton;
+@property (nonatomic, strong) UIBarButtonItem *addToListBarButton;
 @property (nonatomic, strong) UIBarButtonItem *previousTagBarButton;
 @property (nonatomic, strong) UIBarButtonItem *nextTagBarButton;
 
@@ -186,7 +188,7 @@
     if (!empty) {
         [rightItems addObjectsFromArray:expanded
             ? @[self.shareBarButton, busy ? self.loadingBarButton : self.refreshBarButton,
-                self.teachableBarButton, self.favoriteBarButton]
+                self.addToListBarButton, self.teachableBarButton, self.favoriteBarButton]
             : @[self.shareBarButton, self.actionBarButton, busy ? self.loadingBarButton : self.refreshBarButton]];
     }
     if (showSteppers) [rightItems addObjectsFromArray:@[self.nextTagBarButton, self.previousTagBarButton]];
@@ -273,6 +275,11 @@
 }
 
 - (void)sourceListMayHaveChanged:(NSNotification *)notification {
+    if ([notification.name isEqualToString:@"tagmaster.userDataChanged"]) {
+        // The picker, a chip, a list screen or another device can change which lists this tag is
+        // in; the heart and people buttons must follow whether or not a list opened this tag.
+        [self refreshSavedStateButtons];
+    }
     if (!self.source) return;
     if ([notification.name isEqualToString:TMTagListDidChangeNotification] && notification.object != self.source) return;
     [self updateLoadingState];
@@ -350,6 +357,9 @@
                                                              target:self action:@selector(toggleFavorite)];
     self.teachableBarButton = [[UIBarButtonItem alloc] initWithImage:nil style:UIBarButtonItemStylePlain
                                                               target:self action:@selector(toggleTeachable)];
+    self.addToListBarButton = [DPAppDelegate barButtonItemWithSystemName:@"text.badge.plus"
+                                                                   target:self
+                                                                   action:@selector(showListPicker)];
     [self refreshSavedStateButtons];
     self.previousTagBarButton = [DPAppDelegate barButtonItemWithSystemName:@"chevron.up"
                                                                      target:self
@@ -472,6 +482,17 @@
     self.teachableBarButton.accessibilityLabel = teachable ? @"Unmark as Teachable" : @"Mark as Teachable";
     self.favoriteBarButton.enabled = self.tag != nil;
     self.teachableBarButton.enabled = self.tag != nil;
+    self.addToListBarButton.enabled = self.tag != nil;
+}
+
+/// Every list this tag could join, from the bar button beside the heart and people toggles.
+- (void)showListPicker {
+    [self showListPickerFrom:self.addToListBarButton];
+}
+
+- (void)showListPickerFrom:(UIBarButtonItem *)item {
+    if (!self.tag) return;
+    [TMListPickerController presentForTagId:self.tagId from:self barButtonItem:item sourceView:nil];
 }
 
 - (void)toggleFavorite {
@@ -521,6 +542,12 @@
         }]];
     }
     
+    [actions addAction:[UIAlertAction actionWithTitle:@"Add to List…"
+                                                style:UIAlertActionStyleDefault
+                                              handler:^(UIAlertAction * _Nonnull action) {
+        [self showListPickerFrom:self.actionBarButton];
+    }]];
+
     [actions addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                 style:UIAlertActionStyleCancel
                                               handler:nil]];

@@ -15,6 +15,7 @@
 #import "DPFileCache.h"
 #import "DPPitchPipeButton.h"
 #import <QuickLook/QuickLook.h>
+#import "tagmaster-Swift.h"
 
 // Width-aware wrapping stays local to Tag Master. Shared pitch callbacks own sound.
 @interface TMKeyButton : TMWrappingButton
@@ -298,7 +299,8 @@
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *akaLabel;
 @property (nonatomic, strong) UILabel *versionLabel;
-@property (nonatomic, strong) UILabel *savedStatusLabel;
+@property (nonatomic, strong) TMListChipsView *listChips;
+@property (nonatomic, strong) NSUndoManager *listUndoManager;
 @property (nonatomic, strong) UILabel *tagIdHeader;
 @property (nonatomic, strong) UILabel *tagIdLabel;
 @property (nonatomic, strong) UIProgressView *ratingBar;
@@ -345,14 +347,33 @@
     return self;
 }
 
-/// "Favorite" and "Teachable tag" under the title, as on Android, whenever the tag is on a saved list.
+/// Removing a tag from a list through a chip is undoable, so this screen owns
+/// an undo manager rather than borrowing whatever the responder chain happens to
+/// hold — UIKit hands out none of its own on iOS.
+- (NSUndoManager *)undoManager {
+    if (!self.listUndoManager) self.listUndoManager = [[NSUndoManager alloc] init];
+    return self.listUndoManager;
+}
+
+/// Shake-to-undo asks the first responder for its undo manager, so this screen
+/// takes the role while it is on screen; it has no text input to take it from.
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self becomeFirstResponder];
+}
+
+/// A capsule per list this tag belongs to, under the title, and the assist chip
+/// that adds it to another. Shown from the moment the tag is available.
 - (void)refreshSavedStatus {
-    if (!self.savedStatusLabel) return;
-    NSMutableArray<NSString *> *marks = [NSMutableArray array];
-    if (self.tag && [DPAppDelegate containsFavorite:self.tag.tagId]) [marks addObject:@"Favorite"];
-    if (self.tag && [DPAppDelegate containsTeachable:self.tag.tagId]) [marks addObject:@"Teachable tag"];
-    self.savedStatusLabel.text = [marks componentsJoinedByString:@"   "];
-    self.savedStatusLabel.hidden = marks.count == 0;
+    if (!self.listChips) return;
+    self.listChips.host = self;
+    self.listChips.undoHost = self;
+    self.listChips.tagId = self.tag ? self.tag.tagId : 0;
+    [self.listChips reload];
 }
 
 - (void)savedListsChanged:(NSNotification *)notification {
@@ -477,11 +498,9 @@
     
     self.versionLabel = [self makeBodyLabel];
     self.versionLabel.textColor = [UIColor secondaryLabelColor];
-    self.savedStatusLabel = [UILabel new];
-    self.savedStatusLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
-    self.savedStatusLabel.adjustsFontForContentSizeCategory = YES;
-    self.savedStatusLabel.numberOfLines = 0;
-    self.savedStatusLabel.textColor = [UIColor secondaryLabelColor];
+    self.listChips = [[TMListChipsView alloc] initWithFrame:CGRectZero];
+    self.listChips.host = self;
+    self.listChips.undoHost = self;
     self.tagIdHeader = [self makeHeader:@"Tag ID"];
     self.tagIdLabel = [self makeBodyLabel];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(savedListsChanged:) name:@"tagmaster.userDataChanged" object:nil];
@@ -540,7 +559,7 @@
     self.notesSection.spacing = 4;
     TMDetailSections *prose = [[TMDetailSections alloc] initWithArrangedSubviews:@[self.lyricsSection, self.notesSection]];
     TMSummaryColumns *columns = [[TMSummaryColumns alloc] initWithArrangedSubviews:@[performance, prose]];
-    UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, akaLabel, self.versionLabel, self.savedStatusLabel]];
+    UIStackView *identity = [[UIStackView alloc] initWithArrangedSubviews:@[titleLabel, akaLabel, self.versionLabel, self.listChips]];
     identity.axis = UILayoutConstraintAxisVertical;
     identity.spacing = 4;
     grid = [[UIStackView alloc] initWithArrangedSubviews:@[identity, columns]];

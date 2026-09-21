@@ -125,10 +125,12 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     self.navigationItem.backBarButtonItem.title = @"Home";
     
     self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    self.navigationItem.rightBarButtonItem =
-        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass"
-                                             target:self
-                                             action:@selector(search)];
+    // Search stays outermost; Settings sits beside it as an icon, as on Android, rather than
+    // spending a row of the table.
+    self.navigationItem.rightBarButtonItems = @[
+        [DPAppDelegate barButtonItemWithSystemName:@"magnifyingglass" target:self action:@selector(search)],
+        [DPAppDelegate barButtonItemWithSystemName:@"gearshape" target:self action:@selector(openSettings)]
+    ];
     // The favorites row for the tag open beside this list stays selected
     // instead of clearing when the screen reappears in an expanded split.
     self.clearsSelectionOnViewWillAppear = !(self.splitViewController && !self.splitViewController.isCollapsed);
@@ -180,6 +182,16 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     [self updateInlineTitleVisibility];
 }
 
+// A change that arrived mid-scroll was held back rather than dropped; the table
+// is settled enough to take it as soon as the finger and the momentum are gone.
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if (!decelerate) [self tm_applyPendingRefreshIfIdle];
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    [self tm_applyPendingRefreshIfIdle];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     UINavigationBar *bar = self.navigationController.navigationBar;
@@ -217,7 +229,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    return section == 1 && [DPAppDelegate favorites].count == 0 ? @"No favorites yet. Open a tag and use Favorite and Teachable options to add a favorite." : nil;
+    return section == TMHomeFavoritesSection && [DPAppDelegate favorites].count == 0 ? @"No favorites yet. Open a tag and use Favorite and Teachable options to add a favorite." : nil;
 }
 
 - (void)search {
@@ -227,17 +239,30 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [self.tableView reloadData];
+    // This reload shows whatever was waiting, so nothing is left pending.
+    self.tm_pendingListRefresh = NO;
     [self updateEditButton];
     [self tm_syncSelectionForSplit];
 }
 
-// Edit only has work to do when there are favorites to reorder or remove.
+// Edit only has work to do when there are favorites or lists to reorder or remove.
 - (void)updateEditButton {
-    BOOL hasFavorites = [DPAppDelegate favorites].count > 0;
-    self.editButtonItem.enabled = hasFavorites;
-    if (!hasFavorites && self.isEditing) {
+    BOOL hasWork = [DPAppDelegate favorites].count > 0 || [self tm_customListKeys].count > 0;
+    self.editButtonItem.enabled = hasWork;
+    if (!hasWork && self.isEditing) {
         [self setEditing:NO animated:YES];
     }
+}
+
+- (NSArray<NSString *> *)tm_customListKeys {
+    return [TMTagLists customKeys];
+}
+
+/// The custom list a Lists-group row stands for, or nil for Teachable Tags and New list.
+- (NSString *)listKeyForRow:(NSInteger)row {
+    NSArray<NSString *> *keys = [self tm_customListKeys];
+    NSInteger index = row - 1;
+    return (index >= 0 && index < (NSInteger)keys.count) ? keys[index] : nil;
 }
 
 - (void)didReceiveMemoryWarning
@@ -257,12 +282,6 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     }
                      }];
     [arr addObject:@{
-                         @"title": @"Teachable Tags",
-                         @"action": ^() {
-            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init] animated:YES];
-        }
-                         }];
-    [arr addObject:@{
                      @"title": TMRandomTagTitle,
                      @"action": ^() {
         [self randomTag];
@@ -276,14 +295,11 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     }
                      }];
 
-    [arr addObject:@{
-                     @"title": @"Settings",
-                     @"action": ^() {
-        [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
-    }
-                     }];
-
     return arr;
+}
+
+- (void)openSettings {
+    [self.navigationController pushViewController:[[DPSettingsController alloc] init] animated:YES];
 }
 
 - (NSIndexPath *)randomTagIndexPath {
@@ -366,19 +382,62 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 2;
+    return 3;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (section == 0) {
-        return [self navigationItems].count;
-    } else {
-        return [DPAppDelegate favorites].count;
+    switch (section) {
+        case TMHomeNavigationSection: return [self navigationItems].count;
+        // Teachable Tags, then one row per custom list, then New list.
+        case TMHomeListsSection: return [self tm_customListKeys].count + 2;
+        default: return [DPAppDelegate favorites].count;
     }
 }
 
+- (void)tm_showCount:(NSUInteger)count in:(UITableViewCell *)cell {
+    cell.detailTextLabel.text = count == 1 ? @"1 tag" : [NSString stringWithFormat:@"%lu tags", (unsigned long)count];
+    cell.detailTextLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.detailTextLabel.adjustsFontForContentSizeCategory = YES;
+    cell.detailTextLabel.textColor = [UIColor secondaryLabelColor];
+}
+
+- (UITableViewCell *)makeListsCellForRow:(NSInteger)row {
+    NSArray<NSString *> *keys = [self tm_customListKeys];
+    NSString *key = [self listKeyForRow:row];
+    BOOL isNewList = row == (NSInteger)keys.count + 1;
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:isNewList ? UITableViewCellStyleDefault : UITableViewCellStyleValue1
+                                                   reuseIdentifier:nil];
+    cell.backgroundColor = [UIColor clearColor];
+    cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.textLabel.adjustsFontForContentSizeCategory = YES;
+    cell.textLabel.numberOfLines = 0;
+    if (row == 0) {
+        cell.textLabel.text = @"Teachable Tags";
+        [self tm_showCount:[DPAppDelegate teachable].count in:cell];
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.accessibilityIdentifier = @"home.lists.teachable";
+        return cell;
+    }
+    if (row == (NSInteger)keys.count + 1) {
+        cell.textLabel.text = @"New list…";
+        cell.imageView.image = [UIImage systemImageNamed:@"plus.circle"];
+        cell.imageView.tintColor = [DPAppDelegate accentColor];
+        cell.accessibilityIdentifier = @"home.lists.new";
+        cell.accessibilityTraits = UIAccessibilityTraitButton;
+        return cell;
+    }
+    cell.textLabel.text = [TMTagLists nameFor:key];
+    [self tm_showCount:[TMTagLists idsFor:key].count in:cell];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    cell.accessibilityIdentifier = [NSString stringWithFormat:@"home.list.%@", key];
+    return cell;
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
+    if (indexPath.section == TMHomeListsSection) {
+        return [self makeListsCellForRow:indexPath.row];
+    }
+    if (indexPath.section == TMHomeNavigationSection) {
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
         NSArray *items = [self navigationItems];
         NSString *title = indexPath.row < items.count ? items[indexPath.row][@"title"] : nil;
@@ -412,12 +471,25 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    return section == 1 ? @"Favorites" : nil;
+    if (section == TMHomeListsSection) return @"Lists";
+    return section == TMHomeFavoritesSection ? @"Favorites" : nil;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     BOOL expanded = self.splitViewController && !self.splitViewController.isCollapsed;
-    if (indexPath.section == 0) {
+    if (indexPath.section == TMHomeListsSection) {
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        NSArray<NSString *> *keys = [self tm_customListKeys];
+        if (indexPath.row == 0) {
+            [self.navigationController pushViewController:[[DPTeachableTagsController alloc] init] animated:YES];
+        } else if (indexPath.row == (NSInteger)keys.count + 1) {
+            [self promptNewList];
+        } else {
+            [self.navigationController pushViewController:[[TMTagListController alloc] initWithListKey:keys[indexPath.row - 1]] animated:YES];
+        }
+        return;
+    }
+    if (indexPath.section == TMHomeNavigationSection) {
         // Navigation rows always deselect; only a tag row stays lit beside its detail.
         [tableView deselectRowAtIndexPath:indexPath animated:YES];
         NSArray *items = [self navigationItems];
@@ -435,20 +507,58 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
-        return NO;
-    }
-    return YES;
+    // Teachable Tags and New list are permanent; only a user's own lists move or go.
+    if (indexPath.section == TMHomeListsSection) return [self listKeyForRow:indexPath.row] != nil;
+    return indexPath.section == TMHomeFavoritesSection;
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
-        if (indexPath.row < favorites.count) {
-            [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
-        }
-        [self updateEditButton];
+    if (editingStyle != UITableViewCellEditingStyleDelete) return;
+    if (indexPath.section == TMHomeListsSection) {
+        NSString *key = [self listKeyForRow:indexPath.row];
+        if (!key) return;
+        // Deleting a list is never silent, and the half-open swipe is the user's
+        // place in the gesture: it stays put under the confirmation and closes
+        // only once that is answered. Reloading the row here instead would snap
+        // it shut first and read as a swipe that failed.
+        BOOL swiped = !self.editing;
+        __weak DPHomeViewController *weakSelf = self;
+        [self confirmDeleteList:key settled:^{
+            if (swiped) [weakSelf.tableView setEditing:NO animated:YES];
+        }];
+        return;
     }
+    NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
+    if (indexPath.row < favorites.count) {
+        [DPAppDelegate removeFavorite:favorites[indexPath.row].intValue];
+    }
+    [self updateEditButton];
+    [self tm_applyPendingRefreshIfIdle];
+}
+
+- (UIMenu *)tm_menuForListKey:(NSString *)key {
+    __weak DPHomeViewController *weakSelf = self;
+    UIAction *rename = [UIAction actionWithTitle:@"Rename…"
+                                            image:[UIImage systemImageNamed:@"pencil"]
+                                       identifier:nil
+                                          handler:^(UIAction *action) { [weakSelf promptRenameList:key]; }];
+    UIAction *remove = [UIAction actionWithTitle:@"Delete…"
+                                            image:[UIImage systemImageNamed:@"trash"]
+                                       identifier:nil
+                                          handler:^(UIAction *action) { [weakSelf confirmDeleteList:key]; }];
+    remove.attributes = UIMenuElementAttributesDestructive;
+    return [UIMenu menuWithTitle:@"" children:@[rename, remove]];
+}
+
+- (UIContextMenuConfiguration *)tableView:(UITableView *)tableView contextMenuConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath point:(CGPoint)point {
+    NSString *key = indexPath.section == TMHomeListsSection ? [self listKeyForRow:indexPath.row] : nil;
+    if (!key) return nil;
+    __weak DPHomeViewController *weakSelf = self;
+    return [UIContextMenuConfiguration configurationWithIdentifier:nil
+                                                   previewProvider:nil
+                                                    actionProvider:^UIMenu *(NSArray<UIMenuElement *> *suggested) {
+        return [weakSelf tm_menuForListKey:key];
+    }];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -456,8 +566,18 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 }
 
 - (NSIndexPath *)tableView:(UITableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath {
-    if (proposedDestinationIndexPath.section == 0) {
-        return [NSIndexPath indexPathForRow:0 inSection:1];
+    // A list stays among the lists, between Teachable Tags and New list; a
+    // favorite stays among the favorites.
+    if (sourceIndexPath.section == TMHomeListsSection) {
+        NSInteger last = (NSInteger)[self tm_customListKeys].count;
+        NSInteger row = proposedDestinationIndexPath.section == TMHomeListsSection
+            ? proposedDestinationIndexPath.row
+            : (proposedDestinationIndexPath.section < TMHomeListsSection ? 1 : last);
+        row = MAX(1, MIN(last, row));
+        return [NSIndexPath indexPathForRow:row inSection:TMHomeListsSection];
+    }
+    if (proposedDestinationIndexPath.section != TMHomeFavoritesSection) {
+        return [NSIndexPath indexPathForRow:0 inSection:TMHomeFavoritesSection];
     }
     return proposedDestinationIndexPath;
 }
@@ -465,15 +585,26 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
 
 // Override to support rearranging the table view.
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+    if (fromIndexPath.section == TMHomeListsSection) {
+        // The table already shows the new order; reloading from the registry's
+        // change notification would fight the drag that produced it.
+        self.tm_applyingLocalListChange = YES;
+        [TMTagLists moveListFrom:fromIndexPath.row - 1 to:toIndexPath.row - 1];
+        self.tm_applyingLocalListChange = NO;
+        // The drag is over and the rows already match the registry; anything
+        // that arrived from elsewhere while it ran is shown on the next turn,
+        // once the table has finished committing this move.
+        __weak DPHomeViewController *weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf tm_applyPendingRefreshIfIdle]; });
+        return;
+    }
     [DPAppDelegate moveFavoriteAt:fromIndexPath.row to:toIndexPath.row];
 }
 
 // Override to support conditional rearranging of the table view.
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) {
-        return NO;
-    }
-    return YES;
+    if (indexPath.section == TMHomeListsSection) return [self listKeyForRow:indexPath.row] != nil;
+    return indexPath.section == TMHomeFavoritesSection;
 }
 
 #pragma mark - TMTagListSource
@@ -486,7 +617,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     NSArray<NSNumber *> *favorites = [DPAppDelegate favorites];
     NSUInteger index = [favorites indexOfObject:@(tagId)];
     if (index == NSNotFound) return;
-    NSIndexPath *path = [NSIndexPath indexPathForRow:index inSection:1];
+    NSIndexPath *path = [NSIndexPath indexPathForRow:index inSection:TMHomeFavoritesSection];
     [self.tableView selectRowAtIndexPath:path animated:!UIAccessibilityIsReduceMotionEnabled() scrollPosition:UITableViewScrollPositionNone];
     [self.tableView scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionNone animated:!UIAccessibilityIsReduceMotionEnabled()];
 }
@@ -507,7 +638,7 @@ static NSString *const TMRandomTagTitle = @"Random Tag";
     }
     NSNumber *current = expanded ? [DPAppDelegate currentSplitTagIdFor:self] : nil;
     NSUInteger index = current ? [[DPAppDelegate favorites] indexOfObject:current] : NSNotFound;
-    NSIndexPath *path = index == NSNotFound ? nil : [NSIndexPath indexPathForRow:index inSection:1];
+    NSIndexPath *path = index == NSNotFound ? nil : [NSIndexPath indexPathForRow:index inSection:TMHomeFavoritesSection];
     NSIndexPath *selected = self.tableView.indexPathForSelectedRow;
     if (selected && ![selected isEqual:path]) [self.tableView deselectRowAtIndexPath:selected animated:NO];
     if (path && ![selected isEqual:path]) [self.tableView selectRowAtIndexPath:path animated:NO scrollPosition:UITableViewScrollPositionNone];

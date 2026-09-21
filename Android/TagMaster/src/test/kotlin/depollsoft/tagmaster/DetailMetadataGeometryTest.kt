@@ -290,12 +290,13 @@ class DetailMetadataGeometryTest {
             model.notes = if (prose and 2 != 0) "Only notes" else null
             idle()
 
+            // savedStatusLayout is not in this list: it is the chips row, and a loaded tag always
+            // offers at least Add to list there, however little else it has.
             for (id in listOf(
                 R.id.linearLayout3,
                 R.id.keyRow,
                 R.id.akaLayout,
                 R.id.versionLayout,
-                R.id.savedStatusLayout,
             )) {
                 assertEquals(
                     "group ${summary.resources.getResourceEntryName(id)} collapses when it has " +

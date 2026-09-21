@@ -139,6 +139,10 @@
             android:name=".TeachableTagsActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/TeachableTags" />
+        <activity
+            android:name=".TagListActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:parentActivityName=".MeActivity" />
     </application>
 
 </manifest>
