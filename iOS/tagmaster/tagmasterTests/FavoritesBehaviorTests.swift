@@ -56,7 +56,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
     private static let twoLists: [(key: String, name: String, ids: [Int])] = [
         (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [669, 1478]),
-        (key: "chorus-warmups-aa12", name: "Chorus warmups", ids: [122])
+        (key: "chorus-warmups-list", name: "Chorus warmups", ids: [122])
     ]
 
     // MARK: - Home list contents
@@ -108,7 +108,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         }
         XCTAssertEqual(identifiers, ["home.lists.teachable",
                                      "home.list.afterglow-set-k3f9",
-                                     "home.list.chorus-warmups-aa12",
+                                     "home.list.chorus-warmups-list",
                                      "home.lists.new"])
         let newList = home.tableView(table, cellForRowAt: IndexPath(row: 3, section: listsSection))
         XCTAssertNotNil(newList.imageView?.image, "New list carries the plus symbol")
@@ -122,7 +122,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
         home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 2, section: listsSection))
         let list = try? XCTUnwrap(navigation.pushed.last as? TMTagListController)
-        XCTAssertEqual(list?.listKey, "chorus-warmups-aa12")
+        XCTAssertEqual(list?.listKey, "chorus-warmups-list")
     }
 
     func testOnlyCustomListRowsCanBeEditedOrMoved() {
@@ -167,7 +167,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
                        moveRowAt: IndexPath(row: 1, section: listsSection),
                        to: IndexPath(row: 2, section: listsSection))
 
-        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-aa12", "afterglow-set-k3f9"])
+        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list", "afterglow-set-k3f9"])
         home.tableView.reloadData()
         XCTAssertEqual(rowTitles(home, section: listsSection),
                        ["Teachable Tags", "Chorus warmups", "Afterglow set", "New list…"])
@@ -190,7 +190,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         XCTAssertEqual(TMTagLists.customKeys().count, 2, "Nothing goes before the confirmation is answered")
 
         alert?.tm_fire("Delete")
-        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-aa12"])
+        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list"])
         home.requestedPresentation = nil
     }
 
@@ -231,7 +231,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
         settle()
 
         XCTAssertTrue(home.isEditing, "A red-circle delete does not end the edit session")
-        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-aa12"])
+        XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list"])
         home.setEditing(false, animated: false)
         home.requestedPresentation = nil
     }

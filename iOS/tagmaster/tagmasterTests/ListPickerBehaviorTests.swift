@@ -33,7 +33,7 @@ final class PresentationHost: UIViewController {
 final class ListPickerBehaviorTests: TMBehaviorTestCase {
 
     private static let afterglow = "afterglow-set-k3f9"
-    private static let warmups = "chorus-warmups-aa12"
+    private static let warmups = "chorus-warmups-list"
 
     private func seedTwoLists(favorite: [Int] = [], teachable: [Int] = []) {
         seedLists(favorite: favorite, teachable: teachable, lists: [

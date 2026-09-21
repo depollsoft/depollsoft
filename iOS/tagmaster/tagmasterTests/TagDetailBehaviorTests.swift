@@ -304,7 +304,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
     func testTheChipsWrapOntoMoreThanOneLineWhenTheyHaveTo() {
         seedLists(favorite: [1809], teachable: [1809], lists: [
             (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809]),
-            (key: "chorus-warmups-aa12", name: "Chorus warmups for Tuesday evening", ids: [1809])
+            (key: "chorus-warmups-list", name: "Chorus warmups for Tuesday evening", ids: [1809])
         ])
         let tag = seedCachedTag(id: 1809)
         let chips = self.chips(in: self.summary(for: tag))
