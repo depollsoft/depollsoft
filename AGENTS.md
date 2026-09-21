@@ -32,7 +32,7 @@
 
 ## PR Preview Deploys
 
-- `.github/workflows/pr-preview.yml` builds private PR preview artifacts for same-repo mobile PRs and posts a sticky PR comment with APK download details plus `/deploy` instructions.
+- `.github/workflows/pr-preview.yml` builds private PR preview artifacts for same-repo mobile PRs and posts a sticky PR comment with APK download details plus `/deploy` instructions. Only the apps and platforms the PR changes are built and distributed; `scripts/ci/changed_apps.py` treats a file under one app's module as that app's and everything else under `Android/` or `iOS/` as shared, which builds both apps. Android CI and iOS CI use the same selection for their test jobs.
 - Comment `/deploy` on a same-repo PR to queue `.github/workflows/deploy-pr-preview.yml`, which uploads the private Pitch Perfect and Tag Master builds to TestFlight and Play Internal Testing.
 - Required GitHub Actions secrets for preview deploys: `ANDROID_UPLOAD_KEYSTORE`, `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`, `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_CONTENT`, `MATCH_PASSWORD`, and `MATCH_GIT_SSH_KEY`.
 - `PLAY_SERVICE_ACCOUNT_JSON` may be stored as either raw JSON or base64-encoded JSON; the deploy workflow now accepts both formats.

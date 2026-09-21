@@ -29,6 +29,10 @@ jobs:
       pr-title: ${{ steps.resolve.outputs.pr-title }}
       head-sha: ${{ steps.resolve.outputs.head-sha }}
       commit-message: ${{ steps.resolve.outputs.commit-message }}
+      android-any: ${{ steps.manifest.outputs.android-any }}
+      android-matrix: ${{ steps.manifest.outputs.android-matrix }}
+      ios-any: ${{ steps.manifest.outputs.ios-any }}
+      ios-matrix: ${{ steps.manifest.outputs.ios-matrix }}
     steps:
       - name: Resolve source pull request
         id: resolve
@@ -68,22 +72,79 @@ jobs:
           echo "head-sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "commit-message=$commit_message" >> "$GITHUB_OUTPUT"
 
+      # PR Preview builds only the apps a PR changes and records that
+      # selection in a preview-manifest-<pr>-<build> artifact
+      # (scripts/ci/changed_apps.py). The matrices below contain exactly
+      # those apps, so nothing is signed or published for an app that was
+      # not built. A run without a manifest predates the selection and
+      # built everything.
+      - name: Read which apps PR Preview built
+        id: manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          ANDROID_APPS: >-
+            [{"app": "PitchPerfect", "key": "pitchperfect",
+              "apk": "PitchPerfect-private.apk",
+              "firebase_app_id": "1:402153260205:android:76066360519819b891f224"},
+             {"app": "TagMaster", "key": "tagmaster",
+              "apk": "TagMaster-private.apk",
+              "firebase_app_id": "1:572337670650:android:50e818820a9098fb4bbc43"}]
+          IOS_APPS: >-
+            [{"app": "PitchPerfect", "key": "pitchperfect",
+              "archive": "PitchPerfect-private.xcarchive",
+              "ipa": "PitchPerfect-private.ipa",
+              "firebase_app_id": "1:402153260205:ios:9eb7589d0e3abe5b91f224"},
+             {"app": "TagMaster", "key": "tagmaster",
+              "archive": "TagMaster-private.xcarchive",
+              "ipa": "TagMaster-private.ipa",
+              "firebase_app_id": "1:572337670650:ios:5a5295f5bb91237e4bbc43"}]
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts" \
+            --jq '.artifacts[].name | select(startswith("preview-manifest-"))' \
+            | head -1)"
+          selected='{"android": ["pitchperfect", "tagmaster"], "ios": ["pitchperfect", "tagmaster"]}'
+          if [[ -n "$name" ]]; then
+            gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+              --name "$name" --dir manifest
+            selected="$(cat manifest/preview-manifest.json)"
+          fi
+          # Only known app entries can come out: the manifest merely picks
+          # entries from the fixed lists above.
+          # shellcheck disable=SC2016 # jq variables, not shell ones
+          pick='{include: map(select(.key as $key | $selected[$platform] | any(. == $key)))}'
+          android="$(jq -c --arg platform android --argjson selected "$selected" \
+            "$pick" <<< "$ANDROID_APPS")"
+          ios="$(jq -c --arg platform ios --argjson selected "$selected" \
+            "$pick" <<< "$IOS_APPS")"
+          {
+            echo "android-matrix=$android"
+            echo "android-any=$(jq -r '.include | length > 0' <<< "$android")"
+            echo "ios-matrix=$ios"
+            echo "ios-any=$(jq -r '.include | length > 0' <<< "$ios")"
+          } >> "$GITHUB_OUTPUT"
+          echo "Android: $(jq -c '[.include[].app]' <<< "$android")"
+          echo "iOS: $(jq -c '[.include[].app]' <<< "$ios")"
+
   android:
     name: Android — ${{ matrix.app }}
     needs: metadata
-    if: needs.metadata.result == 'success'
+    if: >-
+      needs.metadata.result == 'success' &&
+      needs.metadata.outputs.android-any == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      MATRIX_APP: ${{ matrix.app }}
+      MATRIX_APK: ${{ matrix.apk }}
+      MATRIX_FIREBASE_APP_ID: ${{ matrix.firebase_app_id }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - app: PitchPerfect
-            apk: PitchPerfect-private.apk
-            firebase_app_id: "1:402153260205:android:76066360519819b891f224"
-          - app: TagMaster
-            apk: TagMaster-private.apk
-            firebase_app_id: "1:572337670650:android:50e818820a9098fb4bbc43"
+      # The apps PR Preview built; see the metadata job.
+      matrix: ${{ fromJSON(needs.metadata.outputs.android-matrix) }}
 
     steps:
       - name: Download private APKs from PR Preview
@@ -115,7 +176,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          app="${{ matrix.app }}"
+          app="$MATRIX_APP"
           credentials="$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           if [[ "$app" == "PitchPerfect" ]]; then
             value="$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON"
@@ -142,13 +203,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk="preview-artifacts/android/${{ matrix.apk }}"
+          apk="preview-artifacts/android/$MATRIX_APK"
           test -f "$apk"
           release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
             "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$apk" \
-            --app "${{ matrix.firebase_app_id }}" \
+            --app "$MATRIX_FIREBASE_APP_ID" \
             --groups "$TESTER_GROUPS" \
             --release-notes "$release_notes"
 
@@ -156,31 +217,27 @@ jobs:
         if: always()
         shell: bash
         run: |
-          app="${{ matrix.app }}"
+          app="$MATRIX_APP"
           rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           rm -rf preview-artifacts
 
   ios-build:
     name: Build iOS — ${{ matrix.app }}
     needs: metadata
-    if: needs.metadata.result == 'success'
+    if: >-
+      needs.metadata.result == 'success' &&
+      needs.metadata.outputs.ios-any == 'true'
     runs-on: macos-latest
     timeout-minutes: 40
     env:
+      MATRIX_APP: ${{ matrix.app }}
+      MATRIX_ARCHIVE: ${{ matrix.archive }}
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - app: PitchPerfect
-            archive: PitchPerfect-private.xcarchive
-            ipa: PitchPerfect-private.ipa
-            firebase_app_id: "1:402153260205:ios:9eb7589d0e3abe5b91f224"
-          - app: TagMaster
-            archive: TagMaster-private.xcarchive
-            ipa: TagMaster-private.ipa
-            firebase_app_id: "1:572337670650:ios:5a5295f5bb91237e4bbc43"
+      # The apps PR Preview built; see the metadata job.
+      matrix: ${{ fromJSON(needs.metadata.outputs.ios-matrix) }}
 
     steps:
       - name: Checkout trusted distribution tooling
@@ -207,10 +264,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          zip="preview-artifacts/ios/${{ matrix.archive }}.zip"
+          zip="preview-artifacts/ios/$MATRIX_ARCHIVE.zip"
           test -f "$zip"
           ditto -x -k "$zip" preview-artifacts/ios
-          test -d "preview-artifacts/ios/${{ matrix.archive }}"
+          test -d "preview-artifacts/ios/$MATRIX_ARCHIVE"
 
       - name: Select Xcode
         id: xcode
@@ -252,7 +309,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          run_key="$GITHUB_RUN_ID-${{ matrix.app }}"
+          run_key="$GITHUB_RUN_ID-$MATRIX_APP"
           source="$RUNNER_TEMP/match-source-$run_key"
           remote="$RUNNER_TEMP/match-remote-$run_key.git"
           archive="$RUNNER_TEMP/match-$run_key.tgz"
@@ -295,10 +352,8 @@ jobs:
         shell: bash
         run: >-
           bundle exec fastlane export_firebase_private
-          app:${{ matrix.app }}
-          archive:"$GITHUB_WORKSPACE/preview-artifacts/ios/${{
-            matrix.archive
-          }}"
+          app:"$MATRIX_APP"
+          archive:"$GITHUB_WORKSPACE/preview-artifacts/ios/$MATRIX_ARCHIVE"
 
       - name: Upload signed IPA artifact
         # v4
@@ -316,7 +371,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          app="${{ matrix.app }}"
+          app="$MATRIX_APP"
           run_key="$GITHUB_RUN_ID-${app}"
           rm -f "$RUNNER_TEMP/match-${run_key}.tgz"
           rm -rf \
@@ -331,16 +386,13 @@ jobs:
     if: needs.ios-build.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      MATRIX_APP: ${{ matrix.app }}
+      MATRIX_IPA: ${{ matrix.ipa }}
+      MATRIX_FIREBASE_APP_ID: ${{ matrix.firebase_app_id }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - app: PitchPerfect
-            ipa: PitchPerfect-private.ipa
-            firebase_app_id: "1:402153260205:ios:9eb7589d0e3abe5b91f224"
-          - app: TagMaster
-            ipa: TagMaster-private.ipa
-            firebase_app_id: "1:572337670650:ios:5a5295f5bb91237e4bbc43"
+      matrix: ${{ fromJSON(needs.metadata.outputs.ios-matrix) }}
 
     steps:
       - name: Download signed IPA
@@ -369,7 +421,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          app="${{ matrix.app }}"
+          app="$MATRIX_APP"
           credentials="$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           if [[ "$app" == "PitchPerfect" ]]; then
             value="$FIREBASE_PITCHPERFECT_SERVICE_ACCOUNT_JSON"
@@ -396,13 +448,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ipa="signed-ios/${{ matrix.ipa }}"
+          ipa="signed-ios/$MATRIX_IPA"
           test -f "$ipa"
           release_notes="$(printf 'PR #%s: %s\nLatest commit: %s\nCommit: %s' \
             "$PR_NUMBER" "$PR_TITLE" "$COMMIT_MESSAGE" "$COMMIT_SHA")"
           npx --yes firebase-tools@15.28.2 \
             appdistribution:distribute "$ipa" \
-            --app "${{ matrix.firebase_app_id }}" \
+            --app "$MATRIX_FIREBASE_APP_ID" \
             --groups "$TESTER_GROUPS" \
             --release-notes "$release_notes"
 
@@ -410,13 +462,13 @@ jobs:
         if: always()
         shell: bash
         run: |
-          app="${{ matrix.app }}"
+          app="$MATRIX_APP"
           rm -f "$RUNNER_TEMP/firebase-${GITHUB_RUN_ID}-${app}.json"
           rm -rf signed-ios
 
   update-comments:
     name: Update Firebase distribution comments
-    needs: [metadata, android, ios-publish]
+    needs: [metadata, android, ios-build, ios-publish]
     if: always() && needs.metadata.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -432,6 +484,7 @@ jobs:
           PR_TITLE: ${{ needs.metadata.outputs.pr-title }}
           COMMIT_MESSAGE: ${{ needs.metadata.outputs.commit-message }}
           ANDROID_RESULT: ${{ needs.android.result }}
+          IOS_BUILD_RESULT: ${{ needs.ios-build.result }}
           IOS_RESULT: ${{ needs.ios-publish.result }}
           RUN_URL: >-
             https://github.com/${{ github.repository }}/actions/runs/${{
@@ -443,10 +496,21 @@ jobs:
             const repo = context.repo.repo;
             const issueNumber = Number(process.env.PR_NUMBER);
             const sourceSha = process.env.SOURCE_SHA;
+            // A platform the PR did not change is skipped, not failed.
+            const ok = (result) => result === 'success' || result === 'skipped';
             const succeeded =
-              process.env.ANDROID_RESULT === 'success' &&
-              process.env.IOS_RESULT === 'success';
-            const status = succeeded ? '✅ Published' : '❌ Failed';
+              ok(process.env.ANDROID_RESULT) &&
+              ok(process.env.IOS_BUILD_RESULT) &&
+              ok(process.env.IOS_RESULT);
+            const published = [
+              ['Android', process.env.ANDROID_RESULT],
+              ['iOS', process.env.IOS_RESULT],
+            ]
+              .filter(([, result]) => result === 'success')
+              .map(([platform]) => platform);
+            const status = succeeded
+              ? `✅ Published (${published.join(', ') || 'nothing to publish'})`
+              : '❌ Failed';
             const runLink = `[View run](${process.env.RUN_URL})`;
             const contextLine =
               `${process.env.PR_TITLE} · ${process.env.COMMIT_MESSAGE}`;
