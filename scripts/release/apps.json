@@ -6,7 +6,7 @@
     "wear": {
       "module": "PitchPerfectWear",
       "track": "wear:production",
-      "notes": "No watch-specific changes in this release."
+      "notes": "The watch app now shows the Pitch Perfect icon while it opens."
     },
     "ios_scheme": "pitchperfectUITests",
     "scenes": [
