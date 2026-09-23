@@ -3,4 +3,11 @@
     <style name="Theme.PitchPerfect.Wear" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/plate_ground</item>
     </style>
+
+    <!-- Wear app quality requires the launcher icon on the splash screen. -->
+    <style name="Theme.PitchPerfect.Wear.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/plate_ground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.PitchPerfect.Wear</item>
+    </style>
 </resources>
