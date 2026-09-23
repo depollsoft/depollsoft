@@ -149,16 +149,28 @@ platform :android do
       # bundle from the phone track. A retry checks each track independently.
       targets.unshift(module: wear.fetch('module'), track: wear.fetch('track'), build: version.fetch('build') + 1)
     end
-    pending = targets.reject do |target|
-      releases = production_play_releases(package, key, target[:track])
-      release = releases.find do |item|
+    find_release = lambda do |target|
+      production_play_releases(package, key, target[:track]).find do |item|
         item.track == target[:track] && Array(item.active_artifacts).any? do |artifact|
           artifact.version_code.to_i == target[:build]
         end
       end
+    end
+    # After a rejection Play refuses to send API edits for review; those
+    # releases wait until the owner sends them from Play Console.
+    unsent_message = lambda do |targets_unsent|
+      builds = targets_unsent.map { |target| "#{target[:track]} build #{target[:build]}" }.join(', ')
+      "Play #{builds} requires attention: committed without review because Play only accepts this submission " \
+        'from Play Console. Send the changes for review in Play Console (Publishing overview), then re-run this job.'
+    end
+    pending = targets.reject do |target|
+      release = find_release.call(target)
       if release
         accepted = %w[IN_REVIEW APPROVED_NOT_PUBLISHED PUBLISHED].map { |state| "RELEASE_LIFECYCLE_STATE_#{state}" }
         unless accepted.include?(release.release_lifecycle_state)
+          if release.release_lifecycle_state == 'RELEASE_LIFECYCLE_STATE_NOT_SENT_FOR_REVIEW'
+            UI.user_error!(unsent_message.call([target]))
+          end
           UI.user_error!("Play #{target[:track]} build #{target[:build]} requires attention: #{release.release_lifecycle_state}")
         end
         UI.success("#{app} #{target[:track]} build #{target[:build]} is already submitted (#{release.release_lifecycle_state})")
@@ -184,9 +196,13 @@ platform :android do
                          'build/outputs/bundle/release', "#{target[:module]}-release.aab"),
           metadata_path: File.join(assets, 'metadata'), skip_upload_apk: true,
           skip_upload_metadata: false, skip_upload_images: false, skip_upload_screenshots: false,
-          changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: false,
+          changes_not_sent_for_review: false, rescue_changes_not_sent_for_review: true,
         )
       end
     end
+    unsent = pending.select do |target|
+      find_release.call(target)&.release_lifecycle_state == 'RELEASE_LIFECYCLE_STATE_NOT_SENT_FOR_REVIEW'
+    end
+    UI.user_error!(unsent_message.call(unsent)) unless unsent.empty?
   end
 end
