@@ -56,6 +56,11 @@ def gradle(**options) = $calls << [:build_android, options]
 def upload_to_play_store(**options)
   $calls << [:upload_android, options]
   raise 'Watch submission failed' if options[:track] == $fail_play_track
+  if $commit_without_review
+    code = options[:track] == 'wear:production' ? 1800000001 : 1800000000
+    release = play_release('NOT_SENT_FOR_REVIEW', code, options[:track])
+    options[:track] == 'wear:production' ? ($wear_releases = [release]) : ($play_releases = [release])
+  end
 end
 def assert(value, message)
   raise(message) unless value
@@ -254,6 +259,35 @@ Dir.mktmpdir('production-lane-test-') do |directory|
       assert($calls.select { |call| call.first == :upload_android }.map { |call| call.last[:track] } == ['wear:production'],
              'Changed phone track after failed watch submission')
       $fail_play_track = nil
+      $play_releases = []
+      $wear_releases = []
+      $commit_without_review = true
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise 'Recorded a release Play did not send for review'
+      rescue RuntimeError => error
+        raise unless error.message.include?('Play Console') && error.message.include?('wear:production build 1800000001') &&
+                     error.message.include?('production build 1800000000')
+      end
+      uploads = $calls.select { |call| call.first == :upload_android }.map(&:last)
+      assert(uploads.map { |upload| upload[:track] } == ['wear:production', 'production'], 'Skipped a track after Play refused review')
+      assert(uploads.all? { |upload| upload[:rescue_changes_not_sent_for_review] && !upload[:changes_not_sent_for_review] },
+             'Play lane must request review and fall back to a manual send only when Play refuses it')
+      $commit_without_review = false
+      $calls = []
+      begin
+        $lanes.fetch([:android, :deploy_production]).call(app: app)
+        raise 'Accepted an unsent release on retry'
+      rescue RuntimeError => error
+        raise unless error.message.include?('Play Console')
+      end
+      assert($calls.all? { |call| call.first == :validate }, 'Re-uploaded a release waiting for a manual send')
+      $wear_releases = [play_release('IN_REVIEW', 1800000001, 'wear:production')]
+      $play_releases = [play_release('IN_REVIEW')]
+      $calls = []
+      $lanes.fetch([:android, :deploy_production]).call(app: app)
+      assert($calls.all? { |call| call.first == :validate }, 'Re-uploaded after a manual send')
     end
     $reject_capture = true
     $calls = []
