@@ -106,6 +106,7 @@ abstract class ComposeScreenTest {
         val parts = mutableListOf<String>()
 
         fun collect(node: androidx.compose.ui.semantics.SemanticsNode) {
+            node.config.getOrNull(SemanticsProperties.EditableText)?.let { parts += it.text }
             node.config.getOrNull(SemanticsProperties.Text)?.forEach { parts += it.text }
             node.children.forEach(::collect)
         }

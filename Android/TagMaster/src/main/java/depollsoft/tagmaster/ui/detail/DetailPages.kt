@@ -247,7 +247,7 @@ fun VideosPage(
 private fun UserVideoRow(video: Video) {
     val rows =
         buildList {
-            add(stringResource(R.string.SungBy) to "${video.sungBy}")
+            if (video.sungBy.isPresent()) add(stringResource(R.string.SungBy) to video.sungBy!!)
             if (video.sungKey.isPresent()) add(stringResource(R.string.Key) to video.sungKey!!)
             if (video.posted.isPresent()) add(stringResource(R.string.Posted) to formatDate("%1\$tA, %1\$tB %1\$te, %1\$tY", video.posted))
         }
