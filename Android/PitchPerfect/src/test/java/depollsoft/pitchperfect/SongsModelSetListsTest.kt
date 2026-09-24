@@ -391,16 +391,21 @@ class SongsModelSetListsTest {
     @Test
     fun creatingAListNotifiesListTrackers() {
         var updates = 0
-        com.bindroid.trackable.track({ model.trackLists() }) {
-            updates++
-            keepTracking
+        val watch = depollsoft.lib.state.watchState(read = { model.trackLists() }) { updates++ }
+        fun settle() {
+            depollsoft.lib.state.SnapshotNotifications.flush()
+            org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
         }
+        settle()
         val before = updates
         model.createList("Saturday show")
+        settle()
         assertTrue("creating a list re-renders the list UI", updates > before)
 
         val after = updates
         model.renameList(model.orderedLists.last().id, "Sunday show")
+        settle()
         assertTrue("renaming a list re-renders the list UI", updates > after)
+        watch.stop()
     }
 }

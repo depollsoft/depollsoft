@@ -3,9 +3,6 @@ package depollsoft.pitchperfect
 import android.content.Context
 import android.content.Intent
 import android.os.Looper
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import androidx.wear.remote.interactions.RemoteActivityHelper
 import com.google.android.gms.tasks.Tasks
@@ -14,7 +11,6 @@ import com.google.android.gms.wearable.CapabilityInfo
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.Wearable
-import com.google.android.material.button.MaterialButton
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.firebase.auth.FirebaseAuth
 import depollsoft.lib.activity.RichApplication
@@ -22,8 +18,16 @@ import depollsoft.lib.util.Preferences
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -42,6 +46,9 @@ import java.util.concurrent.Executor
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = RichApplication::class)
 class WatchCompanionTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     private lateinit var firebaseAuth: MockedStatic<FirebaseAuth>
     private lateinit var wearable: MockedStatic<Wearable>
     private lateinit var capabilityClient: CapabilityClient
@@ -53,6 +60,7 @@ class WatchCompanionTest {
     fun setUp() {
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
+        ScreenTestSupport.seedSettingsDefaults()
         val auth = Mockito.mock(FirebaseAuth::class.java)
         firebaseAuth = Mockito.mockStatic(FirebaseAuth::class.java)
         firebaseAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(auth)
@@ -91,20 +99,19 @@ class WatchCompanionTest {
 
     @Test
     fun noConnectedWatches_keepsSectionGone() {
-        val activity = settings(FakeWatchNodeSource(emptyList()))
+        settings(FakeWatchNodeSource(emptyList()))
 
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.watchSection).visibility)
-        assertEquals(0, buttons(activity).childCount)
+        assertFalse(sectionShown())
+        assertEquals(emptyList<String>(), buttons())
     }
 
     @Test
     fun missingApp_showsStatusAndInstallButton() {
-        val activity = settings(FakeWatchNodeSource(listOf(WatchNode("watch-1", "Pixel Watch", false))))
+        settings(FakeWatchNodeSource(listOf(WatchNode("watch-1", "Pixel Watch", false))))
 
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.watchSection).visibility)
-        assertEquals("Pitch Perfect is not on Pixel Watch yet.", status(activity))
-        assertEquals(1, buttons(activity).childCount)
-        assertEquals("Install on Pixel Watch", (buttons(activity).getChildAt(0) as MaterialButton).text.toString())
+        assertTrue(sectionShown())
+        assertEquals("Pitch Perfect is not on Pixel Watch yet.", status())
+        assertEquals(listOf("INSTALL ON PIXEL WATCH"), buttons())
     }
 
     @Test
@@ -112,38 +119,36 @@ class WatchCompanionTest {
         val source = FakeWatchNodeSource(
             listOf(WatchNode("watch-1", "Pixel Watch", true), WatchNode("watch-2", "Galaxy Watch", false)),
         )
-        val activity = settings(source)
+        settings(source)
 
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.watchSection).visibility)
-        assertEquals("Installed on Pixel Watch\nPitch Perfect is not on Galaxy Watch yet.", status(activity))
-        assertEquals(1, buttons(activity).childCount)
-        assertEquals("Install on Galaxy Watch", (buttons(activity).getChildAt(0) as MaterialButton).text.toString())
+        assertTrue(sectionShown())
+        assertEquals("Installed on Pixel Watch\nPitch Perfect is not on Galaxy Watch yet.", status())
+        assertEquals(listOf("INSTALL ON GALAXY WATCH"), buttons())
     }
 
     @Test
     fun capabilityChange_refreshesAndRemovesInstalledWatchButton() {
         val source = FakeWatchNodeSource(listOf(WatchNode("watch-1", "Pixel Watch", false)))
-        val activity = settings(source)
+        settings(source)
         val listener = registeredListener()
 
         source.nodes = listOf(WatchNode("watch-1", "Pixel Watch", true))
         listener.onCapabilityChanged(Mockito.mock(CapabilityInfo::class.java))
         shadowOf(Looper.getMainLooper()).idle()
 
-        assertEquals("Installed on Pixel Watch", status(activity))
-        assertEquals(0, buttons(activity).childCount)
+        assertEquals("Installed on Pixel Watch", status())
+        assertEquals(emptyList<String>(), buttons())
 
         source.nodes = emptyList()
         listener.onCapabilityChanged(Mockito.mock(CapabilityInfo::class.java))
         shadowOf(Looper.getMainLooper()).idle()
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.watchSection).visibility)
-        assertEquals("", status(activity))
+        assertFalse(sectionShown())
     }
 
     @Test
     fun pause_removesListenerAndResumeRefreshesWithoutDuplicateButtons() {
         val source = FakeWatchNodeSource(listOf(WatchNode("watch-1", "Pixel Watch", false)))
-        val activity = settings(source)
+        settings(source)
         val listener = registeredListener()
         controller!!.pause()
 
@@ -156,7 +161,7 @@ class WatchCompanionTest {
         controller!!.resume()
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(callsBefore + 1, source.calls)
-        assertEquals(1, buttons(activity).childCount)
+        assertEquals(1, buttons().size)
     }
 
     @Test
@@ -166,9 +171,9 @@ class WatchCompanionTest {
         wearable.`when`<NodeClient> { Wearable.getNodeClient(context) }
             .thenThrow(IllegalStateException("Unavailable"))
 
-        val activity = settings(WearableWatchNodeSource(ApplicationProvider.getApplicationContext()))
+        settings(WearableWatchNodeSource(ApplicationProvider.getApplicationContext()))
 
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.watchSection).visibility)
+        assertFalse(sectionShown())
     }
 
     @Test
@@ -227,7 +232,8 @@ class WatchCompanionTest {
             val activity = settings(FakeWatchNodeSource(
                 listOf(WatchNode("watch-1", "Pixel Watch", true), WatchNode("watch-2", "Galaxy Watch", false)),
             ))
-            buttons(activity).getChildAt(0).performClick()
+            compose.onAllNodesWithTag(TestTags.WATCH_INSTALL, useUnmergedTree = true)[0].performClick()
+            shadowOf(Looper.getMainLooper()).idle()
 
             val intent = ArgumentCaptor.forClass(Intent::class.java)
             Mockito.verify(helpers.constructed().single()).startRemoteActivity(intent.capture() ?: Intent(), eq("watch-2"))
@@ -267,9 +273,16 @@ class WatchCompanionTest {
     private fun anyCapabilityListener(): CapabilityClient.OnCapabilityChangedListener =
         any(CapabilityClient.OnCapabilityChangedListener::class.java) ?: CapabilityClient.OnCapabilityChangedListener {}
 
-    private fun buttons(activity: SettingsActivity): LinearLayout = activity.findViewById(R.id.watchButtons)
+    private fun sectionShown(): Boolean = compose.onAllNodesWithTag(TestTags.WATCH_SECTION).fetchSemanticsNodes().isNotEmpty()
 
-    private fun status(activity: SettingsActivity): String = activity.findViewById<TextView>(R.id.watchStatus).text.toString()
+    /** The install buttons' labels, in order. */
+    private fun buttons(): List<String> =
+        compose.onAllNodesWithTag(TestTags.WATCH_INSTALL).fetchSemanticsNodes().map { node ->
+            node.config.getOrNull(SemanticsProperties.Text)?.joinToString("").orEmpty()
+        }
+
+    private fun status(): String =
+        compose.onNodeWithTag(TestTags.WATCH_STATUS).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString("")
 
     private fun node(id: String, name: String): Node = Mockito.mock(Node::class.java).also {
         Mockito.`when`(it.id).thenReturn(id)

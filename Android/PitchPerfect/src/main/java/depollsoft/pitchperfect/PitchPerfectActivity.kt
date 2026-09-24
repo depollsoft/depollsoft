@@ -1,47 +1,56 @@
 package depollsoft.pitchperfect
 
-import android.app.Dialog
 import android.content.Intent
 import android.content.res.Configuration
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.*
-import android.widget.FrameLayout
+import android.view.MotionEvent
+import android.view.WindowManager
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import bolts.Task
-import com.bindroid.converters.BoolConverter
-import com.bindroid.ui.UiBinder
-import com.bindroid.utils.uibind
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.wearable.Wearable
-import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import depollsoft.lib.ui.ChangelogViewer
 import depollsoft.lib.util.RunUtils
+import depollsoft.pitchperfect.ui.PlateTheme
 
 class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.TelemetryConsent.Host {
     private var consentRevision = -1
     private var startupDialogsShown = false
-    private lateinit var bottomNavigation: NavigationBarView
-    private lateinit var logInDialog: Dialog
-    private var optionsMenu: Menu? = null
-    private var menuSyncPending = false
-    private var selectedPage: Int = 0
-    private var songListFragment: SongListFragment? = null
     private var frameMonitor: FramePerformanceMonitor? = null
     private var adRequested = false
     private var adReady = false
+
+    /** The banner once it has been requested; the screen hosts it in the reserved slot. */
+    private var banner by mutableStateOf<AdView?>(null)
+
+    /** The adaptive banner's height, reserved before any ad arrives so nothing jumps. */
+    private var bannerHeight by mutableStateOf(0)
+
+    /** Which startup prompt is up, if any. */
+    internal var startupPrompt by mutableStateOf<StartupPrompt?>(null)
+
+    internal lateinit var songs: SongListState
+        private set
+
+    internal lateinit var pager: PagerState
+        private set
+
     private val adLoadRunnable =
         Runnable {
             if (isDestroyed || !adsShouldShow || adRequested || !AdConsent.canRequestAds(this)) return@Runnable
@@ -62,112 +71,45 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
             }
         }
 
-    private fun resolveSongListFragment(): SongListFragment? =
-        songListFragment
-            ?: supportFragmentManager.fragments.filterIsInstance<SongListFragment>().firstOrNull()
-
     val adsShouldShow: Boolean
         get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
 
-    /**
-     * Called when the activity is first created.
-     */
+    @OptIn(ExperimentalComposeUiApi::class)
     public override fun onCreate(savedInstanceState: Bundle?) {
         val startedAt = SystemClock.elapsedRealtime()
         super.onCreate(savedInstanceState)
+        volumeControlStream = AudioManager.STREAM_MUSIC
+        songs = SongListState(SongsModel.get())
 
-        logInDialog = LoginPrompt.buildDialog(this, false)
-
-        this.volumeControlStream = AudioManager.STREAM_MUSIC
-
-        this.setContentView(R.layout.pitchperfectview)
-
-        uibind(
-            R.id.adContainer,
-            "Visibility",
-            { (this::adsShouldShow) },
-            converter = BoolConverter.get(),
-        )
-        uibind(
-            R.id.removeAds,
-            "Visibility",
-            { (this::adsShouldShow) },
-            converter = BoolConverter.get(),
-        )
-
-        findViewById<View>(R.id.removeAds).setOnClickListener {
-            PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
-        }
-
-        bottomNavigation = findViewById(R.id.bottomNavigation)
-        val viewPager = findViewById<ViewPager2>(R.id.viewPager)
-
-        viewPager.offscreenPageLimit = 3
-        viewPager.adapter =
-            object : FragmentStateAdapter(this) {
-                override fun createFragment(position: Int): Fragment =
-                    when (position) {
-                        0 -> PitchPipeFragment()
-                        1 -> NoteListFragment()
-                        2 -> KeySignatureFragment()
-                        3 -> SongListFragment().also { songListFragment = it }
-                        else -> PitchPipeFragment()
+        setContent {
+            PlateTheme {
+                val pagerState = rememberPagerState { MainTab.entries.size }
+                pager = pagerState
+                val pitchPipe = remember { PitchPipeModel() }
+                MainScreen(
+                    pagerState,
+                    AdSlot(adsShouldShow, bannerHeight, banner) {
+                        PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
+                    },
+                    actions = {
+                        MainActions(
+                            onSongs = pagerState.settledPage == MainTab.SONGS.ordinal,
+                            songs = songs,
+                            openSettings = { startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java)) },
+                        )
+                    },
+                    modifier = androidx.compose.ui.Modifier.semantics { testTagsAsResourceId = true },
+                ) { tab ->
+                    val current = pagerState.settledPage == tab.ordinal
+                    when (tab) {
+                        MainTab.PITCH_PIPE -> PitchPipeScreen(pitchPipe, current)
+                        MainTab.NOTES -> NoteListScreen(current)
+                        MainTab.KEYS -> KeySignatureScreen(current)
+                        MainTab.SONGS -> SongListScreen(songs, current)
                     }
-
-                override fun getItemCount(): Int = 4
+                }
+                StartupPrompts(this)
             }
-
-        viewPager.registerOnPageChangeCallback(
-            object : ViewPager2.OnPageChangeCallback() {
-                override fun onPageSelected(position: Int) {
-                    if (selectedPage != position) {
-                        selectedPage = position
-                        // Toolbar actions change only once the page settles, so the
-                        // menu update never lands on the first animation frame.
-                        if (viewPager.scrollState == ViewPager2.SCROLL_STATE_IDLE) {
-                            syncSongMenuItems()
-                        } else {
-                            menuSyncPending = true
-                        }
-                    }
-                    val itemId =
-                        when (position) {
-                            0 -> R.id.pitchpipe_item
-                            1 -> R.id.notes_item
-                            2 -> R.id.keys_item
-                            3 -> R.id.songs_item
-                            else -> R.id.pitchpipe_item
-                        }
-                    if (bottomNavigation.selectedItemId != itemId) {
-                        bottomNavigation.selectedItemId = itemId
-                    }
-                }
-
-                override fun onPageScrollStateChanged(state: Int) {
-                    if (state == ViewPager2.SCROLL_STATE_IDLE && menuSyncPending) {
-                        menuSyncPending = false
-                        syncSongMenuItems()
-                    }
-                }
-            },
-        )
-
-        bottomNavigation.setOnItemSelectedListener {
-            val position =
-                when (it.itemId) {
-                    R.id.pitchpipe_item -> 0
-                    R.id.notes_item -> 1
-                    R.id.keys_item -> 2
-                    R.id.songs_item -> 3
-                    else -> 0
-                }
-            if (viewPager.currentItem != position) {
-                // Pages stay resident and static artwork is cached, so the
-                // standard transition no longer inflates or decodes mid-swipe.
-                viewPager.setCurrentItem(position, true)
-            }
-            scheduleAdLoadAfterIdle()
-            true
         }
 
         PurchaseService.bind(this) { SettingsModel.areAdsRemoved = PurchaseService.areAdsRemoved }
@@ -181,91 +123,6 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         super.onConfigurationChanged(newConfig)
         reserveBannerSpace()
         if (adReady && adsShouldShow) loadBanner()
-    }
-
-    override fun onRestoreInstanceState(state: Bundle) {
-        super.onRestoreInstanceState(state)
-        // tabHost.restoreInstanceState("tabs", state);
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        // tabHost.saveInstanceState("tabs", outState);
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate every action once; page changes only toggle visibility. The
-        // gear stays a visible action on every tab, as on iOS. AppCompat's
-        // inflater honors app:showAsAction; the framework one ignores it.
-        menuInflater.inflate(R.menu.mainmenu, menu)
-        menuInflater.inflate(R.menu.songsmenu, menu)
-        menu.findItem(R.id.settingsMenuItem).setOnMenuItemClickListener {
-            startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java))
-            true
-        }
-        menu.findItem(R.id.editSongsMenuItem).setOnMenuItemClickListener {
-            // Resolve at click time: the menu can build before the page-3
-            // fragment transaction commits.
-            resolveSongListFragment()?.toggleEditingSongs()
-            true
-        }
-        menu.findItem(R.id.sortMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.sortSongs()
-            true
-        }
-        menu.findItem(R.id.addFromListMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.openAddSongsFromList()
-            true
-        }
-        menu.findItem(R.id.manageListsMenuItem).setOnMenuItemClickListener {
-            resolveSongListFragment()?.openManageSetLists()
-            true
-        }
-        optionsMenu = menu
-        syncSongMenuItems(menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        syncSongMenuItems(menu)
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    /** Shows the song actions only on the Songs page without rebuilding the menu. */
-    internal fun syncSongMenuItems(menu: Menu? = optionsMenu) {
-        val editItem = menu?.findItem(R.id.editSongsMenuItem) ?: return
-        val sortItem = menu.findItem(R.id.sortMenuItem) ?: return
-        val onSongs = selectedPage == 3
-        val fragment = resolveSongListFragment()
-        val editing = onSongs && fragment?.isEditingSongs() == true
-        val title = getString(if (editing) R.string.StopEditing else R.string.EditSongList)
-        if (editItem.title?.toString() != title) {
-            editItem.title = title
-            editItem.setIcon(if (editing) R.drawable.ic_check else R.drawable.ic_edit_button)
-        }
-        if (editItem.isVisible != onSongs) editItem.isVisible = onSongs
-        if (sortItem.isVisible != editing) sortItem.isVisible = editing
-
-        // Edit mode carries the list's contents actions; the list itself is managed from a long
-        // press on its selector position and from the Set Lists screen.
-        setVisible(menu, R.id.addFromListMenuItem, editing)
-        setVisible(menu, R.id.manageListsMenuItem, editing)
-        val canAdd = editing && fragment?.canAddSongsFromOtherLists() == true
-        menu.findItem(R.id.addFromListMenuItem)?.let {
-            if (it.isEnabled != canAdd) it.isEnabled = canAdd
-            // A disabled item says why, instead of leaving the person to guess.
-            val title = getString(if (canAdd || !editing) R.string.SetListAddFrom else R.string.SetListAddFromNothing)
-            if (it.title?.toString() != title) it.title = title
-        }
-    }
-
-    private fun setVisible(
-        menu: Menu,
-        itemId: Int,
-        visible: Boolean,
-    ) {
-        val item = menu.findItem(itemId) ?: return
-        if (item.isVisible != visible) item.isVisible = visible
     }
 
     override fun onStart() {
@@ -289,6 +146,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
 
     override fun onDestroy() {
         window.decorView.removeCallbacks(adLoadRunnable)
+        banner?.destroy()
         super.onDestroy()
     }
 
@@ -300,9 +158,8 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     override fun onResume() {
         super.onResume()
         if (consentRevision != AdConsent.revision) {
-            val container = findViewById<FrameLayout>(R.id.adContainer)
-            for (index in 0 until container.childCount) (container.getChildAt(index) as? AdView)?.destroy()
-            container.removeAllViews()
+            banner?.destroy()
+            banner = null
             adRequested = false
             adReady = false
             consentRevision = AdConsent.revision
@@ -312,15 +169,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         } else {
             depollsoft.lib.privacy.TelemetryConsent.showIfNeeded(this)
         }
-
-        runOnUiThread(
-            Runnable {
-                if (handlingResult) {
-                    handlingResult = false
-                    return@Runnable
-                }
-            },
-        )
+        handlingResult = false
 
         if (SettingsModel.wakeLock) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -330,10 +179,14 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     }
 
     override fun onPrivacyChoicesClosed() {
-        if (adsShouldShow) AdConsent.gather(this) {
-            scheduleAdLoadAfterIdle()
+        if (adsShouldShow) {
+            AdConsent.gather(this) {
+                scheduleAdLoadAfterIdle()
+                showStartupDialogs()
+            }
+        } else {
             showStartupDialogs()
-        } else showStartupDialogs()
+        }
     }
 
     private fun showStartupDialogs() {
@@ -342,13 +195,15 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         // First launch belongs to the first pitch: the login prompt waits for the next session.
         val isFirstLaunchEver = RunUtils.runOnce("firstLaunch")
         if (!isFirstLaunchEver && Firebase.auth.currentUser == null && RunUtils.runOnce("loginDialog")) {
-            logInDialog.show()
-        } else if (!isFirstLaunchEver) {
-            val viewer = ChangelogViewer(this, this.getString(R.string.Changelog))
-            viewer.setTitle("Pitch Perfect Changelog")
-            viewer.setIcon(R.mipmap.ic_launcher)
-            viewer.showIfAppropriate()
+            startupPrompt = StartupPrompt.LOGIN
+        } else if (!isFirstLaunchEver && Changelog.shouldShow()) {
+            startupPrompt = StartupPrompt.CHANGELOG
         }
+    }
+
+    /** Switches to [tab], as a tap on its navigation item does. */
+    internal fun showTab(tab: MainTab) {
+        if (::pager.isInitialized) pager.requestScrollToPage(tab.ordinal)
     }
 
     private fun scheduleAdLoadAfterIdle() {
@@ -358,31 +213,15 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     }
 
     private fun reserveBannerSpace() {
-        val adContainer = findViewById<FrameLayout>(R.id.adContainer)
-        val reservedSize = getAdSize()
-        adContainer.layoutParams =
-            adContainer.layoutParams.apply {
-                height = reservedSize.getHeightInPixels(this@PitchPerfectActivity)
-            }
+        bannerHeight = getAdSize().getHeightInPixels(this)
     }
 
     private fun loadBanner() {
         if (!AdConsent.canRequestAds(this)) return
-        val adContainer = findViewById<FrameLayout>(R.id.adContainer)
-        adContainer.removeAllViews()
+        banner?.destroy()
         reserveBannerSpace()
         val adView = AdView(this)
-        adContainer.addView(adView)
-        // Create an ad request. Check your logcat output for the hashed device ID
-        // to get test ads on a physical device, e.g.,
-        // "Use AdRequest.Builder.addTestDevice("ABCDE0123") to get test ads on this
-        // device."
-        val adRequest: AdRequest =
-            AdRequest
-                .Builder()
-                .build()
         val adSize = getAdSize()
-        // Step 4 - Set the adaptive ad size on the ad view.
         adView.setAdSize(adSize)
         adView.adUnitId = resources.getString(R.string.ad_unit_id)
         if (PerformanceDiagnostics.enabled) {
@@ -402,19 +241,13 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
                     }
                 }
         }
-
-        // Step 5 - Start loading the ad in the background.
-        adView.loadAd(adRequest)
+        banner = adView
+        adView.loadAd(AdRequest.Builder().build())
     }
 
     private fun getAdSize(): AdSize {
-        // Step 2 - Determine the screen width (less decorations) to use for the ad width.
         val density: Float = resources.displayMetrics.density
-
-        @Suppress("DEPRECATION")
-        val widthPixels: Float = resources.displayMetrics.widthPixels.toFloat()
-        val adWidth = (widthPixels / density).toInt()
-        // Step 3 - Get adaptive ad size and return for setting on the ad view.
+        val adWidth = (resources.displayMetrics.widthPixels / density).toInt()
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
     }
 
@@ -422,6 +255,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         private const val AD_INITIALIZATION_DELAY_MS = 5_000L
         private const val COMPILATION_STATUS_DELAY_MS = 10_000L
 
+        /** Set by a screen this one started, so returning from it does not replay startup work. */
         @JvmField
         internal var handlingResult: Boolean = false
     }

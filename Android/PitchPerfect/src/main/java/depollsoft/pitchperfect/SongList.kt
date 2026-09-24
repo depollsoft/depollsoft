@@ -1,45 +1,59 @@
 package depollsoft.pitchperfect
 
-import com.bindroid.trackable.*
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.getField
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.state.StateField
+import depollsoft.lib.state.StateList
 import depollsoft.lib.toMap
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.json.JSONObject
 
+/**
+ * One set list: its songs in order, its name and its place among the lists.
+ *
+ * Every change to the name or the songs is stored at once — to the preferences and, when signed
+ * in, to the list's Firestore document — unless it arrives from Firestore ([isRestoring]).
+ * Mutate the songs through the methods here so that happens; [songs] itself is observable, so
+ * composables that read it recompose.
+ */
 class SongList constructor() {
     private var reference: DocumentReference? = null
     lateinit var id: String
-    var name: String by trackable("")
-    var songs: TrackableCollection<PitchedSong> by trackable(TrackableCollection<PitchedSong>())
+
+    private val nameField = StateField("")
+    var name: String
+        get() = nameField.get()
+        set(value) {
+            if (nameField.get() == value) return
+            nameField.set(value)
+            changed()
+        }
+
+    private val songsField = StateField(StateList<PitchedSong>())
+
+    /** The songs, in the list's order. Replacing the whole list stores it. */
+    var songs: StateList<PitchedSong>
+        get() = songsField.get()
+        set(value) {
+            songsField.set(value)
+            changed()
+        }
 
     /**
      * Position among the custom lists, 0-based, or null on a list that has never been ordered.
      *
-     * Deliberately outside the store-on-change tracker below: a drag rewrites `order` on every
-     * custom list, and the design contract commits the new sequence once on drop rather than once
-     * per step.
+     * Deliberately not stored on change: a drag rewrites `order` on every custom list, and the
+     * design contract commits the new sequence once on drop rather than once per step.
      */
-    var order: Long? by trackable()
+    var order: Long? by StateField(null)
+
     val isRestoring =
         object : ThreadLocal<Boolean>() {
             override fun initialValue(): Boolean = false
         }
-
-    init {
-        track({
-            songs.track()
-            name
-        }) {
-            if (!isRestoring.get()!! && this@SongList::id.isInitialized) {
-                storeValue()
-            }
-            keepTracking
-        }
-    }
 
     constructor(id: String) : this() {
         this.id = id
@@ -59,9 +73,9 @@ class SongList constructor() {
         @Suppress("UNCHECKED_CAST")
         val rawSongs = snapshot.getField<Any>("songs")!! as List<Any>
         try {
-            // Set the guard before changing name: name is trackable and used to
-            // write this document, so restoring it unguarded feeds the snapshot
-            // straight back into Firestore before songs have been restored.
+            // Set the guard before changing name: a name change is stored, and storing it
+            // unguarded would feed the snapshot straight back into Firestore before the songs
+            // have been restored.
             isRestoring.set(true)
             name = snapshot.getString("name")!!
             order = snapshot.getLong("order")
@@ -70,77 +84,102 @@ class SongList constructor() {
                     @Suppress("UNCHECKED_CAST")
                     JsonSerializer.deserialize(JSONObject(it as Map<String, Any?>)) as PitchedSong
                 }
-            val changed =
-                songs.size != newSongs.size ||
-                    songs.zip(newSongs).any {
-                        it.first.id != it.second.id ||
-                            it.first.name != it.second.name ||
-                            it.first.key != it.second.key
-                    }
-            if (changed) {
-                songs.become(newSongs) { left, right ->
-                    left.id == right.id && left.name == right.name && left.key == right.key
-                }
+            if (!sameSongs(songs, newSongs)) {
+                // Songs that did not change keep their instance, so a row or an editor holding
+                // one still holds a song in the list.
+                songs.replaceWith(newSongs.map { new -> songs.firstOrNull { sameSong(it, new) } ?: new })
             }
         } finally {
             isRestoring.set(false)
         }
     }
 
+    private fun sameSong(
+        left: PitchedSong,
+        right: PitchedSong,
+    ): Boolean = left.id == right.id && left.name == right.name && left.key == right.key
+
+    private fun sameSongs(
+        left: List<PitchedSong>,
+        right: List<PitchedSong>,
+    ): Boolean = left.size == right.size && left.zip(right).all { sameSong(it.first, it.second) }
+
     fun sortSongs() {
-        songs.transaction {
-            songs.sortBy { it.name.lowercase() }
-        }
+        songs.replaceWith(songs.sortedBy { it.name.lowercase() })
+        changed()
     }
 
     fun addSong(song: PitchedSong) {
-        if (!songs.contains(song)) songs.add(song)
+        if (songs.contains(song)) return
+        songs.add(song)
+        changed()
     }
 
-    fun canMoveDown(s: PitchedSong): Boolean {
-        val index = songs.indexOf(s)
-        return index < songs.size - 1
+    /** Appends [added] as one change. */
+    fun addSongs(added: List<PitchedSong>) {
+        if (added.isEmpty()) return
+        songs.transaction { addAll(added) }
+        changed()
     }
 
-    fun canMoveUp(s: PitchedSong): Boolean {
-        val index = songs.indexOf(s)
-        return index > 0
-    }
+    fun canMoveDown(s: PitchedSong): Boolean = songs.indexOf(s) < songs.size - 1
+
+    fun canMoveUp(s: PitchedSong): Boolean = songs.indexOf(s) > 0
 
     fun moveDown(s: PitchedSong) {
         if (!canMoveDown(s)) return
-        songs.transaction {
-            val index = indexOf(s)
-            removeAt(index)
-            add(index + 1, s)
-        }
+        move(songs.indexOf(s), songs.indexOf(s) + 1)
+        changed()
     }
 
     fun moveUp(s: PitchedSong) {
         if (!canMoveUp(s)) return
+        move(songs.indexOf(s), songs.indexOf(s) - 1)
+        changed()
+    }
+
+    /**
+     * One step of a drag: moves the song without storing, since a drag commits once, on drop,
+     * through [notifyOfChange].
+     */
+    fun moveWithoutStoring(
+        from: Int,
+        to: Int,
+    ) {
+        if (from == to || from !in songs.indices || to !in songs.indices) return
+        move(from, to)
+    }
+
+    private fun move(
+        from: Int,
+        to: Int,
+    ) {
         songs.transaction {
-            val index = indexOf(s)
-            removeAt(index)
-            add(index - 1, s)
+            val song = removeAt(from)
+            add(to, song)
         }
     }
 
     fun removeSong(song: PitchedSong) {
-        songs.remove(song)
+        if (songs.remove(song)) changed()
     }
 
     fun resetSongs() {
         songs.clear()
+        changed()
     }
 
-    fun notifyOfChange() {
-        songs.updateTrackers()
+    /** Stores the list after a change made to one of its songs, or a drag's drop. */
+    fun notifyOfChange() = changed()
+
+    private fun changed() {
+        if (!isRestoring.get()!! && this::id.isInitialized) storeValue()
     }
 
     /**
      * Set once the list has been deleted. A stale holder — an editor opened on one of its songs,
-     * an adapter not yet swapped — can still mutate it afterwards, and the store-on-change tracker
-     * would otherwise put the list straight back into the map and recreate its document.
+     * a screen not yet recomposed — can still mutate it afterwards, and storing that would put
+     * the list straight back into the map and recreate its document.
      */
     var isDeleted: Boolean = false
         private set
