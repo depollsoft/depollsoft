@@ -8,7 +8,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import android.content.res.Configuration
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatDelegate
-import com.bindroid.trackable.TrackableCollection
+import depollsoft.lib.state.StateList
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
@@ -53,7 +53,8 @@ class PitchPerfectApplication : RichApplication() {
         JsonSerializer.registerAlias(java.lang.Boolean.TYPE, "bool")
         JsonSerializer.registerAlias(java.lang.Double::class.java, "Double")
         JsonSerializer.registerAlias(java.lang.Double.TYPE, "double")
-        JsonSerializer.registerAlias(TrackableCollection::class.java, "List")
+        // Bindroid-era versions stored every list as "List"; StateList takes that name over.
+        JsonSerializer.registerAlias(StateList::class.java, "List")
         AppCompatDelegate.setDefaultNightMode(themeMode)
         extraInit()
         PerformanceDiagnostics.logDuration(

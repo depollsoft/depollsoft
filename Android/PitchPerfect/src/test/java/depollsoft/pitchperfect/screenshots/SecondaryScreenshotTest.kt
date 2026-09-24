@@ -16,7 +16,9 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.pressSaveSong
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.scrollSettingsToEnd
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.tickAddableSong
 import org.junit.After
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -28,8 +30,11 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class SecondaryScreenshotTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     @Before
-    fun setUp() = ScreenshotSupport.setUp()
+    fun setUp() = ScreenshotSupport.setUp(compose)
 
     @After
     fun tearDown() = ScreenshotSupport.tearDown()

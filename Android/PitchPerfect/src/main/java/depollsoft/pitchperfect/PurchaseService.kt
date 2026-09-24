@@ -4,7 +4,7 @@ import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.billingclient.api.*
-import com.bindroid.trackable.trackable
+import depollsoft.lib.state.StateField
 import depollsoft.lib.activity.RichApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,9 +93,14 @@ object PurchaseService {
         return true
     }
 
-    var areAdsRemoved: Boolean by trackable(false) {
-        SettingsModel.areAdsRemoved = it
-    }
+    private val adsRemoved = StateField(false)
+
+    var areAdsRemoved: Boolean
+        get() = adsRemoved.get()
+        set(value) {
+            adsRemoved.set(value)
+            SettingsModel.areAdsRemoved = value
+        }
 
     fun beginRemoveAds(
         activity: AppCompatActivity,

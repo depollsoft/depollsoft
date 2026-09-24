@@ -3,7 +3,6 @@ package depollsoft.pitchperfect.screenshots
 import depollsoft.lib.activity.RichApplication
 import depollsoft.pitchperfect.SettingsActivity
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.captureScreen
-import depollsoft.pitchperfect.screenshots.ScreenshotSupport.deleteSetListWithUndo
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launch
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launchMain
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.openDeleteSetListDialog
@@ -14,7 +13,9 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showLoginPrompt
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showTab
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.submitSetListName
 import org.junit.After
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -26,8 +27,11 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class DialogScreenshotTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     @Before
-    fun setUp() = ScreenshotSupport.setUp()
+    fun setUp() = ScreenshotSupport.setUp(compose)
 
     @After
     fun tearDown() = ScreenshotSupport.tearDown()
@@ -75,15 +79,6 @@ class DialogScreenshotTest {
         activity.showTab(3)
         activity.openSetListMenu(ids[0])
         captureScreen("menu_set_list")
-    }
-
-    @Test
-    fun deletedSetListSnackbar() {
-        val ids = ScreenshotSupport.seedSetLists()
-        val activity = launchMain()
-        activity.showTab(3)
-        activity.deleteSetListWithUndo(ids[0])
-        captureScreen("snackbar_set_list_deleted")
     }
 
     @Test

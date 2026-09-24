@@ -1,246 +1,240 @@
 package depollsoft.pitchperfect
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.view.AccessibilityDelegateCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.button.MaterialButton
-import depollsoft.pitchperfect.converters.KeyNameConverter
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import depollsoft.pitchperfect.ui.PlateText
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import depollsoft.pitchperfect.lib.PitchedSong
+import depollsoft.pitchperfect.ui.DrawableIcon
+import depollsoft.pitchperfect.ui.LegacyText
+import depollsoft.pitchperfect.ui.PlateActionIcon
+import depollsoft.pitchperfect.ui.PlateBackground
+import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateMenuItem
+import depollsoft.pitchperfect.ui.PlateOverflowMenu
+import depollsoft.pitchperfect.ui.PlatePrimaryButton
+import depollsoft.pitchperfect.ui.PlateSectionHeader
+import depollsoft.pitchperfect.ui.PlateTheme
+import depollsoft.pitchperfect.ui.PlateTopBar
+import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.plateText
 
 /**
- * "Add songs": a sectioned checklist of every song the current set list does not already have.
- *
- * One section per other list, in list order; songs whose title (ignoring case) and key already
- * exist in the target are left out entirely rather than shown disabled. Confirming appends deep
- * copies with fresh ids, in the order the sections present them.
+ * What "Add songs" offers and what has been ticked. One section per other list, in list order;
+ * songs whose title (ignoring case) and key already exist in the target are left out entirely.
  */
-class AddSongsFromListActivity : AppCompatActivity() {
-    private val model get() = SongsModel.get()
-    private lateinit var targetId: String
-    private lateinit var adapter: AddableAdapter
-    private var confirmButton: MaterialButton? = null
-    private var confirmMenuItem: MenuItem? = null
-    private var selectAllMenuItem: MenuItem? = null
+@Stable
+class AddableSongs(
+    private val model: SongsModel,
+    val targetId: String,
+) {
+    val sections: List<Pair<String, List<PitchedSong>>> =
+        model.addableSongs(targetId).map { (list, songs) -> model.displayName(list) to songs }
+
+    private val offered: List<PitchedSong> = sections.flatMap { it.second }
 
     /**
      * The songs ticked so far, by identity: song ids are only promised unique within one list,
      * and two source lists could carry the same id.
      */
-    private val selection: MutableSet<PitchedSong> =
-        java.util.Collections.newSetFromMap(java.util.IdentityHashMap())
+    private val ticked = mutableStateListOf<PitchedSong>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.addsongsfromlistview)
-        setTitle(R.string.AddSongsTitle)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    val count: Int get() = ticked.size
+    val total: Int get() = offered.size
 
-        targetId = intent.getStringExtra(LIST_EXTRA) ?: model.currentListId
+    fun isTicked(song: PitchedSong): Boolean = ticked.any { it === song }
 
-        val rows = buildRows()
-        adapter = AddableAdapter(rows)
-        val list = findViewById<RecyclerView>(R.id.addableSongList)
-        list.layoutManager = LinearLayoutManager(this)
-        list.adapter = adapter
-        val divider = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        ContextCompat.getDrawable(this, R.drawable.divider_hairline)?.let { divider.setDrawable(it) }
-        list.addItemDecoration(divider)
-
-        confirmButton =
-            findViewById<MaterialButton>(R.id.addSongsConfirmButton).also {
-                it.setOnClickListener { confirm() }
-            }
-        if (rows.isEmpty()) {
-            list.visibility = View.GONE
-            findViewById<TextView>(R.id.addableEmptyText).visibility = View.VISIBLE
-        }
-        syncConfirmAction()
+    fun toggle(song: PitchedSong) {
+        val index = ticked.indexOfFirst { it === song }
+        if (index >= 0) ticked.removeAt(index) else ticked.add(song)
     }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.addsongsmenu, menu)
-        confirmMenuItem = menu.findItem(R.id.confirmAddSongsMenuItem)
-        selectAllMenuItem = menu.findItem(R.id.selectAllSongsMenuItem)
-        syncConfirmAction()
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean =
-        when (item.itemId) {
-            R.id.confirmAddSongsMenuItem -> {
-                confirm()
-                true
-            }
-
-            R.id.selectAllSongsMenuItem -> {
-                toggleSelectAll()
-                true
-            }
-
-            android.R.id.home -> {
-                finish()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-
-    /** Copies the ticked songs into the target list and closes. Visible for the screen tests. */
-    internal fun confirm() {
-        if (selection.isEmpty()) return
-        val ordered = adapter.songRows().map { it.song }.filter { it in selection }
-        model.copySongs(ordered, targetId)
-        PitchPerfectActivity.handlingResult = true
-        setResult(RESULT_OK)
-        finish()
-    }
-
-    /** The current tick count, for the screen tests. */
-    internal val selectedCount: Int get() = selection.size
 
     /** Ticks every offered song, or clears the ticks once they are all in. */
-    internal fun toggleSelectAll() {
-        val all = adapter.songRows().map { it.song }
-        if (all.isEmpty()) return
-        if (selection.size == all.size) selection.clear() else selection.addAll(all)
-        adapter.notifyDataSetChanged()
-        syncConfirmAction()
+    fun toggleAll() {
+        if (offered.isEmpty()) return
+        val all = ticked.size == offered.size
+        ticked.clear()
+        if (!all) ticked.addAll(offered)
     }
 
-    internal fun toggle(song: PitchedSong) {
-        if (!selection.remove(song)) selection.add(song)
-        adapter.notifyDataSetChanged()
-        syncConfirmAction()
+    /** Appends deep copies of the ticked songs, in the order the sections present them. */
+    fun confirm(): Boolean {
+        if (ticked.isEmpty()) return false
+        model.copySongs(offered.filter { isTicked(it) }, targetId)
+        return true
     }
+}
 
-    private fun syncConfirmAction() {
-        val count = selection.size
-        val label =
-            if (count == 0) {
-                getString(R.string.AddSongsConfirm)
-            } else {
-                resources.getQuantityString(R.plurals.AddSongsCount, count, count)
-            }
-        confirmButton?.text = label
-        confirmButton?.isEnabled = count > 0
-        confirmMenuItem?.isEnabled = count > 0
-        confirmMenuItem?.title = label
-        // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
-        confirmMenuItem?.icon?.alpha = if (count > 0) 255 else DISABLED_ICON_ALPHA
-        val total = adapter.songRows().size
-        selectAllMenuItem?.isVisible = total > 0
-        selectAllMenuItem?.setTitle(
-            if (total > 0 && count == total) R.string.AddSongsClearSelection else R.string.AddSongsSelectAll,
-        )
-    }
+/** "Add songs": a sectioned checklist of every song the current set list does not already have. */
+class AddSongsFromListActivity : AppCompatActivity() {
+    internal lateinit var addable: AddableSongs
+        private set
 
-    private fun buildRows(): List<Row> =
-        model.addableSongs(targetId).flatMap { (list, songs) ->
-            listOf<Row>(Row.Section(model.displayName(list))) + songs.map { Row.Song(it) }
-        }
-
-    private sealed class Row {
-        data class Section(
-            val title: String,
-        ) : Row()
-
-        data class Song(
-            val song: PitchedSong,
-        ) : Row()
-    }
-
-    private inner class AddableAdapter(
-        private val rows: List<Row>,
-    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        fun songRows(): List<Row.Song> = rows.filterIsInstance<Row.Song>()
-
-        override fun getItemCount(): Int = rows.size
-
-        override fun getItemViewType(position: Int): Int =
-            if (rows[position] is Row.Section) TYPE_SECTION else TYPE_SONG
-
-        override fun onCreateViewHolder(
-            parent: ViewGroup,
-            viewType: Int,
-        ): RecyclerView.ViewHolder {
-            val inflater = LayoutInflater.from(parent.context)
-            return if (viewType == TYPE_SECTION) {
-                SectionHolder(inflater.inflate(R.layout.addablesongsectionview, parent, false))
-            } else {
-                SongHolder(inflater.inflate(R.layout.addablesongitemview, parent, false))
-            }
-        }
-
-        override fun onBindViewHolder(
-            holder: RecyclerView.ViewHolder,
-            position: Int,
-        ) {
-            when (val row = rows[position]) {
-                is Row.Section -> (holder as SectionHolder).title.text = row.title
-                is Row.Song -> {
-                    val songHolder = holder as SongHolder
-                    val song = row.song
-                    songHolder.title.text = song.name
-                    songHolder.key.text =
-                        KeyNameConverter()
-                            .convertToTarget(song.key, CharSequence::class.java) as? CharSequence
-                    val ticked = song in selection
-                    songHolder.check.visibility = if (ticked) View.VISIBLE else View.INVISIBLE
-                    songHolder.itemView.isSelected = ticked
-                    songHolder.itemView.tag = song.id
-                    songHolder.itemView.setOnClickListener { toggle(song) }
-                    // A row is a checkbox to a screen reader: it has a checked state, not a
-                    // selected one, and toggling it announces the change.
-                    ViewCompat.setAccessibilityDelegate(
-                        songHolder.itemView,
-                        object : AccessibilityDelegateCompat() {
-                            override fun onInitializeAccessibilityNodeInfo(
-                                host: View,
-                                info: AccessibilityNodeInfoCompat,
-                            ) {
-                                super.onInitializeAccessibilityNodeInfo(host, info)
-                                info.className = android.widget.CheckBox::class.java.name
-                                info.isCheckable = true
-                                info.isChecked = song in selection
-                            }
-                        },
-                    )
+    @OptIn(ExperimentalComposeUiApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setTitle(R.string.AddSongsTitle)
+        val model = SongsModel.get()
+        addable = AddableSongs(model, intent.getStringExtra(LIST_EXTRA) ?: model.currentListId)
+        setContent {
+            PlateTheme {
+                Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+                    val count = addable.count
+                    val label =
+                        if (count == 0) stringResource(R.string.AddSongsConfirm) else pluralStringResource(R.plurals.AddSongsCount, count, count)
+                    PlateTopBar(stringResource(R.string.AddSongsTitle), navigationUp = ::finish) {
+                        // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
+                        PlateActionIcon(R.drawable.ic_check, label, ::confirm, Modifier.testTag(TestTags.CONFIRM_ADD), enabled = count > 0)
+                        if (addable.total > 0) {
+                            PlateOverflowMenu(
+                                listOf(
+                                    PlateMenuItem(
+                                        stringResource(
+                                            if (count == addable.total) R.string.AddSongsClearSelection else R.string.AddSongsSelectAll,
+                                        ),
+                                        TestTags.SELECT_ALL,
+                                        onClick = addable::toggleAll,
+                                    ),
+                                ),
+                            )
+                        }
+                    }
+                    AddSongsFromListScreen(addable, label, ::confirm)
                 }
             }
         }
     }
 
-    private class SectionHolder(
-        view: View,
-    ) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.findViewById(R.id.sectionHeaderText)
-    }
-
-    private class SongHolder(
-        view: View,
-    ) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.findViewById(R.id.addableSongTitle)
-        val key: TextView = view.findViewById(R.id.addableSongKey)
-        val check: ImageView = view.findViewById(R.id.addableSongCheck)
+    /** Copies the ticked songs into the target list and closes. */
+    internal fun confirm() {
+        if (!addable.confirm()) return
+        PitchPerfectActivity.handlingResult = true
+        setResult(RESULT_OK)
+        finish()
     }
 
     companion object {
         const val LIST_EXTRA = "depollsoft.pitchperfect.AddSongsFromList.listId"
-        private const val DISABLED_ICON_ALPHA = 97
-        private const val TYPE_SECTION = 0
-        private const val TYPE_SONG = 1
+    }
+}
+
+@Composable
+fun AddSongsFromListScreen(
+    addable: AddableSongs,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+) {
+    val colors = plateColors
+    val context = LocalContext.current
+    PlateBackground {
+        Column(Modifier.fillMaxSize()) {
+            if (addable.sections.isEmpty()) {
+                Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 32.dp), contentAlignment = Alignment.Center) {
+                    LegacyText(
+                        stringResource(R.string.NoSongsToAdd),
+                        size = 15.sp,
+                        color = colors.inkSecondary,
+                        typeface = remember(context) { PlateFonts.oswaldTypeface(context) },
+                        letterSpacing = 0.12f,
+                        align = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().testTag(TestTags.NOTHING_TO_ADD),
+                    )
+                }
+            } else {
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(TestTags.ADDABLE_LIST)) {
+                    addable.sections.forEach { (title, songs) ->
+                        item {
+                            PlateSectionHeader(title, Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 6.dp))
+                            Hairline()
+                        }
+                        items(songs) { song ->
+                            AddableRow(song, addable.isTicked(song)) { addable.toggle(song) }
+                            Hairline()
+                        }
+                    }
+                }
+            }
+            PlatePrimaryButton(
+                confirmLabel,
+                Modifier.padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 16.dp).fillMaxWidth().testTag(TestTags.CONFIRM_ADD_BUTTON),
+                enabled = addable.count > 0,
+                onClick = onConfirm,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddableRow(
+    song: PitchedSong,
+    ticked: Boolean,
+    onToggle: () -> Unit,
+) {
+    val colors = plateColors
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .testTag(TestTags.addableRow(song.id))
+            .background(if (pressed) colors.accent else Color.Transparent)
+            // A row is a checkbox to a screen reader: it has a checked state, and toggling it
+            // announces the change.
+            .clickable(interaction, indication = null, role = Role.Checkbox, onClick = onToggle)
+            .semantics(mergeDescendants = true) { toggleableState = ToggleableState(ticked) },
+        verticalAlignment = ViewCenterVertically,
+    ) {
+        PlateText(
+            song.name.orEmpty(),
+            style = plateText(20.sp, if (pressed) colors.onAccent else colors.ink, PlateFonts.condensed),
+            modifier = Modifier.weight(1f).padding(start = 20.dp, top = 14.dp, bottom = 14.dp),
+        )
+        PlateText(
+            song.key?.let { NoteText.keyName(it) } ?: androidx.compose.ui.text.AnnotatedString(""),
+            style = plateText(18.sp, if (pressed) colors.onAccent else colors.inkSecondary, PlateFonts.mono, letterSpacing = 0.06f),
+            modifier = Modifier.padding(end = 12.dp),
+        )
+        Box(Modifier.width(44.dp).padding(horizontal = 10.dp).alpha(if (ticked) 1f else 0f), contentAlignment = Alignment.Center) {
+            DrawableIcon(R.drawable.ic_check, colors.ink)
+        }
     }
 }

@@ -4,17 +4,26 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Looper
-import android.view.View
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import depollsoft.lib.privacy.PrivacyChoices
+import depollsoft.pitchperfect.MainTab
 import depollsoft.pitchperfect.PitchPerfectActivity
 import depollsoft.pitchperfect.PurchaseService
 import depollsoft.pitchperfect.R
 import depollsoft.pitchperfect.ScreenTestSupport
-import depollsoft.pitchperfect.SongListFragment
+import depollsoft.pitchperfect.SettingsActivity
+import depollsoft.pitchperfect.SettingsDialog
 import depollsoft.pitchperfect.SongsModel
+import depollsoft.pitchperfect.TestTags
 import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.PitchedSong
@@ -28,7 +37,7 @@ import java.time.Duration
  *
  * Every golden in `src/test/screenshots` was first recorded from the View implementation and the
  * Compose screens were diffed against it. The only calls that know how a screen is built are in
- * this file: launching, switching tabs and entering edit mode.
+ * this file: launching, switching tabs, entering edit mode and opening prompts.
  */
 internal object ScreenshotSupport {
     const val PHONE = "w411dp-h891dp-xxhdpi"
@@ -36,6 +45,9 @@ internal object ScreenshotSupport {
     const val TABLET = "w800dp-h1280dp-xhdpi"
 
     private val controllers = mutableListOf<ActivityController<*>>()
+
+    /** The test's compose rule, which finds nodes in whichever activity is showing. */
+    lateinit var compose: ComposeTestRule
 
     /** A silent player: the goldens are about pixels, and Robolectric's audio is irrelevant. */
     private val silentPlayer =
@@ -45,7 +57,8 @@ internal object ScreenshotSupport {
             override fun stop(n: Note) = Unit
         }
 
-    fun setUp() {
+    fun setUp(rule: ComposeTestRule) {
+        compose = rule
         ScreenTestSupport.startFromFirstLaunch()
         ScreenTestSupport.ensureFirebaseApp()
         PurchaseService.areAdsRemoved = true
@@ -66,7 +79,12 @@ internal object ScreenshotSupport {
         ScreenTestSupport.finishScreenTest(open.lastOrNull())
     }
 
-    fun settle() = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
+    /** Lets posted work and animations finish: the main looper's, then Compose's own clock. */
+    fun settle() {
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
+        if (::compose.isInitialized) compose.waitForIdle()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
 
     fun <T : Activity> launch(
         type: Class<T>,
@@ -84,111 +102,79 @@ internal object ScreenshotSupport {
 
     /** Switches the main screen to tab [index]: 0 pitch pipe, 1 notes, 2 keys, 3 songs. */
     fun PitchPerfectActivity.showTab(index: Int) {
-        val item =
-            when (index) {
-                0 -> R.id.pitchpipe_item
-                1 -> R.id.notes_item
-                2 -> R.id.keys_item
-                else -> R.id.songs_item
-            }
-        findViewById<View>(item).performClick()
+        compose.onNodeWithTag(MainTab.entries[index].testTag).performClick()
         settle()
     }
 
     fun PitchPerfectActivity.setEditingSongs(editing: Boolean) {
-        val fragment = supportFragmentManager.fragments.filterIsInstance<SongListFragment>().single()
-        if (fragment.isEditingSongs() != editing) fragment.toggleEditingSongs()
+        if (songs.editing != editing) compose.onNodeWithTag(TestTags.EDIT_SONGS).performClick()
         settle()
     }
 
     fun PitchPerfectActivity.toggleKeyMode() {
-        findViewById<View>(R.id.majorMinorFab).performClick()
+        compose.onNodeWithTag(TestTags.MAJOR_MINOR_FAB).performClick()
         settle()
     }
 
-    private val PitchPerfectActivity.songsFragment: SongListFragment
-        get() = supportFragmentManager.fragments.filterIsInstance<SongListFragment>().single()
-
     fun PitchPerfectActivity.openNewSetListDialog() {
-        songsFragment.promptNewSetList()
+        songs.promptNewList()
         settle()
     }
 
     fun PitchPerfectActivity.openRenameSetListDialog(listId: String) {
-        songsFragment.promptRenameSetList(listId)
+        songs.promptRename(listId)
         settle()
     }
 
     /** Types [text] into the open set list name dialog and presses its positive button. */
     fun PitchPerfectActivity.submitSetListName(text: String) {
-        val dialog =
-            supportFragmentManager.findFragmentByTag(depollsoft.pitchperfect.SetListNameDialog.FRAGMENT_TAG)
-                as androidx.fragment.app.DialogFragment
-        val alert = dialog.dialog as androidx.appcompat.app.AlertDialog
-        alert.findViewById<android.widget.EditText>(R.id.setListNameInput)!!.setText(text)
-        alert.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick()
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).performTextReplacement(text)
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_CONFIRM).performClick()
         settle()
     }
 
     fun PitchPerfectActivity.openDeleteSetListDialog(listId: String) {
-        songsFragment.confirmDeleteList(listId)
+        songs.confirmDelete(listId)
         settle()
     }
 
     fun PitchPerfectActivity.openSetListMenu(listId: String) {
-        val selector = findViewById<depollsoft.pitchperfect.SetListSelectorView>(R.id.setListSelector)
-        songsFragment.showListMenu(selector.positionView(listId)!!, listId)
-        settle()
-    }
-
-    fun PitchPerfectActivity.deleteSetListWithUndo(listId: String) {
-        songsFragment.deleteList(listId)
+        songs.menuFor = listId
         settle()
     }
 
     /** Opens the sign-in prompt from the settings screen's Log In button. */
     fun Activity.showLoginPrompt() {
-        findViewById<View>(R.id.loginButton).performClick()
+        compose.onNodeWithTag(TestTags.LOG_IN).performClick()
         settle()
+        check((this as SettingsActivity).dialog == SettingsDialog.LOG_IN)
     }
 
     fun Activity.scrollSettingsToEnd() {
-        val scroll = findViewById<android.widget.ScrollView>(R.id.scrollView1)
-        scroll.fullScroll(View.FOCUS_DOWN)
+        compose.onNodeWithTag(TestTags.PRIVACY_CHOICES).performScrollTo()
         settle()
     }
 
     fun Activity.pressSaveSong() {
-        findViewById<View>(R.id.saveSongButton).performClick()
+        compose.onNodeWithTag(TestTags.SAVE_SONG).performClick()
         settle()
     }
 
     fun Activity.chooseMinorKeys() {
-        findViewById<View>(R.id.keyModeMinor).performClick()
+        compose.onNodeWithContentDescription(getString(R.string.KeyModeMinor)).performClick()
         settle()
     }
 
     fun Activity.tickAddableSong(title: String) {
-        val list = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.addableSongList)
-        for (index in 0 until list.childCount) {
-            val row = list.getChildAt(index)
-            val label = row.findViewById<android.widget.TextView>(R.id.addableSongTitle) ?: continue
-            if (label.text.toString() == title) row.performClick()
-        }
+        // Every row with that title, as the View driver clicked each matching row.
+        val rows = compose.onAllNodesWithText(title)
+        repeat(rows.fetchSemanticsNodes().size) { rows[it].performClick() }
         settle()
     }
 
-    /**
-     * Sounds [key] on the Keys tab. The View rows took their lit state from a Bindroid binding the
-     * shared models no longer feed, so the row is lit here exactly as that binding would have.
-     */
-    fun PitchPerfectActivity.playKey(key: depollsoft.pitchperfect.lib.Key) {
+    /** Sounds [key] on the Keys tab, whose rows light while their key sounds. */
+    fun PitchPerfectActivity.playKey(key: Key) {
         key.note.play()
-        val list = findViewById<android.widget.ListView>(R.id.majorKeySignatureListView)
-        for (index in 0 until list.childCount) {
-            val row = list.getChildAt(index) as? depollsoft.pitchperfect.KeySignatureListItemView ?: continue
-            if (row.key == key) row.isPressed = true
-        }
         settle()
     }
 

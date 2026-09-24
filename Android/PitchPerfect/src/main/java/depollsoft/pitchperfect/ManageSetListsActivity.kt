@@ -1,278 +1,111 @@
 package depollsoft.pitchperfect
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.PopupMenu
-import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.bindroid.trackable.track
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.DropdownMenu
+import depollsoft.pitchperfect.ui.PlateText
+import androidx.compose.material.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import depollsoft.pitchperfect.ui.DrawableIcon
+import depollsoft.pitchperfect.ui.PlateBackground
+import depollsoft.pitchperfect.ui.PlateFab
+import depollsoft.pitchperfect.ui.PlateFonts
+import depollsoft.pitchperfect.ui.PlateMenuRow
+import depollsoft.pitchperfect.ui.PlateTheme
+import depollsoft.pitchperfect.ui.PlateTopBar
+import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.plateText
 
 /**
- * "Set Lists": every list in order, with its song count, a drag handle and a row overflow.
- *
- * My Songs is pinned first, has no handle and cannot be deleted. A drop commits the new order
- * once, rewriting `order` on every custom list, rather than once per step. The rows re-render on
- * any change, including one arriving from another device.
+ * The Set Lists screen's state. A drag reorders a working copy of the rows and commits the new
+ * order once, on drop, rewriting `order` on every custom list, as the design contract requires.
  */
-class ManageSetListsActivity : AppCompatActivity() {
-    private val model get() = SongsModel.get()
-    private lateinit var adapter: SetListRowAdapter
-    private var rows: List<SongList> = emptyList()
+@Stable
+class ManageSetListsState(
+    val model: SongsModel,
+) {
+    private var dragged: List<SongList>? by mutableStateOf(null)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.managesetlistsview)
-        setTitle(R.string.ManageSetListsTitle)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    /** The rows: the model's order, or the order a drag in progress has made. */
+    val rows: List<SongList> get() = dragged ?: model.orderedLists
 
-        rows = model.orderedLists
-        adapter = SetListRowAdapter()
-        val list = findViewById<RecyclerView>(R.id.setListManageList)
-        list.layoutManager = LinearLayoutManager(this)
-        list.adapter = adapter
-        val divider = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        ContextCompat.getDrawable(this, R.drawable.divider_hairline)?.let { divider.setDrawable(it) }
-        list.addItemDecoration(divider)
+    var nameRequest by mutableStateOf<NameRequest?>(null)
+    var pendingDelete by mutableStateOf<String?>(null)
 
-        val touchHelper =
-            ItemTouchHelper(
-                object : ItemTouchHelper.Callback() {
-                    override fun getMovementFlags(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                    ): Int =
-                        if (isCustomRow(viewHolder.bindingAdapterPosition)) {
-                            makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
-                        } else {
-                            makeMovementFlags(0, 0)
-                        }
+    fun isCustom(list: SongList): Boolean = list.id != SongsModel.DEFAULT_ID
 
-                    override fun isLongPressDragEnabled(): Boolean = false
-
-                    override fun canDropOver(
-                        recyclerView: RecyclerView,
-                        current: RecyclerView.ViewHolder,
-                        target: RecyclerView.ViewHolder,
-                    ): Boolean = isCustomRow(target.bindingAdapterPosition)
-
-                    override fun onMove(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                        target: RecyclerView.ViewHolder,
-                    ): Boolean {
-                        val from = viewHolder.bindingAdapterPosition
-                        val to = target.bindingAdapterPosition
-                        if (!isCustomRow(from) || !isCustomRow(to)) return false
-                        val moved = rows.toMutableList()
-                        moved.add(to, moved.removeAt(from))
-                        rows = moved
-                        adapter.notifyItemMoved(from, to)
-                        dragged = true
-                        return true
-                    }
-
-                    override fun onSwiped(
-                        viewHolder: RecyclerView.ViewHolder,
-                        direction: Int,
-                    ) = Unit
-
-                    override fun clearView(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                    ) {
-                        super.clearView(recyclerView, viewHolder)
-                        commitOrder()
-                    }
-                },
-            )
-        touchHelper.attachToRecyclerView(list)
-        adapter.onStartDrag = { holder -> touchHelper.startDrag(holder) }
-
-        findViewById<FloatingActionButton>(R.id.newSetListButton).setOnClickListener {
-            SetListNameDialog.create(supportFragmentManager, NAME_REQUEST)
-        }
-        supportFragmentManager.setFragmentResultListener(NAME_REQUEST, this) { _, _ -> refresh() }
-
-        track({ model.trackLists() }) {
-            if (!isDestroyed) {
-                runOnUiThread { if (!isDestroyed) refresh() }
-                keepTracking
-            }
-        }
-    }
-
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean =
-        if (item.itemId == android.R.id.home) {
-            finish()
-            true
-        } else {
-            super.onOptionsItemSelected(item)
-        }
-
-    private var dragged = false
-
-    private fun isCustomRow(position: Int): Boolean =
-        position in rows.indices && rows[position].id != SongsModel.DEFAULT_ID
-
-    /** Commits the dropped order once, as the contract requires. Visible for the screen tests. */
-    internal fun commitOrder() {
-        if (!dragged) return
-        dragged = false
-        model.reorderLists(rows.map { it.id })
-    }
-
-    /**
-     * The drag callback's move, without a gesture: a Robolectric test cannot produce one, and the
-     * order that gets committed is the thing worth asserting.
-     */
-    internal fun moveForTest(
+    /** One step of a drag between custom rows; not stored until [commitOrder]. */
+    fun move(
         from: Int,
         to: Int,
     ) {
-        if (!isCustomRow(from) || !isCustomRow(to)) return
-        val moved = rows.toMutableList()
-        moved.add(to, moved.removeAt(from))
-        rows = moved
-        adapter.notifyItemMoved(from, to)
-        dragged = true
+        val current = rows
+        if (from !in current.indices || to !in current.indices) return
+        if (!isCustom(current[from]) || !isCustom(current[to])) return
+        dragged = current.toMutableList().apply { add(to, removeAt(from)) }
     }
 
-    /** Whether the row overflow for [list] offers Delete. Visible for the screen tests. */
-    internal fun rowMenuOffersDeleteForTest(list: SongList): Boolean {
-        val popup = PopupMenu(this, findViewById(R.id.setListManageList))
-        popup.menuInflater.inflate(R.menu.setlistrowmenu, popup.menu)
-        return list.id != SongsModel.DEFAULT_ID && popup.menu.findItem(R.id.deleteSetListRowMenuItem) != null
+    /** Commits the dropped order once. */
+    fun commitOrder() {
+        val order = dragged ?: return
+        dragged = null
+        model.reorderLists(order.map { it.id })
     }
 
-    /** Rebuilds the rows from the model. Visible for the screen tests. */
-    internal fun refresh() {
-        if (dragged) return
-        rows = model.orderedLists
-        adapter.notifyDataSetChanged()
-    }
-
-    /** Makes [list] current and returns to the Songs tab. Visible for the screen tests. */
-    internal fun switchTo(list: SongList) {
-        model.currentListId = list.id
-        finish()
-    }
-
-    internal fun promptRename(list: SongList) {
-        SetListNameDialog.rename(supportFragmentManager, list.id, NAME_REQUEST)
-    }
-
-    internal fun duplicate(list: SongList) {
-        model.duplicateList(list.id)
-        refresh()
-    }
-
-    internal fun confirmDelete(list: SongList) {
-        if (list.id == SongsModel.DEFAULT_ID) return
-        val count = list.songs.size
-        val message =
-            if (count == 0) {
-                getString(R.string.SetListDeleteMessageEmpty)
-            } else {
-                getString(
-                    R.string.SetListDeleteMessage,
-                    resources.getQuantityString(R.plurals.SetListDeleteSongs, count, count),
-                )
-            }
-        MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.SetListDeleteTitle, model.displayName(list)))
-            .setMessage(message)
-            .setPositiveButton(R.string.SetListDelete) { _, _ -> delete(list) }
-            .setNegativeButton(R.string.Cancel, null)
-            .show()
-    }
-
-    internal fun delete(list: SongList) {
-        model.deleteList(list.id)
-        refresh()
-    }
-
-    private inner class SetListRowAdapter : RecyclerView.Adapter<RowHolder>() {
-        var onStartDrag: ((RecyclerView.ViewHolder) -> Unit)? = null
-
-        override fun getItemCount(): Int = rows.size
-
-        override fun onCreateViewHolder(
-            parent: ViewGroup,
-            viewType: Int,
-        ): RowHolder =
-            RowHolder(
-                LayoutInflater.from(parent.context).inflate(R.layout.setlistrowview, parent, false),
-            )
-
-        override fun onBindViewHolder(
-            holder: RowHolder,
-            position: Int,
-        ) {
-            val list = rows[position]
-            val custom = list.id != SongsModel.DEFAULT_ID
-            val current = list.id == model.currentListId
-            val name = model.displayName(list)
-            holder.itemView.tag = list.id
-            holder.name.text = name
-            holder.count.text = countLabel(list.songs.size)
-            holder.currentDot.visibility = if (current) View.VISIBLE else View.INVISIBLE
-            holder.itemView.contentDescription =
-                if (current) getString(R.string.SetListCurrentDescription, name) else null
-            holder.handle.visibility = if (custom) View.VISIBLE else View.INVISIBLE
-            holder.handle.setOnTouchListener { _, event ->
-                if (custom && event.actionMasked == MotionEvent.ACTION_DOWN) {
-                    onStartDrag?.invoke(holder)
-                    true
-                } else {
-                    false
-                }
-            }
-            // A tap on a list switches to it, here as everywhere; Rename lives in the row menu.
-            holder.itemView.setOnClickListener { switchTo(list) }
-            holder.overflow.contentDescription = getString(R.string.SetListRowOverflow, name)
-            holder.overflow.setOnClickListener { showRowMenu(it, list) }
-            // The drag handle is a touch gesture; screen readers and switch access reorder
-            // through named actions instead, one row at a time.
-            holder.detachAccessibilityActions()
-            if (custom) {
-                val customIndex = customRows().indexOf(list)
-                if (customIndex > 0) {
-                    holder.accessibilityActions += ViewCompat.addAccessibilityAction(
-                        holder.itemView,
-                        getString(R.string.MoveUp),
-                    ) { _, _ -> moveList(list, -1) }
-                }
-                if (customIndex in 0 until customRows().size - 1) {
-                    holder.accessibilityActions += ViewCompat.addAccessibilityAction(
-                        holder.itemView,
-                        getString(R.string.MoveDown),
-                    ) { _, _ -> moveList(list, 1) }
-                }
-            }
-        }
-    }
-
-    private fun customRows(): List<SongList> = rows.filter { it.id != SongsModel.DEFAULT_ID }
-
-    /** Moves [list] one step among the custom lists and commits at once. Visible for tests. */
-    internal fun moveList(
+    /** Moves [list] one step among the custom lists and commits at once: the screen reader's reorder. */
+    fun moveList(
         list: SongList,
         delta: Int,
     ): Boolean {
-        val custom = customRows().toMutableList()
+        val custom = rows.filter(::isCustom).toMutableList()
         val from = custom.indexOf(list)
         val to = from + delta
         if (from < 0 || to !in custom.indices) return false
@@ -281,50 +114,250 @@ class ManageSetListsActivity : AppCompatActivity() {
         return true
     }
 
-    private fun showRowMenu(
-        anchor: View,
-        list: SongList,
-    ) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.setlistrowmenu, popup.menu)
-        popup.menu.findItem(R.id.deleteSetListRowMenuItem).isVisible =
-            list.id != SongsModel.DEFAULT_ID
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.renameSetListRowMenuItem -> promptRename(list)
-                R.id.duplicateSetListRowMenuItem -> duplicate(list)
-                R.id.deleteSetListRowMenuItem -> confirmDelete(list)
+    fun duplicate(list: SongList) {
+        model.duplicateList(list.id)
+    }
+
+    fun confirmDelete(list: SongList) {
+        if (isCustom(list)) pendingDelete = list.id
+    }
+
+    fun delete(listId: String) {
+        pendingDelete = null
+        model.deleteList(listId)
+    }
+}
+
+/**
+ * "Set Lists": every list in order, with its song count, a drag handle and a row overflow. My
+ * Songs is pinned first, has no handle and cannot be deleted. The rows re-render on any change,
+ * including one arriving from another device.
+ */
+class ManageSetListsActivity : AppCompatActivity() {
+    internal val state by lazy { ManageSetListsState(SongsModel.get()) }
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setTitle(R.string.ManageSetListsTitle)
+        setContent {
+            PlateTheme {
+                Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+                    PlateTopBar(stringResource(R.string.ManageSetListsTitle), navigationUp = ::finish)
+                    ManageSetListsScreen(state, onSwitch = ::switchTo)
+                }
             }
-            true
         }
-        popup.show()
     }
 
-    private fun countLabel(count: Int): String =
-        if (count == 0) {
-            getString(R.string.NoSongsCount)
-        } else {
-            resources.getQuantityString(R.plurals.SongCount, count, count)
+    /** Makes [list] current and returns to the Songs tab: a tap on a list switches to it. */
+    internal fun switchTo(list: SongList) {
+        state.model.currentListId = list.id
+        finish()
+    }
+}
+
+@Composable
+fun ManageSetListsScreen(
+    state: ManageSetListsState,
+    onSwitch: (SongList) -> Unit,
+) {
+    state.model.trackLists()
+    val listState = rememberLazyListState()
+    val drag = remember(state) { ListDrag(state, listState) }
+    PlateBackground {
+        LazyColumn(
+            Modifier.fillMaxSize().testTag(TestTags.MANAGE_LIST),
+            state = listState,
+            contentPadding = PaddingValues(bottom = 90.dp),
+        ) {
+            items(state.rows, key = { it.id }) { list ->
+                val dragging = drag.listId == list.id
+                Column(
+                    Modifier
+                        .zIndex(if (dragging) 1f else 0f)
+                        .graphicsLayer { if (dragging) translationY = drag.offset },
+                ) {
+                    SetListRow(state, list, drag, onSwitch)
+                    Hairline()
+                }
+            }
         }
+        PlateFab(
+            R.drawable.ic_add_button,
+            stringResource(R.string.SetListNew),
+            onClick = { state.nameRequest = NameRequest() },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp).testTag(TestTags.NEW_SET_LIST),
+        )
+    }
+    state.nameRequest?.let { request ->
+        SetListNameDialog(request.listId, onDismiss = { state.nameRequest = null }, onDone = { _, _ -> state.nameRequest = null })
+    }
+    state.pendingDelete?.let { listId ->
+        DeleteSetListDialog(state.model, listId, onDismiss = { state.pendingDelete = null }, onDelete = { state.delete(listId) })
+    }
+}
 
-    private class RowHolder(
-        view: View,
-    ) : RecyclerView.ViewHolder(view) {
-        val accessibilityActions = mutableListOf<Int>()
-
-        fun detachAccessibilityActions() {
-            accessibilityActions.forEach { ViewCompat.removeAccessibilityAction(itemView, it) }
-            accessibilityActions.clear()
+@Composable
+private fun SetListRow(
+    state: ManageSetListsState,
+    list: SongList,
+    drag: ListDrag,
+    onSwitch: (SongList) -> Unit,
+) {
+    val colors = plateColors
+    val model = state.model
+    val custom = state.isCustom(list)
+    val current = list.id == model.currentListId
+    val name = model.displayName(list)
+    val count = list.songs.size
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    var menuOpen by remember { mutableStateOf(false) }
+    val currentDescription = stringResource(R.string.SetListCurrentDescription, name)
+    val moveUp = stringResource(R.string.MoveUp)
+    val moveDown = stringResource(R.string.MoveDown)
+    val customRows = state.rows.filter(state::isCustom)
+    val customIndex = customRows.indexOf(list)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .testTag(TestTags.manageRow(list.id))
+            .background(if (pressed) colors.accent else Color.Transparent)
+            // A tap on a list switches to it, here as everywhere; Rename lives in the row menu.
+            .clickable(interaction, indication = null) { onSwitch(list) }
+            .semantics {
+                if (current) contentDescription = currentDescription
+                // The drag handle is a touch gesture; screen readers and switch access reorder
+                // through named actions instead, one row at a time.
+                if (custom) {
+                    customActions =
+                        listOfNotNull(
+                            CustomAccessibilityAction(moveUp) { state.moveList(list, -1) }.takeIf { customIndex > 0 },
+                            CustomAccessibilityAction(moveDown) { state.moveList(list, 1) }
+                                .takeIf { customIndex in 0 until customRows.size - 1 },
+                        )
+                }
+            },
+        verticalAlignment = ViewCenterVertically,
+    ) {
+        Box(
+            Modifier
+                .padding(start = 8.dp)
+                .size(6.dp)
+                .alpha(if (current) 1f else 0f)
+                .background(colors.accent, CircleShape),
+        )
+        PlateText(
+            name,
+            style = plateText(20.sp, if (pressed) colors.onAccent else colors.ink, PlateFonts.condensed),
+            modifier = Modifier.weight(1f).padding(start = 6.dp, top = 14.dp, bottom = 14.dp),
+        )
+        PlateText(
+            if (count == 0) stringResource(R.string.NoSongsCount) else pluralStringResource(R.plurals.SongCount, count, count),
+            style = plateText(14.sp, if (pressed) colors.onAccent else colors.inkSecondary, PlateFonts.mono, letterSpacing = 0.06f),
+            modifier = Modifier.padding(end = 8.dp),
+        )
+        Box {
+            val overflowDescription = stringResource(R.string.SetListRowOverflow, name)
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .testTag(TestTags.ROW_OVERFLOW)
+                    .clickable(role = Role.Button, indication = ripple(bounded = false), interactionSource = null) { menuOpen = true }
+                    .semantics { contentDescription = overflowDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                DrawableIcon(R.drawable.ic_more_vert, colors.inkSecondary)
+            }
+            DropdownMenu(menuOpen, { menuOpen = false }) {
+                PlateMenuRow(stringResource(R.string.SetListRename)) {
+                    menuOpen = false
+                    state.nameRequest = NameRequest(list.id)
+                }
+                PlateMenuRow(stringResource(R.string.SetListDuplicateAction)) {
+                    menuOpen = false
+                    state.duplicate(list)
+                }
+                if (custom) {
+                    PlateMenuRow(stringResource(R.string.SetListDelete)) {
+                        menuOpen = false
+                        state.confirmDelete(list)
+                    }
+                }
+            }
         }
+        val handleDescription = stringResource(R.string.SetListReorder)
+        Box(
+            Modifier
+                .size(48.dp)
+                .alpha(if (custom) 1f else 0f)
+                .then(
+                    if (custom) {
+                        Modifier
+                            .testTag(TestTags.DRAG_HANDLE)
+                            .semantics { contentDescription = handleDescription }
+                            .pointerInput(list.id) { drag.track(this, list.id) }
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            DrawableIcon(R.drawable.ic_drag_handle, colors.inkSecondary)
+        }
+    }
+}
 
-        val name: TextView = view.findViewById(R.id.setListRowName)
-        val count: TextView = view.findViewById(R.id.setListRowCount)
-        val overflow: ImageButton = view.findViewById(R.id.setListRowOverflow)
-        val handle: ImageView = view.findViewById(R.id.setListRowDragHandle)
-        val currentDot: View = view.findViewById(R.id.setListRowCurrentDot)
+/** A drag of one custom list by its handle; My Songs stays pinned first. */
+private class ListDrag(
+    private val state: ManageSetListsState,
+    private val listState: LazyListState,
+) {
+    var listId by mutableStateOf<String?>(null)
+        private set
+    var offset by mutableFloatStateOf(0f)
+        private set
+
+    suspend fun track(
+        scope: androidx.compose.ui.input.pointer.PointerInputScope,
+        id: String,
+    ) = scope.awaitEachGesture {
+        val down = awaitFirstDown()
+        down.consume()
+        listId = id
+        offset = 0f
+        try {
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                if (!change.pressed) break
+                val delta = change.position.y - change.previousPosition.y
+                change.consume()
+                if (delta != 0f) moveBy(delta)
+            }
+        } finally {
+            listId = null
+            offset = 0f
+            state.commitOrder()
+        }
     }
 
-    companion object {
-        private const val NAME_REQUEST = "depollsoft.pitchperfect.manageSetLists.name"
+    private fun moveBy(delta: Float) {
+        offset += delta
+        val rows = state.rows
+        val index = rows.indexOfFirst { it.id == listId }
+        val items = listState.layoutInfo.visibleItemsInfo
+        val current = items.firstOrNull { it.index == index } ?: return
+        val middle = current.offset + offset + current.size / 2f
+        val next = items.firstOrNull { it.index == index + 1 }
+        val previous = items.firstOrNull { it.index == index - 1 }
+        if (offset > 0 && next != null && middle > next.offset + next.size / 2f && state.isCustom(rows[index + 1])) {
+            state.move(index, index + 1)
+            offset -= next.size
+        } else if (offset < 0 && previous != null && middle < previous.offset + previous.size / 2f && state.isCustom(rows[index - 1])) {
+            state.move(index, index - 1)
+            offset += previous.size
+        }
     }
 }

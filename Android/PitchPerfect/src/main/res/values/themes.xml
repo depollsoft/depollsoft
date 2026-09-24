@@ -30,6 +30,12 @@
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Plate.Dialog</item>
     </style>
 
+    <!-- The app's own screens draw their action bar in Compose, from the same plate metrics. -->
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
     <style name="AuthTheme" parent="AppTheme">
         <!-- FirebaseUI controls need an active color distinct from the plate surface. -->
         <item name="colorPrimary">@color/plate_ink</item>
