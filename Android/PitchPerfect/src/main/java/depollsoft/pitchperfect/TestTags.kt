@@ -50,6 +50,7 @@ object TestTags {
     const val CLEAR_SONGS = "clearSongListButton"
     const val WATCH_SECTION = "watchSection"
     const val WATCH_STATUS = "watchStatus"
+    const val WATCH_INSTALL = "watchInstallButton"
     const val LOG_IN = "loginButton"
     const val LOG_OUT = "logoutButton"
     const val DELETE_ACCOUNT = "deleteAccountButton"

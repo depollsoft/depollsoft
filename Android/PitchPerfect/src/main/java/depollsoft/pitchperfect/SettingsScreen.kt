@@ -138,7 +138,10 @@ fun SettingsScreen(
                     )
                     Column(Modifier.padding(top = 12.dp)) {
                         state.watches.filterNot { it.installed }.forEach { node ->
-                            PlateSettingsButton(stringResource(R.string.WatchInstallOn, node.name), Modifier.fillMaxWidth()) {
+                            PlateSettingsButton(
+                                stringResource(R.string.WatchInstallOn, node.name),
+                                Modifier.fillMaxWidth().testTag(TestTags.WATCH_INSTALL),
+                            ) {
                                 actions.installOnWatch(node)
                             }
                         }
