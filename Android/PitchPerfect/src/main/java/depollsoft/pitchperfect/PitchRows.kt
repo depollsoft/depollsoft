@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.first
 /** Centres a child the way a View's `center_vertical` gravity does: an odd pixel goes below. */
 val ViewCenterVertically = Alignment.Vertical { size, space -> (space - size) / 2 }
 
+/** Centres a child the way a View's `center_horizontal` gravity does: an odd pixel goes to the end. */
+val ViewCenterHorizontally = Alignment.Horizontal { size, space, _ -> (space - size) / 2 }
+
 /**
  * A row that sounds while it is held, the Notes and Keys rows' touch contract:
  *

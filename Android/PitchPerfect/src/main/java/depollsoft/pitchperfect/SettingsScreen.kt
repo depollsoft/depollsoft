@@ -282,7 +282,7 @@ private fun AboutFooter(
     val link = style.copy(textDecoration = TextDecoration.Underline)
     Column(
         Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = ViewCenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             PlateText(stringResource(R.string.app_name), style = style)
