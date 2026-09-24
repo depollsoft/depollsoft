@@ -175,8 +175,16 @@ class PitchInstrumentState(
         const val ACCESSIBILITY_NOTE_MS = 1500L
         const val BREATH_PERIOD_MS = 4000L
 
-        /** The glow's phase [elapsedMs] into breathing: one full sine cycle every four seconds. */
-        fun breathePhaseAt(elapsedMs: Long): Float =
-            (elapsedMs % BREATH_PERIOD_MS) / BREATH_PERIOD_MS.toFloat() * (2 * PI).toFloat()
+        /**
+         * The glow's phase [elapsedMs] into breathing: one full sine cycle every four seconds,
+         * stretched by the system's [durationScale] as the ValueAnimator it replaces was.
+         */
+        fun breathePhaseAt(
+            elapsedMs: Long,
+            durationScale: Float = 1f,
+        ): Float {
+            val period = (BREATH_PERIOD_MS * durationScale).toLong().coerceAtLeast(1L)
+            return (elapsedMs % period) / period.toFloat() * (2 * PI).toFloat()
+        }
     }
 }

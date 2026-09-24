@@ -7,6 +7,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import android.graphics.Rect
 import android.provider.Settings
+import android.view.View
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -85,6 +86,7 @@ fun WearPitchInstrument(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val renderer = remember(context) { WearInstrumentRenderer(context) }
 
     val breathing = state.breathing
@@ -95,9 +97,10 @@ fun WearPitchInstrument(
         }
         // An infinite-animation frame loop, so tests and the system's animation policy can
         // tell it apart from work that will finish.
+        val scale = animatorDurationScale(context)
         val start = withInfiniteAnimationFrameMillis { it }
         while (true) {
-            withInfiniteAnimationFrameMillis { now -> state.breathePhase = WearInstrumentState.breathePhaseAt(now - start) }
+            withInfiniteAnimationFrameMillis { now -> state.breathePhase = WearInstrumentState.breathePhaseAt(now - start, scale) }
         }
     }
 
@@ -109,7 +112,7 @@ fun WearPitchInstrument(
                 state.rotate(-it.verticalScrollPixels)
                 true
             }.focusable()
-            .pointerInput(state) { trackFingers(state) }
+            .pointerInput(state, view) { trackFingers(state, view) }
             .drawBehind {
                 drawIntoCanvas {
                     renderer.draw(it.nativeCanvas, state.geometry, state.notes, state.model.isFromFToF, state.breathePhase)
@@ -120,9 +123,18 @@ fun WearPitchInstrument(
     }
 }
 
-private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trackFingers(state: WearInstrumentState) {
+private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trackFingers(
+    state: WearInstrumentState,
+    view: View,
+) {
     awaitEachGesture {
         val first = awaitFirstDown(requireUnconsumed = false)
+        // A finger on a cell or the range selector belongs to the face: sliding between notes
+        // must not become the system's swipe-to-dismiss, which would close the app mid-note.
+        // Consuming the events is not enough; the swipe is taken by the window above Compose.
+        val onControl = state.geometry.rangeRowAt(first.position.x, first.position.y) != -1 ||
+            state.geometry.cellAt(first.position.x, first.position.y) != -1
+        if (onControl) view.parent?.requestDisallowInterceptTouchEvent(true)
         state.down(first.id.value, first.position.x, first.position.y, firstFinger = true)
         first.consume()
         try {
@@ -142,6 +154,7 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trackFin
                 if (!stillDown) break
             }
         } finally {
+            if (onControl) view.parent?.requestDisallowInterceptTouchEvent(false)
             state.endGesture()
         }
     }

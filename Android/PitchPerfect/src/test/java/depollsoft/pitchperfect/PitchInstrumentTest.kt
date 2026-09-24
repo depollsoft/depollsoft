@@ -273,6 +273,13 @@ class PitchInstrumentTest {
     }
 
     @Test
+    fun theGlowFollowsTheSystemAnimatorDurationScale() {
+        // At 2x, as a ValueAnimator would, one breath takes eight seconds.
+        assertEquals(PI.toFloat(), PitchInstrumentState.breathePhaseAt(4_000, durationScale = 2f), 1e-4f)
+        assertEquals(PI.toFloat(), PitchInstrumentState.breathePhaseAt(1_000, durationScale = 0.5f), 1e-4f)
+    }
+
+    @Test
     fun theGlowBreathesOnceEveryFourSeconds() {
         assertEquals(0f, PitchInstrumentState.breathePhaseAt(0))
         assertEquals((PI / 2).toFloat(), PitchInstrumentState.breathePhaseAt(1_000), 1e-4f)

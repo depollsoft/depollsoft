@@ -76,9 +76,10 @@ fun PitchInstrument(
         }
         // An infinite-animation frame loop, so tests and the system's animation policy can tell
         // it apart from work that will finish.
+        val scale = animatorDurationScale(context)
         val start = withInfiniteAnimationFrameMillis { it }
         while (true) {
-            withInfiniteAnimationFrameMillis { now -> state.breathePhase = PitchInstrumentState.breathePhaseAt(now - start) }
+            withInfiniteAnimationFrameMillis { now -> state.breathePhase = PitchInstrumentState.breathePhaseAt(now - start, scale) }
         }
     }
 

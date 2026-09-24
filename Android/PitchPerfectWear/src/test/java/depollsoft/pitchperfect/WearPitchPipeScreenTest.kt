@@ -157,4 +157,32 @@ class WearPitchPipeScreenTest {
         compose.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
         assertTrue(model.notes.none { it.isPlaying })
     }
+
+    /** Whether the face's host has asked the views above it not to take the gesture over. */
+    private fun hostKeepsTheGesture(): Boolean {
+        fun find(view: android.view.View): android.view.View? {
+            if (view.javaClass.name.endsWith("AndroidComposeView")) return view
+            if (view is android.view.ViewGroup) for (i in 0 until view.childCount) find(view.getChildAt(i))?.let { return it }
+            return null
+        }
+        val host = find(compose.activity.window.decorView)!!
+        return org.robolectric.Shadows.shadowOf(host.parent as android.view.ViewGroup).disallowInterceptTouchEvent
+    }
+
+    @Test
+    fun aFingerOnANoteKeepsSwipeToDismissAwayUntilItLifts() {
+        compose.onRoot().performTouchInput { down(cell(0)) }
+        assertTrue("sliding between notes cannot become a dismiss swipe", hostKeepsTheGesture())
+        compose.onRoot().performTouchInput { moveTo(cell(1)) }
+        assertTrue(hostKeepsTheGesture())
+        compose.onRoot().performTouchInput { up() }
+        assertFalse("released with the finger", hostKeepsTheGesture())
+    }
+
+    @Test
+    fun aFingerOffTheControlsLeavesSwipeToDismissAlone() {
+        compose.onRoot().performTouchInput { down(Offset(2f, 2f)) }
+        assertFalse(hostKeepsTheGesture())
+        compose.onRoot().performTouchInput { up() }
+    }
 }
