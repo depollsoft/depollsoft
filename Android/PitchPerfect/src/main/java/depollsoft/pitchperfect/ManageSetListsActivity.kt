@@ -3,11 +3,8 @@ package depollsoft.pitchperfect
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -19,16 +16,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import depollsoft.pitchperfect.ui.RowDrag
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,11 +33,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -165,7 +159,17 @@ fun ManageSetListsScreen(
 ) {
     state.model.trackLists()
     val listState = rememberLazyListState()
-    val drag = remember(state) { ListDrag(state, listState) }
+    val drag =
+        remember(state) {
+            RowDrag(
+                listState,
+                indexOf = { key -> state.rows.indexOfFirst { it.id == key } },
+                // My Songs stays pinned first: only custom lists trade places.
+                canMove = { from, to -> state.isCustom(state.rows[from]) && state.isCustom(state.rows[to]) },
+                move = state::move,
+                onDrop = state::commitOrder,
+            )
+        }
     PlateBackground {
         LazyColumn(
             Modifier.fillMaxSize().testTag(TestTags.MANAGE_LIST),
@@ -173,7 +177,7 @@ fun ManageSetListsScreen(
             contentPadding = PaddingValues(bottom = 90.dp),
         ) {
             items(state.rows, key = { it.id }) { list ->
-                val dragging = drag.listId == list.id
+                val dragging = drag.key == list.id
                 Column(
                     Modifier
                         .zIndex(if (dragging) 1f else 0f)
@@ -203,7 +207,7 @@ fun ManageSetListsScreen(
 private fun SetListRow(
     state: ManageSetListsState,
     list: SongList,
-    drag: ListDrag,
+    drag: RowDrag,
     onSwitch: (SongList) -> Unit,
 ) {
     val colors = plateColors
@@ -299,59 +303,6 @@ private fun SetListRow(
             contentAlignment = Alignment.Center,
         ) {
             DrawableIcon(R.drawable.ic_drag_handle, colors.inkSecondary)
-        }
-    }
-}
-
-/** A drag of one custom list by its handle; My Songs stays pinned first. */
-private class ListDrag(
-    private val state: ManageSetListsState,
-    private val listState: LazyListState,
-) {
-    var listId by mutableStateOf<String?>(null)
-        private set
-    var offset by mutableFloatStateOf(0f)
-        private set
-
-    suspend fun track(
-        scope: androidx.compose.ui.input.pointer.PointerInputScope,
-        id: String,
-    ) = scope.awaitEachGesture {
-        val down = awaitFirstDown()
-        down.consume()
-        listId = id
-        offset = 0f
-        try {
-            while (true) {
-                val event = awaitPointerEvent()
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) break
-                val delta = change.position.y - change.previousPosition.y
-                change.consume()
-                if (delta != 0f) moveBy(delta)
-            }
-        } finally {
-            listId = null
-            offset = 0f
-            state.commitOrder()
-        }
-    }
-
-    private fun moveBy(delta: Float) {
-        offset += delta
-        val rows = state.rows
-        val index = rows.indexOfFirst { it.id == listId }
-        val items = listState.layoutInfo.visibleItemsInfo
-        val current = items.firstOrNull { it.index == index } ?: return
-        val middle = current.offset + offset + current.size / 2f
-        val next = items.firstOrNull { it.index == index + 1 }
-        val previous = items.firstOrNull { it.index == index - 1 }
-        if (offset > 0 && next != null && middle > next.offset + next.size / 2f && state.isCustom(rows[index + 1])) {
-            state.move(index, index + 1)
-            offset -= next.size
-        } else if (offset < 0 && previous != null && middle < previous.offset + previous.size / 2f && state.isCustom(rows[index - 1])) {
-            state.move(index, index - 1)
-            offset += previous.size
         }
     }
 }

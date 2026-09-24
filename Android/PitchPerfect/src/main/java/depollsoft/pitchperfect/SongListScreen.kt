@@ -1,11 +1,8 @@
 package depollsoft.pitchperfect
 
 import android.content.Intent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,6 +21,7 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.SnackbarResult
+import depollsoft.pitchperfect.ui.RowDrag
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.coroutineScope
@@ -32,19 +30,16 @@ import kotlinx.coroutines.launch
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -72,7 +67,6 @@ import depollsoft.pitchperfect.ui.PlateMenuItem
 import depollsoft.pitchperfect.ui.PlatePopupMenu
 import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.PlateOverflowMenu
-import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
@@ -181,14 +175,23 @@ private fun SongRows(
     list: SongList,
     listState: LazyListState,
 ) {
-    val drag = remember(list) { SongDrag(list, listState) }
+    val drag =
+        remember(list) {
+            RowDrag(
+                listState,
+                indexOf = { key -> list.songs.indexOfFirst { it.id == key } },
+                canMove = { _, _ -> true },
+                move = list::moveWithoutStoring,
+                onDrop = list::notifyOfChange,
+            )
+        }
     LazyColumn(
         Modifier.fillMaxSize().testTag(TestTags.SONG_LIST),
         state = listState,
         contentPadding = PaddingValues(bottom = 90.dp),
     ) {
         items(list.songs, key = { it.id }) { song ->
-            val dragging = drag.songId == song.id
+            val dragging = drag.key == song.id
             Column(
                 Modifier
                     .zIndex(if (dragging) 1f else 0f)
@@ -211,7 +214,7 @@ private fun SongRow(
     state: SongListState,
     list: SongList,
     song: PitchedSong,
-    drag: SongDrag,
+    drag: RowDrag,
 ) {
     val colors = plateColors
     val context = LocalContext.current
@@ -480,60 +483,5 @@ fun MainActions(
                 },
             ),
         )
-    }
-}
-
-/**
- * A drag of one song by its handle: the row follows the finger, trading places with a neighbour
- * once it passes that neighbour's middle. The steps are not stored; the drop commits once.
- */
-private class SongDrag(
-    private val list: SongList,
-    private val listState: LazyListState,
-) {
-    var songId by mutableStateOf<String?>(null)
-        private set
-    var offset by mutableFloatStateOf(0f)
-        private set
-
-    suspend fun track(
-        scope: androidx.compose.ui.input.pointer.PointerInputScope,
-        id: String,
-    ) = scope.awaitEachGesture {
-        val down = awaitFirstDown()
-        down.consume()
-        songId = id
-        offset = 0f
-        try {
-            while (true) {
-                val event = awaitPointerEvent()
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) break
-                val delta = change.position.y - change.previousPosition.y
-                change.consume()
-                if (delta != 0f) moveBy(delta)
-            }
-        } finally {
-            songId = null
-            offset = 0f
-            list.notifyOfChange()
-        }
-    }
-
-    private fun moveBy(delta: Float) {
-        offset += delta
-        val items = listState.layoutInfo.visibleItemsInfo
-        val index = list.songs.indexOfFirst { it.id == songId }
-        val current = items.firstOrNull { it.index == index } ?: return
-        val middle = current.offset + offset + current.size / 2f
-        val next = items.firstOrNull { it.index == index + 1 }
-        val previous = items.firstOrNull { it.index == index - 1 }
-        if (offset > 0 && next != null && middle > next.offset + next.size / 2f) {
-            list.moveWithoutStoring(index, index + 1)
-            offset -= next.size
-        } else if (offset < 0 && previous != null && middle < previous.offset + previous.size / 2f) {
-            list.moveWithoutStoring(index, index - 1)
-            offset += previous.size
-        }
     }
 }

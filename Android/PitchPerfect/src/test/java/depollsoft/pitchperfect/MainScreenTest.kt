@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.Lifecycle
 import depollsoft.lib.activity.RichApplication
+import androidx.compose.ui.test.performTouchInput
 import depollsoft.pitchperfect.ComposeScreens.Companion.song
 import depollsoft.pitchperfect.lib.Key
 import org.junit.After
@@ -183,6 +184,58 @@ class MainScreenTest {
 
         compose.onNodeWithText("Synced Song").assertIsDisplayed()
         assertFalse(screens.exists(TestTags.SONGS_EMPTY))
+    }
+
+    private fun handleOf(song: depollsoft.pitchperfect.lib.PitchedSong) =
+        compose.onNode(
+            androidx.compose.ui.test.hasTestTag(TestTags.DRAG_HANDLE) and
+                androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag(TestTags.songRow(song.id))),
+            useUnmergedTree = true,
+        )
+
+    @Test
+    fun aSongDraggedToTheBottomEdgeScrollsTheListAndTravelsPastTheVisibleRows() {
+        val all = (0 until 40).map { song("Song %02d".format(it)) }
+        all.forEach(songs::add)
+        val activity = screens.launchMain()
+        activity.tap(MainTab.SONGS)
+        screens.click(TestTags.EDIT_SONGS)
+        val first = all[0]
+        val listBottom = compose.onNodeWithTag(TestTags.SONG_LIST).fetchSemanticsNode().boundsInRoot.bottom
+        val handle = handleOf(first).fetchSemanticsNode().boundsInRoot
+        // Carry the top song down into the bottom edge zone and hold it there.
+        val travel = listBottom - handle.center.y - 20f
+        handleOf(first).performTouchInput {
+            down(center)
+            repeat(20) { moveBy(androidx.compose.ui.geometry.Offset(0f, travel / 20f)) }
+        }
+        screens.settle()
+        compose.onNodeWithTag(TestTags.SONG_LIST).performTouchInput { up() }
+        screens.settle()
+        val index = songs.indexOf(first)
+        assertTrue("held at the edge, the song rides the scroll to the end, got index $index", index >= 35)
+        assertEquals(40, songs.size)
+    }
+
+    @Test
+    fun draggingTheTopVisibleSongDownKeepsTheListWhereItIs() {
+        val all = (0 until 40).map { song("Song %02d".format(it)) }
+        all.forEach(songs::add)
+        val activity = screens.launchMain()
+        activity.tap(MainTab.SONGS)
+        screens.click(TestTags.EDIT_SONGS)
+        val listState = activity.songs.scrollStateFor(SongsModel.DEFAULT_ID)
+        val rowHeight = compose.onNodeWithTag(TestTags.songRow(all[0].id)).fetchSemanticsNode().size.height.toFloat()
+        handleOf(all[0]).performTouchInput {
+            down(center)
+            repeat(6) { moveBy(androidx.compose.ui.geometry.Offset(0f, rowHeight / 4f)) }
+        }
+        screens.settle()
+        assertEquals("the top song traded places with the next", 1, songs.indexOf(all[0]))
+        assertEquals("the list did not scroll to follow it", 0, listState.firstVisibleItemIndex)
+        assertEquals(0, listState.firstVisibleItemScrollOffset)
+        handleOf(all[0]).performTouchInput { up() }
+        screens.settle()
     }
 
     @Test
