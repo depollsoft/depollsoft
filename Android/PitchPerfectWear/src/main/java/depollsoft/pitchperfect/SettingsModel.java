@@ -1,6 +1,6 @@
 package depollsoft.pitchperfect;
 
-import com.bindroid.trackable.Trackable;
+import depollsoft.lib.state.ChangeSignal;
 
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.licensing.LicenseChecker;
@@ -10,8 +10,8 @@ public class SettingsModel {
   private static final String ToggleNoteKey = "depollsoft.pitchperfect.ToggleNote";
   private static final String WakeLockKey = "depollsoft.pitchperfect.WakeLock";
 
-  private static Trackable toggleNoteTrackable = new Trackable();
-  private static Trackable wakeLockTrackable = new Trackable();
+  private static final ChangeSignal toggleNoteSignal = new ChangeSignal();
+  private static final ChangeSignal wakeLockSignal = new ChangeSignal();
 
   static {
     Preferences.initialize(SettingsModel.ToggleNoteKey, false);
@@ -24,22 +24,22 @@ public class SettingsModel {
   }
 
   public static boolean getToggleNotes() {
-    SettingsModel.toggleNoteTrackable.track();
+    SettingsModel.toggleNoteSignal.read();
     return Preferences.<Boolean>get(SettingsModel.ToggleNoteKey);
   }
 
   public static boolean getWakeLock() {
-    SettingsModel.wakeLockTrackable.track();
+    SettingsModel.wakeLockSignal.read();
     return Preferences.<Boolean>get(SettingsModel.WakeLockKey);
   }
 
   public static void setToggleNotes(boolean value) {
     Preferences.set(SettingsModel.ToggleNoteKey, value);
-    SettingsModel.toggleNoteTrackable.updateTrackers();
+    SettingsModel.toggleNoteSignal.changed();
   }
 
   public static void setWakeLock(boolean value) {
     Preferences.set(SettingsModel.WakeLockKey, value);
-    SettingsModel.wakeLockTrackable.updateTrackers();
+    SettingsModel.wakeLockSignal.changed();
   }
 }
