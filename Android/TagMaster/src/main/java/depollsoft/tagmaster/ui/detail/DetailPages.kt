@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui.detail
 
+import kotlin.math.ceil
+import depollsoft.tagmaster.ui.rememberTextViewPaint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -106,7 +108,7 @@ private fun PairLink(
             .clickable(role = Role.Button) {
                 if (uri != null) context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
             },
-        contentAlignment = androidx.compose.ui.Alignment.CenterStart,
+        contentAlignment = ViewAlign.CenterStart,
     ) {
         Text(
             text,
@@ -119,8 +121,8 @@ private fun PairLink(
 
 @Composable
 private fun rememberBudget(style: TextStyle): (String) -> (Density) -> Int {
-    val measurer = rememberTextMeasurer()
-    return { text -> { density -> textBudget(measurer.measure(text, style).size.width, with(density) { style.fontSize.toPx() }) } }
+    val paint = rememberTextViewPaint(style)
+    return { text -> { _ -> textBudget(ceil(paint.measureText(text)).toInt(), paint.textSize) } }
 }
 
 /** The Details page: where the tag comes from and who arranged and sang it. */

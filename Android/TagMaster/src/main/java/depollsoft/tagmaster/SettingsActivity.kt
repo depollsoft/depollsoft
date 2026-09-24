@@ -465,9 +465,9 @@ private fun ThemeChoice() {
                 Box(
                     Modifier
                         .heightIn(min = 48.dp)
-                        .clip(shape)
-                        .then(if (checked) Modifier.background(colors.secondaryContainer) else Modifier)
+                        .then(if (checked) Modifier.background(colors.secondaryContainer, shape) else Modifier)
                         .border(BorderStroke(1.dp, colors.outlineVariant), shape)
+                        .clip(shape)
                         .selectable(checked, role = Role.RadioButton) {
                             if (TagMasterApplication.themeMode != mode) TagMasterApplication.themeMode = mode
                         }.padding(horizontal = 8.dp, vertical = 10.dp)

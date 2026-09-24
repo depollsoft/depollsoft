@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
+import depollsoft.tagmaster.ui.rememberTextViewPaint
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -54,11 +56,15 @@ fun DetailPairs(
     modifier: Modifier = Modifier,
 ) {
     val colors = TagMasterTheme.colors
+    val captionStyle = TagMasterType.labelLarge
+    val captionPaint = rememberTextViewPaint(captionStyle)
+    // DetailMetadataLayout: the caption column is the widest caption's ceil(measureText).
+    val captionWidth = pairs.maxOfOrNull { ceil(captionPaint.measureText(it.caption)).toInt() } ?: 0
     Layout(
         modifier = modifier.fillMaxWidth(),
         content = {
             for (pair in pairs) {
-                Text(pair.caption, Modifier.then(PairRole(true)), style = TagMasterType.labelLarge, color = colors.text)
+                Text(pair.caption, Modifier.then(PairRole(true)), style = captionStyle, color = colors.text)
                 Box(Modifier.then(PairRole(false))) { pair.value(pair.lines) }
             }
         },
@@ -66,7 +72,6 @@ fun DetailPairs(
         val width = constraints.maxWidth
         val captions = measurables.filterIndexed { index, _ -> index % 2 == 0 }
         val values = measurables.filterIndexed { index, _ -> index % 2 == 1 }
-        val captionWidth = captions.maxOfOrNull { it.maxIntrinsicWidth(Constraints.Infinity) } ?: 0
         val budget =
             pairs.maxOfOrNull { max(96.dp.roundToPx(), it.valueBudget(this)) } ?: 0
         val stacked = captionWidth + 8.dp.roundToPx() + budget > width

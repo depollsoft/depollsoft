@@ -38,6 +38,12 @@ object ViewAlign {
             IntOffset((space.width - size.width) / 2, (space.height - size.height) / 2)
         }
 
+    /** Gravity center_vertical|start: vertically centered with integer division, at the start. */
+    val CenterStart = Alignment { size, space, _ -> IntOffset(0, (space.height - size.height) / 2) }
+
+    /** Gravity center_vertical|end. */
+    val CenterEnd = Alignment { size, space, _ -> IntOffset(space.width - size.width, (space.height - size.height) / 2) }
+
     /** A row's children packed together and centered with integer division. */
     val CenterArrangement =
         object : Arrangement.Horizontal {
@@ -80,26 +86,33 @@ fun rememberDesiredWidth(
     text: String,
     style: TextStyle,
 ): Float {
+    val paint = rememberTextViewPaint(style)
+    return remember(text, paint) { android.text.Layout.getDesiredWidth(text, paint) }
+}
+
+/** The paint a TextView showing [style] measures with: size, typeface and letter spacing. */
+@Composable
+fun rememberTextViewPaint(style: TextStyle): TextPaint {
     val density = LocalDensity.current
     val fonts = LocalFontFamilyResolver.current
-    return remember(text, style, density, fonts) {
-        val paint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-        paint.textSize = with(density) { style.fontSize.toPx() }
-        paint.typeface =
-            fonts
-                .resolve(
-                    style.fontFamily,
-                    style.fontWeight ?: FontWeight.Normal,
-                    style.fontStyle ?: FontStyle.Normal,
-                    style.fontSynthesis ?: FontSynthesis.All,
-                ).value as Typeface
-        val spacing = style.letterSpacing
-        if (spacing.isEm) {
-            paint.letterSpacing = spacing.value
-        } else if (spacing.isSp) {
-            paint.letterSpacing = with(density) { spacing.toPx() } / paint.textSize
+    return remember(style, density, fonts) {
+        TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = with(density) { style.fontSize.toPx() }
+            typeface =
+                fonts
+                    .resolve(
+                        style.fontFamily,
+                        style.fontWeight ?: FontWeight.Normal,
+                        style.fontStyle ?: FontStyle.Normal,
+                        style.fontSynthesis ?: FontSynthesis.All,
+                    ).value as Typeface
+            val spacing = style.letterSpacing
+            if (spacing.isEm) {
+                letterSpacing = spacing.value
+            } else if (spacing.isSp) {
+                letterSpacing = with(density) { spacing.toPx() } / textSize
+            }
         }
-        android.text.Layout.getDesiredWidth(text, paint)
     }
 }
 

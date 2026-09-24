@@ -68,10 +68,42 @@ fun PlatformIcon(
     Box(
         modifier
             .size(size)
-            .drawBehind {
-                drawPlatform(drawable, 0, 0, this.size.width.roundToInt(), this.size.height.roundToInt(), alpha)
-            },
+            .drawBehind { drawFitCenter(drawable, alpha) },
     )
+}
+
+/**
+ * ImageView's FIT_CENTER: the drawable at its intrinsic bounds, scaled uniformly to fit and
+ * centered by the same `Matrix.setRectToRect(..., CENTER)` ImageView uses. A drawable without an
+ * intrinsic size fills the element.
+ */
+fun DrawScope.drawFitCenter(
+    drawable: Drawable,
+    alpha: Float = 1f,
+) {
+    val width = size.width.roundToInt()
+    val height = size.height.roundToInt()
+    val intrinsicWidth = drawable.intrinsicWidth
+    val intrinsicHeight = drawable.intrinsicHeight
+    if (intrinsicWidth <= 0 || intrinsicHeight <= 0 || (intrinsicWidth == width && intrinsicHeight == height)) {
+        drawPlatform(drawable, 0, 0, width, height, alpha)
+        return
+    }
+    val matrix = android.graphics.Matrix()
+    matrix.setRectToRect(
+        android.graphics.RectF(0f, 0f, intrinsicWidth.toFloat(), intrinsicHeight.toFloat()),
+        android.graphics.RectF(0f, 0f, width.toFloat(), height.toFloat()),
+        android.graphics.Matrix.ScaleToFit.CENTER,
+    )
+    drawable.setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+    drawable.alpha = (alpha * 255).roundToInt()
+    drawIntoCanvas {
+        val canvas = it.nativeCanvas
+        val saved = canvas.save()
+        canvas.concat(matrix)
+        drawable.draw(canvas)
+        canvas.restoreToCount(saved)
+    }
 }
 
 /**

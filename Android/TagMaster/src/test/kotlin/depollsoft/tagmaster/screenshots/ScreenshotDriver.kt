@@ -1,6 +1,7 @@
 package depollsoft.tagmaster.screenshots
 
 import android.app.Activity
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
@@ -77,6 +78,34 @@ internal class ScreenshotDriver(
     ) {
         (activity as TagPaneHost).showTag(id)
         compose.waitForIdle()
+    }
+
+    /**
+     * Writes every composed node's bounds (px) and text to `build/tm-layout/NAME.txt`, the Compose
+     * counterpart of the View geometry dumps the port was measured against.
+     */
+    fun dumpLayout(name: String) {
+        val out = StringBuilder()
+        fun visit(
+            node: androidx.compose.ui.semantics.SemanticsNode,
+            depth: Int,
+        ) {
+            val bounds = node.boundsInRoot
+            val config = node.config
+            val text =
+                config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString("|")
+                    ?: config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription)?.joinToString("|")
+            val tag = config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)
+            out
+                .append("  ".repeat(depth))
+                .append("[%.1f,%.1f %.1fx%.1f]".format(bounds.left, bounds.top, bounds.width, bounds.height))
+            if (tag != null) out.append(" #").append(tag)
+            if (text != null) out.append(" \"").append(text.take(60)).append('"')
+            out.append('\n')
+            node.children.forEach { visit(it, depth + 1) }
+        }
+        compose.onAllNodes(androidx.compose.ui.test.isRoot(), useUnmergedTree = true).fetchSemanticsNodes().forEach { visit(it, 0) }
+        java.io.File("build/tm-layout").apply { mkdirs() }.resolve("$name.txt").writeText(out.toString())
     }
 
     private fun click(tag: String) {

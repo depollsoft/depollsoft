@@ -214,8 +214,8 @@ private fun Transport(
             Box(
                 Modifier
                     .size(48.dp)
+                    .background(if (playEnabled) colors.primary else colors.onSurface.copy(alpha = 0.10f), CircleShape)
                     .clip(CircleShape)
-                    .background(if (playEnabled) colors.primary else colors.onSurface.copy(alpha = 0.10f))
                     .clickable(enabled = playEnabled, role = Role.Button) { player.togglePlay() }
                     .semantics { contentDescription = playDescription }
                     .testTag("playPause"),
@@ -231,8 +231,8 @@ private fun Transport(
                 Modifier
                     .padding(start = 8.dp)
                     .size(48.dp)
-                    .clip(CircleShape)
                     .border(BorderStroke(1.dp, if (stopEnabled) colors.outlineVariant else colors.onSurface.copy(alpha = 0.12f)), CircleShape)
+                    .clip(CircleShape)
                     .clickable(enabled = stopEnabled, role = Role.Button) { player.stop() }
                     .semantics { contentDescription = stopDescription }
                     .testTag("stop"),

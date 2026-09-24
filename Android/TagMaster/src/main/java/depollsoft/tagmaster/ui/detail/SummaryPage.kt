@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.tagmaster.ui.textViewWidth
+import depollsoft.tagmaster.ui.rememberTextViewPaint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -141,12 +143,13 @@ fun SummaryPage(
                             icon = R.drawable.ic_sheet_music,
                             enabled = !requests.sheetMusicLoading,
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 44.dp, vertical = 8.dp),
+                            inset = 0.dp,
                         )
                         CompactBarberPole(
                             requests.sheetMusicLoading,
                             stringResource(R.string.detail_loading),
                             Modifier
-                                .align(androidx.compose.ui.Alignment.CenterEnd)
+                                .align(ViewAlign.CenterEnd)
                                 .padding(end = 12.dp),
                         )
                     }
@@ -176,9 +179,10 @@ private fun LabelledLine(
     value: String,
 ) {
     val colors = TagMasterTheme.colors
+    val style = TagMasterType.bodyMedium
     Row(Modifier.fillMaxWidth()) {
-        Text(label, style = TagMasterType.bodyMedium, color = colors.text)
-        Text(value, Modifier.padding(start = 4.dp), style = TagMasterType.bodyMedium, color = colors.text)
+        Text(label, Modifier.textViewWidth(label, style), style = style, color = colors.text)
+        Text(value, Modifier.padding(start = 4.dp).textViewWidth(value, style), style = style, color = colors.text)
     }
 }
 
@@ -244,11 +248,11 @@ private fun summaryFacts(
     requests: SummaryRequests,
     canRate: Boolean,
 ): List<DetailPair> {
-    val measurer = rememberTextMeasurer()
     val body = TagMasterType.bodyMedium
+    val bodyPaint = rememberTextViewPaint(body)
 
     fun budget(text: String): (androidx.compose.ui.unit.Density) -> Int =
-        { density -> textBudget(measurer.measure(text, body).size.width, with(density) { body.fontSize.toPx() }) }
+        { _ -> textBudget(kotlin.math.ceil(bodyPaint.measureText(text)).toInt(), bodyPaint.textSize) }
     val pairs = mutableListOf<DetailPair>()
     pairs += textPair(stringResource(R.string.TagId), "${tag.id}", budget("${tag.id}"))
     if (tag.parts.isPresent()) pairs += textPair(stringResource(R.string.Parts), "${tag.parts}", budget("${tag.parts}"))
@@ -264,7 +268,7 @@ private fun summaryFacts(
             stringResource(R.string.Rating),
             valueBudget = { density ->
                 with(density) {
-                    (80.dp.roundToPx() + (ratingText?.let { 8.dp.roundToPx() + measurer.measure(it, body).size.width } ?: 0) +
+                    (80.dp.roundToPx() + (ratingText?.let { 8.dp.roundToPx() + kotlin.math.ceil(bodyPaint.measureText(it)).toInt() } ?: 0) +
                         18.76.dp.roundToPx() + 56.dp.roundToPx())
                 }
             },
@@ -276,7 +280,9 @@ private fun summaryFacts(
                     if (ratingText != null) {
                         Text(
                             ratingText,
-                            Modifier.padding(start = 8.dp),
+                            Modifier
+                                .padding(start = 8.dp)
+                                .textViewWidth(ratingText, body),
                             style = body,
                             color = TagMasterTheme.colors.text,
                             onTextLayout = { lines.lines = it.lineCount },
@@ -333,9 +339,9 @@ private fun KeyNoteButton(tag: Tag) {
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .then(if (playing) Modifier.shadow(2.dp, shape) else Modifier)
-            .clip(shape)
-            .then(if (playing) Modifier.background(colors.primary) else Modifier)
+            .then(if (playing) Modifier.background(colors.primary, shape) else Modifier)
             .border(BorderStroke(1.dp, colors.primary), shape)
+            .clip(shape)
             .notePress(player, { tag.keyNote }, description = noteDescription(note))
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag("playKeyNoteButton"),
@@ -415,8 +421,10 @@ private fun ListChip(
         modifier
             .widthIn(max = 220.dp * fontScale)
             .heightIn(min = 48.dp)
-            .clip(shape)
+            // An outlined Material chip is filled with the surface color, hiding the watermark.
+            .background(colors.surface, shape)
             .border(BorderStroke(1.dp, colors.outlineVariant), shape)
+            .clip(shape)
             .clickable(role = Role.Button, onClick = onClick)
             .semantics {
                 if (onClose != null && closeLabel != null) {
@@ -426,12 +434,14 @@ private fun ListChip(
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlatformIcon(icon, tint = if (accent) colors.primary else colors.onSurfaceVariant, size = 18.dp)
+        val label = TagMasterType.labelLarge.withoutLineHeight().copy(platformStyle = PlatformTextStyle(includeFontPadding = false))
         Text(
             text,
             Modifier
                 .weight(1f, fill = false)
-                .padding(start = 8.dp, end = 4.dp),
-            style = TagMasterType.labelLarge.withoutLineHeight().copy(platformStyle = PlatformTextStyle(includeFontPadding = false)),
+                .padding(start = 8.dp, end = 4.dp)
+                .textViewWidth(text, label),
+            style = label,
             color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

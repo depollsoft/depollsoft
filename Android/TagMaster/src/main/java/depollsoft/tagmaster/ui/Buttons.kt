@@ -79,9 +79,9 @@ fun TagMasterButton(
             .then(
                 InsetShape(shape, inset).let { drawn ->
                     Modifier
-                        .clip(drawn)
                         .background(container, drawn)
                         .then(if (border != null) Modifier.border(border, drawn) else Modifier)
+                        .clip(drawn)
                 },
             )
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)

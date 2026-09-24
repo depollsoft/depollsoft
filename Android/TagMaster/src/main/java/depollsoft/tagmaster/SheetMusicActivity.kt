@@ -275,9 +275,9 @@ private fun KeyFab(
             modifier
                 .padding(end = 16.dp, bottom = 16.dp)
                 .shadow(6.dp, shape)
-                .clip(shape)
-                .background(if (playing) colors.primary else colors.sheetKeySurface)
+                .background(if (playing) colors.primary else colors.sheetKeySurface, shape)
                 .border(BorderStroke(1.dp, colors.primary), shape)
+                .clip(shape)
                 .notePress(player, { tag.keyNote }, description = stringResource(R.string.play_key_note, tag.writtenKey.orEmpty()))
                 .testTag("keyButton"),
         content = {
