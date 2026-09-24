@@ -2,12 +2,11 @@ package depollsoft.tagmaster.barbershop
 
 import android.net.Uri
 import android.util.Log
-import com.bindroid.trackable.*
+import depollsoft.lib.state.StateField
 import kotlin.jvm.JvmOverloads
 import depollsoft.lib.activity.RichApplication
 import org.json.JSONObject
 import depollsoft.pitchperfect.lib.Accidental
-import com.bindroid.trackable.TrackableCollection
 import depollsoft.lib.xml.XmlElement
 import android.util.SparseArray
 import bolts.Task
@@ -28,49 +27,49 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Tag {
-    var appVersion: Int by trackable(CURRENT_APP_VERSION)
-    var id: Int by trackable(0)
-    var title: String? by trackable()
-    var lastRefreshed: Date by trackable(Date(0))
-    var alternativeTitle: String? by trackable()
-    var version: String? by trackable()
-    var writtenKey: String? by trackable()
-    var parts: Int by trackable(0)
-    var tagType: String? by trackable()
-    var recordingMethod: String? by trackable()
-    var teachingVideo: String? by trackable()
-    var notes: String? by trackable()
-    var arranger: String? by trackable()
-    var arrangerWebsite: String? by trackable()
-    var yearArranged: String? by trackable()
-    var sungBy: String? by trackable()
-    var sungByWebsite: String? by trackable()
-    var sungYear: String? by trackable()
-    var learningTrackQuartet: String? by trackable()
-    var learningTrackQuartetWebsite: String? by trackable()
-    var teacher: String? by trackable()
-    var teacherWebsite: String? by trackable()
-    var provider: String? by trackable()
-    var providerWebsite: String? by trackable()
-    var posted: Date? by trackable()
-    var classicTagNumber: Int? by trackable()
-    var rating: Double? by trackable()
-    var downloadCount: Int by trackable(0)
-    var sheetMusicUri: RemoteLocation? by trackable()
-    var notationUri: RemoteLocation? by trackable()
-    var allPartsTrackUri: RemoteLocation? by trackable()
-    var bassTrackUri: RemoteLocation? by trackable()
-    var baritoneTrackUri: RemoteLocation? by trackable()
-    var leadTrackUri: RemoteLocation? by trackable()
-    var tenorTrackUri: RemoteLocation? by trackable()
-    var other1TrackUri: RemoteLocation? by trackable()
-    var other2TrackUri: RemoteLocation? by trackable()
-    var other3TrackUri: RemoteLocation? by trackable()
-    var other4TrackUri: RemoteLocation? by trackable()
-    var videos: MutableList<Video>? by trackable(mutableListOf<Video>())
+    var appVersion: Int by StateField(CURRENT_APP_VERSION)
+    var id: Int by StateField(0)
+    var title: String? by StateField(null)
+    var lastRefreshed: Date by StateField(Date(0))
+    var alternativeTitle: String? by StateField(null)
+    var version: String? by StateField(null)
+    var writtenKey: String? by StateField(null)
+    var parts: Int by StateField(0)
+    var tagType: String? by StateField(null)
+    var recordingMethod: String? by StateField(null)
+    var teachingVideo: String? by StateField(null)
+    var notes: String? by StateField(null)
+    var arranger: String? by StateField(null)
+    var arrangerWebsite: String? by StateField(null)
+    var yearArranged: String? by StateField(null)
+    var sungBy: String? by StateField(null)
+    var sungByWebsite: String? by StateField(null)
+    var sungYear: String? by StateField(null)
+    var learningTrackQuartet: String? by StateField(null)
+    var learningTrackQuartetWebsite: String? by StateField(null)
+    var teacher: String? by StateField(null)
+    var teacherWebsite: String? by StateField(null)
+    var provider: String? by StateField(null)
+    var providerWebsite: String? by StateField(null)
+    var posted: Date? by StateField(null)
+    var classicTagNumber: Int? by StateField(null)
+    var rating: Double? by StateField(null)
+    var downloadCount: Int by StateField(0)
+    var sheetMusicUri: RemoteLocation? by StateField(null)
+    var notationUri: RemoteLocation? by StateField(null)
+    var allPartsTrackUri: RemoteLocation? by StateField(null)
+    var bassTrackUri: RemoteLocation? by StateField(null)
+    var baritoneTrackUri: RemoteLocation? by StateField(null)
+    var leadTrackUri: RemoteLocation? by StateField(null)
+    var tenorTrackUri: RemoteLocation? by StateField(null)
+    var other1TrackUri: RemoteLocation? by StateField(null)
+    var other2TrackUri: RemoteLocation? by StateField(null)
+    var other3TrackUri: RemoteLocation? by StateField(null)
+    var other4TrackUri: RemoteLocation? by StateField(null)
+    var videos: MutableList<Video>? by StateField(mutableListOf())
     val tracks: List<Track>?
         get() {
-            val tracks = TrackableCollection<Track>()
+            val tracks = ArrayList<Track>()
             if (allPartsTrackUri != null) tracks.add(Track("All Parts", allPartsTrackUri))
             if (tenorTrackUri != null) tracks.add(Track("Tenor", tenorTrackUri))
             if (leadTrackUri != null) tracks.add(Track("Lead", leadTrackUri))
@@ -82,7 +81,7 @@ class Tag {
             if (other4TrackUri != null) tracks.add(Track("Other4", other4TrackUri))
             return tracks
         }
-    var lyrics by TrackableField<String?>()
+    var lyrics: String? by StateField(null)
 
     @JvmOverloads
     fun cache(overwrite: Boolean = true) {

@@ -1,6 +1,7 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.track
+import depollsoft.lib.state.SnapshotNotifications
+import depollsoft.lib.state.watchState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -26,20 +27,20 @@ class AuthStateTest {
     fun notifyChanged_reevaluatesEveryTrackedRead() {
         AuthState.setTestSource { signedIn }
         val observed = mutableListOf<Boolean>()
-        track({ AuthState.isSignedIn }) {
-            observed += it()
-            keepTracking
-        }
+        val watch = watchState(emitInitial = true, read = { AuthState.isSignedIn }) { observed += it }
         assertEquals(listOf(false), observed)
 
         // A sign-in that Firebase reports through its auth-state listener, with no
         // activity result at all, still repaints anything bound to the auth state.
         signedIn = true
         AuthState.notifyChanged()
+        SnapshotNotifications.flush()
         assertEquals(listOf(false, true), observed)
 
         signedIn = false
         AuthState.notifyChanged()
+        SnapshotNotifications.flush()
         assertEquals(listOf(false, true, false), observed)
+        watch.stop()
     }
 }

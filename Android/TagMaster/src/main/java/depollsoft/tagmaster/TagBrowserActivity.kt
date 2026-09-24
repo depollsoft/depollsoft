@@ -3,107 +3,109 @@ package depollsoft.tagmaster
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
-import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
-import depollsoft.lib.ui.ThreadSwitchContext
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
+import depollsoft.tagmaster.ui.BarAction
+import depollsoft.tagmaster.ui.BottomTabs
+import depollsoft.tagmaster.ui.ListDetailScaffold
+import depollsoft.tagmaster.ui.ListDialogsHost
+import depollsoft.tagmaster.ui.QueryList
+import depollsoft.tagmaster.ui.SearchFab
+import depollsoft.tagmaster.ui.ShowAs
+import depollsoft.tagmaster.ui.TabItem
+import depollsoft.tagmaster.ui.TagMasterTopBar
+import depollsoft.tagmaster.ui.Watermark
+import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.rememberListDialogs
+import depollsoft.tagmaster.ui.setTagMasterContent
+import kotlinx.coroutines.launch
 
+/** Browse: the catalog four ways — latest, highest rated, most downloaded, and the classics. */
 class TagBrowserActivity :
     AppCompatActivity(),
     TagPaneHost {
-    private val models = mutableListOf<QueryModel>()
+    /** One query per tab, in tab order; each fetches its first page when its tab is first shown. */
+    val models: List<QueryModel> =
+        listOf(
+            QueryModel().apply {
+                maxResults = Integer.MAX_VALUE
+                sortBy = TagSortOptions.Posted
+            },
+            QueryModel().apply {
+                maxResults = Integer.MAX_VALUE
+                sortBy = TagSortOptions.Rating
+            },
+            QueryModel().apply {
+                maxResults = Integer.MAX_VALUE
+                sortBy = TagSortOptions.Downloaded
+            },
+            QueryModel().apply {
+                sortBy = TagSortOptions.Classic
+                collection = TagCollection.ClassicTags
+                maxResults = 400
+            },
+        )
 
-    internal lateinit var tagPane: TagPaneController
+    private val started = BooleanArray(models.size)
+
+    /** The tab on screen. */
+    var currentPage by mutableIntStateOf(0)
+        internal set
+
+    val currentModel: QueryModel
+        get() = models[currentPage]
+
+    internal lateinit var tagPane: TagPaneState
         private set
 
-    private val currentModel: QueryModel?
-        get() = models.getOrNull(findViewById<ViewPager2>(R.id.viewPager)?.currentItem ?: 0)
-
-    private val currentQueryFragment: TagQueryFragment?
-        get() {
-            val position = findViewById<ViewPager2>(R.id.viewPager)?.currentItem ?: return null
-            return supportFragmentManager.findFragmentByTag("f$position") as? TagQueryFragment
-        }
-
-    public override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.setContentView(R.layout.tagmasterview)
-        setUpToolbar(true)
-
-        val latestModel = QueryModel()
-        latestModel.maxResults = Integer.MAX_VALUE
-        latestModel.sortBy = TagSortOptions.Posted
-
-        val ratingModel = QueryModel()
-        ratingModel.maxResults = Integer.MAX_VALUE
-        ratingModel.sortBy = TagSortOptions.Rating
-
-        val downloadsModel = QueryModel()
-        downloadsModel.maxResults = Integer.MAX_VALUE
-        downloadsModel.sortBy = TagSortOptions.Downloaded
-
-        val classicModel = QueryModel()
-        classicModel.sortBy = TagSortOptions.Classic
-        classicModel.collection = TagCollection.ClassicTags
-        classicModel.maxResults = 400
-
-        models.clear()
-        models.addAll(listOf(latestModel, ratingModel, downloadsModel, classicModel))
-
-        val tabLayout = findViewById<TabLayout>(R.id.tabLayout)
-        val viewPager = this.findViewById<ViewPager2>(R.id.viewPager)
-
-        viewPager.adapter =
-            object : FragmentStateAdapter(supportFragmentManager, lifecycle) {
-                override fun getItemCount(): Int = 4
-
-                override fun createFragment(position: Int): Fragment {
-                    val fragment = TagQueryFragment()
-                    fragment.model = models.getOrElse(position) { QueryModel() }
-                    return fragment
-                }
-            }
-
-        val tabs = PopupMenu(this, tabLayout).apply { inflate(R.menu.browsenavigation) }.menu
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            val item = tabs.getItem(position)
-            tab.text = item.title
-            tab.icon = item.icon
-            tab.id = item.itemId
-            tab.setCustomView(R.layout.bottom_tab_content)
-        }.attach()
-
-        tabLayout.applyHorizontalInsetsAsPadding()
-        findViewById<View>(R.id.searchButton).applyBottomInsetsAsMargin()
-
-        findViewById<View>(R.id.searchButton).setOnClickListener {
-            val i = Intent(this, TagSearchActivity::class.java)
-            startActivity(i)
-        }
-
-        supportActionBar?.title = getString(R.string.detail_brand_title).makeTitleString(this)
-
+        currentPage = savedInstanceState?.getInt(STATE_PAGE, 0) ?: 0
+        val configuration = resources.configuration
         tagPane =
-            TagPaneController(
-                activity = this,
-                listedIds = { currentModel?.tags?.map { it.id } ?: emptyList() },
-                reveal = { id -> currentQueryFragment?.revealTag(id) },
-                hasMoreResults = { currentModel?.hasMoreResults == true },
-                fetchMore = { currentModel?.fetchResults(ThreadSwitchContext(this)) },
+            TagPaneState(
+                this,
+                hasTwoPanes(configuration.screenWidthDp, configuration.screenHeightDp),
+                listedIds = { currentModel.tags.map { it.id } },
+                hasMoreResults = { currentModel.hasMoreResults },
+                fetchMore = { currentModel.fetchResults() },
             )
-        tagPane.onCreate(savedInstanceState)
+        setTagMasterContent { BrowseScreen(this) }
+        tagPane.restore(savedInstanceState)
+    }
+
+    /** Starts [page]'s query the first time it is shown. */
+    internal fun startPage(page: Int) {
+        if (started[page]) return
+        started[page] = true
+        models[page].refresh()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        tagPane.onSaveInstanceState(outState)
+        outState.putInt(STATE_PAGE, currentPage)
+        tagPane.save(outState)
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        tagPane.stop()
+        super.onDestroy()
     }
 
     override val hasDetailPane: Boolean
@@ -126,5 +128,63 @@ class TagBrowserActivity :
         event: KeyEvent,
     ): Boolean = tagPane.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
-    override fun onSupportNavigateUp() = navigateUpOrHome()
+    private companion object {
+        const val STATE_PAGE = "depollsoft.tagmaster.browse.page"
+    }
+}
+
+private val browseTabs =
+    listOf(
+        R.string.latest to R.drawable.ic_latest,
+        R.string.Rating to R.drawable.ic_rating,
+        R.string.Downloads to R.drawable.ic_downloads,
+        R.string.classic to R.drawable.ic_classic,
+    )
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun BrowseScreen(activity: TagBrowserActivity) {
+    val dialogs = rememberListDialogs()
+    val pane = activity.tagPane
+    val pager = rememberPagerState(initialPage = activity.currentPage) { browseTabs.size }
+    val scope = rememberCoroutineScope()
+    val listStates = browseTabs.indices.map { rememberLazyListState() }
+    LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect { activity.currentPage = it } }
+    pane.reveal = { id ->
+        val index = activity.currentModel.tags.indexOfFirst { it.id == id }
+        if (index >= 0) scope.launch { listStates[activity.currentPage].animateScrollToItem(index) }
+    }
+    val bar =
+        @Composable {
+            TagMasterTopBar(
+                title = stringResource(R.string.detail_brand_title),
+                brandTitle = true,
+                onNavigateUp = { activity.navigateUpOrHome() },
+                paneTitle = if (pane.hasDetailPane) stringResource(R.string.tag_pane_list_title) else null,
+                actions =
+                    listOf(
+                        BarAction("refresh", stringResource(R.string.Refresh), R.drawable.ic_refresh, ShowAs.IfRoom) {
+                            activity.currentModel.refresh()
+                        },
+                    ),
+            )
+        }
+    val tabs =
+        @Composable {
+            BottomTabs(
+                tabs = browseTabs.mapIndexed { index, (label, icon) -> TabItem(stringResource(label), icon, "browseTab:$index") },
+                selected = pager.currentPage,
+                position = pager.currentPage + pager.currentPageOffsetFraction,
+                onSelect = { scope.launch { pager.animateScrollToPage(it) } },
+                modifier = Modifier.testTag("browseTabs"),
+            )
+        }
+    ListDetailScaffold(pane, dialogs, Watermark.Content, bar, bottom = tabs) {
+        HorizontalPager(pager, Modifier.fillMaxSize().testTag("browsePager"), key = { it }) { page ->
+            LaunchedEffect(page) { activity.startPage(page) }
+            QueryList(activity.models[page], listStates[page], pane.selectedTagId, pane::showTag)
+        }
+        SearchFab { activity.startActivity(Intent(activity, TagSearchActivity::class.java)) }
+    }
+    ListDialogsHost(dialogs)
 }

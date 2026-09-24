@@ -1,6 +1,6 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.TrackableCollection
+import depollsoft.lib.state.StateList
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.TagCollection
 import depollsoft.tagmaster.barbershop.TagSortOptions
@@ -223,7 +223,7 @@ class QueryModelTest {
         tag1.id = 1
         queryModel.tags.add(tag1)
         
-        val newCollection = TrackableCollection<Tag>()
+        val newCollection = StateList<Tag>()
         val tag2 = Tag()
         tag2.id = 2
         newCollection.add(tag2)

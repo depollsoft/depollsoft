@@ -1,15 +1,14 @@
 package depollsoft.tagmaster
 
 import android.content.Context
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.transaction
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
+import depollsoft.lib.state.ChangeSignal
+import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 import java.util.Locale
 
@@ -25,7 +24,7 @@ import java.util.Locale
  *
  * Keys are stable slugs, so renaming a list never moves its tags and an edit made offline on
  * another device still lands in the right list. All mutation goes through this object so the
- * local copy (in [Preferences]) and the cloud copy stay aligned; observers track [version].
+ * local copy (in [Preferences]) and the cloud copy stay aligned; readers of [version] recompose.
  */
 object TagLists {
     const val FAVORITE = "favorite"
@@ -41,19 +40,19 @@ object TagLists {
     enum class NameError { EMPTY, TOO_LONG, DUPLICATE, RESERVED }
 
     /** Bumps on every registry change (create, rename, delete, reorder, remote sync). */
-    private val versionTrackable = Trackable()
+    private val versionSignal = ChangeSignal()
     private var versionValue = 0L
     val version: Long
         get() {
             ensureLoaded()
-            versionTrackable.track()
+            versionSignal.read()
             return versionValue
         }
 
-    private val customKeyList: TrackableCollection<String> = TrackableCollection()
+    private val customKeyList: StateList<String> = StateList()
 
     /** Ordered keys of the user-created lists. Read-only; mutate through this object. */
-    val customKeys: TrackableCollection<String>
+    val customKeys: List<String>
         get() {
             ensureLoaded()
             return customKeyList
@@ -87,7 +86,7 @@ object TagLists {
     /** The stored name of a custom list, or the key itself for a list without metadata. */
     fun name(key: String): String {
         ensureLoaded()
-        versionTrackable.track()
+        versionSignal.read()
         return names[key] ?: key
     }
 
@@ -299,13 +298,10 @@ object TagLists {
         known.addAll(unordered)
         val next = known.toList()
         if (next != customKeyList.toList()) {
-            customKeyList.transaction {
-                clear()
-                addAll(next)
-            }
+            customKeyList.replaceWith(next)
         }
         versionValue++
-        versionTrackable.updateTrackers()
+        versionSignal.changed()
     }
 
     private fun newKey(name: String): String {
@@ -330,6 +326,6 @@ object TagLists {
         names.clear()
         order.clear()
         loaded = false
-        customKeyList.transaction { clear() }
+        customKeyList.replaceWith(emptyList())
     }
 }

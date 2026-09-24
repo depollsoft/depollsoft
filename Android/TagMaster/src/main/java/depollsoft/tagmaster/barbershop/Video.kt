@@ -1,19 +1,19 @@
 package depollsoft.tagmaster.barbershop
 
-import com.bindroid.trackable.*
+import depollsoft.lib.state.StateField
 import depollsoft.lib.xml.XmlElement
 import depollsoft.tagmaster.parseDate
 import java.util.*
 
 class Video {
-    var id by TrackableInt()
-    var description by TrackableField<String?>()
-    var sungKey by TrackableField<String?>()
-    var isMultitrack by TrackableBoolean()
-    var youTubeCode by TrackableField<String?>()
-    var sungBy by TrackableField<String?>()
-    var sungWebsite by TrackableField<String?>()
-    var posted by TrackableField<Date?>()
+    var id: Int by StateField(0)
+    var description: String? by StateField(null)
+    var sungKey: String? by StateField(null)
+    var isMultitrack: Boolean by StateField(false)
+    var youTubeCode: String? by StateField(null)
+    var sungBy: String? by StateField(null)
+    var sungWebsite: String? by StateField(null)
+    var posted: Date? by StateField(null)
 
     fun parseFromXml(elem: XmlElement) {
         for (property in elem.elements) {

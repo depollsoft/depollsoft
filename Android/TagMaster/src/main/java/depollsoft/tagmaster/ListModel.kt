@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.*
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldPath
@@ -9,41 +8,54 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
+import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 
+/**
+ * One list of tag ids, kept in [Preferences] and, when someone is signed in, in the `lists` map of
+ * their Firestore user document.
+ *
+ * [ids] is snapshot state, so composables showing a list recompose when it changes. Every change
+ * goes through this class, which stores it on the spot: the list is saved before the call that
+ * changed it returns.
+ */
 class ListModel private constructor(
     val listName: String,
 ) {
-    var ids: TrackableCollection<Int>
-        by trackable(preferences[listName] ?: TrackableCollection())
+    private val store: StateList<Int> = preferences[listName] ?: StateList()
+
+    /** The tags in this list, in order. Assigning replaces the contents as one change. */
+    var ids: List<Int>
+        get() = store
+        set(value) {
+            val next = value.toList()
+            store.replaceWith(next)
+            changed()
+        }
 
     private var revision = 0L
 
-    /** A main-thread editing baseline. Identity and revision also detect replace/reset-and-restore. */
+    /** A main-thread editing baseline; the revision detects any change made since it was taken. */
     class Snapshot internal constructor(
-        internal val source: TrackableCollection<Int>,
         internal val revision: Long,
         val ids: List<Int>,
     )
 
-    fun snapshot() = Snapshot(ids, revision, ids.toList())
+    fun snapshot() = Snapshot(revision, store.snapshot())
 
     /** Commit a complete permutation once, only if nothing changed since editing began. */
     fun reorder(
         expected: Snapshot,
         order: List<Int>,
     ): Boolean {
-        val current = ids
-        if (current !== expected.source || revision != expected.revision || current.toList() != expected.ids) return false
+        if (revision != expected.revision || store.snapshot() != expected.ids) return false
         if (order == expected.ids || order.size != expected.ids.size ||
             order.toSet().size != order.size || order.toSet() != expected.ids.toSet()
         ) {
             return false
         }
-        current.transaction {
-            clear()
-            addAll(order)
-        }
+        store.replaceWith(order)
+        changed()
         return true
     }
 
@@ -61,42 +73,58 @@ class ListModel private constructor(
     }
 
     fun add(id: Int) {
-        if (!ids.contains(id)) ids.add(id)
+        if (store.contains(id)) return
+        store.add(id)
+        changed()
     }
 
     fun canMoveDown(id: Int): Boolean {
-        val index: Int = ids.indexOf(id)
-        return index >= 0 && index < ids.size - 1
+        val index: Int = store.indexOf(id)
+        return index >= 0 && index < store.size - 1
     }
 
     fun canMoveUp(id: Int): Boolean {
-        val index: Int = ids.indexOf(id)
+        val index: Int = store.indexOf(id)
         return index > 0
     }
 
-    fun contains(id: Int): Boolean = ids.contains(id)
+    fun contains(id: Int): Boolean = store.contains(id)
 
     fun moveDown(id: Int) {
-        if (canMoveDown(id)) move(id, ids.indexOf(id) + 1)
+        if (canMoveDown(id)) move(id, store.indexOf(id) + 1)
     }
 
     fun moveUp(id: Int) {
-        if (canMoveUp(id)) move(id, ids.indexOf(id) - 1)
+        if (canMoveUp(id)) move(id, store.indexOf(id) - 1)
     }
 
     fun remove(id: Int) {
-        ids.remove(Integer.valueOf(id))
+        if (store.remove(Integer.valueOf(id))) changed()
     }
 
     fun reset() {
-        ids.clear()
+        if (store.isEmpty()) return
+        store.clear()
+        changed()
+    }
+
+    /** Replaces the contents with a cloud copy; stored locally only, as [fromFirestore] requires. */
+    private fun replaceFromRemote(value: List<Int>) {
+        if (value == store.snapshot()) return
+        store.replaceWith(value)
+        changed()
+    }
+
+    private fun changed() {
+        revision++
+        storeValue()
     }
 
     private fun storeValue() {
-        if (ids.isEmpty()) {
+        if (store.isEmpty()) {
             preferences.remove(listName)
         } else {
-            preferences[listName] = ids
+            preferences[listName] = store
         }
         if (!shouldStore) {
             return
@@ -109,7 +137,7 @@ class ListModel private constructor(
                 mapOf(
                     "lists" to
                         mapOf(
-                            listName to if (ids.isEmpty()) FieldValue.delete() else ids.toList(),
+                            listName to if (store.isEmpty()) FieldValue.delete() else store.toList(),
                         ),
                 ),
                 // A FieldPath keeps list keys with dots or other punctuation intact.
@@ -118,25 +146,28 @@ class ListModel private constructor(
         }
     }
 
-    init {
-        Trackable.track(
-            object : Tracker {
-                override fun update() {
-                    revision++
-                    storeValue()
-                    Trackable.track(this, { ids.track() })
-                }
-            },
-            { ids.track() },
-        )
-    }
-
     companion object {
         private const val LISTS_KEY = "tagmaster.lists"
         private const val SYNCED_UID_KEY = "tagmaster.syncedUid"
 
-        private val preferences: MutableMap<String, TrackableCollection<Int>> by lazy {
-            Preferences.get(LISTS_KEY) ?: mutableMapOf()
+        private val preferences: MutableMap<String, StateList<Int>> by lazy {
+            decodeLists(Preferences.get(LISTS_KEY))
+        }
+
+        /**
+         * Every stored list as the observable list the models use. Stored lists come back as
+         * [StateList] (the app registers it under the alias the Bindroid collection was written
+         * with); anything else that is a collection is converted rather than dropped.
+         */
+        @Suppress("UNCHECKED_CAST")
+        internal fun decodeLists(stored: Map<*, *>?): MutableMap<String, StateList<Int>> {
+            val lists = mutableMapOf<String, StateList<Int>>()
+            stored?.forEach { (key, value) ->
+                if (key is String && value is Collection<*>) {
+                    lists[key] = value as? StateList<Int> ?: StateList(value.filterIsInstance<Int>())
+                }
+            }
+            return lists
         }
 
         private fun storeValue(toFirestore: Boolean) {
@@ -146,9 +177,9 @@ class ListModel private constructor(
             }
         }
 
-        // Held strongly: a model is tiny, there is one per list, and observers track its `ids`
-        // collection. A weak cache let an empty list (no stored preference) be rebuilt around a
-        // fresh collection once the old model was collected, silently orphaning those observers.
+        // Held strongly: a model is tiny, there is one per list, and composables read its `ids`.
+        // A weak cache let an empty list (no stored preference) be rebuilt around a fresh
+        // collection once the old model was collected, silently orphaning those readers.
         private val modelInstances: MutableMap<String, ListModel> = mutableMapOf()
 
         operator fun invoke(listName: String): ListModel = modelInstances.getOrPut(listName) { ListModel(listName) }
@@ -163,18 +194,16 @@ class ListModel private constructor(
                 return
             }
 
-            val favorites: TrackableCollection<Int>? = Preferences.get(favoritesKey)
-            val teachables: TrackableCollection<Int>? = Preferences.get(teachablesKey)
+            val favorites: Collection<*>? = Preferences.get(favoritesKey)
+            val teachables: Collection<*>? = Preferences.get(teachablesKey)
 
             if (favorites != null) {
-                val favModel = ListModel.invoke("favorite")
-                favModel.ids = favorites
+                ListModel.invoke(TagLists.FAVORITE).ids = favorites.filterIsInstance<Int>()
                 Preferences.set(favoritesKey, null)
             }
 
             if (teachables != null) {
-                val teachableModel = ListModel.invoke("teachable")
-                teachableModel.ids = teachables
+                ListModel.invoke(TagLists.TEACHABLE).ids = teachables.filterIsInstance<Int>()
                 Preferences.set(teachablesKey, null)
             }
         }
@@ -186,10 +215,6 @@ class ListModel private constructor(
         internal fun storedKeys(): Set<String> = preferences.keys.toSet()
 
         /**
-         * Empties [listName] on this device without writing to Firestore. [TagLists.delete] uses it
-         * and then deletes the cloud field together with the list's metadata in one write.
-         */
-        /**
          * Drops every list on this device without touching the cloud. Used when a different
          * account signs in: the lists here belong to the account that last synced them.
          */
@@ -197,7 +222,7 @@ class ListModel private constructor(
             val wasStoring = shouldStore
             shouldStore = false
             try {
-                (preferences.keys + TagLists.RESERVED).toSet().forEach { ListModel.invoke(it).ids.clear() }
+                (preferences.keys + TagLists.RESERVED).toSet().forEach { ListModel.invoke(it).reset() }
                 preferences.clear()
                 TagLists.resetLocal()
             } finally {
@@ -220,11 +245,15 @@ class ListModel private constructor(
             return true
         }
 
+        /**
+         * Empties [listName] on this device without writing to Firestore. [TagLists.delete] uses it
+         * and then deletes the cloud field together with the list's metadata in one write.
+         */
         internal fun discard(listName: String) {
             val wasStoring = shouldStore
             shouldStore = false
             try {
-                ListModel.invoke(listName).ids.clear()
+                ListModel.invoke(listName).reset()
             } finally {
                 shouldStore = wasStoring
             }
@@ -255,22 +284,18 @@ class ListModel private constructor(
                     if (it !is String) {
                         return
                     }
-                    val cur = ListModel.invoke(it)
-                    cur.ids.clear()
+                    ListModel.invoke(it).reset()
                 }
                 // Update existing lists
                 data.keys.forEach {
                     if (it !is String) {
                         return
                     }
-                    val cur = ListModel.invoke(it)
-                    var newValue =
+                    val newValue =
                         (data[it] as? List<*>)
                             ?.mapNotNull { (it as? Long)?.toInt() }
-                            ?.toMutableList() ?: mutableListOf()
-                    if (!newValue.equals(cur.ids)) {
-                        cur.ids.replaceBackingStore(newValue)
-                    }
+                            ?: emptyList()
+                    ListModel.invoke(it).replaceFromRemote(newValue)
                 }
                 TagLists.applyRemote(info, data.keys.filterIsInstance<String>())
             } finally {

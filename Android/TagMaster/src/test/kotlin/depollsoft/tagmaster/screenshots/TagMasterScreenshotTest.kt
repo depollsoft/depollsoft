@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -19,8 +20,6 @@ import depollsoft.tagmaster.SheetMusicActivity
 import depollsoft.tagmaster.TagBrowserActivity
 import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.TagListActivity
-import depollsoft.tagmaster.TagPaneHost
-import depollsoft.tagmaster.TagQueryFragment
 import depollsoft.tagmaster.TagSearchActivity
 import depollsoft.tagmaster.TagSearchResultsActivity
 import depollsoft.tagmaster.TeachableTagsActivity
@@ -29,6 +28,7 @@ import depollsoft.tagmaster.screenshots.ScreenshotFixtures.HEART
 import depollsoft.tagmaster.screenshots.ScreenshotFixtures.settle
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -51,6 +51,10 @@ import java.net.URL
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(application = Application::class, sdk = [35], qualifiers = PHONE)
 class TagMasterScreenshotTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
+    private val driver by lazy { ScreenshotDriver(compose) }
     private var controller: ActivityController<*>? = null
     private var catalog: (URL) -> java.io.InputStream = { ScreenshotFixtures.catalogPage(it) }
 
@@ -107,7 +111,7 @@ class TagMasterScreenshotTest {
     private fun resultsIntent(query: String) =
         Intent(org.robolectric.RuntimeEnvironment.getApplication(), TagSearchResultsActivity::class.java)
             .putExtra(
-                TagQueryFragment.QUERY_MODEL,
+                TagSearchResultsActivity.QUERY_MODEL,
                 JsonSerializer
                     .serialize(
                         QueryModel().apply {
@@ -138,7 +142,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             ScreenshotFixtures.populateLists()
             val activity = launch(MeActivity::class.java)
-            ScreenshotDriver.startEditing(activity)
+            driver.startEditing(activity)
             capture(activity, "home_editing")
         }
 
@@ -154,7 +158,7 @@ class TagMasterScreenshotTest {
     fun homeNewListDialog() =
         withCatalog {
             val activity = launch(MeActivity::class.java)
-            ScreenshotDriver.showNewListDialog(activity)
+            driver.showNewListDialog()
             captureScreen("dialog_new_list")
         }
 
@@ -163,7 +167,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             val (afterglow, _) = ScreenshotFixtures.populateLists()
             val activity = launch(MeActivity::class.java)
-            ScreenshotDriver.showRenameListDialog(activity, afterglow)
+            driver.showRenameListDialog(afterglow)
             captureScreen("dialog_rename_list")
         }
 
@@ -172,7 +176,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             val (afterglow, _) = ScreenshotFixtures.populateLists()
             val activity = launch(MeActivity::class.java)
-            ScreenshotDriver.showDeleteListDialog(activity, afterglow)
+            driver.showDeleteListDialog(afterglow)
             captureScreen("dialog_delete_list")
         }
 
@@ -180,7 +184,7 @@ class TagMasterScreenshotTest {
     fun homeOpenTagDialog() =
         withCatalog {
             val activity = launch(MeActivity::class.java)
-            ScreenshotDriver.showOpenTagDialog(activity)
+            driver.showOpenTagDialog()
             captureScreen("dialog_open_tag")
         }
 
@@ -213,7 +217,7 @@ class TagMasterScreenshotTest {
             val (afterglow, _) = ScreenshotFixtures.populateLists()
             val app = org.robolectric.RuntimeEnvironment.getApplication()
             val activity = launch(TagListActivity::class.java, TagListActivity.intent(app, afterglow))
-            ScreenshotDriver.startEditing(activity)
+            driver.startEditing(activity)
             capture(activity, "list_editing")
         }
 
@@ -276,7 +280,7 @@ class TagMasterScreenshotTest {
         id: Int = HEART,
     ) = withCatalog {
         val activity = launch(TagDetailActivity::class.java, detailIntent(id))
-        ScreenshotDriver.selectDetailPage(activity, page)
+        driver.selectDetailPage(activity, page)
         capture(activity, name)
     }
 
@@ -345,7 +349,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             ScreenshotFixtures.populateLists()
             val activity = launch(TagDetailActivity::class.java, detailIntent())
-            ScreenshotDriver.showListPicker(activity, HEART)
+            driver.showListPicker()
             captureScreen("dialog_list_picker")
         }
 
@@ -353,7 +357,7 @@ class TagMasterScreenshotTest {
     fun detailRatingDialog() =
         withCatalog {
             val activity = launch(TagDetailActivity::class.java, detailIntent())
-            ScreenshotDriver.showRatingDialog(activity)
+            driver.showRatingDialog()
             captureScreen("dialog_rating")
         }
 
@@ -400,7 +404,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             ScreenshotFixtures.populateLists()
             val activity = launch(MeActivity::class.java)
-            (activity as TagPaneHost).showTag(HEART)
+            driver.showTag(activity, HEART)
             capture(activity, "tablet_home_tag")
         }
 
@@ -409,7 +413,7 @@ class TagMasterScreenshotTest {
     fun tabletBrowseWithTag() =
         withCatalog {
             val activity = launch(TagBrowserActivity::class.java)
-            (activity as TagPaneHost).showTag(2147483200)
+            driver.showTag(activity, 2147483200)
             capture(activity, "tablet_browse_tag")
         }
 
@@ -420,9 +424,9 @@ class TagMasterScreenshotTest {
             val (afterglow, _) = ScreenshotFixtures.populateLists()
             val app = org.robolectric.RuntimeEnvironment.getApplication()
             val activity = launch(TagListActivity::class.java, TagListActivity.intent(app, afterglow))
-            (activity as TagPaneHost).showTag(HEART)
+            driver.showTag(activity, HEART)
             settle()
-            ScreenshotDriver.selectDetailPage(activity, 1)
+            driver.selectDetailPage(activity, 1)
             capture(activity, "tablet_list_tag_details")
         }
 
@@ -432,7 +436,7 @@ class TagMasterScreenshotTest {
         withCatalog {
             ScreenshotFixtures.populateLists()
             val activity = launch(TeachableTagsActivity::class.java)
-            (activity as TagPaneHost).showTag(HEART)
+            driver.showTag(activity, HEART)
             capture(activity, "tablet_teachable_tag_night")
         }
 }
