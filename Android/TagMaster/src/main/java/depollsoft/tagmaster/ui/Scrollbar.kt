@@ -123,13 +123,14 @@ private class ScrollbarFade {
 
 /**
  * Draws the platform's vertical scrollbar thumb over this element, inset by the scrolling
- * container's [top] and [bottom] padding, exactly where and how a View with
+ * container's [top], [bottom] and [end] padding, exactly where and how a View with
  * `scrollbarStyle="insideOverlay"` draws it.
  */
 @Composable
 private fun Modifier.viewScrollbar(
     top: Dp,
     bottom: Dp,
+    end: Dp = 0.dp,
     isScrolling: () -> Boolean,
     measure: () -> ScrollExtent?,
 ): Modifier {
@@ -182,7 +183,7 @@ private fun Modifier.viewScrollbar(
         if (offset > track - length) offset = track - length
         // ScrollBarDrawable takes the fade as an integer alpha.
         val shown = (alpha.value * 255).toInt() / 255f
-        drawPlatform(thumb, size.width.toInt() - thickness, trackTop + offset, thickness, length, shown)
+        drawPlatform(thumb, size.width.toInt() - end.roundToPx() - thickness, trackTop + offset, thickness, length, shown)
     }
 }
 
@@ -192,7 +193,7 @@ fun Modifier.recyclerScrollbar(
     state: LazyListState,
     top: Dp = 0.dp,
     bottom: Dp = 0.dp,
-): Modifier = viewScrollbar(top, bottom, { state.isScrollInProgress }) { recyclerViewExtent(state.layoutInfo) }
+): Modifier = viewScrollbar(top, bottom, isScrolling = { state.isScrollInProgress }) { recyclerViewExtent(state.layoutInfo) }
 
 /**
  * ListView's scrollbar for a list with [top] and [bottom] content padding whose rows after the
@@ -206,22 +207,24 @@ fun Modifier.listViewScrollbar(
     divider: Dp = 0.dp,
 ): Modifier {
     val dividerPx = with(LocalDensity.current) { divider.roundToPx() }
-    return viewScrollbar(top, bottom, { state.isScrollInProgress }) { listViewExtent(state.layoutInfo, dividerPx) }
+    return viewScrollbar(top, bottom, isScrolling = { state.isScrollInProgress }) { listViewExtent(state.layoutInfo, dividerPx) }
 }
 
 /**
  * ScrollView's scrollbar, for a [verticalScroll][androidx.compose.foundation.verticalScroll]
- * whose content carries [top] and [bottom] padding (the ScrollView's own padding in the layout it
- * replaces). The range is the child's bottom edge; the extent is the whole view.
+ * whose content carries [top], [bottom] and [end] padding (the ScrollView's own padding in the
+ * layout it replaces; the thumb sits inside it). The range is the child's bottom edge; the extent
+ * is the whole view.
  */
 @Composable
 fun Modifier.scrollViewScrollbar(
     state: ScrollState,
     top: Dp = 0.dp,
     bottom: Dp = 0.dp,
+    end: Dp = 0.dp,
 ): Modifier {
     val density = LocalDensity.current
-    return viewScrollbar(top, bottom, { state.isScrollInProgress }) {
+    return viewScrollbar(top, bottom, end, { state.isScrollInProgress }) {
         val viewport = state.viewportSize
         if (viewport <= 0) {
             null

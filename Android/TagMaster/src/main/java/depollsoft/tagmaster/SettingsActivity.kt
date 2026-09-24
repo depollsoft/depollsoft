@@ -267,7 +267,7 @@ private fun SettingsScreen(activity: SettingsActivity) {
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .scrollViewScrollbar(scroll, bottom = 16.dp)
+                        .scrollViewScrollbar(scroll, bottom = 16.dp, end = 16.dp)
                         .verticalScroll(scroll)
                         .padding(start = 16.dp + extra, end = 16.dp + extra, bottom = 16.dp)
                         .testTag("settingsForm"),
