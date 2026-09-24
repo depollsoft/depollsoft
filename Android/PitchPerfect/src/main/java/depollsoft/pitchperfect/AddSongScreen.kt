@@ -95,6 +95,29 @@ class SongEditorState(
         if (titleMissing && value.text.isNotBlank()) titleMissing = false
     }
 
+    /** What the editor holds so far, for [restore] after the activity is recreated. */
+    fun save(into: android.os.Bundle) {
+        into.putString(SAVED_TITLE, title.text)
+        into.putInt(SAVED_SELECTION_START, title.selection.start)
+        into.putInt(SAVED_SELECTION_END, title.selection.end)
+        into.putBoolean(SAVED_MINOR, minor)
+        into.putInt(SAVED_KEY, (if (minor) Key.getMinorKeys() else Key.getMajorKeys()).indexOf(key))
+        into.putBoolean(SAVED_TITLE_MISSING, titleMissing)
+    }
+
+    fun restore(saved: android.os.Bundle) {
+        val text = saved.getString(SAVED_TITLE) ?: return
+        title =
+            TextFieldValue(
+                text,
+                androidx.compose.ui.text.TextRange(saved.getInt(SAVED_SELECTION_START), saved.getInt(SAVED_SELECTION_END)),
+            )
+        (if (saved.getBoolean(SAVED_MINOR)) Key.getMinorKeys() else Key.getMajorKeys())
+            .getOrNull(saved.getInt(SAVED_KEY))
+            ?.let { key = it }
+        titleMissing = saved.getBoolean(SAVED_TITLE_MISSING)
+    }
+
     /** Saves the song. Returns false, and flags the title, when there is no title. */
     fun save(): Boolean {
         val name = title.text.trim()
@@ -262,3 +285,10 @@ private fun KeyChoice(
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
     }
 }
+
+private const val SAVED_TITLE = "title"
+private const val SAVED_SELECTION_START = "selectionStart"
+private const val SAVED_SELECTION_END = "selectionEnd"
+private const val SAVED_MINOR = "minor"
+private const val SAVED_KEY = "key"
+private const val SAVED_TITLE_MISSING = "titleMissing"

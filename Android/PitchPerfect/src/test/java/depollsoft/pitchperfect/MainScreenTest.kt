@@ -11,6 +11,8 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.Lifecycle
 import depollsoft.lib.activity.RichApplication
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.hasText
 import depollsoft.pitchperfect.ComposeScreens.Companion.song
 import depollsoft.pitchperfect.lib.Key
 import org.junit.After
@@ -358,6 +360,25 @@ class MainScreenTest {
         assertEquals("Blue Skies (tag)", original.name)
         assertEquals("flipping the mode keeps the signature", "a", original.key.friendlyName)
         assertEquals(original.id, songs.single().id)
+    }
+
+    @Test
+    fun aHalfWrittenSongSurvivesRecreation() {
+        songs.add(song("Blue Skies", Key.getMajorKeys()[6]))
+        val intent =
+            android.content.Intent(androidx.test.core.app.ApplicationProvider.getApplicationContext(), AddSongActivity::class.java)
+                .putExtra(AddSongActivity.ID_EXTRA, songs.single().id)
+                .putExtra(AddSongActivity.LIST_EXTRA, SongsModel.DEFAULT_ID)
+        val controller = screens.launch(AddSongActivity::class.java, intent)
+        compose.onNodeWithTag(TestTags.SONG_TITLE).performTextReplacement("Blue Skies (ta")
+        editorKey("G major, 1 sharp").performTap()
+        screens.settle()
+
+        controller.recreate()
+        screens.settle()
+        compose.onNodeWithTag(TestTags.SONG_TITLE).assert(hasText("Blue Skies (ta"))
+        assertEquals("G", controller.get().editor.key.friendlyName)
+        assertEquals("nothing is saved by the rotation", "Blue Skies", songs.single().name)
     }
 
     @Test

@@ -31,6 +31,8 @@ class AddSongActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val list = SongsModel.get().listOrCurrent(intent.getStringExtra(LIST_EXTRA))
         editor = SongEditorState(list, intent.getStringExtra(ID_EXTRA))
+        // The title typed and the key chosen so far survive rotation, as the EditText's did.
+        keepAcrossRecreation("depollsoft.pitchperfect.SongEditor", { android.os.Bundle().also(editor::save) }, editor::restore)
         setTitle(if (editor.editing) R.string.EditSong else R.string.AddSong)
 
         setContent {
