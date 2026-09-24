@@ -140,7 +140,7 @@ fun ViewCenteredText(
             )
         val height = maxOf(placeable.height, constraints.minHeight)
         layout(width, height) {
-            placeable.place((width - even) shr 1, (height - placeable.height) / 2)
+            placeable.placeRelative((width - even) shr 1, (height - placeable.height) / 2)
         }
     }
 }
@@ -150,7 +150,7 @@ fun Modifier.widthPx(width: Int): Modifier =
     layout { measurable, constraints ->
         val exact = width.coerceIn(constraints.minWidth, constraints.maxWidth)
         val placeable = measurable.measure(constraints.copy(minWidth = exact, maxWidth = exact))
-        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+        layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
     }
 
 /**

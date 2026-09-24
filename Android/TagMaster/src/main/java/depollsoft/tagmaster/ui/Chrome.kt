@@ -38,13 +38,17 @@ import kotlinx.coroutines.launch
 fun AppCompatActivity.setTagMasterContent(content: @Composable () -> Unit) {
     WindowCompat.setDecorFitsSystemWindows(window, false)
     WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
+    val menuKey = MenuKey()
     setContent {
         TagMasterTheme {
-            ProvideSnackbars {
-                Box(Modifier.fillMaxSize().rootSemantics()) { content() }
+            CompositionLocalProvider(LocalMenuKey provides menuKey) {
+                ProvideSnackbars {
+                    Box(Modifier.fillMaxSize().rootSemantics()) { content() }
+                }
             }
         }
     }
+    menuKey.install(window)
     val contentView = findViewById<View>(android.R.id.content)
     contentView.background =
         object : ColorDrawable(getColor(R.color.brand_chrome)) {

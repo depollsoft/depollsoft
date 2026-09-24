@@ -176,7 +176,7 @@ private fun MetadataLine(
             var x = 0
             var y = 0
             for (placeable in placeables) {
-                placeable.place(x, y)
+                placeable.placeRelative(x, y)
                 if (stack) y += placeable.height else x += placeable.width
             }
         }

@@ -97,8 +97,8 @@ fun DetailPairs(
         }
         layout(width, y) {
             for (row in rows) {
-                row.caption.place(0, row.y + row.captionTop)
-                row.value.place(row.valueLeft, row.y + row.valueTop)
+                row.caption.placeRelative(0, row.y + row.captionTop)
+                row.value.placeRelative(row.valueLeft, row.y + row.valueTop)
             }
         }
     }

@@ -30,7 +30,10 @@ import depollsoft.tagmaster.ui.ListDialogsHost
 import depollsoft.tagmaster.ui.QueryList
 import depollsoft.tagmaster.ui.SearchFab
 import depollsoft.tagmaster.ui.ShowAs
+import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.TabItem
+import depollsoft.tagmaster.ui.UsualTouchSlop
+import depollsoft.tagmaster.ui.rememberPagerTabs
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.Watermark
 import depollsoft.tagmaster.ui.navigateUpOrHome
@@ -152,7 +155,9 @@ private fun BrowseScreen(activity: TagBrowserActivity) {
     val pager = rememberPagerState(initialPage = activity.currentPage) { browseTabs.size }
     val scope = rememberCoroutineScope()
     val listStates = browseTabs.indices.map { rememberLazyListState() }
-    LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect { activity.currentPage = it } }
+    val pagerTabs = rememberPagerTabs(pager)
+    // The page Refresh acts on is the selected tab's, as onPageSelected set it.
+    LaunchedEffect(pager) { snapshotFlow { pagerTabs.selected }.collect { activity.currentPage = it } }
     pane.reveal = { id ->
         val index = activity.currentModel.tags.indexOfFirst { it.id == id }
         if (index >= 0) scope.launch { listStates[activity.currentPage].revealItem(index) }
@@ -176,16 +181,20 @@ private fun BrowseScreen(activity: TagBrowserActivity) {
         @Composable {
             BottomTabs(
                 tabs = browseTabs.mapIndexed { index, (label, icon) -> TabItem(stringResource(label), icon, "browseTab:$index") },
-                selected = pager.currentPage,
+                selected = pagerTabs.selected,
                 position = pager.currentPage + pager.currentPageOffsetFraction,
-                onSelect = { scope.launch { pager.animateScrollToPage(it) } },
+                onSelect = pagerTabs::select,
                 modifier = Modifier.testTag("browseTabs"),
             )
         }
     ListDetailScaffold(pane, dialogs, Watermark.Content, bar, bottom = tabs) {
-        HorizontalPager(pager, Modifier.fillMaxSize().testTag("browsePager"), key = { it }) { page ->
-            LaunchedEffect(page) { activity.startPage(page) }
-            QueryList(activity.models[page], listStates[page], pane.selectedTagId, pane::showTag)
+        PagingTouchSlop {
+            HorizontalPager(pager, Modifier.fillMaxSize().testTag("browsePager"), key = { it }) { page ->
+                UsualTouchSlop {
+                    LaunchedEffect(page) { activity.startPage(page) }
+                    QueryList(activity.models[page], listStates[page], pane.selectedTagId, pane::showTag)
+                }
+            }
         }
         SearchFab { activity.startActivity(Intent(activity, TagSearchActivity::class.java)) }
     }

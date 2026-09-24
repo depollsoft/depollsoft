@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -162,92 +163,100 @@ fun TagMasterTopBar(
     val navIcon = remember(context) { themeDrawableRes(context, androidx.appcompat.R.attr.homeAsUpIndicator) }
     val overflowIcon = remember(context) { overflowDrawableRes(context) }
 
-    Layout(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(colors.chrome)
-                .semantics { if (paneTitle != null) this.paneTitle = paneTitle },
-        content = {
-            if (onNavigateUp != null) {
-                val up = context.getString(androidx.appcompat.R.string.abc_action_bar_up_description)
-                Box(
-                    Modifier
-                        .layoutId("nav")
-                        .size(56.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = false, radius = 20.dp),
-                            role = Role.Button,
-                            onClick = onNavigateUp,
-                        ).semantics { contentDescription = up }
-                        .testTag("navigateUp"),
-                    contentAlignment = ViewAlign.Center,
-                ) {
-                    PlatformIcon(navIcon, tint = colors.onChrome)
-                }
-            }
-            Text(
-                title,
-                modifier =
-                    Modifier
-                        .layoutId("title")
-                        .testTag("toolbarTitle")
-                        // A TextView clips glyph overhang at its bounds; the Wickhop "T" has some.
-                        .clipToBounds()
-                        .semantics { if (titleIsHeading) heading() },
-                style = titleStyle,
-                color = colors.onChrome,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            for (action in shown) {
-                ActionButton(action, colors, Modifier.layoutId("action"))
-            }
-            if (overflow.isNotEmpty()) {
-                Box(Modifier.layoutId("overflow")) {
-                    val more = context.getString(androidx.appcompat.R.string.abc_action_menu_overflow_description)
-                    Box(
-                        Modifier
-                            .size(40.dp, 48.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = ripple(bounded = false, radius = 20.dp),
-                                role = Role.Button,
-                            ) { menuOpen = true }
-                            .semantics { contentDescription = more }
-                            .testTag("overflowMenu")
-                            .padding(start = 6.dp, end = 10.dp),
-                        contentAlignment = ViewAlign.Center,
-                    ) {
-                        PlatformIcon(overflowIcon, tint = colors.onChrome)
+    if (overflow.isNotEmpty()) OpensOnMenuKey { menuOpen = true }
+    OnChrome {
+        Layout(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .background(colors.chrome)
+                    .semantics { if (paneTitle != null) this.paneTitle = paneTitle },
+            content = {
+                if (onNavigateUp != null) {
+                    val up = context.getString(androidx.appcompat.R.string.abc_action_bar_up_description)
+                    WithTooltip(up, Modifier.layoutId("nav")) { tooltip ->
+                        Box(
+                            Modifier
+                                .size(56.dp)
+                                .combinedClickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(bounded = false, radius = 20.dp),
+                                    role = Role.Button,
+                                    onLongClick = tooltip::longPressed,
+                                    onClick = onNavigateUp,
+                                ).semantics { contentDescription = up }
+                                .testTag("navigateUp"),
+                            contentAlignment = ViewAlign.Center,
+                        ) {
+                            PlatformIcon(navIcon, tint = colors.onChrome)
+                        }
                     }
-                    OverflowMenu(menuOpen, overflow) { menuOpen = false }
+                }
+                Text(
+                    title,
+                    modifier =
+                        Modifier
+                            .layoutId("title")
+                            .testTag("toolbarTitle")
+                            // A TextView clips glyph overhang at its bounds; the Wickhop "T" has some.
+                            .clipToBounds()
+                            .semantics { if (titleIsHeading) heading() },
+                    style = titleStyle,
+                    color = colors.onChrome,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                for (action in shown) {
+                    ActionButton(action, colors, Modifier.layoutId("action"))
+                }
+                if (overflow.isNotEmpty()) {
+                    Box(Modifier.layoutId("overflow")) {
+                        val more = context.getString(androidx.appcompat.R.string.abc_action_menu_overflow_description)
+                        WithTooltip(more) { tooltip ->
+                            Box(
+                                Modifier
+                                    .size(40.dp, 48.dp)
+                                    .combinedClickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = ripple(bounded = false, radius = 20.dp),
+                                        role = Role.Button,
+                                        onLongClick = tooltip::longPressed,
+                                    ) { menuOpen = true }
+                                    .semantics { contentDescription = more }
+                                    .testTag("overflowMenu")
+                                    .padding(start = 6.dp, end = 10.dp),
+                                contentAlignment = ViewAlign.Center,
+                            ) {
+                                PlatformIcon(overflowIcon, tint = colors.onChrome)
+                            }
+                        }
+                        OverflowMenu(menuOpen, overflow) { menuOpen = false }
+                    }
+                }
+            },
+        ) { measurables, constraints ->
+            // MaterialToolbar on a large screen pads its sides by 8dp; its title keeps a 12dp content
+            // inset plus a 4dp title margin, measured from the Up button when there is one.
+            val height = 64.dp.roundToPx()
+            val width = constraints.maxWidth
+            val sidePadding = if (configuration.smallestScreenWidthDp >= 600) 8.dp.roundToPx() else 0
+            val nav = measurables.firstOrNull { it.layoutId == "nav" }?.measure(Constraints())
+            val buttons = measurables.filter { it.layoutId == "action" || it.layoutId == "overflow" }.map { it.measure(Constraints()) }
+            val menuWidth = buttons.sumOf { it.width }
+            val titleLeft = maxOf(sidePadding + (nav?.width ?: 0), 12.dp.roundToPx()) + 4.dp.roundToPx()
+            val menuLeft = width - sidePadding - menuWidth
+            val titleRoom = (menuLeft - titleLeft - 4.dp.roundToPx()).coerceAtLeast(0)
+            val titlePlaceable = measurables.first { it.layoutId == "title" }.measure(Constraints(maxWidth = titleRoom))
+            layout(width, height) {
+                nav?.placeRelative(sidePadding, (height - nav.height) / 2)
+                titlePlaceable.placeRelative(titleLeft, (height - titlePlaceable.height) / 2)
+                var x = menuLeft
+                for (button in buttons) {
+                    button.placeRelative(x, (height - button.height) / 2)
+                    x += button.width
                 }
             }
-        },
-    ) { measurables, constraints ->
-        // MaterialToolbar on a large screen pads its sides by 8dp; its title keeps a 12dp content
-        // inset plus a 4dp title margin, measured from the Up button when there is one.
-        val height = 64.dp.roundToPx()
-        val width = constraints.maxWidth
-        val sidePadding = if (configuration.smallestScreenWidthDp >= 600) 8.dp.roundToPx() else 0
-        val nav = measurables.firstOrNull { it.layoutId == "nav" }?.measure(Constraints())
-        val buttons = measurables.filter { it.layoutId == "action" || it.layoutId == "overflow" }.map { it.measure(Constraints()) }
-        val menuWidth = buttons.sumOf { it.width }
-        val titleLeft = maxOf(sidePadding + (nav?.width ?: 0), 12.dp.roundToPx()) + 4.dp.roundToPx()
-        val menuLeft = width - sidePadding - menuWidth
-        val titleRoom = (menuLeft - titleLeft - 4.dp.roundToPx()).coerceAtLeast(0)
-        val titlePlaceable = measurables.first { it.layoutId == "title" }.measure(Constraints(maxWidth = titleRoom))
-        layout(width, height) {
-            nav?.place(sidePadding, (height - nav.height) / 2)
-            titlePlaceable.place(titleLeft, (height - titlePlaceable.height) / 2)
-            var x = menuLeft
-            for (button in buttons) {
-                button.place(x, (height - button.height) / 2)
-                x += button.width
-            }
-        }
+    }
     }
 }
 
@@ -257,25 +266,36 @@ private fun ActionButton(
     colors: TagMasterColors,
     modifier: Modifier,
 ) {
-    val base =
-        modifier
-            .clickable(
-                enabled = action.enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = false, radius = 20.dp),
-                role = Role.Button,
-                onClick = action.onClick,
-            ).testTag(action.id)
     if (action.icon != null) {
-        Box(
-            base
-                .size(48.dp)
-                .semantics { contentDescription = action.title },
-            contentAlignment = ViewAlign.Center,
-        ) {
-            PlatformIcon(action.icon, tint = colors.onChrome, alpha = action.iconAlpha)
+        // An icon-only action names itself in a tooltip, as AppCompat's action items did.
+        WithTooltip(action.title, modifier) { tooltip ->
+            Box(
+                Modifier
+                    .combinedClickable(
+                        enabled = action.enabled,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false, radius = 20.dp),
+                        role = Role.Button,
+                        onLongClick = tooltip::longPressed,
+                        onClick = action.onClick,
+                    ).testTag(action.id)
+                    .size(48.dp)
+                    .semantics { contentDescription = action.title },
+                contentAlignment = ViewAlign.Center,
+            ) {
+                PlatformIcon(action.icon, tint = colors.onChrome, alpha = action.iconAlpha)
+            }
         }
     } else {
+        val base =
+            modifier
+                .clickable(
+                    enabled = action.enabled,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = 20.dp),
+                    role = Role.Button,
+                    onClick = action.onClick,
+                ).testTag(action.id)
         Box(
             base
                 .height(48.dp)
@@ -308,7 +328,13 @@ private fun OverflowMenu(
     ) {
         for (item in items) {
             DropdownMenuItem(
-                text = { Text(item.title, style = TagMasterType.bodyLarge.withoutLineHeight(), color = colors.onSurface) },
+                text = {
+                    Text(
+                        item.title,
+                        style = TagMasterType.bodyLarge.withoutLineHeight(),
+                        color = if (item.enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
+                    )
+                },
                 enabled = item.enabled,
                 modifier = Modifier.testTag(item.id),
                 onClick = {

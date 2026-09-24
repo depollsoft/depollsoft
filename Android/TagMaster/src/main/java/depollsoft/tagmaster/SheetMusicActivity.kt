@@ -293,8 +293,8 @@ private fun KeyFab(
         val width = maxOf(120.dp.roundToPx(), textStart + label.width + end)
         val height = maxOf(48.dp.roundToPx(), maxOf(icon.height, label.height))
         layout(width, height) {
-            icon.place(start, (height - icon.height) / 2)
-            label.place(textStart + (width - end - textStart - label.width) / 2, (height - label.height) / 2)
+            icon.placeRelative(start, (height - icon.height) / 2)
+            label.placeRelative(textStart + (width - end - textStart - label.width) / 2, (height - label.height) / 2)
         }
     }
 }

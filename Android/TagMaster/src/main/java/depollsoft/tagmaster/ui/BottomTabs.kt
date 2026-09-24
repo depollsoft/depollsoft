@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -49,88 +50,92 @@ fun BottomTabs(
     modifier: Modifier = Modifier,
 ) {
     val colors = TagMasterTheme.colors
-    Layout(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(colors.chrome)
-                .selectableGroup()
-                .drawWithContent {
-                    drawContent()
-                    val count = tabs.size
-                    if (count == 0) return@drawWithContent
-                    val slots = viewSlots(size.width.roundToInt(), count)
-                    val page = position.coerceIn(0f, (count - 1).toFloat())
-                    val index = page.toInt().coerceAtMost(count - 1)
-                    val fraction = page - index
-                    val inset = 8.dp.toPx() + 2.dp.toPx()
-                    val left = lerp(slots[index].first + inset, slots.getOrElse(index + 1) { slots[index] }.first + inset, fraction)
-                    val right =
-                        lerp(
-                            slots[index].second - inset,
-                            slots.getOrElse(index + 1) { slots[index] }.second - inset,
-                            fraction,
-                        )
-                    val height = 3.dp.toPx()
-                    val radius = CornerRadius(3.dp.toPx())
-                    val path =
-                        Path().apply {
-                            addRoundRect(
-                                RoundRect(
-                                    left = left,
-                                    top = 0f,
-                                    right = right,
-                                    bottom = height,
-                                    topLeftCornerRadius = radius,
-                                    topRightCornerRadius = radius,
-                                    bottomLeftCornerRadius = CornerRadius.Zero,
-                                    bottomRightCornerRadius = CornerRadius.Zero,
-                                ),
+    OnChrome {
+        Layout(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .background(colors.chrome)
+                    .selectableGroup()
+                    .drawWithContent {
+                        drawContent()
+                        val count = tabs.size
+                        if (count == 0) return@drawWithContent
+                        val slots = viewSlots(size.width.roundToInt(), count)
+                        val page = position.coerceIn(0f, (count - 1).toFloat())
+                        val index = page.toInt().coerceAtMost(count - 1)
+                        val fraction = page - index
+                        val inset = 8.dp.toPx() + 2.dp.toPx()
+                        val left = lerp(slots[index].first + inset, slots.getOrElse(index + 1) { slots[index] }.first + inset, fraction)
+                        val right =
+                            lerp(
+                                slots[index].second - inset,
+                                slots.getOrElse(index + 1) { slots[index] }.second - inset,
+                                fraction,
+                            )
+                        // Slots are placed from the start edge; in right-to-left the indicator mirrors too.
+                        val (drawLeft, drawRight) = if (layoutDirection == LayoutDirection.Rtl) size.width - right to size.width - left else left to right
+                        val height = 3.dp.toPx()
+                        val radius = CornerRadius(3.dp.toPx())
+                        val path =
+                            Path().apply {
+                                addRoundRect(
+                                    RoundRect(
+                                        left = drawLeft,
+                                        top = 0f,
+                                        right = drawRight,
+                                        bottom = height,
+                                        topLeftCornerRadius = radius,
+                                        topRightCornerRadius = radius,
+                                        bottomLeftCornerRadius = CornerRadius.Zero,
+                                        bottomRightCornerRadius = CornerRadius.Zero,
+                                    ),
+                                )
+                            }
+                        drawPath(path, colors.chromeAccent)
+                    },
+            content = {
+                tabs.forEachIndexed { index, tab ->
+                    val isSelected = index == selected
+                    val tint = if (isSelected) colors.onChrome else colors.tabTint
+                    Column(
+                        Modifier
+                            .selectable(isSelected, role = Role.Tab) { onSelect(index) }
+                            .semantics { contentDescription = tab.label }
+                            .testTag(tab.id)
+                            .padding(horizontal = 8.dp),
+                        horizontalAlignment = ViewAlign.CenterHorizontally,
+                    ) {
+                        Column(Modifier.clearAndSetSemantics { }, horizontalAlignment = ViewAlign.CenterHorizontally) {
+                            PlatformIcon(tab.icon, tint = tint)
+                            Text(
+                                tab.label,
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                style = TagMasterType.labelMedium,
+                                color = tint,
+                                textAlign = TextAlign.Center,
                             )
                         }
-                    drawPath(path, colors.chromeAccent)
-                },
-        content = {
-            tabs.forEachIndexed { index, tab ->
-                val isSelected = index == selected
-                val tint = if (isSelected) colors.onChrome else colors.tabTint
-                Column(
-                    Modifier
-                        .selectable(isSelected, role = Role.Tab) { onSelect(index) }
-                        .semantics { contentDescription = tab.label }
-                        .testTag(tab.id)
-                        .padding(horizontal = 8.dp),
-                    horizontalAlignment = ViewAlign.CenterHorizontally,
-                ) {
-                    Column(Modifier.clearAndSetSemantics { }, horizontalAlignment = ViewAlign.CenterHorizontally) {
-                        PlatformIcon(tab.icon, tint = tint)
-                        Text(
-                            tab.label,
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            style = TagMasterType.labelMedium,
-                            color = tint,
-                            textAlign = TextAlign.Center,
-                        )
                     }
                 }
+            },
+        ) { measurables, constraints ->
+            val width = constraints.maxWidth
+            val slots = viewSlots(width, measurables.size)
+            val placeables =
+                measurables.mapIndexed { index, measurable ->
+                    measurable.measure(Constraints.fixedWidth(slots[index].second - slots[index].first))
+                }
+            val contentHeight = placeables.maxOfOrNull { it.height } ?: 0
+            val height = max(72.dp.roundToPx(), contentHeight + 16.dp.roundToPx())
+            layout(width, height) {
+                placeables.forEachIndexed { index, placeable ->
+                    placeable.placeRelative(slots[index].first, (height - placeable.height) / 2)
+                }
             }
-        },
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth
-        val slots = viewSlots(width, measurables.size)
-        val placeables =
-            measurables.mapIndexed { index, measurable ->
-                measurable.measure(Constraints.fixedWidth(slots[index].second - slots[index].first))
-            }
-        val contentHeight = placeables.maxOfOrNull { it.height } ?: 0
-        val height = max(72.dp.roundToPx(), contentHeight + 16.dp.roundToPx())
-        layout(width, height) {
-            placeables.forEachIndexed { index, placeable ->
-                placeable.place(slots[index].first, (height - placeable.height) / 2)
-            }
-        }
+    }
     }
 }
 

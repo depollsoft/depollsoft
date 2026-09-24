@@ -329,8 +329,8 @@ private fun FactTable(rows: List<Pair<String, String>>) {
         layout(constraints.maxWidth, height) {
             var y = 0
             for ((label, value) in placed) {
-                label.place(0, y)
-                value.place(labelWidth, y)
+                label.placeRelative(0, y)
+                value.placeRelative(labelWidth, y)
                 y += maxOf(label.height, value.height)
             }
         }

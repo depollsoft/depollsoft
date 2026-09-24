@@ -225,16 +225,16 @@ private fun SummaryColumns(
             val left = measurables[0].measure(Constraints.fixedWidth(column))
             val right = measurables[1].measure(Constraints.fixedWidth(width - gap - column))
             layout(width, maxOf(left.height, right.height)) {
-                left.place(0, 0)
-                right.place(column + gap, 0)
+                left.placeRelative(0, 0)
+                right.placeRelative(column + gap, 0)
             }
         } else {
             val top = measurables[0].measure(Constraints.fixedWidth(width))
             val bottom = if (hasProse) measurables[1].measure(Constraints.fixedWidth(width)) else null
             val height = top.height + (bottom?.let { it.height + gap } ?: 0)
             layout(width, height) {
-                top.place(0, 0)
-                bottom?.place(0, top.height + gap)
+                top.placeRelative(0, 0)
+                bottom?.placeRelative(0, top.height + gap)
             }
         }
     }

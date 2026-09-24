@@ -3,7 +3,11 @@ package depollsoft.tagmaster.ui
 import android.content.Context
 import android.util.TypedValue
 import androidx.annotation.AttrRes
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -41,6 +45,8 @@ data class TagMasterColors(
     val background: Color,
     val error: Color,
     val controlHighlight: Color,
+    /** The Chrome overlay's `colorControlHighlight`: the light ripple on the charcoal bars. */
+    val chromeHighlight: Color,
     /** `android:textColorPrimary`: the color of every themed text appearance. */
     val text: Color,
     /** `android:textColorSecondary`. */
@@ -97,6 +103,7 @@ fun tagMasterColors(context: Context): TagMasterColors {
         background = context.attrColor(android.R.attr.colorBackground),
         error = context.attrColor(androidx.appcompat.R.attr.colorError),
         controlHighlight = context.attrColor(androidx.appcompat.R.attr.colorControlHighlight),
+        chromeHighlight = chromeContext.attrColor(androidx.appcompat.R.attr.colorControlHighlight),
         text = context.attrColor(android.R.attr.textColorPrimary),
         textSecondary = context.attrColor(android.R.attr.textColorSecondary),
         chrome = context.resColor(R.color.brand_chrome),
@@ -136,8 +143,28 @@ fun TagMasterTheme(content: @Composable () -> Unit) {
     val configuration = LocalConfiguration.current
     val colors = remember(context, configuration.uiMode) { tagMasterColors(context) }
     CompositionLocalProvider(LocalTagMasterColors provides colors) {
-        MaterialTheme(colorScheme = colors.toColorScheme(), content = content)
+        MaterialTheme(colorScheme = colors.toColorScheme()) {
+            CompositionLocalProvider(LocalRippleConfiguration provides colors.controlHighlight.asRipple(), content = content)
+        }
     }
+}
+
+/**
+ * A View's press and focus highlight is `colorControlHighlight`, alpha and all. A Material 3
+ * ripple with no configuration takes the content color, black when nothing sets one, which vanishes
+ * on the charcoal bars and in dark theme.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+fun Color.asRipple(): RippleConfiguration {
+    val alpha = alpha
+    return RippleConfiguration(copy(alpha = 1f), RippleAlpha(draggedAlpha = alpha, focusedAlpha = alpha, hoveredAlpha = alpha, pressedAlpha = alpha))
+}
+
+/** [content] on the charcoal chrome: its ripples and focus highlights are the light ones. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OnChrome(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalRippleConfiguration provides TagMasterTheme.colors.chromeHighlight.asRipple(), content = content)
 }
 
 object TagMasterTheme {

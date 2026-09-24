@@ -206,8 +206,8 @@ fun OutlinedField(
             val labelPlaceable = measurables.firstOrNull { it.layoutId == "label" }?.measure(Constraints())
             val height = topMargin + box.height
             layout(width, height) {
-                box.place(0, topMargin)
-                labelPlaceable?.place(16.dp.roundToPx(), 0)
+                box.placeRelative(0, topMargin)
+                labelPlaceable?.placeRelative(16.dp.roundToPx(), 0)
             }
         }
         if (helper != null || error != null || counter != null) {

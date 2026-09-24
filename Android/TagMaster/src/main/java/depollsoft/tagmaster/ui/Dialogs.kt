@@ -154,7 +154,7 @@ private fun DialogTitle(
             )
         val chosen = if (fits.hasVisualOverflow) measurables[1] else measurables[0]
         val placeable = chosen.measure(constraints.copy(minWidth = 0))
-        layout(constraints.maxWidth, placeable.height) { placeable.place(0, 0) }
+        layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
     }
 }
 

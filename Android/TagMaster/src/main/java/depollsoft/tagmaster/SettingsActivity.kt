@@ -512,7 +512,7 @@ private fun ThemeChoice() {
         val placeables = measurables.map { it.measure(Constraints.fixedWidth(each)) }
         val height = placeables.maxOf { it.height }
         layout(width, height) {
-            placeables.forEachIndexed { index, placeable -> placeable.place(index * (each - overlap), 0) }
+            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(index * (each - overlap), 0) }
         }
     }
 }
