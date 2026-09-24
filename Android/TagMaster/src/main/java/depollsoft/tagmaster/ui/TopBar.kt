@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalConfiguration
@@ -192,6 +193,8 @@ fun TagMasterTopBar(
                     Modifier
                         .layoutId("title")
                         .testTag("toolbarTitle")
+                        // A TextView clips glyph overhang at its bounds; the Wickhop "T" has some.
+                        .clipToBounds()
                         .semantics { if (titleIsHeading) heading() },
                 style = titleStyle,
                 color = colors.onChrome,

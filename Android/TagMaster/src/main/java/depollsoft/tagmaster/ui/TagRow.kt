@@ -61,10 +61,14 @@ fun StatusIndicator(
             tint = if (available) colors.statusAvailable else colors.onSurfaceVariant,
             size = 32.dp,
         )
+        val style = with(TagMasterType) { bodyMedium.withoutLineHeight() }
         Text(
             label,
-            modifier = Modifier.padding(start = 4.dp),
-            style = with(TagMasterType) { bodyMedium.withoutLineHeight() },
+            modifier =
+                Modifier
+                    .padding(start = 4.dp)
+                    .widthPx(rememberTextViewWidth(label, style)),
+            style = style,
             color = textColor,
         )
     }
@@ -135,9 +139,10 @@ private fun LabelledValue(
     modifier: Modifier = Modifier,
 ) {
     val colors = TagMasterTheme.colors
+    val style = TagMasterType.bodyMedium
     Row(modifier) {
-        Text(label, style = TagMasterType.bodyMedium, color = colors.text, maxLines = 1)
-        Text(value, style = TagMasterType.bodyMedium, color = colors.text, maxLines = 1)
+        Text(label, Modifier.widthPx(rememberTextViewWidth(label, style)), style = style, color = colors.text, maxLines = 1)
+        Text(value, Modifier.widthPx(rememberTextViewWidth(value, style)), style = style, color = colors.text, maxLines = 1)
     }
 }
 

@@ -87,6 +87,7 @@ fun SavedListScreen(
         LazyColumn(
             Modifier
                 .fillMaxSize()
+                .recyclerScrollbar(listState, top = 16.dp, bottom = 16.dp)
                 .testTag(listTag),
             state = listState,
             contentPadding = PaddingValues(vertical = 16.dp),

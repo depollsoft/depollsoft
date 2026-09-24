@@ -89,16 +89,24 @@ class TagMasterScreenshotTest {
         return created.get()
     }
 
+    /** Lets background loads report back and Compose recompose until both are quiet. */
+    private fun settleAll() {
+        repeat(3) {
+            settle()
+            compose.waitForIdle()
+        }
+    }
+
     private fun capture(
         activity: Activity,
         name: String,
     ) {
-        settle()
+        settleAll()
         activity.window.decorView.captureRoboImage("src/test/screenshots/$name.png")
     }
 
     private fun captureScreen(name: String) {
-        settle()
+        settleAll()
         captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 

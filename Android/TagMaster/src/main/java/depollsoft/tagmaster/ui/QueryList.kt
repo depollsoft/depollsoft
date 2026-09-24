@@ -75,6 +75,7 @@ fun QueryList(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .listViewScrollbar(listState, top = 16.dp, bottom = 88.dp, divider = 1.dp)
                 .testTag("queryResults"),
             state = listState,
             contentPadding = PaddingValues(top = 16.dp, bottom = 88.dp),

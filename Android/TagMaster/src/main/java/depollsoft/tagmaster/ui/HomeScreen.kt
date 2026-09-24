@@ -238,6 +238,7 @@ fun HomeScreen(
         LazyColumn(
             Modifier
                 .fillMaxSize()
+                .recyclerScrollbar(listState, top = 16.dp, bottom = 88.dp)
                 .testTag("homeList"),
             state = listState,
             contentPadding = PaddingValues(top = 16.dp, bottom = 88.dp),
