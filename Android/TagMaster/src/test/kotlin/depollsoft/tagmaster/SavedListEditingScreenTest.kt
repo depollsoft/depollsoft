@@ -3,6 +3,8 @@ package depollsoft.tagmaster
 import android.app.Application
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performSemanticsAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -98,7 +100,14 @@ class SavedListEditingScreenTest : ComposeScreenTest() {
         assertFalse(node("savedTag:$first").fetchSemanticsNode().config.contains(androidx.compose.ui.semantics.SemanticsActions.OnClick))
         assertNull(nextStarted(activity))
         click("editSavedList")
-        click("savedTag:$first")
+        compose
+            .onAllNodes(
+                androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("savedTag:$first")) and
+                    androidx.compose.ui.test.hasClickAction(),
+                useUnmergedTree = true,
+            ).onFirst()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
+        idle()
         assertEquals(TagDetailActivity::class.java.name, nextStarted(activity)?.component?.className)
     }
 
