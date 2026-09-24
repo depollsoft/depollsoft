@@ -1,5 +1,8 @@
 package depollsoft.tagmaster
 
+import androidx.compose.material3.ripple
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.toggleable
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
@@ -421,11 +424,14 @@ private fun Setting(
 private fun WakeLockSwitch() {
     val colors = TagMasterTheme.colors
     val checked = SettingsModel.wakeLockOnSheetMusic
+    // A switch reads "On"/"Off" to a screen reader, and the row's press moves the thumb, as
+    // MaterialSwitch did.
+    val interactions = remember { MutableInteractionSource() }
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .selectable(checked, role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = !checked }
+            .toggleable(checked, interactions, ripple(), role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = it }
             .testTag("sheetMusicWakeLockCheckBox"),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
@@ -438,6 +444,7 @@ private fun WakeLockSwitch() {
         Switch(
             checked = checked,
             onCheckedChange = null,
+            interactionSource = interactions,
             colors =
                 SwitchDefaults.colors(
                     checkedTrackColor = colors.primary,

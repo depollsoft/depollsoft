@@ -213,7 +213,7 @@ fun ListNameDialog(
                     .fillMaxWidth(),
             helper = stringResource(R.string.list_name_helper),
             error = error?.let { stringResource(it) },
-            counter = "${field.text.length}/${TagLists.MAX_NAME_LENGTH}",
+            counter = field.text.length to TagLists.MAX_NAME_LENGTH,
             maxLines = 2,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { submit() }),

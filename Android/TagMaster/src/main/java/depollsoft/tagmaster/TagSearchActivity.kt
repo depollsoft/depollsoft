@@ -1,5 +1,8 @@
 package depollsoft.tagmaster
 
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -115,6 +118,8 @@ private fun SearchScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp),
                 ) {
+                    val searchInteractions = remember { MutableInteractionSource() }
+                    val searchFocused by searchInteractions.collectIsFocusedAsState()
                     OutlinedField(
                         label = stringResource(R.string.SearchBoxHint),
                         value = text,
@@ -123,18 +128,17 @@ private fun SearchScreen(
                             model.query = it.text
                         },
                         startIcon = FieldIcon(R.drawable.ic_search),
+                        // The clear icon shows only while the field is focused and has text.
                         endIcon =
-                            if (text.text.isNotEmpty()) {
-                                FieldIcon(
-                                    com.google.android.material.R.drawable.mtrl_ic_cancel,
-                                    stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
-                                ) {
-                                    text = TextFieldValue("")
-                                    model.query = ""
-                                }
-                            } else {
-                                null
+                            FieldIcon(
+                                com.google.android.material.R.drawable.mtrl_ic_cancel,
+                                stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
+                            ) {
+                                text = TextFieldValue("")
+                                model.query = ""
                             },
+                        endIconVisible = searchFocused && text.text.isNotEmpty(),
+                        interactionSource = searchInteractions,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                         fieldModifier =
