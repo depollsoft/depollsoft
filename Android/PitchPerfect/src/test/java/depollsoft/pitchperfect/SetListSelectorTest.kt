@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import depollsoft.lib.activity.RichApplication
+import depollsoft.lib.toMap
+import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.ComposeScreens.Companion.song
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -316,5 +318,52 @@ class SetListSelectorTest {
         val picker = shadowOf(activity).nextStartedActivity
         assertEquals(AddSongsFromListActivity::class.java.name, picker.component!!.className)
         assertEquals(other, picker.getStringExtra(AddSongsFromListActivity.LIST_EXTRA))
+    }
+
+    // ==================== Synced songs ====================
+
+    @Test
+    fun aRowPlaysTheSyncedCopyOfItsSong() {
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        model.defaultSongList.addSong(original)
+        songs()
+        // Another device changed the key: the synced copy keeps the id and replaces the instance.
+        val copy =
+            song("Blue Skies", Key.getMajorKeys()[8]).apply { id = original.id }
+        model.defaultSongList.songs.replaceWith(listOf(copy))
+        screens.settle()
+
+        val row = compose.onNodeWithTag(TestTags.songRow(original.id))
+        row.performTouchInput { down(center) }
+        assertTrue("the row sounds the key it now shows", copy.isPlaying)
+        assertFalse(original.isPlaying)
+        row.performTouchInput { up() }
+        assertFalse(copy.isPlaying)
+    }
+
+    @Test
+    fun aSyncThatReplacesASoundingSongStopsIt() {
+        val original = song("Blue Skies", Key.getMajorKeys()[6])
+        model.defaultSongList.addSong(original)
+        original.play()
+        val copy = song("Blue Skies", Key.getMajorKeys()[8]).apply { id = original.id }
+        val snapshot = syncedSnapshot(model.defaultSongList.id, "Default", listOf(copy))
+        model.defaultSongList.restore(snapshot)
+        assertFalse("nothing can reach the replaced song to stop it any more", original.isPlaying)
+        assertEquals(listOf(copy.key), model.defaultSongList.songs.map { it.key })
+    }
+
+    private fun syncedSnapshot(
+        id: String,
+        name: String,
+        songs: List<depollsoft.pitchperfect.lib.PitchedSong>,
+    ): com.google.firebase.firestore.DocumentSnapshot {
+        val snapshot = org.mockito.Mockito.mock(com.google.firebase.firestore.DocumentSnapshot::class.java)
+        val raw = songs.map { depollsoft.lib.json.JsonSerializer.serialize(it).toMap() }
+        org.mockito.Mockito.`when`(snapshot.id).thenReturn(id)
+        org.mockito.Mockito.`when`(snapshot.getString("name")).thenReturn(name)
+        org.mockito.Mockito.`when`(snapshot.get("songs")).thenReturn(raw)
+        org.mockito.Mockito.`when`(snapshot.get("songs", Any::class.java)).thenReturn(raw)
+        return snapshot
     }
 }

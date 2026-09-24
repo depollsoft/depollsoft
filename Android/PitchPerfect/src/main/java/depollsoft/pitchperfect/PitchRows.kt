@@ -15,7 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.input.pointer.positionChanged
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.ui.hairlineWidth
@@ -31,47 +36,86 @@ val ViewCenterHorizontally = Alignment.Horizontal { size, space, _ -> (space - s
 /**
  * A row that sounds while it is held, the Notes and Keys rows' touch contract:
  *
- * - A press starts [onPress]'s sound, or toggles it in "notes play until pressed again" mode.
+ * - A press starts [play]'s sound, or toggles it in "notes play until pressed again" mode.
  * - Releasing, or a scroll taking the finger, stops a held sound; a toggled one keeps sounding.
  * - In toggle mode a finger that keeps moving after [TOGGLE_SLOP_MS] stops the sound: that is a
  *   drag, not a tap.
  *
- * Pointer events are observed, never consumed, so the list still scrolls.
+ * Pointer events are observed, never consumed, so the list still scrolls. The callbacks may
+ * change from one composition to the next (a row's song replaced by a synced copy, say): each
+ * press uses the callbacks current when it lands, and a gesture in progress is not restarted.
  */
 fun Modifier.soundsWhileHeld(
     toggleMode: () -> Boolean,
     isPlaying: () -> Boolean,
     play: () -> Unit,
     stop: () -> Unit,
-): Modifier =
-    pointerInput(Unit) {
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-            val toggle = toggleMode()
-            if (toggle) {
-                if (isPlaying()) stop() else play()
-            } else {
-                play()
-            }
-            while (true) {
-                // The final pass, after the list has had its chance to claim the finger for a scroll.
-                val event = awaitPointerEvent(PointerEventPass.Final)
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) {
-                    if (!toggle) stop()
-                    break
-                }
-                if (change.isConsumed) {
-                    // A scroll took the finger: the View saw ACTION_CANCEL.
-                    if (!toggle) stop()
-                    break
-                }
-                if (toggle && change.positionChanged() && change.uptimeMillis - down.uptimeMillis > TOGGLE_SLOP_MS) {
-                    stop()
-                }
-            }
-        }
+): Modifier = this then SoundsWhileHeldElement(HeldSound(toggleMode, isPlaying, play, stop))
+
+private class HeldSound(
+    val toggleMode: () -> Boolean,
+    val isPlaying: () -> Boolean,
+    val play: () -> Unit,
+    val stop: () -> Unit,
+)
+
+private data class SoundsWhileHeldElement(
+    val sound: HeldSound,
+) : ModifierNodeElement<SoundsWhileHeldNode>() {
+    override fun create() = SoundsWhileHeldNode(sound)
+
+    override fun update(node: SoundsWhileHeldNode) {
+        node.sound = sound
     }
+}
+
+private class SoundsWhileHeldNode(
+    var sound: HeldSound,
+) : DelegatingNode(),
+    PointerInputModifierNode {
+    private val input =
+        delegate(
+            SuspendingPointerInputModifierNode {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    // This press owns the song it started, even if the row is recomposed with
+                    // another before the finger lifts.
+                    val held = sound
+                    val toggle = held.toggleMode()
+                    if (toggle) {
+                        if (held.isPlaying()) held.stop() else held.play()
+                    } else {
+                        held.play()
+                    }
+                    while (true) {
+                        // The final pass, after the list has had its chance to claim the finger for a scroll.
+                        val event = awaitPointerEvent(PointerEventPass.Final)
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) {
+                            if (!toggle) held.stop()
+                            break
+                        }
+                        if (change.isConsumed) {
+                            // A scroll took the finger: the View saw ACTION_CANCEL.
+                            if (!toggle) held.stop()
+                            break
+                        }
+                        if (toggle && change.positionChanged() && change.uptimeMillis - down.uptimeMillis > TOGGLE_SLOP_MS) {
+                            held.stop()
+                        }
+                    }
+                }
+            },
+        )
+
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: PointerEventPass,
+        bounds: IntSize,
+    ) = input.onPointerEvent(pointerEvent, pass, bounds)
+
+    override fun onCancelPointerInput() = input.onCancelPointerInput()
+}
 
 private const val TOGGLE_SLOP_MS = 100L
 

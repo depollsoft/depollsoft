@@ -87,7 +87,10 @@ class SongList constructor() {
             if (!sameSongs(songs, newSongs)) {
                 // Songs that did not change keep their instance, so a row or an editor holding
                 // one still holds a song in the list.
-                songs.replaceWith(newSongs.map { new -> songs.firstOrNull { sameSong(it, new) } ?: new })
+                val kept = newSongs.map { new -> songs.firstOrNull { sameSong(it, new) } ?: new }
+                // A replaced or removed song can no longer be reached from its row to stop it.
+                songs.filter { old -> kept.none { it === old } && old.isPlaying }.forEach { it.stop() }
+                songs.replaceWith(kept)
             }
         } finally {
             isRestoring.set(false)
