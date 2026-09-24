@@ -54,7 +54,7 @@ fun PlateFab(
             Modifier
                 .size(56.dp)
                 .shadow(6.dp, CircleShape)
-                .background(colors.surface, CircleShape)
+                .background(elevatedSurface(colors, FAB_ELEVATION_OVERLAY), CircleShape)
                 .clip(CircleShape)
                 .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
                 .semantics { if (description != null) contentDescription = description },
@@ -85,7 +85,7 @@ fun PlateExtendedFab(
             Modifier
                 .heightIn(min = 48.dp)
                 .shadow(6.dp, shape)
-                .background(colors.surface, shape)
+                .background(elevatedSurface(colors, FAB_ELEVATION_OVERLAY), shape)
                 .drawWithContent {
                     drawContent()
                     // MaterialShapeDrawable strokes a path inset by half the stroke width.
@@ -200,10 +200,7 @@ fun PlateContainedButton(
     onClick: () -> Unit,
 ) {
     val colors = plateColors
-    // In the dark theme MaterialComponents lightens an elevated surface with a white overlay.
-    val fill =
-        if (colors.surface.luminance() < 0.5f) Color.White.copy(alpha = DARK_ELEVATION_OVERLAY).compositeOver(colors.surface) else colors.surface
-    PlateButtonFrame(modifier, true, onClick, fill = fill, elevation = 2.dp) {
+    PlateButtonFrame(modifier, true, onClick, fill = elevatedSurface(colors, BUTTON_ELEVATION_OVERLAY), elevation = 2.dp) {
         PlateText(
             text,
             style = plateText(14.sp, colors.ink, weight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.08928572f),
@@ -241,5 +238,15 @@ private fun PlateButtonFrame(
     ) { label() }
 }
 
-/** The overlay a 2dp-elevated button's fill measured in the View-era dark theme. */
-private const val DARK_ELEVATION_OVERLAY = 0.056f
+/**
+ * The plate surface under an elevated control. In the dark theme MaterialComponents lightens an
+ * elevated surface with a white overlay; [overlay] is the amount the View-era screens showed.
+ */
+private fun elevatedSurface(
+    colors: PlateColors,
+    overlay: Float,
+): Color = if (colors.surface.luminance() < 0.5f) Color.White.copy(alpha = overlay).compositeOver(colors.surface) else colors.surface
+
+/** A 2dp button's overlay, and a 6dp floating action button's, as measured in the dark theme. */
+private const val BUTTON_ELEVATION_OVERLAY = 0.056f
+private const val FAB_ELEVATION_OVERLAY = 0.086f
