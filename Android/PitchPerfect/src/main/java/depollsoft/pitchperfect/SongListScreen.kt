@@ -22,6 +22,9 @@ import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.SnackbarResult
 import depollsoft.pitchperfect.ui.RowDrag
+import depollsoft.pitchperfect.ui.holdScrollPosition
+import depollsoft.pitchperfect.ui.reorderableRow
+import androidx.compose.ui.platform.LocalHapticFeedback
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.coroutineScope
@@ -36,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -53,7 +55,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import depollsoft.pitchperfect.lib.PitchedSong
 import depollsoft.pitchperfect.ui.DrawableIcon
@@ -175,34 +176,27 @@ private fun SongRows(
     list: SongList,
     listState: LazyListState,
 ) {
+    val haptics = LocalHapticFeedback.current
     val drag =
-        remember(list) {
+        remember(list, haptics) {
             RowDrag(
                 listState,
                 indexOf = { key -> list.songs.indexOfFirst { it.id == key } },
                 canMove = { _, _ -> true },
                 move = list::moveWithoutStoring,
                 onDrop = list::notifyOfChange,
+                haptics = haptics,
             )
         }
+    val surface = plateColors.surface
     LazyColumn(
         Modifier.fillMaxSize().testTag(TestTags.SONG_LIST),
         state = listState,
         contentPadding = PaddingValues(bottom = 90.dp),
     ) {
         items(list.songs, key = { it.id }) { song ->
-            val dragging = drag.key == song.id
-            Column(
-                Modifier
-                    .zIndex(if (dragging) 1f else 0f)
-                    .graphicsLayer {
-                        if (dragging) {
-                            translationY = drag.offset
-                            shadowElevation = 1.dp.toPx()
-                        }
-                    },
-            ) {
-                SongRow(state, list, song, drag)
+            Column(reorderableRow(drag, song.id, surface)) {
+                SongRow(state, list, song, drag, listState)
                 Hairline()
             }
         }
@@ -215,6 +209,7 @@ private fun SongRow(
     list: SongList,
     song: PitchedSong,
     drag: RowDrag,
+    listState: LazyListState,
 ) {
     val colors = plateColors
     val context = LocalContext.current
@@ -240,10 +235,12 @@ private fun SongRow(
                     customActions =
                         listOfNotNull(
                             CustomAccessibilityAction(moveUp) {
+                                listState.holdScrollPosition()
                                 list.moveUp(song)
                                 true
                             }.takeIf { list.canMoveUp(song) },
                             CustomAccessibilityAction(moveDown) {
+                                listState.holdScrollPosition()
                                 list.moveDown(song)
                                 true
                             }.takeIf { list.canMoveDown(song) },
@@ -272,7 +269,7 @@ private fun SongRow(
                 ) {
                     DrawableIcon(R.drawable.ic_edit_button, colors.ink, size = 16.dp)
                 }
-                SongContextMenu(menuOpen, { menuOpen = false }, list, song, openEditor)
+                SongContextMenu(menuOpen, { menuOpen = false }, list, song, openEditor, listState)
             }
         }
         Row(
@@ -337,6 +334,7 @@ private fun SongContextMenu(
     list: SongList,
     song: PitchedSong,
     openEditor: () -> Unit,
+    listState: LazyListState,
 ) {
     PlatePopupMenu(
         expanded,
@@ -344,9 +342,26 @@ private fun SongContextMenu(
         listOfNotNull(
             PopupMenuItem(stringResource(R.string.EditSong), onClick = openEditor),
             PopupMenuItem(stringResource(R.string.RemoveSong)) { list.removeSong(song) },
-            PopupMenuItem(stringResource(R.string.SortAll)) { list.sortSongs() },
-            if (list.canMoveUp(song)) PopupMenuItem(stringResource(R.string.MoveUp)) { list.moveUp(song) } else null,
-            if (list.canMoveDown(song)) PopupMenuItem(stringResource(R.string.MoveDown)) { list.moveDown(song) } else null,
+            PopupMenuItem(stringResource(R.string.SortAll)) {
+                listState.holdScrollPosition()
+                list.sortSongs()
+            },
+            if (list.canMoveUp(song)) {
+                PopupMenuItem(stringResource(R.string.MoveUp)) {
+                    listState.holdScrollPosition()
+                    list.moveUp(song)
+                }
+            } else {
+                null
+            },
+            if (list.canMoveDown(song)) {
+                PopupMenuItem(stringResource(R.string.MoveDown)) {
+                    listState.holdScrollPosition()
+                    list.moveDown(song)
+                }
+            } else {
+                null
+            },
         ),
     )
 }

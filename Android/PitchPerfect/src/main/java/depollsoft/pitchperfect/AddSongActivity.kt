@@ -38,6 +38,7 @@ class AddSongActivity : AppCompatActivity() {
         setContent {
             PlateTheme {
                 val titleFocus = remember { FocusRequester() }
+                val save = rememberSongSave(editor, { done(RESULT_SAVED) }, titleFocus)
                 Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     PlateTopBar(stringResource(if (editor.editing) R.string.EditSong else R.string.AddSong)) {
                         PlateActionIcon(R.drawable.ic_delete, stringResource(R.string.RemoveSong), ::remove, Modifier.testTag(TestTags.REMOVE_SONG))
@@ -45,13 +46,11 @@ class AddSongActivity : AppCompatActivity() {
                         PlateActionIcon(
                             R.drawable.ic_check,
                             stringResource(R.string.Ok),
-                            {
-                                if (editor.save()) done(RESULT_SAVED) else titleFocus.requestFocus()
-                            },
+                            save,
                             Modifier.testTag(TestTags.OK_SONG),
                         )
                     }
-                    AddSongScreen(editor, onSaved = { done(RESULT_SAVED) }, titleFocus = titleFocus)
+                    AddSongScreen(editor, onSaved = { done(RESULT_SAVED) }, titleFocus = titleFocus, save = save)
                 }
             }
         }

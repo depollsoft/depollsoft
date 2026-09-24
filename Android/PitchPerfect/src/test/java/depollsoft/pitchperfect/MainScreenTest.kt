@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performImeAction
 import androidx.lifecycle.Lifecycle
 import depollsoft.lib.activity.RichApplication
 import androidx.compose.ui.test.performTouchInput
@@ -241,6 +242,57 @@ class MainScreenTest {
     }
 
     @Test
+    fun sortingKeepsTheListWhereItIsWhileTheRowsSlide() {
+        // Reverse order: after the sort the old top row is the last one.
+        val all = (0 until 40).map { song("Song %02d".format(39 - it)) }
+        all.forEach(songs::add)
+        val activity = screens.launchMain()
+        activity.tap(MainTab.SONGS)
+        screens.click(TestTags.EDIT_SONGS)
+        val listState = activity.songs.scrollStateFor(SongsModel.DEFAULT_ID)
+        screens.click(TestTags.SORT_SONGS)
+        assertEquals("Song 00", songs[0].name)
+        assertEquals("the list stays at the top instead of following Song 39 to the end", 0, listState.firstVisibleItemIndex)
+        compose.onNodeWithText("Song 00").assertIsDisplayed()
+    }
+
+    @Test
+    fun movingTheSecondSongUpKeepsItOnScreen() {
+        val all = (0 until 20).map { song("Song %02d".format(it)) }
+        all.forEach(songs::add)
+        val activity = screens.launchMain()
+        activity.tap(MainTab.SONGS)
+        screens.click(TestTags.EDIT_SONGS)
+        val listState = activity.songs.scrollStateFor(SongsModel.DEFAULT_ID)
+        val moveUp = activity.getString(R.string.MoveUp)
+        val action =
+            compose.onNodeWithTag(TestTags.songRow(all[1].id)).fetchSemanticsNode().config[
+                androidx.compose.ui.semantics.SemanticsActions.CustomActions,
+            ].single { it.label == moveUp }
+        compose.runOnIdle { action.action() }
+        screens.settle()
+        assertEquals(all[1], songs[0])
+        assertEquals(0, listState.firstVisibleItemIndex)
+        compose.onNodeWithText("Song 01").assertIsDisplayed()
+    }
+
+    @Test
+    fun theSongsListKeepsItsPlaceAcrossRecreation() {
+        (0 until 40).map { song("Song %02d".format(it)) }.forEach(songs::add)
+        val controller = screens.launch(PitchPerfectActivity::class.java)
+        controller.get().tap(MainTab.SONGS)
+        compose.runOnIdle {
+            kotlinx.coroutines.runBlocking { controller.get().songs.scrollStateFor(SongsModel.DEFAULT_ID).scrollToItem(20, 5) }
+        }
+        screens.settle()
+        controller.recreate()
+        screens.settle()
+        val restored = controller.get().songs.scrollStateFor(SongsModel.DEFAULT_ID)
+        assertEquals(20, restored.firstVisibleItemIndex)
+        assertEquals(5, restored.firstVisibleItemScrollOffset)
+    }
+
+    @Test
     fun editModeOffersEachSongsEditButtonAndHandle() {
         songs.add(song("Blue Skies"))
         val activity = screens.launchMain()
@@ -379,6 +431,33 @@ class MainScreenTest {
         compose.onNodeWithTag(TestTags.SONG_TITLE).assert(hasText("Blue Skies (ta"))
         assertEquals("G", controller.get().editor.key.friendlyName)
         assertEquals("nothing is saved by the rotation", "Blue Skies", songs.single().name)
+    }
+
+    @Test
+    fun keyboardDoneOnTheTitleOnlyPutsTheKeyboardAway() {
+        val editor = openEditor(screens.launchMain())
+        compose.onNodeWithTag(TestTags.SONG_TITLE).performTextReplacement("Blue Skies")
+        compose.onNodeWithTag(TestTags.SONG_TITLE).performImeAction()
+        screens.settle()
+        assertFalse("Done does not save and close the editor", editor.isFinishing)
+        assertTrue(songs.isEmpty())
+    }
+
+    @Test
+    fun theToolbarCheckBuzzesLikeTheSaveButton() {
+        val editor = openEditor(screens.launchMain())
+        screens.click(TestTags.OK_SONG)
+        assertFalse(editor.isFinishing)
+        assertEquals(android.view.HapticFeedbackConstants.REJECT, lastHaptic(editor))
+    }
+
+    private fun lastHaptic(activity: android.app.Activity): Int {
+        fun walk(view: android.view.View): Int? {
+            shadowOf(view).lastHapticFeedbackPerformed().takeIf { it != -1 }?.let { return it }
+            if (view is android.view.ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))?.let { return it }
+            return null
+        }
+        return walk(activity.window.decorView) ?: -1
     }
 
     @Test

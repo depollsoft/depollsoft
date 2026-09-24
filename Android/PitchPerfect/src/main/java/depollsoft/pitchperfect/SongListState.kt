@@ -1,11 +1,13 @@
 package depollsoft.pitchperfect
 
+import android.os.Bundle
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import depollsoft.pitchperfect.lib.PitchedSong
+import depollsoft.pitchperfect.ui.holdScrollPosition
 
 /** A request for the set list name dialog: a new list, or a new name for [listId]. */
 data class NameRequest(
@@ -46,13 +48,32 @@ class SongListState(
 
     fun scrollStateFor(listId: String): LazyListState = scrollStates.getOrPut(listId) { LazyListState() }
 
+    /** Each list's place, for [restoreScrollPositions] after recreation, as a RecyclerView kept it. */
+    fun saveScrollPositions(): Bundle =
+        Bundle().apply {
+            for ((listId, scroll) in scrollStates) {
+                putIntArray(listId, intArrayOf(scroll.firstVisibleItemIndex, scroll.firstVisibleItemScrollOffset))
+            }
+        }
+
+    fun restoreScrollPositions(saved: Bundle) {
+        for (listId in saved.keySet()) {
+            val (index, offset) = saved.getIntArray(listId)?.takeIf { it.size == 2 } ?: continue
+            scrollStates[listId] = LazyListState(index, offset)
+        }
+    }
+
     val currentList: SongList get() = model.currentList
 
     fun toggleEditing() {
         editing = !editing
     }
 
-    fun sortSongs() = model.currentList.sortSongs()
+    /** Sorts the current list, keeping the list where it is on screen while the rows slide. */
+    fun sortSongs() {
+        scrollStateFor(model.currentListId).holdScrollPosition()
+        model.currentList.sortSongs()
+    }
 
     /** "Add songs from another set list…" is disabled when nothing is addable. */
     fun canAddSongsFromOtherLists(): Boolean = model.hasAddableSongs(model.currentListId)

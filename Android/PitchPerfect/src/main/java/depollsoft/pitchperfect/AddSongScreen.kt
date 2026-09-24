@@ -1,5 +1,11 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import depollsoft.pitchperfect.ui.ListMotion
+
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
@@ -147,26 +153,44 @@ class SongEditorState(
     }
 }
 
+/**
+ * Saving the editor, from the Save button or the toolbar's check: a confirming buzz and [onSaved]
+ * when the song is stored, or a rejecting buzz and the title field focused when it has no title.
+ */
+@Composable
+fun rememberSongSave(
+    state: SongEditorState,
+    onSaved: () -> Unit,
+    titleFocus: FocusRequester,
+): () -> Unit {
+    val view = LocalView.current
+    val saved by rememberUpdatedState(onSaved)
+    return remember(state, view, titleFocus) {
+        {
+            if (state.save()) {
+                view.performHapticFeedback(
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.CONTEXT_CLICK,
+                )
+                saved()
+            } else {
+                titleFocus.requestFocus()
+                view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+            }
+        }
+    }
+}
+
 /** The song editor: its title, its key's mode and signature, and Save Song. */
 @Composable
 fun AddSongScreen(
     state: SongEditorState,
     onSaved: () -> Unit,
     titleFocus: FocusRequester = remember { FocusRequester() },
+    save: () -> Unit = rememberSongSave(state, onSaved, titleFocus),
 ) {
-    val view = LocalView.current
     val colors = plateColors
-    val save: () -> Unit = {
-        if (state.save()) {
-            view.performHapticFeedback(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.CONTEXT_CLICK,
-            )
-            onSaved()
-        } else {
-            titleFocus.requestFocus()
-            view.performHapticFeedback(HapticFeedbackConstants.REJECT)
-        }
-    }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focus = LocalFocusManager.current
     PlateBackground {
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp)) {
@@ -178,7 +202,12 @@ fun AddSongScreen(
                     description = stringResource(R.string.SongTitle),
                     textStyle = plateText(24.sp, colors.ink, PlateFonts.condensed, letterSpacing = 0.009375f),
                     error = if (state.titleMissing) stringResource(R.string.SongTitleRequired) else null,
-                    onDone = save,
+                    // Done only puts the keyboard away, as the EditText's default action did;
+                    // saving is the Save button's and the toolbar's.
+                    onDone = {
+                        keyboard?.hide()
+                        focus.clearFocus()
+                    },
                     focusRequester = titleFocus,
                     modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
                     fieldModifier = Modifier.testTag(TestTags.SONG_TITLE),
@@ -261,14 +290,16 @@ private fun KeyChoice(
     val view = LocalView.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    // The row stays lit while it is the chosen key, and lights on press.
-    val lit = chosen || pressed
-    val ink = if (lit) colors.onAccent else colors.ink
+    // The row stays lit while it is the chosen key, and lights at once on press. Choosing a key
+    // cross-fades the old row out and the new one in, as notifyItemChanged did.
+    val chosenFill by animateColorAsState(if (chosen) colors.accent else colors.accent.copy(alpha = 0f), ListMotion.change(), label = "keyFill")
+    val chosenInk by animateColorAsState(if (chosen) colors.onAccent else colors.ink, ListMotion.change(), label = "keyInk")
+    val ink = if (pressed) colors.onAccent else chosenInk
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
-            .background(if (lit) colors.accent else Color.Transparent)
+            .background(if (pressed) colors.accent else chosenFill)
             .clickable(interaction, indication = null, role = Role.RadioButton) {
                 // A second tap on the chosen row leaves it chosen.
                 if (!chosen) {

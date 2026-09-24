@@ -1,5 +1,8 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.animation.core.animateFloatAsState
+import depollsoft.pitchperfect.ui.ListMotion
+
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -181,14 +184,19 @@ fun AddSongsFromListScreen(
                 }
             } else {
                 LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag(TestTags.ADDABLE_LIST)) {
-                    addable.sections.forEach { (title, songs) ->
-                        item {
-                            PlateSectionHeader(title, Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 6.dp))
-                            Hairline()
+                    // Keyed by section, since a duplicated list can hold songs with the same ids.
+                    addable.sections.forEachIndexed { section, (title, songs) ->
+                        item(key = "section:$section:$title") {
+                            Column(Modifier.animateItem(ListMotion.fade(), ListMotion.placement(), ListMotion.fade())) {
+                                PlateSectionHeader(title, Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 6.dp))
+                                Hairline()
+                            }
                         }
-                        items(songs) { song ->
-                            AddableRow(song, addable.isTicked(song)) { addable.toggle(song) }
-                            Hairline()
+                        items(songs, key = { "$section:${it.id}" }) { song ->
+                            Column(Modifier.animateItem(ListMotion.fade(), ListMotion.placement(), ListMotion.fade())) {
+                                AddableRow(song, addable.isTicked(song)) { addable.toggle(song) }
+                                Hairline()
+                            }
                         }
                     }
                 }
@@ -237,7 +245,8 @@ private fun AddableRow(
             letterSpacing = 0.06f,
             wrapWidth = true,
         )
-        Box(Modifier.width(44.dp).padding(horizontal = 10.dp).alpha(if (ticked) 1f else 0f), contentAlignment = Alignment.Center) {
+        val tick by animateFloatAsState(if (ticked) 1f else 0f, ListMotion.change(), label = "tick")
+        Box(Modifier.width(44.dp).padding(horizontal = 10.dp).alpha(tick), contentAlignment = Alignment.Center) {
             DrawableIcon(R.drawable.ic_check, colors.ink)
         }
     }

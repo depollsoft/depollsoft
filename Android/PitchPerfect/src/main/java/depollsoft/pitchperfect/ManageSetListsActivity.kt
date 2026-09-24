@@ -20,6 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import depollsoft.pitchperfect.ui.RowDrag
+import depollsoft.pitchperfect.ui.holdScrollPosition
+import depollsoft.pitchperfect.ui.reorderableRow
+import androidx.compose.ui.platform.LocalHapticFeedback
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
@@ -33,7 +36,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -46,7 +48,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateFab
@@ -159,8 +160,9 @@ fun ManageSetListsScreen(
 ) {
     state.model.trackLists()
     val listState = rememberLazyListState()
+    val haptics = LocalHapticFeedback.current
     val drag =
-        remember(state) {
+        remember(state, haptics) {
             RowDrag(
                 listState,
                 indexOf = { key -> state.rows.indexOfFirst { it.id == key } },
@@ -168,8 +170,10 @@ fun ManageSetListsScreen(
                 canMove = { from, to -> state.isCustom(state.rows[from]) && state.isCustom(state.rows[to]) },
                 move = state::move,
                 onDrop = state::commitOrder,
+                haptics = haptics,
             )
         }
+    val surface = plateColors.surface
     PlateBackground {
         LazyColumn(
             Modifier.fillMaxSize().testTag(TestTags.MANAGE_LIST),
@@ -177,13 +181,11 @@ fun ManageSetListsScreen(
             contentPadding = PaddingValues(bottom = 90.dp),
         ) {
             items(state.rows, key = { it.id }) { list ->
-                val dragging = drag.key == list.id
-                Column(
-                    Modifier
-                        .zIndex(if (dragging) 1f else 0f)
-                        .graphicsLayer { if (dragging) translationY = drag.offset },
-                ) {
-                    SetListRow(state, list, drag, onSwitch)
+                Column(reorderableRow(drag, list.id, surface)) {
+                    SetListRow(state, list, drag, onSwitch) { delta ->
+                        listState.holdScrollPosition()
+                        state.moveList(list, delta)
+                    }
                     Hairline()
                 }
             }
@@ -209,6 +211,7 @@ private fun SetListRow(
     list: SongList,
     drag: RowDrag,
     onSwitch: (SongList) -> Unit,
+    moveList: (delta: Int) -> Boolean,
 ) {
     val colors = plateColors
     val model = state.model
@@ -238,8 +241,8 @@ private fun SetListRow(
                 if (custom) {
                     customActions =
                         listOfNotNull(
-                            CustomAccessibilityAction(moveUp) { state.moveList(list, -1) }.takeIf { customIndex > 0 },
-                            CustomAccessibilityAction(moveDown) { state.moveList(list, 1) }
+                            CustomAccessibilityAction(moveUp) { moveList(-1) }.takeIf { customIndex > 0 },
+                            CustomAccessibilityAction(moveDown) { moveList(1) }
                                 .takeIf { customIndex in 0 until customRows.size - 1 },
                         )
                 }
