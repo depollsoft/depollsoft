@@ -221,6 +221,31 @@ class MainScreenTest {
     }
 
     @Test
+    fun holdingASongJustAboveTheListsBottomPaddingScrollsTheList() {
+        (0 until 40).map { song("Song %02d".format(it)) }.forEach(songs::add)
+        val activity = screens.launchMain()
+        activity.tap(MainTab.SONGS)
+        screens.click(TestTags.EDIT_SONGS)
+        val listState = activity.songs.scrollStateFor(SongsModel.DEFAULT_ID)
+        val first = songs[0]
+        val density = activity.resources.displayMetrics.density
+        val listBottom = compose.onNodeWithTag(TestTags.SONG_LIST).fetchSemanticsNode().boundsInRoot.bottom
+        val handle = handleOf(first).fetchSemanticsNode().boundsInRoot
+        val rowHeight = compose.onNodeWithTag(TestTags.songRow(first.id)).fetchSemanticsNode().size.height
+        // Bring the row's bottom edge 10dp into the padded area's edge zone, still above the 90dp padding.
+        val target = listBottom - 90 * density - 10 * density - rowHeight / 2f
+        val travel = target - handle.center.y
+        handleOf(first).performTouchInput {
+            down(center)
+            repeat(20) { moveBy(androidx.compose.ui.geometry.Offset(0f, travel / 20f)) }
+        }
+        screens.settle()
+        assertTrue("the list scrolls before the row reaches the padding", listState.firstVisibleItemIndex > 0)
+        compose.onNodeWithTag(TestTags.SONG_LIST).performTouchInput { up() }
+        screens.settle()
+    }
+
+    @Test
     fun draggingTheTopVisibleSongDownKeepsTheListWhereItIs() {
         val all = (0 until 40).map { song("Song %02d".format(it)) }
         all.forEach(songs::add)

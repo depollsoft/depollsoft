@@ -168,8 +168,10 @@ class RowDrag(
         val row = info.visibleItemsInfo.firstOrNull { it.key == key } ?: return 0f
         val top = row.offset + offset
         val bottom = top + row.size
-        val start = info.viewportStartOffset.toFloat()
-        val end = info.viewportEndOffset.toFloat()
+        // ItemTouchHelper scrolled once the row left the list's padded area: with the Songs
+        // list's 90dp bottom padding, that is well above the screen's edge.
+        val start = info.viewportStartOffset.toFloat() + info.beforeContentPadding
+        val end = info.viewportEndOffset.toFloat() - info.afterContentPadding
         return when {
             top < start + edge && listState.canScrollBackward -> -maxStep * ((start + edge - top) / edge).coerceAtMost(1f)
             bottom > end - edge && listState.canScrollForward -> maxStep * ((bottom - (end - edge)) / edge).coerceAtMost(1f)
