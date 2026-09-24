@@ -1,5 +1,6 @@
 package depollsoft.tagmaster.ui
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -156,7 +157,11 @@ fun OutlinedField(
                                 BasicTextField(
                                     value = value,
                                     onValueChange = onValueChange,
-                                    modifier = fieldModifier.fillMaxWidth(),
+                                    // The field is named by its label, as TextInputLayout named its EditText.
+                                    modifier =
+                                        fieldModifier
+                                            .fillMaxWidth()
+                                            .semantics { if (label.isNotEmpty()) contentDescription = label },
                                     textStyle = hintStyle.copy(color = textColor),
                                     maxLines = maxLines,
                                     singleLine = maxLines == 1,
@@ -166,7 +171,12 @@ fun OutlinedField(
                                     cursorBrush = SolidColor(colors.primary),
                                 )
                                 if (progress < 1f && value.text.isEmpty()) {
-                                    Text(label, style = hintStyle, color = colors.onSurfaceVariant.copy(alpha = 1f - progress))
+                                    Text(
+                                        label,
+                                        Modifier.clearAndSetSemantics { },
+                                        style = hintStyle,
+                                        color = colors.onSurfaceVariant.copy(alpha = 1f - progress),
+                                    )
                                 }
                             } else {
                                 Text(value.text, fieldModifier, style = hintStyle, color = textColor, maxLines = maxLines)
@@ -182,7 +192,7 @@ fun OutlinedField(
                         label,
                         Modifier
                             .layoutId("label")
-                            .semantics { },
+                            .clearAndSetSemantics { },
                         style = labelStyle,
                         color = labelColor.copy(alpha = progress),
                     )

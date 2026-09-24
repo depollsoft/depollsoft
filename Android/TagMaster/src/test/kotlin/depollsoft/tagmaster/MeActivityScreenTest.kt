@@ -231,6 +231,18 @@ class MeActivityScreenTest : ComposeScreenTest() {
     }
 
     @Test
+    fun aTextFieldIsNamedByItsLabel() {
+        home()
+        click("openByIdButton")
+        val field = node("openTagIdInput").fetchSemanticsNode().config
+        assertEquals(listOf(string(R.string.TagId)), field[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription])
+        // The floating label and the hint are drawing only; the field carries the name once.
+        assertTrue(
+            compose.onAllNodes(hasText(string(R.string.TagId)), useUnmergedTree = true).fetchSemanticsNodes().isEmpty(),
+        )
+    }
+
+    @Test
     @Config(qualifiers = "w640dp-h200dp-land")
     fun onAShortLandscapeScreenWithLargeTextTheDialogKeepsItsButtons() {
         org.robolectric.RuntimeEnvironment.setFontScale(2f)
