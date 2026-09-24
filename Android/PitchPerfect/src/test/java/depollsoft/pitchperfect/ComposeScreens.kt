@@ -9,7 +9,10 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.robolectric.Robolectric
@@ -81,6 +84,7 @@ internal class ComposeScreens(
     }
 
     companion object {
+        /** A song titled [title] in [key]. */
         fun song(
             title: String,
             key: Key = Key.getMajorKeys()[0],
@@ -91,3 +95,15 @@ internal class ComposeScreens(
             }
     }
 }
+
+/** A finger lands on the node's centre and stays there. */
+internal fun SemanticsNodeInteraction.performTouchDown(): SemanticsNodeInteraction = performTouchInput { down(center) }
+
+/** The finger from [performTouchDown] lifts. */
+internal fun SemanticsNodeInteraction.performTouchUp(): SemanticsNodeInteraction = performTouchInput { up() }
+
+/** A real tap: down and up through pointer input, as a finger makes it. */
+internal fun SemanticsNodeInteraction.performTap(): SemanticsNodeInteraction = performTouchInput { click(center) }
+
+internal fun ComposeTestRule.onNodeWithContentDescriptionCompat(description: String): SemanticsNodeInteraction =
+    onNodeWithContentDescription(description)

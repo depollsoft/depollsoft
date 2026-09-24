@@ -157,7 +157,8 @@ fun AddSongScreen(
                     error = if (state.titleMissing) stringResource(R.string.SongTitleRequired) else null,
                     onDone = save,
                     focusRequester = titleFocus,
-                    modifier = Modifier.padding(top = 2.dp).fillMaxWidth().testTag(TestTags.SONG_TITLE),
+                    modifier = Modifier.padding(top = 2.dp).fillMaxWidth(),
+                    fieldModifier = Modifier.testTag(TestTags.SONG_TITLE),
                 )
                 Row(
                     Modifier.padding(vertical = 8.dp).fillMaxWidth(),

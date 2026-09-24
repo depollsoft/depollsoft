@@ -134,6 +134,7 @@ fun PlateFilledField(
     description: String,
     textStyle: TextStyle,
     modifier: Modifier = Modifier,
+    fieldModifier: Modifier = Modifier,
     error: String? = null,
     onDone: () -> Unit = {},
     focusRequester: androidx.compose.ui.focus.FocusRequester = remember { androidx.compose.ui.focus.FocusRequester() },
@@ -149,7 +150,7 @@ fun PlateFilledField(
         BasicTextField(
             value,
             onValueChange,
-            Modifier
+            fieldModifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { focused = it.isFocused }
