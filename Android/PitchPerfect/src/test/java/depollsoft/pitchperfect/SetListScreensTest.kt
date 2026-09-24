@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
@@ -222,6 +223,29 @@ class SetListScreensTest {
         screens.click(TestTags.NAME_DIALOG_CONFIRM)
         assertEquals(listOf("My Songs", "Chapter show"), activity.state.rows.map { model.displayName(it) })
         assertEquals("creating from here does not switch lists", SongsModel.DEFAULT_ID, model.currentListId)
+    }
+
+    @Test
+    fun anOpenPromptAndItsHalfTypedNameSurviveRecreation() {
+        val controller = screens.launch(ManageSetListsActivity::class.java)
+        screens.click(TestTags.NEW_SET_LIST)
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).performTextReplacement("Chapt")
+        controller.recreate()
+        screens.settle()
+        compose.onNodeWithTag(TestTags.NAME_DIALOG_FIELD).assert(hasText("Chapt"))
+        screens.click(TestTags.NAME_DIALOG_CONFIRM)
+        assertEquals(listOf("My Songs", "Chapt"), controller.get().state.rows.map { model.displayName(it) })
+    }
+
+    @Test
+    fun aPendingDeleteSurvivesRecreation() {
+        val other = model.createList("Saturday show")
+        val controller = screens.launch(ManageSetListsActivity::class.java)
+        controller.get().state.pendingDelete = other
+        screens.settle()
+        controller.recreate()
+        screens.settle()
+        assertEquals(other, controller.get().state.pendingDelete)
     }
 
     @Test

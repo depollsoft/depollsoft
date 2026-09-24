@@ -80,6 +80,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         super.onCreate(savedInstanceState)
         volumeControlStream = AudioManager.STREAM_MUSIC
         songs = SongListState(SongsModel.get())
+        keepSetListPromptsOpen(songs)
 
         setContent {
             PlateTheme {

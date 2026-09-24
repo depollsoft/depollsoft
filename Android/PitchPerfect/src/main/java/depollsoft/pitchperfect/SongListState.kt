@@ -31,13 +31,13 @@ data class Announcement(
 @Stable
 class SongListState(
     val model: SongsModel,
-) {
+) : SetListPrompts {
     /** Edit mode: songs show their edit buttons and drag handles, and the list actions appear. */
     var editing by mutableStateOf(false)
         private set
 
-    var nameRequest by mutableStateOf<NameRequest?>(null)
-    var pendingDelete by mutableStateOf<String?>(null)
+    override var nameRequest by mutableStateOf<NameRequest?>(null)
+    override var pendingDelete by mutableStateOf<String?>(null)
     var menuFor by mutableStateOf<String?>(null)
     var announcement by mutableStateOf<Announcement?>(null)
 

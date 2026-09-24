@@ -71,14 +71,14 @@ import depollsoft.pitchperfect.ui.plateText
 @Stable
 class ManageSetListsState(
     val model: SongsModel,
-) {
+) : SetListPrompts {
     private var dragged: List<SongList>? by mutableStateOf(null)
 
     /** The rows: the model's order, or the order a drag in progress has made. */
     val rows: List<SongList> get() = dragged ?: model.orderedLists
 
-    var nameRequest by mutableStateOf<NameRequest?>(null)
-    var pendingDelete by mutableStateOf<String?>(null)
+    override var nameRequest by mutableStateOf<NameRequest?>(null)
+    override var pendingDelete by mutableStateOf<String?>(null)
 
     fun isCustom(list: SongList): Boolean = list.id != SongsModel.DEFAULT_ID
 
@@ -140,6 +140,7 @@ class ManageSetListsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTitle(R.string.ManageSetListsTitle)
+        keepSetListPromptsOpen(state)
         setContent {
             PlateTheme {
                 Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
