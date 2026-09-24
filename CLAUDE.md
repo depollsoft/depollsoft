@@ -10,7 +10,6 @@ This is a polyglot monorepo containing several mobile applications and backend s
 
 - **PitchPerfect**: A music education app for pitch training (Android & iOS)
 - **TagMaster**: A barbershop music tag browsing/teaching app (Android & iOS)
-- **Bindroid**: An open-source Android data binding library that implements MVVM pattern
 
 ### Project Structure
 
@@ -29,7 +28,8 @@ This is a polyglot monorepo containing several mobile applications and backend s
 ./gradlew clean build              # Build all Android projects
 ./gradlew :PitchPerfect:assembleDebug    # Build PitchPerfect debug APK
 ./gradlew :TagMaster:assembleDebug       # Build TagMaster debug APK
-./gradlew :bindroid:build               # Build Bindroid library
+./gradlew :PitchPerfectWear:assembleDebug  # Build the Wear OS pitch pipe
+./gradlew :TagMaster:recordRoborazziDebug  # Re-record a module's screenshot goldens
 ```
 
 ### iOS Projects
@@ -65,13 +65,10 @@ npm run deploy                     # Deploy to Firebase
 
 ### Android Architecture
 
-- **Bindroid Library**: Custom data binding framework implementing MVVM pattern
-  - TrackableField classes for reactive properties
-  - UiBinder for UI-to-model bindings
-  - Support for converters and two-way bindings
-  - Well-tested with dedicated test suite in `bindroid-test`
+- **UI**: Jetpack Compose in Kotlin for every screen of Pitch Perfect, Pitch Perfect for Wear OS and Tag Master (see `docs/android-compose.md`). Custom-drawn surfaces paint through Canvas renderers; the AdMob banner and video use `AndroidView`; the home-screen widget stays on `RemoteViews`
+- **State**: models keep observable state in Compose snapshot state via `depollsoft.lib.state` (`StateField`, `StateList`, `ChangeSignal`, `watchState`) in DepollSoftCommon; screen composables take a model and callbacks
 - **Shared Libraries**:
-  - DepollSoftCommon: Shared utilities across Android apps
+  - DepollSoftCommon: Shared utilities across Android apps, including the snapshot-state helpers
   - depollsoft.lib.kotlin: Kotlin extensions (also has tests)
   - PitchPerfectLib: Shared components for PitchPerfect
 - **Build System**: Gradle with dynamic version codes (YYMMDD *1000 + build* 10 + suffix)
@@ -147,9 +144,8 @@ npm run deploy                     # Deploy to Firebase
 - **API**: node:test suite in `api/src/test` covering the analytics router (`npm test`); the router takes injected Pub/Sub, BigQuery, JWT and geoip dependencies via `createAnalyticsRouter`
 - **Tag Master list sync**: `TagListSyncEmulatorTest` (Android, run the class on its own) and `TMListSyncEmulatorTests` (iOS) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh tagmaster`, and skip when none is running; see `docs/tag-lists.md`
 - **Android**:
-  - Bindroid: Well-tested with dedicated test suite
   - depollsoft.lib.kotlin: Has test coverage
-  - TagMaster / PitchPerfect: screen behaviour is tested on the JVM with Robolectric (`src/test`); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI does not run
+  - TagMaster / PitchPerfect / PitchPerfectWear: screen behaviour is tested on the JVM with Robolectric and the Compose test APIs (`src/test`); pixels are pinned by Roborazzi screenshot goldens in `src/test/screenshots` (`recordRoborazziDebug` to update, `verifyRoborazziDebug` to check); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI does not run
 - **Pitch Perfect set list sync**: `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS, needs a signed build) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh pitchperfect`, and skip when none is running; see `docs/pitchperfect-set-lists.md`
 - **iOS**:
   - depolllib: Has tests
@@ -203,8 +199,8 @@ npm test
 
 ### Best Practices
 
-1. Follow MVVM pattern on Android using Bindroid
+1. Build Android screens as Compose functions of a model plus callbacks, with state in snapshot state (`depollsoft.lib.state`)
 2. Keep shared iOS package versions aligned across both Xcode projects
-3. Test Bindroid changes thoroughly - it's a core dependency
+3. Re-record and review screenshot goldens when a UI change is intended; an unexplained golden diff is a regression
 4. Check CI/CD logs if API deployment fails
 5. Use strict TypeScript settings for API development
