@@ -1,5 +1,9 @@
 package depollsoft.pitchperfect.ui
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
@@ -65,8 +69,15 @@ object PlateFonts {
 /**
  * A TextView's text: font padding included, so a line is exactly as tall and its baseline exactly
  * where the View layouts put it.
+ *
+ * A TextView reads a size from XML as whole pixels (`getDimensionPixelSize` rounds 16sp at 2.625x,
+ * 42px exactly, but 15sp, 39.375px, to 39px); on a device whose density is not a whole number the
+ * fraction would make every line differ. Pass [wholePixels] false for a size the View code set with
+ * `setTextSize`, which keeps the fraction.
  */
 @Suppress("DEPRECATION")
+@Composable
+@ReadOnlyComposable
 fun plateText(
     size: TextUnit,
     color: Color = Color.Unspecified,
@@ -74,10 +85,11 @@ fun plateText(
     weight: FontWeight? = null,
     letterSpacing: Float = 0f,
     style: FontStyle? = null,
+    wholePixels: Boolean = true,
 ): TextStyle =
     TextStyle(
         color = color,
-        fontSize = size,
+        fontSize = if (wholePixels) size.inWholePixels(LocalDensity.current) else size,
         fontFamily = family,
         fontWeight = weight,
         fontStyle = style,
@@ -116,3 +128,20 @@ fun PlateTheme(content: @Composable () -> Unit) {
         MaterialTheme(colors = material, content = content)
     }
 }
+
+/** [this] size as the whole number of pixels `getDimensionPixelSize` makes of it, back in sp. */
+fun TextUnit.inWholePixels(density: androidx.compose.ui.unit.Density): TextUnit {
+    if (!isSp) return this
+    val px = with(density) { toPx() }
+    val whole = if (px == 0f) 0f else maxOf(1f, (px + 0.5f).toInt().toFloat())
+    return (whole / density.fontScale / density.density).sp
+}
+
+/**
+ * [dp] as the View code sized things, `(dp * displayMetrics.density).toInt()`: truncated to whole
+ * pixels where a Dp rounds. The two differ on devices whose density is not a whole number (14dp
+ * is 36.75px at 420dpi: the View took 36).
+ */
+@Composable
+@ReadOnlyComposable
+fun viewDp(dp: Float): Dp = with(LocalDensity.current) { (dp * density).toInt().toDp() }

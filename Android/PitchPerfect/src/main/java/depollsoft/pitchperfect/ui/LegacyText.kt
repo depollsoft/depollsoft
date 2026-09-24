@@ -56,7 +56,8 @@ fun LegacyText(
     val paint =
         remember(size, color, typeface, letterSpacing, density) {
             TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                textSize = with(density) { size.toPx() }
+                // Whole pixels, as a TextView reads an XML text size.
+                textSize = with(density) { size.inWholePixels(density).toPx() }
                 this.color = color.toArgb()
                 this.typeface = typeface
                 this.letterSpacing = letterSpacing

@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import depollsoft.pitchperfect.ui.viewDp
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.combinedClickable
@@ -264,6 +265,8 @@ private fun Position(
                     if (selected) colors.ink else colors.inkSecondary,
                     PlateFonts.oswald,
                     letterSpacing = 0.16f,
+                    // The selector set its sizes with setTextSize, which keeps the fraction.
+                    wholePixels = false,
                 ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -294,7 +297,7 @@ private fun AddPosition(onCreate: () -> Unit) {
     ) {
         PlateText(
             stringResource(R.string.SetListAddGlyph),
-            style = plateText(20.sp, colors.inkSecondary, PlateFonts.oswald),
+            style = plateText(20.sp, colors.inkSecondary, PlateFonts.oswald, wholePixels = false),
         )
     }
 }
@@ -330,11 +333,12 @@ private fun Modifier.fadingEdges(scroll: ScrollState): Modifier =
 
 private val FRAME_RADIUS = 5.dp
 private val FRAME_STROKE = 1.5.dp
-private val SIDE_PADDING = 14.dp
-private val LEADING_PADDING = 20.dp
+// The selector View sized its paddings and widths with (dp * density).toInt().
+private val SIDE_PADDING @Composable get() = viewDp(14f)
+private val LEADING_PADDING @Composable get() = viewDp(20f)
 private val FADE_LENGTH = 24.dp
 private val DOT_INSET = 8.dp
 private val DOT_SIZE = 6.dp
-private val ADD_WIDTH = 44.dp
-private val MAX_POSITION_WIDTH = 180.dp
+private val ADD_WIDTH @Composable get() = viewDp(44f)
+private val MAX_POSITION_WIDTH @Composable get() = viewDp(180f)
 private const val WASH_ALPHA = 26
