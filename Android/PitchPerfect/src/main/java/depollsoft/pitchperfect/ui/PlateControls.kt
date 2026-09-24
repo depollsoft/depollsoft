@@ -99,7 +99,7 @@ fun PlateModeToggle(
         layout(width, height) {
             var x = 0
             placeables.forEach {
-                it.place(x, 0)
+                it.placeRelative(x, 0)
                 x += it.width - overlap
             }
         }

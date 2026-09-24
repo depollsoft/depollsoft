@@ -29,6 +29,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
@@ -146,6 +149,7 @@ fun AppCompatAlertDialog(
     title: String?,
     buttons: List<DialogButton> = emptyList(),
     neutral: DialogButton? = null,
+    @androidx.annotation.DrawableRes icon: Int? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = plateColors
@@ -177,12 +181,26 @@ fun AppCompatAlertDialog(
         ) {
             Column(Modifier.dialogEntrance().clip(DialogShape).background(background, DialogShape)) {
                 if (title != null) {
-                    PlateText(
-                        title,
-                        style = plateText(20.sp, colors.ink, weight = FontWeight.Medium),
-                        maxLines = 1,
-                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp),
-                    )
+                    // AlertController's title template: the icon, 8dp, then the title.
+                    Row(
+                        Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (icon != null) {
+                            androidx.compose.foundation.Image(
+                                androidx.compose.ui.graphics.painter.BitmapPainter(
+                                    rememberLauncherIcon(icon),
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp).size(32.dp),
+                            )
+                        }
+                        PlateText(
+                            title,
+                            style = plateText(20.sp, colors.ink, weight = FontWeight.Medium),
+                            maxLines = 1,
+                        )
+                    }
                 }
                 // The body gets only the height the title and buttons leave, as AlertDialog's
                 // scroll panel did, so the buttons stay on screen however tall it is.
@@ -198,6 +216,17 @@ fun AppCompatAlertDialog(
                 }
             }
         }
+    }
+}
+
+/** [id] (an adaptive launcher icon included) drawn to a bitmap, as an ImageView would show it. */
+@Composable
+private fun rememberLauncherIcon(@androidx.annotation.DrawableRes id: Int): androidx.compose.ui.graphics.ImageBitmap {
+    val context = LocalView.current.context
+    val size = with(LocalDensity.current) { 32.dp.roundToPx() }
+    return remember(id, size) {
+        val drawable = androidx.core.content.ContextCompat.getDrawable(context, id)!!
+        drawable.toBitmap(size, size).asImageBitmap()
     }
 }
 

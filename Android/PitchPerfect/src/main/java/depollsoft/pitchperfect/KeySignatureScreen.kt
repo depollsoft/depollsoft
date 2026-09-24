@@ -1,5 +1,8 @@
 package depollsoft.pitchperfect
 
+import depollsoft.pitchperfect.ui.hairlineWidth
+import depollsoft.pitchperfect.ui.listViewScrollbar
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -111,6 +114,7 @@ private fun KeyList(
             .zIndex(if (visible) 1f else 0f)
             .alpha(if (visible) 1f else 0f)
             .then(if (visible) Modifier else Modifier.clearAndSetSemantics {})
+            .listViewScrollbar(state, bottom = 90.dp, divider = hairlineWidth)
             .testTag(tag),
         state = state,
         contentPadding = PaddingValues(bottom = 90.dp),

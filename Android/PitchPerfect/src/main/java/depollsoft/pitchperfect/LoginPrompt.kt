@@ -89,6 +89,7 @@ fun LoginPromptDialog(
     isHoomiLogout: Boolean = false,
 ) {
     val context = LocalContext.current
+    val view = androidx.compose.ui.platform.LocalView.current
     var opening by rememberSaveable { mutableStateOf(false) }
     var status by rememberSaveable { mutableStateOf<Int?>(null) }
 
@@ -170,6 +171,9 @@ fun LoginPromptDialog(
             ) {
                 opening = true
                 status = null
+                // A live region may not speak a line that has only just appeared; say it outright,
+                // as the View did.
+                view.announceForAccessibility(context.getString(R.string.OpeningSignIn))
                 launcher.launch(LoginPrompt.createSignInIntent())
             }
         }

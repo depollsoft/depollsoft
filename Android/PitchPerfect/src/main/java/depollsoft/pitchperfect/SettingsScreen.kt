@@ -1,5 +1,12 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import depollsoft.pitchperfect.ui.scrollViewScrollbar
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -109,11 +116,13 @@ fun SettingsScreen(
     actions: SettingsActions,
 ) {
     val colors = plateColors
+    val scroll = rememberScrollState()
     PlateBackground {
         Column(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .scrollViewScrollbar(scroll)
+                .verticalScroll(scroll)
                 .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 28.dp),
         ) {
             PlateSectionHeader(stringResource(R.string.SectionPitchPipe), Modifier.padding(top = 12.dp))
@@ -250,7 +259,13 @@ private fun ThemeChoice(
 ) {
     val colors = plateColors
     val selected = state.themeMode == mode
-    val ring = if (selected) colors.accent else colors.ink.copy(alpha = UNSELECTED_RING_ALPHA)
+    // The radio button's animated drawable: the ring takes the accent and the dot grows in.
+    val ring by animateColorAsState(
+        if (selected) colors.accent else colors.ink.copy(alpha = UNSELECTED_RING_ALPHA),
+        tween(RADIO_MS),
+        label = "ring",
+    )
+    val dot by animateFloatAsState(if (selected) 1f else 0f, tween(RADIO_MS, easing = FastOutSlowInEasing), label = "dot")
     Row(
         Modifier
             .height(48.dp)
@@ -265,7 +280,7 @@ private fun ThemeChoice(
                 .drawBehind {
                     val stroke = 2.dp.toPx()
                     drawCircle(ring, radius = 10.dp.toPx() - stroke / 2f, style = Stroke(stroke))
-                    if (selected) drawCircle(ring, radius = 5.dp.toPx())
+                    if (dot > 0f) drawCircle(ring, radius = 5.dp.toPx() * dot)
                 },
         )
         PlateText(label, style = plateText(16.sp, colors.ink))
@@ -273,6 +288,7 @@ private fun ThemeChoice(
 }
 
 private const val UNSELECTED_RING_ALPHA = 0.51f
+private const val RADIO_MS = 200
 
 /** The about lines: name and version, the publisher, the home page and the terms. */
 @Composable

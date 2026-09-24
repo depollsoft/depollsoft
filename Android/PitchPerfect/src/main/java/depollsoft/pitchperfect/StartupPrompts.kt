@@ -52,6 +52,7 @@ fun ChangelogDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = CHANGELOG_TITLE,
         buttons = listOf(DialogButton(stringResource(android.R.string.ok), onDismiss)),
+        icon = R.mipmap.ic_launcher,
     ) {
         LegacyText(
             text,

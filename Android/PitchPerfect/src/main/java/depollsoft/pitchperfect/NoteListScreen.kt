@@ -1,5 +1,8 @@
 package depollsoft.pitchperfect
 
+import depollsoft.pitchperfect.ui.hairlineWidth
+import depollsoft.pitchperfect.ui.listViewScrollbar
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,7 +44,10 @@ fun NoteListScreen(
 
     val listState = rememberLazyListState()
     CenterOnFirstLayout(listState, notes.size)
-    LazyColumn(Modifier.fillMaxSize().testTag(TestTags.NOTE_LIST), state = listState) {
+    LazyColumn(
+        Modifier.fillMaxSize().listViewScrollbar(listState, divider = hairlineWidth).testTag(TestTags.NOTE_LIST),
+        state = listState,
+    ) {
         hairlineDivided(notes.size) { index -> NoteRow(notes[index], Modifier.testTag(TestTags.noteRow(index))) }
     }
 }
