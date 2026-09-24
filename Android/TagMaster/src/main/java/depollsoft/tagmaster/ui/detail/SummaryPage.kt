@@ -1,14 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.tagmaster.ui.WithTooltip
-import androidx.compose.material3.ripple
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalInputModeManager
-import androidx.compose.ui.input.InputMode
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -19,6 +10,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -43,9 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -82,6 +81,7 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
+import depollsoft.tagmaster.ui.WithTooltip
 import depollsoft.tagmaster.ui.drawPlatform
 import depollsoft.tagmaster.ui.isPresent
 import depollsoft.tagmaster.ui.listIconRes

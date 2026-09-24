@@ -1,10 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.tagmaster.ui.listViewScrollbar
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.layout.PaddingValues
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -13,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -50,6 +49,7 @@ import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.formatDate
 import depollsoft.tagmaster.ui.isPresent
+import depollsoft.tagmaster.ui.listViewScrollbar
 import depollsoft.tagmaster.ui.rememberTextViewPaint
 import depollsoft.tagmaster.ui.scrollViewScrollbar
 import kotlin.math.ceil

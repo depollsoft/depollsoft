@@ -1,12 +1,10 @@
 package depollsoft.tagmaster
 
-import depollsoft.tagmaster.ui.scrollViewScrollbar
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -50,6 +49,7 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.setTagMasterContent
 
 /** The search form: text, sort order and the catalog filters, which open [TagSearchResultsActivity]. */

@@ -4,9 +4,9 @@ import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
-import org.junit.Assert.assertEquals
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

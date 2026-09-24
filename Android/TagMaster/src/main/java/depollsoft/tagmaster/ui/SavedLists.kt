@@ -193,6 +193,7 @@ fun SavedTagRow(
 ) {
     val context = LocalContext.current
     val handleInteractions = remember { MutableInteractionSource() }
+    val rowInteractions = remember { MutableInteractionSource() }
     val colors = TagMasterTheme.colors
     val load = rememberTagLoad(id)
     val tag = load.tag
@@ -225,7 +226,10 @@ fun SavedTagRow(
                                     if (position > 0) add(CustomAccessibilityAction(moveUp) { onMove(id, -1) })
                                     if (position < count - 1) add(CustomAccessibilityAction(moveDown) { onMove(id, 1) })
                                 }
-                        }.focusable()
+                        }
+                        // Keyboard focus on the row shows, as the platform's default focus highlight did.
+                        .indication(rowInteractions, ripple())
+                        .focusable(interactionSource = rowInteractions)
                 } else if (load.failed) {
                     // A tag that will not load can still be opened on the website.
                     Modifier.clickable {

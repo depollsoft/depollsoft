@@ -1,6 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.tagmaster.ui.viewPx
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.rememberTextViewPaint
+import depollsoft.tagmaster.ui.viewPx
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min

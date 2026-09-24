@@ -10,10 +10,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.junit4.v2.createComposeRule
 import depollsoft.tagmaster.ui.detail.StopWhenNotCurrent
 import org.junit.Assert.assertEquals
 import org.junit.Rule

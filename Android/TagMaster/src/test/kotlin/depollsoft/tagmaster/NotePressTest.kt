@@ -4,19 +4,19 @@ import android.app.Application
 import android.os.Looper
 import android.view.SoundEffectConstants
 import android.view.View
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.test.click
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
@@ -26,6 +26,7 @@ import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.tagmaster.ui.notePress
 import depollsoft.tagmaster.ui.rememberNotePlayer
+import java.time.Duration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,6 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import java.time.Duration
 
 /**
  * The key-note buttons: a touch sounds the note until the finger lifts, a click that is not a

@@ -1,13 +1,16 @@
 package depollsoft.tagmaster
 
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.tagmaster.barbershop.TagSortOptions
 import depollsoft.tagmaster.screenshots.ScreenshotFixtures
+import java.io.IOException
+import java.io.InputStream
+import java.net.URL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,9 +18,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.io.IOException
-import java.io.InputStream
-import java.net.URL
 
 /**
  * Browse and search results against canned catalog pages: each browse mode asks for its own sort,

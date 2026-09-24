@@ -32,8 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +42,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.SettingsActivity
@@ -57,15 +57,15 @@ import depollsoft.tagmaster.TagSearchActivity
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.await
 import depollsoft.tagmaster.barbershop.Tag
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Random
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Random
 
 /**
  * Home's two requests — a random tag, and a tag opened by its id — held by the activity so that

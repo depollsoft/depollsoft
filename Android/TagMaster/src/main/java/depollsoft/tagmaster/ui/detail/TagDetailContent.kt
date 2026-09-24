@@ -44,17 +44,17 @@ import depollsoft.tagmaster.ui.BottomTabs
 import depollsoft.tagmaster.ui.ButtonStyle
 import depollsoft.tagmaster.ui.ListDialogs
 import depollsoft.tagmaster.ui.LocalSnackbars
+import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.QuartetIllustration
 import depollsoft.tagmaster.ui.ShowAs
 import depollsoft.tagmaster.ui.TabItem
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
-import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.UsualTouchSlop
 import depollsoft.tagmaster.ui.ViewAlign
-import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.rememberPagerTabs
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 
 /**
  * One tag's detail below its toolbar: the quartet while the first load runs, the error and Retry

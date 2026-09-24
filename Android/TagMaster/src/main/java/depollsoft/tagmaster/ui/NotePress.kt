@@ -1,13 +1,15 @@
 package depollsoft.tagmaster.ui
 
+import android.os.Handler
+import android.os.Looper
 import android.view.SoundEffectConstants
 import android.view.View
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
@@ -27,8 +29,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import android.os.Handler
-import android.os.Looper
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 

@@ -1,6 +1,5 @@
 package depollsoft.tagmaster
 
-import depollsoft.tagmaster.ui.revealItem
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -27,17 +26,18 @@ import depollsoft.tagmaster.ui.BarAction
 import depollsoft.tagmaster.ui.BottomTabs
 import depollsoft.tagmaster.ui.ListDetailScaffold
 import depollsoft.tagmaster.ui.ListDialogsHost
+import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.QueryList
 import depollsoft.tagmaster.ui.SearchFab
 import depollsoft.tagmaster.ui.ShowAs
-import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.TabItem
-import depollsoft.tagmaster.ui.UsualTouchSlop
-import depollsoft.tagmaster.ui.rememberPagerTabs
 import depollsoft.tagmaster.ui.TagMasterTopBar
+import depollsoft.tagmaster.ui.UsualTouchSlop
 import depollsoft.tagmaster.ui.Watermark
 import depollsoft.tagmaster.ui.navigateUpOrHome
 import depollsoft.tagmaster.ui.rememberListDialogs
+import depollsoft.tagmaster.ui.rememberPagerTabs
+import depollsoft.tagmaster.ui.revealItem
 import depollsoft.tagmaster.ui.setTagMasterContent
 import kotlinx.coroutines.launch
 
