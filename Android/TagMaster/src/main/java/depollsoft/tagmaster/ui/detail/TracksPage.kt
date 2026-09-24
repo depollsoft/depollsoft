@@ -1,5 +1,6 @@
 package depollsoft.tagmaster.ui.detail
 
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,8 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -32,8 +31,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -41,6 +42,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,6 +55,9 @@ import depollsoft.tagmaster.ui.PlatformIcon
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.ViewAlign
+import depollsoft.tagmaster.ui.ViewSlider
+import depollsoft.tagmaster.ui.drawPlatform
+import depollsoft.tagmaster.ui.textViewWidth
 
 /** The parts a tag can have tracks for, in the order the picker lists them. */
 private fun parts(tag: Tag): List<Pair<Int, RemoteLocation?>> =
@@ -184,17 +189,50 @@ private fun PartChoice(
             .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-            Box(Modifier.size(32.dp), contentAlignment = ViewAlign.Center) {
-                RadioButton(
-                    selected = selected,
-                    onClick = null,
-                    colors = RadioButtonDefaults.colors(selectedColor = colors.primary, unselectedColor = colors.onSurfaceVariant),
-                )
-            }
-        }
+        RadioIndicator(selected)
         Text(label, style = TagMasterType.bodyLarge.let { with(TagMasterType) { it.withoutLineHeight() } }, color = colors.text)
     }
+}
+
+/**
+ * The radio circle a MaterialRadioButton draws: the theme's radio button drawable and tint, in the
+ * checked or unchecked state, without its transition animation.
+ */
+@Composable
+private fun RadioIndicator(selected: Boolean) {
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val indicator =
+        remember(context, configuration.uiMode) {
+            val attributes =
+                context.obtainStyledAttributes(
+                    null,
+                    intArrayOf(android.R.attr.button, androidx.appcompat.R.attr.buttonCompat, androidx.appcompat.R.attr.buttonTint),
+                    androidx.appcompat.R.attr.radioButtonStyle,
+                    0,
+                )
+            try {
+                val id = attributes.getResourceId(1, 0).takeIf { it != 0 } ?: attributes.getResourceId(0, 0)
+                AppCompatResources.getDrawable(context, id)!!.mutate().also { drawable ->
+                    val tint =
+                        attributes.getResourceId(2, 0).takeIf { it != 0 }?.let { AppCompatResources.getColorStateList(context, it) }
+                            ?: attributes.getColorStateList(2)
+                    if (tint != null) DrawableCompat.setTintList(drawable, tint)
+                }
+            } finally {
+                attributes.recycle()
+            }
+        }
+    Box(
+        Modifier
+            .size(with(LocalDensity.current) { indicator.intrinsicWidth.toDp() }, with(LocalDensity.current) { indicator.intrinsicHeight.toDp() })
+            .drawBehind {
+                indicator.state =
+                    if (selected) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked) else intArrayOf(android.R.attr.state_enabled)
+                indicator.jumpToCurrentState()
+                drawPlatform(indicator, 0, 0, size.width.toInt(), size.height.toInt())
+            },
+    )
 }
 
 /** Play/pause, stop, the loading pole, position text, the seek slider and the balance slider. */
@@ -214,7 +252,7 @@ private fun Transport(
             Box(
                 Modifier
                     .size(48.dp)
-                    .background(if (playEnabled) colors.primary else colors.onSurface.copy(alpha = 0.10f), CircleShape)
+                    .background(if (playEnabled) colors.primary else colors.onSurface.copy(alpha = 0.12f), CircleShape)
                     .clip(CircleShape)
                     .clickable(enabled = playEnabled, role = Role.Button) { player.togglePlay() }
                     .semantics { contentDescription = playDescription }
@@ -253,7 +291,7 @@ private fun Transport(
             )
         }
         val positionLabel = stringResource(R.string.detail_playback_position)
-        Slider(
+        ViewSlider(
             value = player.position.toFloat().coerceAtMost(maxOf(1, player.length).toFloat()),
             onValueChange = { player.seekTo(it.toInt()) },
             valueRange = 0f..maxOf(1, player.length).toFloat(),
@@ -261,16 +299,13 @@ private fun Transport(
             modifier =
                 Modifier
                     .padding(top = 8.dp)
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
                     .semantics { contentDescription = positionLabel }
                     .testTag("position"),
-            colors = sliderColors(),
         )
         Row(Modifier.fillMaxWidth(), verticalAlignment = ViewAlign.CenterVertically) {
             val balance = stringResource(R.string.Balance)
-            Text(balance, Modifier.padding(end = 16.dp), style = TagMasterType.labelMedium, color = secondary)
-            Slider(
+            Text(balance, Modifier.padding(end = 16.dp).textViewWidth(balance, TagMasterType.labelMedium), style = TagMasterType.labelMedium, color = secondary)
+            ViewSlider(
                 value = player.balance.toFloat(),
                 onValueChange = { player.changeBalance(it.toInt()) },
                 valueRange = 0f..1000f,
@@ -278,21 +313,9 @@ private fun Transport(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
                         .semantics { contentDescription = balance }
                         .testTag("balance"),
-                colors = sliderColors(),
             )
         }
     }
 }
-
-@Composable
-private fun sliderColors() =
-    TagMasterTheme.colors.let { colors ->
-        SliderDefaults.colors(
-            thumbColor = colors.primary,
-            activeTrackColor = colors.primary,
-            inactiveTrackColor = colors.secondaryContainer,
-        )
-    }
