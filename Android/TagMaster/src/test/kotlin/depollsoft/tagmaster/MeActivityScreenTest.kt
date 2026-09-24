@@ -1,6 +1,7 @@
 package depollsoft.tagmaster
 
 import android.app.Application
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasText
@@ -229,4 +230,20 @@ class MeActivityScreenTest : ComposeScreenTest() {
         assertFalse(activity.hasDetailPane)
     }
 
+    @Test
+    @Config(qualifiers = "w640dp-h200dp-land")
+    fun onAShortLandscapeScreenWithLargeTextTheDialogKeepsItsButtons() {
+        org.robolectric.RuntimeEnvironment.setFontScale(2f)
+        try {
+            home()
+            click("openByIdButton")
+            node("openTagIdInput").performTextInput("0")
+            click("openTagConfirm")
+            // The error line makes the content taller still; Open must stay on screen.
+            node("openTagConfirm").assertIsDisplayed()
+            node("dialogButton:${string(R.string.home_cancel)}").assertIsDisplayed()
+        } finally {
+            org.robolectric.RuntimeEnvironment.setFontScale(1f)
+        }
+    }
 }

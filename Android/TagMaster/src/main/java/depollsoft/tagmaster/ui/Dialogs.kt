@@ -89,19 +89,23 @@ fun TagMasterDialog(
                 DialogTitle(title, Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp))
                 if (message != null) Spacer(Modifier.height(16.dp))
             }
-            if (message != null) {
-                Box(Modifier.heightIn(min = 48.dp)) {
-                    Text(
-                        message,
-                        Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp),
-                        style = TagMasterType.bodyMedium,
-                        color = colors.onSurfaceVariant,
-                    )
+            // The message and content get only the height the title and buttons leave, as
+            // AlertDialog's content panel did, so the buttons stay on a short screen.
+            Column(Modifier.weight(1f, fill = false)) {
+                if (message != null) {
+                    Box(Modifier.heightIn(min = 48.dp)) {
+                        Text(
+                            message,
+                            Modifier
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 24.dp),
+                            style = TagMasterType.bodyMedium,
+                            color = colors.onSurfaceVariant,
+                        )
+                    }
                 }
+                content?.invoke(this)
             }
-            content?.invoke(this)
             if (confirm != null || dismiss != null) {
                 Row(
                     Modifier
