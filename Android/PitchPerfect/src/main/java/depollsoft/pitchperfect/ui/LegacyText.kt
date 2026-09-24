@@ -84,6 +84,8 @@ fun LegacyText(
                             .setAlignment(alignment)
                             .setLineSpacing(spacing, 1f)
                             .setIncludePad(true)
+                            // TextView's default since API 28: fallback fonts' taller lines count.
+                            .setUseLineSpacingFromFallbacks(true)
                             .setBreakStrategy(Layout.BREAK_STRATEGY_HIGH_QUALITY)
                             .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE)
                             .build()

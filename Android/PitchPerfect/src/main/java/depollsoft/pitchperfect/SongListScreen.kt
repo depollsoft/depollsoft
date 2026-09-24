@@ -254,6 +254,8 @@ private fun SongRow(
                 Box(
                     Modifier
                         .width(48.dp)
+                        // The borderless ImageButton wrapped its 24dp icon in 16dp of padding: 56dp tall.
+                        .height(56.dp)
                         .testTag(TestTags.EDIT_SONG_BUTTON)
                         .combinedClickable(
                             role = Role.Button,
@@ -263,6 +265,7 @@ private fun SongRow(
                             onClick = openEditor,
                         ).semantics { contentDescription = context.getString(R.string.EditSong) }
                         .padding(16.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     DrawableIcon(R.drawable.ic_edit_button, colors.ink, size = 16.dp)
                 }
