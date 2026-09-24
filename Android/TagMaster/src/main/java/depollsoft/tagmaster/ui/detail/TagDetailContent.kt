@@ -72,9 +72,11 @@ fun TagDetailContent(
     val snackbars = LocalSnackbars.current
     val refreshFailed = stringResource(R.string.detail_tag_refresh_failed, state.tagId)
     val retry = stringResource(R.string.detail_retry)
-    LaunchedEffect(state.refreshFailed) {
+    // Up while this tag's refresh has failed; the next load, another tag or leaving the screen
+    // takes it down, as the fragment dismissed it at the start of every load and on destroy.
+    LaunchedEffect(state.refreshFailed, state.tagId) {
         if (state.refreshFailed) {
-            snackbars.show(refreshFailed, retry, indefinite = true) { state.retry() }
+            snackbars.showNow(refreshFailed, retry, indefinite = true) { state.retry() }
         }
     }
     val pager = rememberPagerState(initialPage = state.page) { pageTabs.size }

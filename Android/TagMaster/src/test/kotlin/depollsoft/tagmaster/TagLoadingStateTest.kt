@@ -16,6 +16,8 @@ import bolts.TaskCompletionSource
 import depollsoft.lib.activity.RichApplication
 import depollsoft.tagmaster.barbershop.Tag
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
@@ -187,10 +189,16 @@ class TagLoadingStateTest {
             pending().second.setError(IllegalStateException("offline"))
             assertState(c.get(), loading = false, loaded = true, error = true)
             assertSame(original, c.get().tag)
+            val failedMessage = c.get().getString(R.string.detail_tag_refresh_failed, c.get().detail.tagId)
+            fun snackbarShown() = compose.onAllNodes(androidx.compose.ui.test.hasText(failedMessage)).fetchSemanticsNodes().isNotEmpty()
+            assertTrue("the failure is announced", snackbarShown())
             refresh(c.get())
+            assertFalse("a new load takes the old failure down", snackbarShown())
             pending().second.setResult(tag(title = "Updated quartet"))
             assertState(c.get(), loading = false, loaded = true)
             assertEquals("Updated quartet", c.get().tag!!.title)
+            idle()
+            assertFalse(snackbarShown())
         } finally {
             c.pause().stop().destroy()
         }

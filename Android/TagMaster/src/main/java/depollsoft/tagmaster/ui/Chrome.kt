@@ -83,21 +83,34 @@ class Snackbars(
         indefinite: Boolean = false,
         onAction: () -> Unit = {},
     ) {
-        scope.launch {
-            host.currentSnackbarData?.dismiss()
-            val result =
-                host.showSnackbar(
-                    message,
-                    action,
-                    duration =
-                        when {
-                            indefinite -> SnackbarDuration.Indefinite
-                            long -> SnackbarDuration.Long
-                            else -> SnackbarDuration.Short
-                        },
-                )
-            if (result == SnackbarResult.ActionPerformed) onAction()
-        }
+        scope.launch { showNow(message, action, long, indefinite, onAction) }
+    }
+
+    /**
+     * Shows a message for as long as the calling coroutine runs: cancelling it (a keyed
+     * LaunchedEffect restarting or leaving) takes the snackbar down, as the View code's explicit
+     * `dismiss()` did.
+     */
+    suspend fun showNow(
+        message: String,
+        action: String? = null,
+        long: Boolean = true,
+        indefinite: Boolean = false,
+        onAction: () -> Unit = {},
+    ) {
+        host.currentSnackbarData?.dismiss()
+        val result =
+            host.showSnackbar(
+                message,
+                action,
+                duration =
+                    when {
+                        indefinite -> SnackbarDuration.Indefinite
+                        long -> SnackbarDuration.Long
+                        else -> SnackbarDuration.Short
+                    },
+            )
+        if (result == SnackbarResult.ActionPerformed) onAction()
     }
 
     fun dismiss() {
