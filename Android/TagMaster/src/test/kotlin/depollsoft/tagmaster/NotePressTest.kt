@@ -2,6 +2,13 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.os.Looper
+import android.view.SoundEffectConstants
+import android.view.View
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.click
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
@@ -50,18 +57,27 @@ class NotePressTest {
 
     private var playerShown by mutableStateOf(true)
 
-    private fun setUp(): Note {
+    private val view: View = Mockito.mock(View::class.java)
+
+    private fun setUp(inAScrollingPage: Boolean = false): Note {
         current = note()
         compose.setContent {
             if (!playerShown) return@setContent
             val player = rememberNotePlayer()
             if (shown) {
-                Box(
+                Column(
                     Modifier
-                        .size(48.dp)
-                        .testTag("key")
-                        .notePress(player, { current }),
-                )
+                        .size(200.dp)
+                        .then(if (inAScrollingPage) Modifier.verticalScroll(rememberScrollState()) else Modifier),
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .testTag("key")
+                            .notePress(player, { current }, view = view),
+                    )
+                    if (inAScrollingPage) Box(Modifier.size(48.dp, 1000.dp))
+                }
             }
         }
         compose.waitForIdle()
@@ -141,5 +157,46 @@ class NotePressTest {
         Mockito.verify(note).stop()
         idleFor(2000)
         Mockito.verify(note, Mockito.times(1)).stop()
+    }
+
+    @Test
+    fun aFingerThatDriftsOffTheButtonKeepsTheNoteSounding() {
+        val note = setUp()
+        compose.onNodeWithTag("key").performTouchInput {
+            down(center)
+            moveBy(Offset(width * 2f, 0f))
+        }
+        compose.waitForIdle()
+        Mockito.verify(note, Mockito.never()).stop()
+        compose.onNodeWithTag("key").performTouchInput { up() }
+        compose.waitForIdle()
+        Mockito.verify(note).stop()
+        Mockito.verify(view, Mockito.never()).playSoundEffect(SoundEffectConstants.CLICK)
+    }
+
+    @Test
+    fun aScrollThatTakesTheTouchStopsTheNote() {
+        val note = setUp(inAScrollingPage = true)
+        compose.onNodeWithTag("key").performTouchInput {
+            down(center)
+            repeat(10) { moveBy(Offset(0f, -20f)) }
+        }
+        compose.waitForIdle()
+        Mockito.verify(note).stop()
+        compose.onNodeWithTag("key").performTouchInput { up() }
+    }
+
+    @Test
+    fun aTapMakesTheClickSoundAndACancelledTouchDoesNot() {
+        setUp()
+        compose.onNodeWithTag("key").performTouchInput {
+            down(center)
+            cancel()
+        }
+        compose.waitForIdle()
+        Mockito.verify(view, Mockito.never()).playSoundEffect(SoundEffectConstants.CLICK)
+        compose.onNodeWithTag("key").performTouchInput { click() }
+        compose.waitForIdle()
+        Mockito.verify(view).playSoundEffect(SoundEffectConstants.CLICK)
     }
 }

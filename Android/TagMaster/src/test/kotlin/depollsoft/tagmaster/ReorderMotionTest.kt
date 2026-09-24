@@ -1,6 +1,9 @@
 package depollsoft.tagmaster
 
 import android.app.Application
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +33,7 @@ import depollsoft.tagmaster.ui.rememberReorderState
 import depollsoft.tagmaster.ui.reorderHandle
 import depollsoft.tagmaster.ui.reorderRow
 import depollsoft.tagmaster.ui.shownOrder
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -55,8 +59,10 @@ class ReorderMotionTest {
     private val felt = mutableListOf<HapticFeedbackType>()
     private lateinit var state: ReorderState<Int>
     private lateinit var listState: LazyListState
+    private lateinit var scope: kotlinx.coroutines.CoroutineScope
 
     private val rowHeight = 56.dp
+    private val handlePresses = MutableInteractionSource()
 
     private fun show() {
         compose.setContent {
@@ -69,6 +75,7 @@ class ReorderMotionTest {
                     },
             ) {
                 listState = rememberLazyListState()
+                scope = androidx.compose.runtime.rememberCoroutineScope()
                 state =
                     rememberReorderState(listState, keyOf = { it }) { _, order ->
                         items.clear()
@@ -89,7 +96,7 @@ class ReorderMotionTest {
                             Box(
                                 Modifier
                                     .size(48.dp)
-                                    .reorderHandle(state, item, { items.toList() }, enabled = true)
+                                    .reorderHandle(state, item, { items.toList() }, enabled = true, interactionSource = handlePresses)
                                     .testTag("handle:$item"),
                             )
                         }
@@ -206,6 +213,19 @@ class ReorderMotionTest {
         assertEquals(2, state.dragging)
         assertEquals(0f, state.offset, 0f)
         compose.onNodeWithTag("handle:2").performTouchInput { up() }
+    }
+
+    @Test
+    fun theHandleReportsItsPressSoItCanRipple() {
+        val seen = mutableListOf<Interaction>()
+        show()
+        compose.runOnIdle { scope.launch { handlePresses.interactions.collect { seen += it } } }
+        compose.onNodeWithTag("handle:0").performTouchInput { down(center) }
+        compose.waitForIdle()
+        assertTrue(seen.last() is PressInteraction.Press)
+        compose.onNodeWithTag("handle:0").performTouchInput { up() }
+        compose.waitForIdle()
+        assertTrue(seen.last() is PressInteraction.Release)
     }
 
     private fun androidx.compose.ui.test.junit4.ComposeTestRule.onAllNodesWithTagExists(tag: String) =

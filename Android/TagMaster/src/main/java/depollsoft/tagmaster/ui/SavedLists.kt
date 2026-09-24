@@ -7,6 +7,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -185,10 +188,11 @@ fun SavedTagRow(
     onOpen: (Int) -> Unit,
     onRemove: (Int, String) -> Unit,
     onMove: (Int, Int) -> Boolean,
-    handleModifier: Modifier,
+    handleModifier: (MutableInteractionSource) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val handleInteractions = remember { MutableInteractionSource() }
     val colors = TagMasterTheme.colors
     val load = rememberTagLoad(id)
     val tag = load.tag
@@ -237,8 +241,9 @@ fun SavedTagRow(
             Box(
                 Modifier
                     .size(48.dp)
-                    .clickable(role = Role.Button) { onRemove(id, displayName) }
-                    .semantics { contentDescription = removeLabel }
+                    .clickable(interactionSource = null, indication = ripple(bounded = false, radius = 24.dp), role = Role.Button) {
+                        onRemove(id, displayName)
+                    }.semantics { contentDescription = removeLabel }
                     .testTag("remove:$id"),
                 contentAlignment = ViewAlign.Center,
             ) {
@@ -287,7 +292,8 @@ fun SavedTagRow(
                     .padding(end = 8.dp)
                     .size(48.dp)
                     .alpha(if (enabled) 1f else 0.38f)
-                    .then(handleModifier)
+                    .indication(handleInteractions, ripple(bounded = false, radius = 24.dp))
+                    .then(handleModifier(handleInteractions))
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown || !event.isAltPressed) return@onPreviewKeyEvent false
                         when (event.key) {
@@ -295,7 +301,7 @@ fun SavedTagRow(
                             Key.DirectionDown -> onMove(id, 1)
                             else -> false
                         }
-                    }.focusable(enabled)
+                    }.focusable(enabled, handleInteractions)
                     .semantics {
                         contentDescription = dragLabel
                         role = Role.Button

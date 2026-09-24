@@ -106,7 +106,7 @@ fun SavedListScreen(
                     onOpen = onOpenTag,
                     onRemove = editor::askToRemove,
                     onMove = editor::move,
-                    handleModifier = Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1),
+                    handleModifier = { pressed -> Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1, pressed) },
                     modifier =
                         Modifier
                             .listItemMotion(this, animatePlacement = !reorder.isMoving(id))

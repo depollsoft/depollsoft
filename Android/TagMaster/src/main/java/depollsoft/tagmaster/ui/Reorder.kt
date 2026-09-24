@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -291,12 +293,16 @@ fun <K : Any> Modifier.reorderRow(
             }.drawBehind { drawRect(surface.copy(alpha = surface.alpha * state.lift)) }
     }
 
-/** The drag handle's gesture: touching it picks [item] up, and dragging moves it. */
+/**
+ * The drag handle's gesture: touching it picks [item] up, and dragging moves it. The press is
+ * reported to [interactionSource], so the handle can ripple as the View's ImageButton did.
+ */
 fun <K : Any> Modifier.reorderHandle(
     state: ReorderState<K>,
     item: K,
     source: () -> List<K>,
     enabled: Boolean,
+    interactionSource: MutableInteractionSource? = null,
 ): Modifier =
     if (!enabled) {
         this
@@ -309,6 +315,8 @@ fun <K : Any> Modifier.reorderHandle(
                     val down = awaitFirstDown()
                     if (!state.start(item, source())) return@awaitEachGesture
                     down.consume()
+                    val press = PressInteraction.Press(down.position)
+                    interactionSource?.tryEmit(press)
                     val scroller = launch { state.autoScroll(edge, maxStep) }
                     var lifted = false
                     try {
@@ -325,6 +333,7 @@ fun <K : Any> Modifier.reorderHandle(
                         }
                     } finally {
                         scroller.cancel()
+                        interactionSource?.tryEmit(if (lifted) PressInteraction.Release(press) else PressInteraction.Cancel(press))
                         if (lifted) state.drop() else state.cancel()
                     }
                 }

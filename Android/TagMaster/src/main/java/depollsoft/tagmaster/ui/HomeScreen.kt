@@ -289,7 +289,7 @@ fun HomeScreen(
                     count = lists.size,
                     dialogs = dialogs,
                     onOpen = { context.startActivity(TagListActivity.intent(context, key)) },
-                    handleGesture = Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1),
+                    handleGesture = { pressed -> Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1, pressed) },
                     modifier =
                         Modifier
                             .listItemMotion(this, animatePlacement = !listsReorder.isMoving(key))
@@ -326,8 +326,9 @@ fun HomeScreen(
                     onOpen = actions::openTag,
                     onRemove = editor::askToRemove,
                     onMove = editor::move,
-                    handleModifier =
-                        Modifier.reorderHandle(favoritesReorder, id, { favorites.ids.toList() }, editor.isEditing && shownFavorites.size > 1),
+                    handleModifier = { pressed ->
+                        Modifier.reorderHandle(favoritesReorder, id, { favorites.ids.toList() }, editor.isEditing && shownFavorites.size > 1, pressed)
+                    },
                     modifier =
                         Modifier
                             .listItemMotion(this, animatePlacement = !favoritesReorder.isMoving(id))

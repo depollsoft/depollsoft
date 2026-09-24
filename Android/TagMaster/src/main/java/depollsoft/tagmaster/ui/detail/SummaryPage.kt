@@ -1,5 +1,14 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.tagmaster.ui.WithTooltip
+import androidx.compose.material3.ripple
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.input.InputMode
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -294,19 +303,27 @@ private fun summaryFacts(
                     }
                 }
                 CompactBarberPole(requests.ratingSubmitting, submitting)
-                Box(
-                    Modifier
-                        .padding(start = 8.dp)
-                        .size(48.dp)
-                        .clickable(enabled = canRate, role = Role.Button) { requests.ratingDialog = true }
-                        .semantics { contentDescription = rateLabel }
-                        .testTag("rateButton"),
-                    contentAlignment = ViewAlign.Center,
-                ) {
-                    PlatformIcon(
-                        R.drawable.ic_rate,
-                        tint = if (canRate) TagMasterTheme.colors.primary else TagMasterTheme.colors.primary.copy(alpha = 0.38f),
-                    )
+                // app:tooltipText named the icon on a long press, and its ripple was borderless.
+                WithTooltip(rateLabel, Modifier.padding(start = 8.dp)) { tooltip ->
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .combinedClickable(
+                                enabled = canRate,
+                                interactionSource = null,
+                                indication = ripple(bounded = false, radius = 24.dp),
+                                role = Role.Button,
+                                onLongClick = tooltip::longPressed,
+                            ) { requests.ratingDialog = true }
+                            .semantics { contentDescription = rateLabel }
+                            .testTag("rateButton"),
+                        contentAlignment = ViewAlign.Center,
+                    ) {
+                        PlatformIcon(
+                            R.drawable.ic_rate,
+                            tint = if (canRate) TagMasterTheme.colors.primary else TagMasterTheme.colors.primary.copy(alpha = 0.38f),
+                        )
+                    }
                 }
             }
         }
@@ -340,6 +357,13 @@ private fun KeyNoteButton(tag: Tag) {
     val shape = RoundedCornerShape(8.dp)
     // The View button's own state drawable: outlined, filled with the accent while activated.
     val background = rememberDrawable(R.drawable.key_button_background)
+    // The accent fill is the press feedback (the ripple is transparent while pressed or
+    // activated); keyboard focus and hover show the control highlight, as the View button did.
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val hovered by interactions.collectIsHoveredAsState()
+    val keyboard = LocalInputModeManager.current.inputMode == InputMode.Keyboard
+    val highlight = !playing && ((focused && keyboard) || hovered)
     Box(
         Modifier
             .fillMaxWidth()
@@ -349,8 +373,9 @@ private fun KeyNoteButton(tag: Tag) {
                 background.state =
                     if (playing) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_activated) else intArrayOf(android.R.attr.state_enabled)
                 drawPlatform(background, 0, 0, size.width.toInt(), size.height.toInt())
+                if (highlight) drawRect(colors.controlHighlight)
             }.clip(shape)
-            .notePress(player, { tag.keyNote }, description = noteDescription(note))
+            .notePress(player, { tag.keyNote }, description = noteDescription(note), view = LocalView.current, interactionSource = interactions)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag("playKeyNoteButton"),
         contentAlignment = ViewAlign.Center,

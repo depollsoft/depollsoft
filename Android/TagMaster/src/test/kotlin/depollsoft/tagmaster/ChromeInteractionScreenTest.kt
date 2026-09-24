@@ -56,6 +56,18 @@ class ChromeInteractionScreenTest : ComposeScreenTest() {
     }
 
     @Test
+    fun theRateButtonNamesItselfOnALongPress() {
+        val tag = ScreenTestSupport.fixtureTag()
+        ScreenTestSupport.cacheOnDisk(tag)
+        val activity =
+            launch(TagDetailActivity::class.java, Intent(app, TagDetailActivity::class.java).putExtra(TagDetailActivity.TAG_ID_EXTRA, tag.id))
+        ScreenTestSupport.awaitTagLoaded(activity)
+        idle()
+        longClick("rateButton")
+        assertEquals(string(R.string.Rate), text("tooltip"))
+    }
+
+    @Test
     fun theMenuKeyOpensTheOverflow() {
         val key = TagLists.create("Afterglow set")
         val activity = launch(TagListActivity::class.java, TagListActivity.intent(app, key))
