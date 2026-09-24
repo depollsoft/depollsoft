@@ -16,6 +16,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -125,7 +126,7 @@ private fun Pages(
 }
 
 @Composable
-private fun AdArea(
+internal fun AdArea(
     slot: AdSlot,
     endMargin: androidx.compose.ui.unit.Dp,
 ) {
@@ -148,7 +149,8 @@ private fun AdArea(
     Box(Modifier.fillMaxWidth().height(height).testTag(TestTags.AD_CONTAINER)) {
         val banner = slot.banner
         if (banner != null) {
-            AndroidView(factory = { banner }, modifier = Modifier.fillMaxSize())
+            // A reload replaces the AdView; keying on it hosts the new view, not the destroyed one.
+            key(banner) { AndroidView(factory = { banner }, modifier = Modifier.fillMaxSize()) }
         }
     }
 }
