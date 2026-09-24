@@ -32,6 +32,7 @@ import depollsoft.tagmaster.ui.listItemMotion
 import depollsoft.tagmaster.ui.rememberReorderState
 import depollsoft.tagmaster.ui.reorderHandle
 import depollsoft.tagmaster.ui.reorderRow
+import depollsoft.tagmaster.ui.revealItem
 import depollsoft.tagmaster.ui.shownOrder
 import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
@@ -226,6 +227,21 @@ class ReorderMotionTest {
         compose.onNodeWithTag("handle:0").performTouchInput { up() }
         compose.waitForIdle()
         assertTrue(seen.last() is PressInteraction.Release)
+    }
+
+    @Test
+    fun revealingARowOffScreenScrollsThereSmoothly() {
+        show()
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle { scope.launch { listState.revealItem(25) } }
+        compose.mainClock.advanceTimeBy(48)
+        compose.waitForIdle()
+        val midway = listState.firstVisibleItemIndex
+        assertTrue("on its way, not jumped: first visible $midway", midway in 1..14)
+        compose.mainClock.advanceTimeBy(2000)
+        compose.waitForIdle()
+        val row = listState.layoutInfo.visibleItemsInfo.first { it.key == 25 }
+        assertTrue("row 25 fully shown", row.offset + row.size <= listState.layoutInfo.viewportEndOffset)
     }
 
     private fun androidx.compose.ui.test.junit4.ComposeTestRule.onAllNodesWithTagExists(tag: String) =

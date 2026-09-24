@@ -1,5 +1,10 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.tagmaster.ui.listViewScrollbar
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.PaddingValues
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -180,11 +185,9 @@ fun VideosPage(
 ) {
     val colors = TagMasterTheme.colors
     val videos = tag.videos.orEmpty()
-    Column(
-        modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-    ) {
+    // The teaching video and the heading stay put; only the performances scroll, as the
+    // ListView below them did.
+    Column(modifier.fillMaxSize()) {
         val teaching = tag.teachingVideo
         if (teaching.isPresent()) {
             Column(
@@ -226,18 +229,29 @@ fun VideosPage(
                 color = colors.text,
             )
         }
-        Column(Modifier.padding(vertical = 16.dp)) {
-            videos.forEachIndexed { index, video ->
-                // ListView's divider: 1dp between rows, taking its own space.
-                if (index > 0) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(colors.outlineVariant),
-                    )
+        val listState = rememberLazyListState()
+        LazyColumn(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .listViewScrollbar(listState, top = 16.dp, bottom = 16.dp, divider = 1.dp)
+                .testTag("videoList"),
+            state = listState,
+            contentPadding = PaddingValues(vertical = 16.dp),
+        ) {
+            itemsIndexed(videos, key = { _, video -> video.id }) { index, video ->
+                Column {
+                    // ListView's divider: 1dp between rows, taking its own space.
+                    if (index > 0) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(colors.outlineVariant),
+                        )
+                    }
+                    UserVideoRow(video)
                 }
-                UserVideoRow(video)
             }
         }
     }

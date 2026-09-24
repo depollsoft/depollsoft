@@ -3,6 +3,8 @@ package depollsoft.tagmaster
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToIndex
+import org.junit.Assert.assertEquals
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.barbershop.Video
 import org.junit.Assert.assertFalse
@@ -98,5 +100,28 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
     fun aTagWithNoVideosSaysSo() {
         open(bare(), 3)
         assertFalse(exists("video:1"))
+    }
+
+    @Test
+    fun theTeachingVideoStaysWhileThePerformancesScroll() {
+        val tag =
+            ScreenTestSupport.fixtureTag().apply {
+                teachingVideo = "teach"
+                videos = (1..20).map { index -> Video().apply { id = index; sungBy = "Quartet $index"; youTubeCode = "v$index" } }.toMutableList()
+            }
+        open(tag, 3)
+        val before = node("teachingVideo").fetchSemanticsNode().boundsInRoot
+        node("videoList").performScrollToIndex(19)
+        idle()
+        assertTrue(exists("video:20"))
+        assertEquals(before, node("teachingVideo").fetchSemanticsNode().boundsInRoot)
+    }
+
+    @Test
+    fun theWindowIsTitledWithTheTag() {
+        val tag = ScreenTestSupport.fixtureTag()
+        val activity = open(tag, 0)
+        assertEquals(tag.title, activity.title.toString())
+        assertEquals(tag.title, node("toolbarTitle").fetchSemanticsNode().let { text("toolbarTitle") })
     }
 }

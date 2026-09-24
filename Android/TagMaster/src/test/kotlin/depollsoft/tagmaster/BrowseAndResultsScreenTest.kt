@@ -1,5 +1,7 @@
 package depollsoft.tagmaster
 
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.performScrollToNode
@@ -105,6 +107,32 @@ class BrowseAndResultsScreenTest : ComposeScreenTest() {
             assertFalse(activity.model.hasMoreResults)
             assertTrue(requested.any { it.contains("start=21") })
         }
+
+    @Test
+    fun aFailedNextPageIsAskedForAgainWhenTheListMovesNearTheEnd() {
+        respond = { url -> if (url.toString().contains("start=21")) throw IOException("The connection was interrupted.") else ScreenshotFixtures.catalogPage(url) }
+        catalog {
+            val activity = results("heart")
+            settle(activity.model)
+            val last = androidx.compose.ui.test.hasTestTag("queryTag:${activity.model.tags.last().id}")
+            node("queryResults").performScrollToNode(last)
+            idle()
+            settle(activity.model)
+            fun nextPageAsks() = synchronized(requested) { requested.count { it.contains("start=21") } }
+            val failed = nextPageAsks()
+            assertTrue(failed >= 1)
+            idle()
+            settle(activity.model)
+            assertEquals("a still list does not retry by itself", failed, nextPageAsks())
+            // A nudge near the end asks again, as ListView's scroll callback did.
+            respond = { url -> ScreenshotFixtures.catalogPage(url) }
+            node("queryResults").performTouchInput { swipeDown(startY = centerY, endY = centerY + 60f) }
+            idle()
+            settle(activity.model)
+            assertTrue("the nudge asked again", nextPageAsks() > failed)
+            assertEquals(26, activity.model.tags.size)
+        }
+    }
 
     @Test
     fun rotatingResultsKeepsTheLoadedPagesWithoutAskingAgain() =

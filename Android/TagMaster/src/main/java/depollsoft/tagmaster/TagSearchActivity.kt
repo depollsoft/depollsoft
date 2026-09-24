@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -111,11 +112,13 @@ private fun SearchScreen(
                     .fillMaxSize()
                     .imePadding(),
             ) {
+                val formScroll = rememberScrollState()
                 Column(
                     Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .scrollViewScrollbar(formScroll, top = 16.dp, bottom = 16.dp, end = 16.dp)
+                        .verticalScroll(formScroll)
                         .padding(16.dp),
                 ) {
                     val searchInteractions = remember { MutableInteractionSource() }

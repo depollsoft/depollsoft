@@ -53,6 +53,7 @@ import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.UsualTouchSlop
 import depollsoft.tagmaster.ui.ViewAlign
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.rememberPagerTabs
 
 /**
@@ -84,12 +85,13 @@ fun TagDetailContent(
     val pagerTabs = rememberPagerTabs(pager)
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { state.page = it } }
     LaunchedEffect(state.page) { if (pager.settledPage != state.page) pager.scrollToPage(state.page) }
+    val loadingLabel = stringResource(R.string.detail_loading)
     Column(modifier.fillMaxSize()) {
         if (state.isLoading && loaded) {
             LinearProgressIndicator(
                 Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "" }
+                    .semantics { contentDescription = loadingLabel }
                     .testTag("refreshProgress"),
                 color = TagMasterTheme.colors.primary,
             )
@@ -175,10 +177,12 @@ private fun LoadingState(tagId: Int) {
     val colors = TagMasterTheme.colors
     val status = stringResource(R.string.detail_loading_tag, tagId)
     val gathering = stringResource(R.string.detail_gathering_quartet)
+    val scroll = rememberScrollState()
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .scrollViewScrollbar(scroll)
+            .verticalScroll(scroll)
             .padding(24.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
         horizontalAlignment = ViewAlign.CenterHorizontally,
@@ -220,10 +224,12 @@ private fun LoadingState(tagId: Int) {
 @Composable
 private fun ErrorState(state: TagDetailState) {
     val colors = TagMasterTheme.colors
+    val scroll = rememberScrollState()
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .scrollViewScrollbar(scroll)
+            .verticalScroll(scroll)
             .padding(32.dp)
             .testTag("detailError"),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,

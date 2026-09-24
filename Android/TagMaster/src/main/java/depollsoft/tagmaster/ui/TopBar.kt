@@ -18,6 +18,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -160,6 +161,9 @@ fun TagMasterTopBar(
             TagMasterType.titleLarge.withoutLineHeight()
         }
     var menuOpen by remember { mutableStateOf(false) }
+    // A screen's own bar names its window, as the activity title bound to the toolbar did.
+    val activity = context as? android.app.Activity
+    if (paneTitle == null && activity != null) SideEffect { activity.title = title }
     val navIcon = remember(context) { themeDrawableRes(context, androidx.appcompat.R.attr.homeAsUpIndicator) }
     val overflowIcon = remember(context) { overflowDrawableRes(context) }
 
@@ -170,7 +174,9 @@ fun TagMasterTopBar(
                 modifier
                     .fillMaxWidth()
                     .background(colors.chrome)
-                    .semantics { if (paneTitle != null) this.paneTitle = paneTitle },
+                    // The toolbar's title was the window's pane title, so TalkBack announces a new
+                // screen or a renamed list by its title; beside another pane, the pane's own.
+                .semantics { this.paneTitle = paneTitle ?: title },
             content = {
                 if (onNavigateUp != null) {
                     val up = context.getString(androidx.appcompat.R.string.abc_action_bar_up_description)
