@@ -292,7 +292,12 @@ private fun VideoRow(
             FactTable(rows)
             if (multitrack != null) {
                 Box(Modifier.fillMaxWidth(), contentAlignment = ViewAlign.Center) {
-                    StatusIndicator(stringResource(R.string.Multitrack), multitrack, Modifier.heightIn(max = 32.dp))
+                    StatusIndicator(
+                        stringResource(R.string.Multitrack),
+                        multitrack,
+                        minHeight = 0.dp,
+                        labelAlignment = androidx.compose.ui.Alignment.Top,
+                    )
                 }
             }
         }

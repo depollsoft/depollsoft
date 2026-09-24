@@ -39,6 +39,10 @@ fun formatDate(
 /**
  * Read-only availability of a tag's sheet music or learning tracks: a check or a cross and a
  * label, spoken as "Sheet music available" / "No sheet music". Not a control.
+ *
+ * It was a TextView with the mark as a compound drawable: the mark is always centred on the
+ * row's height, and the label follows the TextView's gravity. Tag rows centred it in a 36dp row;
+ * a video row left the default, so its label sits at the top of the mark.
  */
 @Composable
 fun StatusIndicator(
@@ -46,20 +50,23 @@ fun StatusIndicator(
     available: Boolean,
     modifier: Modifier = Modifier,
     textColor: androidx.compose.ui.graphics.Color = TagMasterTheme.colors.onSurface,
+    minHeight: androidx.compose.ui.unit.Dp = 36.dp,
+    labelAlignment: androidx.compose.ui.Alignment.Vertical = ViewAlign.CenterVertically,
 ) {
     val colors = TagMasterTheme.colors
     val description =
         stringResource(if (available) R.string.status_available else R.string.status_unavailable, label)
     Row(
         modifier
-            .heightIn(min = 36.dp)
+            .heightIn(min = minHeight)
             .clearAndSetSemantics { contentDescription = description },
-        verticalAlignment = ViewAlign.CenterVertically,
+        verticalAlignment = labelAlignment,
     ) {
         PlatformIcon(
             if (available) R.drawable.ic_check else R.drawable.ic_clear,
             tint = if (available) colors.statusAvailable else colors.onSurfaceVariant,
             size = 32.dp,
+            modifier = Modifier.align(ViewAlign.CenterVertically),
         )
         val style = with(TagMasterType) { bodyMedium.withoutLineHeight() }
         Text(
