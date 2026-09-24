@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -120,6 +121,56 @@ class SavedListEditingScreenTest : ComposeScreenTest() {
         click("dialogButton:${string(R.string.saved_list_remove)}")
         assertFalse(activity.listEditor.isEditing)
         node("editSavedList").assertIsNotEnabled()
+    }
+
+    private fun populateMany(count: Int): List<Int> =
+        (0 until count).map { index ->
+            val id = 2147482000 + index
+            ScreenTestSupport.cacheOnDisk(ScreenTestSupport.fixtureTag().apply { this.id = id; title = "Fixture %02d".format(index) })
+            TeachableTagsModel.addTeachableTag(id)
+            id
+        }
+
+    @Test
+    fun aRowHeldAtTheBottomEdgeScrollsTheListAndTravelsPastTheVisibleRows() {
+        val all = populateMany(30)
+        teachable()
+        click("editSavedList")
+        val listBottom = node("teachableList").fetchSemanticsNode().boundsInRoot.bottom
+        val handle = node("drag:${all[0]}").fetchSemanticsNode().boundsInRoot
+        val travel = listBottom - handle.center.y - 20f
+        node("drag:${all[0]}").performTouchInput {
+            down(center)
+            repeat(20) { moveBy(androidx.compose.ui.geometry.Offset(0f, travel / 20f)) }
+        }
+        idle()
+        node("drag:${all[0]}").performTouchInput { up() }
+        idle()
+        val index = TeachableTagsModel.teachableTagIds.indexOf(all[0])
+        assertTrue("held at the edge, the row rides the scroll to the end, got index $index", index >= 25)
+        assertEquals(30, TeachableTagsModel.teachableTagIds.size)
+    }
+
+    @Test
+    fun draggingTheTopVisibleRowDownKeepsTheListWhereItIs() {
+        val all = populateMany(30)
+        teachable()
+        click("editSavedList")
+        val listTop = node("teachableList").fetchSemanticsNode().boundsInRoot.top
+        val firstTop = node("savedTag:${all[0]}").fetchSemanticsNode().boundsInRoot.top
+        val rowHeight = node("savedTag:${all[0]}").fetchSemanticsNode().size.height.toFloat()
+        node("drag:${all[0]}").performTouchInput {
+            down(center)
+            repeat(6) { moveBy(androidx.compose.ui.geometry.Offset(0f, rowHeight / 4f)) }
+        }
+        idle()
+        // The row it passed now sits where the dragged row started: the list did not scroll after it.
+        val passedTop = node("savedTag:${all[1]}").fetchSemanticsNode().boundsInRoot.top
+        assertEquals(firstTop, passedTop, 1f)
+        assertTrue(passedTop >= listTop)
+        node("drag:${all[0]}").performTouchInput { up() }
+        idle()
+        assertEquals(listOf(all[1], all[0]), TeachableTagsModel.teachableTagIds.take(2))
     }
 
     @Test

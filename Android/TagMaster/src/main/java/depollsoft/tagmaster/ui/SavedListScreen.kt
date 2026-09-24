@@ -83,7 +83,7 @@ fun SavedListScreen(
         }
     ListDetailScaffold(pane, dialogs, Watermark.Window, bar) {
         val colors = TagMasterTheme.colors
-        val shown = reorder.order(ids)
+        val shown = reorder.shownOrder(ids)
         LazyColumn(
             Modifier
                 .fillMaxSize()

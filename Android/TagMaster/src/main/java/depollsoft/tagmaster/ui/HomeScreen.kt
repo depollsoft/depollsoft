@@ -234,8 +234,8 @@ fun HomeScreen(
     ListDetailScaffold(pane, dialogs, Watermark.Window, bar) {
         val snackbars = LocalSnackbars.current
         val colors = TagMasterTheme.colors
-        val lists = listsReorder.order(customKeys)
-        val shownFavorites = favoritesReorder.order(favoriteIds)
+        val lists = listsReorder.shownOrder(customKeys)
+        val shownFavorites = favoritesReorder.shownOrder(favoriteIds)
         LazyColumn(
             Modifier
                 .fillMaxSize()
