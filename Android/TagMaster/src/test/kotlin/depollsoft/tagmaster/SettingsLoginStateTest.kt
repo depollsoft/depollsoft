@@ -1,96 +1,58 @@
 package depollsoft.tagmaster
 
 import android.app.Application
-import android.os.Looper
-import android.view.View
-import depollsoft.lib.activity.RichApplication
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Before
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.Shadows.shadowOf
-import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 
-/**
- * The Settings screen's log in / log out buttons follow Firebase's real auth state, not the
- * FirebaseUI activity result: a Facebook sign-in whose result never arrives must still flip
- * them as soon as the auth-state listener reports the new user.
- */
+/** Settings shows Log in or Log out from the real auth state, with no activity result needed. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
-class SettingsLoginStateTest {
+@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+class SettingsLoginStateTest : ComposeScreenTest() {
     private var signedIn = false
-    private var controller: ActivityController<SettingsActivity>? = null
 
-    @Before
-    fun setUp() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
-        ListModel.setTestMode(true)
-        // SettingsModel's `preference` delegates register their defaults once, into whichever
-        // store was selected at that moment. Another class may since have emptied or swapped that
-        // store, which would leave SettingsActivity reading null here. Put them back.
+    private fun settings(): SettingsActivity {
         ScreenTestSupport.seedSettingsDefaults()
         AuthState.setTestSource { signedIn }
-    }
-
-    @After
-    fun tearDown() {
-        controller?.destroy()
-        controller = null
-        AuthState.setTestSource(null)
+        return launch(SettingsActivity::class.java)
     }
 
     @Test
-    fun loginButtons_followAuthStateWithoutAnActivityResult() {
-        val activity = launchSettings()
-        idle()
-        val loginButton = activity.findViewById<View>(R.id.loginButton)
-        val logoutButton = activity.findViewById<View>(R.id.logoutButton)
-        assertEquals(View.VISIBLE, loginButton.visibility)
-        assertEquals(View.GONE, logoutButton.visibility)
-
+    fun theLoginButtonsFollowAuthStateWithoutAnActivityResult() {
+        settings()
+        assertTrue(exists("loginButton"))
+        assertFalse(exists("logoutButton"))
         signedIn = true
         AuthState.notifyChanged()
         idle()
-        assertEquals(View.GONE, loginButton.visibility)
-        assertEquals(View.VISIBLE, logoutButton.visibility)
-
+        assertFalse(exists("loginButton"))
+        assertTrue(exists("logoutButton"))
         signedIn = false
         AuthState.notifyChanged()
         idle()
-        assertEquals(View.VISIBLE, loginButton.visibility)
-        assertEquals(View.GONE, logoutButton.visibility)
+        assertTrue(exists("loginButton"))
+        assertFalse(exists("logoutButton"))
     }
 
     @Test
-    fun resumingSettings_repaintsFromAuthState() {
-        val activity = launchSettings()
-        idle()
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loginButton).visibility)
-
+    fun resumingSettingsRepaintsFromAuthState() {
+        settings()
+        assertTrue(exists("loginButton"))
         controller!!.pause()
         signedIn = true
         controller!!.resume()
         idle()
-
-        assertEquals(View.GONE, activity.findViewById<View>(R.id.loginButton).visibility)
-        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.logoutButton).visibility)
+        assertFalse(exists("loginButton"))
+        assertTrue(exists("logoutButton"))
     }
 
-    private fun launchSettings(): SettingsActivity {
-        val built = Robolectric.buildActivity(SettingsActivity::class.java)
-        built.get().setTheme(R.style.AppTheme)
-        controller = built
-        return built.setup().get()
+    @Test
+    fun theThemeChoiceIsSavedAndApplied() {
+        settings()
+        click("theme:1")
+        assertTrue(TagMasterApplication.themeMode != androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
-
-    private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 }

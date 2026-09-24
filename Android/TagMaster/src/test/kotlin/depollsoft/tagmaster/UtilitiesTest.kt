@@ -1,17 +1,10 @@
 package depollsoft.tagmaster
 
-import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
-import android.os.Looper
-import android.os.SystemClock
-import android.view.MotionEvent
 import androidx.appcompat.widget.AppCompatDrawableManager
 import depollsoft.lib.activity.BrowserActivity
-import depollsoft.pitchperfect.lib.Accidental
-import depollsoft.pitchperfect.lib.Note
-import depollsoft.pitchperfect.lib.ui.PitchPipeButton
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -22,7 +15,6 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
-import java.time.Duration
 import java.util.*
 
 class UtilitiesTest {
@@ -99,8 +91,8 @@ class UtilitiesTest {
     }
 
     @Test
-    fun nullable_date_converter_hides_absent_values() {
-        assertEquals("", NullableDateConverter(" %tD").convertToTarget(null, String::class.java))
+    fun formatDate_hides_absent_values() {
+        assertEquals("", depollsoft.tagmaster.ui.formatDate(" %tD", null))
     }
 
     private fun assertDate(
@@ -116,7 +108,7 @@ class UtilitiesTest {
     }
 }
 
-/** Regression coverage for non-touch playback and link dispatch. */
+/** Regression coverage for link dispatch. */
 @RunWith(RobolectricTestRunner::class)
 @Config(
     application = Application::class,
@@ -124,67 +116,6 @@ class UtilitiesTest {
     sdk = [28],
 )
 class CorrectnessInteractionTest {
-    @Test
-    fun pitch_click_plays_once_and_stops_after_1500ms() {
-        withPitchButton { button, note ->
-            button.performClick()
-            Mockito
-                .verify(note)
-                .play()
-            Shadows
-                .shadowOf(Looper.getMainLooper())
-                .idleFor(Duration.ofMillis(1499))
-            Mockito
-                .verify(note, Mockito.never())
-                .stop()
-            Shadows
-                .shadowOf(Looper.getMainLooper())
-                .idleFor(Duration.ofMillis(1))
-            Mockito
-                .verify(note)
-                .stop()
-        }
-    }
-
-    @Test
-    fun pitch_touch_release_does_not_start_a_second_note() {
-        withPitchButton { button, note ->
-            val now = SystemClock.uptimeMillis()
-            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
-                val event = MotionEvent.obtain(now, now, action, 1f, 1f, 0)
-                button.onTouchEvent(event)
-                event.recycle()
-            }
-            Shadows
-                .shadowOf(Looper.getMainLooper())
-                .idle()
-            Mockito
-                .verify(note, Mockito.times(1))
-                .play()
-            Mockito
-                .verify(note, Mockito.times(1))
-                .stop()
-        }
-    }
-
-    @Test
-    fun pitch_toggle_accessibility_activates_and_stops_without_a_timer() {
-        withPitchButton { button, note ->
-            button.setIsToggle(true)
-            button.performClick()
-            Mockito.verify(note).setIsPlaying(true)
-            Mockito.`when`(note.isPlaying).thenReturn(true)
-            button.performClick()
-            Mockito.verify(note).setIsPlaying(false)
-            Shadows
-                .shadowOf(Looper.getMainLooper())
-                .idleFor(Duration.ofSeconds(2))
-            Mockito
-                .verify(note, Mockito.never())
-                .stop()
-        }
-    }
-
     @Test
     fun deep_links_route_both_schemes_and_finish() {
         for (scheme in listOf("http", "https")) {
@@ -265,63 +196,6 @@ class CorrectnessInteractionTest {
         }
     }
 
-    @Test
-    fun pitch_cancel_stops_hold_without_a_click() {
-        withPitchButton { button, note ->
-            touch(button, MotionEvent.ACTION_DOWN)
-            touch(button, MotionEvent.ACTION_CANCEL)
-            Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
-            Mockito.verify(note).play()
-            Mockito.verify(note).stop()
-        }
-    }
-
-    @Test
-    fun pitch_replacement_stops_old_hold_and_does_not_stop_replacement_on_release() {
-        withPitchButton { button, note ->
-            touch(button, MotionEvent.ACTION_DOWN)
-            val replacement = Mockito.mock(Note::class.java)
-            Mockito.`when`(replacement.accidental).thenReturn(Accidental.Natural)
-            button.note = replacement
-            touch(button, MotionEvent.ACTION_UP)
-            Shadows.shadowOf(Looper.getMainLooper()).idle()
-            Mockito.verify(note).stop()
-            Mockito.verify(replacement, Mockito.never()).play()
-            Mockito.verify(replacement, Mockito.never()).stop()
-        }
-    }
-
-    @Test
-    fun pitch_detach_stops_hold_and_timed_click() {
-        for (hold in listOf(true, false)) withPitchButton { button, note ->
-            if (hold) touch(button, MotionEvent.ACTION_DOWN) else button.performClick()
-            (button.parent as android.view.ViewGroup).removeView(button)
-            Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
-            Mockito.verify(note).play()
-            Mockito.verify(note).stop()
-        }
-    }
-
-    @Test
-    fun pitch_touch_toggle_retains_press_activation_without_timed_stop() {
-        withPitchButton { button, note ->
-            button.setIsToggle(true)
-            touch(button, MotionEvent.ACTION_DOWN)
-            touch(button, MotionEvent.ACTION_UP)
-            Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))
-            Mockito.verify(note).setIsPlaying(true)
-            Mockito.verify(note, Mockito.never()).stop()
-        }
-    }
-
-    private fun touch(button: PitchPipeButton, action: Int) {
-        val now = SystemClock.uptimeMillis()
-        MotionEvent.obtain(now, now, action, 1f, 1f, 0).also {
-            button.onTouchEvent(it)
-            it.recycle()
-        }
-    }
-
     private fun withLink(
         url: String?,
         check: (UrlHandlerActivity) -> Unit,
@@ -345,29 +219,4 @@ class CorrectnessInteractionTest {
         }
     }
 
-    private fun withPitchButton(check: (PitchPipeButton, Note) -> Unit) {
-        val controller =
-            Robolectric
-                .buildActivity(Activity::class.java)
-                .setup()
-        try {
-            val activity = controller.get()
-            val button =
-                PitchPipeButton(activity)
-            val note = Mockito.mock(Note::class.java)
-            Mockito
-                .`when`(note.accidental)
-                .thenReturn(Accidental.Natural)
-            Mockito
-                .`when`(note.friendlyName)
-                .thenReturn("C")
-            button.note = note
-            activity.setContentView(button)
-            button.layout(0, 0, 100, 100)
-            Mockito.clearInvocations(note)
-            check(button, note)
-        } finally {
-            controller.pause().stop().destroy()
-        }
-    }
 }

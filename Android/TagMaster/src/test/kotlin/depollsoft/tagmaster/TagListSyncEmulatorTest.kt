@@ -2,7 +2,7 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.os.Looper
-import com.bindroid.trackable.TrackableCollection
+import depollsoft.lib.state.StateList
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
@@ -326,7 +326,7 @@ class TagListSyncEmulatorTest {
             ListModel::class.java
                 .getDeclaredField("preferences\$delegate")
                 .apply { isAccessible = true }
-                .get(null) as Lazy<MutableMap<String, TrackableCollection<Int>>>
+                .get(null) as Lazy<MutableMap<String, StateList<Int>>>
         // Emptying a collection notifies its ListModel, which removes the key: snapshot first.
         val stored = delegate.value
         val collections = stored.values.toList()

@@ -5,11 +5,9 @@
 
     <!-- Reading measure for lists and forms: content is centered and capped at this width on
          tablets and in landscape (see View.applyContentInsets in EdgeToEdge.kt). -->
-    <dimen name="content_max_width">640dp</dimen>
     <!-- Summary and Tracks lay out as two columns in landscape (layout-land), so they may use a
          wider measure there (values-land/dimens.xml). -->
     <dimen name="two_column_max_width">640dp</dimen>
 
     <!-- Width of the list side of the two-pane list-detail layout (layout-w720dp-h480dp). -->
-    <dimen name="list_pane_width">360dp</dimen>
 </resources>

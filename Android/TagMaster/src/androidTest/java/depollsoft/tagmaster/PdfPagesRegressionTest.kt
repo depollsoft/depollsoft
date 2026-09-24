@@ -2,7 +2,6 @@ package depollsoft.tagmaster
 
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.test.core.app.ActivityScenario
@@ -47,14 +46,12 @@ class PdfPagesRegressionTest {
                 val deadline = System.currentTimeMillis() + 10000
                 while (!rendered && System.currentTimeMillis() < deadline) {
                     scenario.onActivity { activity ->
-                        val bitmap = (activity.photoView.drawable as? BitmapDrawable)?.bitmap
+                        val bitmap = activity.image
                         if (bitmap != null) {
                             assertEquals(bitmap.width * 2, bitmap.height)
                             assertEquals(Color.RED, bitmap.getPixel(bitmap.width / 2, bitmap.height / 4))
                             assertEquals(Color.BLUE, bitmap.getPixel(bitmap.width / 2, bitmap.height * 3 / 4))
-                            val pole = activity.findViewById<BarberPoleLoadingView>(R.id.sheetMusicLoading)
-                            assertFalse(pole.loading)
-                            assertFalse(pole.isAnimating)
+                            assertFalse(activity.imageLoading)
                             rendered = true
                         }
                     }

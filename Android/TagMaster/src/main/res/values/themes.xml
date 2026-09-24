@@ -54,13 +54,6 @@
     </style>
 
     <!-- Popups follow the app appearance, not the charcoal toolbar overlay. -->
-    <style name="ThemeOverlay.TagMaster.Popup" parent="ThemeOverlay.Material3.Light">
-        <item name="colorSurface">@color/md_surface</item>
-        <item name="colorOnSurface">@color/md_on_surface</item>
-        <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
-        <item name="colorControlNormal">@color/md_on_surface</item>
-        <item name="android:textColorPrimary">@color/md_on_surface</item>
-    </style>
 
     <!-- Variant with a window action bar, for screens that cannot include @layout/app_toolbar
          (shared BrowserActivity, FirebaseUI sign-in). -->

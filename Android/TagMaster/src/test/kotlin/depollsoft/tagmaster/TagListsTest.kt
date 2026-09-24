@@ -1,13 +1,11 @@
 package depollsoft.tagmaster
 
 import android.app.Application
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.Tracker
-import com.bindroid.utils.Function
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
+import depollsoft.lib.state.SnapshotNotifications
+import depollsoft.lib.state.watchState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -138,16 +136,10 @@ class TagListsTest {
     fun create_bumpsTheVersionAndNotifiesTrackers() {
         val before = TagLists.version
         var notifications = 0
-        lateinit var tracker: Tracker
-        tracker =
-            object : Tracker {
-                override fun update() {
-                    notifications++
-                    Trackable.track(tracker, Function { TagLists.version })
-                }
-            }
-        Trackable.track(tracker, Function { TagLists.version })
+        val watch = watchState(read = { TagLists.version }) { notifications++ }
         TagLists.create("Afterglow set")
+        SnapshotNotifications.flush()
+        watch.stop()
         assertTrue(TagLists.version > before)
         assertTrue(notifications > 0)
     }
@@ -295,7 +287,7 @@ class TagListsTest {
 
     @Test
     fun listsWithoutMetadataSurfaceUnderTheirKey() {
-        ListModel("legacy-key").ids = TrackableCollection(mutableListOf(1, 2))
+        ListModel("legacy-key").ids = listOf(1, 2)
         TagLists.resetForTest()
         assertEquals(listOf("legacy-key"), TagLists.customKeys.toList())
         assertEquals("legacy-key", TagLists.name("legacy-key"))
@@ -309,8 +301,8 @@ class TagListsTest {
     @Test
     fun namedListsComeBeforeUnnamedOnes() {
         val named = TagLists.create("Afterglow set")
-        ListModel("zzz-legacy").ids = TrackableCollection(mutableListOf(7))
-        ListModel("aaa-legacy").ids = TrackableCollection(mutableListOf(8))
+        ListModel("zzz-legacy").ids = listOf(7)
+        ListModel("aaa-legacy").ids = listOf(8)
         TagLists.resetForTest()
         assertEquals(listOf(named, "aaa-legacy", "zzz-legacy"), TagLists.customKeys.toList())
     }
@@ -352,7 +344,7 @@ class TagListsTest {
 
     @Test
     fun remoteInfo_namesAnUnnamedListAfterItsKey() {
-        ListModel("legacy-key").ids = TrackableCollection(mutableListOf(1))
+        ListModel("legacy-key").ids = listOf(1)
         TagLists.resetForTest()
         assertEquals(mapOf("name" to "legacy-key", "order" to 0), TagLists.remoteInfo()["legacy-key"])
     }
@@ -556,7 +548,7 @@ class TagListsTest {
             ListModel::class.java
                 .getDeclaredField("preferences\$delegate")
                 .apply { isAccessible = true }
-                .get(null) as Lazy<MutableMap<String, TrackableCollection<Int>>>
+                .get(null) as Lazy<MutableMap<String, depollsoft.lib.state.StateList<Int>>>
         // Emptying a collection notifies its ListModel, which removes the key: snapshot first.
         val stored = delegate.value
         val collections = stored.values.toList()

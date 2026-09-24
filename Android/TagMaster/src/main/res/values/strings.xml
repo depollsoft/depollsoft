@@ -38,7 +38,6 @@
     <string name="DLs">DLs: </string>
     <string name="LearningTracks">Learning tracks</string>
     <string name="SheetMusicCheck">Sheet music</string>
-    <string name="LoadMoreTags">Fetch additional tags…</string>
     <string name="Search">Search</string>
     <string name="SearchHint">Search BarbershopTags.com</string>
     <string name="SheetMusicSentence">Sheet music</string>
@@ -136,7 +135,6 @@
     <string name="Play">Play</string>
     <string name="Refresh">Refresh</string>
     <string name="ChooseARating">Select a rating</string>
-    <string name="FreePitchPipe">Also try Pitch Perfect, a free digital pitch pipe!</string>
     <string name="DepollSoft">DepollSoft</string>
     <string name="ClearCache">Clear cached sheet music and tracks</string>
     <string name="CurrentCacheSize">Current cache size:</string>

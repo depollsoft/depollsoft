@@ -1,16 +1,15 @@
 package depollsoft.tagmaster
 
 import android.app.Application
-import com.bindroid.trackable.Trackable
-import com.bindroid.trackable.TrackableCollection
-import com.bindroid.trackable.Tracker
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import depollsoft.lib.activity.RichApplication
-import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.state.SnapshotNotifications
+import depollsoft.lib.state.StateList
+import depollsoft.lib.state.watchState
 import depollsoft.lib.util.Preferences
 import org.junit.Assert.*
 import org.junit.Before
@@ -22,7 +21,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class, sdk = [35])
 class SavedListReorderTest {
     @Before fun setup() {
         RichApplication::class.java
@@ -42,32 +41,27 @@ class SavedListReorderTest {
 
     private fun model() =
         ListModel("reorder-test").apply {
-            ids = TrackableCollection(mutableListOf(1, 2, 3, 4))
+            ids = listOf(1, 2, 3, 4)
         }
 
-    private fun notifications(
-        model: ListModel,
-        changed: () -> Unit,
-    ) {
-        val tracker =
-            object : Tracker {
-                override fun update() {
-                    changed()
-                    Trackable.track(this) { model.ids.track() }
-                }
-            }
-        Trackable.track(tracker) { model.ids.track() }
+    /** Counts how often observers of [model]'s ids hear about a change; each read delivers pending ones. */
+    private fun notifications(model: ListModel): () -> Int {
+        var calls = 0
+        watchState(read = { model.ids.toList() }) { calls++ }
+        return {
+            SnapshotNotifications.flush()
+            calls
+        }
     }
 
     @Test fun empty_and_single_reorders_do_not_notify() {
         for (values in listOf(emptyList(), listOf(1))) {
-            val model = model().apply { ids = TrackableCollection(values.toMutableList()) }
-            var calls = 0
-            notifications(model) { calls++ }
+            val model = model().apply { ids = values }
+            val calls = notifications(model)
             assertFalse(model.reorder(model.snapshot(), values))
             assertFalse(model.move(1, 0))
             assertFalse(model.move(1, 1))
-            assertEquals(0, calls)
+            assertEquals(0, calls())
         }
     }
 
@@ -105,19 +99,17 @@ class SavedListReorderTest {
             for (destination in 0..3) {
                 val model = model()
                 val expected = mutableListOf(1, 2, 3, 4).apply { add(destination, removeAt(id - 1)) }
-                var calls = 0
-                notifications(model) { calls++ }
+                val calls = notifications(model)
                 assertEquals(id - 1 != destination, model.move(id, destination))
                 assertEquals(expected, model.ids.toList())
-                assertEquals(if (id - 1 == destination) 0 else 1, calls)
+                assertEquals(if (id - 1 == destination) 0 else 1, calls())
             }
         }
     }
 
     @Test fun invalid_missing_and_noop_moves_never_notify() {
         val model = model()
-        var calls = 0
-        notifications(model) { calls++ }
+        val calls = notifications(model)
         assertFalse(model.move(999, 0))
         assertFalse(model.move(1, -1))
         assertFalse(model.move(1, 4))
@@ -127,35 +119,33 @@ class SavedListReorderTest {
         model.moveUp(999)
         model.moveDown(999)
         assertFalse(model.canMoveDown(999))
-        assertEquals(0, calls)
+        assertEquals(0, calls())
         assertEquals(listOf(1, 2, 3, 4), model.ids.toList())
     }
 
     @Test fun rejects_duplicates_missing_added_ids_and_noop_orders() {
         val model = model()
         val baseline = model.snapshot()
-        var calls = 0
-        notifications(model) { calls++ }
+        val calls = notifications(model)
         for (order in listOf(listOf(1, 1, 3, 4), listOf(1, 2, 3), listOf(1, 2, 3, 5), baseline.ids)) {
             assertFalse(model.reorder(baseline, order))
         }
-        assertEquals(0, calls)
+        assertEquals(0, calls())
     }
 
     @Test fun preview_and_cancel_are_not_model_mutations() {
         val model = model()
         val baseline = model.snapshot()
         val preview = baseline.ids.toMutableList()
-        var calls = 0
-        notifications(model) { calls++ }
+        val calls = notifications(model)
         repeat(3) { preview.add(it + 1, preview.removeAt(it)) }
         assertEquals(listOf(2, 3, 4, 1), preview)
         assertEquals(baseline.ids, model.ids.toList())
-        assertEquals(0, calls)
+        assertEquals(0, calls())
         assertTrue(model.reorder(baseline, preview))
-        assertEquals(1, calls)
+        assertEquals(1, calls())
         assertFalse(model.reorder(baseline, preview))
-        assertEquals(1, calls)
+        assertEquals(1, calls())
     }
 
     @Test fun concurrent_insert_remove_reset_and_collection_replacement_win() {
@@ -164,8 +154,8 @@ class SavedListReorderTest {
                 { it.add(9) },
                 { it.remove(2) },
                 { it.reset() },
-                { it.ids = TrackableCollection(it.ids.toMutableList()) },
-                { it.ids.replaceBackingStore(mutableListOf(1, 2, 3, 4)) },
+                { it.ids = it.ids.toList() },
+                { it.ids = listOf(1, 2, 3, 4) },
                 {
                     it.add(9)
                     it.remove(9)
@@ -176,18 +166,17 @@ class SavedListReorderTest {
             val baseline = model.snapshot()
             change(model)
             val latest = model.ids.toList()
-            var calls = 0
-            notifications(model) { calls++ }
+            val calls = notifications(model)
             assertFalse(model.reorder(baseline, listOf(4, 3, 2, 1)))
             assertEquals(latest, model.ids.toList())
-            assertEquals(0, calls)
+            assertEquals(0, calls())
         }
     }
 
     @Test fun pending_delete_uses_id_after_external_reorder_and_addition() {
         val model = model()
         val pendingId = model.ids[1]
-        model.ids.replaceBackingStore(mutableListOf(9, 4, 3, 2, 1))
+        model.ids = listOf(9, 4, 3, 2, 1)
         model.remove(pendingId)
         assertEquals(listOf(9, 4, 3, 1), model.ids.toList())
         model.remove(pendingId)
@@ -232,16 +221,16 @@ class SavedListReorderTest {
 
     @Test fun serialized_order_uses_existing_alias_and_survives_preferences_reload() {
         val model = model()
-        JsonSerializer.registerAlias(TrackableCollection::class.java, "depollsoft.lib.binding.ObservableCollection")
+        TagMasterApplication.registerStorageAliases()
         assertTrue(model.move(1, 3))
-        Preferences.set("tagmaster.lists", mapOf("favorite" to model.ids))
+        Preferences.set("tagmaster.lists", mapOf("favorite" to StateList(model.ids)))
         val raw =
             RuntimeEnvironment
                 .getApplication()
                 .getSharedPreferences("depollsoft.lib.Preferences", 0)
                 .getString("tagmaster.lists", null)!!
         assertTrue(raw.contains("depollsoft.lib.binding.ObservableCollection"))
-        val restored = Preferences.get<Map<String, TrackableCollection<Int>>>("tagmaster.lists")
+        val restored = Preferences.get<Map<String, StateList<Int>>>("tagmaster.lists")
         assertEquals(listOf(2, 3, 4, 1), restored["favorite"]!!.toList())
         val constructor = ListModel::class.java.getDeclaredConstructor(String::class.java).apply { isAccessible = true }
         val reloaded = constructor.newInstance("reorder-test")

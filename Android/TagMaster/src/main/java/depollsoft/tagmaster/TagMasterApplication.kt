@@ -6,12 +6,12 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 import androidx.appcompat.app.AppCompatDelegate
-import com.bindroid.trackable.TrackableCollection
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.analytics.Analytics
 import depollsoft.lib.json.JsonSerializer
+import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 
 class TagMasterApplication : RichApplication() {
@@ -32,10 +32,7 @@ class TagMasterApplication : RichApplication() {
             if (!crashes) FirebaseCrashlytics.getInstance().deleteUnsentReports()
         }
         TelemetryConsent.applyChoices(choices.analytics, choices.crashes)
-        JsonSerializer.registerAlias(
-            TrackableCollection::class.java,
-            "depollsoft.lib.binding.ObservableCollection",
-        )
+        registerStorageAliases()
         Firebase.auth.addAuthStateListener {
             AuthState.notifyChanged()
             ListModel.connectToFirestore()
@@ -54,6 +51,14 @@ class TagMasterApplication : RichApplication() {
         private const val FACEBOOK_DEBUG = "403828359632347"
         private const val FACEBOOK_PRODUCTION = "311400242255131"
         const val LOG_TAG = "depollsoft.tagmaster"
+
+        /**
+         * Lists are stored under the name the original binding library's collection had, so every
+         * list saved by an earlier version still loads, and lists saved now still load in one.
+         */
+        fun registerStorageAliases() {
+            JsonSerializer.registerAlias(StateList::class.java, "depollsoft.lib.binding.ObservableCollection")
+        }
         public var themeMode: Int
             get() = Preferences.get("tagmaster.theme") ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             set(value) {

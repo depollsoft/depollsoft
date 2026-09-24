@@ -1,7 +1,5 @@
 package depollsoft.tagmaster
 
-import com.bindroid.trackable.TrackableCollection
-
 object TeachableTagsModel {
     // Resolved on every use so this wrapper and ListModel("teachable") can never drift apart, even
     // when a test resets the model cache.
@@ -9,7 +7,7 @@ object TeachableTagsModel {
         get() = ListModel(TagLists.TEACHABLE)
 
     @JvmStatic
-    var teachableTagIds: TrackableCollection<Int>
+    var teachableTagIds: List<Int>
         get() = model.ids
         set(value) {
             model.ids = value

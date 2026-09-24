@@ -1,0 +1,115 @@
+package depollsoft.tagmaster.screenshots
+
+import android.app.Activity
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import depollsoft.tagmaster.MeActivity
+import depollsoft.tagmaster.TagBrowserActivity
+import depollsoft.tagmaster.TagDetailActivity
+import depollsoft.tagmaster.TagListActivity
+import depollsoft.tagmaster.TagPaneHost
+import depollsoft.tagmaster.TeachableTagsActivity
+
+/**
+ * The few steps a screenshot needs that depend on how the screen is built.
+ *
+ * Everything else a screenshot sets up goes through the models, the intents, the disk cache and the
+ * network transport; only these helpers know the screens are Compose.
+ */
+internal class ScreenshotDriver(
+    private val compose: ComposeTestRule,
+) {
+    /** Turns on the list's edit mode, as tapping Edit in the toolbar does. */
+    fun startEditing(activity: Activity) {
+        val editor =
+            when (activity) {
+                is MeActivity -> activity.listEditor
+                is TeachableTagsActivity -> activity.listEditor
+                is TagListActivity -> activity.listEditor
+                else -> error("${activity.javaClass.simpleName} has no edit mode")
+            }
+        if (!editor.isEditing) editor.toggle()
+        compose.waitForIdle()
+    }
+
+    /** Shows the tag detail page at [index] (0 Summary, 1 Details, 2 Tracks, 3 Videos). */
+    fun selectDetailPage(
+        activity: Activity,
+        index: Int,
+    ) {
+        val detail =
+            when (activity) {
+                is TagDetailActivity -> activity.detail
+                is MeActivity -> activity.tagPane.detail
+                is TagListActivity -> activity.tagPane.detail
+                is TeachableTagsActivity -> activity.tagPane.detail
+                is TagBrowserActivity -> activity.tagPane.detail
+                else -> null
+            }
+        requireNotNull(detail) { "${activity.javaClass.simpleName} is not showing a tag" }.page = index
+        compose.waitForIdle()
+    }
+
+    fun showNewListDialog() = click("newListButton")
+
+    fun showRenameListDialog(key: String) {
+        compose.onNodeWithTag("listRow:$key").performTouchInput { longClick() }
+        click("menuRename")
+    }
+
+    fun showDeleteListDialog(key: String) {
+        compose.onNodeWithTag("listRow:$key").performTouchInput { longClick() }
+        click("menuDelete")
+    }
+
+    fun showListPicker() = click("chip:add")
+
+    fun showRatingDialog() = click("rateButton")
+
+    fun showOpenTagDialog() = click("openByIdButton")
+
+    fun showTag(
+        activity: Activity,
+        id: Int,
+    ) {
+        (activity as TagPaneHost).showTag(id)
+        compose.waitForIdle()
+    }
+
+    /**
+     * Writes every composed node's bounds (px) and text to `build/tm-layout/NAME.txt`, the Compose
+     * counterpart of the View geometry dumps the port was measured against.
+     */
+    fun dumpLayout(name: String) {
+        val out = StringBuilder()
+        fun visit(
+            node: androidx.compose.ui.semantics.SemanticsNode,
+            depth: Int,
+        ) {
+            val bounds = node.boundsInRoot
+            val config = node.config
+            val text =
+                config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString("|")
+                    ?: config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription)?.joinToString("|")
+            val tag = config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)
+            out
+                .append("  ".repeat(depth))
+                .append("[%.1f,%.1f %.1fx%.1f]".format(bounds.left, bounds.top, bounds.width, bounds.height))
+            if (tag != null) out.append(" #").append(tag)
+            if (text != null) out.append(" \"").append(text.take(60)).append('"')
+            out.append('\n')
+            node.children.forEach { visit(it, depth + 1) }
+        }
+        compose.onAllNodes(androidx.compose.ui.test.isRoot(), useUnmergedTree = true).fetchSemanticsNodes().forEach { visit(it, 0) }
+        java.io.File("build/tm-layout").apply { mkdirs() }.resolve("$name.txt").writeText(out.toString())
+    }
+
+    private fun click(tag: String) {
+        compose.onNodeWithTag(tag, useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+    }
+}
