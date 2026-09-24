@@ -107,6 +107,42 @@ class BrowseAndResultsScreenTest : ComposeScreenTest() {
         }
 
     @Test
+    fun rotatingResultsKeepsTheLoadedPagesWithoutAskingAgain() =
+        catalog {
+            val activity = results("heart")
+            settle(activity.model)
+            val scrollTo = androidx.compose.ui.test.hasTestTag("queryTag:${activity.model.tags.last().id}")
+            node("queryResults").performScrollToNode(scrollTo)
+            idle()
+            settle(activity.model)
+            assertEquals(26, activity.model.tags.size)
+            val asked = requested.size
+            fun shown(model: QueryModel) = model.tags.filter { exists("queryTag:${it.id}") }.map { it.id }
+            val before = shown(activity.model)
+
+            val rotated = rotate<TagSearchResultsActivity>()
+            assertEquals("both pages are still there", 26, rotated.model.tags.size)
+            assertEquals("nothing was fetched again", asked, requested.size)
+            assertEquals("the list is where it was", before, shown(rotated.model))
+        }
+
+    @Test
+    fun rotatingBrowseKeepsEachTabsResultsWithoutAskingAgain() =
+        catalog {
+            val activity = launch(TagBrowserActivity::class.java)
+            settle(activity.models[0])
+            click("browseTab:1")
+            settle(activity.models[1])
+            val loaded = activity.models.map { it.tags.size }
+            val asked = requested.size
+
+            val rotated = rotate<TagBrowserActivity>()
+            assertEquals(1, rotated.currentPage)
+            assertEquals(loaded, rotated.models.map { it.tags.size })
+            assertEquals("nothing was fetched again", asked, requested.size)
+        }
+
+    @Test
     fun theRefreshActionAsksTheCatalogAgain() =
         catalog {
             val activity = results("heart")

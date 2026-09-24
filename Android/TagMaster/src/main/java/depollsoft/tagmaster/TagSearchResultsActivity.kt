@@ -3,6 +3,7 @@ package depollsoft.tagmaster
 import depollsoft.tagmaster.ui.revealItem
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -31,6 +32,8 @@ open class TagSearchResultsActivity :
     lateinit var model: QueryModel
         private set
 
+    private val retained: RetainedQueries by viewModels()
+
     internal lateinit var tagPane: TagPaneState
         private set
 
@@ -40,10 +43,12 @@ open class TagSearchResultsActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // A rotated screen keeps the results it loaded, as the retained query fragment did.
+        val fresh = !retained.isRetained
         model =
-            savedInstanceState?.getString(QUERY_MODEL)?.let(::readModel)
-                ?: intent?.getStringExtra(QUERY_MODEL)?.let(::readModel)
-                ?: QueryModel()
+            retained.models {
+                listOf(intent?.getStringExtra(QUERY_MODEL)?.let(::readModel) ?: QueryModel())
+            }.single()
         val configuration = resources.configuration
         tagPane =
             TagPaneState(
@@ -55,7 +60,7 @@ open class TagSearchResultsActivity :
             )
         setTagMasterContent { ResultsScreen(this) }
         tagPane.restore(savedInstanceState)
-        model.refresh()
+        if (fresh) model.refresh()
     }
 
     private fun readModel(json: String): QueryModel? =

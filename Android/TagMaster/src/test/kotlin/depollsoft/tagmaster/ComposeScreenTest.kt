@@ -80,6 +80,18 @@ abstract class ComposeScreenTest {
         return next.get()
     }
 
+    /**
+     * A configuration change: the activity is recreated and keeps what survives one (its
+     * ViewModels), unlike [recreate], which rebuilds it from saved state alone as after process death.
+     */
+    @Suppress("UNCHECKED_CAST")
+    protected fun <A : Activity> rotate(): A {
+        val current = controller!!
+        current.recreate()
+        idle()
+        return current.get() as A
+    }
+
     protected fun idle() {
         repeat(3) {
             shadowOf(Looper.getMainLooper()).idle()

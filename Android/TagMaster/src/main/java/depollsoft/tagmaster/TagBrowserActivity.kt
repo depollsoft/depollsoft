@@ -4,6 +4,7 @@ import depollsoft.tagmaster.ui.revealItem
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,8 +42,12 @@ import kotlinx.coroutines.launch
 class TagBrowserActivity :
     AppCompatActivity(),
     TagPaneHost {
+    private val retained: RetainedQueries by viewModels()
+
     /** One query per tab, in tab order; each fetches its first page when its tab is first shown. */
-    val models: List<QueryModel> =
+    val models: List<QueryModel> by lazy { retained.models(::browseQueries) }
+
+    private fun browseQueries(): List<QueryModel> =
         listOf(
             QueryModel().apply {
                 maxResults = Integer.MAX_VALUE
@@ -62,8 +67,6 @@ class TagBrowserActivity :
                 maxResults = 400
             },
         )
-
-    private val started = BooleanArray(models.size)
 
     /** The tab on screen. */
     var currentPage by mutableIntStateOf(0)
@@ -93,8 +96,7 @@ class TagBrowserActivity :
 
     /** Starts [page]'s query the first time it is shown. */
     internal fun startPage(page: Int) {
-        if (started[page]) return
-        started[page] = true
+        if (!retained.started.add(page)) return
         models[page].refresh()
     }
 
