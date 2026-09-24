@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.DropdownMenu
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
@@ -70,7 +69,8 @@ import depollsoft.pitchperfect.ui.PlateAlertDialog
 import depollsoft.pitchperfect.ui.PlateFab
 import depollsoft.pitchperfect.ui.PlateFonts
 import depollsoft.pitchperfect.ui.PlateMenuItem
-import depollsoft.pitchperfect.ui.PlateMenuRow
+import depollsoft.pitchperfect.ui.PlatePopupMenu
+import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.PlateOverflowMenu
 import depollsoft.pitchperfect.ui.hairlineWidth
 import depollsoft.pitchperfect.ui.plateColors
@@ -335,32 +335,17 @@ private fun SongContextMenu(
     song: PitchedSong,
     openEditor: () -> Unit,
 ) {
-    DropdownMenu(expanded, onDismiss) {
-        PlateMenuRow(stringResource(R.string.EditSong)) {
-            onDismiss()
-            openEditor()
-        }
-        PlateMenuRow(stringResource(R.string.RemoveSong)) {
-            onDismiss()
-            list.removeSong(song)
-        }
-        PlateMenuRow(stringResource(R.string.SortAll)) {
-            onDismiss()
-            list.sortSongs()
-        }
-        if (list.canMoveUp(song)) {
-            PlateMenuRow(stringResource(R.string.MoveUp)) {
-                onDismiss()
-                list.moveUp(song)
-            }
-        }
-        if (list.canMoveDown(song)) {
-            PlateMenuRow(stringResource(R.string.MoveDown)) {
-                onDismiss()
-                list.moveDown(song)
-            }
-        }
-    }
+    PlatePopupMenu(
+        expanded,
+        onDismiss,
+        listOfNotNull(
+            PopupMenuItem(stringResource(R.string.EditSong), onClick = openEditor),
+            PopupMenuItem(stringResource(R.string.RemoveSong)) { list.removeSong(song) },
+            PopupMenuItem(stringResource(R.string.SortAll)) { list.sortSongs() },
+            if (list.canMoveUp(song)) PopupMenuItem(stringResource(R.string.MoveUp)) { list.moveUp(song) } else null,
+            if (list.canMoveDown(song)) PopupMenuItem(stringResource(R.string.MoveDown)) { list.moveDown(song) } else null,
+        ),
+    )
 }
 
 /**
@@ -376,27 +361,25 @@ private fun SetListMenu(
     val context = LocalContext.current
     val model = state.model
     val close = { state.menuFor = null }
-    DropdownMenu(state.menuFor == listId, close) {
-        PlateMenuRow(model.displayName(listId), enabled = false) {}
-        PlateMenuRow(stringResource(R.string.SetListRenameAction)) {
-            close()
-            state.promptRename(listId)
-        }
-        PlateMenuRow(stringResource(R.string.SetListDuplicateAction)) {
-            close()
-            state.duplicateList(listId) { context.getString(R.string.SetListDuplicatedAnnouncement, it) }
-        }
-        if (listId != SongsModel.DEFAULT_ID) {
-            PlateMenuRow(stringResource(R.string.SetListDeleteAction)) {
-                close()
-                state.confirmDelete(listId)
-            }
-        }
-        PlateMenuRow(stringResource(R.string.SetListManageAction)) {
-            close()
-            context.startActivity(Intent(context, ManageSetListsActivity::class.java))
-        }
-    }
+    PlatePopupMenu(
+        state.menuFor == listId,
+        close,
+        listOfNotNull(
+            PopupMenuItem(model.displayName(listId), enabled = false),
+            PopupMenuItem(stringResource(R.string.SetListRenameAction)) { state.promptRename(listId) },
+            PopupMenuItem(stringResource(R.string.SetListDuplicateAction)) {
+                state.duplicateList(listId) { context.getString(R.string.SetListDuplicatedAnnouncement, it) }
+            },
+            if (listId != SongsModel.DEFAULT_ID) {
+                PopupMenuItem(stringResource(R.string.SetListDeleteAction)) { state.confirmDelete(listId) }
+            } else {
+                null
+            },
+            PopupMenuItem(stringResource(R.string.SetListManageAction)) {
+                context.startActivity(Intent(context, ManageSetListsActivity::class.java))
+            },
+        ),
+    )
 }
 
 /** The prompts the tab can have open: naming a list and confirming a delete. */

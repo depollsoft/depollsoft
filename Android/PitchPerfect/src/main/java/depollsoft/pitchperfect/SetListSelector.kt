@@ -245,12 +245,17 @@ private fun Position(
                     edge,
                 )
             }
-            // Room for the dot before the label on every position, so the label never shifts
-            // when the selection moves.
-            .padding(start = LEADING_PADDING, end = SIDE_PADDING)
-            .centerVerticallyLikeViews(),
     ) {
-        PlateText(
+        // The position's long-press menu hangs from the position itself, outside its padding.
+        menu()
+        Box(
+            Modifier
+                // Room for the dot before the label on every position, so the label never shifts
+                // when the selection moves.
+                .padding(start = LEADING_PADDING, end = SIDE_PADDING)
+                .centerVerticallyLikeViews(),
+        ) {
+            PlateText(
             text,
             style =
                 plateText(
@@ -263,9 +268,8 @@ private fun Position(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             softWrap = false,
-        )
-        // The position's long-press menu hangs from the position itself.
-        menu()
+            )
+        }
     }
 }
 

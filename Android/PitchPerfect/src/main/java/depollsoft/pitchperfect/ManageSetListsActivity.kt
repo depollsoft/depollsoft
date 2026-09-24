@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.DropdownMenu
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
@@ -58,7 +57,8 @@ import depollsoft.pitchperfect.ui.DrawableIcon
 import depollsoft.pitchperfect.ui.PlateBackground
 import depollsoft.pitchperfect.ui.PlateFab
 import depollsoft.pitchperfect.ui.PlateFonts
-import depollsoft.pitchperfect.ui.PlateMenuRow
+import depollsoft.pitchperfect.ui.PlatePopupMenu
+import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.PlateTheme
 import depollsoft.pitchperfect.ui.PlateTopBar
 import depollsoft.pitchperfect.ui.plateColors
@@ -270,22 +270,15 @@ private fun SetListRow(
             ) {
                 DrawableIcon(R.drawable.ic_more_vert, colors.inkSecondary)
             }
-            DropdownMenu(menuOpen, { menuOpen = false }) {
-                PlateMenuRow(stringResource(R.string.SetListRename)) {
-                    menuOpen = false
-                    state.nameRequest = NameRequest(list.id)
-                }
-                PlateMenuRow(stringResource(R.string.SetListDuplicateAction)) {
-                    menuOpen = false
-                    state.duplicate(list)
-                }
-                if (custom) {
-                    PlateMenuRow(stringResource(R.string.SetListDelete)) {
-                        menuOpen = false
-                        state.confirmDelete(list)
-                    }
-                }
-            }
+            PlatePopupMenu(
+                menuOpen,
+                { menuOpen = false },
+                listOfNotNull(
+                    PopupMenuItem(stringResource(R.string.SetListRename)) { state.nameRequest = NameRequest(list.id) },
+                    PopupMenuItem(stringResource(R.string.SetListDuplicateAction)) { state.duplicate(list) },
+                    if (custom) PopupMenuItem(stringResource(R.string.SetListDelete)) { state.confirmDelete(list) } else null,
+                ),
+            )
         }
         val handleDescription = stringResource(R.string.SetListReorder)
         Box(
