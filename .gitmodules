@@ -1,3 +1,0 @@
-[submodule "Android/Bindroid"]
-	path = Android/Bindroid
-	url = https://github.com/depoll/bindroid.git

@@ -169,93 +169,85 @@ subprojects {
             }
         }
 
-        // Apply Jacoco to all library modules except bindroid-test (which is an instrumentation test app)
-        if (project.name != 'bindroid-test') {
-            apply plugin: 'jacoco'
-            jacoco { toolVersion = '0.8.15' }
+        // Apply Jacoco to every library module.
+        apply plugin: 'jacoco'
+        jacoco { toolVersion = '0.8.15' }
 
-            afterEvaluate {
-                def unitTestTask = tasks.findByName('testDebugUnitTest')
-                if (unitTestTask != null) {
-                    unitTestTask.extensions.findByType(org.gradle.testing.jacoco.plugins.JacocoTaskExtension)?.with {
-                        includeNoLocationClasses = true
-                        excludes = ['jdk.internal.*']
+        afterEvaluate {
+            def unitTestTask = tasks.findByName('testDebugUnitTest')
+            if (unitTestTask != null) {
+                unitTestTask.extensions.findByType(org.gradle.testing.jacoco.plugins.JacocoTaskExtension)?.with {
+                    includeNoLocationClasses = true
+                    excludes = ['jdk.internal.*']
+                }
+
+                def baseExcludes = [
+                    '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                    '**/*Test*.*', 'android/**/*.*', 'androidx/**/*.*',
+                    '**/Analytics*.*',
+                    '**/depollsoft/lib/util/Util*.*',
+                    '**/TrackingScope*.*',
+                    // Exclude Kotlin inline function anonymous classes - these can't be covered
+                    // because inline code gets copied to the call site at compile time
+                    '**/*Kt$trackable$*.class',
+                    '**/*Kt$trackableNullable$*.class',
+                    '**/*Kt$bind$*.class',
+                    '**/*Kt$uibind$*.class',
+                    '**/*Kt$bindTo$*.class',
+                    '**/*Kt$weakBind$*.class',
+                    '**/*Kt$weakProp$*.class',
+                    '**/*Kt$compiledProp$*.class',
+                    '**/*Kt$converter$*.class',
+                    '**/*Kt$transaction$*.class',
+                    // Exclude SAM adapter classes
+                    '**/*$sam$*.class'
+                ]
+                def includes = ['**/*.class']
+                project.ext.coverageExcludes = new ArrayList<>(baseExcludes)
+                project.ext.coverageIncludes = new ArrayList<>(includes)
+                println "Excludes for library ${project.name}: ${project.ext.coverageExcludes}"
+
+                tasks.register('jacocoTestReport', JacocoReport) {
+                    println "Creating jacocoTestReport for library ${project.name}"
+                    println "Build dir for ${project.name}: ${buildDir}"
+                    dependsOn unitTestTask
+                    reports {
+                        xml.required.set(true)
+                        html.required.set(true)
                     }
+                    def classTree = files(
+                        fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
+                        fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
+                    )
+                    classDirectories.setFrom(classTree)
+                    sourceDirectories.setFrom(files('src/main/java', 'src/main/kotlin', 'src'))
+                    executionData.setFrom(fileTree(dir: buildDir, includes: [
+                        'jacoco/testDebugUnitTest.exec',
+                        'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec',
+                        'outputs/unit_test_code_coverage/debugUnitTest/*.ec',
+                        'outputs/code-coverage/connected/*/coverage.ec',
+                        'outputs/code_coverage/debugAndroidTest/connected/*/*.ec',
+                        'outputs/code_coverage/connected/*/*.ec'
+                    ]))
+                }
 
-                    def baseExcludes = [
-                        '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
-                        '**/*Test*.*', 'android/**/*.*', 'androidx/**/*.*',
-                        '**/Analytics*.*',
-                        '**/depollsoft/lib/util/Util*.*',
-                        '**/TrackingScope*.*',
-                        // Exclude Kotlin inline function anonymous classes - these can't be covered
-                        // because inline code gets copied to the call site at compile time
-                        '**/*Kt$trackable$*.class',
-                        '**/*Kt$trackableNullable$*.class',
-                        '**/*Kt$bind$*.class',
-                        '**/*Kt$uibind$*.class',
-                        '**/*Kt$bindTo$*.class',
-                        '**/*Kt$weakBind$*.class',
-                        '**/*Kt$weakProp$*.class',
-                        '**/*Kt$compiledProp$*.class',
-                        '**/*Kt$converter$*.class',
-                        '**/*Kt$transaction$*.class',
-                        // Exclude SAM adapter classes
-                        '**/*$sam$*.class'
-                    ]
-                    def includes = ['**/*.class']
-                    project.ext.coverageExcludes = new ArrayList<>(baseExcludes)
-                    project.ext.coverageIncludes = new ArrayList<>(includes)
-                    println "Excludes for library ${project.name}: ${project.ext.coverageExcludes}"
-
-                    tasks.register('jacocoTestReport', JacocoReport) {
-                        println "Creating jacocoTestReport for library ${project.name}"
-                        println "Build dir for ${project.name}: ${buildDir}"
-                        dependsOn unitTestTask
-                        reports {
-                            xml.required.set(true)
-                            html.required.set(true)
-                        }
-                        def classTree = files(
-                            fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
-                            fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
-                        )
-                        classDirectories.setFrom(classTree)
-                        sourceDirectories.setFrom(files('src/main/java', 'src/main/kotlin', 'src'))
-                        executionData.setFrom(fileTree(dir: buildDir, includes: [
-                            'jacoco/testDebugUnitTest.exec',
-                            'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec',
-                            'outputs/unit_test_code_coverage/debugUnitTest/*.ec',
-                            'outputs/code-coverage/connected/*/coverage.ec',
-                            'outputs/code_coverage/debugAndroidTest/connected/*/*.ec',
-                            'outputs/code_coverage/connected/*/*.ec'
-                        ]))
+                tasks.register('jacocoTestCoverageVerification', JacocoCoverageVerification) {
+                    dependsOn unitTestTask
+                    def minCoverage = 0.85
+                    violationRules {
+                        rule { limit { minimum = minCoverage } }
                     }
-
-                    tasks.register('jacocoTestCoverageVerification', JacocoCoverageVerification) {
-                        dependsOn unitTestTask
-                        // Lower threshold for modules with heavy inline function usage (bindroid-kotlin).
-                        // This threshold is set lower due to JaCoCo's inability to instrument Kotlin inline functions.
-                        // See https://github.com/jacoco/jacoco/issues/582. This threshold should be revisited if tooling improves.
-                        def minCoverage = 0.85
-                        if (project.name == 'bindroid-kotlin') {
-                            minCoverage = 0.50
-                        }
-                        violationRules {
-                            rule { limit { minimum = minCoverage } }
-                        }
-                        classDirectories.setFrom(files(
-                            fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
-                            fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
-                        ))
-                        executionData.setFrom(fileTree(dir: buildDir, includes: [
-                            'jacoco/testDebugUnitTest.exec',
-                            'outputs/unit_test_code_coverage/debugUnitTest/*.ec',
-                            'outputs/code-coverage/connected/*/coverage.ec',
-                            'outputs/code_coverage/debugAndroidTest/connected/*/*.ec',
-                            'outputs/code_coverage/connected/*/*.ec'
-                        ]))
-                    }
+                    classDirectories.setFrom(files(
+                        fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
+                        fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
+                    ))
+                    executionData.setFrom(fileTree(dir: buildDir, includes: [
+                        'jacoco/testDebugUnitTest.exec',
+                        'outputs/unit_test_code_coverage/debugUnitTest/*.ec',
+                        'outputs/code-coverage/connected/*/coverage.ec',
+                        'outputs/code_coverage/debugAndroidTest/connected/*/*.ec',
+                        'outputs/code_coverage/connected/*/*.ec'
+                    ]))
                 }
             }
         }
@@ -286,27 +278,15 @@ static def getDate() {
     return Integer.parseInt(DateTimeFormatter.ofPattern("YYMMdd").format(LocalDateTime.now()))
 }
 
-configurations {
-    all {
-        resolutionStrategy {
-            dependencySubstitution {
-                substitute project(':bindroid') with project(':bindroid:bindroid')
-            }
-        }
-    }
-}
-
 // Aggregate coverage tasks across all non-test modules
 gradle.projectsEvaluated {
     def verifiers = []
     def reporters = []
     subprojects.each { p ->
-        if (p.name != 'bindroid-test') {
-            def v = p.tasks.findByName('jacocoTestCoverageVerification')
-            def r = p.tasks.findByName('jacocoTestReport')
-            if (v != null) verifiers << v.path
-            if (r != null) reporters << r.path
-        }
+        def v = p.tasks.findByName('jacocoTestCoverageVerification')
+        def r = p.tasks.findByName('jacocoTestReport')
+        if (v != null) verifiers << v.path
+        if (r != null) reporters << r.path
     }
     tasks.register('coverage') {
         group = 'verification'

@@ -13,7 +13,7 @@ APPS = json.loads((Path(__file__).with_name('apps.json')).read_text())
 SHARED = ['iOS/depolllib', 'iOS/pitchperfect/pitchperfectlib', 'Android/PitchPerfectLib',
           'Android/DepollSoftCommon', 'Android/DepollSoftCommon.Compat',
           'Android/depollsoft.lib.kotlin', 'Android/build.gradle', 'Android/gradle',
-          'Android/Bindroid', 'CloudCode', 'AppEngine']
+          'CloudCode', 'AppEngine']
 LIMITS = {'name': 30, 'subtitle': 30, 'description': 4000, 'keywords': 100,
           'promotional_text': 170, 'title': 30, 'short_description': 80, 'full_description': 4000}
 
