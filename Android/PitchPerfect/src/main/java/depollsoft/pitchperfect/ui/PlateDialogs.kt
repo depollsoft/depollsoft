@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -212,6 +213,8 @@ fun PlateTextButton(
             ).then(if (button.testTag != null) Modifier.testTag(button.testTag) else Modifier)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
+        // The label spans the button, centred as TextView's gravity centred it (at a fractional x).
+        propagateMinConstraints = true,
     ) {
         PlateText(
             button.text.uppercase(),
@@ -223,6 +226,7 @@ fun PlateTextButton(
                     letterSpacing = 0.08928572f,
                 ),
             maxLines = 1,
+            align = TextAlign.Center,
         )
     }
 }

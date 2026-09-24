@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -76,11 +77,14 @@ fun PlateModeToggle(
                             this.selected = chosen
                         }.padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
+                    // The label spans the button, centred as TextView's gravity centred it (at a fractional x).
+                    propagateMinConstraints = true,
                 ) {
                     PlateText(
                         label.uppercase(),
                         style = plateText(12.sp, if (chosen) colors.onAccent else colors.inkSecondary, PlateFonts.oswald, letterSpacing = 0.12f),
                         maxLines = 1,
+                        align = TextAlign.Center,
                     )
                 }
             }

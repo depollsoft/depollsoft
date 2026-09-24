@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -153,6 +154,7 @@ fun PlateSettingsButton(
             text.uppercase(),
             style = plateText(14.sp, colors.ink.copy(alpha = if (enabled) 1f else 0.38f), PlateFonts.oswald, letterSpacing = 0.12f),
             maxLines = 1,
+            align = TextAlign.Center,
         )
     }
 }
@@ -166,11 +168,20 @@ fun PlatePrimaryButton(
     onClick: () -> Unit,
 ) {
     val colors = plateColors
-    PlateButtonFrame(modifier, enabled, onClick, fill = if (enabled) colors.accent else colors.hairline) {
+    // The style asked for no elevation, but MaterialButton's state animator lifts an enabled
+    // filled button by 2dp regardless.
+    PlateButtonFrame(
+        modifier,
+        enabled,
+        onClick,
+        fill = if (enabled) colors.accent else colors.hairline,
+        elevation = if (enabled) 2.dp else 0.dp,
+    ) {
         PlateText(
             text.uppercase(),
             style = plateText(14.sp, if (enabled) colors.onAccent else colors.inkSecondary, PlateFonts.oswald, letterSpacing = 0.12f),
             maxLines = 1,
+            align = TextAlign.Center,
         )
     }
 }
@@ -191,6 +202,7 @@ fun PlateContainedButton(
             text,
             style = plateText(14.sp, colors.ink, weight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.08928572f),
             maxLines = 1,
+            align = TextAlign.Center,
         )
     }
 }
@@ -218,5 +230,7 @@ private fun PlateButtonFrame(
             .clickable(enabled = enabled, role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center,
+        // The label spans the button, centred as TextView's gravity centred it (at a fractional x).
+        propagateMinConstraints = true,
     ) { label() }
 }

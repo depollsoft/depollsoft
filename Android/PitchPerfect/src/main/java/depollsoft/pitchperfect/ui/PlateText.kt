@@ -104,7 +104,7 @@ private class TextViewSizing(
         measurable: Measurable,
         constraints: Constraints,
     ): MeasureResult {
-        val line = if (constraints.hasFixedWidth) null else lineSize(constraints.maxWidth)
+        val line = lineSize(constraints.maxWidth)
         if (line == null) {
             val placeable = measurable.measure(constraints)
             return layout(placeable.width, placeable.height) { placeable.place(0, 0) }
@@ -117,10 +117,17 @@ private class TextViewSizing(
         val exact = style.textAlign == TextAlign.Center || style.textAlign == TextAlign.End
         val placeable =
             measurable.measure(
-                if (exact) constraints.copy(minWidth = width, maxWidth = width) else constraints.copy(minWidth = width),
+                if (exact) {
+                    constraints.copy(minWidth = width, maxWidth = width, minHeight = 0)
+                } else {
+                    constraints.copy(minWidth = width, minHeight = 0)
+                },
             )
         val height = line.height.coerceIn(constraints.minHeight, constraints.maxHeight)
-        return layout(width, height) { placeable.place(0, 0) }
+        // Given more height than its line (a button's), centred text is centred vertically too,
+        // the odd pixel below, as TextView's `center` gravity placed it.
+        val top = if (exact) (height - line.height) / 2 else 0
+        return layout(width, height) { placeable.place(0, top) }
     }
 
     override fun IntrinsicMeasureScope.maxIntrinsicWidth(
