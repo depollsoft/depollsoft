@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -69,11 +70,13 @@ fun StatusIndicator(
             modifier = Modifier.align(ViewAlign.CenterVertically),
         )
         val style = with(TagMasterType) { bodyMedium.withoutLineHeight() }
+        // The View set its drawable padding as (int) (4 * density), truncating where dp rounds.
+        val drawablePadding = with(LocalDensity.current) { (4 * density).toInt().toDp() }
         Text(
             label,
             modifier =
                 Modifier
-                    .padding(start = 4.dp)
+                    .padding(start = drawablePadding)
                     .widthPx(rememberTextViewWidth(label, style)),
             style = style,
             color = textColor,

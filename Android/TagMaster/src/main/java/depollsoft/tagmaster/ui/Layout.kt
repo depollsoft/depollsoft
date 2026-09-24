@@ -152,3 +152,11 @@ fun Modifier.widthPx(width: Int): Modifier =
         val placeable = measurable.measure(constraints.copy(minWidth = exact, maxWidth = exact))
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     }
+
+/**
+ * [dp] in pixels the way the View code computed it, `(dp * displayMetrics.density).toInt()`:
+ * truncated, where [Density.roundToPx] rounds. They differ on devices whose density is not a
+ * whole number (4dp is 10.5px at 420dpi: the View took 10), so layouts that stand in for View
+ * code which truncated use this.
+ */
+fun androidx.compose.ui.unit.Density.viewPx(dp: Int): Int = (dp * density).toInt()

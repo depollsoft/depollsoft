@@ -1,5 +1,6 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.tagmaster.ui.viewPx
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
@@ -73,18 +74,20 @@ fun DetailPairs(
         val captions = measurables.filterIndexed { index, _ -> index % 2 == 0 }
         val values = measurables.filterIndexed { index, _ -> index % 2 == 1 }
         val budget =
-            pairs.maxOfOrNull { max(96.dp.roundToPx(), it.valueBudget(this)) } ?: 0
-        val stacked = captionWidth + 8.dp.roundToPx() + budget > width
-        val gap = (if (stacked) 4 else 8).dp.roundToPx()
+            pairs.maxOfOrNull { max(viewPx(96), it.valueBudget(this)) } ?: 0
+        val stacked = captionWidth + viewPx(8) + budget > width
+        val gap = viewPx(if (stacked) 4 else 8)
         val rows = mutableListOf<Row>()
         var y = 0
         pairs.forEachIndexed { index, pair ->
             val topMargin =
-                when {
-                    index > 0 && summary && pair.isRating -> 8
-                    index > 0 && stacked -> 4
-                    else -> 0
-                }.dp.roundToPx()
+                viewPx(
+                    when {
+                        index > 0 && summary && pair.isRating -> 8
+                        index > 0 && stacked -> 4
+                        else -> 0
+                    },
+                )
             y += topMargin
             val row =
                 measurePair(captions[index], values[index], pair.lines, width, if (stacked) -1 else captionWidth, gap, if (summary && !pair.isRating) 28 else 48)
@@ -137,8 +140,8 @@ private fun androidx.compose.ui.layout.MeasureScope.measurePair(
     }
     val natural = max(captionTop + caption.height, valueTop + value.height)
     val multiline = lines.lines > 1 || captionWidth < 0
-    val inset = if (multiline) 4.dp.roundToPx() else 0
-    val height = max(rowHeightDp.dp.roundToPx(), natural + inset * 2)
+    val inset = if (multiline) viewPx(4) else 0
+    val height = max(viewPx(rowHeightDp), natural + inset * 2)
     val offset = (height - natural) / 2
     return Row(caption, value, captionTop + offset, valueTop + offset, valueLeft, height)
 }

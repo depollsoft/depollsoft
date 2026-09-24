@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -60,7 +61,8 @@ fun ListRow(
     handle: (@Composable () -> Unit)? = null,
 ) {
     val colors = TagMasterTheme.colors
-    val gutter = if (editing) 4.dp else 16.dp
+    // The adapter set the gutter as (dp * density).toInt(), truncating.
+    val gutter = with(LocalDensity.current) { viewPx(if (editing) 4 else 16).toDp() }
     Row(
         modifier
             .fillMaxWidth()

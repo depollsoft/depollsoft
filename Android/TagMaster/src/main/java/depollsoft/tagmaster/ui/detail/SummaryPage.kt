@@ -49,6 +49,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import bolts.Task
 import depollsoft.lib.util.ContentCache
 import depollsoft.tagmaster.ListModel
@@ -443,7 +444,12 @@ private fun ListChip(
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlatformIcon(icon, tint = if (accent) colors.primary else colors.onSurfaceVariant, size = 18.dp)
-        val label = TagMasterType.labelLarge.withoutLineHeight().copy(platformStyle = PlatformTextStyle(includeFontPadding = false))
+        // MDC's chip reads its text size as a float, not whole pixels as a TextView does.
+        val label =
+            TagMasterType.labelLarge.withoutLineHeight().copy(
+                fontSize = 14.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+            )
         Text(
             text,
             Modifier

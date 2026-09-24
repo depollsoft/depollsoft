@@ -133,7 +133,7 @@ private fun DialogTitle(
     val colors = TagMasterTheme.colors
     val measurer = rememberTextMeasurer()
     val large = TagMasterType.headlineSmall.withoutLineHeight()
-    val small = TagMasterType.titleLarge.withoutLineHeight().copy(fontSize = 18.sp, letterSpacing = 0.sp)
+    val small = TagMasterType.titleLarge.withoutLineHeight().copy(fontSize = 18.sp, letterSpacing = 0.sp).inWholePixels()
     Layout(
         modifier = modifier.fillMaxWidth(),
         content = {

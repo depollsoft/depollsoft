@@ -47,6 +47,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import kotlin.math.roundToInt
 
@@ -89,7 +90,8 @@ fun OutlinedField(
     val focused by interactionSource.collectIsFocusedAsState()
     val collapsed = focused || value.text.isNotEmpty() || onValueChange == null
     val progress by animateFloatAsState(if (collapsed) 1f else 0f, tween(167), label = "label")
-    val labelStyle = TagMasterType.bodySmall.withoutLineHeight().copy(platformStyle = PlatformTextStyle(includeFontPadding = false))
+    // TextInputLayout draws its floating label at a float size, not whole pixels as a TextView does.
+    val labelStyle = TagMasterType.bodySmall.withoutLineHeight().copy(fontSize = 12.sp, platformStyle = PlatformTextStyle(includeFontPadding = false))
     val measurer = rememberTextMeasurer()
     val labelLayout = remember(label, labelStyle) { measurer.measure(label, labelStyle) }
     val labelAscent = with(density) { labelLayout.firstBaseline.roundToInt() }
