@@ -66,6 +66,8 @@ class SettingsActivity(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         title = getString(R.string.Settings)
+        // An open sign-in prompt must come back to receive FirebaseUI's result.
+        keepDialogOpen("depollsoft.pitchperfect.SettingsDialog", { dialog }) { dialog = it }
         setupPrivateBuildDiagnostics()
         val actions =
             SettingsActions(

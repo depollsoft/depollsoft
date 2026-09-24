@@ -152,6 +152,25 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun aSignInResultArrivingAfterRecreationReachesThePrompt() {
+        com.firebase.ui.auth.AuthUI.setApplicationContext(RichApplication.getAppContext())
+        val controller = screens.launch(SettingsActivity::class.java)
+        tapScrolled(TestTags.LOG_IN)
+        compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performClick()
+        screens.settle()
+        val started = shadowOf(controller.get()).nextStartedActivityForResult
+
+        // The phone rotates while FirebaseUI is up; its result comes back to the new activity.
+        controller.recreate()
+        screens.settle()
+        controller.get().activityResultRegistry.dispatchResult(started.requestCode, android.app.Activity.RESULT_CANCELED, null)
+        screens.settle()
+
+        compose.onNodeWithText(controller.get().getString(R.string.SignInCanceled)).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.LOGIN_BUTTON).assertIsEnabled()
+    }
+
+    @Test
     fun theSignInPromptUsesFirebaseUisMethodPicker() {
         assertFalse(LoginPrompt.CREDENTIAL_MANAGER_ENABLED)
         assertTrue(LoginPrompt.ALWAYS_SHOW_PROVIDER_CHOICE)

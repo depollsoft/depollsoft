@@ -81,6 +81,8 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         volumeControlStream = AudioManager.STREAM_MUSIC
         songs = SongListState(SongsModel.get())
         keepSetListPromptsOpen(songs)
+        // An open sign-in prompt must come back to receive FirebaseUI's result.
+        keepDialogOpen("depollsoft.pitchperfect.StartupPrompt", { startupPrompt }) { startupPrompt = it }
 
         setContent {
             PlateTheme {
