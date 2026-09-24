@@ -112,6 +112,20 @@ class AddSongsFromListActivity : AppCompatActivity() {
     internal lateinit var addable: AddableSongs
         private set
 
+    /** The Menu key opens the Select all menu, as the window action bar's overflow did. */
+    private val menuKey = depollsoft.pitchperfect.ui.MenuKeySignal()
+
+    override fun onKeyUp(
+        keyCode: Int,
+        event: android.view.KeyEvent,
+    ): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_MENU) {
+            menuKey.press()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,28 +134,30 @@ class AddSongsFromListActivity : AppCompatActivity() {
         addable = AddableSongs(model, intent.getStringExtra(LIST_EXTRA) ?: model.currentListId)
         setContent {
             PlateTheme {
-                Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
-                    val count = addable.count
-                    val label =
-                        if (count == 0) stringResource(R.string.AddSongsConfirm) else pluralStringResource(R.plurals.AddSongsCount, count, count)
-                    PlateTopBar(stringResource(R.string.AddSongsTitle), navigationUp = ::finish) {
-                        // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
-                        PlateActionIcon(R.drawable.ic_check, label, ::confirm, Modifier.testTag(TestTags.CONFIRM_ADD), enabled = count > 0)
-                        if (addable.total > 0) {
-                            PlateOverflowMenu(
-                                listOf(
-                                    PlateMenuItem(
-                                        stringResource(
-                                            if (count == addable.total) R.string.AddSongsClearSelection else R.string.AddSongsSelectAll,
+                androidx.compose.runtime.CompositionLocalProvider(depollsoft.pitchperfect.ui.LocalMenuKey provides menuKey) {
+                    Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+                        val count = addable.count
+                        val label =
+                            if (count == 0) stringResource(R.string.AddSongsConfirm) else pluralStringResource(R.plurals.AddSongsCount, count, count)
+                        PlateTopBar(stringResource(R.string.AddSongsTitle), navigationUp = ::finish) {
+                            // Vector menu icons do not dim on their own; a dead checkmark must not read as live.
+                            PlateActionIcon(R.drawable.ic_check, label, ::confirm, Modifier.testTag(TestTags.CONFIRM_ADD), enabled = count > 0)
+                            if (addable.total > 0) {
+                                PlateOverflowMenu(
+                                    listOf(
+                                        PlateMenuItem(
+                                            stringResource(
+                                                if (count == addable.total) R.string.AddSongsClearSelection else R.string.AddSongsSelectAll,
+                                            ),
+                                            TestTags.SELECT_ALL,
+                                            onClick = addable::toggleAll,
                                         ),
-                                        TestTags.SELECT_ALL,
-                                        onClick = addable::toggleAll,
                                     ),
-                                ),
-                            )
+                                )
+                            }
                         }
+                        AddSongsFromListScreen(addable, label, ::confirm)
                     }
-                    AddSongsFromListScreen(addable, label, ::confirm)
                 }
             }
         }

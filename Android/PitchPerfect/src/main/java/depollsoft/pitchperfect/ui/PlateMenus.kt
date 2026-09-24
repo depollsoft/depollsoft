@@ -1,7 +1,11 @@
 package depollsoft.pitchperfect.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,24 +39,45 @@ class PlateMenuItem(
 )
 
 /**
+ * Presses of the keyboard's Menu key, which an activity forwards from `onKeyUp`; the screen's
+ * overflow menu opens on each, as the window action bar's did.
+ */
+@Stable
+class MenuKeySignal {
+    var presses by mutableIntStateOf(0)
+        private set
+
+    fun press() {
+        presses++
+    }
+}
+
+val LocalMenuKey = staticCompositionLocalOf { MenuKeySignal() }
+
+/**
  * The action bar's overflow button and its menu, as the window action bar's "More options"
- * button: 40dp wide, the three-dot icon 6dp in from its leading edge.
+ * button: 40dp wide, the three-dot icon 6dp in from its leading edge. The menu opens over the
+ * button, and the Menu key opens it too.
  */
 @Composable
 fun PlateOverflowMenu(items: List<PlateMenuItem>) {
     val colors = plateColors
     var open by remember { mutableStateOf(false) }
     val description = stringResource(androidx.appcompat.R.string.abc_action_menu_overflow_description)
-    Box {
+    val menuKey = LocalMenuKey.current
+    val pressesAtStart = remember { menuKey.presses }
+    LaunchedEffect(menuKey.presses) { if (menuKey.presses != pressesAtStart) open = true }
+    WithTooltip(description) { showTooltip ->
         Box(
             Modifier
                 .width(40.dp)
                 .height(48.dp)
                 .testTag(TestTags.OVERFLOW)
-                .clickable(
+                .combinedClickable(
                     role = Role.Button,
                     interactionSource = null,
                     indication = ripple(bounded = false, radius = 20.dp),
+                    onLongClick = showTooltip,
                 ) { open = true }
                 .semantics { contentDescription = description }
                 .padding(start = 6.dp, end = 10.dp),
@@ -60,6 +85,11 @@ fun PlateOverflowMenu(items: List<PlateMenuItem>) {
         ) {
             DrawableIcon(androidx.appcompat.R.drawable.abc_ic_menu_overflow_material, colors.ink)
         }
-        PlatePopupMenu(open, { open = false }, items.map { PopupMenuItem(it.title, it.enabled, it.testTag, it.onClick) })
+        PlatePopupMenu(
+            open,
+            { open = false },
+            items.map { PopupMenuItem(it.title, it.enabled, it.testTag, it.onClick) },
+            placement = MenuPlacement.OVER_ANCHOR_END,
+        )
     }
 }

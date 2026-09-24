@@ -4,7 +4,21 @@ import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import android.view.SoundEffectConstants
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -31,7 +45,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.CollectionInfo
+import androidx.compose.ui.semantics.CollectionItemInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.collectionInfo
+import androidx.compose.ui.semantics.collectionItemInfo
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -71,7 +93,7 @@ fun Modifier.centerVerticallyLikeViews(): Modifier =
     layout { measurable, constraints ->
         val placeable = measurable.measure(constraints.copy(minHeight = 0))
         val height = constraints.maxHeight
-        layout(placeable.width, height) { placeable.place(0, (height - placeable.height) / 2) }
+        layout(placeable.width, height) { placeable.placeRelative(0, (height - placeable.height) / 2) }
     }
 
 /** The theme's `actionBarSize`, the height the window action bar had. */
@@ -138,18 +160,21 @@ fun PlateTopBar(
 private fun UpButton(onClick: () -> Unit) {
     val colors = plateColors
     val description = androidx.compose.ui.res.stringResource(androidx.appcompat.R.string.abc_action_bar_up_description)
-    Box(
-        Modifier
-            .size(56.dp)
-            .clickable(
-                role = Role.Button,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = false, radius = 28.dp),
-                onClick = onClick,
-            ).semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) {
-        DrawableIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material, colors.ink)
+    WithTooltip(description) { showTooltip ->
+        Box(
+            Modifier
+                .size(56.dp)
+                .combinedClickable(
+                    role = Role.Button,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = 28.dp),
+                    onLongClick = showTooltip,
+                    onClick = onClick,
+                ).semantics { contentDescription = description },
+            contentAlignment = Alignment.Center,
+        ) {
+            DrawableIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material, colors.ink)
+        }
     }
 }
 
@@ -163,19 +188,23 @@ fun PlateActionIcon(
     enabled: Boolean = true,
 ) {
     val colors = plateColors
-    Box(
-        modifier
-            .size(48.dp)
-            .clickable(
-                enabled = enabled,
-                role = Role.Button,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = false, radius = 20.dp),
-                onClick = onClick,
-            ).semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) {
-        DrawableIcon(icon, colors.ink, alpha = if (enabled) 1f else 0.38f)
+    // An icon-only action names itself in a tooltip, as the action bar's did.
+    WithTooltip(description) { showTooltip ->
+        Box(
+            modifier
+                .size(48.dp)
+                .combinedClickable(
+                    enabled = enabled,
+                    role = Role.Button,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = 20.dp),
+                    onLongClick = showTooltip,
+                    onClick = onClick,
+                ).semantics { contentDescription = description },
+            contentAlignment = Alignment.Center,
+        ) {
+            DrawableIcon(icon, colors.ink, alpha = if (enabled) 1f else 0.38f)
+        }
     }
 }
 
@@ -201,7 +230,7 @@ fun PlateBottomNavigation(
     Layout(
         content = {
             destinations.forEachIndexed { index, destination ->
-                NavigationItem(destination, index == selected, rail = false) { onSelect(index) }
+                NavigationItem(destination, index, index == selected, rail = false) { onSelect(index) }
             }
         },
         modifier =
@@ -209,7 +238,9 @@ fun PlateBottomNavigation(
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(colors.surface)
-                .topHairline(colors.hairline),
+                .topHairline(colors.hairline)
+                // A screen reader hears the bar as tabs: "Tab 2 of 4".
+                .semantics { collectionInfo = CollectionInfo(rowCount = 1, columnCount = destinations.size) },
     ) { measurables, constraints ->
         // BottomNavigationMenuView's split: equal widths, the leftover pixels to the first items.
         val width = constraints.maxWidth
@@ -223,7 +254,7 @@ fun PlateBottomNavigation(
         layout(width, height) {
             var x = 0
             placeables.forEach {
-                it.place(x, 0)
+                it.placeRelative(x, 0)
                 x += it.width
             }
         }
@@ -242,16 +273,20 @@ fun PlateNavigationRail(
     Layout(
         content = {
             destinations.forEachIndexed { index, destination ->
-                NavigationItem(destination, index == selected, rail = true) { onSelect(index) }
+                NavigationItem(destination, index, index == selected, rail = true) { onSelect(index) }
             }
         },
-        modifier = modifier.background(colors.surface).endHairline(colors.hairline),
+        modifier =
+            modifier
+                .background(colors.surface)
+                .endHairline(colors.hairline)
+                .semantics { collectionInfo = CollectionInfo(rowCount = destinations.size, columnCount = 1) },
     ) { measurables, constraints ->
         val item = RAIL_ITEM.roundToPx()
         val top = RAIL_TOP.roundToPx()
         val placeables = measurables.map { it.measure(Constraints.fixed(item, item)) }
         layout(item, constraints.maxHeight) {
-            placeables.forEachIndexed { index, placeable -> placeable.place(0, top + index * item) }
+            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(0, top + index * item) }
         }
     }
 }
@@ -266,6 +301,7 @@ private val RAIL_TOP = 8.dp
 @Composable
 private fun NavigationItem(
     destination: PlateDestination,
+    index: Int,
     selected: Boolean,
     rail: Boolean,
     onClick: () -> Unit,
@@ -277,51 +313,102 @@ private fun NavigationItem(
         plateText(12.sp, tint, letterSpacing = 0.033333335f)
             .copy(platformStyle = PlatformTextStyle(includeFontPadding = rail))
     val labelPadding = if (rail) 2.dp else 0.dp
-    Layout(
-        content = {
-            DrawableIcon(destination.icon, tint)
-            PlateText(
-                destination.label,
-                style = regular.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1,
-                align = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 1f else 0f),
-            )
-            PlateText(
-                destination.label,
-                style = regular,
-                maxLines = 1,
-                align = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 0f else 1f),
-            )
-        },
-        modifier =
-            Modifier
-                .testTag(destination.testTag)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(),
-                    role = Role.Tab,
-                    onClick = onClick,
-                ).semantics(mergeDescendants = true) {
-                    contentDescription = destination.label
-                    this.selected = selected
-                },
-    ) { measurables, constraints ->
-        val icon = measurables[0].measure(Constraints())
-        val bold = measurables[1].measure(Constraints())
-        val plain = measurables[2].measure(Constraints())
-        val content = maxOf(icon.width, bold.width, plain.width)
-        val width = constraints.maxWidth
-        val left = (width - content) / 2
-        val iconTop = (if (rail) RAIL_ICON_TOP else BAR_ICON_TOP).toPx().toInt()
-        val labelTop = (if (rail) RAIL_LABEL_TOP else BAR_LABEL_TOP).toPx().toInt()
-        layout(width, constraints.maxHeight) {
-            icon.place(left + (content - icon.width) / 2, iconTop)
-            bold.place(left + (content - bold.width) / 2, labelTop)
-            plain.place(left + (content - plain.width) / 2, labelTop)
+    WithTooltip(destination.label) { showTooltip ->
+        Layout(
+            content = {
+                DrawableIcon(destination.icon, tint)
+                PlateText(
+                    destination.label,
+                    style = regular.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    align = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 1f else 0f),
+                )
+                PlateText(
+                    destination.label,
+                    style = regular,
+                    maxLines = 1,
+                    align = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = labelPadding).alpha(if (selected) 0f else 1f),
+                )
+            },
+            modifier =
+                Modifier
+                    .testTag(destination.testTag)
+                    // As MaterialComponents' items: a tab in a collection, and the current one offers
+                    // no click to a screen reader (a tap on it still does nothing but ripple).
+                    .clearAndSetSemantics {
+                        contentDescription = destination.label
+                        role = Role.Tab
+                        this.selected = selected
+                        collectionItemInfo =
+                            if (rail) CollectionItemInfo(index, 1, 0, 1) else CollectionItemInfo(0, 1, index, 1)
+                        if (!selected) {
+                            onClick {
+                                onClick()
+                                true
+                            }
+                        }
+                        onLongClick {
+                            showTooltip()
+                            true
+                        }
+                    }.tabGestures(onClick, showTooltip),
+        ) { measurables, constraints ->
+            val icon = measurables[0].measure(Constraints())
+            val bold = measurables[1].measure(Constraints())
+            val plain = measurables[2].measure(Constraints())
+            val content = maxOf(icon.width, bold.width, plain.width)
+            val width = constraints.maxWidth
+            val left = (width - content) / 2
+            val iconTop = (if (rail) RAIL_ICON_TOP else BAR_ICON_TOP).toPx().toInt()
+            val labelTop = (if (rail) RAIL_LABEL_TOP else BAR_LABEL_TOP).toPx().toInt()
+            layout(width, constraints.maxHeight) {
+                icon.placeRelative(left + (content - icon.width) / 2, iconTop)
+                bold.placeRelative(left + (content - bold.width) / 2, labelTop)
+                plain.placeRelative(left + (content - plain.width) / 2, labelTop)
+            }
         }
     }
+}
+
+/**
+ * A navigation item's taps, long press, keyboard activation and ripple, with no semantics of their
+ * own, so the item's semantics can leave the click out while it is the current tab.
+ */
+@Composable
+private fun Modifier.tabGestures(
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+): Modifier {
+    val interaction = remember { MutableInteractionSource() }
+    val view = LocalView.current
+    val click by rememberUpdatedState(onClick)
+    val longClick by rememberUpdatedState(onLongClick)
+    return indication(interaction, ripple())
+        .pointerInput(interaction) {
+            detectTapGestures(
+                onPress = { position ->
+                    val press = PressInteraction.Press(position)
+                    interaction.emit(press)
+                    interaction.emit(if (tryAwaitRelease()) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+                },
+                onLongPress = { longClick() },
+                onTap = {
+                    view.playSoundEffect(SoundEffectConstants.CLICK)
+                    click()
+                },
+            )
+        }.focusable(interactionSource = interaction)
+        .onKeyEvent { event ->
+            val activates = event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter
+            if (activates && event.type == KeyEventType.KeyUp) {
+                click()
+                true
+            } else {
+                activates
+            }
+        }
 }
 
 // Where MaterialComponents' navigation views put the icon and the label within an item.

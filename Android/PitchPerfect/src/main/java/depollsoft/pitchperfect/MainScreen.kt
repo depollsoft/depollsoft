@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,7 +15,17 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import depollsoft.pitchperfect.ui.PlateText
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,39 +86,75 @@ fun MainScreen(
     adSlot: AdSlot,
     actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
     modifier: Modifier = Modifier,
+    overlay: @Composable BoxScope.() -> Unit = {},
     page: @Composable (MainTab) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val destinations =
         MainTab.entries.map { PlateDestination(stringResource(it.label), it.icon, it.testTag) }
+    val selection = rememberTabSelection(pagerState)
     val select: (Int) -> Unit = { index ->
         // Pages stay resident and static artwork is cached, so the standard transition does not
         // inflate or decode mid-swipe.
-        if (pagerState.currentPage != index) scope.launch { pagerState.animateScrollToPage(index) }
+        if (selection.selected != index) scope.launch { selection.scrollTo(index) }
     }
     val colors = plateColors
-    Column(modifier.fillMaxSize().background(colors.ground)) {
-        // The window action bar sat above the rail, so the rail's shadow never reached it.
-        PlateTopBar(stringResource(R.string.app_name), Modifier.zIndex(2f), actions = actions)
-        if (isTablet) {
-            Row(Modifier.weight(1f)) {
-                PlateNavigationRail(
-                    destinations,
-                    pagerState.currentPage,
-                    select,
-                    Modifier.fillMaxHeight().zIndex(1f).shadow(8.dp),
-                )
-                Column(Modifier.weight(1f)) {
-                    Pages(pagerState, Modifier.weight(1f), page)
-                    AdArea(adSlot, endMargin = 8.dp)
+    Box(modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().background(colors.ground)) {
+            // The window action bar sat above the rail, so the rail's shadow never reached it.
+            PlateTopBar(stringResource(R.string.app_name), Modifier.zIndex(2f), actions = actions)
+            if (isTablet) {
+                Row(Modifier.weight(1f)) {
+                    PlateNavigationRail(
+                        destinations,
+                        selection.selected,
+                        select,
+                        Modifier.fillMaxHeight().zIndex(1f).shadow(8.dp),
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Pages(pagerState, Modifier.weight(1f), page)
+                        AdArea(adSlot, endMargin = 8.dp)
+                    }
                 }
+            } else {
+                Pages(pagerState, Modifier.weight(1f), page)
+                AdArea(adSlot, endMargin = 4.dp)
+                PlateBottomNavigation(destinations, selection.selected, select)
             }
-        } else {
-            Pages(pagerState, Modifier.weight(1f), page)
-            AdArea(adSlot, endMargin = 4.dp)
-            PlateBottomNavigation(destinations, pagerState.currentPage, select)
+        }
+        overlay()
+    }
+}
+
+/**
+ * Which navigation item is lit, as ViewPager2 reported it: a tapped item lights at once and stays
+ * lit while the pager scrolls past the pages between; a drag changes it as the finger lets go,
+ * toward the page the pager then settles on.
+ */
+@Stable
+class TabSelection(
+    private val pager: PagerState,
+    private val dragged: State<Boolean>,
+) {
+    private var tapped by mutableStateOf<Int?>(null)
+
+    val selected: Int
+        get() = tapped ?: if (dragged.value) pager.settledPage else pager.targetPage
+
+    suspend fun scrollTo(index: Int) {
+        tapped = index
+        try {
+            pager.animateScrollToPage(index)
+        } finally {
+            if (tapped == index) tapped = null
         }
     }
+}
+
+@Composable
+fun rememberTabSelection(pager: PagerState): TabSelection {
+    val dragged = pager.interactionSource.collectIsDraggedAsState()
+    return remember(pager) { TabSelection(pager, dragged) }
 }
 
 @Composable
@@ -116,12 +163,33 @@ private fun Pages(
     modifier: Modifier,
     page: @Composable (MainTab) -> Unit,
 ) {
+    // ViewPager2 waited for twice the usual slop (the paging slop) before a sideways finger became
+    // a page swipe, so a slightly sideways press on a note did not page and cut it off. The pages
+    // themselves keep the usual slop for their own gestures.
+    val content = LocalViewConfiguration.current
+    val paging = rememberPagingViewConfiguration(content)
     PlateBackground(modifier.fillMaxWidth()) {
-        HorizontalPager(
-            pagerState,
-            Modifier.fillMaxSize().testTag(TestTags.PAGER),
-            beyondViewportPageCount = MainTab.entries.size - 1,
-        ) { index -> page(MainTab.entries[index]) }
+        CompositionLocalProvider(LocalViewConfiguration provides paging) {
+            HorizontalPager(
+                pagerState,
+                Modifier.fillMaxSize().testTag(TestTags.PAGER),
+                beyondViewportPageCount = MainTab.entries.size - 1,
+            ) { index ->
+                CompositionLocalProvider(LocalViewConfiguration provides content) { page(MainTab.entries[index]) }
+            }
+        }
+    }
+}
+
+/** [base] with the platform's paging touch slop, for a pager's own swipe. */
+@Composable
+fun rememberPagingViewConfiguration(base: ViewConfiguration): ViewConfiguration {
+    val context = LocalContext.current
+    return remember(base, context) {
+        val slop = android.view.ViewConfiguration.get(context).scaledPagingTouchSlop.toFloat()
+        object : ViewConfiguration by base {
+            override val touchSlop: Float get() = slop
+        }
     }
 }
 

@@ -1,5 +1,9 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.runtime.CompositionLocalProvider
+import depollsoft.pitchperfect.ui.LocalMenuKey
+import depollsoft.pitchperfect.ui.MenuKeySignal
+
 import android.content.Intent
 import android.content.res.Configuration
 import android.media.AudioManager
@@ -74,6 +78,20 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
     val adsShouldShow: Boolean
         get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
 
+    /** The Menu key opens the Songs tab's overflow menu, as the window action bar did. */
+    private val menuKey = MenuKeySignal()
+
+    override fun onKeyUp(
+        keyCode: Int,
+        event: android.view.KeyEvent,
+    ): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_MENU) {
+            menuKey.press()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
     @OptIn(ExperimentalComposeUiApi::class)
     public override fun onCreate(savedInstanceState: Bundle?) {
         val startedAt = SystemClock.elapsedRealtime()
@@ -87,32 +105,35 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
 
         setContent {
             PlateTheme {
-                val pagerState = rememberPagerState { MainTab.entries.size }
-                pager = pagerState
-                val pitchPipe = remember { PitchPipeModel() }
-                MainScreen(
-                    pagerState,
-                    AdSlot(adsShouldShow, bannerHeight, banner) {
-                        PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
-                    },
-                    actions = {
-                        MainActions(
-                            onSongs = pagerState.settledPage == MainTab.SONGS.ordinal,
-                            songs = songs,
-                            openSettings = { startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java)) },
-                        )
-                    },
-                    modifier = androidx.compose.ui.Modifier.semantics { testTagsAsResourceId = true },
-                ) { tab ->
-                    val current = pagerState.settledPage == tab.ordinal
-                    when (tab) {
-                        MainTab.PITCH_PIPE -> PitchPipeScreen(pitchPipe, current)
-                        MainTab.NOTES -> NoteListScreen(current)
-                        MainTab.KEYS -> KeySignatureScreen(current)
-                        MainTab.SONGS -> SongListScreen(songs, current)
+                CompositionLocalProvider(LocalMenuKey provides menuKey) {
+                    val pagerState = rememberPagerState { MainTab.entries.size }
+                    pager = pagerState
+                    val pitchPipe = remember { PitchPipeModel() }
+                    MainScreen(
+                        pagerState,
+                        AdSlot(adsShouldShow, bannerHeight, banner) {
+                            PurchaseService.beginRemoveAds(this@PitchPerfectActivity, 666)
+                        },
+                        actions = {
+                            MainActions(
+                                onSongs = pagerState.settledPage == MainTab.SONGS.ordinal,
+                                songs = songs,
+                                openSettings = { startActivity(Intent(this@PitchPerfectActivity, SettingsActivity::class.java)) },
+                            )
+                        },
+                        modifier = androidx.compose.ui.Modifier.semantics { testTagsAsResourceId = true },
+                        overlay = { SongAnnouncements(songs, androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomCenter)) },
+                    ) { tab ->
+                        val current = pagerState.settledPage == tab.ordinal
+                        when (tab) {
+                            MainTab.PITCH_PIPE -> PitchPipeScreen(pitchPipe, current)
+                            MainTab.NOTES -> NoteListScreen(current)
+                            MainTab.KEYS -> KeySignatureScreen(current)
+                            MainTab.SONGS -> SongListScreen(songs, current)
+                        }
                     }
+                    StartupPrompts(this)
                 }
-                StartupPrompts(this)
             }
         }
 

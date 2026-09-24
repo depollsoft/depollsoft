@@ -18,7 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarHost
+import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarData
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.SnackbarResult
 import depollsoft.pitchperfect.ui.RowDrag
@@ -134,41 +140,69 @@ fun SongListScreen(
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp).testTag(TestTags.ADD_SONG_FAB),
         )
-        Announcements(state, Modifier.align(Alignment.BottomCenter))
     }
     SongListDialogs(state)
 }
 
 /**
- * The tab's snackbar: Duplicate's and Delete's announcements, the latter with Undo. They stay up
- * as long as MaterialComponents' short and long snackbars did.
+ * The Songs tab's snackbar: Duplicate's and Delete's announcements, the latter with Undo. The main
+ * screen hosts it at the bottom of the window, over the navigation, where Snackbar.make put it, so
+ * it stays up across a tab switch. It slides up and away as MaterialComponents' did, and stays up
+ * as long as its short and long snackbars did, stretched to the accessibility timeout a person
+ * has asked for.
  */
 @Composable
-private fun Announcements(
+fun SongAnnouncements(
     state: SongListState,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val host = remember { SnackbarHostState() }
     val announcement = state.announcement
     LaunchedEffect(announcement) {
         if (announcement == null) return@LaunchedEffect
         coroutineScope {
+            val shownFor =
+                SnackbarTiming.timeoutMillis(
+                    context,
+                    if (announcement.long) SnackbarTiming.LONG_MS else SnackbarTiming.SHORT_MS,
+                    hasAction = announcement.actionLabel != null,
+                )
             val dismiss =
-                launch {
-                    delay(if (announcement.long) LONG_SNACKBAR_MS else SHORT_SNACKBAR_MS)
-                    host.currentSnackbarData?.dismiss()
+                shownFor?.let {
+                    launch {
+                        delay(it)
+                        host.currentSnackbarData?.dismiss()
+                    }
                 }
             val result = host.showSnackbar(announcement.text, announcement.actionLabel, SnackbarDuration.Indefinite)
-            dismiss.cancel()
+            dismiss?.cancel()
             if (result == SnackbarResult.ActionPerformed) announcement.onAction?.invoke()
         }
         if (state.announcement == announcement) state.announcement = null
     }
-    SnackbarHost(host, modifier)
+    SlidingSnackbarHost(host, modifier)
 }
 
-private const val SHORT_SNACKBAR_MS = 1_500L
-private const val LONG_SNACKBAR_MS = 2_750L
+/** A snackbar host that slides its snackbar up from below and back down, as Material's did. */
+@Composable
+private fun SlidingSnackbarHost(
+    host: SnackbarHostState,
+    modifier: Modifier,
+) {
+    val data = host.currentSnackbarData
+    // The last snackbar shown, kept on screen while it slides away.
+    val last = remember { arrayOfNulls<SnackbarData>(1) }
+    if (data != null) last[0] = data
+    AnimatedVisibility(
+        visible = data != null,
+        modifier = modifier,
+        enter = slideInVertically(tween(SnackbarTiming.SLIDE_MS, easing = FastOutSlowInEasing)) { it },
+        exit = slideOutVertically(tween(SnackbarTiming.SLIDE_MS, easing = FastOutSlowInEasing)) { it },
+    ) {
+        last[0]?.let { Snackbar(it) }
+    }
+}
 
 @Composable
 private fun SongRows(
