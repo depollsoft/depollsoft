@@ -16,6 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import java.util.TimeZone
 
 /**
  * What the View-era app wrote to disk still loads after the port.
@@ -28,6 +29,7 @@ import org.robolectric.annotation.Config
 @Config(application = Application::class, sdk = [35])
 class LegacyStorageTest {
     private val app get() = RuntimeEnvironment.getApplication()
+    private val defaultZone = TimeZone.getDefault()
 
     private fun fixture(name: String): String =
         requireNotNull(javaClass.classLoader!!.getResourceAsStream("legacy/$name.json")) { "missing fixture $name" }
@@ -45,7 +47,10 @@ class LegacyStorageTest {
     }
 
     @After
-    fun tearDown() = rebindPreferences()
+    fun tearDown() {
+        TimeZone.setDefault(defaultZone)
+        rebindPreferences()
+    }
 
     private fun rebindPreferences() {
         Preferences::class.java
@@ -85,6 +90,9 @@ class LegacyStorageTest {
 
     @Test
     fun cachedTagLoads() {
+        // A stored Date carries its local-time fields beside Time, and loading applies them in
+        // the device's zone. The fixture was written in Pacific time.
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
         val tag = JsonSerializer.deserialize(fixture("tag")) as Tag
         assertEquals(2147483101, tag.id)
         assertEquals("Heart of My Heart", tag.title)

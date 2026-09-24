@@ -30,7 +30,7 @@ iOS/build/
 # Generated release media and local capture tools
 /build/release/
 /.venv-release/
-/scripts/release/**/__pycache__/
+/scripts/**/__pycache__/
 
 # User exports and local credentials
 Firebase/**/allUsers
