@@ -1,6 +1,8 @@
 package depollsoft.pitchperfect
 
+import android.graphics.Rect
 import android.graphics.RectF
+import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
@@ -66,6 +68,31 @@ class WearInstrumentGeometry(
         if (x < rangeLowRect.left - sidePad || x > rangeLowRect.right + sidePad) return -1
         if (y < rangeLowRect.top - rowHeight * 0.5f) return -1
         return if (y < rangeLowRect.bottom) 0 else 1
+    }
+
+    /**
+     * The area a screen reader's explore-by-touch finds cell [index] in: the cell widened to half
+     * the distance to its neighbours, so the gaps a finger would play from are not dead.
+     */
+    fun cellTarget(index: Int): Rect {
+        val c = cellCenters[index]
+        val halfSpacing = ringRadius * sin(PI / cellCenters.size.coerceAtLeast(1)).toFloat()
+        val half = maxOf(cellRadius, halfSpacing)
+        return Rect((c[0] - half).toInt(), (c[1] - half).toInt(), (c[0] + half).toInt(), (c[1] + half).toInt())
+    }
+
+    /** The area explore-by-touch finds range row [row] in: the padded strip [rangeRowAt] uses. */
+    fun rangeTarget(row: Int): Rect {
+        val sidePad = 0.06f * size
+        val holeBottom = faceCy + ringRadius - 1.25f * cellRadius
+        val top = if (row == 0) rangeLowRect.top - rangeLowRect.height() * 0.5f else rangeLowRect.bottom
+        val bottom = if (row == 0) rangeLowRect.bottom else maxOf(rangeHighRect.bottom, holeBottom)
+        return Rect(
+            (rangeLowRect.left - sidePad).toInt(),
+            top.toInt(),
+            (rangeLowRect.right + sidePad).toInt(),
+            bottom.toInt(),
+        )
     }
 
     /** The cell whose sector is under a finger, or -1. */

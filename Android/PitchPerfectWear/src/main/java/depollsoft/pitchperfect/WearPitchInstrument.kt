@@ -1,5 +1,10 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import android.graphics.Rect
 import android.provider.Settings
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
@@ -144,30 +149,27 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trackFin
 
 /**
  * One invisible node per cell and range row, laid over what the renderer draws, so a screen
- * reader can find, read and activate each part of the face. They carry semantics only; fingers
- * pass through to the face.
+ * reader can find, read and activate each part of the face. Each covers the area a finger would
+ * reach that part from, so exploring by touch finds what a tap would play. They carry semantics
+ * only; fingers pass through to the face.
  */
 @Composable
 private fun AccessibilityTargets(state: WearInstrumentState) {
     val geometry = state.geometry
     val notes = state.notes
-    val radius = geometry.cellRadius
     for (index in 0 until minOf(geometry.cellCenters.size, notes.size)) {
-        val c = geometry.cellCenters[index]
         val note = notes[index]
-        Target(
-            Rect((c[0] - radius).toInt(), (c[1] - radius).toInt(), (c[0] + radius).toInt(), (c[1] + radius).toInt()),
-            NoteNames.spoken(note),
-            selected = note.isPlaying,
-        ) { state.accessibilityClick(index) }
+        Target(geometry.cellTarget(index), NoteNames.spoken(note), selected = note.isPlaying) {
+            state.accessibilityClick(index)
+        }
     }
     val low = stringResource(R.string.RangeLowDescription)
     val high = stringResource(R.string.RangeHighDescription)
-    Target(Rect().also { geometry.rangeLowRect.roundOut(it) }, low, selected = !state.model.isFromFToF) {
+    Target(geometry.rangeTarget(0), low, selected = !state.model.isFromFToF) {
         state.selectRange(false)
         true
     }
-    Target(Rect().also { geometry.rangeHighRect.roundOut(it) }, high, selected = state.model.isFromFToF) {
+    Target(geometry.rangeTarget(1), high, selected = state.model.isFromFToF) {
         state.selectRange(true)
         true
     }
@@ -185,6 +187,7 @@ private fun Target(
         Modifier
             .offset { IntOffset(bounds.left, bounds.top) }
             .size(with(density) { bounds.width().coerceAtLeast(1).toDp() }, with(density) { bounds.height().coerceAtLeast(1).toDp() })
+            .activatedByKeys(onClick)
             .semantics {
                 contentDescription = description
                 role = Role.Button
@@ -193,3 +196,14 @@ private fun Target(
             },
     )
 }
+
+/**
+ * Lets a keyboard or D-pad reach a face target and activate it with Enter, the D-pad centre or
+ * Space, as the View's ExploreByTouchHelper did. Like the View, no focus ring is drawn.
+ */
+private fun Modifier.activatedByKeys(onClick: () -> Boolean): Modifier =
+    onKeyEvent { event ->
+        event.type == KeyEventType.KeyUp &&
+            event.key in listOf(Key.Enter, Key.NumPadEnter, Key.DirectionCenter, Key.Spacebar) &&
+            onClick()
+    }.focusable()

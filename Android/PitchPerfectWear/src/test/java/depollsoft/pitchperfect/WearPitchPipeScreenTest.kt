@@ -15,6 +15,9 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performRotaryScrollInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.click
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.Lifecycle
@@ -95,6 +98,14 @@ class WearPitchPipeScreenTest {
         assertTrue("switching range stops the sounding note", Note.getCommonNotes().none { it.isPlaying })
         compose.onNodeWithContentDescription("Octave range F to F").assertIsSelected()
         assertEquals(1, compose.onAllNodesWithContentDescription("F, octave 5").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun aKeyboardOrRotarySideButtonReachesEachCellAndEnterSoundsIt() {
+        val cell = compose.onNodeWithContentDescription("A, octave 4")
+        cell.performSemanticsAction(SemanticsActions.RequestFocus)
+        cell.performKeyInput { pressKey(Key.Enter) }
+        assertTrue(model.notes[9].isPlaying)
     }
 
     @Test

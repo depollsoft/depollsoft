@@ -13,6 +13,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.unit.dp
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
@@ -233,6 +236,26 @@ class PitchInstrumentTest {
             .performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         assertTrue(model.isFromFToF)
+    }
+
+    @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+    @Test
+    fun aKeyboardReachesEachCellAndEnterSoundsIt() {
+        val a4 = state.notes.indexOfFirst { it.friendlyName == "A" && it.accidental == depollsoft.pitchperfect.lib.Accidental.Natural }
+        val cell = compose.onNodeWithContentDescription("A, octave 4")
+        cell.performSemanticsAction(SemanticsActions.RequestFocus)
+        cell.assert(androidx.compose.ui.test.isFocused())
+        cell.performKeyInput { pressKey(androidx.compose.ui.input.key.Key.Enter) }
+        compose.waitForIdle()
+        assertEquals(listOf(a4), playing())
+
+        val high =
+            compose.onNodeWithContentDescription(RichApplication.getAppContext().getString(R.string.RangeHighDescription))
+        high.performSemanticsAction(SemanticsActions.RequestFocus)
+        high.performKeyInput { pressKey(androidx.compose.ui.input.key.Key.DirectionCenter) }
+        compose.waitForIdle()
+        assertTrue(model.isFromFToF)
+        assertEquals("changing range silences the face", emptyList<Int>(), playing())
     }
 
     @Test

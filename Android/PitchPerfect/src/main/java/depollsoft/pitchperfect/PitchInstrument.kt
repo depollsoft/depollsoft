@@ -1,5 +1,11 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import android.graphics.Rect
 import android.provider.Settings
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
@@ -157,7 +163,8 @@ private fun Target(
             .size(
                 with(density) { bounds.width().coerceAtLeast(1).toDp() },
                 with(density) { bounds.height().coerceAtLeast(1).toDp() },
-            ).semantics {
+            ).activatedByKeys(onClick)
+            .semantics {
                 contentDescription = description
                 role = Role.Button
                 this.selected = selected
@@ -165,3 +172,14 @@ private fun Target(
             },
     )
 }
+
+/**
+ * Lets a keyboard or D-pad reach a face target and activate it with Enter, the D-pad centre or
+ * Space, as the View's ExploreByTouchHelper did. Like the View, no focus ring is drawn.
+ */
+private fun Modifier.activatedByKeys(onClick: () -> Boolean): Modifier =
+    onKeyEvent { event ->
+        event.type == KeyEventType.KeyUp &&
+            event.key in listOf(Key.Enter, Key.NumPadEnter, Key.DirectionCenter, Key.Spacebar) &&
+            onClick()
+    }.focusable()

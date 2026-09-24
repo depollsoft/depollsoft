@@ -207,6 +207,29 @@ class WearInstrumentStateTest {
     }
 
     @Test
+    fun exploreByTouchFindsWhatAFingerWouldPlay() {
+        // Between two cells, where a finger plays one of them, a screen reader finds one of them too.
+        geometry.cellCenters.indices.forEach { index ->
+            val angle = Math.toRadians(-90.0 + (index + 1) * 360.0 / 13)
+            val gapX = (192f + geometry.ringRadius * cos(angle).toFloat()).toInt()
+            val gapY = (192f + geometry.ringRadius * sin(angle).toFloat()).toInt()
+            val next = (index + 1) % 13
+            assertTrue(
+                "the gap after cell $index is covered",
+                geometry.cellTarget(index).contains(gapX, gapY) || geometry.cellTarget(next).contains(gapX, gapY),
+            )
+        }
+        // The range rows' padded hit strip, not just their drawn frames.
+        val low = geometry.rangeLowRect
+        val high = geometry.rangeHighRect
+        assertTrue(geometry.rangeTarget(0).contains(low.centerX().toInt(), (low.top - low.height() * 0.4f).toInt()))
+        assertTrue(geometry.rangeTarget(0).contains((low.left - 384 * 0.04f).toInt(), low.centerY().toInt()))
+        assertTrue(geometry.rangeTarget(1).contains(high.centerX().toInt(), (high.bottom + low.height() * 0.8f).toInt()))
+        // And the two rows do not claim each other's space.
+        assertFalse(android.graphics.Rect.intersects(geometry.rangeTarget(0), geometry.rangeTarget(1)))
+    }
+
+    @Test
     fun onlyTheFirstFingerCanPickARange() {
         down(0, 0)
         val high = geometry.rangeHighRect
