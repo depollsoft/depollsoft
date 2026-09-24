@@ -13,7 +13,7 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showLoginPrompt
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showTab
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.submitSetListName
 import org.junit.After
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

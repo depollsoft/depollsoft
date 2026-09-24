@@ -16,7 +16,7 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.pressSaveSong
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.scrollSettingsToEnd
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.tickAddableSong
 import org.junit.After
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

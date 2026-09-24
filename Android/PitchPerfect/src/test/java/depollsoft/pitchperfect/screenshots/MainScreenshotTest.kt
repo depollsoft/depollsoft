@@ -15,7 +15,7 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.setEditingSongs
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showTab
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.toggleKeyMode
 import org.junit.After
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
