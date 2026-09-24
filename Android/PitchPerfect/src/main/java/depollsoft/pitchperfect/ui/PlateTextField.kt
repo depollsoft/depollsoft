@@ -1,5 +1,23 @@
 package depollsoft.pitchperfect.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.text.rememberTextMeasurer
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +56,10 @@ import androidx.compose.ui.unit.sp
  * The plate's outlined text box, as the set list name dialog's TextInputLayout drew it: a 2dp
  * rounded hairline outline with the label floating in a gap in its top edge, the helper or error
  * line in monospace under it, and the outline in ink at 2dp while focused or in error.
+ *
+ * While the field is empty and unfocused the label rests inside the box at the text's size, and it
+ * floats up into the outline as the field is focused or filled; the helper and error lines fade
+ * and slide in, all as TextInputLayout animated them.
  */
 @Composable
 fun PlateOutlinedField(
@@ -52,10 +74,25 @@ fun PlateOutlinedField(
     onDone: () -> Unit = {},
 ) {
     val colors = plateColors
+    val density = LocalDensity.current
     var focused by remember { mutableStateOf(false) }
-    var labelWidth by remember { mutableStateOf(0) }
+    var fieldHeight by remember { mutableStateOf(0) }
     val strokeColor = if (error != null) colors.ink else colors.hairline
     val strokeWidth = if (focused || error != null) 2.dp else 1.dp
+    val floated by animateFloatAsState(
+        if (focused || value.text.isNotEmpty()) 1f else 0f,
+        tween(LABEL_FLOAT_MS, easing = FastOutSlowInEasing),
+        label = "label",
+    )
+    val floatedStyle = plateText(12.sp, colors.inkSecondary, letterSpacing = 0.033333335f)
+    val restingSize = textStyle.fontSize.takeIf { it.isSp } ?: floatedStyle.fontSize
+    // The outline's gap is sized to the floated label, whatever size the label is drawn at now.
+    val measurer = rememberTextMeasurer()
+    val labelWidth =
+        remember(label, floatedStyle) {
+            // The width PlateText gives the line, as a TextView measured it.
+            measurer.measure(label, floatedStyle, maxLines = 1).run { kotlin.math.ceil(getLineRight(0) - getLineLeft(0)).toInt() }
+        }
     Column(modifier) {
         Box(Modifier.padding(top = LABEL_HALF_HEIGHT)) {
             BasicTextField(
@@ -64,14 +101,15 @@ fun PlateOutlinedField(
                 fieldModifier
                     .fillMaxWidth()
                     .onFocusChanged { focused = it.isFocused }
+                    .onSizeChanged { fieldHeight = it.height }
                     .semantics {
                         contentDescription = label
                         if (error != null) this.error(error)
                     }.drawBehind {
                         val stroke = strokeWidth.toPx()
-                        val gapStart = LABEL_START.toPx() - LABEL_GAP.toPx()
-                        val gapEnd = LABEL_START.toPx() + labelWidth + LABEL_GAP.toPx()
-                        // The label sits in a gap cut from the outline's top edge.
+                        // The label sits in a gap cut from the outline's top edge, opening as it floats up.
+                        val gapStart = LABEL_START.toPx() - LABEL_GAP.toPx() * floated
+                        val gapEnd = LABEL_START.toPx() + (labelWidth + LABEL_GAP.toPx()) * floated
                         clipRect(right = gapStart) { outline(strokeColor, stroke) }
                         clipRect(left = gapEnd) { outline(strokeColor, stroke) }
                         clipRect(left = gapStart, right = gapEnd, top = stroke * 2) { outline(strokeColor, stroke) }
@@ -80,29 +118,55 @@ fun PlateOutlinedField(
                 singleLine = true,
                 cursorBrush = SolidColor(colors.ink),
                 keyboardOptions =
-                    KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        // textCapWords alone: no suggestions or autocorrect for a list's name.
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Done,
+                    ),
                 keyboardActions = KeyboardActions(onDone = { onDone() }),
             )
+            var labelHeight by remember { mutableStateOf(0) }
             PlateText(
                 label,
-                style = plateText(12.sp, colors.inkSecondary, letterSpacing = 0.033333335f),
+                style = floatedStyle.copy(fontSize = lerp(restingSize, floatedStyle.fontSize, floated)),
+                maxLines = 1,
                 modifier =
                     Modifier
-                        .offset(x = LABEL_START, y = -LABEL_HALF_HEIGHT)
-                        .onGloballyPositioned { labelWidth = it.size.width },
+                        .offset {
+                            // Floated, the label straddles the outline's top edge; resting, it is
+                            // centred on the text line inside the box.
+                            val floatedY = -LABEL_HALF_HEIGHT.roundToPx()
+                            val restingY = (fieldHeight - labelHeight) / 2
+                            IntOffset(LABEL_START.roundToPx(), (restingY + (floatedY - restingY) * floated).toInt())
+                        }.onSizeChanged { labelHeight = it.height },
             )
         }
         val below = error ?: helper
-        if (below != null) {
-            PlateText(
-                below,
-                // The error appearance named monospace, but TextInputLayout never applied its font family.
-                style = plateText(12.sp, if (error != null) colors.ink else colors.inkSecondary, letterSpacing = 0.033333335f),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp),
-            )
+        AnimatedContent(
+            targetState = below?.let { it to (error != null) },
+            transitionSpec = { captionTransition(with(density) { CAPTION_SLIDE.roundToPx() }) },
+            label = "caption",
+        ) { caption ->
+            if (caption != null) {
+                PlateText(
+                    caption.first,
+                    // The error appearance named monospace, but TextInputLayout never applied its font family.
+                    style = plateText(12.sp, if (caption.second) colors.ink else colors.inkSecondary, letterSpacing = 0.033333335f),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp),
+                )
+            }
         }
     }
 }
+
+/**
+ * TextInputLayout's caption change: the new helper or error line fades in over 167ms while sliding
+ * down into place, the old one fades out, and the space below the field changes at once.
+ */
+private fun <S> AnimatedContentTransitionScope<S>.captionTransition(slidePx: Int): ContentTransform =
+    (fadeIn(tween(CAPTION_MS)) + slideInVertically(tween(CAPTION_MS)) { -slidePx }) togetherWith
+        fadeOut(tween(CAPTION_MS)) using SizeTransform(clip = false) { _, _ -> snap() }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.outline(
     color: androidx.compose.ui.graphics.Color,
@@ -118,6 +182,9 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.outline(
 }
 
 private val LABEL_HALF_HEIGHT = 5.33.dp
+private const val LABEL_FLOAT_MS = 167
+private const val CAPTION_MS = 167
+private val CAPTION_SLIDE = 5.dp
 private val LABEL_START = 16.dp
 private val LABEL_GAP = 4.dp
 
@@ -182,11 +249,18 @@ fun PlateFilledField(
                 }
             },
         )
-        PlateText(
-            error.orEmpty(),
-            style = plateText(12.sp, colors.ink, letterSpacing = 0.033333335f),
-            modifier = Modifier.padding(top = 4.dp),
-        )
+        val density = LocalDensity.current
+        AnimatedContent(
+            targetState = error.orEmpty(),
+            transitionSpec = { captionTransition(with(density) { CAPTION_SLIDE.roundToPx() }) },
+            label = "error",
+        ) { text ->
+            PlateText(
+                text,
+                style = plateText(12.sp, colors.ink, letterSpacing = 0.033333335f),
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }
 

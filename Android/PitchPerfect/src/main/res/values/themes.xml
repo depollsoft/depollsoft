@@ -131,4 +131,11 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">2dp</item>
     </style>
+
+    <!-- The Compose dialogs' windows: no window entrance (the card animates in itself), a quick
+         fade on the way out. -->
+    <style name="Animation.Plate.Dialog" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@anim/plate_dialog_exit</item>
+    </style>
 </resources>

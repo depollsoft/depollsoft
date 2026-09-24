@@ -1,5 +1,18 @@
 package depollsoft.pitchperfect.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onPlaced
+
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -65,10 +78,11 @@ fun PlateAlertDialog(
 ) {
     val colors = plateColors
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        MatchPlatformDim(PLATE_DIM)
+        MatchPlatformWindow(PLATE_DIM)
         val configuration = LocalConfiguration.current
         val density = LocalDensity.current
         val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
+        val band = remember { arrayOfNulls<LayoutCoordinates>(2) }
         Box(
             Modifier
                 .layout { measurable, constraints ->
@@ -81,10 +95,25 @@ fun PlateAlertDialog(
                             .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
                     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                }.padding(horizontal = horizontalInset, vertical = verticalInset),
+                }
+                // MaterialAlertDialog's inset band around the card was part of its window, and a
+                // tap there cancelled the dialog as a tap outside the window does.
+                .onPlaced { band[0] = it }
+                .pointerInput(onDismissRequest) {
+                    detectTapGestures { position ->
+                        val outer = band[0]
+                        val card = band[1]
+                        if (outer != null && card != null && !outer.localBoundingBoxOf(card).contains(position)) onDismissRequest()
+                    }
+                }.padding(horizontal = horizontalInset, vertical = verticalInset)
+                // The system resized the old dialog window above the keyboard; this one keeps the
+                // card centred in the space the keyboard leaves.
+                .windowInsetsPadding(WindowInsets.ime),
         ) {
             Column(
                 Modifier
+                    .onPlaced { band[1] = it }
+                    .dialogEntrance()
                     .clip(DialogShape)
                     .background(colors.surface, DialogShape),
             ) {
@@ -129,7 +158,7 @@ fun AppCompatAlertDialog(
             }
         }
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        MatchPlatformDim(APPCOMPAT_DIM)
+        MatchPlatformWindow(APPCOMPAT_DIM)
         val configuration = LocalConfiguration.current
         val density = LocalDensity.current
         val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
@@ -143,9 +172,10 @@ fun AppCompatAlertDialog(
                             .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
                     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                }.padding(16.dp),
+                }.padding(16.dp)
+                .windowInsetsPadding(WindowInsets.ime),
         ) {
-            Column(Modifier.clip(DialogShape).background(background, DialogShape)) {
+            Column(Modifier.dialogEntrance().clip(DialogShape).background(background, DialogShape)) {
                 if (title != null) {
                     PlateText(
                         title,
@@ -234,13 +264,33 @@ fun PlateTextButton(
 
 /**
  * Dims the screen behind a dialog as its View-era theme did: MaterialComponents' dialogs by 32%,
- * AppCompat's by 60%. Compose's dialog window would always use the platform's amount.
+ * AppCompat's by 60%. Compose's dialog window would always use the platform's amount. The window
+ * also fades out as it closes, however it is closed ([dialogEntrance] brings the card in).
  */
 @Composable
-private fun MatchPlatformDim(amount: Float) {
+private fun MatchPlatformWindow(dim: Float) {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
-    SideEffect { window.setDimAmount(amount) }
+    SideEffect {
+        window.setDimAmount(dim)
+        window.setWindowAnimations(depollsoft.pitchperfect.R.style.Animation_Plate_Dialog)
+    }
 }
+
+/** A dialog's card fades in from 90% of its size as it opens. */
+@Composable
+fun Modifier.dialogEntrance(): Modifier {
+    val shown = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { shown.animateTo(1f, tween(DIALOG_ENTER_MS, easing = LinearOutSlowInEasing)) }
+    return graphicsLayer {
+        alpha = shown.value
+        val scale = DIALOG_ENTER_SCALE + (1f - DIALOG_ENTER_SCALE) * shown.value
+        scaleX = scale
+        scaleY = scale
+    }
+}
+
+internal const val DIALOG_ENTER_MS = 150
+private const val DIALOG_ENTER_SCALE = 0.9f
 
 private const val PLATE_DIM = 0.32f
 private const val APPCOMPAT_DIM = 0.6f
