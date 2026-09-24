@@ -10,6 +10,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -34,9 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -73,6 +81,7 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
+import depollsoft.tagmaster.ui.WithTooltip
 import depollsoft.tagmaster.ui.drawPlatform
 import depollsoft.tagmaster.ui.isPresent
 import depollsoft.tagmaster.ui.listIconRes
@@ -225,16 +234,16 @@ private fun SummaryColumns(
             val left = measurables[0].measure(Constraints.fixedWidth(column))
             val right = measurables[1].measure(Constraints.fixedWidth(width - gap - column))
             layout(width, maxOf(left.height, right.height)) {
-                left.place(0, 0)
-                right.place(column + gap, 0)
+                left.placeRelative(0, 0)
+                right.placeRelative(column + gap, 0)
             }
         } else {
             val top = measurables[0].measure(Constraints.fixedWidth(width))
             val bottom = if (hasProse) measurables[1].measure(Constraints.fixedWidth(width)) else null
             val height = top.height + (bottom?.let { it.height + gap } ?: 0)
             layout(width, height) {
-                top.place(0, 0)
-                bottom?.place(0, top.height + gap)
+                top.placeRelative(0, 0)
+                bottom?.placeRelative(0, top.height + gap)
             }
         }
     }
@@ -294,19 +303,27 @@ private fun summaryFacts(
                     }
                 }
                 CompactBarberPole(requests.ratingSubmitting, submitting)
-                Box(
-                    Modifier
-                        .padding(start = 8.dp)
-                        .size(48.dp)
-                        .clickable(enabled = canRate, role = Role.Button) { requests.ratingDialog = true }
-                        .semantics { contentDescription = rateLabel }
-                        .testTag("rateButton"),
-                    contentAlignment = ViewAlign.Center,
-                ) {
-                    PlatformIcon(
-                        R.drawable.ic_rate,
-                        tint = if (canRate) TagMasterTheme.colors.primary else TagMasterTheme.colors.primary.copy(alpha = 0.38f),
-                    )
+                // app:tooltipText named the icon on a long press, and its ripple was borderless.
+                WithTooltip(rateLabel, Modifier.padding(start = 8.dp)) { tooltip ->
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .combinedClickable(
+                                enabled = canRate,
+                                interactionSource = null,
+                                indication = ripple(bounded = false, radius = 24.dp),
+                                role = Role.Button,
+                                onLongClick = tooltip::longPressed,
+                            ) { requests.ratingDialog = true }
+                            .semantics { contentDescription = rateLabel }
+                            .testTag("rateButton"),
+                        contentAlignment = ViewAlign.Center,
+                    ) {
+                        PlatformIcon(
+                            R.drawable.ic_rate,
+                            tint = if (canRate) TagMasterTheme.colors.primary else TagMasterTheme.colors.primary.copy(alpha = 0.38f),
+                        )
+                    }
                 }
             }
         }
@@ -340,6 +357,13 @@ private fun KeyNoteButton(tag: Tag) {
     val shape = RoundedCornerShape(8.dp)
     // The View button's own state drawable: outlined, filled with the accent while activated.
     val background = rememberDrawable(R.drawable.key_button_background)
+    // The accent fill is the press feedback (the ripple is transparent while pressed or
+    // activated); keyboard focus and hover show the control highlight, as the View button did.
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val hovered by interactions.collectIsHoveredAsState()
+    val keyboard = LocalInputModeManager.current.inputMode == InputMode.Keyboard
+    val highlight = !playing && ((focused && keyboard) || hovered)
     Box(
         Modifier
             .fillMaxWidth()
@@ -349,8 +373,9 @@ private fun KeyNoteButton(tag: Tag) {
                 background.state =
                     if (playing) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_activated) else intArrayOf(android.R.attr.state_enabled)
                 drawPlatform(background, 0, 0, size.width.toInt(), size.height.toInt())
+                if (highlight) drawRect(colors.controlHighlight)
             }.clip(shape)
-            .notePress(player, { tag.keyNote }, description = noteDescription(note))
+            .notePress(player, { tag.keyNote }, description = noteDescription(note), view = LocalView.current, interactionSource = interactions)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag("playKeyNoteButton"),
         contentAlignment = ViewAlign.Center,

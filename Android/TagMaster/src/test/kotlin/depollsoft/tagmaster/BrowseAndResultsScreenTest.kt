@@ -3,9 +3,14 @@ package depollsoft.tagmaster
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.tagmaster.barbershop.TagSortOptions
 import depollsoft.tagmaster.screenshots.ScreenshotFixtures
+import java.io.IOException
+import java.io.InputStream
+import java.net.URL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -13,9 +18,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.io.IOException
-import java.io.InputStream
-import java.net.URL
 
 /**
  * Browse and search results against canned catalog pages: each browse mode asks for its own sort,
@@ -105,6 +107,32 @@ class BrowseAndResultsScreenTest : ComposeScreenTest() {
             assertFalse(activity.model.hasMoreResults)
             assertTrue(requested.any { it.contains("start=21") })
         }
+
+    @Test
+    fun aFailedNextPageIsAskedForAgainWhenTheListMovesNearTheEnd() {
+        respond = { url -> if (url.toString().contains("start=21")) throw IOException("The connection was interrupted.") else ScreenshotFixtures.catalogPage(url) }
+        catalog {
+            val activity = results("heart")
+            settle(activity.model)
+            val last = androidx.compose.ui.test.hasTestTag("queryTag:${activity.model.tags.last().id}")
+            node("queryResults").performScrollToNode(last)
+            idle()
+            settle(activity.model)
+            fun nextPageAsks() = synchronized(requested) { requested.count { it.contains("start=21") } }
+            val failed = nextPageAsks()
+            assertTrue(failed >= 1)
+            idle()
+            settle(activity.model)
+            assertEquals("a still list does not retry by itself", failed, nextPageAsks())
+            // A nudge near the end asks again, as ListView's scroll callback did.
+            respond = { url -> ScreenshotFixtures.catalogPage(url) }
+            node("queryResults").performTouchInput { swipeDown(startY = centerY, endY = centerY + 60f) }
+            idle()
+            settle(activity.model)
+            assertTrue("the nudge asked again", nextPageAsks() > failed)
+            assertEquals(26, activity.model.tags.size)
+        }
+    }
 
     @Test
     fun rotatingResultsKeepsTheLoadedPagesWithoutAskingAgain() =

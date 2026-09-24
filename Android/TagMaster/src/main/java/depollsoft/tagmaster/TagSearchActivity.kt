@@ -3,6 +3,8 @@ package depollsoft.tagmaster
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -46,6 +49,7 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.setTagMasterContent
 
 /** The search form: text, sort order and the catalog filters, which open [TagSearchResultsActivity]. */
@@ -108,13 +112,17 @@ private fun SearchScreen(
                     .fillMaxSize()
                     .imePadding(),
             ) {
+                val formScroll = rememberScrollState()
                 Column(
                     Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        .scrollViewScrollbar(formScroll, top = 16.dp, bottom = 16.dp, end = 16.dp)
+                        .verticalScroll(formScroll)
                         .padding(16.dp),
                 ) {
+                    val searchInteractions = remember { MutableInteractionSource() }
+                    val searchFocused by searchInteractions.collectIsFocusedAsState()
                     OutlinedField(
                         label = stringResource(R.string.SearchBoxHint),
                         value = text,
@@ -123,18 +131,17 @@ private fun SearchScreen(
                             model.query = it.text
                         },
                         startIcon = FieldIcon(R.drawable.ic_search),
+                        // The clear icon shows only while the field is focused and has text.
                         endIcon =
-                            if (text.text.isNotEmpty()) {
-                                FieldIcon(
-                                    com.google.android.material.R.drawable.mtrl_ic_cancel,
-                                    stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
-                                ) {
-                                    text = TextFieldValue("")
-                                    model.query = ""
-                                }
-                            } else {
-                                null
+                            FieldIcon(
+                                com.google.android.material.R.drawable.mtrl_ic_cancel,
+                                stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
+                            ) {
+                                text = TextFieldValue("")
+                                model.query = ""
                             },
+                        endIconVisible = searchFocused && text.text.isNotEmpty(),
+                        interactionSource = searchInteractions,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                         fieldModifier =

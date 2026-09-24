@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -176,7 +176,7 @@ private fun MetadataLine(
             var x = 0
             var y = 0
             for (placeable in placeables) {
-                placeable.place(x, y)
+                placeable.placeRelative(x, y)
                 if (stack) y += placeable.height else x += placeable.width
             }
         }

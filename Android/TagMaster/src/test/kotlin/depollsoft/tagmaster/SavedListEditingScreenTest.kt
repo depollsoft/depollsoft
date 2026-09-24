@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import org.junit.Assert.assertEquals
@@ -171,6 +172,37 @@ class SavedListEditingScreenTest : ComposeScreenTest() {
         node("drag:${all[0]}").performTouchInput { up() }
         idle()
         assertEquals(listOf(all[1], all[0]), TeachableTagsModel.teachableTagIds.take(2))
+    }
+
+    @Test
+    fun movingTheTopVisibleRowDownKeepsTheListWhereItIs() {
+        val all = populateMany(30)
+        teachable()
+        click("editSavedList")
+        node("teachableList").performScrollToIndex(10)
+        idle()
+        val top = node("savedTag:${all[10]}").fetchSemanticsNode().boundsInRoot.top
+        customAction("savedTag:${all[10]}", string(R.string.MoveDown))
+        // Without holding by index, the list would scroll after the moved row and bury the one
+        // that took its place.
+        assertEquals(top, node("savedTag:${all[11]}").fetchSemanticsNode().boundsInRoot.top, 1f)
+        assertTrue(node("savedTag:${all[10]}").fetchSemanticsNode().boundsInRoot.top > top)
+    }
+
+    @Test
+    fun leavingTheScreenDropsTheRemoveConfirmation() {
+        val (_, second) = populate()
+        val activity = teachable()
+        click("editSavedList")
+        click("remove:$second")
+        assertTrue(exists("dialog"))
+        controller!!.pause()
+        idle()
+        controller!!.resume()
+        idle()
+        assertNull(activity.listEditor.pendingRemoval)
+        assertFalse(exists("dialog"))
+        assertEquals(3, TeachableTagsModel.teachableTagIds.size)
     }
 
     @Test

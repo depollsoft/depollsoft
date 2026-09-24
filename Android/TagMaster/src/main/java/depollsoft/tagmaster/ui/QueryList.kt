@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -55,7 +57,22 @@ fun QueryList(
         }
     }
     LaunchedEffect(listState, model) {
-        snapshotFlow { nearEnd }.collect { if (it) model.fetchResults() }
+        // The next page is fetched when the end comes into view. ListView asked again on every
+        // scroll event, so after a failed page a nudge near the end retries; the same position
+        // and rows never ask twice, so a failure does not retry in a loop.
+        var asked: Any? = null
+        snapshotFlow {
+            if (nearEnd && !model.isLoading) {
+                Triple(model.tags.size, listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset)
+            } else {
+                null
+            }
+        }.collect { position ->
+            if (position != null && position != asked) {
+                asked = position
+                model.fetchResults()
+            }
+        }
     }
     Column(modifier.fillMaxSize()) {
         val status = model.statusText
@@ -81,23 +98,30 @@ fun QueryList(
             contentPadding = PaddingValues(top = 16.dp, bottom = 88.dp),
         ) {
             itemsIndexed(tags, key = { index, tag -> "${tag.id}:$index" }) { index, tag ->
-                if (index > 0) {
-                    Box(
+                Column(Modifier.listItemMotion(this)) {
+                    if (index > 0) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(colors.outlineVariant),
+                        )
+                    }
+                    val selected = selectedTagId == tag.id
+                    val highlight by animateColorAsState(
+                        if (selected) colors.secondaryContainer else colors.secondaryContainer.copy(alpha = 0f),
+                        tween(ListMotion.CHANGE_MILLIS),
+                        label = "selected",
+                    )
+                    TagRowContent(
+                        tag,
                         Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(colors.outlineVariant),
+                            .drawBehind { if (highlight.alpha > 0f) drawRect(highlight) }
+                            .clickable { onOpen(tag.id) }
+                            .semantics { if (selected) stateDescription = showing }
+                            .testTag("queryTag:${tag.id}"),
                     )
                 }
-                val selected = selectedTagId == tag.id
-                TagRowContent(
-                    tag,
-                    Modifier
-                        .then(if (selected) Modifier.drawBehind { drawRect(colors.secondaryContainer) } else Modifier)
-                        .clickable { onOpen(tag.id) }
-                        .semantics { if (selected) stateDescription = showing }
-                        .testTag("queryTag:${tag.id}"),
-                )
             }
         }
         if (model.isLoading) {

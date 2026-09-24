@@ -9,15 +9,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.TagPaneState
@@ -47,17 +46,21 @@ fun SavedListScreen(
     val ids = model.ids.toList()
     val changed = stringResource(R.string.saved_list_changed)
     val reorder =
-        remember(listState, model) {
-            ReorderState<Int>(listState, { "tag:$it" }) { baseline, order ->
-                val snapshot = model.snapshot()
-                if (snapshot.ids == baseline) model.reorder(snapshot, order)
-            }
+        rememberReorderState<Int>(listState, model, keyOf = { "tag:$it" }) { baseline, order ->
+            val snapshot = model.snapshot()
+            snapshot.ids == baseline && model.reorder(snapshot, order)
         }
     LaunchedEffect(ids) {
         editor.contentChanged()
         if (reorder.sourceChanged(ids)) view.announceForAccessibility(changed)
     }
     LaunchedEffect(editor.isEditing) { if (!editor.isEditing) reorder.cancel() }
+    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
+    // editor's pause() did.
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        reorder.cancel()
+        editor.dismissRemoval()
+    }
     val scope = rememberCoroutineScope()
     pane.reveal = { id ->
         val index = ids.indexOf(id)
@@ -83,7 +86,7 @@ fun SavedListScreen(
         }
     ListDetailScaffold(pane, dialogs, Watermark.Window, bar) {
         val colors = TagMasterTheme.colors
-        val shown = reorder.shownOrder(ids)
+        val shown = reorder.shownOrder(ids, listState)
         LazyColumn(
             Modifier
                 .fillMaxSize()
@@ -103,11 +106,12 @@ fun SavedListScreen(
                     onOpen = onOpenTag,
                     onRemove = editor::askToRemove,
                     onMove = editor::move,
-                    handleModifier = Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1),
+                    handleModifier = { pressed -> Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1, pressed) },
                     modifier =
                         Modifier
-                            .topDivider(index > 0, colors.outlineVariant)
-                            .then(if (reorder.dragging == id) Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offset } else Modifier),
+                            .listItemMotion(this, animatePlacement = !reorder.isMoving(id))
+                            .reorderRow(reorder, id, colors.surface)
+                            .topDivider(index > 0, colors.outlineVariant),
                 )
             }
         }

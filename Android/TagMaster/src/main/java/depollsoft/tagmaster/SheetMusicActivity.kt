@@ -11,9 +11,15 @@ import android.graphics.pdf.PdfRenderer
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,20 +30,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import bolts.Task
@@ -268,17 +279,37 @@ private fun KeyFab(
     val playing = tag.keyNote?.isPlaying == true
     val shape = RoundedCornerShape(16.dp)
     val content = if (playing) colors.onPrimary else colors.primary
+    // The extended FAB's state list animator: raised 6dp more while pressed, 2dp while focused.
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val focused by interactions.collectIsFocusedAsState()
+    val elevation by animateDpAsState(
+        when {
+            pressed -> 12.dp
+            focused && LocalInputModeManager.current.inputMode == InputMode.Keyboard -> 8.dp
+            else -> 6.dp
+        },
+        tween(100),
+        label = "elevation",
+    )
     // ExtendedFloatingActionButton's layout: the icon 16dp from the start, the label centered in
     // what is left after the icon's 12dp padding and the 20dp end padding, at least 120dp wide.
     Layout(
         modifier =
             modifier
                 .padding(end = 16.dp, bottom = 16.dp)
-                .shadow(6.dp, shape)
+                .shadow(elevation, shape)
                 .background(if (playing) colors.primary else colors.sheetKeySurface, shape)
                 .border(BorderStroke(1.dp, colors.primary), shape)
                 .clip(shape)
-                .notePress(player, { tag.keyNote }, description = stringResource(R.string.play_key_note, tag.writtenKey.orEmpty()))
+                .indication(interactions, ripple())
+                .notePress(
+                    player,
+                    { tag.keyNote },
+                    description = stringResource(R.string.play_key_note, tag.writtenKey.orEmpty()),
+                    view = LocalView.current,
+                    interactionSource = interactions,
+                )
                 .testTag("keyButton"),
         content = {
             PlatformIcon(R.drawable.ic_key, tint = content)
@@ -293,8 +324,8 @@ private fun KeyFab(
         val width = maxOf(120.dp.roundToPx(), textStart + label.width + end)
         val height = maxOf(48.dp.roundToPx(), maxOf(icon.height, label.height))
         layout(width, height) {
-            icon.place(start, (height - icon.height) / 2)
-            label.place(textStart + (width - end - textStart - label.width) / 2, (height - label.height) / 2)
+            icon.placeRelative(start, (height - icon.height) / 2)
+            label.placeRelative(textStart + (width - end - textStart - label.width) / 2, (height - label.height) / 2)
         }
     }
 }

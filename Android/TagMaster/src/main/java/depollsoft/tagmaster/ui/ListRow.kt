@@ -1,10 +1,14 @@
 package depollsoft.tagmaster.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,13 +19,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -29,6 +33,7 @@ import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -75,7 +80,7 @@ fun ListRow(
                 Modifier
                     .padding(end = 8.dp)
                     .size(48.dp)
-                    .clickable(role = Role.Button, onClick = onRemove)
+                    .clickable(interactionSource = null, indication = ripple(bounded = false, radius = 24.dp), role = Role.Button, onClick = onRemove)
                     .semantics { contentDescription = removeLabel ?: "" }
                     .testTag("listRemove:$key"),
                 contentAlignment = ViewAlign.Center,
@@ -85,8 +90,9 @@ fun ListRow(
         }
         PlatformIcon(icon, Modifier.padding(end = 16.dp), tint = colors.primary)
         Column(Modifier.weight(1f)) {
-            ActionTitle(name, maxLines = 2)
-            if (detail != null) ActionDetail(detail)
+            // A rename or a new count crossfades, as RecyclerView animated a changed row.
+            Crossfade(name, animationSpec = tween(ListMotion.CHANGE_MILLIS), label = "name") { ActionTitle(it, maxLines = 2) }
+            if (detail != null) Crossfade(detail, animationSpec = tween(ListMotion.CHANGE_MILLIS), label = "detail") { ActionDetail(it) }
         }
         if (checked) PlatformIcon(R.drawable.ic_check, Modifier.padding(start = 16.dp), tint = colors.primary)
         handle?.invoke()
@@ -99,16 +105,18 @@ fun DragHandle(
     label: String,
     enabled: Boolean,
     onMove: (Int) -> Boolean,
-    gesture: Modifier,
+    gesture: (MutableInteractionSource) -> Modifier,
     tag: String,
     startMargin: Boolean = true,
 ) {
+    val interactions = remember { MutableInteractionSource() }
     Box(
         Modifier
             .padding(start = if (startMargin) 8.dp else 0.dp)
             .size(48.dp)
             .alpha(if (enabled) 1f else 0.38f)
-            .then(gesture)
+            .indication(interactions, ripple(bounded = false, radius = 24.dp))
+            .then(gesture(interactions))
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown || !event.isAltPressed) return@onPreviewKeyEvent false
                 when (event.key) {
@@ -116,7 +124,7 @@ fun DragHandle(
                     Key.DirectionDown -> onMove(1)
                     else -> false
                 }
-            }.focusable(enabled)
+            }.focusable(enabled, interactions)
             .semantics {
                 contentDescription = label
                 role = Role.Button
@@ -142,7 +150,7 @@ fun ManagedListRow(
     count: Int,
     dialogs: ListDialogs,
     onOpen: () -> Unit,
-    handleGesture: Modifier,
+    handleGesture: (MutableInteractionSource) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
     var menuOpen by remember { mutableStateOf(false) }

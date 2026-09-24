@@ -6,18 +6,24 @@ import android.graphics.RectF
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.awaitHorizontalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -27,6 +33,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.disabled
@@ -36,6 +43,7 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CancellationException
 
 /**
  * A Material 3 slider drawn the way MDC 1.14's `Slider` draws itself, so a screen that had one
@@ -44,8 +52,12 @@ import androidx.core.content.ContextCompat
  * center, with 2dp inside corners, and a 4dp stop dot at the end of the inactive track. Colors are
  * MDC's own `m3_slider_*` state lists, so the disabled look matches as well.
  *
- * Tapping or dragging sets the value; screen readers adjust it with the set-progress action; a
- * keyboard or D-pad focuses it and moves it with the arrow keys, as MDC's slider did.
+ * Touch works as MDC's slider does inside a scrolling page: a drag claims the slider only once it
+ * has moved sideways past the touch slop (a vertical drag scrolls the page instead), a tap sets the
+ * value where the finger lifts, the bar thumb narrows to half its width while held, and a gesture
+ * taken away mid-drag puts the value back. Screen readers adjust it with
+ * the set-progress action; a keyboard or D-pad focuses it (with a highlight) and moves it with the
+ * arrow keys. In a right-to-left layout it runs from the right.
  */
 @Composable
 fun ViewSlider(
@@ -65,6 +77,11 @@ fun ViewSlider(
     val span = valueRange.endInclusive - valueRange.start
     val geometry = remember { SliderGeometry() }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    var pressed by remember { mutableStateOf(false) }
+    val interactions = remember { MutableInteractionSource() }
+    val hasFocus by interactions.collectIsFocusedAsState()
+    // Only keyboard focus shows; a slider never takes focus from a touch.
+    val focused = hasFocus && LocalInputModeManager.current.inputMode == InputMode.Keyboard
     Box(
         modifier
             .fillMaxWidth()
@@ -92,26 +109,56 @@ fun ViewSlider(
                                 change(keyed[0])
                             }
                             true
-                        }.focusable()
-                        .pointerInput(valueRange) {
-                        fun valueAt(x: Float): Float {
-                            val fraction = ((x - geometry.start) / (geometry.end - geometry.start)).coerceIn(0f, 1f)
-                            return valueRange.start + fraction * span
-                        }
-                        awaitEachGesture {
-                            val down = awaitFirstDown()
-                            change(valueAt(down.position.x))
-                            drag(down.id) { moved ->
-                                moved.consume()
-                                change(valueAt(moved.position.x))
+                        }.focusable(interactionSource = interactions)
+                        .pointerInput(valueRange, rtl) {
+                            fun valueAt(x: Float): Float {
+                                // From this node's own size: drawing may not have happened yet.
+                                val side = SIDE_PADDING.toPx()
+                                val along = ((x - side) / (size.width - side * 2)).coerceIn(0f, 1f)
+                                return valueRange.start + (if (rtl) 1f - along else along) * span
+                            }
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                val before = currentValue
+                                val claimed = awaitHorizontalTouchSlopOrCancellation(down.id) { moved, _ -> moved.consume() }
+                                if (claimed == null) {
+                                    // A tap sets the value where it lifts; a scroll took the gesture otherwise.
+                                    val up = currentEvent.changes.firstOrNull { it.id == down.id }
+                                    if (up != null && !up.pressed && !up.isConsumed) {
+                                        up.consume()
+                                        change(valueAt(up.position.x))
+                                    }
+                                    return@awaitEachGesture
+                                }
+                                pressed = true
+                                change(valueAt(claimed.position.x))
+                                try {
+                                    val completed =
+                                        horizontalDrag(claimed.id) { moved ->
+                                            moved.consume()
+                                            change(valueAt(moved.position.x))
+                                        }
+                                    if (!completed) change(before)
+                                } catch (e: CancellationException) {
+                                    change(before)
+                                    throw e
+                                } finally {
+                                    pressed = false
+                                }
                             }
                         }
-                    }
                 },
             ).drawBehind {
                 geometry.update(size.width, this)
                 val fraction = if (span > 0f) ((currentValue - valueRange.start) / span).coerceIn(0f, 1f) else 0f
-                drawIntoCanvas { paints.draw(it.nativeCanvas, geometry, size.height, fraction, enabled, this) }
+                drawIntoCanvas {
+                    val canvas = it.nativeCanvas
+                    val save = canvas.save()
+                    // Right to left, the whole slider mirrors: it starts at the right.
+                    if (rtl) canvas.scale(-1f, 1f, size.width / 2f, 0f)
+                    paints.draw(canvas, geometry, size.height, fraction, enabled, pressed, focused, this)
+                    canvas.restoreToCount(save)
+                }
             },
     )
 }
@@ -159,6 +206,11 @@ private class SliderPaints(
     private val inactiveTrack = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_inactive_track_color)!!
     private val thumb = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_thumb_color)!!
     private val inactiveStop = ContextCompat.getColorStateList(context, com.google.android.material.R.color.m3_slider_inactive_tick_marks_color)!!
+    private val focusHighlight =
+        android.util.TypedValue().let { value ->
+            context.theme.resolveAttribute(androidx.appcompat.R.attr.colorControlHighlight, value, true)
+            if (value.resourceId != 0) ContextCompat.getColor(context, value.resourceId) else value.data
+        }
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val path = Path()
     private val rect = RectF()
@@ -169,6 +221,8 @@ private class SliderPaints(
         height: Float,
         fraction: Float,
         enabled: Boolean,
+        pressed: Boolean,
+        focused: Boolean,
         density: androidx.compose.ui.unit.Density,
     ) {
         val state = if (enabled) intArrayOf(android.R.attr.state_enabled) else intArrayOf()
@@ -198,10 +252,17 @@ private class SliderPaints(
                     canvas.drawCircle(geometry.end, (top + bottom) / 2, STOP.toPx() / 2, paint)
                 }
             }
-            // The bar thumb.
-            val thumbWidth = THUMB_WIDTH.toPx()
+            // The bar thumb, half as wide while a finger holds it.
+            val thumbWidth = THUMB_WIDTH.toPx() * if (pressed) 0.5f else 1f
             val thumbHeight = THUMB_HEIGHT.toPx()
             val thumbTop = (height - thumbHeight) / 2
+            if (focused) {
+                // Keyboard focus: the control highlight around the thumb.
+                val ring = FOCUS_RING.toPx()
+                rect.set(center - ring, (height - ring * 2) / 2, center + ring, (height + ring * 2) / 2)
+                paint.color = focusHighlight
+                canvas.drawRoundRect(rect, ring, ring, paint)
+            }
             rect.set(center - thumbWidth / 2, thumbTop, center + thumbWidth / 2, thumbTop + thumbHeight)
             paint.color = thumb.getColorForState(state, 0)
             canvas.drawRoundRect(rect, thumbWidth / 2, thumbWidth / 2, paint)
@@ -237,3 +298,4 @@ private val THUMB_GAP = 6.dp
 private val THUMB_WIDTH = 4.dp
 private val THUMB_HEIGHT = 44.dp
 private val STOP = 4.dp
+private val FOCUS_RING = 20.dp

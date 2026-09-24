@@ -5,6 +5,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +22,12 @@ import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -200,23 +204,30 @@ private fun PartChoice(
     onSelect: () -> Unit,
 ) {
     val colors = TagMasterTheme.colors
+    // The whole row picks the part; its ripple is the round one around the circle that
+    // MaterialRadioButton drew.
+    val interactions = remember { MutableInteractionSource() }
     Row(
         modifier
             .heightIn(min = 48.dp)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
+            .selectable(selected = selected, interactionSource = interactions, indication = null, role = Role.RadioButton, onClick = onSelect),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
-        RadioIndicator(selected)
+        RadioIndicator(selected, Modifier.indication(interactions, ripple(bounded = false, radius = 20.dp)))
         Text(label, style = TagMasterType.bodyLarge.let { with(TagMasterType) { it.withoutLineHeight() } }, color = colors.text)
     }
 }
 
 /**
  * The radio circle a MaterialRadioButton draws: the theme's radio button drawable and tint, in the
- * checked or unchecked state, without its transition animation.
+ * checked or unchecked state, animating between them as the drawable's transitions do. It shows
+ * its first state without animating.
  */
 @Composable
-private fun RadioIndicator(selected: Boolean) {
+private fun RadioIndicator(
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val indicator =
@@ -240,13 +251,52 @@ private fun RadioIndicator(selected: Boolean) {
                 attributes.recycle()
             }
         }
+    // Frames of the drawable's own transition ask for a redraw through its callback.
+    var frame by remember { mutableIntStateOf(0) }
+    DisposableEffect(indicator) {
+        val main = android.os.Handler(android.os.Looper.getMainLooper())
+        indicator.callback =
+            object : android.graphics.drawable.Drawable.Callback {
+                override fun invalidateDrawable(who: android.graphics.drawable.Drawable) {
+                    frame++
+                }
+
+                override fun scheduleDrawable(
+                    who: android.graphics.drawable.Drawable,
+                    what: Runnable,
+                    `when`: Long,
+                ) {
+                    main.postAtTime(what, who, `when`)
+                }
+
+                override fun unscheduleDrawable(
+                    who: android.graphics.drawable.Drawable,
+                    what: Runnable,
+                ) {
+                    main.removeCallbacks(what, who)
+                }
+            }
+        onDispose { indicator.callback = null }
+    }
+    val shown = remember(indicator) { booleanArrayOf(false) }
+    SideEffect {
+        indicator.state =
+            if (selected) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked) else intArrayOf(android.R.attr.state_enabled)
+        if (!shown[0]) {
+            indicator.jumpToCurrentState()
+            shown[0] = true
+        }
+    }
     Box(
-        Modifier
+        modifier
             .size(with(LocalDensity.current) { indicator.intrinsicWidth.toDp() }, with(LocalDensity.current) { indicator.intrinsicHeight.toDp() })
             .drawBehind {
-                indicator.state =
-                    if (selected) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked) else intArrayOf(android.R.attr.state_enabled)
-                indicator.jumpToCurrentState()
+                frame
+                if (!shown[0]) {
+                    indicator.state =
+                        if (selected) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked) else intArrayOf(android.R.attr.state_enabled)
+                    indicator.jumpToCurrentState()
+                }
                 drawPlatform(indicator, 0, 0, size.width.toInt(), size.height.toInt())
             },
     )

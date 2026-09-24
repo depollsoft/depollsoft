@@ -7,23 +7,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.paneTitle
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
 /** One dialog button: a text button, optionally in the error color for a destructive choice. */
@@ -69,6 +72,7 @@ fun TagMasterDialog(
     val colors = TagMasterTheme.colors
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        MaterialDialogMotion()
         Column(
             modifier
                 .then(
@@ -122,6 +126,17 @@ fun TagMasterDialog(
 }
 
 /**
+ * MaterialAlertDialogBuilder's window animation: the dialog fades in while growing from 80%, and
+ * fades out. Compose's dialog window has none. Set during the first composition, before the
+ * window's first frame, so the window animates in as well as out.
+ */
+@Composable
+fun MaterialDialogMotion() {
+    val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+    SideEffect { window?.setWindowAnimations(com.google.android.material.R.style.MaterialAlertDialog_Material3_Animation) }
+}
+
+/**
  * AppCompat's DialogTitle: one line at 24sp, or — when that would not fit in the window's first,
  * preferred-width measuring pass — up to two lines at 18sp rather than an ellipsis.
  */
@@ -154,7 +169,7 @@ private fun DialogTitle(
             )
         val chosen = if (fits.hasVisualOverflow) measurables[1] else measurables[0]
         val placeable = chosen.measure(constraints.copy(minWidth = 0))
-        layout(constraints.maxWidth, placeable.height) { placeable.place(0, 0) }
+        layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
     }
 }
 

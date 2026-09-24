@@ -1,8 +1,13 @@
 package depollsoft.tagmaster.ui
 
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,11 +26,13 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -34,11 +42,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -55,6 +67,8 @@ import kotlin.math.roundToInt
 class FieldIcon(
     val drawable: Int,
     val description: String? = null,
+    /** Degrees the icon is turned: the dropdown arrow points up while its list is open. */
+    val rotation: Float = 0f,
     val onClick: (() -> Unit)? = null,
 )
 
@@ -78,16 +92,22 @@ fun OutlinedField(
     endIcon: FieldIcon? = null,
     helper: String? = null,
     error: String? = null,
-    counter: String? = null,
+    /** Characters entered and the limit; past the limit the counter and outline turn to the error color. */
+    counter: Pair<Int, Int>? = null,
     maxLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     fieldModifier: Modifier = Modifier,
+    /** Drawn as focused: an exposed dropdown whose list is open. */
+    active: Boolean = false,
+    /** Whether [endIcon] shows; it fades and scales in and out as TextInputLayout's clear icon did. */
+    endIconVisible: Boolean = true,
 ) {
     val colors = TagMasterTheme.colors
     val density = LocalDensity.current
-    val focused by interactionSource.collectIsFocusedAsState()
+    val hasFocus by interactionSource.collectIsFocusedAsState()
+    val focused = hasFocus || active
     val collapsed = focused || value.text.isNotEmpty() || onValueChange == null
     val progress by animateFloatAsState(if (collapsed) 1f else 0f, tween(167), label = "label")
     // TextInputLayout draws its floating label at a float size, not whole pixels as a TextView does.
@@ -96,16 +116,17 @@ fun OutlinedField(
     val labelLayout = remember(label, labelStyle) { measurer.measure(label, labelStyle) }
     val labelAscent = with(density) { labelLayout.firstBaseline.roundToInt() }
     val topMargin = labelAscent / 2
+    val overflowed = counter != null && counter.first > counter.second
     val stroke =
         when {
-            error != null -> colors.error
+            error != null || overflowed -> colors.error
             focused -> colors.primary
             else -> colors.outline
         }
-    val strokeWidth = if (focused || error != null) 2.dp else 1.dp
+    val strokeWidth = if (focused || error != null || overflowed) 2.dp else 1.dp
     val labelColor =
         when {
-            error != null -> colors.error
+            error != null || overflowed -> colors.error
             focused -> colors.primary
             else -> colors.onSurfaceVariant
         }
@@ -150,7 +171,7 @@ fun OutlinedField(
                                 .weight(1f)
                                 .padding(
                                     start = if (startIcon != null) 0.dp else 16.dp,
-                                    end = if (endIcon != null) 0.dp else 16.dp,
+                                    end = if (endIcon != null && endIconVisible) 0.dp else 16.dp,
                                     top = 17.dp,
                                     bottom = 17.dp,
                                 ),
@@ -185,7 +206,13 @@ fun OutlinedField(
                             }
                         }
                         if (endIcon != null) {
-                            FieldIconSlot(endIcon, colors.onSurfaceVariant, Modifier.padding(start = 4.dp))
+                            AnimatedVisibility(
+                                endIconVisible,
+                                enter = fadeIn(tween(100)) + scaleIn(tween(150), initialScale = 0.8f),
+                                exit = fadeOut(tween(100)) + scaleOut(tween(150), targetScale = 0.8f),
+                            ) {
+                                FieldIconSlot(endIcon, colors.onSurfaceVariant, Modifier.padding(start = 4.dp))
+                            }
                         }
                     }
                 }
@@ -206,8 +233,8 @@ fun OutlinedField(
             val labelPlaceable = measurables.firstOrNull { it.layoutId == "label" }?.measure(Constraints())
             val height = topMargin + box.height
             layout(width, height) {
-                box.place(0, topMargin)
-                labelPlaceable?.place(16.dp.roundToPx(), 0)
+                box.placeRelative(0, topMargin)
+                labelPlaceable?.placeRelative(16.dp.roundToPx(), 0)
             }
         }
         if (helper != null || error != null || counter != null) {
@@ -223,11 +250,24 @@ fun OutlinedField(
                     color = if (error != null) colors.error else colors.onSurfaceVariant,
                 )
                 if (counter != null) {
+                    val (count, limit) = counter
+                    val spoken =
+                        stringResource(
+                            if (overflowed) {
+                                com.google.android.material.R.string.character_counter_overflowed_content_description
+                            } else {
+                                com.google.android.material.R.string.character_counter_content_description
+                            },
+                            count,
+                            limit,
+                        )
                     Text(
-                        counter,
-                        Modifier.padding(start = 16.dp),
+                        "$count/$limit",
+                        Modifier
+                            .padding(start = 16.dp)
+                            .semantics { contentDescription = spoken },
                         style = TagMasterType.bodySmall.withoutLineHeight(),
-                        color = colors.onSurfaceVariant,
+                        color = if (overflowed) colors.error else colors.onSurfaceVariant,
                         textAlign = TextAlign.End,
                     )
                 }
@@ -256,7 +296,7 @@ private fun FieldIconSlot(
             ),
         contentAlignment = ViewAlign.Center,
     ) {
-        PlatformIcon(icon.drawable, tint = tint)
+        PlatformIcon(icon.drawable, Modifier.rotate(icon.rotation), tint = tint)
     }
 }
 
@@ -274,25 +314,49 @@ fun DropdownField(
     tag: String = "dropdown:$label",
 ) {
     val colors = TagMasterTheme.colors
+    val density = LocalDensity.current
     var expanded by remember { mutableStateOf(false) }
+    var fieldWidth by remember { mutableIntStateOf(0) }
+    // While the list is open the field shows as focused and its arrow turns up, as
+    // MaterialAutoCompleteTextView's did.
+    val arrow by animateFloatAsState(if (expanded) 180f else 0f, tween(ListMotion.CHANGE_MILLIS), label = "arrow")
     Box(modifier.fillMaxWidth()) {
         OutlinedField(
             label = label,
             value = TextFieldValue(choices.getOrElse(selected.coerceAtLeast(0)) { "" }),
             textStyle = TagMasterType.bodyMedium.withoutLineHeight(),
             textColor = colors.text,
-            endIcon = FieldIcon(com.google.android.material.R.drawable.mtrl_dropdown_arrow),
+            endIcon = FieldIcon(com.google.android.material.R.drawable.mtrl_dropdown_arrow, rotation = arrow),
+            active = expanded,
             modifier =
                 Modifier
+                    .onSizeChanged { fieldWidth = it.width }
                     .clickable(role = Role.DropdownList) { expanded = true }
                     .semantics { role = Role.DropdownList }
                     .testTag(tag),
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = colors.surfaceContainerHigh) {
+        // The list is as wide as the field and marks the current choice.
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.width(with(density) { fieldWidth.toDp() }),
+            containerColor = colors.surfaceContainerHigh,
+        ) {
             choices.forEachIndexed { index, choice ->
+                val isSelected = index == selected
                 DropdownMenuItem(
-                    text = { Text(choice, style = TagMasterType.bodyLarge.withoutLineHeight(), color = colors.onSurface) },
-                    modifier = Modifier.testTag("$tag:$index"),
+                    text = {
+                        Text(
+                            choice,
+                            style = TagMasterType.bodyLarge.withoutLineHeight(),
+                            color = if (isSelected) colors.onSecondaryContainer else colors.onSurface,
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .then(if (isSelected) Modifier.background(colors.secondaryContainer) else Modifier)
+                            .semantics { this.selected = isSelected }
+                            .testTag("$tag:$index"),
                     onClick = {
                         expanded = false
                         onSelect(index)

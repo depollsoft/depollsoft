@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -20,12 +21,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -421,11 +424,14 @@ private fun Setting(
 private fun WakeLockSwitch() {
     val colors = TagMasterTheme.colors
     val checked = SettingsModel.wakeLockOnSheetMusic
+    // A switch reads "On"/"Off" to a screen reader, and the row's press moves the thumb, as
+    // MaterialSwitch did.
+    val interactions = remember { MutableInteractionSource() }
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-            .selectable(checked, role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = !checked }
+            .toggleable(checked, interactions, ripple(), role = Role.Switch) { SettingsModel.wakeLockOnSheetMusic = it }
             .testTag("sheetMusicWakeLockCheckBox"),
         verticalAlignment = ViewAlign.CenterVertically,
     ) {
@@ -438,6 +444,7 @@ private fun WakeLockSwitch() {
         Switch(
             checked = checked,
             onCheckedChange = null,
+            interactionSource = interactions,
             colors =
                 SwitchDefaults.colors(
                     checkedTrackColor = colors.primary,
@@ -512,7 +519,7 @@ private fun ThemeChoice() {
         val placeables = measurables.map { it.measure(Constraints.fixedWidth(each)) }
         val height = placeables.maxOf { it.height }
         layout(width, height) {
-            placeables.forEachIndexed { index, placeable -> placeable.place(index * (each - overlap), 0) }
+            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(index * (each - overlap), 0) }
         }
     }
 }

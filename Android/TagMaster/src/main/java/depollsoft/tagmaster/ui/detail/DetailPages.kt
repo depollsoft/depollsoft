@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -45,6 +49,7 @@ import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.formatDate
 import depollsoft.tagmaster.ui.isPresent
+import depollsoft.tagmaster.ui.listViewScrollbar
 import depollsoft.tagmaster.ui.rememberTextViewPaint
 import depollsoft.tagmaster.ui.scrollViewScrollbar
 import kotlin.math.ceil
@@ -180,11 +185,9 @@ fun VideosPage(
 ) {
     val colors = TagMasterTheme.colors
     val videos = tag.videos.orEmpty()
-    Column(
-        modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-    ) {
+    // The teaching video and the heading stay put; only the performances scroll, as the
+    // ListView below them did.
+    Column(modifier.fillMaxSize()) {
         val teaching = tag.teachingVideo
         if (teaching.isPresent()) {
             Column(
@@ -226,18 +229,29 @@ fun VideosPage(
                 color = colors.text,
             )
         }
-        Column(Modifier.padding(vertical = 16.dp)) {
-            videos.forEachIndexed { index, video ->
-                // ListView's divider: 1dp between rows, taking its own space.
-                if (index > 0) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(colors.outlineVariant),
-                    )
+        val listState = rememberLazyListState()
+        LazyColumn(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .listViewScrollbar(listState, top = 16.dp, bottom = 16.dp, divider = 1.dp)
+                .testTag("videoList"),
+            state = listState,
+            contentPadding = PaddingValues(vertical = 16.dp),
+        ) {
+            itemsIndexed(videos, key = { _, video -> video.id }) { index, video ->
+                Column {
+                    // ListView's divider: 1dp between rows, taking its own space.
+                    if (index > 0) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(colors.outlineVariant),
+                        )
+                    }
+                    UserVideoRow(video)
                 }
-                UserVideoRow(video)
             }
         }
     }
@@ -329,8 +343,8 @@ private fun FactTable(rows: List<Pair<String, String>>) {
         layout(constraints.maxWidth, height) {
             var y = 0
             for ((label, value) in placed) {
-                label.place(0, y)
-                value.place(labelWidth, y)
+                label.placeRelative(0, y)
+                value.placeRelative(labelWidth, y)
                 y += maxOf(label.height, value.height)
             }
         }

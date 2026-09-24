@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,14 +44,17 @@ import depollsoft.tagmaster.ui.BottomTabs
 import depollsoft.tagmaster.ui.ButtonStyle
 import depollsoft.tagmaster.ui.ListDialogs
 import depollsoft.tagmaster.ui.LocalSnackbars
+import depollsoft.tagmaster.ui.PagingTouchSlop
 import depollsoft.tagmaster.ui.QuartetIllustration
 import depollsoft.tagmaster.ui.ShowAs
 import depollsoft.tagmaster.ui.TabItem
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
+import depollsoft.tagmaster.ui.UsualTouchSlop
 import depollsoft.tagmaster.ui.ViewAlign
-import kotlinx.coroutines.launch
+import depollsoft.tagmaster.ui.rememberPagerTabs
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 
 /**
  * One tag's detail below its toolbar: the quartet while the first load runs, the error and Retry
@@ -80,15 +82,16 @@ fun TagDetailContent(
         }
     }
     val pager = rememberPagerState(initialPage = state.page) { pageTabs.size }
-    val scope = rememberCoroutineScope()
+    val pagerTabs = rememberPagerTabs(pager)
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { state.page = it } }
     LaunchedEffect(state.page) { if (pager.settledPage != state.page) pager.scrollToPage(state.page) }
+    val loadingLabel = stringResource(R.string.detail_loading)
     Column(modifier.fillMaxSize()) {
         if (state.isLoading && loaded) {
             LinearProgressIndicator(
                 Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "" }
+                    .semantics { contentDescription = loadingLabel }
                     .testTag("refreshProgress"),
                 color = TagMasterTheme.colors.primary,
             )
@@ -108,9 +111,9 @@ fun TagDetailContent(
         if (tag != null) {
             BottomTabs(
                 tabs = pageTabs.mapIndexed { index, (label, icon) -> TabItem(stringResource(label), icon, "detailTab:$index") },
-                selected = pager.currentPage,
+                selected = pagerTabs.selected,
                 position = pager.currentPage + pager.currentPageOffsetFraction,
-                onSelect = { scope.launch { pager.animateScrollToPage(it) } },
+                onSelect = pagerTabs::select,
                 modifier = Modifier.testTag("detailTabs"),
             )
         }
@@ -144,21 +147,27 @@ private fun DetailPages(
             }
         }
     }
-    HorizontalPager(
-        state = pager,
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .alpha(reveal.value)
-                .testTag("detailPager"),
-        beyondViewportPageCount = 1,
-        key = { it },
-    ) { page ->
-        when (page) {
-            0 -> SummaryPage(tag, dialogs)
-            1 -> DetailsPage(tag)
-            2 -> TracksPage(tag, current = pager.currentPage == 2)
-            else -> VideosPage(tag)
+    PagingTouchSlop {
+        HorizontalPager(
+            state = pager,
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .alpha(reveal.value)
+                    .testTag("detailPager"),
+            beyondViewportPageCount = 1,
+            key = { it },
+        ) { page ->
+            UsualTouchSlop {
+                when (page) {
+                    0 -> SummaryPage(tag, dialogs)
+                    1 -> DetailsPage(tag)
+                    // A track stops once the pager has settled on another page, not halfway
+                    // through a swipe that may yet come back, as the fragment paused only then.
+                    2 -> TracksPage(tag, current = pager.settledPage == 2)
+                    else -> VideosPage(tag)
+                }
+            }
         }
     }
 }
@@ -168,10 +177,12 @@ private fun LoadingState(tagId: Int) {
     val colors = TagMasterTheme.colors
     val status = stringResource(R.string.detail_loading_tag, tagId)
     val gathering = stringResource(R.string.detail_gathering_quartet)
+    val scroll = rememberScrollState()
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .scrollViewScrollbar(scroll)
+            .verticalScroll(scroll)
             .padding(24.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
         horizontalAlignment = ViewAlign.CenterHorizontally,
@@ -213,10 +224,12 @@ private fun LoadingState(tagId: Int) {
 @Composable
 private fun ErrorState(state: TagDetailState) {
     val colors = TagMasterTheme.colors
+    val scroll = rememberScrollState()
     Column(
         Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .scrollViewScrollbar(scroll)
+            .verticalScroll(scroll)
             .padding(32.dp)
             .testTag("detailError"),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
