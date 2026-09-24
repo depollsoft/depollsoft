@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,11 +71,7 @@ private fun NoteRow(
             },
         verticalAlignment = ViewCenterVertically,
     ) {
-        PlateText(
-            name,
-            style = plateText(24.sp, if (lit) colors.onAccent else colors.ink, PlateFonts.condensed),
-            modifier = Modifier.weight(1f).padding(start = 20.dp, top = 10.dp, bottom = 10.dp),
-        )
+        LegacyText(name, 24.sp, if (lit) colors.onAccent else colors.ink, PlateFonts.condensedTypeface, Modifier.weight(1f).padding(start = 20.dp, top = 10.dp, bottom = 10.dp), wrapWidth = true)
         PlateText(
             "%1.2f Hz".format(note.frequency),
             style = plateText(14.sp, if (lit) colors.onAccent else colors.inkSecondary, PlateFonts.mono, letterSpacing = 0.04f),

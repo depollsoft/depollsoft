@@ -53,16 +53,21 @@ fun PlateText(
                         maxLines = maxLines,
                         constraints = Constraints(maxWidth = constraints.maxWidth),
                     )
-                val placeable =
-                    if (probe.lineCount == 1) {
-                        val width =
-                            ceil(probe.getLineRight(0) - probe.getLineLeft(0)).toInt()
-                                .coerceIn(constraints.minWidth, constraints.maxWidth)
-                        measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
-                    } else {
-                        measurable.measure(constraints)
-                    }
-                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                if (probe.lineCount != 1) {
+                    val placeable = measurable.measure(constraints)
+                    return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                }
+                val width =
+                    ceil(probe.getLineRight(0) - probe.getLineLeft(0)).toInt()
+                        .coerceIn(constraints.minWidth, constraints.maxWidth)
+                val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+                // TextView's line is as tall as its integer font metrics: the ascent and the
+                // descent each rounded outward, where Compose rounds their sum once.
+                val baseline = probe.getLineBaseline(0)
+                val height =
+                    (ceil(baseline) + ceil(probe.getLineBottom(0) - baseline)).toInt()
+                        .coerceIn(constraints.minHeight, constraints.maxHeight)
+                layout(placeable.width, maxOf(height, 0)) { placeable.place(0, 0) }
             }.drawWithContent {
                 // TextView clips glyphs that overhang its left edge and its top and bottom, but
                 // not its right edge; a glyph's negative bearing is cut exactly as it was.

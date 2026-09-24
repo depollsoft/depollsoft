@@ -48,12 +48,10 @@ object PlateFonts {
     val oswald = FontFamily(Font(R.font.oswald_medium, FontWeight.Medium))
 
     /** `sans-serif-condensed`: note and song names. */
-    val condensed =
-        FontFamily(
-            androidx.compose.ui.text.font.Typeface(
-                android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.NORMAL),
-            ),
-        )
+    val condensedTypeface: android.graphics.Typeface =
+        android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.NORMAL)
+
+    val condensed = FontFamily(androidx.compose.ui.text.font.Typeface(condensedTypeface))
 
     /** `monospace`: frequencies, keys and section headers. */
     val mono = FontFamily.Monospace

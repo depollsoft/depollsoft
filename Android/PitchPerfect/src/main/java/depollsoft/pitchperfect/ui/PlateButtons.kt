@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -81,14 +82,26 @@ fun PlateExtendedFab(
                 .heightIn(min = 48.dp)
                 .shadow(6.dp, shape)
                 .background(colors.surface, shape)
-                .border(BorderStroke(1.dp, colors.hairline), shape)
+                .drawWithContent {
+                    drawContent()
+                    // MaterialShapeDrawable strokes a path inset by half the stroke width.
+                    val stroke = 1.dp.toPx()
+                    drawRoundRect(
+                        colors.hairline,
+                        androidx.compose.ui.geometry.Offset(stroke / 2f, stroke / 2f),
+                        androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
+                        androidx.compose.ui.geometry.CornerRadius(size.height / 2f - stroke / 2f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(stroke),
+                    )
+                }
                 .clip(shape)
                 .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
                 .semantics(mergeDescendants = true) {
                     contentDescription = description
                     role = Role.Button
                 }.padding(start = 12.dp, end = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            // An odd leftover pixel goes below the content, as a View's gravity puts it.
+            verticalAlignment = Alignment.Vertical { size, space -> (space - size) / 2 },
         ) {
             DrawableIcon(icon, colors.ink)
             Spacer(Modifier.width(12.dp))

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import depollsoft.pitchperfect.ui.LegacyText
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -258,7 +259,7 @@ private fun KeyChoice(
             },
         verticalAlignment = ViewCenterVertically,
     ) {
-        PlateText(NoteText.keySignature(key), style = plateText(24.sp, ink), modifier = Modifier.weight(1f).padding(start = 20.dp))
-        PlateText(NoteText.keyName(key), style = plateText(22.sp, ink, PlateFonts.condensed), modifier = Modifier.padding(end = 20.dp))
+        LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
+        LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)
     }
 }

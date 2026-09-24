@@ -228,10 +228,14 @@ private fun AddableRow(
             style = plateText(20.sp, if (pressed) colors.onAccent else colors.ink, PlateFonts.condensed),
             modifier = Modifier.weight(1f).padding(start = 20.dp, top = 14.dp, bottom = 14.dp),
         )
-        PlateText(
-            song.key?.let { NoteText.keyName(it) } ?: androidx.compose.ui.text.AnnotatedString(""),
-            style = plateText(18.sp, if (pressed) colors.onAccent else colors.inkSecondary, PlateFonts.mono, letterSpacing = 0.06f),
-            modifier = Modifier.padding(end = 12.dp),
+        LegacyText(
+            song.key?.let { NoteText.keyName(it) } ?: "",
+            18.sp,
+            if (pressed) colors.onAccent else colors.inkSecondary,
+            android.graphics.Typeface.MONOSPACE,
+            Modifier.padding(end = 12.dp),
+            letterSpacing = 0.06f,
+            wrapWidth = true,
         )
         Box(Modifier.width(44.dp).padding(horizontal = 10.dp).alpha(if (ticked) 1f else 0f), contentAlignment = Alignment.Center) {
             DrawableIcon(R.drawable.ic_check, colors.ink)

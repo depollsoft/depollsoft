@@ -162,31 +162,46 @@ private fun PositionsRow(
         val (left, width, viewport) = selectedBounds.toList()
         if (width > 0) scroll.scrollTo((left - (viewport - width) / 2).coerceAtLeast(0))
     }
-    Layout(content, modifier.horizontalScroll(scroll)) { measurables, constraints ->
+    // Inside the scroll the row is offered unbounded width, so the viewport is measured outside it.
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier) {
         val viewport = constraints.maxWidth
+        PositionsLayout(scroll, viewport, selectedBounds, selectedIndex, content)
+    }
+}
+
+@Composable
+private fun PositionsLayout(
+    scroll: ScrollState,
+    viewport: Int,
+    selectedBounds: IntArray,
+    selectedIndex: Int,
+    content: @Composable () -> Unit,
+) {
+    Layout(content, Modifier.horizontalScroll(scroll)) { measurables, constraints ->
         val height = constraints.maxHeight
-        val loose = Constraints(maxHeight = height, minHeight = height)
-        val natural = measurables.map { it.measure(loose) }
-        val total = natural.sumOf { it.width }
-        val placeables =
-            if (constraints.hasBoundedWidth && total < viewport) {
+        // Each position's own width, from its intrinsics: a measurable is measured only once.
+        val natural = measurables.map { it.maxIntrinsicWidth(height) }
+        val total = natural.sum()
+        val widths =
+            if (total < viewport) {
                 // LinearLayout hands out the excess in order, each share truncated, the
                 // remainder carried to the next weighted child.
                 var remaining = viewport - total
                 var weights = (measurables.size - 1).toFloat()
-                measurables.mapIndexed { index, measurable ->
-                    if (index == measurables.lastIndex) {
-                        natural[index]
+                natural.mapIndexed { index, width ->
+                    if (index == natural.lastIndex) {
+                        width
                     } else {
                         val share = (remaining / weights).toInt()
                         remaining -= share
                         weights -= 1f
-                        measurable.measure(Constraints.fixed(natural[index].width + share, height))
+                        width + share
                     }
                 }
             } else {
                 natural
             }
+        val placeables = measurables.mapIndexed { index, it -> it.measure(Constraints.fixed(widths[index], height)) }
         val width = placeables.sumOf { it.width }
         selectedBounds.fill(0)
         if (selectedIndex in placeables.indices) {
