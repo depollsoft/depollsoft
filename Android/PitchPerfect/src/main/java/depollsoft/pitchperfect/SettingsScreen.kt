@@ -2,6 +2,8 @@ package depollsoft.pitchperfect
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.RadioButton
-import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import depollsoft.pitchperfect.ui.PlateText
@@ -26,6 +26,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -215,7 +217,7 @@ private fun SettingSwitch(
             .heightIn(min = 56.dp)
             .testTag(tag)
             .toggleable(checked, role = Role.Switch, onValueChange = onChange),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = ViewCenterVertically,
     ) {
         PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
         Switch(
@@ -232,6 +234,10 @@ private fun SettingSwitch(
     }
 }
 
+/**
+ * One appearance choice, as a MaterialRadioButton drew it: a 32dp button area holding a 20dp ring
+ * with a 2dp stroke (and a 5dp dot when chosen), then the label, the whole row 48dp tall.
+ */
 @Composable
 private fun ThemeChoice(
     label: String,
@@ -241,22 +247,29 @@ private fun ThemeChoice(
 ) {
     val colors = plateColors
     val selected = state.themeMode == mode
+    val ring = if (selected) colors.accent else colors.ink.copy(alpha = UNSELECTED_RING_ALPHA)
     Row(
         Modifier
             .height(48.dp)
             .testTag(tag)
             .selectable(selected, role = Role.RadioButton) { state.themeMode = mode },
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = ViewCenterVertically,
     ) {
-        RadioButton(
-            selected,
-            onClick = null,
-            colors = RadioButtonDefaults.colors(selectedColor = colors.accent, unselectedColor = colors.ink.copy(alpha = 0.54f)),
-            modifier = Modifier.padding(horizontal = 6.dp),
+        Box(
+            Modifier
+                .width(32.dp)
+                .height(48.dp)
+                .drawBehind {
+                    val stroke = 2.dp.toPx()
+                    drawCircle(ring, radius = 10.dp.toPx() - stroke / 2f, style = Stroke(stroke))
+                    if (selected) drawCircle(ring, radius = 5.dp.toPx())
+                },
         )
-        PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.padding(start = 4.dp, end = 4.dp))
+        PlateText(label, style = plateText(16.sp, colors.ink))
     }
 }
+
+private const val UNSELECTED_RING_ALPHA = 0.51f
 
 /** The about lines: name and version, the publisher, the home page and the terms. */
 @Composable

@@ -26,7 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -197,7 +200,10 @@ fun PlateContainedButton(
     onClick: () -> Unit,
 ) {
     val colors = plateColors
-    PlateButtonFrame(modifier, true, onClick, fill = colors.surface, elevation = 2.dp) {
+    // In the dark theme MaterialComponents lightens an elevated surface with a white overlay.
+    val fill =
+        if (colors.surface.luminance() < 0.5f) Color.White.copy(alpha = DARK_ELEVATION_OVERLAY).compositeOver(colors.surface) else colors.surface
+    PlateButtonFrame(modifier, true, onClick, fill = fill, elevation = 2.dp) {
         PlateText(
             text,
             style = plateText(14.sp, colors.ink, weight = androidx.compose.ui.text.font.FontWeight.Medium, letterSpacing = 0.08928572f),
@@ -234,3 +240,6 @@ private fun PlateButtonFrame(
         propagateMinConstraints = true,
     ) { label() }
 }
+
+/** The overlay a 2dp-elevated button's fill measured in the View-era dark theme. */
+private const val DARK_ELEVATION_OVERLAY = 0.056f
