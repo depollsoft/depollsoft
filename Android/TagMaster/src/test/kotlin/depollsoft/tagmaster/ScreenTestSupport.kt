@@ -71,6 +71,11 @@ internal object ScreenTestSupport {
                                 override fun connect() = Unit
 
                                 override fun getInputStream(): java.io.InputStream {
+                                    // The handler is JVM-wide, so Robolectric's own download of an
+                                    // android-all jar it hasn't cached yet (the first class on a
+                                    // new SDK level, on a fresh CI runner) comes through here too.
+                                    // HttpClient doesn't use URL handlers, so it still reaches Maven.
+                                    if (url.path.contains("/org/robolectric/")) return fetchArtifact(url)
                                     val responder =
                                         transport()
                                             ?: throw java.io.IOException(
@@ -85,6 +90,23 @@ internal object ScreenTestSupport {
         } catch (_: Error) {
             // Already installed by an earlier test class in this JVM.
         }
+    }
+
+    private fun fetchArtifact(url: java.net.URL): java.io.InputStream {
+        val response =
+            java.net.http.HttpClient
+                .newBuilder()
+                .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                .build()
+                .send(
+                    java.net.http.HttpRequest
+                        .newBuilder(url.toURI())
+                        .build(),
+                    java.net.http.HttpResponse.BodyHandlers
+                        .ofInputStream(),
+                )
+        if (response.statusCode() != 200) throw java.io.IOException("HTTP ${response.statusCode()} for $url")
+        return response.body()
     }
 
     /**
