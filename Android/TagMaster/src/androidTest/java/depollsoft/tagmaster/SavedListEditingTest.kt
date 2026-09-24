@@ -73,7 +73,7 @@ class SavedListEditingTest {
         ActivityScenario.launch(TeachableTagsActivity::class.java).use { scenario ->
             startEditing(scenario)
             val step = rowHeight()
-            compose.onNodeWithTag("drag:${ids[0]}").performTouchInput {
+            compose.onNodeWithTag("drag:${ids[0]}", useUnmergedTree = true).performTouchInput {
                 down(center)
                 repeat(12) { moveBy(androidx.compose.ui.geometry.Offset(0f, step * 3 / 12)) }
                 up()
@@ -81,7 +81,7 @@ class SavedListEditingTest {
             compose.waitForIdle()
             assertEquals(listOf(ids[1], ids[2], ids[3], ids[0]), order())
             assertEquals(1, commits())
-            compose.onNodeWithTag("drag:${ids[0]}").performTouchInput {
+            compose.onNodeWithTag("drag:${ids[0]}", useUnmergedTree = true).performTouchInput {
                 down(center)
                 repeat(12) { moveBy(androidx.compose.ui.geometry.Offset(0f, -step * 3 / 12)) }
                 up()
@@ -97,7 +97,7 @@ class SavedListEditingTest {
         ActivityScenario.launch(TeachableTagsActivity::class.java).use { scenario ->
             startEditing(scenario)
             val step = rowHeight()
-            compose.onNodeWithTag("drag:${ids[0]}").performTouchInput {
+            compose.onNodeWithTag("drag:${ids[0]}", useUnmergedTree = true).performTouchInput {
                 down(center)
                 moveBy(androidx.compose.ui.geometry.Offset(0f, step * 2))
             }
@@ -108,9 +108,11 @@ class SavedListEditingTest {
             assertEquals(0, commits())
 
             startEditing(scenario)
-            compose.onNodeWithTag("drag:${ids[1]}").performTouchInput {
-                down(center)
-                moveBy(androidx.compose.ui.geometry.Offset(0f, step))
+            // The first finger was never lifted (Done took the drag from under it), so this one
+            // is a second pointer.
+            compose.onNodeWithTag("drag:${ids[1]}", useUnmergedTree = true).performTouchInput {
+                down(1, center)
+                moveBy(1, androidx.compose.ui.geometry.Offset(0f, step))
             }
             scenario.moveToState(Lifecycle.State.STARTED)
             scenario.moveToState(Lifecycle.State.RESUMED)
@@ -125,7 +127,7 @@ class SavedListEditingTest {
         ActivityScenario.launch(TeachableTagsActivity::class.java).use { scenario ->
             startEditing(scenario)
             val step = rowHeight()
-            compose.onNodeWithTag("drag:${ids[0]}").performTouchInput {
+            compose.onNodeWithTag("drag:${ids[0]}", useUnmergedTree = true).performTouchInput {
                 down(center)
                 moveBy(androidx.compose.ui.geometry.Offset(0f, step * 2))
             }
@@ -133,7 +135,7 @@ class SavedListEditingTest {
             val external = listOf(ids[3], ids[2], ids[1], ids[0])
             instrumentation.runOnMainSync { TeachableTagsModel.teachableTagIds = external }
             compose.waitForIdle()
-            compose.onNodeWithTag("drag:${ids[0]}").performTouchInput { up() }
+            compose.onNodeWithTag("drag:${ids[0]}", useUnmergedTree = true).performTouchInput { up() }
             compose.waitForIdle()
             assertEquals(external, order())
         }

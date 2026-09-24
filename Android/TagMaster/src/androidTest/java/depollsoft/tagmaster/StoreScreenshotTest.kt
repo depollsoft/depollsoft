@@ -37,7 +37,10 @@ class StoreScreenshotTest {
 
     private fun main(action: () -> Unit) = instrumentation.runOnMainSync(action)
 
-    /** Polls [predicate] on the main thread; loaders animate, so global idleness never comes. */
+    /**
+     * Polls [predicate] until live content arrives. It runs on the test thread: the semantics
+     * queries it makes synchronize with the main thread and may not run on it.
+     */
     private fun awaitContent(
         description: String,
         predicate: () -> Boolean,
@@ -45,8 +48,13 @@ class StoreScreenshotTest {
         val deadline = System.currentTimeMillis() + 120000
         var ready = false
         while (!ready && System.currentTimeMillis() < deadline) {
-            main { ready = predicate() }
-            if (!ready) Thread.sleep(250)
+            ready = predicate()
+            if (!ready) {
+                Thread.sleep(250)
+                // The rule owns the frame clock and moves it only when the test synchronizes;
+                // move it here so animations (a tab's page scroll) run while live content loads.
+                compose.mainClock.advanceTimeBy(250)
+            }
         }
         check(ready) { "Live content did not load: $description" }
     }
