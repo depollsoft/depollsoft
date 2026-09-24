@@ -156,7 +156,7 @@ class ListModel private constructor(
 
         /**
          * Every stored list as the observable list the models use. Stored lists come back as
-         * [StateList] (the app registers it under the alias the Bindroid collection was written
+         * [StateList] (the app registers it under the alias the original binding library's collection was written
          * with); anything else that is a collection is converted rather than dropped.
          */
         @Suppress("UNCHECKED_CAST")

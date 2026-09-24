@@ -70,6 +70,8 @@ dependencies {
     // bytecode patch as it reaches the packaged app. The screen suites they were extracted from
     // now run on the JVM under Robolectric in src/test, so the RecyclerView action helpers,
     // intent-stubbing, activity rules and fragment-testing are no longer used here.
+    androidTestImplementation platform(compose_bom)
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     androidTestImplementation 'androidx.test:core:1.7.0'

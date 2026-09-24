@@ -18,9 +18,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * What the Bindroid-era app wrote to disk still loads after the port.
+ * What the View-era app wrote to disk still loads after the port.
  *
- * The fixtures in `src/test/resources/legacy` were written by the View/Bindroid app (commit
+ * The fixtures in `src/test/resources/legacy` were written by the View-era app (commit
  * 082383d0): its saved lists (stored as `depollsoft.lib.binding.ObservableCollection`), the
  * pre-lists favorites format, a cached tag, the rated-tag set and a saved search.
  */

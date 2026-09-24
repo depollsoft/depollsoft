@@ -1,11 +1,11 @@
 package depollsoft.tagmaster
 
 import android.app.Application
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.ColorSpace
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import depollsoft.tagmaster.ui.QuartetRenderer
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -44,12 +44,9 @@ class TagLoadingRegressionTest {
         instrumentation.runOnMainSync {
             val directory = File(app.getExternalFilesDir(null), "quartet-frames").apply { mkdirs() }
             for (dark in listOf(false, true)) {
-                val config = Configuration(app.resources.configuration)
-                config.uiMode = (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
-                    (if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
-                val view = TagLoadingView(app.createConfigurationContext(config))
                 for (scale in listOf(1, 10)) {
-                    view.layout(0, 0, 216 * scale, 96 * scale)
+                    val width = 216 * scale
+                    val height = 96 * scale
                     for ((label, phase) in listOf(
                         "0" to 0f,
                         "0.125" to 0.125f,
@@ -61,13 +58,13 @@ class TagLoadingRegressionTest {
                     )) {
                         val bitmap =
                             Bitmap.createBitmap(
-                                view.width,
-                                view.height,
+                                width,
+                                height,
                                 Bitmap.Config.ARGB_8888,
                                 true,
                                 ColorSpace.get(ColorSpace.Named.SRGB),
                             )
-                        view.drawQuartet(Canvas(bitmap), phase, label != "still")
+                        QuartetRenderer.draw(Canvas(bitmap), width, height, phase, moving = label != "still", dark = dark)
                         File(directory, "android-${if (dark) "dark" else "light"}-$scale-$label.png")
                             .outputStream()
                             .use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
