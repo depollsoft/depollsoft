@@ -96,7 +96,8 @@ fun PlateOutlinedField(
         if (below != null) {
             PlateText(
                 below,
-                style = plateText(12.sp, if (error != null) colors.ink else colors.inkSecondary, PlateFonts.mono),
+                // The error appearance named monospace, but TextInputLayout never applied its font family.
+                style = plateText(12.sp, if (error != null) colors.ink else colors.inkSecondary, letterSpacing = 0.033333335f),
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp),
             )
         }
@@ -174,7 +175,7 @@ fun PlateFilledField(
         )
         PlateText(
             error.orEmpty(),
-            style = plateText(12.sp, colors.ink, PlateFonts.mono, letterSpacing = 0.033333335f),
+            style = plateText(12.sp, colors.ink, letterSpacing = 0.033333335f),
             modifier = Modifier.padding(top = 4.dp),
         )
     }

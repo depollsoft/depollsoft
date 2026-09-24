@@ -60,7 +60,7 @@ fun PlateAlertDialog(
 ) {
     val colors = plateColors
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        MatchPlatformDim()
+        MatchPlatformDim(PLATE_DIM)
         val configuration = LocalConfiguration.current
         val density = LocalDensity.current
         val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
@@ -70,10 +70,11 @@ fun PlateAlertDialog(
                     // The dialog window wraps its content but is at least 95% of a portrait
                     // screen's width (`windowMinWidthMinor`), and never wider than the screen.
                     val minimum = (screenWidth * MIN_WIDTH_FRACTION).toInt()
-                    val placeable =
-                        measurable.measure(
-                            constraints.copy(minWidth = minimum.coerceAtMost(screenWidth), maxWidth = screenWidth),
-                        )
+                    // Wrap-content, as the window was: its content's own width within those bounds.
+                    val width =
+                        measurable.maxIntrinsicWidth(constraints.maxHeight)
+                            .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
+                    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }.padding(horizontal = horizontalInset, vertical = verticalInset),
         ) {
@@ -128,7 +129,7 @@ fun AppCompatAlertDialog(
             }
         }
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        MatchPlatformDim()
+        MatchPlatformDim(APPCOMPAT_DIM)
         val configuration = LocalConfiguration.current
         val density = LocalDensity.current
         val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
@@ -136,10 +137,11 @@ fun AppCompatAlertDialog(
             Modifier
                 .layout { measurable, constraints ->
                     val minimum = (screenWidth * MIN_WIDTH_FRACTION).toInt()
-                    val placeable =
-                        measurable.measure(
-                            constraints.copy(minWidth = minimum.coerceAtMost(screenWidth), maxWidth = screenWidth),
-                        )
+                    // Wrap-content, as the window was: its content's own width within those bounds.
+                    val width =
+                        measurable.maxIntrinsicWidth(constraints.maxHeight)
+                            .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
+                    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }.padding(16.dp),
         ) {
@@ -225,18 +227,15 @@ fun PlateTextButton(
     }
 }
 
-/** The platform dialog dims the screen by the theme's amount; Compose's dialog uses its own. */
+/**
+ * Dims the screen behind a dialog as its View-era theme did: MaterialComponents' dialogs by 32%,
+ * AppCompat's by 60%. Compose's dialog window would always use the platform's amount.
+ */
 @Composable
-private fun MatchPlatformDim() {
+private fun MatchPlatformDim(amount: Float) {
     val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
-    val context = LocalView.current.context
-    SideEffect {
-        val dim =
-            context.obtainStyledAttributes(intArrayOf(android.R.attr.backgroundDimAmount)).run {
-                getFloat(0, DEFAULT_DIM).also { recycle() }
-            }
-        window.setDimAmount(dim)
-    }
+    SideEffect { window.setDimAmount(amount) }
 }
 
-private const val DEFAULT_DIM = 0.32f
+private const val PLATE_DIM = 0.32f
+private const val APPCOMPAT_DIM = 0.6f

@@ -110,9 +110,17 @@ private class TextViewSizing(
             return layout(placeable.width, placeable.height) { placeable.place(0, 0) }
         }
         val width = line.width.coerceIn(constraints.minWidth, constraints.maxWidth)
-        val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+        // Centred or end-aligned text is laid out at exactly that width so it lands where the
+        // TextView's gravity put it. Start-aligned text keeps the room Compose wants — a hair more
+        // than the line, which at exactly the line's width could wrap a multi-word label — and
+        // simply reports the TextView's width.
+        val exact = style.textAlign == TextAlign.Center || style.textAlign == TextAlign.End
+        val placeable =
+            measurable.measure(
+                if (exact) constraints.copy(minWidth = width, maxWidth = width) else constraints.copy(minWidth = width),
+            )
         val height = line.height.coerceIn(constraints.minHeight, constraints.maxHeight)
-        return layout(placeable.width, height) { placeable.place(0, 0) }
+        return layout(width, height) { placeable.place(0, 0) }
     }
 
     override fun IntrinsicMeasureScope.maxIntrinsicWidth(
