@@ -3,6 +3,8 @@ package depollsoft.pitchperfect.ui
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -61,6 +63,12 @@ fun PlateText(
                         measurable.measure(constraints)
                     }
                 layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+            }.drawWithContent {
+                // TextView clips glyphs that overhang its left edge and its top and bottom, but
+                // not its right edge; a glyph's negative bearing is cut exactly as it was.
+                clipRect(left = 0f, top = 0f, right = Float.MAX_VALUE, bottom = size.height) {
+                    this@drawWithContent.drawContent()
+                }
             },
         ),
         style = styled,
