@@ -44,8 +44,6 @@ dependencies {
     implementation project(':DepollSoftCommon')
     implementation project(':DepollSoftCommon.Compat')
     implementation project(':depollsoft.lib.kotlin')
-    implementation project(':bindroid')
-    implementation project(':bindroid-kotlin')
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'com.facebook.android:facebook-android-sdk:18.3.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -87,6 +85,8 @@ dependencies {
 
     // Store captures, FirebaseUI compatibility, and privacy consent still run on a device.
     // PrivacyConsentTest uses Espresso to exercise the consent controls.
+    androidTestImplementation platform(compose_bom)
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     androidTestImplementation 'androidx.test:core:1.7.0'

@@ -83,8 +83,12 @@ public class PitchPipeModelTest {
             // Start with C-to-C
             Preferences.set(IS_FROM_F_TO_F_KEY, false);
             
-            PitchPipeModel model = new PitchPipeModel();
-            
+            int[] widgetUpdates = {0};
+            PitchPipeModel model = new PitchPipeModel(() -> {
+                widgetUpdates[0]++;
+                return kotlin.Unit.INSTANCE;
+            });
+
             // Switch to F-to-F
             model.setFromFToF(true);
             
@@ -96,7 +100,7 @@ public class PitchPipeModelTest {
             assertTrue((Boolean) Preferences.get(IS_FROM_F_TO_F_KEY));
             
             // Verify widget update was called
-            widgetMock.verify(() -> PitchPipeAppWidget.updateWidgets());
+            assertEquals(1, widgetUpdates[0]);
         }
     }
 

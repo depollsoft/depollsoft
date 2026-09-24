@@ -5,8 +5,13 @@ import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 
-/** The pitch pipe's thirteen notes, C to C or F to F; the range is a stored preference. */
-class PitchPipeModel {
+/**
+ * The pitch pipe's thirteen notes, C to C or F to F; the range is a stored preference.
+ * [updateWidgets] redraws the home-screen widgets after the range changes.
+ */
+class PitchPipeModel @JvmOverloads constructor(
+    private val updateWidgets: () -> Unit = PitchPipeAppWidget::updateWidgets,
+) {
     /** The cells, clockwise from the top. */
     var notes: List<Note> by StateField(emptyList())
 
@@ -16,7 +21,7 @@ class PitchPipeModel {
         set(value) {
             Preferences.set(IS_FROM_F_TO_F_KEY, value)
             notes = if (value) F_TO_F else C_TO_C
-            PitchPipeAppWidget.updateWidgets()
+            updateWidgets()
         }
 
     init {

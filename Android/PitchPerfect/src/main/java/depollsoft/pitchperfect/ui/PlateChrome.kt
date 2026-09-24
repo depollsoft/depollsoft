@@ -182,7 +182,7 @@ fun PlateActionIcon(
 /** A navigation destination: its label, its icon and the tag tests find it by. */
 class PlateDestination(
     val label: String,
-    @DrawableRes val icon: Int,
+    @param:DrawableRes val icon: Int,
     val testTag: String,
 )
 

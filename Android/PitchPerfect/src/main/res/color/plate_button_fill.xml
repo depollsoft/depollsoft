@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- The lit fill is for a button that can act; a disabled one drops to the hairline tone. -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false" android:color="@color/plate_hairline"/>
-    <item android:color="@color/plate_accent"/>
-</selector>
