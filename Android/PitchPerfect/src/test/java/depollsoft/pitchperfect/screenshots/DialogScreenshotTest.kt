@@ -73,6 +73,18 @@ class DialogScreenshotTest {
     }
 
     @Test
+    fun deleteSetListWithALongName() {
+        val ids = ScreenshotSupport.seedSetLists()
+        // Too long for the dialog window's first measuring pass: the title takes AppCompat's
+        // two-line size, however wide the dialog then opens.
+        depollsoft.pitchperfect.SongsModel.get().renameList(ids[0], "Saturday chapter show at the lake house")
+        val activity = launchMain()
+        activity.showTab(3)
+        activity.openDeleteSetListDialog(ids[0])
+        captureScreen("dialog_delete_set_list_long_name")
+    }
+
+    @Test
     fun setListMenu() {
         val ids = ScreenshotSupport.seedSetLists()
         val activity = launchMain()

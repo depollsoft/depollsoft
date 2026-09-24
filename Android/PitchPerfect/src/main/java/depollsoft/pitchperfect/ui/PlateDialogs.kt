@@ -1,5 +1,9 @@
 package depollsoft.pitchperfect.ui
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -85,12 +89,7 @@ fun PlateAlertDialog(
                     .background(colors.surface, DialogShape),
             ) {
                 if (title != null) {
-                    PlateText(
-                        title,
-                        style = plateText(16.sp, colors.ink, letterSpacing = 0.009375f),
-                        maxLines = 1,
-                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp),
-                    )
+                    DialogTitle(title, horizontalInset, Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp))
                 }
                 if (message != null) {
                     if (title != null) Spacer(Modifier.heightIn(min = 8.dp))
@@ -245,3 +244,30 @@ private fun MatchPlatformDim(amount: Float) {
 
 private const val PLATE_DIM = 0.32f
 private const val APPCOMPAT_DIM = 0.6f
+
+/**
+ * AppCompat's DialogTitle under the plate dialog theme: one Subtitle1 line, unless the title would
+ * ellipsize in the window's first measuring pass, at the platform's preferred dialog width (320dp,
+ * less the card's [horizontalInset] and the title's 24dp padding on each side). Then DialogTitle
+ * switches to `textAppearanceMedium`'s size, 18sp, over up to two lines, and keeps it however wide
+ * the dialog then opens.
+ */
+@Composable
+private fun DialogTitle(
+    title: String,
+    horizontalInset: Dp,
+    modifier: Modifier,
+) {
+    val colors = plateColors
+    val measurer = rememberTextMeasurer()
+    val single = plateText(16.sp, colors.ink, letterSpacing = 0.009375f)
+    val wrapped = plateText(18.sp, colors.ink, letterSpacing = 0.009375f)
+    val density = LocalDensity.current
+    val firstPass = with(density) { 320.dp.roundToPx() - 2 * horizontalInset.roundToPx() - 2 * 24.dp.roundToPx() }
+    val fits = remember(title, single, firstPass) { !measurer.measure(title, single, maxLines = 1, constraints = Constraints(maxWidth = firstPass)).hasVisualOverflow }
+    if (fits) {
+        PlateText(title, style = single, maxLines = 1, modifier = modifier)
+    } else {
+        PlateText(title, style = wrapped, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = modifier)
+    }
+}
