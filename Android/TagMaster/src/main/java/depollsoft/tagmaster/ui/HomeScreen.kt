@@ -354,9 +354,10 @@ private fun AboutFooter() {
             .padding(vertical = 8.dp),
     ) {
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            Text(stringResource(R.string.app_name), style = secondary, color = colors.onSurfaceVariant)
-            Text(stringResource(R.string.home_version_separator), style = secondary, color = colors.onSurfaceVariant)
-            Text(stringResource(R.string.app_version), style = secondary, color = colors.onSurfaceVariant)
+            for (part in listOf(R.string.app_name, R.string.home_version_separator, R.string.app_version)) {
+                val text = stringResource(part)
+                Text(text, Modifier.textViewWidth(text, secondary), style = secondary, color = colors.onSurfaceVariant, maxLines = 1)
+            }
         }
         Hyperlink(
             stringResource(R.string.home_content_attribution),
@@ -377,7 +378,8 @@ private fun AboutFooter() {
                         .heightIn(min = 48.dp)
                         .padding(start = 8.dp, end = 4.dp),
                 )
-                Text(stringResource(R.string.Copyright, year), style = secondary, color = colors.onSurfaceVariant)
+                val copyright = stringResource(R.string.Copyright, year)
+                Text(copyright, Modifier.textViewWidth(copyright, secondary), style = secondary, color = colors.onSurfaceVariant, maxLines = 1)
             }
             Hyperlink(stringResource(R.string.TermsOfUse), "http://apps.depoll.com/terms-of-use", Modifier.padding(horizontal = 8.dp))
             Hyperlink(stringResource(R.string.Donate), "http://www.davidpoll.com/applications/tag-master/donate", Modifier.padding(horizontal = 8.dp))

@@ -57,6 +57,12 @@ fun Hyperlink(
     contentAlignment: androidx.compose.ui.Alignment = ViewAlign.Center,
 ) {
     val context = LocalContext.current
+    val shown =
+        with(TagMasterType) { style.withoutLineHeight() }
+            .copy(textDecoration = if (uri != null) TextDecoration.Underline else null)
+    val color = if (uri != null) TagMasterTheme.colors.primary else TagMasterTheme.colors.text
+    // One centered line sits where a centered TextView would put it; anything else wraps normally.
+    val singleCenteredLine = textAlign == TextAlign.Center && contentAlignment == ViewAlign.Center && '\n' !in text
     Box(
         modifier
             .heightIn(min = 48.dp)
@@ -64,14 +70,13 @@ fun Hyperlink(
                 if (uri != null) context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
             },
         contentAlignment = contentAlignment,
+        propagateMinConstraints = singleCenteredLine,
     ) {
-        Text(
-            text,
-            style = with(TagMasterType) { style.withoutLineHeight() }
-                .copy(textDecoration = if (uri != null) TextDecoration.Underline else null),
-            color = if (uri != null) TagMasterTheme.colors.primary else TagMasterTheme.colors.text,
-            textAlign = textAlign,
-        )
+        if (singleCenteredLine) {
+            ViewCenteredText(text, shown, color)
+        } else {
+            Text(text, style = shown, color = color, textAlign = textAlign)
+        }
     }
 }
 
