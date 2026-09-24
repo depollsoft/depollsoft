@@ -155,7 +155,7 @@ private fun DetailPages(
         when (page) {
             0 -> SummaryPage(tag, dialogs)
             1 -> DetailsPage(tag)
-            2 -> TracksPage(tag)
+            2 -> TracksPage(tag, current = pager.currentPage == 2)
             else -> VideosPage(tag)
         }
     }

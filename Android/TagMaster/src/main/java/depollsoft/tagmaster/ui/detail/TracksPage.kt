@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -77,10 +78,25 @@ private fun parts(tag: Tag): List<Pair<Int, RemoteLocation?>> =
  * The Tracks page: recording notes, the transport, and a part picker. Choosing a part only arms
  * the player; nothing downloads until Play. In landscape the picker sits beside the player.
  */
+/**
+ * Runs [onHidden] whenever a pager page stops being the current one. ViewPager2 paused an
+ * off-screen page's fragment, so a page that plays sound stops when another tab is chosen even
+ * though the pager keeps its neighbour composed.
+ */
+@Composable
+fun StopWhenNotCurrent(
+    current: Boolean,
+    onHidden: () -> Unit,
+) {
+    val latest by rememberUpdatedState(onHidden)
+    LaunchedEffect(current) { if (!current) latest() }
+}
+
 @Composable
 fun TracksPage(
     tag: Tag,
     modifier: Modifier = Modifier,
+    current: Boolean = true,
 ) {
     val context = LocalContext.current
     val snackbars = LocalSnackbars.current
@@ -90,6 +106,7 @@ fun TracksPage(
     lateinit var player: TrackPlayer
     player = remember { TrackPlayer(context) { snackbars.show(failed, retry) { player.play() } } }
     DisposableEffect(player) { onDispose { player.release() } }
+    StopWhenNotCurrent(current) { player.stop() }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, player) {
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_PAUSE) player.stop() }
