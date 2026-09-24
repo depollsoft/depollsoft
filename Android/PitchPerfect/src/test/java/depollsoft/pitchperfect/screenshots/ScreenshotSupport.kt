@@ -178,6 +178,20 @@ internal object ScreenshotSupport {
         settle()
     }
 
+    /**
+     * Sounds [key] on the Keys tab. The View rows took their lit state from a Bindroid binding the
+     * shared models no longer feed, so the row is lit here exactly as that binding would have.
+     */
+    fun PitchPerfectActivity.playKey(key: depollsoft.pitchperfect.lib.Key) {
+        key.note.play()
+        val list = findViewById<android.widget.ListView>(R.id.majorKeySignatureListView)
+        for (index in 0 until list.childCount) {
+            val row = list.getChildAt(index) as? depollsoft.pitchperfect.KeySignatureListItemView ?: continue
+            if (row.key == key) row.isPressed = true
+        }
+        settle()
+    }
+
     /** The activity window alone. */
     fun Activity.capture(name: String) {
         settle()

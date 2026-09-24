@@ -10,6 +10,7 @@ import depollsoft.pitchperfect.lib.Key
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.capture
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launchMain
+import depollsoft.pitchperfect.screenshots.ScreenshotSupport.playKey
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.setEditingSongs
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.showTab
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.toggleKeyMode
@@ -96,7 +97,7 @@ class MainScreenshotTest {
 
     @Test
     fun notesPlaying() {
-        Note.getPrunedNotes().first { it.friendlyName == "D" && it.octave == 4 }.play()
+        Note.getPrunedNotes().first { it.friendlyName == "A" && it.octave == 3 }.play()
         val activity = launchMain()
         activity.showTab(1)
         activity.capture("main_notes_playing")
@@ -119,9 +120,10 @@ class MainScreenshotTest {
 
     @Test
     fun keysPlaying() {
-        Key.getMajorKeys()[6].note.play()
         val activity = launchMain()
+        // The Keys tab silences its notes as it comes up, so the key sounds once it is showing.
         activity.showTab(2)
+        activity.playKey(Key.getMajorKeys()[6])
         activity.capture("main_keys_playing")
     }
 
@@ -204,7 +206,7 @@ class MainScreenshotTest {
     @Test
     @Config(qualifiers = ScreenshotSupport.PHONE_NIGHT)
     fun notesNight() {
-        Note.getPrunedNotes().first { it.friendlyName == "D" && it.octave == 4 }.play()
+        Note.getPrunedNotes().first { it.friendlyName == "A" && it.octave == 3 }.play()
         val activity = launchMain()
         activity.showTab(1)
         activity.capture("night_main_notes_playing")
