@@ -398,6 +398,39 @@ class TagMasterScreenshotTest {
             capture(launch(SettingsActivity::class.java), "settings_night")
         }
 
+    // ==================== A fractional density ====================
+
+    // A 420dpi phone, whose density is not a whole number: text and View-style dimensions round
+    // differently there than at xxhdpi, so these keep that rounding matched.
+    @Test
+    @Config(qualifiers = PHONE_420)
+    fun homePopulated420() =
+        withCatalog {
+            ScreenshotFixtures.populateLists()
+            capture(launch(MeActivity::class.java), "dpi420_home_populated")
+        }
+
+    @Test
+    @Config(qualifiers = PHONE_420)
+    fun results420() =
+        withCatalog {
+            capture(launch(TagSearchResultsActivity::class.java, resultsIntent("heart")), "dpi420_results")
+        }
+
+    @Test
+    @Config(qualifiers = PHONE_420)
+    fun detailSummary420() {
+        ScreenshotFixtures.populateLists()
+        detail(0, "dpi420_detail_summary")
+    }
+
+    @Test
+    @Config(qualifiers = PHONE_420)
+    fun settings420() =
+        withCatalog {
+            capture(launch(SettingsActivity::class.java), "dpi420_settings")
+        }
+
     // ==================== Tablet list and detail ====================
 
     @Test
@@ -452,6 +485,7 @@ class TagMasterScreenshotTest {
 }
 
 private const val PHONE = "w411dp-h891dp-xxhdpi"
+private const val PHONE_420 = "w411dp-h891dp-420dpi"
 private const val LANDSCAPE = "w891dp-h411dp-land-xxhdpi"
 private const val TABLET = "w1280dp-h800dp-land-xhdpi"
 private const val PHONE_NIGHT = "w411dp-h891dp-night-xxhdpi"

@@ -41,6 +41,9 @@ import java.time.Duration
  */
 internal object ScreenshotSupport {
     const val PHONE = "w411dp-h891dp-xxhdpi"
+
+    /** A 420dpi phone: its density is not a whole number, so text and View-style sizes round differently. */
+    const val PHONE_420 = "w411dp-h891dp-420dpi"
     const val PHONE_NIGHT = "w411dp-h891dp-night-xxhdpi"
     const val TABLET = "w800dp-h1280dp-xhdpi"
 

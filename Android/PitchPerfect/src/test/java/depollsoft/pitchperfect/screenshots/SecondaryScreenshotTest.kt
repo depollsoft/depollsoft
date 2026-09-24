@@ -149,6 +149,10 @@ class SecondaryScreenshotTest {
     fun settings() = launch(SettingsActivity::class.java).capture("settings")
 
     @Test
+    @Config(qualifiers = ScreenshotSupport.PHONE_420)
+    fun settings420() = launch(SettingsActivity::class.java).capture("dpi420_settings")
+
+    @Test
     fun settingsEnd() {
         val activity = launch(SettingsActivity::class.java)
         activity.scrollSettingsToEnd()

@@ -267,4 +267,24 @@ class MainScreenshotTest {
         activity.showTab(3)
         activity.capture("tablet_main_songs_ad_slot")
     }
+
+    // A 420dpi phone, whose density is not a whole number: text and View-style dimensions round
+    // differently there than at xxhdpi, so these keep that rounding matched.
+    @Test
+    @Config(qualifiers = ScreenshotSupport.PHONE_420)
+    fun keys420() {
+        val activity = launchMain()
+        activity.showTab(2)
+        activity.capture("dpi420_main_keys_major")
+    }
+
+    @Test
+    @Config(qualifiers = ScreenshotSupport.PHONE_420)
+    fun songsWithSetLists420() {
+        ScreenshotSupport.seedMySongs()
+        ScreenshotSupport.seedSetLists()
+        val activity = launchMain()
+        activity.showTab(3)
+        activity.capture("dpi420_main_songs_set_lists")
+    }
 }
