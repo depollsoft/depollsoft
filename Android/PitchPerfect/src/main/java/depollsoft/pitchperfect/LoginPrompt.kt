@@ -4,6 +4,8 @@ import android.app.Activity.RESULT_OK
 import android.text.Html
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -134,7 +136,11 @@ fun LoginPromptDialog(
         title = stringResource(R.string.LoginTitle),
         neutral = DialogButton(stringResource(R.string.SkipLogin), onDismiss),
     ) {
-        androidx.compose.foundation.layout.Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+        androidx.compose.foundation.layout.Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+        ) {
             LegacyText(
                 explanation,
                 size = 16.sp,

@@ -155,7 +155,9 @@ fun AppCompatAlertDialog(
                         modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp),
                     )
                 }
-                content()
+                // The body gets only the height the title and buttons leave, as AlertDialog's
+                // scroll panel did, so the buttons stay on screen however tall it is.
+                Column(Modifier.weight(1f, fill = false)) { content() }
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

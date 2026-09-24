@@ -152,6 +152,20 @@ class SettingsScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "w640dp-h320dp-land")
+    fun onAShortLandscapeScreenTheDialogsKeepTheirButtonsOnScreen() {
+        val activity = settings()
+        tapScrolled(TestTags.CHANGELOG)
+        compose.onNodeWithText(activity.getString(android.R.string.ok)).assertIsDisplayed()
+        compose.onNodeWithText(activity.getString(android.R.string.ok)).performClick()
+        screens.settle()
+
+        tapScrolled(TestTags.LOG_IN)
+        compose.onNodeWithText("NOT NOW").assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.LOGIN_BUTTON).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun aSignInResultArrivingAfterRecreationReachesThePrompt() {
         com.firebase.ui.auth.AuthUI.setApplicationContext(RichApplication.getAppContext())
         val controller = screens.launch(SettingsActivity::class.java)
