@@ -55,4 +55,14 @@ class SettingsLoginStateTest : ComposeScreenTest() {
         click("theme:1")
         assertTrue(TagMasterApplication.themeMode != androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
+
+    @Test
+    fun aSignInResultThatArrivesBeforeTheScreenComposesIsStillAnnounced() {
+        ScreenTestSupport.seedSettingsDefaults()
+        AuthState.setTestSource { signedIn }
+        // A recreated activity receives FirebaseUI's result during onStart, before its first frame.
+        val activity = launch(SettingsActivity::class.java, before = { it.showMessage(R.string.forms_sign_in_canceled) })
+        val canceled = activity.getString(R.string.forms_sign_in_canceled)
+        assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasText(canceled)).fetchSemanticsNodes().isNotEmpty())
+    }
 }

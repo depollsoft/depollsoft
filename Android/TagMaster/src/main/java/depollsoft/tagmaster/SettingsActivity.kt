@@ -98,7 +98,17 @@ class SettingsActivity : AppCompatActivity() {
         private set
 
     private var cacheSizeJob: Job? = null
-    internal var snackbars: Snackbars? = null
+    /**
+     * A message waiting for the screen to show it. A sign-in result can arrive before a recreated
+     * screen has composed its snackbar host, so messages queue here instead of being dropped.
+     */
+    internal var pendingMessage by mutableStateOf<Message?>(null)
+
+    internal class Message(
+        val text: String,
+        val action: String? = null,
+        val onAction: () -> Unit = {},
+    )
 
     private val signInLauncher =
         registerForActivityResult(FirebaseAuthUIActivityResultContract()) { result ->
@@ -149,7 +159,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     internal fun showMessage(message: Int) {
-        if (!isFinishing && !isDestroyed) snackbars?.show(getString(message), long = false)
+        if (!isFinishing && !isDestroyed) pendingMessage = Message(getString(message))
     }
 
     internal fun clearCache() {
@@ -183,7 +193,7 @@ class SettingsActivity : AppCompatActivity() {
                     throw e
                 } catch (e: Exception) {
                     if (!isFinishing && !isDestroyed) {
-                        snackbars?.show(getString(R.string.forms_cache_size_failed), getString(R.string.Refresh)) { refreshCacheSize() }
+                        pendingMessage = Message(getString(R.string.forms_cache_size_failed), getString(R.string.Refresh)) { refreshCacheSize() }
                     }
                 }
             }
@@ -234,7 +244,14 @@ class SettingsActivity : AppCompatActivity() {
 @Composable
 private fun SettingsScreen(activity: SettingsActivity) {
     val colors = TagMasterTheme.colors
-    activity.snackbars = LocalSnackbars.current
+    val snackbars = LocalSnackbars.current
+    activity.pendingMessage?.let { message ->
+        LaunchedEffect(message) {
+            activity.pendingMessage = null
+            // A message with an action (Refresh) stays up long; a plain result is brief.
+            snackbars.show(message.text, message.action, long = message.action != null, onAction = message.onAction)
+        }
+    }
     var confirming by remember { mutableStateOf<Pair<Int, () -> Unit>?>(null) }
     Column(Modifier.fillMaxSize()) {
         TagMasterTopBar(title = stringResource(R.string.app_name), brandTitle = true, onNavigateUp = { activity.navigateUpOrHome() })
