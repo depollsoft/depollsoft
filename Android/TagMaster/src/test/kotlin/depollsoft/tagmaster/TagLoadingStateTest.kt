@@ -3,15 +3,23 @@ package depollsoft.tagmaster
 import android.app.Application
 import android.content.Intent
 import android.os.Looper
-import android.view.View
-import androidx.appcompat.view.menu.MenuBuilder
-import androidx.viewpager2.widget.ViewPager2
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.performSemanticsAction
 import bolts.Task
 import bolts.TaskCompletionSource
 import depollsoft.lib.activity.RichApplication
 import depollsoft.tagmaster.barbershop.Tag
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -23,9 +31,17 @@ import org.robolectric.annotation.Config
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
+/**
+ * The tag detail screen's loading states: nothing but the loading state until a tag arrives, the
+ * tag replacing it as soon as it does, errors with a working retry, and requests that belong to a
+ * tag the screen has moved on from never landing.
+ */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class, sdk = [35])
 class TagLoadingStateTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     private val requests = LinkedBlockingQueue<Pair<Int, TaskCompletionSource<Tag>>>()
     private val id = 2147483018
 
@@ -39,7 +55,8 @@ class TagLoadingStateTest {
         writtenKey = "C"
     }
 
-    @Before fun context() {
+    @Before
+    fun context() {
         RichApplication::class.java
             .getDeclaredField("context")
             .apply { isAccessible = true }
@@ -61,7 +78,15 @@ class TagLoadingStateTest {
 
     private fun pending() = requests.poll(3, TimeUnit.SECONDS) ?: error("No request")
 
-    private fun idle() = shadowOf(Looper.getMainLooper()).idle()
+    private fun idle() {
+        shadowOf(Looper.getMainLooper()).idle()
+        compose.waitForIdle()
+    }
+
+    private fun shown(tag: String) = compose.onAllNodesWithTagCount(tag) > 0
+
+    private fun androidx.compose.ui.test.junit4.ComposeTestRule.onAllNodesWithTagCount(tag: String) =
+        onAllNodes(androidx.compose.ui.test.hasTestTag(tag)).fetchSemanticsNodes().size
 
     private fun assertState(
         a: TagDetailActivity,
@@ -69,119 +94,110 @@ class TagLoadingStateTest {
         loaded: Boolean,
         error: Boolean = false,
     ) {
-        assertEquals(loading, a.isLoading)
-        assertEquals(error, a.loadFailed)
-
-        fun visible(
-            id: Int,
-            expected: Boolean,
-        ) = assertEquals(id.toString(), if (expected) View.VISIBLE else View.GONE, a.findViewById<View>(id).visibility)
-        visible(R.id.detailLoadingState, loading && !loaded)
-        visible(R.id.viewPager, loaded)
-        visible(R.id.tabLayout, loaded)
-        visible(R.id.imageView1, loaded)
-        visible(R.id.progress, loading && loaded)
-        visible(R.id.detailErrorState, error && !loaded)
-        assertEquals(!loading, a.findViewById<View>(R.id.detailRetryButton).isEnabled)
-        if (!loaded) assertNull("No placeholder fragments", a.findViewById<ViewPager2>(R.id.viewPager).adapter)
-        if (!loading || loaded) assertFalse(a.findViewById<TagLoadingView>(R.id.quartetIllustration).isAnimating)
-        val menu = MenuBuilder(a)
-        assertEquals(loaded, a.onCreateOptionsMenu(menu))
-        if (loaded) {
-            a.onPrepareOptionsMenu(menu)
-            assertEquals(!loading, menu.findItem(R.id.refreshMenuItem).isEnabled)
+        idle()
+        assertEquals("loading", loading, a.isLoading)
+        assertEquals("failed", error, a.loadFailed)
+        assertEquals("loading state", loading && !loaded, shown("detailLoading"))
+        assertEquals("pages", loaded, shown("detailPager"))
+        assertEquals("tabs", loaded, shown("detailTabs"))
+        assertEquals("refresh bar", loading && loaded, shown("refreshProgress"))
+        assertEquals("error state", error && !loaded, shown("detailError"))
+        if (error && !loaded) {
+            if (loading) compose.onNodeWithTag("detailRetry").assertIsNotEnabled() else compose.onNodeWithTag("detailRetry").assertIsEnabled()
         }
+        // The tag's toolbar actions (Refresh among them, in the overflow on a phone) only exist
+        // once there is a tag.
+        assertEquals("tag actions", loaded, shown("overflowMenu"))
     }
 
     private fun refresh(a: TagDetailActivity) {
-        val menu = MenuBuilder(a)
-        a.onCreateOptionsMenu(menu)
-        a.onOptionsItemSelected(menu.findItem(R.id.refreshMenuItem))
+        a.detail.refresh()
+        idle()
     }
 
-    @Test fun initial_request_before_resume_has_no_placeholder_pages() {
-        val c = build().create()
+    private fun retry() {
+        compose.onNodeWithTag("detailRetry").performSemanticsAction(SemanticsActions.OnClick)
+        idle()
+    }
+
+    @Test
+    fun initialRequestBeforeResumeHasNoPlaceholderPages() {
+        val c = build().create().start()
         try {
-            assertState(c.get(), true, false)
+            // Nothing is on screen yet; the request is already out and no tag is assumed.
+            assertEquals(true, c.get().isLoading)
+            assertNull(c.get().tag)
             assertEquals(id, pending().first)
         } finally {
             c.destroy()
         }
     }
 
-    @Test fun visible_pending_replaces_immediately_on_completion() {
+    @Test
+    fun aPendingLoadIsReplacedAsSoonAsItCompletes() {
         val c = build().setup().visible()
         try {
-            assertState(c.get(), true, false)
-            assertEquals(
-                "Loading tag $id…",
-                c
-                    .get()
-                    .findViewById<android.widget.TextView>(R.id.detailLoadingStatus)
-                    .text
-                    .toString(),
-            )
+            assertState(c.get(), loading = true, loaded = false)
+            compose.onNodeWithTag("detailLoading").assert(hasContentDescription("Loading tag $id…", substring = true))
             pending().second.setResult(tag())
-            idle()
-            assertState(c.get(), false, true)
+            assertState(c.get(), loading = false, loaded = true)
             assertEquals(id, c.get().tag!!.id)
         } finally {
             c.pause().stop().destroy()
         }
     }
 
-    @Test fun fast_cache_result_never_waits_for_animation() {
+    @Test
+    fun aFastCacheResultNeverShowsTheLoadingState() {
         val c = build(fast = true).setup().visible()
         try {
-            assertState(c.get(), false, true)
+            assertState(c.get(), loading = false, loaded = true)
         } finally {
             c.pause().stop().destroy()
         }
     }
 
-    @Test fun initial_failure_retry_and_cancellation_stop_waiting() {
+    @Test
+    fun anInitialFailureRetriesAndACancellationStopsWaiting() {
         val c = build().setup().visible()
         try {
             pending().second.setError(IllegalStateException("offline"))
-            idle()
-            assertState(c.get(), false, false, true)
-            c.get().findViewById<View>(R.id.detailRetryButton).performClick()
-            assertState(c.get(), true, false)
+            assertState(c.get(), loading = false, loaded = false, error = true)
+            retry()
+            assertState(c.get(), loading = true, loaded = false)
             pending().second.setCancelled()
-            idle()
-            assertState(c.get(), false, false, true)
-            c.get().findViewById<View>(R.id.detailRetryButton).performClick()
+            assertState(c.get(), loading = false, loaded = false, error = true)
+            retry()
             pending().second.setResult(tag())
-            idle()
-            assertState(c.get(), false, true)
+            assertState(c.get(), loading = false, loaded = true)
         } finally {
             c.pause().stop().destroy()
         }
     }
 
-    @Test fun failed_refresh_retains_tag_and_retry_updates_current_content() {
+    @Test
+    fun aFailedRefreshKeepsTheTagAndARetryUpdatesIt() {
         val c = build().setup().visible()
         try {
             pending().second.setResult(tag())
             idle()
             val original = c.get().tag
             refresh(c.get())
-            assertState(c.get(), true, true)
+            assertState(c.get(), loading = true, loaded = true)
             pending().second.setError(IllegalStateException("offline"))
-            idle()
-            assertState(c.get(), false, true, true)
+            assertState(c.get(), loading = false, loaded = true, error = true)
             assertSame(original, c.get().tag)
             refresh(c.get())
             pending().second.setResult(tag(title = "Updated quartet"))
-            idle()
-            assertState(c.get(), false, true)
+            assertState(c.get(), loading = false, loaded = true)
             assertEquals("Updated quartet", c.get().tag!!.title)
         } finally {
             c.pause().stop().destroy()
         }
     }
 
-    @Test fun old_request_cannot_populate_a_new_tag() {
+    @Test
+    fun anOldRequestCannotPopulateANewTag() {
         val c = build().setup().visible()
         try {
             val old = pending()
@@ -189,8 +205,7 @@ class TagLoadingStateTest {
             val current = pending()
             assertEquals(id + 1, current.first)
             old.second.setResult(tag())
-            idle()
-            assertState(c.get(), true, false)
+            assertState(c.get(), loading = true, loaded = false)
             current.second.setResult(tag(id + 1))
             idle()
             assertEquals(id + 1, c.get().tag!!.id)
@@ -199,35 +214,35 @@ class TagLoadingStateTest {
         }
     }
 
-    @Test fun navigating_away_rejects_late_completion_and_stops_motion() {
+    @Test
+    fun leavingTheScreenRejectsALateCompletion() {
         val c = build().setup().visible()
-        val view = c.get().findViewById<TagLoadingView>(R.id.quartetIllustration)
         val request = pending()
         c.get().finish()
         c.pause().stop().destroy()
         request.second.setResult(tag())
-        idle()
+        shadowOf(Looper.getMainLooper()).idle()
         assertNull(c.get().tag)
-        assertFalse(view.isAnimating)
     }
 
-    @Test fun mismatched_result_is_an_error_not_a_different_tag() {
+    @Test
+    fun aResultForAnotherTagIsAnErrorNotADifferentTag() {
         val c = build().setup().visible()
         try {
             pending().second.setResult(tag(id + 1))
-            idle()
-            assertState(c.get(), false, false, true)
+            assertState(c.get(), loading = false, loaded = false, error = true)
         } finally {
             c.pause().stop().destroy()
         }
     }
 
-    @Test fun synchronous_request_failure_offers_retry() {
+    @Test
+    fun aLoaderThatThrowsOffersRetry() {
         val c = build()
         c.get().tagLoader = { _, _ -> throw IllegalStateException("offline") }
         c.setup().visible()
         try {
-            assertState(c.get(), false, false, true)
+            assertState(c.get(), loading = false, loaded = false, error = true)
         } finally {
             c.pause().stop().destroy()
         }
