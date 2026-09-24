@@ -134,7 +134,9 @@ fun TextUnit.inWholePixels(density: androidx.compose.ui.unit.Density): TextUnit 
     if (!isSp) return this
     val px = with(density) { toPx() }
     val whole = if (px == 0f) 0f else maxOf(1f, (px + 0.5f).toInt().toFloat())
-    return (whole / density.fontScale / density.density).sp
+    // Back through the density's own conversion: with Android 14's non-linear font scaling a
+    // plain division by fontScale would undo a different curve than toPx applied.
+    return with(density) { whole.toSp() }
 }
 
 /**
