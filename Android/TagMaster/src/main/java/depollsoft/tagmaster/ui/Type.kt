@@ -84,7 +84,9 @@ fun TextStyle.inWholePixels(): TextStyle {
         if (!isSp) return this
         val px = with(density) { toPx() }
         val whole = if (px == 0f) 0f else maxOf(1f, (px + 0.5f).toInt().toFloat())
-        return with(density) { (whole / fontScale / this@with.density).sp }
+        // Back through the density's own font scaling: from Android 14 that curve is non-linear,
+        // and dividing by fontScale would shrink large text below the TextView's size.
+        return with(density) { whole.toSp() }
     }
     return copy(fontSize = fontSize.rounded(), lineHeight = lineHeight.rounded())
 }
