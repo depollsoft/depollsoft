@@ -69,7 +69,7 @@ fun TagMasterButton(
                 Triple(
                     Color.Transparent,
                     if (enabled) colors.primary else disabledContent,
-                    BorderStroke(1.dp, if (enabled) colors.outlineVariant else colors.onSurface.copy(alpha = 0.12f)),
+                    BorderStroke(1.dp, if (enabled) colors.outline else colors.onSurface.copy(alpha = 0.12f)),
                 )
         }
     Box(
@@ -112,19 +112,25 @@ private class InsetShape(
         val inner = shape.createOutline(Size(size.width, (size.height - 2 * inset).coerceAtLeast(0f)), layoutDirection, density)
         return when (inner) {
             is Outline.Rectangle -> Outline.Rectangle(inner.rect.translate(0f, inset))
+            // A path, not Outline.Rounded: Modifier.border rebuilds a rounded outline from the
+            // full size and would draw the stroke outside the inset.
             is Outline.Rounded ->
                 inner.roundRect.let {
-                    Outline.Rounded(
-                        RoundRect(
-                            it.left,
-                            it.top + inset,
-                            it.right,
-                            it.bottom + inset,
-                            it.topLeftCornerRadius,
-                            it.topRightCornerRadius,
-                            it.bottomRightCornerRadius,
-                            it.bottomLeftCornerRadius,
-                        ),
+                    Outline.Generic(
+                        Path().apply {
+                            addRoundRect(
+                                RoundRect(
+                                    it.left,
+                                    it.top + inset,
+                                    it.right,
+                                    it.bottom + inset,
+                                    it.topLeftCornerRadius,
+                                    it.topRightCornerRadius,
+                                    it.bottomRightCornerRadius,
+                                    it.bottomLeftCornerRadius,
+                                ),
+                            )
+                        },
                     )
                 }
             is Outline.Generic -> Outline.Generic(Path().apply { addPath(inner.path, androidx.compose.ui.geometry.Offset(0f, inset)) })

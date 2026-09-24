@@ -61,7 +61,7 @@ fun SavedListScreen(
     val scope = rememberCoroutineScope()
     pane.reveal = { id ->
         val index = ids.indexOf(id)
-        if (index >= 0) scope.launch { listState.animateScrollToItem(index) }
+        if (index >= 0) scope.launch { listState.revealItem(index) }
     }
     val bar =
         @Composable {

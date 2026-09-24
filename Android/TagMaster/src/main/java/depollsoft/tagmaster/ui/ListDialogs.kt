@@ -203,15 +203,22 @@ fun ListNameDialog(
         dismiss = DialogButton(stringResource(R.string.home_cancel), onClick = onDismiss),
         confirm = DialogButton(stringResource(if (renaming) R.string.list_rename else R.string.list_create), id = "listNameConfirm") { submit() },
     ) {
-        val colors = TagMasterTheme.colors
-        OutlinedTextField(
+        OutlinedField(
+            label = stringResource(R.string.list_name_hint),
             value = field,
             onValueChange = { field = it },
             modifier =
                 Modifier
                     .padding(start = 24.dp, end = 24.dp, top = 8.dp)
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
+                    .fillMaxWidth(),
+            helper = stringResource(R.string.list_name_helper),
+            error = error?.let { stringResource(it) },
+            counter = "${field.text.length}/${TagLists.MAX_NAME_LENGTH}",
+            maxLines = 2,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { submit() }),
+            fieldModifier =
+                Modifier
                     .focusRequester(focus)
                     .onPreviewKeyEvent { event ->
                         // The field wraps a long name onto a second line, but Enter still means
@@ -223,26 +230,10 @@ fun ListNameDialog(
                             false
                         }
                     }.testTag("listNameInput"),
-            label = { Text(stringResource(R.string.list_name_hint)) },
-            textStyle = TagMasterType.bodyLarge.copy(color = colors.onSurface),
-            maxLines = 2,
-            isError = error != null,
-            supportingText = {
-                Text(error?.let { stringResource(it) } ?: stringResource(R.string.list_name_helper))
-            },
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { submit() }),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colors.primary, cursorColor = colors.primary),
         )
-        Text(
-            "${field.text.length}/${TagLists.MAX_NAME_LENGTH}",
-            modifier = Modifier.padding(start = 40.dp, end = 40.dp).fillMaxWidth(),
-            style = TagMasterType.bodySmall,
-            color = colors.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.End,
-        )
+        // Requested from inside the dialog, whose content is composed after the caller's.
+        LaunchedEffect(Unit) { focus.requestFocus() }
     }
-    LaunchedEffect(Unit) { focus.requestFocus() }
 }
 
 /**

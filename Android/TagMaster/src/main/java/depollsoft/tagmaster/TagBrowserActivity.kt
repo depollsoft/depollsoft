@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import depollsoft.tagmaster.ui.revealItem
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -152,7 +153,7 @@ private fun BrowseScreen(activity: TagBrowserActivity) {
     LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect { activity.currentPage = it } }
     pane.reveal = { id ->
         val index = activity.currentModel.tags.indexOfFirst { it.id == id }
-        if (index >= 0) scope.launch { listStates[activity.currentPage].animateScrollToItem(index) }
+        if (index >= 0) scope.launch { listStates[activity.currentPage].revealItem(index) }
     }
     val bar =
         @Composable {

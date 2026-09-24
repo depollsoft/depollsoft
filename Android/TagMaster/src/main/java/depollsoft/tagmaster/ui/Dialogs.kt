@@ -80,7 +80,6 @@ fun TagMasterDialog(
                             .fillMaxWidth()
                     },
                 )
-                .shadow(6.dp, RoundedCornerShape(28.dp))
                 .background(colors.surfaceContainerHigh, RoundedCornerShape(28.dp))
                 .clip(RoundedCornerShape(28.dp))
                 .semantics { if (title != null) paneTitle = title }

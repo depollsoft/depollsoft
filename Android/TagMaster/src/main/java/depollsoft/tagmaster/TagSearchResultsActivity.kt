@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import depollsoft.tagmaster.ui.revealItem
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
@@ -106,7 +107,7 @@ open class TagSearchResultsActivity :
         val scope = rememberCoroutineScope()
         pane.reveal = { id ->
             val index = activity.model.tags.indexOfFirst { it.id == id }
-            if (index >= 0) scope.launch { listState.animateScrollToItem(index) }
+            if (index >= 0) scope.launch { listState.revealItem(index) }
         }
         val bar =
             @Composable {

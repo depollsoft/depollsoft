@@ -70,6 +70,7 @@ import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.navigateUpOrHome
+import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.setTagMasterContent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -245,10 +246,12 @@ private fun SettingsScreen(activity: SettingsActivity) {
             BarberPoleWatermark()
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 val extra = with(LocalDensity.current) { ((constraints.maxWidth - 640.dp.roundToPx()).coerceAtLeast(0) / 2).toDp() }
+                val scroll = rememberScrollState()
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
+                        .scrollViewScrollbar(scroll, bottom = 16.dp)
+                        .verticalScroll(scroll)
                         .padding(start = 16.dp + extra, end = 16.dp + extra, bottom = 16.dp)
                         .testTag("settingsForm"),
                 ) {

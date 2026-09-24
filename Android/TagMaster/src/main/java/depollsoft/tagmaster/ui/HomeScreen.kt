@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import depollsoft.tagmaster.ListModel
@@ -207,7 +208,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     pane.reveal = { id ->
         val index = favoriteIds.indexOf(id)
-        if (index >= 0) scope.launch { listState.animateScrollToItem(index + favoritesStart) }
+        if (index >= 0) scope.launch { listState.revealItem(index + favoritesStart) }
     }
     val favoritesLabel = stringResource(R.string.Favorites)
     val bar =
@@ -390,13 +391,12 @@ private fun AboutFooter() {
 /** "Enter Tag ID": a number field that opens the tag, or says why it cannot. */
 @Composable
 private fun OpenTagDialog(actions: HomeActions) {
-    var text by rememberSaveable { mutableStateOf("") }
+    var text by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
     var error by rememberSaveable { mutableStateOf(false) }
     val focus = remember { FocusRequester() }
-    val colors = TagMasterTheme.colors
 
     fun submit() {
-        val id = text.toIntOrNull()
+        val id = text.text.toIntOrNull()
         if (id == null || id <= 0) {
             error = true
             return
@@ -407,29 +407,25 @@ private fun OpenTagDialog(actions: HomeActions) {
     }
     TagMasterDialog(
         onDismissRequest = { actions.openTagDialog = false },
+        wrapWidth = true,
         title = stringResource(R.string.home_enter_tag_id),
         dismiss = DialogButton(stringResource(R.string.home_cancel)) { actions.openTagDialog = false },
         confirm = DialogButton(stringResource(R.string.home_open), id = "openTagConfirm") { submit() },
     ) {
-        OutlinedTextField(
+        OutlinedField(
+            label = stringResource(R.string.TagId),
             value = text,
             onValueChange = { text = it },
             modifier =
                 Modifier
                     .padding(start = 24.dp, end = 24.dp, top = 8.dp)
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .focusRequester(focus)
-                    .testTag("openTagIdInput"),
-            label = { Text(stringResource(R.string.TagId)) },
-            textStyle = TagMasterType.bodyLarge.copy(color = colors.onSurface),
-            singleLine = true,
-            isError = error,
-            supportingText = if (error) ({ Text(stringResource(R.string.home_invalid_tag_id)) }) else null,
+                    .fillMaxWidth(),
+            error = if (error) stringResource(R.string.home_invalid_tag_id) else null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
             keyboardActions = KeyboardActions(onGo = { submit() }),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colors.primary, cursorColor = colors.primary),
+            fieldModifier = Modifier.focusRequester(focus).testTag("openTagIdInput"),
         )
+        // Requested from inside the dialog, whose content is composed after the caller's.
+        LaunchedEffect(Unit) { focus.requestFocus() }
     }
-    LaunchedEffect(Unit) { focus.requestFocus() }
 }

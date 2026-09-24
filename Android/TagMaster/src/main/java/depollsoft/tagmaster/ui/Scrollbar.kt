@@ -7,6 +7,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
@@ -233,3 +235,30 @@ fun Modifier.scrollViewScrollbar(
 private const val INITIAL_DELAY = 1200L
 private const val SCROLL_DELAY = 300L
 private const val FADE_DURATION = 250
+
+/**
+ * Scrolls just far enough to show item [index] whole, the way RecyclerView's and ListView's
+ * smoothScrollToPosition do: nothing when it is already in view, otherwise the smallest scroll
+ * that brings its near edge inside the padded viewport.
+ */
+suspend fun LazyListState.revealItem(index: Int) {
+    fun find() = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+    // Item offsets start after the top padding; the box ends before the bottom padding.
+    val end = layoutInfo.viewportSize.height - layoutInfo.beforeContentPadding - layoutInfo.afterContentPadding
+    val shown = find()
+    if (shown != null) {
+        when {
+            shown.offset < 0 -> animateScrollBy(shown.offset.toFloat())
+            shown.offset + shown.size > end -> animateScrollBy((shown.offset + shown.size - end).toFloat())
+        }
+        return
+    }
+    val first = layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0
+    scrollToItem(index)
+    if (index > first) {
+        // Coming from above: settle with the item's bottom edge at the end of the viewport.
+        val placed = find() ?: return
+        val back = end - (placed.offset + placed.size)
+        if (back > 0) scrollBy(-back.toFloat())
+    }
+}
