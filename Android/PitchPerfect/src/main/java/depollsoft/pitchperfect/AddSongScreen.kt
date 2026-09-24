@@ -4,7 +4,6 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Column
@@ -224,8 +223,7 @@ private fun CenterChosenKey(
         val index = keys.indexOfFirst { it == state.key }
         if (index < 0) return@LaunchedEffect
         withFrameNanos { }
-        listState.scrollToItem(index)
-        listState.scrollBy(-maxOf(0, height / 2 - rowHeight / 2).toFloat())
+        listState.scrollToItem(index, -maxOf(0, height / 2 - rowHeight / 2))
     }
 }
 

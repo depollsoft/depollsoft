@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 
-/** A section header (`TextAppearance.Plate.SectionHeader`): monospace caps in secondary ink. */
+/** A section header (`TextAppearance.Plate.SectionHeader`): letter-spaced caps in secondary ink. */
 @Composable
 fun PlateSectionHeader(
     text: String,
@@ -30,7 +30,8 @@ fun PlateSectionHeader(
 ) {
     PlateText(
         text.uppercase(),
-        style = plateText(12.sp, plateColors.inkSecondary, PlateFonts.mono, letterSpacing = 0.14f),
+        // The style named monospace, but its Material parent's app:fontFamily (sans-serif) wins.
+        style = plateText(12.sp, plateColors.inkSecondary, letterSpacing = 0.14f),
         modifier = modifier,
     )
 }

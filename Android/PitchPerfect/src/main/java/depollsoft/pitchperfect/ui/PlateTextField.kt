@@ -140,7 +140,11 @@ fun PlateFilledField(
 ) {
     val colors = plateColors
     var focused by remember { mutableStateOf(false) }
-    val underline = if (focused) 2.dp else 1.dp
+    // TextInputLayout's underline: 1dp of ink at the unfocused stroke's 48% while idle, 2dp of
+    // solid ink while focused or in error.
+    val active = focused || error != null
+    val underline = if (active) 2.dp else 1.dp
+    val underlineColor = if (active) colors.ink else colors.ink.copy(alpha = IDLE_UNDERLINE_ALPHA)
     Column(modifier) {
         BasicTextField(
             value,
@@ -153,8 +157,12 @@ fun PlateFilledField(
                     contentDescription = description
                     if (error != null) this.error(error)
                 }.drawBehind {
+                    // The filled box: the plate surface with the small component's 2dp top corners.
+                    val corner = 2.dp.toPx()
+                    drawRoundRect(colors.surface, cornerRadius = CornerRadius(corner))
+                    drawRect(colors.surface, Offset(0f, corner), Size(size.width, size.height - corner))
                     val height = underline.toPx()
-                    drawRect(colors.ink, Offset(0f, size.height - height), Size(size.width, height))
+                    drawRect(underlineColor, Offset(0f, size.height - height), Size(size.width, height))
                 }.padding(vertical = 10.dp),
             textStyle = textStyle,
             singleLine = true,
@@ -180,3 +188,5 @@ fun PlateFilledField(
         )
     }
 }
+
+private const val IDLE_UNDERLINE_ALPHA = 0.478f
