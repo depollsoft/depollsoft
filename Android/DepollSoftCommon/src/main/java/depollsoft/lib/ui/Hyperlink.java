@@ -11,11 +11,10 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.bindroid.trackable.TrackableField;
 
 public class Hyperlink extends androidx.appcompat.widget.AppCompatTextView {
 
-  private TrackableField<String> hyperlinkUri = new TrackableField<String>();
+  private String hyperlinkUri;
 
   private boolean isSetting;
   private boolean initialized;
@@ -48,7 +47,7 @@ public class Hyperlink extends androidx.appcompat.widget.AppCompatTextView {
   }
 
   public String getHyperlinkUri() {
-    return this.hyperlinkUri.get();
+    return this.hyperlinkUri;
   }
 
   private void init() {
@@ -87,7 +86,7 @@ public class Hyperlink extends androidx.appcompat.widget.AppCompatTextView {
   }
 
   public void setHyperlinkUri(String value) {
-    this.hyperlinkUri.set(value);
+    this.hyperlinkUri = value;
     this.ensureUnderlined();
   }
 }

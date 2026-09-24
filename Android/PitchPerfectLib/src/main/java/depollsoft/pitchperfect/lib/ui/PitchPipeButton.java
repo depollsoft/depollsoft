@@ -5,20 +5,19 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.Button;
 
-import com.bindroid.BindingMode;
-import com.bindroid.converters.BoolConverter;
-import com.bindroid.trackable.TrackableField;
-import com.bindroid.ui.UiBinder;
-import com.bindroid.utils.ReflectedProperty;
+import depollsoft.lib.state.StateField;
+import depollsoft.lib.state.StateWatch;
+import depollsoft.lib.state.ObservableStateKt;
 
 import depollsoft.pitchperfect.lib.Note;
 
 public class PitchPipeButton extends Button {
 
-  private TrackableField<Note> note = new TrackableField<Note>();
+  private StateField<Note> note = new StateField<>(null);
 
-  private TrackableField<Boolean> isToggle = new TrackableField<Boolean>(false);
+  private StateField<Boolean> isToggle = new StateField<>(false);
 
+  private StateWatch pressedWatch;
   private boolean touchInProgress;
   private Note clickNote;
   // Only stop notes activated by this button, not a note sounding elsewhere.
@@ -58,12 +57,21 @@ public class PitchPipeButton extends Button {
   @Override
   protected void onAttachedToWindow() {
     super.onAttachedToWindow();
-    UiBinder.bind(new ReflectedProperty(this, "Pressed"), new ReflectedProperty(this,
-        "Note.IsPlaying"), BindingMode.ONE_WAY, BoolConverter.get());
+    pressedWatch = ObservableStateKt.watchState(true, () -> {
+      Note current = getNote();
+      return current != null && current.getIsPlaying();
+    }, pressed -> {
+      setPressed(pressed);
+      return kotlin.Unit.INSTANCE;
+    });
   }
 
   @Override
   protected void onDetachedFromWindow() {
+    if (pressedWatch != null) {
+      pressedWatch.stop();
+      pressedWatch = null;
+    }
     removeCallbacks(stopClickNote);
     removeCallbacks(clearTouchState);
     stopActiveNote();

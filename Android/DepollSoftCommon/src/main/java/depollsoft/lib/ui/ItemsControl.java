@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.Adapter;
 import android.widget.LinearLayout;
 
-import com.bindroid.trackable.TrackableField;
 
 public class ItemsControl extends LinearLayout {
   private class Observer extends DataSetObserver {
@@ -29,7 +28,7 @@ public class ItemsControl extends LinearLayout {
 
   private Observer observer;
 
-  private TrackableField<Adapter> adapter = new TrackableField<Adapter>();
+  private Adapter adapter;
 
   public ItemsControl(Context context) {
     super(context);
@@ -42,7 +41,7 @@ public class ItemsControl extends LinearLayout {
   }
 
   public Adapter getAdapter() {
-    return this.adapter.get();
+    return this.adapter;
   }
 
   protected void init() {
@@ -84,7 +83,7 @@ public class ItemsControl extends LinearLayout {
     if (this.getAdapter() != null) {
       this.getAdapter().unregisterDataSetObserver(this.observer);
     }
-    this.adapter.set(value);
+    this.adapter = value;
     if (this.getAdapter() != null) {
       this.getAdapter().registerDataSetObserver(this.observer);
       this.idToView.clear();

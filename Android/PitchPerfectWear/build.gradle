@@ -1,7 +1,12 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+apply plugin: 'io.github.takahirom.roborazzi'
 
 
 android {
+    buildFeatures {
+        compose = true
+    }
     namespace = 'depollsoft.pitchperfect'
     compileSdk 37
 
@@ -67,6 +72,19 @@ android {
 }
 
 dependencies {
+    implementation platform(compose_bom)
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.activity:activity-compose:1.13.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    testImplementation platform(compose_bom)
+    testImplementation 'androidx.compose.ui:ui-test-junit4'
+    testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"
+    testImplementation "io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi_version"
+    testImplementation "io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi_version"
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.core:core-ktx:1.19.0'
@@ -79,4 +97,10 @@ dependencies {
     testImplementation 'androidx.test.ext:junit:1.3.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.16.1'
+}
+
+// Screenshot goldens live beside the tests so a port can be diffed against the View-era
+// rendering: `recordRoborazziDebug` writes them, `compareRoborazziDebug` diffs against them.
+roborazzi {
+    outputDir = file("src/test/screenshots")
 }

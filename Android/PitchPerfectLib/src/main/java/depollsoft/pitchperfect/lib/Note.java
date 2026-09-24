@@ -3,7 +3,7 @@ package depollsoft.pitchperfect.lib;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
-import com.bindroid.trackable.TrackableField;
+import depollsoft.lib.state.StateField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -124,19 +124,19 @@ public class Note {
     return Note.prunedNotes;
   }
 
-  private TrackableField<String> friendlyName = new TrackableField<String>();
+  private StateField<String> friendlyName = new StateField<>(null);
 
-  private TrackableField<Integer> octave = new TrackableField<Integer>(0);
+  private StateField<Integer> octave = new StateField<>(0);
 
-  private TrackableField<Accidental> accidental = new TrackableField<Accidental>();
+  private StateField<Accidental> accidental = new StateField<>(null);
 
-  private TrackableField<Double> frequency = new TrackableField<Double>(0d);
+  private StateField<Double> frequency = new StateField<>(0d);
 
-  private TrackableField<Integer> keyNumber = new TrackableField<Integer>();
+  private StateField<Integer> keyNumber = new StateField<>(null);
 
-  private TrackableField<Boolean> isPlaying = new TrackableField<Boolean>(false);
+  private StateField<Boolean> isPlaying = new StateField<>(false);
 
-  private TrackableField<Note> alternate = new TrackableField<Note>();
+  private StateField<Note> alternate = new StateField<>(null);
   private boolean isAttemptingToPlay;
 
   private Object synchronizer = new Object();

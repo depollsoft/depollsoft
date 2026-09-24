@@ -8,7 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 
-import com.bindroid.trackable.Trackable;
+import depollsoft.lib.state.ChangeSignal;
 
 import depollsoft.lib.activity.RichApplication;
 import depollsoft.lib.json.JsonSerializer;
@@ -36,7 +36,7 @@ public class Preferences {
   }
   public static class MappingList extends ArrayList<Mapping> {}
   private static SharedPreferences preferences;
-  private static Map<String, Trackable> trackableMap;
+  private static Map<String, ChangeSignal> trackableMap;
   private static boolean initialized = false;
 
   // Test mode support
@@ -60,12 +60,12 @@ public class Preferences {
     Preferences.preferences = context
         .getSharedPreferences("depollsoft.lib.Preferences",
             Context.MODE_PRIVATE);
-    Preferences.trackableMap = new HashMap<String, Trackable>();
+    Preferences.trackableMap = new HashMap<String, ChangeSignal>();
     Preferences.preferences
         .registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
-          Trackable trackable = Preferences.trackableMap.remove(key);
-          if (trackable != null) {
-            trackable.updateTrackers();
+          ChangeSignal signal = Preferences.trackableMap.get(key);
+          if (signal != null) {
+            signal.changed();
           }
         });
     initialized = true;
@@ -107,8 +107,8 @@ public class Preferences {
       return null;
     }
     if (!Preferences.trackableMap.containsKey(key))
-      Preferences.trackableMap.put(key, new Trackable());
-    Preferences.trackableMap.get(key).track();
+      Preferences.trackableMap.put(key, new ChangeSignal());
+    Preferences.trackableMap.get(key).read();
     String stringValue = Preferences.preferences.getString(key, null);
     if (stringValue == null)
       return null;

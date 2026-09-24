@@ -15,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
 import android.util.LruCache;
 
-import com.bindroid.trackable.TrackableField;
 
 public class LoadingImageView extends androidx.appcompat.widget.AppCompatImageView {
 
@@ -39,7 +38,7 @@ public class LoadingImageView extends androidx.appcompat.widget.AppCompatImageVi
         }
       };
   private static final int MAX_DOWNLOAD_BYTES = 8 * 1024 * 1024;
-  private final TrackableField<String> source = new TrackableField<String>();
+  private String source;
   private volatile int requestVersion;
 
   public LoadingImageView(Context context) {
@@ -117,11 +116,11 @@ public class LoadingImageView extends androidx.appcompat.widget.AppCompatImageVi
   }
 
   public String getSource() {
-    return source.get();
+    return this.source;
   }
 
   public void setSource(String value) {
-    source.set(value);
+    this.source = value;
     int version = ++requestVersion;
     setImageDrawable(null);
     if (value != null && !value.isEmpty()) fetchSource(value, version);

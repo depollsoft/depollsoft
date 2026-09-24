@@ -138,6 +138,12 @@ class KeySignatureFragment : Fragment() {
     }
 
     private fun updateFabState() {
+        // The shared models no longer notify Bindroid bindings, so show the chosen list here.
+        if (::majorView.isInitialized) {
+            majorView.visibility = if (model.isMajor) View.VISIBLE else View.GONE
+            minorView.visibility = if (model.isMajor) View.GONE else View.VISIBLE
+        }
+        fab?.setIconResource(if (model.isMajor) R.drawable.ic_major else R.drawable.ic_minor)
         fab?.text = getString(if (model.isMajor) R.string.major else R.string.minor)
         fab?.contentDescription =
             getString(if (model.isMajor) R.string.SwitchToMinorKeys else R.string.SwitchToMajorKeys)

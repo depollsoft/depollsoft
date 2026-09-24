@@ -3,7 +3,7 @@ package depollsoft.lib.audio;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
-import com.bindroid.utils.Action;
+import depollsoft.lib.util.Action;
 
 public class StreamingAudioTrack extends AudioTrack {
   private class TrackWatcherThread extends Thread {

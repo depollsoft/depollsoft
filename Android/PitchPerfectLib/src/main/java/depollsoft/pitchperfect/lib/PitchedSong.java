@@ -2,16 +2,16 @@ package depollsoft.pitchperfect.lib;
 
 import java.util.UUID;
 
-import com.bindroid.trackable.TrackableField;
+import depollsoft.lib.state.StateField;
 
 public class PitchedSong implements Comparable<PitchedSong> {
-  private TrackableField<String> name = new TrackableField<String>();
+  private StateField<String> name = new StateField<>(null);
 
-  private TrackableField<Key> key = new TrackableField<Key>();
+  private StateField<Key> key = new StateField<>(null);
 
-  private TrackableField<String> uuid = new TrackableField<String>();
+  private StateField<String> uuid = new StateField<>(null);
 
-  private TrackableField<Boolean> isPlaying = new TrackableField<Boolean>(false);
+  private StateField<Boolean> isPlaying = new StateField<>(false);
 
   public PitchedSong() {
     this.setId(UUID.randomUUID().toString());

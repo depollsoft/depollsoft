@@ -2,7 +2,9 @@ apply plugin: 'com.android.library'
 
 dependencies {
     api fileTree(include: '*.jar', dir: 'libs')
-    api project(':bindroid')
+    // Models keep observable state in Compose snapshot state; see depollsoft.lib.state.
+    api platform(compose_bom)
+    api 'androidx.compose.runtime:runtime'
     api 'androidx.legacy:legacy-support-v4:1.0.0'
     api 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'

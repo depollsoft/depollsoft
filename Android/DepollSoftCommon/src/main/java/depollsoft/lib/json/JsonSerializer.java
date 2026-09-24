@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.bindroid.utils.Pair;
+import depollsoft.lib.util.Pair;
 
 @SuppressWarnings("ALL")
 public class JsonSerializer {

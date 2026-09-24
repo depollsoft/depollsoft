@@ -1,6 +1,6 @@
 package depollsoft.pitchperfect.lib;
 
-import com.bindroid.trackable.TrackableCollection;
+import depollsoft.lib.state.StateList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -204,13 +204,13 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_notNull() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         assertNotNull("Major keys collection should not be null", majorKeys);
     }
 
     @Test
     public void testGetMajorKeys_containsCMajor() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         boolean found = false;
         for (Key k : majorKeys) {
             if (k.getNote().getFriendlyName().equals("C") &&
@@ -226,7 +226,7 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_containsGMajor() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         boolean found = false;
         for (Key k : majorKeys) {
             if (k.getNote().getFriendlyName().equals("G") &&
@@ -241,7 +241,7 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_containsFlatKeys() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         boolean hasFlat = false;
         for (Key k : majorKeys) {
             if (k.getAccidental() == Accidental.Flat) {
@@ -254,7 +254,7 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_containsSharpKeys() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         boolean hasSharp = false;
         for (Key k : majorKeys) {
             if (k.getAccidental() == Accidental.Sharp) {
@@ -267,7 +267,7 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_allAreMajorType() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         for (Key k : majorKeys) {
             assertEquals("All keys should be Major type", KeyType.Major, k.getKeyType());
         }
@@ -275,8 +275,8 @@ public class KeyTest {
 
     @Test
     public void testGetMajorKeys_sameInstanceReturned() {
-        TrackableCollection<Key> first = Key.getMajorKeys();
-        TrackableCollection<Key> second = Key.getMajorKeys();
+        StateList<Key> first = Key.getMajorKeys();
+        StateList<Key> second = Key.getMajorKeys();
         assertSame("Should return same instance", first, second);
     }
 
@@ -284,13 +284,13 @@ public class KeyTest {
 
     @Test
     public void testGetMinorKeys_notNull() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         assertNotNull("Minor keys collection should not be null", minorKeys);
     }
 
     @Test
     public void testGetMinorKeys_containsAMinor() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         boolean found = false;
         for (Key k : minorKeys) {
             if (k.getNote().getFriendlyName().equals("A") &&
@@ -306,7 +306,7 @@ public class KeyTest {
 
     @Test
     public void testGetMinorKeys_containsEMinor() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         boolean found = false;
         for (Key k : minorKeys) {
             if (k.getNote().getFriendlyName().equals("E") &&
@@ -322,7 +322,7 @@ public class KeyTest {
 
     @Test
     public void testGetMinorKeys_allAreMinorType() {
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
         for (Key k : minorKeys) {
             assertEquals("All keys should be Minor type", KeyType.Minor, k.getKeyType());
         }
@@ -330,8 +330,8 @@ public class KeyTest {
 
     @Test
     public void testGetMinorKeys_sameInstanceReturned() {
-        TrackableCollection<Key> first = Key.getMinorKeys();
-        TrackableCollection<Key> second = Key.getMinorKeys();
+        StateList<Key> first = Key.getMinorKeys();
+        StateList<Key> second = Key.getMinorKeys();
         assertSame("Should return same instance", first, second);
     }
 
@@ -340,8 +340,8 @@ public class KeyTest {
     @Test
     public void testCircleOfFifths_majorAndMinorParallel() {
         // C Major and A Minor are relative keys (same key signature)
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
-        TrackableCollection<Key> minorKeys = Key.getMinorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> minorKeys = Key.getMinorKeys();
 
         Key cMajor = null;
         Key aMinor = null;
@@ -370,7 +370,7 @@ public class KeyTest {
 
     @Test
     public void testCircleOfFifths_accidentalsRange() {
-        TrackableCollection<Key> majorKeys = Key.getMajorKeys();
+        StateList<Key> majorKeys = Key.getMajorKeys();
         for (Key k : majorKeys) {
             assertTrue("Accidentals should be between -6 and 6",
                     k.getNumAccidentals() >= -6 && k.getNumAccidentals() <= 6);
