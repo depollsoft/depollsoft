@@ -3,6 +3,7 @@ package depollsoft.tagmaster.ui
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -17,14 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
@@ -35,7 +44,8 @@ import androidx.core.content.ContextCompat
  * center, with 2dp inside corners, and a 4dp stop dot at the end of the inactive track. Colors are
  * MDC's own `m3_slider_*` state lists, so the disabled look matches as well.
  *
- * Tapping or dragging sets the value; screen readers adjust it with the set-progress action.
+ * Tapping or dragging sets the value; screen readers adjust it with the set-progress action; a
+ * keyboard or D-pad focuses it and moves it with the arrow keys, as MDC's slider did.
  */
 @Composable
 fun ViewSlider(
@@ -49,9 +59,12 @@ fun ViewSlider(
     val configuration = LocalConfiguration.current
     val paints = remember(context, configuration.uiMode) { SliderPaints(context) }
     val currentValue by rememberUpdatedState(value)
+    val keyed = remember { FloatArray(1) }
+    keyed[0] = value
     val change by rememberUpdatedState(onValueChange)
     val span = valueRange.endInclusive - valueRange.start
     val geometry = remember { SliderGeometry() }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Box(
         modifier
             .fillMaxWidth()
@@ -70,7 +83,17 @@ fun ViewSlider(
                 if (!enabled) {
                     Modifier
                 } else {
-                    Modifier.pointerInput(valueRange) {
+                    Modifier
+                        .onKeyEvent { event ->
+                            val step = keyStep(event, span, rtl) ?: return@onKeyEvent false
+                            if (event.type == KeyEventType.KeyDown) {
+                                // Several presses can land before the new value comes back in.
+                                keyed[0] = (keyed[0] + step).coerceIn(valueRange)
+                                change(keyed[0])
+                            }
+                            true
+                        }.focusable()
+                        .pointerInput(valueRange) {
                         fun valueAt(x: Float): Float {
                             val fraction = ((x - geometry.start) / (geometry.end - geometry.start)).coerceIn(0f, 1f)
                             return valueRange.start + fraction * span
@@ -91,6 +114,27 @@ fun ViewSlider(
                 drawIntoCanvas { paints.draw(it.nativeCanvas, geometry, size.height, fraction, enabled, this) }
             },
     )
+}
+
+/**
+ * How far an arrow key moves the value, or null for a key the slider ignores. Like MDC's slider
+ * with no step size: one unit a press, and a twentieth of the range while the key repeats.
+ */
+private fun keyStep(
+    event: KeyEvent,
+    span: Float,
+    rtl: Boolean,
+): Float? {
+    val direction =
+        when (event.key) {
+            Key.DirectionRight -> if (rtl) -1 else 1
+            Key.DirectionLeft -> if (rtl) 1 else -1
+            Key.Plus, Key.Equals, Key.NumPadAdd -> 1
+            Key.Minus, Key.NumPadSubtract -> -1
+            else -> return null
+        }
+    val increment = if (event.nativeKeyEvent.repeatCount > 0) maxOf(1f, span / 20f) else 1f
+    return direction * increment
 }
 
 /** Where the track's first and last values sit, in pixels. */
