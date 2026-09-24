@@ -56,6 +56,27 @@ serialized by the Bindroid-era code to keep that true.
   fragment's loaded pages) is kept too: in `rememberSaveable`, the activity's `SavedStateRegistry`,
   or a `ViewModel`.
 
+## Motion and interaction
+
+Both apps move the same way. Keep new screens consistent with this:
+
+* **List rows** that can be added, removed, moved or changed use `Modifier.animateItem` with each
+  app's `ListMotion` (RecyclerView's default animator: 120ms fades, 250ms moves). A reorder the
+  app makes itself (Sort, Move up/down, keyboard and accessibility moves) holds the scroll
+  position by index, so the list doesn't follow its old top row.
+* **Dragged rows** (`RowDrag` in Pitch Perfect, `ReorderState` in Tag Master) start on touch-down
+  of the handle, lift to a 6dp shadow in 150ms, tick on each swap, and settle into their slot in
+  200ms before the order is committed. The dragged row never gets a placement animation.
+* **Snackbars** last 1.5s (short) or 2.75s (long), as MDC's did, stretched to the accessibility
+  timeout the user asked for.
+* **Icon buttons and tabs** show their label as a tooltip on long-press and hover, as AppCompat's
+  did. The hardware Menu key opens the screen's overflow menu.
+* **Dialogs and popup menus** animate in and out. Pagers select a tapped tab at once and a swiped
+  one when it settles; side effects of "the current page" (stopping a track) wait for
+  `settledPage`.
+* Compose `clickable` plays the system click sound. A custom `pointerInput` gesture that stands
+  for a click has to call `playSoundEffect` itself.
+
 ## Matching the Views' pixels
 
 The screens reproduce the View layouts they replaced, down to the pixel. What that took, and what
