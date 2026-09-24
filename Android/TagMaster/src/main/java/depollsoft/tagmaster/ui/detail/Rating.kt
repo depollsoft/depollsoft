@@ -45,7 +45,8 @@ private const val STARS = 5
 /**
  * The stars of a RatingBar in the style [styleAttr] names, built the way ProgressBar builds them:
  * the style's progress drawable, each bitmap layer repeating across the bar and the progress
- * layers clipped to the rating, the progress layer tinted with [progressTint].
+ * layers clipped to the rating, then the style's background, secondary and progress tints applied
+ * to their layers ([progressTint] overriding the style's, as the layout did).
  */
 internal class StarBar(
     context: Context,
@@ -60,21 +61,51 @@ internal class StarBar(
     val width: Int get() = sampleWidth * STARS
 
     init {
-        val array = context.obtainStyledAttributes(null, intArrayOf(android.R.attr.progressDrawable), styleAttr, 0)
+        val array =
+            context.obtainStyledAttributes(
+                null,
+                intArrayOf(
+                    android.R.attr.progressDrawable,
+                    android.R.attr.progressTint,
+                    android.R.attr.progressBackgroundTint,
+                    android.R.attr.secondaryProgressTint,
+                ),
+                styleAttr,
+                0,
+            )
         val source = array.getDrawable(0)!!
+        val styleProgressTint = array.getColorStateList(1)
+        val backgroundTint = array.getColorStateList(2)
+        val secondaryTint = array.getColorStateList(3)
         array.recycle()
         drawable = tileify(source, false, context) as LayerDrawable
-        if (progressTint != null) drawable.findDrawableByLayerId(android.R.id.progress)?.setTint(progressTint)
+        // ProgressBar.applyProgressTints: each tint goes to its layer, in the default SRC_IN mode.
+        backgroundTint?.let { drawable.findDrawableByLayerId(android.R.id.background)?.setTintList(it) }
+        secondaryTint?.let { drawable.findDrawableByLayerId(android.R.id.secondaryProgress)?.setTintList(it) }
+        (progressTint?.let { android.content.res.ColorStateList.valueOf(it) } ?: styleProgressTint)?.let {
+            drawable.findDrawableByLayerId(android.R.id.progress)?.setTintList(it)
+        }
+        drawable.state = intArrayOf(android.R.attr.state_enabled)
         height = drawable.intrinsicHeight
     }
 
+    /**
+     * Draws [rating] as RatingBar does with [stepSize]: the rating is rounded to whole steps
+     * (`setProgress(round(rating * progressPerStar))`), the progress layer's level is
+     * `(int) (progress / max * 10000)`, and the secondary layer covers the whole stars the rating
+     * reaches into.
+     */
     fun draw(
         canvas: android.graphics.Canvas,
         rating: Float,
+        stepSize: Float,
     ) {
-        val level = (rating / STARS * 10000).roundToInt().coerceIn(0, 10000)
-        drawable.findDrawableByLayerId(android.R.id.progress)?.level = level
-        drawable.findDrawableByLayerId(android.R.id.secondaryProgress)?.level = 0
+        val max = (STARS / stepSize).roundToInt()
+        val perStar = max.toFloat() / STARS
+        val progress = (rating * perStar).roundToInt().coerceIn(0, max)
+        val secondary = (ceil(progress / perStar) * perStar).toInt()
+        drawable.findDrawableByLayerId(android.R.id.progress)?.level = (progress.toFloat() / max * 10000).toInt()
+        drawable.findDrawableByLayerId(android.R.id.secondaryProgress)?.level = (secondary.toFloat() / max * 10000).toInt()
         drawable.setBounds(0, 0, width, height)
         drawable.draw(canvas)
     }
@@ -132,7 +163,7 @@ fun RatingStars(
         modifier
             .width(with(density) { bar.width.toDp() })
             .height(with(density) { bar.height.toDp() })
-            .drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating) } },
+            .drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating, stepSize = 0.1f) } },
     )
 }
 
@@ -174,6 +205,6 @@ fun RatingPicker(
                     onRatingChange(value.roundToInt().coerceIn(0, STARS))
                     true
                 }
-            }.drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating.toFloat()) } },
+            }.drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating.toFloat(), stepSize = 1f) } },
     )
 }

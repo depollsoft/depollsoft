@@ -1,7 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import depollsoft.tagmaster.ui.textViewWidth
-import depollsoft.tagmaster.ui.rememberTextViewPaint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -34,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
@@ -73,11 +72,15 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
+import depollsoft.tagmaster.ui.drawPlatform
 import depollsoft.tagmaster.ui.isPresent
 import depollsoft.tagmaster.ui.listIconRes
 import depollsoft.tagmaster.ui.noteDescription
 import depollsoft.tagmaster.ui.notePress
+import depollsoft.tagmaster.ui.rememberDrawable
 import depollsoft.tagmaster.ui.rememberNotePlayer
+import depollsoft.tagmaster.ui.rememberTextViewPaint
+import depollsoft.tagmaster.ui.textViewWidth
 import java.util.Locale
 
 /**
@@ -334,14 +337,18 @@ private fun KeyNoteButton(tag: Tag) {
     val note = tag.keyNote
     val playing = note?.isPlaying == true
     val shape = RoundedCornerShape(8.dp)
+    // The View button's own state drawable: outlined, filled with the accent while activated.
+    val background = rememberDrawable(R.drawable.key_button_background)
     Box(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .then(if (playing) Modifier.shadow(2.dp, shape) else Modifier)
-            .then(if (playing) Modifier.background(colors.primary, shape) else Modifier)
-            .border(BorderStroke(1.dp, colors.primary), shape)
-            .clip(shape)
+            .drawBehind {
+                background.state =
+                    if (playing) intArrayOf(android.R.attr.state_enabled, android.R.attr.state_activated) else intArrayOf(android.R.attr.state_enabled)
+                drawPlatform(background, 0, 0, size.width.toInt(), size.height.toInt())
+            }.clip(shape)
             .notePress(player, { tag.keyNote }, description = noteDescription(note))
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag("playKeyNoteButton"),
@@ -350,7 +357,9 @@ private fun KeyNoteButton(tag: Tag) {
         val content = if (playing) colors.onPrimary else colors.primary
         Row(verticalAlignment = ViewAlign.CenterVertically) {
             PlatformIcon(R.drawable.ic_key, Modifier.padding(end = 8.dp), tint = content)
-            Text(tag.writtenKey ?: "", style = TagMasterType.labelLarge.withoutLineHeight(), color = content)
+            val key = tag.writtenKey ?: ""
+            val label = TagMasterType.labelLarge.withoutLineHeight()
+            Text(key, Modifier.textViewWidth(key, label), style = label, color = content)
         }
     }
 }

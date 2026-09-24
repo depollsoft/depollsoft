@@ -1,7 +1,5 @@
 package depollsoft.tagmaster.ui.detail
 
-import kotlin.math.ceil
-import depollsoft.tagmaster.ui.rememberTextViewPaint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -47,6 +45,9 @@ import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.formatDate
 import depollsoft.tagmaster.ui.isPresent
+import depollsoft.tagmaster.ui.rememberTextViewPaint
+import depollsoft.tagmaster.ui.scrollViewScrollbar
+import kotlin.math.ceil
 
 /**
  * A detail page's scrolling column: 16dp above and below, 16dp margins, and on wide windows a
@@ -66,11 +67,14 @@ fun DetailScroll(
                 val room = constraints.maxWidth - maxWidth.dp.roundToPx()
                 if (room > 0) (room / 2).toDp() else 0.dp
             }
+        val scroll = rememberScrollState()
+        val topPadding = if (top) 16.dp else 0.dp
         Column(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = if (top) 16.dp else 0.dp, bottom = 16.dp, start = extra + 16.dp, end = extra + 16.dp),
+                .scrollViewScrollbar(scroll, top = topPadding, bottom = 16.dp)
+                .verticalScroll(scroll)
+                .padding(top = topPadding, bottom = 16.dp, start = extra + 16.dp, end = extra + 16.dp),
         ) {
             content()
         }
