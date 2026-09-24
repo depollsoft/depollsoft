@@ -1,6 +1,8 @@
 package depollsoft.tagmaster.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -85,8 +87,9 @@ fun ListRow(
         }
         PlatformIcon(icon, Modifier.padding(end = 16.dp), tint = colors.primary)
         Column(Modifier.weight(1f)) {
-            ActionTitle(name, maxLines = 2)
-            if (detail != null) ActionDetail(detail)
+            // A rename or a new count crossfades, as RecyclerView animated a changed row.
+            Crossfade(name, animationSpec = tween(ListMotion.CHANGE_MILLIS), label = "name") { ActionTitle(it, maxLines = 2) }
+            if (detail != null) Crossfade(detail, animationSpec = tween(ListMotion.CHANGE_MILLIS), label = "detail") { ActionDetail(it) }
         }
         if (checked) PlatformIcon(R.drawable.ic_check, Modifier.padding(start = 16.dp), tint = colors.primary)
         handle?.invoke()

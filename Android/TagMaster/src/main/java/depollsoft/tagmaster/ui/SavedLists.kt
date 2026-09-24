@@ -3,6 +3,8 @@ package depollsoft.tagmaster.ui
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -198,6 +200,12 @@ fun SavedTagRow(
     val moveUp = stringResource(R.string.MoveUp)
     val moveDown = stringResource(R.string.MoveDown)
     val showing = stringResource(R.string.tag_row_showing)
+    // The tablet's "showing" highlight fades in and out, as RecyclerView animated a changed row.
+    val highlight by animateColorAsState(
+        if (selected) colors.secondaryContainer else colors.secondaryContainer.copy(alpha = 0f),
+        tween(ListMotion.CHANGE_MILLIS),
+        label = "selected",
+    )
     Row(
         modifier
             .fillMaxWidth()
@@ -244,7 +252,7 @@ fun SavedTagRow(
                         tag,
                         modifier =
                             Modifier
-                                .then(if (selected) Modifier.drawBehind { drawRect(colors.secondaryContainer) } else Modifier)
+                                .drawBehind { if (highlight.alpha > 0f) drawRect(highlight) }
                                 .then(
                                     if (editing) {
                                         Modifier.clearAndSetSemantics { invisibleToUser() }

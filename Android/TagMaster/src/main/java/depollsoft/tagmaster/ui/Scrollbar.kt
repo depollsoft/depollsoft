@@ -241,27 +241,50 @@ private const val FADE_DURATION = 250
 
 /**
  * Scrolls just far enough to show item [index] whole, the way RecyclerView's and ListView's
- * smoothScrollToPosition do: nothing when it is already in view, otherwise the smallest scroll
- * that brings its near edge inside the padded viewport.
+ * smoothScrollToPosition do: nothing when it is already in view, otherwise an animated scroll
+ * that stops with the item's near edge inside the padded viewport.
  */
 suspend fun LazyListState.revealItem(index: Int) {
     fun find() = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
     // Item offsets start after the top padding; the box ends before the bottom padding.
     val end = layoutInfo.viewportSize.height - layoutInfo.beforeContentPadding - layoutInfo.afterContentPadding
-    val shown = find()
-    if (shown != null) {
+
+    suspend fun settleOn(shown: androidx.compose.foundation.lazy.LazyListItemInfo) {
         when {
             shown.offset < 0 -> animateScrollBy(shown.offset.toFloat())
             shown.offset + shown.size > end -> animateScrollBy((shown.offset + shown.size - end).toFloat())
         }
+    }
+    find()?.let {
+        settleOn(it)
         return
     }
-    val first = layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0
-    scrollToItem(index)
-    if (index > first) {
-        // Coming from above: settle with the item's bottom edge at the end of the viewport.
-        val placed = find() ?: return
-        val back = end - (placed.offset + placed.size)
-        if (back > 0) scrollBy(-back.toFloat())
+    // Off screen: glide toward it by the rows' average height, as a smooth scroller does, then
+    // line its near edge up. A list too long to estimate falls back to a jump.
+    val visible = layoutInfo.visibleItemsInfo
+    if (visible.isEmpty()) {
+        scrollToItem(index)
+        return
+    }
+    val average = visible.sumOf { it.size }.toFloat() / visible.size
+    val distance =
+        if (index > visible.last().index) {
+            (index - visible.last().index) * average + (visible.last().offset + visible.last().size - end)
+        } else {
+            -((visible.first().index - index) * average - visible.first().offset)
+        }
+    animateScrollBy(distance)
+    val shown = find()
+    if (shown != null) {
+        settleOn(shown)
+    } else {
+        val below = index > (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0)
+        scrollToItem(index)
+        if (below) {
+            // Coming from above: settle with the item's bottom edge at the end of the viewport.
+            val placed = find() ?: return
+            val back = end - (placed.offset + placed.size)
+            if (back > 0) scrollBy(-back.toFloat())
+        }
     }
 }

@@ -32,9 +32,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
@@ -43,7 +44,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import depollsoft.tagmaster.ListModel
 import depollsoft.tagmaster.R
 import depollsoft.tagmaster.SettingsActivity
@@ -179,18 +179,14 @@ fun HomeScreen(
     val customKeys = TagLists.customKeys.toList()
     val changed = stringResource(R.string.saved_list_changed)
     val listsReorder =
-        remember(listState) {
-            ReorderState<String>(listState, { "list:$it" }) { baseline, order ->
-                // A list deleted or created mid-drag changes the set; then this order is not one.
-                if (baseline.toSet() == TagLists.customKeys.toSet()) TagLists.reorder(order)
-            }
+        rememberReorderState<String>(listState, keyOf = { "list:$it" }) { baseline, order ->
+            // A list deleted or created mid-drag changes the set; then this order is not one.
+            baseline.toSet() == TagLists.customKeys.toSet() && TagLists.reorder(order)
         }
     val favoritesReorder =
-        remember(listState) {
-            ReorderState<Int>(listState, { "favorite:$it" }) { baseline, order ->
-                val snapshot = favorites.snapshot()
-                if (snapshot.ids == baseline) favorites.reorder(snapshot, order)
-            }
+        rememberReorderState<Int>(listState, keyOf = { "favorite:$it" }) { baseline, order ->
+            val snapshot = favorites.snapshot()
+            snapshot.ids == baseline && favorites.reorder(snapshot, order)
         }
     LaunchedEffect(favoriteIds, customKeys) {
         editor.contentChanged()
@@ -202,6 +198,13 @@ fun HomeScreen(
             favoritesReorder.cancel()
             listsReorder.cancel()
         }
+    }
+    // Leaving the screen drops a drag in progress and the Remove confirmation, as the View
+    // editor's pause() did.
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        favoritesReorder.cancel()
+        listsReorder.cancel()
+        editor.dismissRemoval()
     }
     // The rows before the favorites: the header, the user's lists and the row closing them.
     val favoritesStart = 2 + customKeys.size
@@ -234,8 +237,8 @@ fun HomeScreen(
     ListDetailScaffold(pane, dialogs, Watermark.Window, bar) {
         val snackbars = LocalSnackbars.current
         val colors = TagMasterTheme.colors
-        val lists = listsReorder.shownOrder(customKeys)
-        val shownFavorites = favoritesReorder.shownOrder(favoriteIds)
+        val lists = listsReorder.shownOrder(customKeys, listState)
+        val shownFavorites = favoritesReorder.shownOrder(favoriteIds, listState)
         LazyColumn(
             Modifier
                 .fillMaxSize()
@@ -277,7 +280,6 @@ fun HomeScreen(
                 }
             }
             itemsIndexed(lists, key = { _, key -> "list:$key" }) { index, key ->
-                val dragging = listsReorder.dragging == key
                 ManagedListRow(
                     key = key,
                     name = TagLists.name(key),
@@ -290,11 +292,12 @@ fun HomeScreen(
                     handleGesture = Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1),
                     modifier =
                         Modifier
-                            .then(if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = listsReorder.offset } else Modifier),
+                            .listItemMotion(this, animatePlacement = !listsReorder.isMoving(key))
+                            .reorderRow(listsReorder, key, colors.surface),
                 )
             }
             item(key = "listsFooter") {
-                Column {
+                Column(Modifier.listItemMotion(this)) {
                     ActionRow(R.drawable.ic_add, Modifier.testTag("newListButton"), onClick = { dialogs.newList() }) {
                         ActionTitle(stringResource(R.string.list_new_row))
                     }
@@ -313,7 +316,6 @@ fun HomeScreen(
                 }
             }
             itemsIndexed(shownFavorites, key = { _, id -> "favorite:$id" }) { index, id ->
-                val dragging = favoritesReorder.dragging == id
                 SavedTagRow(
                     id = id,
                     editing = editor.isEditing,
@@ -328,11 +330,12 @@ fun HomeScreen(
                         Modifier.reorderHandle(favoritesReorder, id, { favorites.ids.toList() }, editor.isEditing && shownFavorites.size > 1),
                     modifier =
                         Modifier
-                            .topDivider(index > 0, colors.outlineVariant)
-                            .then(if (dragging) Modifier.zIndex(1f).graphicsLayer { translationY = favoritesReorder.offset } else Modifier),
+                            .listItemMotion(this, animatePlacement = !favoritesReorder.isMoving(id))
+                            .reorderRow(favoritesReorder, id, colors.surface)
+                            .topDivider(index > 0, colors.outlineVariant),
                 )
             }
-            item(key = "footer") { AboutFooter() }
+            item(key = "footer") { Box(Modifier.listItemMotion(this)) { AboutFooter() } }
         }
         SearchFab { context.startActivity(Intent(context, TagSearchActivity::class.java)) }
     }
