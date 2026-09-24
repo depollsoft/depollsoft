@@ -122,8 +122,8 @@ fun TagMasterDialog(
 }
 
 /**
- * AppCompat's DialogTitle: one line at 24sp, or — when that would not fit — up to two lines at
- * 18sp rather than an ellipsis.
+ * AppCompat's DialogTitle: one line at 24sp, or — when that would not fit in the window's first,
+ * preferred-width measuring pass — up to two lines at 18sp rather than an ellipsis.
  */
 @Composable
 private fun DialogTitle(
@@ -141,7 +141,17 @@ private fun DialogTitle(
             Text(title, style = small, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
         },
     ) { measurables, constraints ->
-        val fits = measurer.measure(title, large, maxLines = 1, constraints = Constraints(maxWidth = constraints.maxWidth))
+        // A wrap-content dialog window is first measured at the platform's preferred dialog width,
+        // 320dp, less the card's 24dp insets and the title's 24dp padding on each side. A title
+        // that would ellipsize in that pass shrinks for good, however wide the dialog then opens.
+        val firstPass = 320.dp.roundToPx() - 4 * 24.dp.roundToPx()
+        val fits =
+            measurer.measure(
+                title,
+                large,
+                maxLines = 1,
+                constraints = Constraints(maxWidth = minOf(constraints.maxWidth, firstPass)),
+            )
         val chosen = if (fits.hasVisualOverflow) measurables[1] else measurables[0]
         val placeable = chosen.measure(constraints.copy(minWidth = 0))
         layout(constraints.maxWidth, placeable.height) { placeable.place(0, 0) }
