@@ -52,12 +52,50 @@ serialized by the Bindroid-era code to keep that true.
   `AndroidView`. The home-screen widget stays on `RemoteViews`.
 * Stable `Modifier.testTag`s identify controls; `testTagsAsResourceId` is on so UiAutomator-based
   store captures can still find them.
+* State that a View kept across recreation (an open DialogFragment, an EditText's text, a retained
+  fragment's loaded pages) is kept too: in `rememberSaveable`, the activity's `SavedStateRegistry`,
+  or a `ViewModel`.
+
+## Matching the Views' pixels
+
+The screens reproduce the View layouts they replaced, down to the pixel. What that took, and what
+new screens and changes need to keep doing:
+
+* **Text sizes are whole pixels.** A TextView reads a size from XML or a text appearance with
+  `getDimensionPixelSize`, so 14sp at 2.625x is 37px, not 36.75px. The type scales
+  (`TagMasterType`, `plateText`, `LegacyText`) round the same way. Sizes the View code set with
+  `setTextSize`, MDC's chip text and `TextInputLayout`'s floating label keep the fraction, and so
+  do their Compose counterparts.
+* **View code truncated dp.** Custom Views computed `(dp * density).toInt()`; where they did, the
+  Compose layouts use `viewPx` (Tag Master) or `viewDp` (Pitch Perfect) rather than
+  `roundToPx()`.
+* **Centring** uses the View rule (an odd leftover pixel goes below or after); see `ViewAlign`.
+* **Dialog titles** follow AppCompat's DialogTitle: a wrap-content dialog window is first measured
+  at the platform's preferred width, 320dp, and a title that would ellipsize there switches to
+  18sp over two lines for good, even if it fits the dialog that opens.
+* Whole-number densities (xhdpi, xxhdpi) hide rounding differences, since every rule agrees there.
+  Keep at least a few goldens at a fractional density such as 420dpi.
 
 ## Tests
 
-* Behaviour: Robolectric + `createAndroidComposeRule` in each app's `src/test`.
+* Behaviour: Robolectric with the Compose test APIs (the v2 rules in
+  `androidx.compose.ui.test.junit4.v2`) in each app's `src/test`.
 * Pixels: Roborazzi screenshot tests (`*ScreenshotTest`) under `src/test`, goldens in
-  `src/test/screenshots`. `./gradlew :<App>:recordRoborazziDebug` rewrites goldens,
-  `:<App>:verifyRoborazziDebug` fails on a difference and `:<App>:compareRoborazziDebug` writes
-  `*_compare.png` diff images next to them. The goldens were first recorded from the View
+  `src/test/screenshots`, most at xxhdpi and xhdpi and a few (`dpi420_*`) at 420dpi.
+  `./gradlew :<App>:recordRoborazziDebug` rewrites goldens, `:<App>:verifyRoborazziDebug` fails on
+  a difference and `:<App>:compareRoborazziDebug` writes `*_compare.png` diff images next to them.
+  Roborazzi's comparison tolerates small differences by default, so judge an intended pixel-exact
+  change by comparing the PNGs themselves. The goldens were first recorded from the View
   implementation, and each Compose screen was diffed against them during the port.
+* Pitfalls:
+  * An infinite `withFrameMillis` loop never lets the test clock go idle; use
+    `withInfiniteAnimationFrameMillis`, which tests park, and test the animation's maths directly.
+  * `performClick()` injects a real tap; a screen reader's activation is
+    `performSemanticsAction(SemanticsActions.OnClick)`.
+  * In an instrumented test the rule owns the frame clock and advances it only when the test
+    synchronizes, so a loop polling model state must call `mainClock.advanceTimeBy` for animations
+    to run. Semantics queries must not run on the main thread.
+  * Test tags on nodes merged into a parent need `useUnmergedTree = true`.
+* Device-only suites (`src/androidTest`: store captures, drags, privacy consent, PDF rendering) have
+  no CI runner; run them with `./gradlew :<App>:connectedDebugAndroidTest` on an emulator, and the
+  store captures with `-Pandroid.testInstrumentationRunnerArguments.storeScreenshots=true`.
