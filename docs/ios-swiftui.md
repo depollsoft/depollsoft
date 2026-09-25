@@ -84,9 +84,15 @@ merge without id collisions.
   in an inactive scene, or when told to. `TMBarberPole.listLoading()` and
   `.operation(_:active:)` carry the old views' accessibility labels and identifiers.
 - **UIKit left in place, deliberately.** QuickLook (`TMQuickLookPreview`), the in-app
-  browser (`TMSafariView`) and the tag actions sheet (`TMActionSheet`): on iOS 26
+  browser (`TMSafariView`), the tag actions sheet (`TMActionSheet`; on iOS 26
   SwiftUI's `confirmationDialog` draws an anchored bubble without Cancel, not the
-  centred sheet the app had. `TMPageTabBarBridge` gives the TabView's bar the
+  centred sheet the app had) and the list picker's presentation (`TMListPickerPresenter`;
+  SwiftUI's popover inside a toolbar lands on the button without an arrow).
+- **Presenting from a toolbar.** Presenters in `.toolbar` content must be
+  `UIViewRepresentable`s (`TMPresentingAnchor`): a view *controller* representable there
+  is adopted by the navigation controller as a pushed screen. SwiftUI also builds toolbar
+  items twice, once off screen, so only the copy in a window presents, once it has its
+  final size. `TMPageTabBarBridge` gives the TabView's bar the
   `page-tab-bar`/`page-<Title>` identifiers and keeps it a bottom bar on iPad.
 - **Parity notes.** Bar symbols are the same `UIImage` a bar button item gets, offset
   by its alignment insets. `TMFollowsUIKitTint` reads the live UIKit tint so accent
