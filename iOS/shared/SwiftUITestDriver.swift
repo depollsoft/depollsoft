@@ -115,13 +115,13 @@ struct UIDriver {
             return false
         }
         // A SwiftUI toolbar item is exposed twice: UIKit's bar item host, which does not
-        // activate, and the SwiftUI node inside it, which does. Take the first that acts.
+        // activate, and the SwiftUI node inside it, which does. Take the first that acts,
+        // then fall back to a UIKit control's own action (a UIBarButtonItem's button).
         for element in matches where element.accessibilityActivate() {
             ScreenCatalog.settle(0.05)
             return true
         }
-        XCTFail("\(label) did not activate", file: file, line: line)
-        return false
+        return activate(matches[0], file: file, line: line)
     }
 
     /// Runs a named custom action (a swipe action, "Move up", a context menu item VoiceOver exposes).
