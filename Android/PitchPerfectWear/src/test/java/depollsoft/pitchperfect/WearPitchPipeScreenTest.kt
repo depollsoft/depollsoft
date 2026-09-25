@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.semantics.SemanticsActions
@@ -77,6 +78,14 @@ class WearPitchPipeScreenTest {
     private fun cell(index: Int): Offset {
         val c = WearInstrumentGeometry(384, 384, 13).cellCenters[index]
         return Offset(c[0], c[1])
+    }
+
+    /** scripts/release/wear.py waits for this id in a UI Automator dump before capturing. */
+    @Test
+    fun theFaceIsFoundByTheReleaseCaptureAsResourceIdPitchInstrument() {
+        compose
+            .onNodeWithTag("pitchInstrument")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.TestTagsAsResourceId, true))
     }
 
     @Test
