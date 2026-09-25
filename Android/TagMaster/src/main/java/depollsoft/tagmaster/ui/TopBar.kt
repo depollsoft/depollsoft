@@ -75,16 +75,14 @@ internal class BrandTitle(
     private val typeface = Typeface.createFromAsset(context.assets, TITLE_FONT)
 
     /**
-     * The size, in pixels, the title is drawn at: 22sp as the toolbar's TextView read it (through
-     * the platform's non-linear font scaling, rounded as `getDimensionPixelSize` rounds), shrunk
-     * until the font is 40dp tall.
+     * The size, in pixels, the title is drawn at: 22sp through the platform's non-linear font
+     * scaling, as the toolbar's TextView scaled it, shrunk until the font is 40dp tall.
      */
     fun sizePx(context: Context): Float {
         val metrics = context.resources.displayMetrics
-        val sp = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics)
         val paint = Paint().apply {
             typeface = this@BrandTitle.typeface
-            textSize = (sp + 0.5f).toInt().coerceAtLeast(1).toFloat()
+            textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics)
         }
         val font = paint.fontMetrics
         val maxHeight = 40f * metrics.density

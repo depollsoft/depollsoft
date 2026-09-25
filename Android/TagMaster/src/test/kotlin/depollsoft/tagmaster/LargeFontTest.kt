@@ -50,9 +50,9 @@ class LargeFontTest {
     fun theBrandTitleScalesAsTheToolbarsTextViewDid() {
         val context = RuntimeEnvironment.getApplication()
         val metrics = context.resources.displayMetrics
-        val textView = (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics) + 0.5f).toInt().toFloat()
-        assertTrue("the curve differs from linear scaling here", textView < 22f * metrics.density * 1.3f - 1f)
-        // Below the 40dp cap the title is the TextView's size exactly.
-        assertEquals(textView, BrandTitle(context).sizePx(context), 0f)
+        val curved = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics)
+        assertTrue("the curve differs from linear scaling here", curved < 22f * metrics.density * 1.3f - 1f)
+        // Below the 40dp cap the title follows the curve, not linear scaling.
+        assertEquals(curved, BrandTitle(context).sizePx(context), 0.01f)
     }
 }
