@@ -11,7 +11,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -63,6 +61,7 @@ import depollsoft.tagmaster.ui.ButtonStyle
 import depollsoft.tagmaster.ui.DialogButton
 import depollsoft.tagmaster.ui.DropdownField
 import depollsoft.tagmaster.ui.LocalSnackbars
+import depollsoft.tagmaster.ui.ReadingWidth
 import depollsoft.tagmaster.ui.Snackbars
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterDialog
@@ -263,8 +262,7 @@ private fun SettingsScreen(activity: SettingsActivity) {
                 .fillMaxWidth(),
         ) {
             BarberPoleWatermark()
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                val extra = with(LocalDensity.current) { ((constraints.maxWidth - 640.dp.roundToPx()).coerceAtLeast(0) / 2).toDp() }
+            ReadingWidth(Modifier.fillMaxSize()) { extra ->
                 val scroll = rememberScrollState()
                 Column(
                     Modifier

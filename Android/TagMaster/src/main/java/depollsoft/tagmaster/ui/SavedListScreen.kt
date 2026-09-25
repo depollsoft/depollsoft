@@ -87,32 +87,34 @@ fun SavedListScreen(
     ListDetailScaffold(pane, dialogs, Watermark.Window, bar) {
         val colors = TagMasterTheme.colors
         val shown = reorder.shownOrder(ids, listState)
-        LazyColumn(
-            Modifier
-                .fillMaxSize()
-                .recyclerScrollbar(listState, top = 16.dp, bottom = 16.dp)
-                .testTag(listTag),
-            state = listState,
-            contentPadding = PaddingValues(vertical = 16.dp),
-        ) {
-            itemsIndexed(shown, key = { _, id -> "tag:$id" }) { index, id ->
-                SavedTagRow(
-                    id = id,
-                    editing = editor.isEditing,
-                    position = index,
-                    count = shown.size,
-                    listLabel = listLabel,
-                    selected = pane.selectedTagId == id,
-                    onOpen = onOpenTag,
-                    onRemove = editor::askToRemove,
-                    onMove = editor::move,
-                    handleModifier = { pressed -> Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1, pressed) },
-                    modifier =
-                        Modifier
-                            .listItemMotion(this, animatePlacement = !reorder.isMoving(id))
-                            .reorderRow(reorder, id, colors.surface)
-                            .topDivider(index > 0, colors.outlineVariant),
-                )
+        ReadingWidth(Modifier.fillMaxSize()) { inset ->
+            LazyColumn(
+                Modifier
+                    .fillMaxSize()
+                    .recyclerScrollbar(listState, top = 16.dp, bottom = 16.dp)
+                    .testTag(listTag),
+                state = listState,
+                contentPadding = PaddingValues(horizontal = inset, vertical = 16.dp),
+            ) {
+                itemsIndexed(shown, key = { _, id -> "tag:$id" }) { index, id ->
+                    SavedTagRow(
+                        id = id,
+                        editing = editor.isEditing,
+                        position = index,
+                        count = shown.size,
+                        listLabel = listLabel,
+                        selected = pane.selectedTagId == id,
+                        onOpen = onOpenTag,
+                        onRemove = editor::askToRemove,
+                        onMove = editor::move,
+                        handleModifier = { pressed -> Modifier.reorderHandle(reorder, id, { model.ids.toList() }, editor.isEditing && shown.size > 1, pressed) },
+                        modifier =
+                            Modifier
+                                .listItemMotion(this, animatePlacement = !reorder.isMoving(id))
+                                .reorderRow(reorder, id, colors.surface)
+                                .topDivider(index > 0, colors.outlineVariant),
+                    )
+                }
             }
         }
         if (ids.isEmpty()) {

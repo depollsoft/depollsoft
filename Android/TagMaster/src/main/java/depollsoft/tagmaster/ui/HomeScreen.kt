@@ -57,15 +57,15 @@ import depollsoft.tagmaster.TagSearchActivity
 import depollsoft.tagmaster.TeachableTagsActivity
 import depollsoft.tagmaster.await
 import depollsoft.tagmaster.barbershop.Tag
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Random
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Random
 
 /**
  * Home's two requests — a random tag, and a tag opened by its id — held by the activity so that
@@ -239,104 +239,106 @@ fun HomeScreen(
         val colors = TagMasterTheme.colors
         val lists = listsReorder.shownOrder(customKeys, listState)
         val shownFavorites = favoritesReorder.shownOrder(favoriteIds, listState)
-        LazyColumn(
-            Modifier
-                .fillMaxSize()
-                .recyclerScrollbar(listState, top = 16.dp, bottom = 88.dp)
-                .testTag("homeList"),
-            state = listState,
-            contentPadding = PaddingValues(top = 16.dp, bottom = 88.dp),
-        ) {
-            item(key = "header") {
-                Column {
-                    ActionRow(R.drawable.ic_library_music, Modifier.testTag("browseButton"), onClick = {
-                        context.startActivity(Intent(context, TagBrowserActivity::class.java))
-                    }) { ActionTitle(stringResource(R.string.BrowseTags)) }
-                    ActionRow(
-                        R.drawable.ic_shuffle,
-                        Modifier.testTag("randomTagButton"),
-                        enabled = !actions.isLoadingRandom,
-                        onClick = { actions.loadRandomTag(snackbars) },
-                        trailing = {
-                            CompactBarberPole(
-                                actions.isLoadingRandom,
-                                stringResource(R.string.home_loading_random),
-                                Modifier.padding(start = 16.dp),
-                            )
-                        },
-                    ) { ActionTitle(stringResource(R.string.RandomTag)) }
-                    ActionRow(R.drawable.ic_tag, Modifier.testTag("openByIdButton"), onClick = { actions.openTagDialog = true }) {
-                        ActionTitle(stringResource(R.string.open_tag))
-                    }
-                    SectionHeading(stringResource(R.string.lists_heading))
-                    ActionRow(R.drawable.ic_people, Modifier.testTag("teachableButton"), onClick = {
-                        context.startActivity(Intent(context, TeachableTagsActivity::class.java))
-                    }) {
-                        Column {
-                            ActionTitle(stringResource(R.string.TeachableTags))
-                            ActionDetail(listCountText(TagLists.TEACHABLE), Modifier.testTag("teachableCount"))
+        ReadingWidth(Modifier.fillMaxSize()) { inset ->
+            LazyColumn(
+                Modifier
+                    .fillMaxSize()
+                    .recyclerScrollbar(listState, top = 16.dp, bottom = 88.dp)
+                    .testTag("homeList"),
+                state = listState,
+                contentPadding = PaddingValues(start = inset, top = 16.dp, end = inset, bottom = 88.dp),
+            ) {
+                item(key = "header") {
+                    Column {
+                        ActionRow(R.drawable.ic_library_music, Modifier.testTag("browseButton"), onClick = {
+                            context.startActivity(Intent(context, TagBrowserActivity::class.java))
+                        }) { ActionTitle(stringResource(R.string.BrowseTags)) }
+                        ActionRow(
+                            R.drawable.ic_shuffle,
+                            Modifier.testTag("randomTagButton"),
+                            enabled = !actions.isLoadingRandom,
+                            onClick = { actions.loadRandomTag(snackbars) },
+                            trailing = {
+                                CompactBarberPole(
+                                    actions.isLoadingRandom,
+                                    stringResource(R.string.home_loading_random),
+                                    Modifier.padding(start = 16.dp),
+                                )
+                            },
+                        ) { ActionTitle(stringResource(R.string.RandomTag)) }
+                        ActionRow(R.drawable.ic_tag, Modifier.testTag("openByIdButton"), onClick = { actions.openTagDialog = true }) {
+                            ActionTitle(stringResource(R.string.open_tag))
+                        }
+                        SectionHeading(stringResource(R.string.lists_heading))
+                        ActionRow(R.drawable.ic_people, Modifier.testTag("teachableButton"), onClick = {
+                            context.startActivity(Intent(context, TeachableTagsActivity::class.java))
+                        }) {
+                            Column {
+                                ActionTitle(stringResource(R.string.TeachableTags))
+                                ActionDetail(listCountText(TagLists.TEACHABLE), Modifier.testTag("teachableCount"))
+                            }
                         }
                     }
                 }
-            }
-            itemsIndexed(lists, key = { _, key -> "list:$key" }) { index, key ->
-                ManagedListRow(
-                    key = key,
-                    name = TagLists.name(key),
-                    detail = listCountText(key),
-                    editing = editor.isEditing,
-                    position = index,
-                    count = lists.size,
-                    dialogs = dialogs,
-                    onOpen = { context.startActivity(TagListActivity.intent(context, key)) },
-                    handleGesture = { pressed -> Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1, pressed) },
-                    modifier =
-                        Modifier
-                            .listItemMotion(this, animatePlacement = !listsReorder.isMoving(key))
-                            .reorderRow(listsReorder, key, colors.surface),
-                )
-            }
-            item(key = "listsFooter") {
-                Column(Modifier.listItemMotion(this)) {
-                    ActionRow(R.drawable.ic_add, Modifier.testTag("newListButton"), onClick = { dialogs.newList() }) {
-                        ActionTitle(stringResource(R.string.list_new_row))
-                    }
-                    SectionHeading(favoritesLabel)
-                    if (favoriteIds.isEmpty()) {
-                        Text(
-                            stringResource(R.string.home_favorites_empty),
+                itemsIndexed(lists, key = { _, key -> "list:$key" }) { index, key ->
+                    ManagedListRow(
+                        key = key,
+                        name = TagLists.name(key),
+                        detail = listCountText(key),
+                        editing = editor.isEditing,
+                        position = index,
+                        count = lists.size,
+                        dialogs = dialogs,
+                        onOpen = { context.startActivity(TagListActivity.intent(context, key)) },
+                        handleGesture = { pressed -> Modifier.reorderHandle(listsReorder, key, { TagLists.customKeys.toList() }, editor.isEditing && lists.size > 1, pressed) },
+                        modifier =
                             Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                                .testTag("favoritesEmptyText"),
-                            style = TagMasterType.bodyMedium,
-                            color = colors.onSurfaceVariant,
-                        )
+                                .listItemMotion(this, animatePlacement = !listsReorder.isMoving(key))
+                                .reorderRow(listsReorder, key, colors.surface),
+                    )
+                }
+                item(key = "listsFooter") {
+                    Column(Modifier.listItemMotion(this)) {
+                        ActionRow(R.drawable.ic_add, Modifier.testTag("newListButton"), onClick = { dialogs.newList() }) {
+                            ActionTitle(stringResource(R.string.list_new_row))
+                        }
+                        SectionHeading(favoritesLabel)
+                        if (favoriteIds.isEmpty()) {
+                            Text(
+                                stringResource(R.string.home_favorites_empty),
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                                    .testTag("favoritesEmptyText"),
+                                style = TagMasterType.bodyMedium,
+                                color = colors.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
+                itemsIndexed(shownFavorites, key = { _, id -> "favorite:$id" }) { index, id ->
+                    SavedTagRow(
+                        id = id,
+                        editing = editor.isEditing,
+                        position = index,
+                        count = shownFavorites.size,
+                        listLabel = favoritesLabel,
+                        selected = pane.selectedTagId == id,
+                        onOpen = actions::openTag,
+                        onRemove = editor::askToRemove,
+                        onMove = editor::move,
+                        handleModifier = { pressed ->
+                            Modifier.reorderHandle(favoritesReorder, id, { favorites.ids.toList() }, editor.isEditing && shownFavorites.size > 1, pressed)
+                        },
+                        modifier =
+                            Modifier
+                                .listItemMotion(this, animatePlacement = !favoritesReorder.isMoving(id))
+                                .reorderRow(favoritesReorder, id, colors.surface)
+                                .topDivider(index > 0, colors.outlineVariant),
+                    )
+                }
+                item(key = "footer") { Box(Modifier.listItemMotion(this)) { AboutFooter() } }
             }
-            itemsIndexed(shownFavorites, key = { _, id -> "favorite:$id" }) { index, id ->
-                SavedTagRow(
-                    id = id,
-                    editing = editor.isEditing,
-                    position = index,
-                    count = shownFavorites.size,
-                    listLabel = favoritesLabel,
-                    selected = pane.selectedTagId == id,
-                    onOpen = actions::openTag,
-                    onRemove = editor::askToRemove,
-                    onMove = editor::move,
-                    handleModifier = { pressed ->
-                        Modifier.reorderHandle(favoritesReorder, id, { favorites.ids.toList() }, editor.isEditing && shownFavorites.size > 1, pressed)
-                    },
-                    modifier =
-                        Modifier
-                            .listItemMotion(this, animatePlacement = !favoritesReorder.isMoving(id))
-                            .reorderRow(favoritesReorder, id, colors.surface)
-                            .topDivider(index > 0, colors.outlineVariant),
-                )
-            }
-            item(key = "footer") { Box(Modifier.listItemMotion(this)) { AboutFooter() } }
         }
         SearchFab { context.startActivity(Intent(context, TagSearchActivity::class.java)) }
     }
