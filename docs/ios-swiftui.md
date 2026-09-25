@@ -64,3 +64,32 @@ The Xcode projects list files explicitly. Register or remove files with
 `iOS/<app>/tools/add_source.py` (`--target tests`, `--shared` for `iOS/shared`,
 `--remove`). Object ids are hash-derived, so branches that add different files
 merge without id collisions.
+
+## Tag Master tag detail
+
+- **Structure.** `TagDetailScreen` (TagDetailView.swift) over `TagDetailModel`, with
+  `TagSummaryModel` and `TagTracksModel` for the two pages that do work. The pages are
+  `TagSummaryPage`, `TagDetailsPage`, `TagTracksPage` (with the inline `TMTrackPlayer`)
+  and `TagVideosPage`; `TMListChips`, `TMListPicker`, `TMSheetMusicScreen` and
+  `TMTagPlaceholder` complete it. Tags come through `TMTagLoading` (production:
+  `TMCatalogTagLoader`), so tests finish loads in any order without swizzling.
+- **Staging.** `TagDetailViewController` keeps the Objective-C name
+  `DPTagViewController` and hosts the screen on the UIKit shell: it answers `tagId`,
+  `source`, ⌘↑/⌘↓ and `canPerformAction:`, and supplies `TMDetailNavigator` (open a tag,
+  a list, the sheet music reader). In a SwiftUI shell the screen can sit directly in a
+  `NavigationSplitView` detail column: pass a model, set `navigator`, `expanded` and
+  `screenVisible`.
+- **Shared artwork.** `TMQuartetStaff(animating:)` and `TMBarberPole(compact:darkSurface:animating:)`
+  (TMArtworkViews.swift) draw the vector artwork and hold still under Reduce Motion,
+  in an inactive scene, or when told to. `TMBarberPole.listLoading()` and
+  `.operation(_:active:)` carry the old views' accessibility labels and identifiers.
+- **UIKit left in place, deliberately.** QuickLook (`TMQuickLookPreview`), the in-app
+  browser (`TMSafariView`) and the tag actions sheet (`TMActionSheet`): on iOS 26
+  SwiftUI's `confirmationDialog` draws an anchored bubble without Cancel, not the
+  centred sheet the app had. `TMPageTabBarBridge` gives the TabView's bar the
+  `page-tab-bar`/`page-<Title>` identifiers and keeps it a bottom bar on iPad.
+- **Parity notes.** Bar symbols are the same `UIImage` a bar button item gets, offset
+  by its alignment insets. `TMFollowsUIKitTint` reads the live UIKit tint so accent
+  colours dim behind sheets as UIKit's did. Beside a list on iPad the TabView sits one
+  pixel inside the column's safe area; flush, it grows into the unsafe strip under the
+  floating list. That pixel is the remaining iPad difference.
