@@ -58,7 +58,7 @@ class PitchInstrumentTest {
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
         ScreenTestSupport.seedSettingsDefaults()
-        // Switching range redraws the home-screen widget in production; that has its own tests.
+        // Switching range redraws the home-screen widget in production (see PitchPipeAppWidgetTest).
         widgets = Mockito.mockStatic(PitchPipeAppWidget::class.java)
         Note.setPlayer(SilentPlayer)
         model = PitchPipeModel()
