@@ -28,9 +28,6 @@
 #endif
 
 #import "DPBarbershop.h"
-#import "DPHomeViewController.h"
-#import "DPBrowseViewController.h"
-#import "DPTeachableTagsController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "TMQuartetStaffView.h"
@@ -178,7 +175,7 @@ static __weak UIResponder *TMRecordedFirstResponder;
     [self.window makeKeyAndVisible];
     
     navController.navigationBar.prefersLargeTitles = YES;
-    [navController pushViewController:[[DPHomeViewController alloc] init] animated:NO];
+    [navController pushViewController:[TMScreens home] animated:NO];
     navigationController = navController;
 
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
@@ -319,7 +316,7 @@ static __weak UIResponder *TMRecordedFirstResponder;
     if ([key isEqualToString:[TMTagLists favoriteKey]]) {
         // Favorites is a section of Home rather than a screen of its own.
         for (UIViewController *controller in navigation.viewControllers) {
-            if ([controller isKindOfClass:DPHomeViewController.class]) {
+            if ([TMScreens isHome:controller]) {
                 [navigation popToViewController:controller animated:YES];
                 if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
                 return;
@@ -328,8 +325,8 @@ static __weak UIResponder *TMRecordedFirstResponder;
         return;
     }
     UIViewController *destination = [key isEqualToString:[TMTagLists teachableKey]]
-        ? (UIViewController *)[[DPTeachableTagsController alloc] init]
-        : (UIViewController *)[[TMTagListController alloc] initWithListKey:key];
+        ? [TMScreens teachable]
+        : [TMScreens listWithKey:key];
     [navigation pushViewController:destination animated:YES];
     if (expanded) [split showColumn:UISplitViewControllerColumnPrimary];
 }
@@ -547,6 +544,10 @@ static TMLogoBackgroundView *TMSharedBackground;
     [TMSharedBackground removeFromSuperview];
     view.backgroundColor = [UIColor systemBackgroundColor];
     TMSharedBackground = [self addLogoBackgroundTo:view];
+}
+
++ (BOOL)hasSharedBackground {
+    return TMSharedBackground != nil;
 }
 
 + (void)removeSharedBackground {

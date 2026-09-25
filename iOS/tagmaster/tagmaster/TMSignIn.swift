@@ -1,9 +1,8 @@
 //
-//  DPSettingsController.swift
+//  TMSignIn.swift
 //  tagmaster
 //
-//  Created by David Poll on 6/15/19.
-//  Copyright © 2019 DepollSoft. All rights reserved.
+//  FirebaseUI's sign-in picker with Tag Master's Apple button, shown from Settings.
 //
 
 import AuthenticationServices
@@ -29,7 +28,7 @@ import FirebaseOAuthSwiftUI
 import FirebasePhoneAuthSwiftUI
 #endif
 
-// MARK: - SwiftUI Auth View for UIKit Integration
+// MARK: - Sign-in
 
 #if canImport(FirebaseAuthSwiftUI)
 private enum TagMasterAppleNonce {
@@ -138,7 +137,7 @@ private struct TagMasterAppleSignInButton: View {
 }
 
 
-/// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
+/// FirebaseUI's AuthPickerView, reporting a sign-in or a dismissal.
 struct TagMasterAuthView: View {
     let authService: AuthService
     let onAuthStateChanged: () -> Void
@@ -195,41 +194,3 @@ struct TagMasterAuthView: View {
 }
 #endif
 
-// MARK: - UIKit Extension for Settings
-
-extension DPSettingsController {
-
-    /// Handles login/logout button tap
-    @objc func logInClick() {
-        // If user is already signed in, sign out
-        guard Auth.auth().currentUser == nil else {
-            do {
-                try Auth.auth().signOut()
-                self.refreshLoginButton()
-            } catch {
-                print("Error signing out: \(error.localizedDescription)")
-            }
-            return
-        }
-
-        // Present sign-in UI
-        #if canImport(FirebaseAuthSwiftUI)
-        let authView = TagMasterAuthView(
-            onAuthStateChanged: { [weak self] in
-                self?.refreshLoginButton()
-                self?.dismiss(animated: true)
-            },
-            onDismiss: { [weak self] in
-                self?.dismiss(animated: true)
-            }
-        )
-
-        let hostingController = UIHostingController(rootView: authView)
-        hostingController.modalPresentationStyle = .pageSheet
-        present(hostingController, animated: true)
-        #else
-        // Fallback: Direct Firebase Auth if FirebaseAuthSwiftUI not available
-        print("FirebaseAuthSwiftUI not available - implement fallback auth")
-        #endif
-    }
-}

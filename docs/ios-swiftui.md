@@ -120,3 +120,35 @@ The Xcode projects list files explicitly. Register or remove files with
 `iOS/<app>/tools/add_source.py` (`--target tests`, `--shared` for `iOS/shared`,
 `--remove`). Object ids are hash-derived, so branches that add different files
 merge without id collisions.
+
+## Tag Master lists
+
+Home, Browse, Search, the results list, Settings, Teachable Tags and the
+user's own lists are SwiftUI (`TMHomeScreen`, `TMBrowseScreen`,
+`TMQueryScreen`, `TMSearchScreen`, `TMSettingsScreen`, `TMTagListScreen`),
+each over an `@Observable` model.
+
+- **Navigation goes through `TMNavigator`.** Models ask it to open a tag, push a
+  destination (`TMDestination`), remove their own screen or open a URL. The
+  UIKit shell supplies `TMUIKitNavigator`, and tests pass `RecordingNavigator`.
+  `TMScreens` builds each screen with its model and bar items.
+- **The UIKit shell still carries the screens.** `TMHostingController` hosts a
+  screen on the navigation stack or in the split, owns its bar items
+  (`TMChrome`, rebuilt through observation tracking) and is the
+  `TMTagListSource` the detail steps through. When the shell moves to
+  SwiftUI, `TMChrome` becomes `.toolbar` content and `TMUIKitNavigator` becomes
+  a `NavigationPath`/split-selection router. Nothing in the models changes.
+- **Catalog access is injected.** `TMCatalog` runs queries (tests pass
+  `TMFixtureCatalog`), and `TMTagStore` loads rows on demand.
+  `DPTagQueryResult.failed` separates "no matches" from "catalog unreachable".
+- **UIKit metrics are copied deliberately.** `tmLabelMetrics` lays text out on
+  UILabel's line-height grid. Rows use UITableViewCell's 20pt margins and
+  section-aware separator insets. Filters keep `UISegmentedControl` because it
+  sizes segments to their titles, and fall back to a menu when a row is narrow
+  or the text size is an accessibility size.
+- **Alerts.** The list-naming alert stays a `UIAlertController`
+  (`TMListNamePrompt`, presented by `TMAlertPresenter`) because its message has
+  to follow the typing. Every other alert is a SwiftUI `.alert`.
+- **Watermark.** `TMScreenBackground` draws the barber pole on phones and
+  stays clear beside the iPad split's single shared watermark.
+- Captures: `TagListsScreenCatalogTests` (iPhone `iphone-*`, iPad `ipad-*`).
