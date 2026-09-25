@@ -35,6 +35,7 @@
 		B4A1B0000000000000000011 /* ListPickerBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */; };
 		F289A31BED729E925232A256 /* ScreenCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7D60E9982541B0A82AC843 /* ScreenCatalog.swift */; };
 		01A1D1D51F5468AB3010E52C /* SwiftUITestDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C42CD1CE6BA8E54914DEA7E /* SwiftUITestDriver.swift */; };
+		C24C4EE38EE73B8C6EC5BEEE /* TagDetailScreenCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E9BA29B9AACC5D27522E00 /* TagDetailScreenCatalogTests.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -193,6 +194,7 @@
 		B4A1B000000000000000000C /* TMListSyncEmulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListSyncEmulatorTests.swift; sourceTree = "<group>"; };
 		B4A1B000000000000000000E /* TagListBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagListBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListPickerBehaviorTests.swift; sourceTree = "<group>"; };
+		18E9BA29B9AACC5D27522E00 /* TagDetailScreenCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagDetailScreenCatalogTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
@@ -564,6 +566,7 @@
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */,
 				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				18E9BA29B9AACC5D27522E00 /* TagDetailScreenCatalogTests.swift */,
 				B4A1B0000000000000000010 /* ListPickerBehaviorTests.swift */,
 				B4A1B000000000000000000E /* TagListBehaviorTests.swift */,
 				B4A1B000000000000000000C /* TMListSyncEmulatorTests.swift */,
@@ -893,6 +896,7 @@
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				C24C4EE38EE73B8C6EC5BEEE /* TagDetailScreenCatalogTests.swift in Sources */,
 				01A1D1D51F5468AB3010E52C /* SwiftUITestDriver.swift in Sources */,
 				F289A31BED729E925232A256 /* ScreenCatalog.swift in Sources */,
 				B4A1B0000000000000000011 /* ListPickerBehaviorTests.swift in Sources */,
