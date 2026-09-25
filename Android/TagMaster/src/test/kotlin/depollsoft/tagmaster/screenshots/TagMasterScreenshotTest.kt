@@ -62,14 +62,15 @@ class TagMasterScreenshotTest {
 
     @Before
     fun setUp() {
+        // Details prints Last Refreshed in the default zone, and the goldens were recorded in
+        // Pacific time while CI runs in UTC. Pin it before the tags are cached: a cached Date
+        // keeps its local-time fields and reapplies them in the zone it is loaded in.
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
         ScreenTestSupport.startClean()
         ScreenTestSupport.clearTagCaches()
         ScreenshotFixtures.clearPrivacyChoices()
         ScreenshotFixtures.cacheTags()
         ScreenshotFixtures.pinVersion()
-        // Details prints the posted time in the default zone, and the goldens were recorded in
-        // Pacific time; CI runs in UTC.
-        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
         AuthState.setTestSource { false }
     }
 
