@@ -3,15 +3,10 @@
 //
 
 #import "DPAppDelegate.h"
-#import "DPSettingsController.h"
 #import "DPTagTracksController.h"
 #import "TMBarberPoleLoadingView.h"
 #import "DPTagViewController.h"
-#import "DPBrowseViewController.h"
-#import "DPTagCell.h"
 #import "DPFileCache.h"
 #import "DPRemoteLocation.h"
 #import "TMObjC.h"
 #import "TMLogoArtwork.h"
-#import "DPSearchViewController.h"
-#import "DPTagQueryViewController.h"

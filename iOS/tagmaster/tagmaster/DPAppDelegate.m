@@ -28,7 +28,6 @@
 #endif
 
 #import "DPBarbershop.h"
-#import "DPBrowseViewController.h"
 #import "DPJsonSerializer.h"
 #import "DPTagViewController.h"
 #import "TMQuartetStaffView.h"

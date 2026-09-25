@@ -9,6 +9,7 @@
 //  steps through and it owns the bar items, which UIKit draws.
 //
 
+import ObjectiveC
 import SwiftUI
 import UIKit
 
@@ -34,12 +35,15 @@ protocol TMNavigator: AnyObject {
     /// Takes this screen off the stack without disturbing anything pushed above it.
     func removeScreen()
     func openURL(_ url: URL)
+    func presentPrivacyChoices()
 }
 
 /// Implemented by models that list tags, so the detail can step through them.
 @MainActor
 protocol TMTagListing: AnyObject {
     var listedTagIds: [Int] { get }
+    /// The row lit for the tag open beside the list, if any.
+    var selectedTagId: Int? { get }
     func didStep(to tagId: Int)
 }
 
@@ -58,6 +62,9 @@ struct TMChrome {
 final class TMHostingController: UIHostingController<AnyView>, TMTagListSource {
     private let chrome: (TMHostingController) -> TMChrome
     weak var listing: TMTagListing?
+    /// The models of screens that list no tags, for tests and the catalog.
+    var searchModel: TMSearchModel?
+    var settingsModel: TMSettingsModel?
     var onAppear: ((TMHostingController) -> Void)?
     var onWillDisappear: ((TMHostingController) -> Void)?
     var onDisappear: ((TMHostingController) -> Void)?
@@ -130,6 +137,9 @@ final class TMHostingController: UIHostingController<AnyView>, TMTagListSource {
     func tm_didStep(toTagId tagId: Int32) {
         listing?.didStep(to: Int(tagId))
     }
+
+    /// The tag whose row is lit beside the detail, for Objective-C callers.
+    @objc var tm_selectedTagId: NSNumber? { listing?.selectedTagId.map { NSNumber(value: $0) } }
 }
 
 /// The navigator for a screen on the UIKit stack.
@@ -177,6 +187,11 @@ final class TMUIKitNavigator: TMNavigator {
     func openURL(_ url: URL) {
         UIApplication.shared.open(url)
     }
+
+    func presentPrivacyChoices() {
+        guard let controller else { return }
+        TelemetryConsent.present(from: controller)
+    }
 }
 
 /// UIKit bar button items in the app's style (DPAppDelegate's symbol buttons).
@@ -184,8 +199,10 @@ final class TMUIKitNavigator: TMNavigator {
 enum TMBarItems {
     static func symbol(_ name: String, identifier: String? = nil, action: @escaping () -> Void) -> UIBarButtonItem {
         // DPAppDelegate's factory supplies the symbol configuration and the spoken label.
-        let item = DPAppDelegate.barButtonItem(withSystemName: name, target: nil, action: nil)!
-        item.primaryAction = UIAction(image: item.image) { _ in action() }
+        let handler = TMBarAction(action)
+        let item = DPAppDelegate.barButtonItem(withSystemName: name, target: handler,
+                                               action: #selector(TMBarAction.run))!
+        objc_setAssociatedObject(item, &TMBarAction.key, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         if let identifier { item.accessibilityIdentifier = identifier }
         return item
     }
@@ -196,4 +213,12 @@ enum TMBarItems {
         item.accessibilityLabel = label
         return item
     }
+}
+
+/// A bar button's target: runs a closure, and lives as long as its item.
+final class TMBarAction: NSObject {
+    static var key: UInt8 = 0
+    private let action: () -> Void
+    init(_ action: @escaping () -> Void) { self.action = action }
+    @objc func run() { action() }
 }

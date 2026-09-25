@@ -22,6 +22,7 @@ final class RecordingNavigator: TMNavigator {
     private(set) var destinations: [TMDestination] = []
     private(set) var removals = 0
     private(set) var openedURLs: [URL] = []
+    private(set) var privacyPresentations = 0
 
     func showTag(_ tagId: Int) {
         shownTags.append(tagId)
@@ -31,6 +32,7 @@ final class RecordingNavigator: TMNavigator {
     func show(_ destination: TMDestination) { destinations.append(destination) }
     func removeScreen() { removals += 1 }
     func openURL(_ url: URL) { openedURLs.append(url) }
+    func presentPrivacyChoices() { privacyPresentations += 1 }
 }
 
 /// Catalog answers built from titles, recording every query asked.
@@ -97,6 +99,33 @@ extension TMBehaviorTestCase {
             return alert != nil
         }
         return alert
+    }
+
+    /// Presses a bar button the way a tap does.
+    func press(_ item: UIBarButtonItem?, file: StaticString = #filePath, line: UInt = #line) {
+        guard let item, let action = item.action else {
+            XCTFail("No bar button to press", file: file, line: line)
+            return
+        }
+        XCTAssertTrue(UIApplication.shared.sendAction(action, to: item.target, from: item, for: nil), file: file, line: line)
+        ScreenCatalog.settle(0.05)
+    }
+
+    /// Taps a tab of the bar inside `view` by its title, through the tab's own control.
+    func tapTab(_ title: String, in view: UIView, file: StaticString = #filePath, line: UInt = #line) {
+        guard let bar = firstDescendant(of: view, where: { $0 is UITabBar }) as? UITabBar else {
+            XCTFail("No tab bar", file: file, line: line)
+            return
+        }
+        let controls = descendants(of: bar) { $0 is UIControl && !$0.isHidden && $0.accessibilityLabel == title }
+        guard let control = controls.first as? UIControl else {
+            XCTFail("No tab \(title); tabs: \(descendants(of: bar) { $0 is UIControl }.map { $0.accessibilityLabel ?? "?" })",
+                    file: file, line: line)
+            return
+        }
+        control.sendActions(for: .touchUpInside)
+        control.sendActions(for: .primaryActionTriggered)
+        ScreenCatalog.settle(0.2)
     }
 
     /// Dismisses anything presented over the window.

@@ -78,17 +78,70 @@ import UIKit
         return controller
     }
 
+    // MARK: - Catalog
+
+    static func browse(navigator custom: TMNavigator? = nil, catalog: TMCatalog = .live) -> TMHostingController {
+        let navigator = TMUIKitNavigator()
+        let model = TMBrowseModel(catalog: catalog, navigator: custom ?? navigator)
+        let controller = TMHostingController(TMBrowseScreen(model: model)) { _ in TMChrome(title: "Browse") }
+        model.pages.forEach { $0.owner = controller }
+        controller.listing = model
+        navigator.controller = controller
+        return controller
+    }
+
+    /// A results screen over tags already in hand, which fetches nothing more.
+    @objc(resultsScreenWithTags:) nonisolated static func results(tags: [DPTag]) -> UIViewController {
+        MainActor.assumeIsolated { results(TMTagQuery(), preloaded: tags) }
+    }
+
+    static func results(_ query: TMTagQuery, navigator custom: TMNavigator? = nil,
+                        catalog: TMCatalog = .live, preloaded: [DPTag]? = nil) -> TMHostingController {
+        let navigator = TMUIKitNavigator()
+        let model = TMQueryModel(query: query, catalog: catalog, navigator: custom ?? navigator, preloaded: preloaded)
+        let controller = TMHostingController(TMQueryScreen(model: model)) { _ in TMChrome(title: model.title) }
+        controller.onAppear = { _ in model.syncSelection() }
+        model.owner = controller
+        controller.listing = model
+        navigator.controller = controller
+        return controller
+    }
+
+    static func search(navigator custom: TMNavigator? = nil) -> TMHostingController {
+        let navigator = TMUIKitNavigator()
+        let model = TMSearchModel(navigator: custom ?? navigator)
+        // Runs the search with the current text and options; also the way to search by options alone.
+        let run = TMBarItems.symbol("magnifyingglass") { [weak model] in model?.search() }
+        let controller = TMHostingController(TMSearchScreen(model: model)) { _ in
+            TMChrome(title: "Search", right: [run])
+        }
+        navigator.controller = controller
+        controller.searchModel = model
+        return controller
+    }
+
+    static func settings(navigator custom: TMNavigator? = nil, account: TMAccount = .firebase,
+                         build: TMBuildInfo = .bundle) -> TMHostingController {
+        let navigator = TMUIKitNavigator()
+        let model = TMSettingsModel(navigator: custom ?? navigator, account: account, build: build)
+        let controller = TMHostingController(TMSettingsScreen(model: model)) { _ in TMChrome(title: "Settings") }
+        controller.onAppear = { _ in model.refresh() }
+        navigator.controller = controller
+        controller.settingsModel = model
+        return controller
+    }
+
     // MARK: - Routing
 
     /// The screen for a destination another screen asked for.
     static func controller(for destination: TMDestination) -> UIViewController {
         switch destination {
-        case .browse: return DPBrowseViewController()
-        case .search: return DPSearchViewController()
-        case .settings: return DPSettingsController()
+        case .browse: return browse()
+        case .search: return search()
+        case .settings: return settings()
         case .teachable: return teachable()
         case .list(let key): return list(key: key)
-        case .results(let query): return query.makeLegacyController()
+        case .results(let query): return results(query)
         }
     }
 
@@ -99,18 +152,5 @@ import UIKit
                   let model = hosting.listing as? TMTagListModel else { return false }
             return model.key == key
         }
-    }
-}
-
-extension TMTagQuery {
-    func makeLegacyController() -> UIViewController {
-        let controller = DPTagQueryViewController()
-        controller.query = text
-        controller.sortBy = sortBy
-        controller.collection = collection
-        controller.parts = parts.map { NSNumber(value: $0) }
-        controller.hasLearningTracks = learningTracks.map { NSNumber(value: $0) }
-        controller.hasSheetMusic = sheetMusic.map { NSNumber(value: $0) }
-        return controller
     }
 }

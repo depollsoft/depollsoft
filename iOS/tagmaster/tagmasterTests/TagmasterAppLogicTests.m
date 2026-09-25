@@ -3,7 +3,6 @@
 #import <objc/runtime.h>
 
 #import "DPAppDelegate.h"
-#import "DPBrowseViewController.h"
 #import "DPTagViewController.h"
 #import "DPTagSummaryController.h"
 #import "DPTagDetailController.h"
@@ -11,10 +10,7 @@
 #import "DPTagTracksController.h"
 #import "DPTagVideoController.h"
 #import "DPTagPageControllerBase.h"
-#import "DPTagCell.h"
 #import "DPBusyIndicator.h"
-#import "DPSearchViewController.h"
-#import "DPTagQueryViewController.h"
 #import "TMLogoArtwork.h"
 #import "TMQuartetArtwork.h"
 #import "TMQuartetStaffView.h"
@@ -26,7 +22,6 @@
 #import "DPTrack.h"
 #import "DPVideo.h"
 #import "DPFileCache.h"
-#import "DPSettingsController.h"
 #import <AVFoundation/AVFoundation.h>
 #import "tagmaster-Swift.h"
 #import "TMReviewLoader.h"
@@ -321,46 +316,6 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
     window.rootViewController = nil;
 }
 
-- (void)testSearchAndQueryControllersDisplayResults
-{
-    DPTag *tag = [self buildSampleTagWithIdentifier:777];
-    [tag cache];
-    
-    // Test search controller setup and settings persistence
-    DPSearchViewController *searchController = [[DPSearchViewController alloc] init];
-    (void)searchController.view;
-    
-    UISearchBar *searchBar = [searchController valueForKey:@"searchBar"];
-    UISegmentedControl *sortBy = [searchController valueForKey:@"sortBy"];
-    UISegmentedControl *sheetMusic = [searchController valueForKey:@"sheetMusic"];
-    UISegmentedControl *learningTracks = [searchController valueForKey:@"learningTracks"];
-    UISegmentedControl *parts = [searchController valueForKey:@"parts"];
-    UISegmentedControl *collection = [searchController valueForKey:@"collection"];
-    
-    XCTAssertNotNil(searchBar);
-    XCTAssertNotNil(sortBy);
-    XCTAssertNotNil(sheetMusic);
-    XCTAssertNotNil(learningTracks);
-    XCTAssertNotNil(parts);
-    XCTAssertNotNil(collection);
-
-    searchBar.text = @"sample";
-    sortBy.selectedSegmentIndex = 3;
-    sheetMusic.selectedSegmentIndex = 2;
-    learningTracks.selectedSegmentIndex = 1;
-    parts.selectedSegmentIndex = 2;
-    collection.selectedSegmentIndex = 1;
-    
-    // Trigger settings save
-    [searchController viewDidDisappear:NO];
-    
-    // Verify settings were persisted
-    XCTAssertEqual([[NSUserDefaults standardUserDefaults] integerForKey:@"search.sortBy"], 3);
-    XCTAssertEqual([[NSUserDefaults standardUserDefaults] integerForKey:@"search.sheetMusic"], 2);
-    XCTAssertEqual([[NSUserDefaults standardUserDefaults] integerForKey:@"search.learningTracks"], 1);
-    XCTAssertEqual([[NSUserDefaults standardUserDefaults] integerForKey:@"search.parts"], 2);
-    XCTAssertEqual([[NSUserDefaults standardUserDefaults] integerForKey:@"search.collection"], 1);
-}
 
 #pragma mark - KVO
 
@@ -400,11 +355,6 @@ static NSString *const kListsDefaultsKey = @"depollsoft.pitchperfect.lists";
 - (void)rate;
 - (void)rateTag:(NSInteger)rating;
 - (void)openSheetMusic;
-@end
-@interface DPTagQueryViewController (PolishTests)
-- (void)refresh;
-- (void)refreshViews;
-- (void)tm_syncSelectionForSplit;
 @end
 
 // Capture only presentation. Production action and background-work paths still run.
@@ -536,27 +486,6 @@ TM_CAPTURE_IMPL
     }
 }
 
-- (void)testAvailabilityUsesGreenWithoutChangingSpokenLabels {
-    DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    DPTag *tag = [self tag];
-    cell.tagInstance = tag;
-    UIImageView *sheet = [cell valueForKey:@"hasSheetMusic"];
-    UIImageView *tracks = [cell valueForKey:@"hasLearningTracks"];
-    XCTAssertEqualObjects(sheet.tintColor, [UIColor secondaryLabelColor]);
-    XCTAssertEqualObjects(tracks.tintColor, [UIColor secondaryLabelColor]);
-    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music unavailable"]);
-    // DPTag caches its derived tracks; reuse the cell with a newly loaded tag.
-    tag = [self tag];
-    tag.sheetMusicUri = [DPRemoteLocation new];
-    tag.tenorTrackUri = [DPRemoteLocation new];
-    cell.tagInstance = tag;
-    XCTAssertEqualObjects(sheet.image, [UIImage systemImageNamed:@"checkmark"]);
-    XCTAssertEqualObjects(tracks.image, [UIImage systemImageNamed:@"checkmark"]);
-    XCTAssertEqualObjects(sheet.tintColor, [UIColor systemGreenColor]);
-    XCTAssertEqualObjects(tracks.tintColor, [UIColor systemGreenColor]);
-    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music available"]);
-    XCTAssertTrue([cell.accessibilityLabel containsString:@"Learning tracks available"]);
-}
 
 - (void)testRecoveryAlertHasRetryAndCancel {
     TMAlertHost *host = [TMAlertHost new];
@@ -714,54 +643,8 @@ TM_CAPTURE_IMPL
     XCTAssertEqual(tracks.busyIndicator.busyCount, 0);
 }
 
-- (void)testQueryFailureRetryAndExhaustedRefresh {
-    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
-    IMP original = method_getImplementation(method);
-    __block BOOL fail = YES;
-    __block int calls = 0;
-    DPTag *tag = [self tag];
-    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *query, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
-        calls++;
-        if (fail) [NSException raise:@"offline" format:@"private diagnostic"];
-        DPTagQueryResult *result = [DPTagQueryResult new];
-        result.tags = @[tag]; result.available = 1; result.count = 1; result.start = 0;
-        return result;
-    });
-    method_setImplementation(method, mock);
-    @try {
-        DPTagQueryViewController *query = [DPTagQueryViewController new];
-        [query loadViewIfNeeded];
-        [self waitUntil:^BOOL { return [[query valueForKey:@"failed"] boolValue] && !query.isLoading; }];
-        UILabel *label = [query valueForKey:@"statusLabel"];
-        XCTAssertTrue([label isKindOfClass:UILabel.class]);
-        XCTAssertFalse([query.statusText containsString:@"private diagnostic"]);
-        fail = NO;
-        [[query valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
-        [self waitUntil:^BOOL { return query.tags.count == 1 && !query.isLoading; }];
-        XCTAssertFalse(query.hasMoreResults);
-        [query refresh];
-        [self waitUntil:^BOOL { return calls == 3 && !query.isLoading; }];
-        XCTAssertEqual(query.tags.count, 1);
-    } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
-}
 
 
-- (void)testSelfSizingRowsAndSpokenAvailability {
-    DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    cell.tagInstance = [self tag];
-    CGFloat normal = [cell.contentView systemLayoutSizeFittingSize:CGSizeMake(320, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
-    UITraitCollection *large = [UITraitCollection traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-    for (NSString *key in @[@"title", @"aka", @"details"]) {
-        UILabel *label = [cell valueForKey:key];
-        XCTAssertTrue(label.adjustsFontForContentSizeCategory);
-        XCTAssertEqual(label.numberOfLines, 0);
-        label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:large];
-    }
-    CGFloat enlarged = [cell.contentView systemLayoutSizeFittingSize:CGSizeMake(320, 0) withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
-    XCTAssertGreaterThan(enlarged, normal);
-    XCTAssertTrue([cell.accessibilityLabel containsString:@"Sheet music unavailable"]);
-    XCTAssertTrue([cell.accessibilityLabel containsString:@"Learning tracks unavailable"]);
-}
 
 
 - (void)testPitchActivationAndFormTargets {
@@ -771,23 +654,6 @@ TM_CAPTURE_IMPL
     XCTAssertTrue([pitch.button accessibilityActivate]);
     [pitch.button sendActionsForControlEvents:UIControlEventTouchCancel];
     XCTAssertFalse(pitch.note.isPlaying);
-    DPSearchViewController *search = [DPSearchViewController new]; [search loadViewIfNeeded];
-    search.view.frame = CGRectMake(0, 0, 320, 700); [search.view layoutIfNeeded];
-    // The options live in an inset-grouped list; build and lay out its rows the way the screen does.
-    UITableView *form = [search valueForKey:@"tableView"];
-    id<UITableViewDataSource> formSource = (id<UITableViewDataSource>)search;
-    for (NSInteger row = 0; row < [formSource tableView:form numberOfRowsInSection:0]; row++) {
-        UITableViewCell *cell = [formSource tableView:form cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:0]];
-        cell.frame = CGRectMake(0, 0, 320, 300);
-        [cell layoutIfNeeded];
-    }
-    for (NSString *key in @[@"sortBy", @"sheetMusic", @"learningTracks", @"parts", @"collection"]) {
-        UISegmentedControl *control = [search valueForKey:key];
-        UIView *visibleControl = control.hidden ? [control.superview valueForKey:@"menuButton"] : control;
-        XCTAssertGreaterThanOrEqual(visibleControl.bounds.size.height, 44);
-        XCTAssertGreaterThan(control.accessibilityLabel.length, 0);
-    }
-    XCTAssertEqualObjects(search.navigationItem.rightBarButtonItem.accessibilityLabel, @"Search");
     TMTestTracks *tracks = [TMTestTracks new];
     [tracks loadViewIfNeeded];
     tracks.view.frame = CGRectMake(0, 0, 320, 700);
@@ -1450,11 +1316,9 @@ TM_CAPTURE_IMPL
     return split;
 }
 
-- (DPTagQueryViewController *)tabletQuery {
-    DPTagQueryViewController *query = [DPTagQueryViewController new];
-    query.hasMoreResults = NO; // Fixture does not fetch until the pagination assertion.
-    query.tags = @[[self tag:1809], [self tag:42], [self tag:99]];
-    return query;
+// A results list over three known tags; it fetches nothing more.
+- (UIViewController<TMTagListSource> *)tabletQuery {
+    return (UIViewController<TMTagListSource> *)[TMScreens resultsScreenWithTags:@[[self tag:1809], [self tag:42], [self tag:99]]];
 }
 
 - (DPTagViewController *)tabletDetail:(UISplitViewController *)split {
@@ -1464,7 +1328,7 @@ TM_CAPTURE_IMPL
 }
 
 - (void)testTabletReusesDetailPreservesEveryPageAndChangesSourceWithoutReloading {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     UINavigationController *originalSecondary = (id)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
     UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
@@ -1508,7 +1372,7 @@ TM_CAPTURE_IMPL
     NSUInteger requests = self.requests.count;
     [DPAppDelegate showTagWithId:detail.tagId from:query];
     XCTAssertEqual(self.requests.count, requests, @"The same loaded tag is a no-op");
-    DPTagQueryViewController *other = [self tabletQuery];
+    UIViewController<TMTagListSource> *other = [self tabletQuery];
     UINavigationController *primary = (id)[split viewControllerForColumn:UISplitViewControllerColumnPrimary];
     [primary pushViewController:other animated:NO];
     [DPAppDelegate showTagWithId:detail.tagId from:other];
@@ -1521,7 +1385,7 @@ TM_CAPTURE_IMPL
 }
 
 - (void)testTabletSteppingEndsKeyboardPagingAndPersistentQuerySelection {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     [DPAppDelegate showTagWithId:1809 from:query];
     DPTagViewController *detail = [self tabletDetail:split];
@@ -1556,70 +1420,30 @@ TM_CAPTURE_IMPL
     XCTAssertFalse(next.enabled);
     [detail stepToNextTag];
     XCTAssertEqual(self.requests.count, 3);
-    UITableView *table = [query valueForKey:@"tagTable"];
-    XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
-    [query refreshViews];
-    [self layout];
-    DPTagCell *cell = [table cellForRowAtIndexPath:table.indexPathForSelectedRow];
-    XCTAssertNotNil(cell);
-    XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryNone);
-    XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+    // The list keeps the stepped-to row lit (its paging on the last row is covered in QueryBehaviorTests).
+    XCTAssertEqualObjects([query valueForKey:@"tm_selectedTagId"], @99);
     [detail stepToPreviousTag];
     XCTAssertEqual(detail.tagId, 42);
-
-    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
-    IMP original = method_getImplementation(method);
-    DPTag *fourth = [self tag:100];
-    XCTestExpectation *fetched = [self expectationWithDescription:@"Next page fetched at last loaded tag"];
-    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
-        XCTAssertEqual(start, 3);
-        DPTagQueryResult *result = [DPTagQueryResult new];
-        result.start = 3; result.count = 1; result.available = 4; result.tags = @[fourth];
-        [fetched fulfill];
-        return result;
-    });
-    method_setImplementation(method, mock);
-    @try {
-        DPTagQueryResult *loaded = [DPTagQueryResult new]; loaded.start = 0; loaded.count = 3;
-        [query setValue:loaded forKey:@"mostRecentResult"];
-        query.hasMoreResults = YES;
-        [detail stepToNextTag];
-        [self waitForExpectations:@[fetched] timeout:3];
-        TMAssertEventually(3, ^BOOL{ return !query.isLoading && query.tags.count == 4 && next.enabled; });
-        XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:2 inSection:0]);
-        [detail stepToNextTag];
-        XCTAssertEqual(detail.tagId, 100);
-        XCTAssertFalse(next.enabled);
-        query.tags = @[];
-        [query refreshViews];
-        XCTAssertNil(table.indexPathForSelectedRow);
-        XCTAssertFalse(previous.enabled);
-        XCTAssertFalse(next.enabled);
-    } @finally {
-        method_setImplementation(method, original);
-        imp_removeBlock(mock);
-    }
+    XCTAssertEqualObjects([query valueForKey:@"tm_selectedTagId"], @42);
 }
 
 - (void)testTabletCollapseClearsSelectionAndKeepsPhonePushBehavior {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     [DPAppDelegate showTagWithId:1809 from:query];
     DPTagViewController *detail = [self tabletDetail:split];
     [detail loadViewIfNeeded];
-    UITableView *table = [query valueForKey:@"tagTable"];
     split.simulateCollapse = YES;
     [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
-    XCTAssertNil(table.indexPathForSelectedRow);
+    XCTAssertNil([query valueForKey:@"tm_selectedTagId"]);
     XCTAssertNil([DPAppDelegate currentSplitTagIdFor:query]);
     XCTAssertEqual(detail.keyCommands.count, 0);
     XCTAssertFalse([detail.navigationItem.rightBarButtonItems containsObject:[detail valueForKey:@"nextTagBarButton"]]);
-    for (UITableViewCell *cell in table.visibleCells) XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryDisclosureIndicator);
     [detail stepToNextTag];
     XCTAssertEqual(detail.tagId, 1809);
     split.simulateCollapse = NO;
     [NSNotificationCenter.defaultCenter postNotificationName:TMTagSelectionDidChangeNotification object:split];
-    XCTAssertEqualObjects(table.indexPathForSelectedRow, [NSIndexPath indexPathForRow:0 inSection:0]);
+    XCTAssertEqualObjects([query valueForKey:@"tm_selectedTagId"], @1809);
     split.simulateCollapse = YES;
     UINavigationController *navigation = query.navigationController;
     NSUInteger count = navigation.viewControllers.count;
@@ -1632,7 +1456,7 @@ TM_CAPTURE_IMPL
 
 
 - (void)testTabletSheetMusicStaysInDetailColumnAndCanGoFullScreen {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     [DPAppDelegate showTagWithId:1809 from:query];
     DPTagViewController *detail = [self tabletDetail:split];
@@ -1677,7 +1501,7 @@ TM_CAPTURE_IMPL
 }
 
 - (void)testTabletPaintsOneWatermarkBehindBothColumns {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     UIViewController *placeholder = ((UINavigationController *)[split viewControllerForColumn:UISplitViewControllerColumnSecondary]).viewControllers.firstObject;
     [DPAppDelegate showTagWithId:1809 from:query];
@@ -1711,7 +1535,7 @@ TM_CAPTURE_IMPL
 }
 
 - (void)testTabletPlaceholderCopyLayoutDynamicTypeAndStillQuartet {
-    DPTagQueryViewController *query = [self tabletQuery];
+    UIViewController<TMTagListSource> *query = [self tabletQuery];
     TMTabletTestSplit *split = [self tabletSplitWithList:query];
     UINavigationController *secondary = (id)[split viewControllerForColumn:UISplitViewControllerColumnSecondary];
     UIViewController *placeholder = secondary.viewControllers.firstObject;
@@ -1745,21 +1569,8 @@ TM_CAPTURE_IMPL
     XCTAssertEqualWithAccuracy(CGRectGetMidY(stack.frame), CGRectGetMidY(safe), 1);
     XCTAssertLessThanOrEqual(body.bounds.size.width, 480);
     XCTAssertTrue(CGRectContainsRect(safe, stack.frame));
-    DPTagCell *cell = [[DPTagCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    for (NSNumber *dark in @[@NO, @YES]) {
-        UITraitCollection *traits = [UITraitCollection traitCollectionWithUserInterfaceStyle:dark.boolValue ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight];
-        UIColor *color = [cell.selectedBackgroundView.backgroundColor resolvedColorWithTraitCollection:traits];
-        XCTAssertEqualWithAccuracy(CGColorGetAlpha(color.CGColor), dark.boolValue ? 0.22 : 0.14, 0.001);
-    }
-    [cell setSelected:YES animated:NO];
-    XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
-    [cell setSelected:NO animated:NO];
-    XCTAssertFalse(cell.accessibilityTraits & UIAccessibilityTraitSelected);
 }
 
-- (void)testBrowseWidthsRotationLargeTextSplitAndSelection {
-    [self exerciseWidthsRotationLargeTextSplitAndSelection:0];
-}
 - (void)testDetailWidthsRotationLargeTextSplitAndSelection {
     [self exerciseWidthsRotationLargeTextSplitAndSelection:1];
 }
@@ -1779,13 +1590,9 @@ TM_CAPTURE_IMPL
     @try {
         CGSize portrait = UIScreen.mainScreen.bounds.size;
         NSString *device = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"ipad" : @"phone";
-        TMPageViewController *controller;
-        if (page == 0) controller = [DPBrowseViewController new];
-        else {
-            DPTagViewController *detail = [DPTagViewController new];
-            detail.tagId = 1809;
-            controller = detail;
-        }
+        DPTagViewController *detail = [DPTagViewController new];
+        detail.tagId = 1809;
+        TMPageViewController *controller = detail;
         UINavigationController *nav = [self attach:controller size:portrait style:UIUserInterfaceStyleDark large:NO];
         XCTAssertEqual(controller.selectedIndex, 0);
         if (page == 1) {
@@ -1794,11 +1601,6 @@ TM_CAPTURE_IMPL
             [self assertLoaded:(DPTagViewController *)controller tag:tag];
         }
         [self exercisePageSelection:controller];
-        if (page == 0) {
-            for (DPTagQueryViewController *child in controller.viewControllers) {
-                TMAssertEventually(3, ^BOOL{ return !child.isLoading && child.tags.count == 1; });
-            }
-        }
         for (NSUInteger variant = 0; variant < 4; variant++) {
             BOOL landscape = variant % 2;
             self.window.frame = (CGRect){CGPointZero, landscape ? CGSizeMake(portrait.height, portrait.width) : portrait};
@@ -2139,11 +1941,6 @@ TM_CAPTURE_IMPL
 
 // A hosted XCTest app deliberately skips Firebase setup. Model signed-out status
 // at the account boundary rather than bootstrapping authentication for layout tests.
-@interface TMLayoutSettings : DPSettingsController
-@end
-@implementation TMLayoutSettings
-- (BOOL)isSignedIn { return NO; }
-@end
 
 // Local layout fixtures use production controllers without submitting queries or changing lists.
 @interface TMLayoutRegressionTests : XCTestCase
@@ -2211,22 +2008,6 @@ TM_CAPTURE_IMPL
     self.window.tintColor = UIColor.systemBlueColor;
     [self.window makeKeyAndVisible];
     [self settle];
-}
-- (void)testNarrowPartsUsesMenuBeforeTargetsShrink {
-    DPSearchViewController *search = [DPSearchViewController new];
-    [self mount:search width:320 category:UIContentSizeCategoryLarge];
-    UITableView *table = [search valueForKey:@"tableView"];
-    [table scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
-    [self settle];
-    UIView *wrapper = [search valueForKey:@"filterControls"][3];
-    UISegmentedControl *parts = [search valueForKey:@"parts"];
-    // The wrapper reaches its real width only once the scrolled-to row has been laid
-    // out, and an unlaid-out wrapper is trivially narrower than 308pt.
-    TMSpinUntil(3, ^BOOL{ return wrapper.bounds.size.width > 0 && !wrapper.layer.needsLayout; });
-    NSLog(@"TM_LAYOUT_PROBE Parts wrapper=%.1f segments=%.1f count=%ld hidden=%d", wrapper.bounds.size.width, parts.bounds.size.width, (long)parts.numberOfSegments, parts.hidden);
-    XCTAssertLessThan(wrapper.bounds.size.width, 308);
-    XCTAssertTrue(parts.hidden, @"Seven 44pt targets cannot fit below 308pt");
-    XCTAssertFalse([[wrapper valueForKey:@"menuButton"] isHidden]);
 }
 - (void)testDetailsAX5ValueDoesNotBecomeOneCharacterColumn {
     DPTagDetailController *details = [DPTagDetailController new];
@@ -2336,37 +2117,6 @@ TM_CAPTURE_IMPL
             XCTAssertEqualWithAccuracy(scroll.contentSize.height, full, 1);
         }
     }
-}
-- (void)testEveryFilterFitsAndKeepsOptionsAcrossResize {
-    NSDictionary *defaults = NSUserDefaults.standardUserDefaults.dictionaryRepresentation;
-    for (UIViewController *controller in @[[DPSearchViewController new], [TMLayoutSettings new]]) {
-        [self mount:controller width:393 category:UIContentSizeCategoryLarge];
-        NSArray *wrappers = [controller valueForKey:@"filterControls"];
-        XCTAssertEqual(wrappers.count, [controller isKindOfClass:DPSearchViewController.class] ? 5 : 4);
-        // Exercise each real consumer at its wrapper boundary, independent of offscreen cell reuse.
-        for (UIView *wrapper in wrappers) {
-            UISegmentedControl *control = [wrapper valueForKey:@"control"];
-            UIButton *menu = [wrapper valueForKey:@"menuButton"];
-            NSInteger original = control.selectedSegmentIndex;
-            NSArray *titles = [menu.menu.children valueForKey:@"title"];
-            for (UIContentSizeCategory category in @[UIContentSizeCategoryLarge, UIContentSizeCategoryAccessibilityExtraExtraExtraLarge]) {
-                wrapper.traitOverrides.preferredContentSizeCategory = category; [wrapper updateTraitsIfNeeded];
-                for (NSNumber *width in @[@256, @329, @700, @256, @700]) {
-                    wrapper.bounds = CGRectMake(0, 0, width.doubleValue, 44);
-                    [wrapper performSelector:NSSelectorFromString(@"updateFilter")];
-                    BOOL hidden = control.hidden;
-                    for (NSInteger cycle = 0; cycle < 3; cycle++) [wrapper performSelector:NSSelectorFromString(@"updatePresentation")];
-                    XCTAssertEqual(control.hidden, hidden);
-                    XCTAssertEqual(menu.hidden, !hidden);
-                    if (!hidden) for (NSInteger index = 0; index < control.numberOfSegments; index++) XCTAssertGreaterThanOrEqual([control widthForSegmentAtIndex:index], 44);
-                    if ([category isEqualToString:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge]) XCTAssertTrue(hidden);
-                    XCTAssertEqual(control.selectedSegmentIndex, original);
-                    XCTAssertEqualObjects([menu.menu.children valueForKey:@"title"], titles);
-                }
-            }
-        }
-    }
-    for (NSString *key in defaults) if ([key hasPrefix:@"search."] || [key hasPrefix:@"random."]) XCTAssertEqualObjects([NSUserDefaults.standardUserDefaults objectForKey:key], defaults[key]);
 }
 - (void)testSummaryHasExactlyOneConditionalProseBreak {
     for (NSNumber *large in @[@NO, @YES]) {
@@ -2656,49 +2406,6 @@ TM_CAPTURE_IMPL
         }
     } @finally { method_setImplementation(fetch, oldFetch); imp_removeBlock(noNetwork); }
 }
-- (void)testQueryEmptyErrorAndPopulatedReachability {
-    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
-    IMP original = method_getImplementation(method);
-    __block NSInteger mode = 0;
-    DPTag *tag = [self layoutTag];
-    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *query, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
-        if (mode == 1) [NSException raise:@"offline" format:@"Deterministic layout fixture"];
-        DPTagQueryResult *result = [DPTagQueryResult new]; result.tags = mode == 2 ? @[tag] : @[];
-        result.count = (int)result.tags.count; result.available = result.count; result.start = 0; return result;
-    });
-    method_setImplementation(method, mock);
-    @try {
-        for (mode = 0; mode < 3; mode++) {
-            DPTagQueryViewController *query = [DPTagQueryViewController new];
-            [self mount:query width:393 category:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-            TMAssertEventually(5, ^BOOL{ return !query.isLoading; });
-            [self settle];
-            UITableView *table = [query valueForKey:@"tagTable"];
-            XCTAssertEqual([table numberOfRowsInSection:0], mode == 2 ? 1 : 0);
-            if (mode < 2) {
-                UILabel *label = [query valueForKey:@"statusLabel"]; [self assertWholeLabel:label];
-                UIButton *retry = [query valueForKey:@"retryButton"];
-                XCTAssertEqual(retry.hidden, mode == 0);
-                self.window.frame = CGRectMake(0, 0, 852, 393); [self settle];
-                if (mode == 1) {
-                    // The error view places its button a few passes after the landscape
-                    // resize; scroll until that placement has come to rest.
-                    TMSpinUntil(5, ^BOOL{
-                        [table scrollRectToVisible:[retry convertRect:retry.bounds toView:table] animated:NO];
-                        [self settle];
-                        return retry.bounds.size.height >= 44
-                            && CGRectContainsRect(CGRectInset(table.bounds, -.5, -.5), [retry convertRect:retry.bounds toView:table]);
-                    });
-                    CGRect rect = [retry convertRect:retry.bounds toView:table];
-                    [table scrollRectToVisible:rect animated:NO];
-                    XCTAssertTrue(CGRectContainsRect(CGRectInset(table.bounds, -.5, -.5), rect));
-                    XCTAssertGreaterThanOrEqual(retry.bounds.size.height, 44);
-                    [self captureLayout:@"query-error-landscape-ax5"];
-                }
-            } else [self checkLabelsIn:[self scrollRow:[NSIndexPath indexPathForRow:0 inSection:0] in:table position:UITableViewScrollPositionTop].contentView];
-        }
-    } @finally { method_setImplementation(method, original); imp_removeBlock(mock); }
-}
 - (void)testValidSheetPreviewKeyAndResizedBounds {
     TMTestSummary *summary = [TMTestSummary new];
     DPTag *tag = [self layoutTag]; tag.title = @"Four-part score layout fixture";
@@ -2812,11 +2519,6 @@ TM_CAPTURE_IMPL
             [self captureLayout:@"details-final-row-dark-ax5"];
         }
     }
-    TMLayoutSettings *settings = [TMLayoutSettings new];
-    [self mount:[[UINavigationController alloc] initWithRootViewController:settings] width:320 category:UIContentSizeCategoryLarge];
-    UITableView *table = [settings valueForKey:@"tableView"];
-    [table scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:2] atScrollPosition:UITableViewScrollPositionBottom animated:NO];
-    [self captureLayout:@"settings-narrow-default"];
 }
 @end
 
@@ -2826,6 +2528,33 @@ TM_CAPTURE_IMPL
 @property UIWindow *previousWindow;
 @property NSTimeInterval shippingKeyNoteDuration;
 @end
+// Hosts a barber pole as a list's footer, the way the results lists show their
+// next page loading, with the visibility the pole needs from its screen.
+@interface TMPoleHost : UIViewController
+@property (nonatomic, strong) UITableView *table;
+@property (nonatomic, strong) TMBarberPoleLoadingView *pole;
+@end
+@implementation TMPoleHost
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.table = [[UITableView alloc] initWithFrame:self.view.bounds];
+    self.table.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [self.view addSubview:self.table];
+    self.pole = [[TMBarberPoleLoadingView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 68)];
+    self.table.tableFooterView = self.pole;
+    [self.pole startAnimating];
+}
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    if (self.table.tableFooterView == self.pole && self.pole.frame.size.width != self.table.bounds.size.width) {
+        self.pole.frame = CGRectMake(0, 0, self.table.bounds.size.width, 68);
+        self.table.tableFooterView = self.pole;
+    }
+}
+- (void)viewWillAppear:(BOOL)animated { [super viewWillAppear:animated]; self.pole.controllerVisible = YES; }
+- (void)viewWillDisappear:(BOOL)animated { [super viewWillDisappear:animated]; self.pole.controllerVisible = NO; }
+@end
+
 @implementation TMFooterPitchTests
 - (void)setUp {
     [super setUp];
@@ -3628,35 +3357,18 @@ TM_CAPTURE_IMPL
 }
 
 - (void)testBarberPolePendingQueryLifecycle {
-    Method method = class_getClassMethod(DPTag.class, @selector(query:numberOfResults:start:parts:learningTracks:sheetMusic:collection:sortBy:));
-    IMP original = method_getImplementation(method);
     Method motion = class_getInstanceMethod(NSClassFromString(@"TMBarberPoleLoadingView"), NSSelectorFromString(@"reduceMotionEnabled"));
     IMP originalMotion = method_getImplementation(motion);
     __block BOOL reduced = NO;
     IMP mockMotion = imp_implementationWithBlock(^BOOL(id view) { return reduced; });
     method_setImplementation(motion, mockMotion);
-    dispatch_semaphore_t gate = dispatch_semaphore_create(0);
-    XCTestExpectation *entered = [self expectationWithDescription:@"real query pending"];
-    __block NSUInteger calls = 0;
-    DPTag *tag = [self tag]; tag.title = @"Lost";
-    IMP mock = imp_implementationWithBlock(^DPTagQueryResult *(id cls, NSString *text, int number, int start, NSNumber *parts, NSNumber *tracks, NSNumber *sheet, enum DPTagCollection collection, enum DPTagSortOptions sort) {
-        calls++;
-        XCTAssertEqualObjects(text, @"Lost"); XCTAssertEqual(number, 20); XCTAssertEqual(start, 0);
-        if (calls == 1) { [entered fulfill]; dispatch_semaphore_wait(gate, DISPATCH_TIME_FOREVER); }
-        if (calls == 2) [NSException raise:@"offline" format:@"fixture"];
-        DPTagQueryResult *result = [DPTagQueryResult new];
-        result.tags = @[tag]; result.count = 1; result.available = 1; result.start = 0;
-        return result;
-    });
-    method_setImplementation(method, mock);
-    DPTagQueryViewController *query = [DPTagQueryViewController new]; query.query = @"Lost";
+    // A list's footer pole, as the results lists show their next page loading.
+    TMPoleHost *query = [TMPoleHost new];
     @try {
-        [query performSelector:NSSelectorFromString(@"fetchResults")];
-        [self waitForExpectations:@[entered] timeout:3];
         [query loadViewIfNeeded];
-        UIView *pole = [query valueForKey:@"activity"];
+        UIView *pole = query.pole;
         CALayer *stripes = [pole valueForKey:@"stripes"], *frame = [pole valueForKey:@"frameLayer"];
-        XCTAssertTrue(query.isLoading); XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
         [self mount:query width:UIScreen.mainScreen.bounds.size.width dark:NO large:YES];
         CABasicAnimation *animation = (id)[stripes animationForKey:@"rotationStripes"];
         XCTAssertNotNil(animation); XCTAssertEqualWithAccuracy(animation.duration, 2, 0.01);
@@ -3672,7 +3384,7 @@ TM_CAPTURE_IMPL
         XCTAssertTrue(CATransform3DIsIdentity(frame.transform));
         XCTAssertEqualObjects(pole.accessibilityLabel, @"Loading tags");
         XCTAssertTrue(pole.isAccessibilityElement);
-        UITableView *table = [query valueForKey:@"tagTable"];
+        UITableView *table = query.table;
         XCTAssertEqual(table.tableFooterView, pole);
         XCTAssertEqualWithAccuracy(pole.bounds.size.width, table.bounds.size.width, 0.5);
         CGRect stationary = frame.frame;
@@ -3697,7 +3409,7 @@ TM_CAPTURE_IMPL
         [self capture:@"tagmaster-ios-shared-vector-dark-pending"];
         reduced = YES;
         [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
-        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertTrue(query.isLoading);
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
         [self capture:@"tagmaster-ios-shared-vector-dark-reduced-motion"];
         reduced = NO;
         [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
@@ -3721,19 +3433,9 @@ TM_CAPTURE_IMPL
         XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
         table.tableFooterView = nil; XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
         table.tableFooterView = pole; [self settle]; XCTAssertNotNil([stripes animationForKey:@"rotationStripes"]);
-        dispatch_semaphore_signal(gate);
-        [self waitUntil:^BOOL { return !query.isLoading && query.tags.count == 1; }]; [self settle];
-        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertNil(table.tableFooterView);
-        [query refresh];
-        [self waitUntil:^BOOL { return !query.isLoading && [[query valueForKey:@"failed"] boolValue]; }]; [self settle];
-        XCTAssertNil([stripes animationForKey:@"rotationStripes"]); XCTAssertNil(table.tableFooterView);
-        [[query valueForKey:@"retryButton"] sendActionsForControlEvents:UIControlEventTouchUpInside];
-        [self waitUntil:^BOOL { return calls == 3 && !query.isLoading; }];
-        XCTAssertEqual(query.tags.count, 1);
+        [query.pole stopAnimating];
+        XCTAssertNil([stripes animationForKey:@"rotationStripes"]);
     } @finally {
-        dispatch_semaphore_signal(gate);
-        [self waitUntil:^BOOL { return !query.isLoading; }];
-        method_setImplementation(method, original); imp_removeBlock(mock);
         method_setImplementation(motion, originalMotion); imp_removeBlock(mockMotion);
     }
 }

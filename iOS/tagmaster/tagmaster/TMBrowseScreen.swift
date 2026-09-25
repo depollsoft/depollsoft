@@ -40,6 +40,7 @@ final class TMBrowseModel: TMTagListing {
 
     // The detail steps through whichever page is showing.
     var listedTagIds: [Int] { selectedPage.listedTagIds }
+    var selectedTagId: Int? { selectedPage.selectedTagId }
     func didStep(to tagId: Int) { selectedPage.didStep(to: tagId) }
 }
 

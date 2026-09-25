@@ -41,8 +41,14 @@ final class TMQueryModel: TMTagListing {
     @ObservationIgnored private var observer: NSObjectProtocol?
 
     init(query: TMTagQuery, catalog: TMCatalog = .live, navigator: TMNavigator? = nil,
-         pageSize: Int = 20, maxResults: Int = 1000, center: NotificationCenter = .default) {
+         pageSize: Int = 20, maxResults: Int = 1000, preloaded: [DPTag]? = nil,
+         center: NotificationCenter = .default) {
         self.query = query
+        if let preloaded {
+            tags = preloaded
+            nextStart = preloaded.count
+            hasMoreResults = false
+        }
         self.catalog = catalog
         self.navigator = navigator
         self.pageSize = pageSize

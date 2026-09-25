@@ -430,24 +430,22 @@ enum Screens {
     static func homeModel(_ home: UIViewController) -> TMHomeModel { (home as! TMHostingController).listing as! TMHomeModel }
     static func openTag(_ home: UIViewController) { homeModel(home).openTagPrompt = TMOpenTagPrompt() }
     static func randomTag(_ home: UIViewController) { homeModel(home).randomTag() }
-    static func browse() -> UIViewController { DPBrowseViewController() }
+    static func browse() -> UIViewController { TMScreens.browse() }
     static func selectBrowsePage(_ browse: UIViewController, _ index: Int) {
-        (browse as! TMPageViewController).selectedIndex = UInt(index)
+        ((browse as! TMHostingController).listing as! TMBrowseModel).selectedIndex = index
     }
-    static func search() -> UIViewController { DPSearchViewController() }
+    static func search() -> UIViewController { TMScreens.search() }
     static func setSearchText(_ search: UIViewController, _ text: String) {
-        search.navigationItem.searchController?.searchBar.text = text
+        (search as! TMHostingController).searchModel?.text = text
     }
-    static func results(query: String) -> UIViewController {
-        let results = DPTagQueryViewController()
-        results.query = query
-        return results
+    static func results(query: String) -> UIViewController { TMScreens.results(TMTagQuery(text: query)) }
+    static func settings() -> UIViewController {
+        TMScreens.settings(account: TMAccount(isSignedIn: { false }, signOut: {}),
+                           build: TMBuildInfo(number: "", pullRequest: "?"))
     }
-    final class SignedOutSettings: DPSettingsController {
-        override func isSignedIn() -> Bool { false }
+    static func clearFavorites(_ settings: UIViewController) {
+        (settings as! TMHostingController).settingsModel?.clearTapped(.favorites)
     }
-    static func settings() -> UIViewController { SignedOutSettings() }
-    static func clearFavorites(_ settings: UIViewController) { settings.perform(Selector(("clearFavorites"))) }
     static func teachable() -> UIViewController { TMScreens.teachable() }
     static func list(_ key: String) -> UIViewController { TMScreens.list(key: key) }
 }
