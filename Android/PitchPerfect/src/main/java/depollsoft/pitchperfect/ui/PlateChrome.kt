@@ -78,7 +78,7 @@ val isTablet: Boolean
 fun Modifier.bottomHairline(color: Color): Modifier =
     drawBehind { drawRect(color, Offset(0f, size.height - 1f), Size(size.width, 1f)) }
 
-/** A one-pixel hairline along the top edge, like `bar_surface_top_edge`. */
+/** A one-pixel hairline along the top edge. */
 fun Modifier.topHairline(color: Color): Modifier = drawBehind { drawRect(color, Offset.Zero, Size(size.width, 1f)) }
 
 /** A one-pixel hairline along the trailing edge, like `bar_surface_end_edge`. */
