@@ -386,6 +386,14 @@ struct TMHomeScreen: View {
     }
 }
 
+extension View {
+    /// UITableView's inset-grouped spacing above the first section.
+    func tmInsetGroupedMetrics() -> some View {
+        contentMargins(.top, 15, for: .scrollContent)
+            .listSectionSpacing(.custom(16.0 / 3))
+    }
+}
+
 /// A grouped section's title, on UITableView's margins.
 struct TMSectionHeader: View {
     let title: String

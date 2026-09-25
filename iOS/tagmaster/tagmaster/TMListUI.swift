@@ -248,8 +248,9 @@ struct TMTagRow: View {
                     Text(aka).font(TMTheme.font(.footnote)).tmLabelMetrics(.footnote)
                 }
                 Text(content.details).font(TMTheme.font(.footnote)).tmLabelMetrics(.footnote)
-                mark(content.hasSheetMusic, "Sheet music")
-                mark(content.hasLearningTracks, "Learning tracks")
+                // UIKit settled the first mark's row a point taller than the second.
+                mark(content.hasSheetMusic, "Sheet music").frame(height: 21)
+                mark(content.hasLearningTracks, "Learning tracks").frame(height: 20)
             }
             .foregroundStyle(Color(uiColor: .label))
             .frame(maxWidth: .infinity, alignment: .leading)

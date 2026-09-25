@@ -71,12 +71,13 @@ struct TMSearchScreen: View {
                     TMFilterRow(filter: filter, selection: $model.selections[index])
                 }
             } header: {
-                Text("Search Options")
+                TMSectionHeader("Search Options")
             } footer: {
-                Text("Searches match titles and lyrics. Leave the field empty to list every tag that matches the options.")
+                TMSectionFooter("Searches match titles and lyrics. Leave the field empty to list every tag that matches the options.")
             }
         }
         .listStyle(.insetGrouped)
+        .tmInsetGroupedMetrics()
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.immediately)
         .searchable(text: $model.text, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")

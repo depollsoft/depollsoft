@@ -151,33 +151,34 @@ struct TMSettingsScreen: View {
             Section {
                 actionRow(model.accountTitle) { model.accountTapped() }
                     .accessibilityHint(model.accountHint)
-            } header: { Text("Account") } footer: { Text("Log in to back up and synchronize your tag lists.") }
+            } header: { TMSectionHeader("Account") } footer: { TMSectionFooter("Log in to back up and synchronize your tag lists.") }
 
             Section {
                 clearRow("Clear Favorites", .favorites)
                 clearRow("Clear Teachable Tags", .teachable)
-            } header: { Text("Saved Tags") } footer: {
-                Text("Clearing a list removes every tag from it on this device and, when logged in, on your other devices.")
+            } header: { TMSectionHeader("Saved Tags") } footer: {
+                TMSectionFooter("Clearing a list removes every tag from it on this device and, when logged in, on your other devices.")
             }
 
             Section {
                 ForEach(Array(TMSettingsModel.filters.enumerated()), id: \.offset) { index, filter in
                     TMFilterRow(filter: filter, selection: $model.filterSelections[index])
                 }
-            } header: { Text("Random Tag Filters") } footer: { Text("Random Tag only picks tags that match these filters.") }
+            } header: { TMSectionHeader("Random Tag Filters") } footer: { TMSectionFooter("Random Tag only picks tags that match these filters.") }
 
             Section {
                 actionRow("Privacy choices") { model.privacyChoices() }
-            } header: { Text("Privacy") }
+            } header: { TMSectionHeader("Privacy") }
 
             if model.build.isPrivate {
                 Section {
                     Text(model.build.summary).font(TMTheme.font(.body))
                     actionRow("Copy Logs") { model.copyLogs() }
-                } header: { Text("Private Build") }
+                } header: { TMSectionHeader("Private Build") }
             }
         }
         .listStyle(.insetGrouped)
+        .tmInsetGroupedMetrics()
         .scrollContentBackground(.hidden)
         .background { TMScreenBackground(grouped: true) }
         .onAppear { model.refresh() }
@@ -204,6 +205,7 @@ struct TMSettingsScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
         }
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
     }
 
     private func clearRow(_ title: String, _ list: TMSettingsModel.Clearing) -> some View {
@@ -219,6 +221,7 @@ struct TMSettingsScreen: View {
             .contentShape(Rectangle())
         }
         .disabled(count == 0)
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
     }
 }
 

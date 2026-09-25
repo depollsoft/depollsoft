@@ -49,7 +49,10 @@ struct TMFilterRow: View {
                 }
             }
         }
-        .padding(.vertical, 12)
+        .padding(.top, 12)
+        // A UITableView cell also gives its separator a point of its own height.
+        .padding(.bottom, 13)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
     }
 
     /// The width the segments need, as TMFilterControl measured it: each title in

@@ -51,11 +51,14 @@ struct TMBrowseScreen: View {
     var body: some View {
         TabView(selection: $model.selectedIndex) {
             ForEach(Array(TMBrowsePage.all.enumerated()), id: \.offset) { index, page in
-                TMQueryScreen(model: model.pages[index], showsBackground: false)
+                // Each page draws the watermark in the one place Browse's own view held it.
+                TMQueryScreen(model: model.pages[index])
                     // Only the tab container is compact; pages keep the column's own size class.
                     .environment(\.horizontalSizeClass, sizeClass)
                     .tabItem {
                         Label(page.title, systemImage: page.symbol)
+                            // Outline symbols, as UITabBarItem showed them; SwiftUI would fill them.
+                            .environment(\.symbolVariants, .none)
                             .accessibilityIdentifier("page-\(page.title)")
                     }
                     .tag(index)
@@ -65,7 +68,6 @@ struct TMBrowseScreen: View {
         .tmTabBarNeverMinimizes()
         // A compact container keeps the bar at the foot of the screen on iPad too.
         .environment(\.horizontalSizeClass, .compact)
-        .background { TMScreenBackground() }
         .onChange(of: model.selectedIndex) { _, _ in
             NotificationCenter.default.post(name: .TMTagListDidChange, object: model.selectedPage.owner)
         }

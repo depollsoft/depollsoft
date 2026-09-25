@@ -156,8 +156,6 @@ final class TMQueryModel: TMTagListing {
 
 struct TMQueryScreen: View {
     @Bindable var model: TMQueryModel
-    /// False inside Browse, whose page container draws the watermark once.
-    var showsBackground = true
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -173,7 +171,7 @@ struct TMQueryScreen: View {
                         TMTagRow(content: content, showsChevron: !model.expanded, selected: selected)
                     }
                     .tmTagRowAccessibility(content, selected: selected)
-                    .tmTagListRow(selected: selected)
+                    .tmTagListRow(selected: selected, groupedInset: true)
                     .id(tagId)
                     .onAppear { model.rowAppeared(index) }
                 }
@@ -196,7 +194,7 @@ struct TMQueryScreen: View {
                 withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .default) { proxy.scrollTo(target) }
             }
         }
-        .background { if showsBackground { TMScreenBackground() } }
+        .background { TMScreenBackground() }
         .onAppear {
             model.syncSelection()
             if model.tags.isEmpty && model.statusText == nil { model.fetchNextPage() }
