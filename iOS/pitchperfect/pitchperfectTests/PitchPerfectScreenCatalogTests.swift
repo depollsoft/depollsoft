@@ -8,157 +8,132 @@
 //
 
 import FirebaseCore
+import SwiftUI
 import UIKit
 import XCTest
 @testable import pitchperfect
 
-/// Drives the UIKit app into catalog states. (Captured before the SwiftUI port.)
+/// Drives the app into catalog states: through its controls where a finger
+/// would, through its models where a gesture cannot be synthesized.
 @MainActor
 final class CatalogApp {
     let window: UIWindow
-    let tabs: UITabBarController
+    let models: PitchPerfectModels
+    let host: UIViewController
 
     init(style: UIUserInterfaceStyle) throws {
         window = ScreenCatalog.makeWindow(style: style)
-        let storyboard = UIStoryboard(name: "MainStoryboard_iPhone", bundle: Bundle(for: DPAppDelegate.self))
-        tabs = try XCTUnwrap(storyboard.instantiateInitialViewController() as? UITabBarController)
-        window.rootViewController = tabs
-        let delegate = DPAppDelegate()
-        delegate.window = window
-        delegate.perform(NSSelectorFromString("configureRootNavigationControllers"))
+        models = PitchPerfectModels()
+        host = UIHostingController(rootView: PitchPerfectRoot(models: models))
+        window.rootViewController = host
         window.makeKeyAndVisible()
-        tabs.loadViewIfNeeded()
-        tabs.beginAppearanceTransition(true, animated: false)
-        tabs.endAppearanceTransition()
+        ScreenCatalog.settle()
     }
 
     func tearDown() {
-        window.rootViewController?.dismiss(animated: false)
-        tabs.beginAppearanceTransition(false, animated: false)
-        tabs.endAppearanceTransition()
+        host.dismiss(animated: false)
         window.isHidden = true
         window.rootViewController = nil
     }
 
-    @discardableResult
-    func show(tab index: Int) -> UIViewController {
-        let outgoing = tabs.selectedIndex == index ? nil : tabs.selectedViewController
-        outgoing?.beginAppearanceTransition(false, animated: false)
-        tabs.selectedIndex = index
-        outgoing?.endAppearanceTransition()
-        let navigation = tabs.selectedViewController as! UINavigationController
-        let controller = navigation.topViewController!
-        controller.loadViewIfNeeded()
-        navigation.beginAppearanceTransition(true, animated: false)
-        navigation.endAppearanceTransition()
-        tabs.view.layoutIfNeeded()
-        return controller
-    }
-
-    var songs: DPSongListViewController { show(tab: 3) as! DPSongListViewController }
+    var ui: UIDriver { UIDriver(window) }
 
     var topPresented: UIViewController {
-        var top: UIViewController = tabs
+        var top = host
         while let next = top.presentedViewController { top = next }
         return top
     }
 
+    /// The frontmost sheet's own controls.
+    var sheet: UIDriver { UIDriver(topPresented.view) }
+
+    func show(tab index: Int) {
+        models.tab = [.pitchPipe, .notes, .keys, .songs][index]
+        ScreenCatalog.settle()
+    }
+
+    var songs: SongListModel { models.songs }
+
     // MARK: Actions
 
+    /// Toggle mode: each activation starts a note that keeps sounding.
     func pressInstrument(_ labels: [String], toggle: Bool) {
-        let pipe = show(tab: 0)
-        let instrument = pipe.value(forKey: "instrumentView") as! DPPitchInstrumentView
-        instrument.layoutIfNeeded()
-        let elements = instrument.accessibilityElements as! [UIAccessibilityElement]
-        for label in labels {
-            let element = elements.first { $0.accessibilityLabel == label }!
-            let touch = PitchPerfectTestTouch()
-            touch.point = CGPoint(x: element.accessibilityFrameInContainerSpace.midX,
-                                  y: element.accessibilityFrameInContainerSpace.midY)
-            instrument.touchesBegan([touch], with: nil)
-            if toggle { instrument.touchesEnded([touch], with: nil) }
-        }
+        show(tab: 0)
+        for label in labels { ui.tap(label: label) }
     }
 
     func selectRange(high: Bool) {
-        let pipe = show(tab: 0)
-        let instrument = pipe.value(forKey: "instrumentView") as! DPPitchInstrumentView
-        let elements = instrument.accessibilityElements as! [UIAccessibilityElement]
-        _ = elements.first { $0.accessibilityLabel == (high ? "Octave range F to F" : "Octave range C to C") }!
-            .accessibilityActivate()
+        show(tab: 0)
+        ui.tap(label: high ? "Octave range F to F" : "Octave range C to C")
     }
 
     func showMinorKeys() {
-        let keys = show(tab: 2)
-        let control = keys.navigationItem.leftBarButtonItem!.customView as! UISegmentedControl
+        show(tab: 2)
+        let control = descendants(of: UISegmentedControl.self, in: window).first!
         control.selectedSegmentIndex = 1
         control.sendActions(for: .valueChanged)
     }
 
     func pressSong(row: Int) {
-        let table = songs.value(forKey: "tableView") as! UITableView
-        let cell = table.cellForRow(at: IndexPath(row: row, section: 0))!
-        cell.touchesBegan([], with: nil)
+        show(tab: 3)
+        songs.press(DPSongsModel.sharedInstance.currentList.songs[row])
     }
 
-    func editSongs() { songs.perform(NSSelectorFromString("edit")) }
-
-    func openSettings() {
-        let controller = tabs.selectedViewController.flatMap { ($0 as? UINavigationController)?.topViewController }!
-        DPCommon.openSettings(controller, barButtonItem: controller.navigationItem.rightBarButtonItem!)
+    func editSongs() {
+        show(tab: 3)
+        ui.tap(id: "pencil")
     }
 
-    func addSong() { songs.perform(NSSelectorFromString("addSong")) }
+    func openSettings() { ui.tap(id: "gearshape") }
+
+    func addSong() { ui.tap(id: "plus") }
 
     func editSong(row: Int) {
-        let list = DPSongsModel.sharedInstance.currentList
-        songs.perform(NSSelectorFromString("editSong:fromUi:"), with: list.songs[row], with: UIView())
-    }
-
-    var editor: DPSongEditorViewController {
-        (topPresented as! UINavigationController).topViewController as! DPSongEditorViewController
+        songs.editSong(DPSongsModel.sharedInstance.currentList.songs[row])
     }
 
     func typeSongTitle(_ title: String) {
-        let editor = self.editor
-        editor.view.layoutIfNeeded()
-        let state = editor.value(forKey: "editor") as! DPSongEditor
-        state.title = title
+        let field = descendants(of: UITextField.self, in: topPresented.view).first!
+        field.text = title
+        field.sendActions(for: .editingChanged)
     }
 
-    func pressEditorDone() {
-        editor.perform(NSSelectorFromString("complete"))
-    }
+    func pressEditorDone() { sheet.tap(id: "checkmark") }
 
-    func manageSetLists() { songs.perform(NSSelectorFromString("manageSetLists")) }
+    func manageSetLists() { songs.manageSetLists() }
 
     func addSongsFromAnotherList(choose rows: [IndexPath]) {
-        songs.perform(NSSelectorFromString("addSongsFromAnotherSetList"))
+        songs.addSongsFromAnotherList()
         ScreenCatalog.settle()
-        let picker = (topPresented as! UINavigationController).topViewController as! AddSongsFromListController
-        let table = picker.value(forKey: "tableView") as! UITableView
-        for row in rows { picker.tableView(table, didSelectRowAt: row) }
+        let groups = DPSongsModel.sharedInstance.addableSongs(for: DPSongsModel.sharedInstance.currentList)
+        for row in rows {
+            let song = groups[row.section].songs[row.row]
+            sheet.tap(label: "\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
+        }
     }
 
     func promptNewSetList(typing text: String?) {
-        songs.perform(NSSelectorFromString("promptNewSetList"))
+        show(tab: 3)
+        ui.tap(id: "setlist.new")
         ScreenCatalog.settle()
         if let text, let alert = topPresented as? UIAlertController {
             alert.pp_type(text)
         }
     }
 
-    func confirmDelete(_ list: DPSongList) {
-        songs.perform(NSSelectorFromString("confirmDeleteSetList:"), with: list)
-    }
+    func confirmDelete(_ list: DPSongList) { songs.confirmDelete(list) }
 
     func showLogin() {
-        let login = DPLoginViewController()
-        let navigation = UINavigationController(rootViewController: login)
-        tabs.present(navigation, animated: false)
+        host.present(UIHostingController(rootView: NavigationStack { LoginIntroScreen() }), animated: false)
     }
 
-    func showPrivacyChoices() { TelemetryConsent.present(from: tabs) }
+    func showPrivacyChoices() { TelemetryConsent.present(from: host) }
+
+    func descendants<T: UIView>(of type: T.Type, in root: UIView) -> [T] {
+        var result = (root as? T).map { [$0] } ?? []
+        for child in root.subviews { result += descendants(of: type, in: child) }
+        return result
+    }
 }
 
 @MainActor
@@ -202,10 +177,12 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     private func stopAll() {
-        for note in DPNote.commonNotes() as! [DPNote] { note.stop() }
+        NotePlayer.shared.stop(DPNote.commonNotes() as! [DPNote])
     }
 
     private func launch(_ style: UIUserInterfaceStyle = .light) throws -> CatalogApp {
+        // The app applies the stored theme to its windows; store the one wanted.
+        UserDefaults.standard.set(style == .dark ? 2 : 0, forKey: "depollsoft.pitchperfect.theme")
         let app = try CatalogApp(style: style)
         self.app = app
         return app
@@ -255,6 +232,8 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
 
     func testPitchPipeSounding() throws {
         DPSettingsModel.sharedInstance.toggleNotes = true
+        PitchInstrumentView.breathingFrozen = true
+        defer { PitchInstrumentView.breathingFrozen = false }
         let app = try launch()
         app.show(tab: 0)
         ScreenCatalog.settle()

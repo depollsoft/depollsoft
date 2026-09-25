@@ -1,5 +1,5 @@
 //
-//  DPLoginViewController.swift
+//  LoginScreen.swift
 //  pitchperfect
 //
 //  Created by David Poll on 6/22/21.
@@ -206,38 +206,96 @@ struct FirebaseAuthView: View {
 }
 #endif
 
-// MARK: - UIKit Extension for Login
+// MARK: - Signing in
 
-extension DPLoginViewController {
-
-    /// Presents the Firebase authentication UI
-    /// - Parameter viewController: The view controller to present from
-    @objc public func logIn(_ viewController: UIViewController) {
-        #if canImport(FirebaseAuthSwiftUI)
-        let authView = FirebaseAuthView(
-            onSignIn: { [weak self, weak viewController] isNewUser in
-                self?.completeLogIn(isNewUser)
-                viewController?.dismiss(animated: true) {
-                    if viewController === self {
-                        self?.dismiss(animated: true)
-                    }
-                }
-            },
-            onDismiss: { [weak viewController] in
-                viewController?.dismiss(animated: true)
-            }
-        )
-
-        let hostingController = UIHostingController(rootView: authView)
-        hostingController.modalPresentationStyle = .pageSheet
-        viewController.present(hostingController, animated: true)
-        #else
-        // Fallback: Direct Firebase Auth if FirebaseAuthSwiftUI not available
-        print("FirebaseAuthSwiftUI not available - implement fallback auth")
-        #endif
+enum SignIn {
+    /// Starts syncing once an account is known: a new account uploads this
+    /// device's songs; an existing one takes the cloud's.
+    @MainActor
+    static func completed(isNewUser: Bool) {
+        DPSettingsModel.sharedInstance.attachToFirestore()
+        DPSongsModel.sharedInstance.attachToFirestore(store: isNewUser)
     }
+}
 
-    @objc func logInClick() {
-        logIn(self)
+private struct SignInSheet: ViewModifier {
+    @Binding var isPresented: Bool
+    let onSignIn: (Bool) -> Void
+    let onDismiss: () -> Void
+    @State private var signedIn = false
+
+    func body(content: Content) -> some View {
+        content.sheet(isPresented: $isPresented, onDismiss: {
+            if !signedIn { onDismiss() }
+            signedIn = false
+        }) {
+            #if canImport(FirebaseAuthSwiftUI)
+            FirebaseAuthView(
+                onSignIn: { isNewUser in
+                    signedIn = true
+                    SignIn.completed(isNewUser: isNewUser)
+                    onSignIn(isNewUser)
+                    isPresented = false
+                },
+                onDismiss: { isPresented = false }
+            )
+            #else
+            Text("Sign-in is unavailable in this build.")
+            #endif
+        }
+    }
+}
+
+extension View {
+    /// The Firebase sign-in picker as a page sheet. `onSignIn` receives whether the
+    /// account is new (sync has already started); `onDismiss` runs when it closes
+    /// without one.
+    func signInSheet(isPresented: Binding<Bool>,
+                     onSignIn: @escaping (Bool) -> Void,
+                     onDismiss: @escaping () -> Void = {}) -> some View {
+        modifier(SignInSheet(isPresented: isPresented, onSignIn: onSignIn, onDismiss: onDismiss))
+    }
+}
+
+// MARK: - The optional login screen
+
+/// Offered once, on the second launch, to anyone not signed in.
+struct LoginIntroScreen: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingSignIn = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                LoginExplanation()
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            Button("Sign up or log in") { showingSignIn = true }
+                .buttonStyle(.borderless)
+        }
+        .staffScreenBackground()
+        .navigationTitle("Log In To Pitch Perfect")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Skip") { dismiss() }
+            }
+        }
+        .signInSheet(isPresented: $showingSignIn, onSignIn: { _ in dismiss() })
+    }
+}
+
+private struct LoginExplanation: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 17) {
+            Text("**Recommended:** Log in to Pitch Perfect and we'll save your settings and song list to the cloud.")
+            Text("When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your data goes where you go.")
+            Text("Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices.")
+        }
+        .font(.system(size: 17))
+        .foregroundStyle(Color(uiColor: .label))
     }
 }
