@@ -15,7 +15,10 @@ final class ConsentUITests: XCTestCase {
         screenshot.name = "Privacy choices - default off"
         screenshot.lifetime = .keepAlways
         add(screenshot)
-        analytics.tap()
+        // A SwiftUI Toggle's element spans its row; the switch itself sits inside it.
+        let knob = analytics.switches.firstMatch
+        (knob.exists ? knob : analytics).tap()
+        XCTAssertEqual(analytics.value as? String, "1")
         app.navigationBars.buttons["Save choices"].tap()
         app.terminate()
         app.launchArguments = ["-FIRDebugEnabled", "-depollsoft.pitchperfect.LoginShown", "YES"]
@@ -24,7 +27,7 @@ final class ConsentUITests: XCTestCase {
         openPrivacy(app)
         XCTAssertEqual(analytics.value as? String, "1")
         XCTAssertEqual(crashes.value as? String, "0")
-        app.staticTexts["Decline both"].tap()
+        app.buttons["Decline both"].tap()
         app.terminate()
         app.launch()
         openPrivacy(app)
@@ -37,7 +40,9 @@ final class ConsentUITests: XCTestCase {
         let settings = settingsButton.exists ? settingsButton : app.tables.staticTexts["Settings"].firstMatch
         XCTAssertTrue(settings.waitForExistence(timeout: 15))
         settings.tap()
-        let privacy = app.staticTexts["Privacy choices"].firstMatch
+        // A button in SwiftUI Settings; a table cell's text where Settings is still UIKit.
+        let privacyButton = app.buttons["Privacy choices"].firstMatch
+        let privacy = privacyButton.waitForExistence(timeout: 5) ? privacyButton : app.staticTexts["Privacy choices"].firstMatch
         for _ in 0..<4 where !privacy.isHittable { app.swipeUp() }
         XCTAssertTrue(privacy.waitForExistence(timeout: 5))
         privacy.tap()

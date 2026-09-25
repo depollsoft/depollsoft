@@ -1,5 +1,5 @@
 //
-//  DPLoginViewController.swift
+//  LoginScreen.swift
 //  pitchperfect
 //
 //  Created by David Poll on 6/22/21.
@@ -138,13 +138,17 @@ private struct PitchPerfectAppleSignInButton: View {
 }
 
 
-/// SwiftUI view that wraps FirebaseUI's AuthPickerView for use in UIKit
-struct FirebaseAuthView: View {
-    let authService: AuthService
+/// FirebaseUI's sign-in picker, hosted on the screen that asks for it: the
+/// picker presents itself as a sheet whenever `isPresented` is set.
+struct FirebaseAuthHost: View {
+    @Binding var isPresented: Bool
     let onSignIn: (Bool) -> Void
     let onDismiss: () -> Void
 
-    init(onSignIn: @escaping (Bool) -> Void, onDismiss: @escaping () -> Void) {
+    @State private var authService = FirebaseAuthHost.makeService()
+    @State private var didFinish = false
+
+    private static func makeService() -> AuthService {
         let configuration = AuthConfiguration(
             logo: ImageResource(name: "AuthLogo", bundle: .main),
             shouldHideCancelButton: false,
@@ -152,92 +156,145 @@ struct FirebaseAuthView: View {
             customStringsBundle: .main,
             mfaIssuer: "Pitch Perfect"
         )
-
         let authService = AuthService(configuration: configuration)
             .withEmailSignIn()
             .withGoogleSignIn()
             .withFacebookSignIn()
-        authService.registerProvider(
-            providerWithButton: PitchPerfectAppleProviderUI()
-        )
+        authService.registerProvider(providerWithButton: PitchPerfectAppleProviderUI())
         #if canImport(FirebasePhoneAuthSwiftUI)
         _ = authService.withPhoneSignIn()
         #endif
-
-        self.authService = authService
-        self.onSignIn = onSignIn
-        self.onDismiss = onDismiss
+        return authService
     }
 
-    @State private var didFinish = false
+    /// Whether the account just signed in was created by this sign-in.
+    static func isNewUser(_ metadata: UserMetadata) -> Bool {
+        guard let created = metadata.creationDate, let lastSignIn = metadata.lastSignInDate else { return false }
+        return abs(created.timeIntervalSince(lastSignIn)) <= 1.0
+    }
 
     var body: some View {
         AuthPickerView { Color.clear }
             .environment(authService)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
             .onAppear {
-                authService.isPresented = true
+                if isPresented { authService.isPresented = true }
+            }
+            .onChange(of: isPresented) { _, show in
+                if show {
+                    didFinish = false
+                    authService.isPresented = true
+                } else if authService.isPresented {
+                    authService.isPresented = false
+                }
             }
             .onChange(of: authService.currentUser?.uid) { _, userID in
-                guard !didFinish,
-                      let currentUser = authService.currentUser,
-                      userID == Auth.auth().currentUser?.uid else {
-                    return
-                }
-
+                guard !didFinish, let currentUser = authService.currentUser,
+                      userID == Auth.auth().currentUser?.uid else { return }
                 didFinish = true
-                let metadata = currentUser.metadata
-                let isNewUser: Bool
-                if let creationDate = metadata.creationDate,
-                   let lastSignInDate = metadata.lastSignInDate {
-                    isNewUser = abs(
-                        creationDate.timeIntervalSince(lastSignInDate)
-                    ) <= 1.0
-                } else {
-                    isNewUser = false
-                }
-                onSignIn(isNewUser)
+                onSignIn(Self.isNewUser(currentUser.metadata))
+                authService.isPresented = false
             }
-            .onChange(of: authService.isPresented) { _, isPresented in
-                if !isPresented && !didFinish {
-                    onDismiss()
-                }
+            .onChange(of: authService.isPresented) { _, shown in
+                guard !shown else { return }
+                if !didFinish { onDismiss() }
+                isPresented = false
             }
     }
 }
 #endif
 
-// MARK: - UIKit Extension for Login
+// MARK: - Signing in
 
-extension DPLoginViewController {
+enum SignIn {
+    /// Starts syncing once an account is known: a new account uploads this
+    /// device's songs; an existing one takes the cloud's.
+    @MainActor
+    static func completed(isNewUser: Bool) {
+        DPSettingsModel.sharedInstance.attachToFirestore()
+        DPSongsModel.sharedInstance.attachToFirestore(store: isNewUser)
+    }
+}
 
-    /// Presents the Firebase authentication UI
-    /// - Parameter viewController: The view controller to present from
-    @objc public func logIn(_ viewController: UIViewController) {
+private struct SignInSheet: ViewModifier {
+    @Binding var isPresented: Bool
+    let onSignIn: (Bool) -> Void
+    let onDismiss: () -> Void
+
+    func body(content: Content) -> some View {
         #if canImport(FirebaseAuthSwiftUI)
-        let authView = FirebaseAuthView(
-            onSignIn: { [weak self, weak viewController] isNewUser in
-                self?.completeLogIn(isNewUser)
-                viewController?.dismiss(animated: true) {
-                    if viewController === self {
-                        self?.dismiss(animated: true)
-                    }
-                }
-            },
-            onDismiss: { [weak viewController] in
-                viewController?.dismiss(animated: true)
-            }
-        )
-
-        let hostingController = UIHostingController(rootView: authView)
-        hostingController.modalPresentationStyle = .pageSheet
-        viewController.present(hostingController, animated: true)
+        content.background {
+            FirebaseAuthHost(isPresented: $isPresented,
+                             onSignIn: { isNewUser in
+                                 SignIn.completed(isNewUser: isNewUser)
+                                 onSignIn(isNewUser)
+                             },
+                             onDismiss: onDismiss)
+        }
         #else
-        // Fallback: Direct Firebase Auth if FirebaseAuthSwiftUI not available
-        print("FirebaseAuthSwiftUI not available - implement fallback auth")
+        content
         #endif
     }
+}
 
-    @objc func logInClick() {
-        logIn(self)
+extension View {
+    /// The Firebase sign-in picker as a page sheet. `onSignIn` receives whether the
+    /// account is new (sync has already started); `onDismiss` runs when it closes
+    /// without one.
+    func signInSheet(isPresented: Binding<Bool>,
+                     onSignIn: @escaping (Bool) -> Void,
+                     onDismiss: @escaping () -> Void = {}) -> some View {
+        modifier(SignInSheet(isPresented: isPresented, onSignIn: onSignIn, onDismiss: onDismiss))
+    }
+}
+
+// MARK: - The optional login screen
+
+/// Offered once, on the second launch, to anyone not signed in.
+struct LoginIntroScreen: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingSignIn = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                LoginExplanation()
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            Button { showingSignIn = true } label: {
+                Text("Sign up or log in")
+                    .font(.system(size: 15))
+                    .frame(minHeight: 30)
+            }
+            .buttonStyle(.borderless)
+        }
+        .staffScreenBackground()
+        .navigationTitle("Log In To Pitch Perfect")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Skip") { dismiss() }
+            }
+        }
+        .signInSheet(isPresented: $showingSignIn, onSignIn: { _ in dismiss() })
+    }
+}
+
+private struct LoginExplanation: View {
+    var body: some View {
+        // UIKit fonts rather than SwiftUI's .system(size:), which tracks its
+        // text differently from the HTML-typeset UIKit screen.
+        VStack(alignment: .leading, spacing: 50.0 / 3.0) {
+            Text("Recommended:").font(Font(UIFont.boldSystemFont(ofSize: 17) as CTFont))
+                + Text(" Log in to Pitch Perfect and we'll save your settings and song list to the cloud.")
+            Text("When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your data goes where you go.")
+            Text("Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices.")
+        }
+        .font(Font(UIFont.systemFont(ofSize: 17) as CTFont))
+        .foregroundStyle(Color(uiColor: .label))
     }
 }

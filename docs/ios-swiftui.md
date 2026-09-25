@@ -58,6 +58,62 @@ builds that tree. Prefer, in order:
 Accessibility identifiers and labels carried over from UIKit unchanged, because
 the XCUITest bundles and `scripts/release/capture.py` use them.
 
+## Pitch Perfect
+
+- **Entry.** `PitchPerfectMain` (`DPAppDelegate.swift`) starts the SwiftUI
+  `PitchPerfectApp`, or a bare `DPTestAppDelegate` host under XCTest. The Swift
+  `DPAppDelegate` keeps the launch work (Firebase, consent, audio session, the
+  JSON aliases the stores serialize with, widget playback) through
+  `@UIApplicationDelegateAdaptor`. Auth callbacks arrive through the scene's
+  `onOpenURL`, and Privacy choices is offered whenever the scene becomes active.
+- **Shell.** `PitchPerfectRoot` is a `TabView` of four `NavigationStack`s. The
+  tabs' models live in `PitchPerfectModels`, made once per app (or per test), so
+  a tab comes back as it was left and tests can reach its state.
+- **Screens.** `PitchPipeScreen`, `NotesScreen` and `KeysScreen`
+  (`InstrumentScreens.swift`), `SongListScreen` with `SetListSelector`,
+  `SetListsScreen`, `SongEditorScreen`, `AddSongsScreen`, `SettingsScreen`,
+  `LoginIntroScreen`, and the shared `PrivacyChoicesView`
+  (`iOS/shared/TelemetryConsent.swift`, also used by Tag Master through
+  `TelemetryConsent.present(from:)`).
+- **Style.** `PlateStyle.swift` bridges DPTheme's colours and fonts,
+  `StaffBackground` tiles the etched staff from the same origin the UIKit
+  pattern colours used (a screen's staff starts below the bars; a full-screen
+  table's starts at the top), and `BarSymbol` draws bar symbols at UIKit's bar
+  configuration. `plateList()` and `plateRow()` reproduce the UITableView rows:
+  rules inset 20 pt, 1 pt rows added for separators, rules that stay put in edit
+  mode.
+- **Sound.** `NotePlayer` sounds every note and makes playing observable;
+  rows press through a `ButtonStyle` watching `isPressed`, so a note sounds for
+  as long as a finger rests on it, as the UIKit cells' touches did.
+- **Pitch pipe.** `InstrumentGeometry` and `PitchPipeModel` hold the layout and
+  touch rules; `InstrumentRenderer` draws the face into a `Canvas` with the same
+  Core Graphics calls the UIKit view made. `MultiTouchSurface`, a transparent
+  `UIView`, is the one UIKit view left: SwiftUI gestures follow a single touch
+  before iOS 18 (`SpatialEventGesture`), and chords need every finger.
+- **Remaining UIKit.** The set-list naming and delete prompts are
+  `UIAlertController`s presented by `SetListAlertPresenter`: SwiftUI's `.alert`
+  fixes its message and buttons once shown, which would let an invalid name
+  through. The banner is the ad SDK's `BannerView` in `BannerAdSlot`.
+
+Deliberate differences from the UIKit screens:
+
+- Keys opens centred on C. UIKit scrolled before the table had a size, so it
+  opened a row and a half from the top instead.
+- Add songs' section headers show the engraved label once; UIKit also drew
+  the system header title over it.
+- Wake Lock keeps the screen awake. UIKit stored the setting but never
+  applied it.
+- Cancelling sign-in from Settings stops the Log in row's spinner.
+- After Done with a blank title, the hosted SwiftUI editor's title field takes
+  focus and the keyboard shortens the key list in the capture; the UIKit
+  capture of the same moment showed the full list.
+- The pitch pipe breathes on the clock (one breath every four seconds) rather
+  than per frame, so ProMotion displays no longer breathe twice as fast.
+- The row, rule and bar metrics match to the pixel on iPhone; the system
+  controls SwiftUI draws itself (List's delete and reorder controls, glass bar
+  shadows) sit within a few pixels of UIKit's, and the login explanation's
+  glyph spacing differs slightly from UIKit's HTML typesetting.
+
 ## Project files
 
 The Xcode projects list files explicitly. Register or remove files with

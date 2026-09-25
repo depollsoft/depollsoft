@@ -218,7 +218,11 @@ final class StoreScreenshotTests: XCTestCase {
         let edit = app.navigationBars.buttons["Edit"]
         XCTAssertTrue(edit.readyForCapture(timeout: 10))
         edit.tap()
-        if !app.tables.cells.containing(.staticText, identifier: "Blue Skies").firstMatch.exists {
+        // Each song row is one button, "Title, Key".
+        func songRow(_ title: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        }
+        if !songRow("Blue Skies").exists {
             for (index, title) in ["Blue Skies", "Down Our Way", "Heart of My Heart", "Shenandoah", "Sweet Adeline", "The Old Songs", "When You Were Sweet Sixteen", "You Are My Sunshine"].enumerated() {
                 app.navigationBars.buttons["Add"].tap()
                 let field = app.textFields.firstMatch
@@ -247,7 +251,7 @@ final class StoreScreenshotTests: XCTestCase {
                 let save = app.navigationBars["Add Song"].buttons["Done"]
                 XCTAssertTrue(save.isHittable)
                 save.tap()
-                XCTAssertTrue(app.tables.cells.containing(.staticText, identifier: title).firstMatch.readyForCapture(timeout: 10))
+                XCTAssertTrue(songRow(title).readyForCapture(timeout: 10))
                 XCTAssertTrue(app.navigationBars.buttons["Add"].readyForCapture(timeout: 10))
             }
         }
@@ -258,10 +262,10 @@ final class StoreScreenshotTests: XCTestCase {
         snap("04-songs")
         app.navigationBars.buttons["Edit"].tap()
         snap("05-edit-songs")
-        let first = app.tables.cells.firstMatch
-        XCTAssertTrue(first.buttons.firstMatch.exists)
-        // The system detail disclosure opens the actual song editor.
-        first.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'info' OR label CONTAINS[c] 'detail'")).firstMatch.tap()
+        // Each row's detail disclosure opens the actual song editor.
+        let info = app.buttons["More Info"].firstMatch
+        XCTAssertTrue(info.readyForCapture(timeout: 10))
+        info.tap()
         XCTAssertTrue(app.textFields.firstMatch.readyForCapture(timeout: 10))
         snap("06-song-editor")
     }

@@ -55,8 +55,16 @@ struct UIDriver {
     }
 
     static func identifier(of element: NSObject) -> String? {
-        guard element.responds(to: NSSelectorFromString("accessibilityIdentifier")) else { return nil }
-        let id = element.value(forKey: "accessibilityIdentifier") as? String
+        let id: String?
+        if let identified = element as? UIAccessibilityIdentification {
+            id = identified.accessibilityIdentifier
+        } else if element.responds(to: NSSelectorFromString("accessibilityIdentifier")) {
+            // SwiftUI's accessibility nodes answer the selector without adopting the
+            // protocol. Call it directly: KVC cannot read every implementation.
+            id = element.perform(NSSelectorFromString("accessibilityIdentifier"))?.takeUnretainedValue() as? String
+        } else {
+            id = nil
+        }
         return (id?.isEmpty ?? true) ? nil : id
     }
 

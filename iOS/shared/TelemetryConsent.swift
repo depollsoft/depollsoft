@@ -1,3 +1,4 @@
+import SwiftUI
 import UIKit
 import FirebaseAnalytics
 import FirebaseCrashlytics
@@ -55,97 +56,131 @@ struct PrivacyChoices {
         present(from: presenter)
     }
 
+    /// Presents Privacy choices from UIKit: a sheet with its own navigation bar.
     @objc static func present(from presenter: UIViewController) {
-        let controller = PrivacyViewController(style: .insetGrouped)
-        let navigation = UINavigationController(rootViewController: controller)
-        navigation.view.tintColor = .label
-        navigation.navigationBar.tintColor = .label
-        presenter.present(navigation, animated: true)
-        navigation.presentationController?.delegate = controller
+        let host = UIHostingController(rootView: PrivacyChoicesSheet())
+        presenter.present(host, animated: true)
     }
 }
 
-private final class PrivacyViewController: UITableViewController, UIAdaptivePresentationControllerDelegate {
-    private let analytics = UISwitch()
-    private let crashes = UISwitch()
-    private let choices = PrivacyChoices()
-    private var hasAdPrivacy: Bool { TelemetryConsent.adPrivacyRequired() }
+/// What the Privacy choices screen shows and saves.
+@Observable
+@MainActor
+final class PrivacyChoicesModel {
+    private let choices: PrivacyChoices
+    var analytics: Bool
+    var crashes: Bool
+    let showsAdPrivacy: Bool
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        title = "Privacy choices"
-        analytics.isOn = choices.analytics
-        crashes.isOn = choices.crashes
-        analytics.accessibilityLabel = "Usage analytics"
-        crashes.accessibilityLabel = "Crash reports"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save choices", style: .plain,
-                                                            target: self, action: #selector(save))
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel,
-                                                           target: self, action: #selector(cancel))
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 56
+    init(choices: PrivacyChoices = PrivacyChoices(),
+         adPrivacyRequired: Bool = TelemetryConsent.adPrivacyRequired()) {
+        self.choices = choices
+        analytics = choices.analytics
+        crashes = choices.crashes
+        showsAdPrivacy = adPrivacyRequired
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int { 4 }
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        section == 3 ? (hasAdPrivacy ? 3 : 2) : 1
-    }
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        switch section {
-        case 1: return "Share screens visited, sessions, and app and device information with Google Analytics to understand app usage."
-        case 2: return "Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app."
-        default: return nil
-        }
-    }
-    override func tableView(_ tableView: UITableView, willDisplayFooterView view: UIView, forSection section: Int) {
-        guard let footer = view as? UITableViewHeaderFooterView else { return }
-        footer.textLabel?.textColor = .label
-        footer.textLabel?.adjustsFontForContentSizeCategory = true
-    }
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
-        cell.textLabel?.numberOfLines = 0
-        cell.textLabel?.font = .preferredFont(forTextStyle: .body)
-        cell.textLabel?.adjustsFontForContentSizeCategory = true
-        cell.selectionStyle = .none
-        switch indexPath.section {
-        case 0:
-            cell.textLabel?.text = "Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings."
-        case 1:
-            cell.textLabel?.text = "Usage analytics"
-            cell.accessoryView = analytics
-        case 2:
-            cell.textLabel?.text = "Crash reports"
-            cell.accessoryView = crashes
-        default:
-            cell.textLabel?.text = indexPath.row == 0 ? "Decline both" : indexPath.row == 1 ? "Privacy policy" : "Ad privacy choices"
-            cell.textLabel?.textColor = view.tintColor
-            cell.selectionStyle = .default
-            cell.accessibilityTraits = .button
-        }
-        return cell
-    }
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        guard indexPath.section == 3 else { return }
-        switch indexPath.row {
-        case 0:
-            analytics.isOn = false
-            crashes.isOn = false
-            save()
-        case 1: UIApplication.shared.open(URL(string: "https://apps.depoll.com/privacy/")!)
-        default: TelemetryConsent.showAdPrivacy?(self)
-        }
-    }
-    @objc private func save() {
-        choices.save(analytics: analytics.isOn, crashes: crashes.isOn)
+    func save() {
+        choices.save(analytics: analytics, crashes: crashes)
         TelemetryConsent.applySavedChoices()
-        dismiss(animated: true) { TelemetryConsent.onDismiss?() }
     }
-    @objc private func cancel() {
-        dismiss(animated: true) { TelemetryConsent.onDismiss?() }
+
+    func declineBoth() {
+        analytics = false
+        crashes = false
+        save()
     }
-    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-        TelemetryConsent.onDismiss?()
+}
+
+/// Privacy choices in its own navigation stack, as both apps present it.
+/// However it closes (Save, Cancel or a swipe), TelemetryConsent.onDismiss runs
+/// once, so the ad-consent flow can follow.
+struct PrivacyChoicesSheet: View {
+    var body: some View {
+        NavigationStack { PrivacyChoicesView() }
+            .tint(Color(uiColor: .label))
+            .onDisappear { TelemetryConsent.onDismiss?() }
+    }
+}
+
+struct PrivacyChoicesView: View {
+    @State private var model = PrivacyChoicesModel()
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        List {
+            Section {
+                Text("Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings.")
+                    // A multi-line UITableViewCell label sat closer to the card's edges.
+                    .padding(.top, -3)
+                    .padding(.bottom, -10.0 / 3.0)
+            }
+            Section {
+                Toggle("Usage analytics", isOn: $model.analytics)
+            } footer: {
+                Text("Share screens visited, sessions, and app and device information with Google Analytics to understand app usage.")
+                    .foregroundStyle(Color(uiColor: .label))
+            }
+            Section {
+                Toggle("Crash reports", isOn: $model.crashes)
+            } footer: {
+                Text("Send crash reports, including stack traces and app and device information, to Google Firebase Crashlytics to help fix problems. Turning this off takes full effect the next time you start the app.")
+                    .foregroundStyle(Color(uiColor: .label))
+            }
+            Section {
+                Button("Decline both") {
+                    model.declineBoth()
+                    dismiss()
+                }
+                Button("Privacy policy") { openURL(URL(string: "https://apps.depoll.com/privacy/")!) }
+                if model.showsAdPrivacy {
+                    Button("Ad privacy choices") { TelemetryConsent.presentAdPrivacy() }
+                }
+            }
+            .foregroundStyle(.tint)
+        }
+        .listStyle(.insetGrouped)
+        // UITableView's inset-grouped cards sit 20 pt in on a phone.
+        .contentMargins(.horizontal, 20, for: .scrollContent)
+        .navigationTitle("Privacy choices")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                CancelButton { dismiss() }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Save choices") {
+                    model.save()
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+extension TelemetryConsent {
+    /// The ad SDK's own privacy form, presented over whatever is frontmost.
+    static func presentAdPrivacy() {
+        guard let presenter = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene }).flatMap(\.windows)
+            .first(where: \.isKeyWindow)?.rootViewController else { return }
+        var top = presenter
+        while let next = top.presentedViewController { top = next }
+        showAdPrivacy?(top)
+    }
+}
+
+/// The system Cancel bar item: an ✕ on iOS 26, the word before it.
+private struct CancelButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .close, action: action)
+                .accessibilityLabel("Cancel")
+        } else {
+            Button("Cancel", role: .cancel, action: action)
+        }
     }
 }

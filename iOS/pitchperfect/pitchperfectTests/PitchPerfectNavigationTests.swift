@@ -1,136 +1,144 @@
+import SwiftUI
 import UIKit
 import XCTest
 @testable import pitchperfect
 
 @MainActor
-final class PitchPerfectNavigationTests: PitchPerfectControllerTestCase {
-    func testStoryboardDisplaysAllFourTabsAndTheirContent() throws {
-        try withApp { tabs in
-            XCTAssertEqual(tabs.tabBar.items?.map(\.title), ["Pitch Pipe", "Notes", "Keys", "Songs"])
-            XCTAssertFalse(tabs.tabBar.isHidden)
-            XCTAssertNotNil(tabs.tabBar.window)
-            XCTAssertGreaterThan(tabs.view.bounds.width, 0)
-            let pipe = try select(0, in: tabs, as: DPPitchPipeViewController.self)
-            let instrument = try XCTUnwrap(pipe.value(forKey: "instrumentView") as? DPPitchInstrumentView)
-            XCTAssertFalse(instrument.isHidden)
-            XCTAssertNotNil(instrument.window)
-            XCTAssertTrue((instrument.accessibilityElements as? [UIAccessibilityElement])?
-                .contains { $0.accessibilityLabel == "C, octave 4" } == true)
-            let notes = try select(1, in: tabs, as: DPNotesViewController.self)
-            XCTAssertGreaterThan(try table(in: notes).numberOfRows(inSection: 0), 0)
-            let keys = try select(2, in: tabs, as: DPKeysViewController.self)
-            XCTAssertEqual(try table(in: keys).numberOfRows(inSection: 0), 13)
-            let songs = try select(3, in: tabs, as: DPSongListViewController.self)
-            XCTAssertEqual(try table(in: songs).numberOfRows(inSection: 0), 0)
+final class PitchPerfectNavigationTests: PitchPerfectTestCase {
+    private func tabBar(_ app: HostedApp) throws -> UITabBar {
+        try XCTUnwrap(app.descendants(of: UITabBar.self, in: app.window).first)
+    }
+
+    private func navigationTitle(_ app: HostedApp) -> String? {
+        app.descendants(of: UINavigationBar.self, in: app.window)
+            .first { $0.window != nil && !$0.isHidden && $0.alpha > 0 }?.topItem?.title
+    }
+
+    func testTheFourTabsShowInOrderWithTheirTitles() throws {
+        let app = try launch()
+        XCTAssertEqual(try tabBar(app).items?.map(\.title), ["Pitch Pipe", "Notes", "Keys", "Songs"])
+        for (index, title) in ["Pitch Pipe", "Notes", "Keys", "Songs"].enumerated() {
+            app.show(tab: index)
+            XCTAssertEqual(try tabBar(app).selectedItem?.title, title)
+            XCTAssertTrue(app.ui.exists(id: "gearshape") || index == 3, "\(title) offers Settings")
         }
     }
 
-    func testRapidTabSwitchingKeepsTheSelectedControllerVisible() throws {
-        try withApp { tabs in
-            for _ in 0..<3 {
-                for (index, title) in ["Pitch Pipe", "Notes", "Keys", "Songs"].enumerated() {
-                    let controller = try select(index, in: tabs, as: UIViewController.self)
-                    XCTAssertEqual(controller.navigationItem.title, title)
-                    XCTAssertEqual(tabs.tabBar.selectedItem, tabs.tabBar.items?[index])
-                }
+    func testEachTabIsAButtonNamedForItsScreen() throws {
+        let app = try launch()
+        for title in ["Pitch Pipe", "Notes", "Keys", "Songs"] {
+            XCTAssertTrue(app.ui.elements.contains { $0.accessibilityLabel == title && $0.accessibilityTraits.contains(.button) },
+                          title)
+        }
+    }
+
+    func testRapidTabSwitchingKeepsTheChosenTabShowing() throws {
+        let app = try launch()
+        for _ in 0..<3 {
+            for (index, title) in ["Pitch Pipe", "Notes", "Keys", "Songs"].enumerated() {
+                app.show(tab: index)
+                XCTAssertEqual(try tabBar(app).selectedItem?.title, title)
             }
         }
     }
 
-    func testKeySelectionCanReturnToPitchPipe() throws {
-        try withApp { tabs in
-            let keys = try select(2, in: tabs, as: DPKeysViewController.self)
-            let keyCell = try cell(0, in: table(in: keys))
-            let key = try XCTUnwrap(keyCell.value(forKey: "key") as? DPKey)
-            assertPressAndRelease(keyCell, note: key.note)
-            let pipe = try select(0, in: tabs, as: DPPitchPipeViewController.self)
-            XCTAssertEqual(pipe.navigationItem.title, "Pitch Pipe")
-            XCTAssertFalse(key.note.isPlaying)
-            let instrument = try XCTUnwrap(pipe.value(forKey: "instrumentView") as? DPPitchInstrumentView)
-            XCTAssertEqual((instrument.accessibilityElements as? [UIAccessibilityElement])?.count, 15)
+    func testTheTabIconsAreTemplateImages() throws {
+        let app = try launch()
+        for item in try tabBar(app).items ?? [] {
+            XCTAssertEqual(item.image?.renderingMode, .alwaysTemplate, item.title ?? "")
         }
     }
 }
 
 @MainActor
-final class PitchPerfectInstrumentTests: PitchPerfectControllerTestCase {
-    private func instrument(in tabs: UITabBarController) throws -> DPPitchInstrumentView {
-        let pipe = try select(0, in: tabs, as: DPPitchPipeViewController.self)
-        let instrument = try XCTUnwrap(pipe.value(forKey: "instrumentView") as? DPPitchInstrumentView)
-        instrument.layoutIfNeeded()
-        return instrument
+final class NotePlayerTests: PitchPerfectTestCase {
+    func testAMomentaryPressSoundsOnlyWhileHeld() {
+        let note = DPNote.c4()!
+        let player = NotePlayer.shared
+        player.pressBegan(note)
+        XCTAssertTrue(player.isPlaying(note))
+        player.pressEnded(note)
+        XCTAssertFalse(player.isPlaying(note))
     }
 
-    private func touch(_ label: String, in instrument: DPPitchInstrumentView) throws -> PitchPerfectTestTouch {
-        let elements = try XCTUnwrap(instrument.accessibilityElements as? [UIAccessibilityElement])
-        let element = try XCTUnwrap(elements.first { $0.accessibilityLabel == label })
-        XCTAssertTrue(element.accessibilityTraits.contains(.button))
-        let frame = element.accessibilityFrameInContainerSpace
-        XCTAssertGreaterThanOrEqual(frame.width, 44)
-        XCTAssertGreaterThanOrEqual(frame.height, 44)
-        XCTAssertTrue(instrument.bounds.contains(frame))
-        let touch = PitchPerfectTestTouch()
-        touch.point = CGPoint(x: frame.midX, y: frame.midY)
-        XCTAssertTrue(instrument.hitTest(touch.point, with: nil) === instrument)
-        return touch
+    func testToggleNotesKeepsANoteUntilPressedAgain() {
+        DPSettingsModel.sharedInstance.toggleNotes = true
+        let note = DPNote.c4()!
+        let player = NotePlayer.shared
+        player.pressBegan(note)
+        player.pressEnded(note)
+        XCTAssertTrue(player.isPlaying(note))
+        player.pressBegan(note)
+        player.pressEnded(note)
+        XCTAssertFalse(player.isPlaying(note))
     }
 
-    func testCNotePressAndReleaseUsesTheVisibleHitTarget() throws {
-        try withApp { tabs in
-            let instrument = try instrument(in: tabs)
-            let touch = try touch("C, octave 4", in: instrument)
-            let note = try XCTUnwrap(DPNote.c4())
-            instrument.touchesBegan([touch], with: nil)
-            XCTAssertTrue(note.isPlaying)
-            instrument.touchesEnded([touch], with: nil)
-            XCTAssertFalse(note.isPlaying)
-        }
+    func testEveryStartAndStopIsObservable() {
+        let player = NotePlayer.shared
+        let before = player.revision
+        player.play(DPNote.c4())
+        player.stop(DPNote.c4())
+        XCTAssertEqual(player.revision, before + 2)
+    }
+}
+
+@MainActor
+final class NotesAndKeysTests: PitchPerfectTestCase {
+    func testTheNotesListNamesEverySpellingAndFrequency() throws {
+        let app = try launch()
+        app.show(tab: 1)
+        let notes = DPNote.prunedNotes() as! [DPNote]
+        let middle = notes[notes.count / 2]
+        let row = try XCTUnwrap(app.ui.element(label: NoteSpelling.spoken(middle)))
+        XCTAssertEqual(row.accessibilityValue, String(format: "%1.2f Hz", middle.frequency))
+        XCTAssertEqual(NoteSpelling.spoken(DPNote.c4()), "C 4")
+        let sharp = try XCTUnwrap(notes.first { $0.alternate != nil })
+        XCTAssertTrue(NoteSpelling.spoken(sharp).contains("sharp"))
+        XCTAssertTrue(NoteSpelling.spoken(sharp).contains("flat"))
     }
 
-    func testAllNaturalNotesRespondToRapidTaps() throws {
-        try withApp { tabs in
-            let instrument = try instrument(in: tabs)
-            let notes = try XCTUnwrap(DPPitchPipeModel().notes as? [DPNote])
-            for _ in 0..<2 {
-                for index in [0, 2, 4, 5, 7, 9, 11] {
-                    let note = notes[index]
-                    let touch = try touch("\(note.friendlyName!), octave 4", in: instrument)
-                    instrument.touchesBegan([touch], with: nil)
-                    XCTAssertTrue(note.isPlaying)
-                    XCTAssertEqual(notes.filter(\.isPlaying).count, 1)
-                    instrument.touchesEnded([touch], with: nil)
-                    XCTAssertFalse(notes.contains { $0.isPlaying })
-                }
-            }
-        }
+    func testTheNotesListOpensOnItsMiddleNote() throws {
+        let app = try launch()
+        app.show(tab: 1)
+        let notes = DPNote.prunedNotes() as! [DPNote]
+        XCTAssertTrue(app.ui.exists(label: NoteSpelling.spoken(notes[notes.count / 2])))
+        XCTAssertFalse(app.ui.exists(label: NoteSpelling.spoken(notes[0])), "the list opens mid-range, not at the top")
     }
 
-    func testSecondTapStopsAToggledNote() throws {
-        try withApp { tabs in
-            let instrument = try instrument(in: tabs)
-            DPSettingsModel.sharedInstance.toggleNotes = true
-            XCTAssertTrue(instrument.toggleMode)
-            let touch = try touch("C, octave 4", in: instrument)
-            let note = try XCTUnwrap(DPNote.c4())
-            instrument.touchesBegan([touch], with: nil)
-            instrument.touchesEnded([touch], with: nil)
-            XCTAssertTrue(note.isPlaying)
-            instrument.touchesBegan([touch], with: nil)
-            instrument.touchesEnded([touch], with: nil)
-            XCTAssertFalse(note.isPlaying)
-        }
+    func testLeavingNotesStopsWhatItSounded() throws {
+        DPSettingsModel.sharedInstance.toggleNotes = true
+        let app = try launch()
+        app.show(tab: 1)
+        let note = DPNote.c4()!
+        NotePlayer.shared.pressBegan(note)
+        XCTAssertTrue(note.isPlaying)
+        app.show(tab: 2)
+        XCTAssertFalse(note.isPlaying)
     }
 
-    func testLeavingPitchPipeStopsSoundingNotes() throws {
-        try withApp { tabs in
-            let instrument = try instrument(in: tabs)
-            DPSettingsModel.sharedInstance.toggleNotes = true
-            let touch = try touch("C, octave 4", in: instrument)
-            instrument.touchesBegan([touch], with: nil)
-            instrument.touchesEnded([touch], with: nil)
-            XCTAssertTrue(DPNote.c4().isPlaying)
-            _ = try select(1, in: tabs, as: DPNotesViewController.self)
-            XCTAssertFalse(DPNote.c4().isPlaying)
-        }
+    func testMajorAndMinorShowEveryKeySignature() throws {
+        let app = try launch()
+        app.show(tab: 2)
+        let majors = DPKey.majorKeys() as! [DPKey]
+        let minors = DPKey.minorKeys() as! [DPKey]
+        XCTAssertEqual(majors.count, 13)
+        XCTAssertEqual(minors.count, 13)
+        let middle = SongEditorSpeech.name(for: majors[6], minor: false)
+        XCTAssertEqual(middle, "C major, no sharps or flats")
+        XCTAssertTrue(app.ui.exists(label: middle))
+        app.showMinorKeys()
+        XCTAssertTrue(app.ui.exists(label: SongEditorSpeech.name(for: minors[6], minor: true)))
+        XCTAssertFalse(app.ui.exists(label: middle))
+    }
+
+    func testSwitchingModeStopsTheOtherModesNotes() throws {
+        DPSettingsModel.sharedInstance.toggleNotes = true
+        let app = try launch()
+        app.show(tab: 2)
+        let key = (DPKey.majorKeys() as! [DPKey])[6]
+        NotePlayer.shared.pressBegan(key.note)
+        XCTAssertTrue(key.note.isPlaying)
+        app.showMinorKeys()
+        XCTAssertFalse(key.note.isPlaying)
     }
 }

@@ -11,8 +11,6 @@
 		1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E131315267FD07600F33385 /* DPSettingsModel.swift */; };
 		1E13131D2682475900F33385 /* panobackground.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1E13131A2682475900F33385 /* panobackground.svg */; };
 		1E5B19891FE74ED000241069 /* libdepolllib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E5B19841FE74ED000241069 /* libdepolllib.a */; };
-		1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */; };
-		1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */; };
 		1E8EA64A267E5BC400255826 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E8EA647267E5BC400255826 /* CoreServices.framework */; };
 		1E927AD222A6D0390018E370 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1E927AD122A6D0390018E370 /* GoogleService-Info.plist */; };
 		1E95FFA12686560500B5299C /* DPCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E95FFA02686560500B5299C /* DPCommon.swift */; };
@@ -27,12 +25,8 @@
 		A7D10A060000000000000006 /* WidgetHitTargetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D10A050000000000000005 /* WidgetHitTargetUITests.swift */; };
 		631C911715906D2B004733F1 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911515906D2B004733F1 /* notes.png */; };
 		631C911815906D2B004733F1 /* notes@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C911615906D2B004733F1 /* notes@2x.png */; };
-		631C912315945219004733F1 /* DPKeysViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912215945219004733F1 /* DPKeysViewController.m */; };
 		631C9126159455F1004733F1 /* keys.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9124159455F1004733F1 /* keys.png */; };
 		631C9127159455F1004733F1 /* keys@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 631C9125159455F1004733F1 /* keys@2x.png */; };
-		631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912915957B58004733F1 /* DPSongListViewController.m */; };
-		631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912C15957D3C004733F1 /* DPSettingsModel.m */; };
-		631C913015958022004733F1 /* DPSongsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 631C912F15958022004733F1 /* DPSongsModel.m */; };
 		631C91341595830F004733F1 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C91331595830F004733F1 /* CFNetwork.framework */; };
 		631C913815958329004733F1 /* libz.1.1.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C913715958329004733F1 /* libz.1.1.3.dylib */; };
 		631C913A1595832F004733F1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 631C91391595832F004733F1 /* Security.framework */; };
@@ -50,10 +44,6 @@
 		6338EFC01979DEB2000187E2 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFBF1979DEB2000187E2 /* CoreLocation.framework */; };
 		6338EFC21979DEBD000187E2 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6338EFC11979DEBD000187E2 /* CoreTelephony.framework */; };
 		6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6338EFC31979DFFA000187E2 /* Images.xcassets */; };
-		634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897915885F6A000D9AFE /* AbstractLayoutView.m */; };
-		634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897B15885F6A000D9AFE /* GridLayoutView.m */; };
-		634C898515885F6A000D9AFE /* HLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C897D15885F6A000D9AFE /* HLayoutView.m */; };
-		634C898815885F6A000D9AFE /* VLayoutView.m in Sources */ = {isa = PBXBuildFile; fileRef = 634C898215885F6A000D9AFE /* VLayoutView.m */; };
 		634C898915886230000D9AFE /* MusiQwik.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7B15883F2900C78CC0 /* MusiQwik.ttf */; };
 		634C898A15886230000D9AFE /* MusiQwikB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7C15883F2900C78CC0 /* MusiQwikB.ttf */; };
 		634C898B15886230000D9AFE /* MusiSync.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 63A99D7D15883F2900C78CC0 /* MusiSync.ttf */; };
@@ -74,30 +64,19 @@
 		63B403E8158EAB4B00FCA77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403E6158EA92E00FCA77C /* AudioToolbox.framework */; };
 		63B403E9158EAB4B00FCA77C /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63C14A96157A997600348592 /* CoreAudio.framework */; };
 		63B403EB158EAC1100FCA77C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63B403EA158EAC1100FCA77C /* AVFoundation.framework */; };
-		63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E615964EAA00116907 /* DPSettingsViewController.m */; };
-		63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63CB96E91597D67400116907 /* DPSongEditorViewController.m */; };
 		63DC36A2151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36A4151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36A6151E9000007C46DB /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A5151E9000007C46DB /* CoreGraphics.framework */; };
 		63DC36AC151E9000007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36AA151E9000007C46DB /* InfoPlist.strings */; };
-		63DC36AE151E9000007C46DB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36AD151E9000007C46DB /* main.m */; };
-		63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36B1151E9000007C46DB /* DPAppDelegate.m */; };
-		63DC36B5151E9000007C46DB /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */; };
-		63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */; };
-		63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36C1151E9000007C46DB /* DPNotesViewController.m */; };
 		63DC36CF151E9000007C46DB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A1151E9000007C46DB /* UIKit.framework */; };
 		63DC36D0151E9000007C46DB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63DC36A3151E9000007C46DB /* Foundation.framework */; };
 		63DC36D8151E9000007C46DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 63DC36D6151E9000007C46DB /* InfoPlist.strings */; };
 		63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 63DC36DA151E9000007C46DB /* pitchperfectTests.m */; };
 		63E363921602FEF700EA031C /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363911602FEF700EA031C /* StoreKit.framework */; };
 		63E363941602FF0100EA031C /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E363931602FF0100EA031C /* libsqlite3.dylib */; };
-		63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */; };
 		76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C584F19CA54391BAD09BEC /* DPTheme.swift */; };
 		77FF20D42F5CAB5E691BBDA3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 24DCB8F913D487DFA23A2EDC /* Foundation.framework */; };
 		7FB9FEC7BBCA4996B8B7E164 /* Oswald-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */; };
-		A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */; };
-		A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */; };
-		A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */; };
 		A81895E5CA40BE9414EB6E6E /* Oswald-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */; };
 		B6419FE131931C3EE072A617 /* FirebaseAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6412 /* FirebaseAuthSwiftUI */; };
 		B6419FE131931C3EE072A618 /* FirebaseGoogleSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 30BD81978519FFC6BF4D6413 /* FirebaseGoogleSwiftUI */; };
@@ -108,19 +87,25 @@
 		ABBB00080000000000000008 /* PitchRadialLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00060000000000000006 /* PitchRadialLayout.swift */; };
 		ABBB0000000000000000B001 /* SetListSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B000 /* SetListSelectorView.swift */; };
 		ABBB0000000000000000B003 /* SetListPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B002 /* SetListPrompts.swift */; };
-		ABBB0000000000000000B005 /* SetListsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B004 /* SetListsController.swift */; };
-		ABBB0000000000000000B007 /* AddSongsFromListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B006 /* AddSongsFromListController.swift */; };
+		034385170E3FFBB8DAC2F600 /* PlateStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE882C5C5C2C17F27D689E0 /* PlateStyle.swift */; };
+		0E3EF7071698241E6A8C6EF4 /* NotePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09DC8867DDC5E669C1260E4 /* NotePlayer.swift */; };
+		F9F1588A1855E2F6BB5DCBF8 /* PitchInstrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27355AA5E07A3186FEF6C80C /* PitchInstrument.swift */; };
+		6D8FD38F5D9F1431C9935FF5 /* AdBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDEFC918D17ACF1E9D95861 /* AdBanner.swift */; };
+		B4BBE1C30AD69DF4361CD38F /* InstrumentScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B4DB1AA978FCB636E8D3A8 /* InstrumentScreens.swift */; };
+		CA233395DC30C3E320623386 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B5021FDF7F1E4BB6CD18D06 /* SettingsScreen.swift */; };
+		46B1EE24731D112A7A825283 /* SongListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA8FCD8CB75B3D2978B6BD4 /* SongListScreen.swift */; };
+		B2976F1F9DCD202864F54EC8 /* PitchPerfectRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83998B65CAA76710D71BB237 /* PitchPerfectRoot.swift */; };
+		44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D5B492DCC792ECA65B576A /* SetListsScreen.swift */; };
+		E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1737B3746383017103376669 /* AddSongsScreen.swift */; };
+		F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */; };
 		ABBB000A000000000000000A /* SongEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00090000000000000009 /* SongEditorView.swift */; };
 		ABBB00030000000000000003 /* PitchChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB00010000000000000001 /* PitchChord.swift */; };
-		B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */; };
 		C0AUTH001000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0AUTH001000000000000002 /* Localizable.strings */; };
 		C0AUTH001000000000000011 /* FirebasePhoneAuthSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = C0AUTH001000000000000012 /* FirebasePhoneAuthSwiftUI */; };
-		C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A1 /* LayoutManagersTests.m */; };
 		C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */; };
 		C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */; };
 		C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */; };
 		C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */; };
-		C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */; };
 		C0NEWT0010000000000000F1 /* DPCommonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0010000000000000F1 /* DPCommonTests.swift */; };
 		C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */; };
 		C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */; };
@@ -133,15 +118,16 @@
 		E99893A7AE91DA00BA7E64AB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5FD845E01B6D632658559754 /* FirebaseAuth */; };
 		F93A6264054DB367D4C05F58 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 5F22ED447DBCFFF567C11F60 /* FirebaseFunctions */; };
 		FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE992AD2E1386173B2838076 /* DPAppLog.swift */; };
-		4E11C49FE3985B4E884CC505 /* PitchPerfectControllerTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */; };
-		EE2907DB0CD15B608722189D /* PitchPerfectNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */; };
-		4C675DB105B35F21BA509DAF /* PitchPerfectNoteAndKeyListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */; };
-		C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */; };
 		ABBB0000000000000000B009 /* DPSongsModelSetListsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */; };
 		ABBB0000000000000000B00B /* DPSongListSyncEmulatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */; };
 		ABBB0000000000000000B00D /* DPSongsModelInitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */; };
 		7447E930B806FEFBFF2AA1F3 /* ScreenCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FA3CE6D4BCDEBA8C146EA7 /* ScreenCatalog.swift */; };
 		63FAA36D7BFA7A6566AA76B4 /* SwiftUITestDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16DD6724FC3BBA706C7C969 /* SwiftUITestDriver.swift */; };
+		2734B05CD1729026F41ADA83 /* PitchPerfectScreenCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FCB9CD06D4BD6B642F5EA4 /* PitchPerfectScreenCatalogTests.swift */; };
+		A89CCE7E56863DC12C781F79 /* PitchPerfectTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F0F4586C45E83D77603159 /* PitchPerfectTestSupport.swift */; };
+		2A8E10313E52D8DA9716F4F1 /* PitchPipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB50761750D57FECC0C2B2B1 /* PitchPipeTests.swift */; };
+		795E22A6227760EDF08EEA47 /* PitchPerfectNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */; };
+		3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */; };
 		1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */; };
 		319BAFA3CDBA97E6CCDAEBAD /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 02C2927DF115B8E67AFA6F59 /* FirebaseAnalyticsCore */; };
 		3590F25955BA13F49EF7DED7 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6D805B3F00E05D86234DC2BF /* FirebaseCrashlytics */; };
@@ -238,8 +224,6 @@
 		1E131315267FD07600F33385 /* DPSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModel.swift; sourceTree = "<group>"; };
 		1E13131A2682475900F33385 /* panobackground.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = panobackground.svg; sourceTree = "<group>"; };
 		1E5B19801FE74ED000241069 /* depolllib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = depolllib.xcodeproj; path = ../depolllib/depolllib.xcodeproj; sourceTree = "<group>"; };
-		1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPLoginViewController.swift; sourceTree = "<group>"; };
-		1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeViewController.swift; sourceTree = "<group>"; };
 		1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = pitchperfect.entitlements; sourceTree = "<group>"; };
 		1E8EA647267E5BC400255826 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		1E927AD122A6D0390018E370 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -247,28 +231,27 @@
 		1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfect-Bridging-Header.h"; sourceTree = "<group>"; };
 		1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPAppDelegate.swift; sourceTree = "<group>"; };
 		1E989A3422F533F900EA9F2E /* DPSongsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModel.swift; sourceTree = "<group>"; };
-		1EFEC59B228BA0FF00F4532A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		24DCB8F913D487DFA23A2EDC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		ABBB00010000000000000001 /* PitchChord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchChord.swift; sourceTree = "<group>"; };
 		ABBB00060000000000000006 /* PitchRadialLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchRadialLayout.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B000 /* SetListSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListSelectorView.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B002 /* SetListPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListPrompts.swift; sourceTree = "<group>"; };
-		ABBB0000000000000000B004 /* SetListsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListsController.swift; sourceTree = "<group>"; };
-		ABBB0000000000000000B006 /* AddSongsFromListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongsFromListController.swift; sourceTree = "<group>"; };
+		5EE882C5C5C2C17F27D689E0 /* PlateStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateStyle.swift; sourceTree = "<group>"; };
+		C09DC8867DDC5E669C1260E4 /* NotePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotePlayer.swift; sourceTree = "<group>"; };
+		27355AA5E07A3186FEF6C80C /* PitchInstrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchInstrument.swift; sourceTree = "<group>"; };
+		2BDEFC918D17ACF1E9D95861 /* AdBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBanner.swift; sourceTree = "<group>"; };
+		D0B4DB1AA978FCB636E8D3A8 /* InstrumentScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentScreens.swift; sourceTree = "<group>"; };
+		3B5021FDF7F1E4BB6CD18D06 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		9FA8FCD8CB75B3D2978B6BD4 /* SongListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongListScreen.swift; sourceTree = "<group>"; };
+		83998B65CAA76710D71BB237 /* PitchPerfectRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectRoot.swift; sourceTree = "<group>"; };
+		99D5B492DCC792ECA65B576A /* SetListsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetListsScreen.swift; sourceTree = "<group>"; };
+		1737B3746383017103376669 /* AddSongsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongsScreen.swift; sourceTree = "<group>"; };
+		38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginScreen.swift; sourceTree = "<group>"; };
 		ABBB00090000000000000009 /* SongEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongEditorView.swift; sourceTree = "<group>"; };
-		4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchInstrumentView.swift; sourceTree = "<group>"; };
 		631C911515906D2B004733F1 /* notes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notes.png; sourceTree = "<group>"; };
 		631C911615906D2B004733F1 /* notes@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "notes@2x.png"; sourceTree = "<group>"; };
-		631C912115945219004733F1 /* DPKeysViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPKeysViewController.h; sourceTree = "<group>"; };
-		631C912215945219004733F1 /* DPKeysViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPKeysViewController.m; sourceTree = "<group>"; };
 		631C9124159455F1004733F1 /* keys.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = keys.png; sourceTree = "<group>"; };
 		631C9125159455F1004733F1 /* keys@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "keys@2x.png"; sourceTree = "<group>"; };
-		631C912815957B58004733F1 /* DPSongListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongListViewController.h; sourceTree = "<group>"; };
-		631C912915957B58004733F1 /* DPSongListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSongListViewController.m; sourceTree = "<group>"; };
-		631C912B15957D3C004733F1 /* DPSettingsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsModel.h; sourceTree = "<group>"; };
-		631C912C15957D3C004733F1 /* DPSettingsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsModel.m; sourceTree = "<group>"; };
-		631C912E15958022004733F1 /* DPSongsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongsModel.h; sourceTree = "<group>"; };
-		631C912F15958022004733F1 /* DPSongsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSongsModel.m; sourceTree = "<group>"; };
 		631C91331595830F004733F1 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		631C91351595831A004733F1 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		631C913715958329004733F1 /* libz.1.1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.1.3.dylib; path = usr/lib/libz.1.1.3.dylib; sourceTree = SDKROOT; };
@@ -286,17 +269,6 @@
 		6338EFBF1979DEB2000187E2 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		6338EFC11979DEBD000187E2 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		6338EFC31979DFFA000187E2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		634C897815885F6A000D9AFE /* AbstractLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AbstractLayoutView.h; sourceTree = "<group>"; };
-		634C897915885F6A000D9AFE /* AbstractLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AbstractLayoutView.m; sourceTree = "<group>"; };
-		634C897A15885F6A000D9AFE /* GridLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GridLayoutView.h; sourceTree = "<group>"; };
-		634C897B15885F6A000D9AFE /* GridLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GridLayoutView.m; sourceTree = "<group>"; };
-		634C897C15885F6A000D9AFE /* HLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HLayoutView.h; sourceTree = "<group>"; };
-		634C897D15885F6A000D9AFE /* HLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HLayoutView.m; sourceTree = "<group>"; };
-		634C897E15885F6A000D9AFE /* LayoutManagers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LayoutManagers.h; sourceTree = "<group>"; };
-		634C897F15885F6A000D9AFE /* License.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = License.txt; sourceTree = "<group>"; };
-		634C898015885F6A000D9AFE /* Readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Readme.txt; sourceTree = "<group>"; };
-		634C898115885F6A000D9AFE /* VLayoutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLayoutView.h; sourceTree = "<group>"; };
-		634C898215885F6A000D9AFE /* VLayoutView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLayoutView.m; sourceTree = "<group>"; };
 		638F1BEB17F5069500906944 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		6392E7C51AE1C7510082AEC1 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		63A99D52158826F800C78CC0 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
@@ -314,24 +286,13 @@
 		63B403E6158EA92E00FCA77C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		63B403EA158EAC1100FCA77C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		63C14A96157A997600348592 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		63CB96E515964EAA00116907 /* DPSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSettingsViewController.h; sourceTree = "<group>"; };
-		63CB96E615964EAA00116907 /* DPSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSettingsViewController.m; sourceTree = "<group>"; };
-		63CB96E81597D67400116907 /* DPSongEditorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPSongEditorViewController.h; sourceTree = "<group>"; };
-		63CB96E91597D67400116907 /* DPSongEditorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPSongEditorViewController.m; sourceTree = "<group>"; };
 		63DC369D151E9000007C46DB /* pitchperfect.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = pitchperfect.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC36A1151E9000007C46DB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		63DC36A3151E9000007C46DB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		63DC36A5151E9000007C46DB /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		63DC36A9151E9000007C46DB /* pitchperfect-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "pitchperfect-Info.plist"; sourceTree = "<group>"; };
 		63DC36AB151E9000007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		63DC36AD151E9000007C46DB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		63DC36AF151E9000007C46DB /* pitchperfect-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pitchperfect-Prefix.pch"; sourceTree = "<group>"; };
-		63DC36B0151E9000007C46DB /* DPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPAppDelegate.h; sourceTree = "<group>"; };
-		63DC36B1151E9000007C46DB /* DPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPAppDelegate.m; sourceTree = "<group>"; };
-		63DC36B9151E9000007C46DB /* DPPitchPipeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPPitchPipeViewController.h; sourceTree = "<group>"; };
-		63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPPitchPipeViewController.m; sourceTree = "<group>"; };
-		63DC36C0151E9000007C46DB /* DPNotesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPNotesViewController.h; sourceTree = "<group>"; };
-		63DC36C1151E9000007C46DB /* DPNotesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPNotesViewController.m; sourceTree = "<group>"; };
 		63DC36CC151E9000007C46DB /* pitchperfectTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DC36D5151E9000007C46DB /* pitchperfectTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "pitchperfectTests-Info.plist"; sourceTree = "<group>"; };
 		63DC36D7151E9000007C46DB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -340,24 +301,15 @@
 		63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pitchperfectlib.xcodeproj; path = pitchperfectlib/pitchperfectlib.xcodeproj; sourceTree = "<group>"; };
 		63E363911602FEF700EA031C /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		63E363931602FF0100EA031C /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
-		63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DPLoginViewController.h; sourceTree = "<group>"; };
-		63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DPLoginViewController.m; sourceTree = "<group>"; };
 		7DF7455F2E871F0F6709A8FD /* pitchperfectUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pitchperfectUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GoogleMobileAdsStub.h; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GoogleMobileAdsStub.m; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "DPAppDelegate+Ads.m"; sourceTree = "<group>"; };
-		A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DPTestAppDelegate.h; sourceTree = "<group>"; };
-		A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPTestAppDelegate.m; sourceTree = "<group>"; };
 		A3433DD5597D07DB78C74A9E /* pitchperfectUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = pitchperfectUITests.swift; sourceTree = "<group>"; };
 		BE992AD2E1386173B2838076 /* DPAppLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DPAppLog.swift; path = ../../depolllib/DPAppLog.swift; sourceTree = "<group>"; };
 		BF5A9239DD6F1B199D1E7307 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C0AUTH001000000000000003 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		C0DEFACE00000000000000A1 /* LayoutManagersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LayoutManagersTests.m; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPPitchPipeModelTests.swift; sourceTree = "<group>"; };
 		C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+UUIDFallback.m"; sourceTree = "<group>"; };
-		C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DPViewControllerLifecycleTests.m; sourceTree = "<group>"; };
 		C0NEWF0010000000000000F1 /* DPCommonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPCommonTests.swift; sourceTree = "<group>"; };
 		C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListEdgeCaseTests.swift; sourceTree = "<group>"; };
 		C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSettingsModelEdgeCaseTests.swift; sourceTree = "<group>"; };
@@ -372,13 +324,14 @@
 		A7D10A010000000000000001 /* PitchWidgetAudio.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetAudio.swift; sourceTree = "<group>"; };
 		A7D10A040000000000000004 /* PitchPerfectWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PitchPerfectWidget.entitlements; sourceTree = "<group>"; };
 		A7D10A070000000000000007 /* PitchWidgetRangeIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PitchWidgetRangeIntent.swift; sourceTree = "<group>"; };
-		FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectControllerTestCase.swift; sourceTree = "<group>"; };
-		BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNavigationTests.swift; sourceTree = "<group>"; };
-		D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNoteAndKeyListTests.swift; sourceTree = "<group>"; };
-		F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsPresentationTests.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelSetListsTests.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongListSyncEmulatorTests.swift; sourceTree = "<group>"; };
 		ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPSongsModelInitTests.swift; sourceTree = "<group>"; };
+		77FCB9CD06D4BD6B642F5EA4 /* PitchPerfectScreenCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectScreenCatalogTests.swift; sourceTree = "<group>"; };
+		E0F0F4586C45E83D77603159 /* PitchPerfectTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectTestSupport.swift; sourceTree = "<group>"; };
+		FB50761750D57FECC0C2B2B1 /* PitchPipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPipeTests.swift; sourceTree = "<group>"; };
+		0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectNavigationTests.swift; sourceTree = "<group>"; };
+		499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSettingsTests.swift; sourceTree = "<group>"; };
 		5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchPerfectSongManagementTests.swift; sourceTree = "<group>"; };
 		BD8765116ED3097D4A35113F /* AdConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdConsent.swift; path = pitchperfect/AdConsent.swift; sourceTree = "<group>"; };
 		FA302DC4CFB02B16EA9E5DD8 /* ConsentUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConsentUITests.swift; path = ../shared/ConsentUITests.swift; sourceTree = "<group>"; };
@@ -505,24 +458,6 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		634C897715885F6A000D9AFE /* LayoutManagers */ = {
-			isa = PBXGroup;
-			children = (
-				634C897815885F6A000D9AFE /* AbstractLayoutView.h */,
-				634C897915885F6A000D9AFE /* AbstractLayoutView.m */,
-				634C897A15885F6A000D9AFE /* GridLayoutView.h */,
-				634C897B15885F6A000D9AFE /* GridLayoutView.m */,
-				634C897C15885F6A000D9AFE /* HLayoutView.h */,
-				634C897D15885F6A000D9AFE /* HLayoutView.m */,
-				634C897E15885F6A000D9AFE /* LayoutManagers.h */,
-				634C897F15885F6A000D9AFE /* License.txt */,
-				634C898015885F6A000D9AFE /* Readme.txt */,
-				634C898115885F6A000D9AFE /* VLayoutView.h */,
-				634C898215885F6A000D9AFE /* VLayoutView.m */,
-			);
-			path = LayoutManagers;
-			sourceTree = "<group>";
-		};
 		63CB96D81595C01100116907 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -559,7 +494,6 @@
 				63DC3719151E9079007C46DB /* pitchperfectlib.xcodeproj */,
 				1E5B19801FE74ED000241069 /* depolllib.xcodeproj */,
 				63DC36A0151E9000007C46DB /* Frameworks */,
-				634C897715885F6A000D9AFE /* LayoutManagers */,
 				63DC36A7151E9000007C46DB /* pitchperfect */,
 				63DC36D3151E9000007C46DB /* pitchperfectTests */,
 				63DC369E151E9000007C46DB /* Products */,
@@ -619,52 +553,32 @@
 			isa = PBXGroup;
 			children = (
 				1E8483E11DD864D300AF4EAB /* pitchperfect.entitlements */,
-				63DC36B0151E9000007C46DB /* DPAppDelegate.h */,
-				63DC36B1151E9000007C46DB /* DPAppDelegate.m */,
-				A1F1C7132F8C18B200000009 /* DPTestAppDelegate.h */,
-				A1F1C7132F8C18B20000000A /* DPTestAppDelegate.m */,
-				A1F1C7132F8C18B200000004 /* DPAppDelegate+Ads.m */,
 				1E989A3022F5063000EA9F2E /* DPAppDelegate.swift */,
-				631C912115945219004733F1 /* DPKeysViewController.h */,
-				631C912215945219004733F1 /* DPKeysViewController.m */,
-				63DC36C0151E9000007C46DB /* DPNotesViewController.h */,
-				63DC36C1151E9000007C46DB /* DPNotesViewController.m */,
 				63A99D781588359700C78CC0 /* DPPitchPipeModel.h */,
 				63A99D791588359700C78CC0 /* DPPitchPipeModel.m */,
-				63DC36B9151E9000007C46DB /* DPPitchPipeViewController.h */,
-				63DC36BA151E9000007C46DB /* DPPitchPipeViewController.m */,
-				1E72A35D28B950DD00226DE6 /* DPPitchPipeViewController.swift */,
-				631C912B15957D3C004733F1 /* DPSettingsModel.h */,
-				631C912C15957D3C004733F1 /* DPSettingsModel.m */,
 				1E131315267FD07600F33385 /* DPSettingsModel.swift */,
-				63CB96E515964EAA00116907 /* DPSettingsViewController.h */,
-				63CB96E615964EAA00116907 /* DPSettingsViewController.m */,
-				63CB96E81597D67400116907 /* DPSongEditorViewController.h */,
-				63CB96E91597D67400116907 /* DPSongEditorViewController.m */,
-				631C912815957B58004733F1 /* DPSongListViewController.h */,
-				631C912915957B58004733F1 /* DPSongListViewController.m */,
-				631C912E15958022004733F1 /* DPSongsModel.h */,
-				631C912F15958022004733F1 /* DPSongsModel.m */,
 				1E989A3422F533F900EA9F2E /* DPSongsModel.swift */,
 				C0AUTH001000000000000002 /* Localizable.strings */,
 				BE992AD2E1386173B2838076 /* DPAppLog.swift */,
-				63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */,
 				63DC36A8151E9000007C46DB /* Supporting Files */,
 				6338EFC31979DFFA000187E2 /* Images.xcassets */,
-				63ED0BC91AC0ADB100535ED1 /* DPLoginViewController.h */,
-				63ED0BCA1AC0ADB100535ED1 /* DPLoginViewController.m */,
-				1E6A9AEE2682880700F029B0 /* DPLoginViewController.swift */,
-				A1F1C7132F8C18B200000001 /* GoogleMobileAdsStub.h */,
-				A1F1C7132F8C18B200000002 /* GoogleMobileAdsStub.m */,
 				1E989A2F22F5063000EA9F2E /* pitchperfect-Bridging-Header.h */,
 				1E95FFA02686560500B5299C /* DPCommon.swift */,
 				0402FA3EE07445808AD3AB18 /* Oswald-Medium.ttf */,
-				4937577BEF004004B3E3EC60 /* DPPitchInstrumentView.swift */,
 				ABBB00010000000000000001 /* PitchChord.swift */,
 				ABBB00060000000000000006 /* PitchRadialLayout.swift */,
 				ABBB00090000000000000009 /* SongEditorView.swift */,
-				ABBB0000000000000000B006 /* AddSongsFromListController.swift */,
-				ABBB0000000000000000B004 /* SetListsController.swift */,
+				38A9F2873253B92DF9F3EC95 /* LoginScreen.swift */,
+				1737B3746383017103376669 /* AddSongsScreen.swift */,
+				99D5B492DCC792ECA65B576A /* SetListsScreen.swift */,
+				83998B65CAA76710D71BB237 /* PitchPerfectRoot.swift */,
+				9FA8FCD8CB75B3D2978B6BD4 /* SongListScreen.swift */,
+				3B5021FDF7F1E4BB6CD18D06 /* SettingsScreen.swift */,
+				D0B4DB1AA978FCB636E8D3A8 /* InstrumentScreens.swift */,
+				2BDEFC918D17ACF1E9D95861 /* AdBanner.swift */,
+				27355AA5E07A3186FEF6C80C /* PitchInstrument.swift */,
+				C09DC8867DDC5E669C1260E4 /* NotePlayer.swift */,
+				5EE882C5C5C2C17F27D689E0 /* PlateStyle.swift */,
 				ABBB0000000000000000B002 /* SetListPrompts.swift */,
 				ABBB0000000000000000B000 /* SetListSelectorView.swift */,
 				E9C584F19CA54391BAD09BEC /* DPTheme.swift */,
@@ -677,7 +591,6 @@
 			children = (
 				63DC36A9151E9000007C46DB /* pitchperfect-Info.plist */,
 				63DC36AA151E9000007C46DB /* InfoPlist.strings */,
-				63DC36AD151E9000007C46DB /* main.m */,
 				63DC36AF151E9000007C46DB /* pitchperfect-Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -688,25 +601,24 @@
 			children = (
 				63DC36D9151E9000007C46DB /* pitchperfectTests.h */,
 				63DC36DA151E9000007C46DB /* pitchperfectTests.m */,
-				C0DEFACE00000000000000A1 /* LayoutManagersTests.m */,
 				C0DEFACE00000000000000A2 /* DPSettingsModelTests.swift */,
 				C0DEFACE00000000000000A3 /* DPSongsModelTests.swift */,
 				C0DEFACE00000000000000A4 /* DPPitchPipeModelTests.swift */,
 				C0DEFACE00000000000000A5 /* NSString+UUIDFallback.m */,
-				C0DEFACE00000000000000A8 /* DPViewControllerLifecycleTests.m */,
 				C0NEWF0010000000000000F1 /* DPCommonTests.swift */,
 				C0NEWF0020000000000000F2 /* DPSongListEdgeCaseTests.swift */,
 				C0NEWF0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift */,
 				C0NEWF0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift */,
 				C0NEWF0050000000000000F5 /* PitchChordTests.swift */,
 				5965ABAE6CDE569D817AF0A5 /* PitchPerfectSongManagementTests.swift */,
+				499260AA39BC26906364161C /* PitchPerfectSettingsTests.swift */,
+				0F9BB2BB5C8CD214C5959517 /* PitchPerfectNavigationTests.swift */,
+				FB50761750D57FECC0C2B2B1 /* PitchPipeTests.swift */,
+				E0F0F4586C45E83D77603159 /* PitchPerfectTestSupport.swift */,
+				77FCB9CD06D4BD6B642F5EA4 /* PitchPerfectScreenCatalogTests.swift */,
 				ABBB0000000000000000B00C /* DPSongsModelInitTests.swift */,
 				ABBB0000000000000000B00A /* DPSongListSyncEmulatorTests.swift */,
 				ABBB0000000000000000B008 /* DPSongsModelSetListsTests.swift */,
-				F5463CEB9C5C57F9B76CA586 /* PitchPerfectSettingsPresentationTests.swift */,
-				D47380BBE85C5C58A2925BE7 /* PitchPerfectNoteAndKeyListTests.swift */,
-				BDFF2AFF828C5E45847D8C5F /* PitchPerfectNavigationTests.swift */,
-				FD83E62EE2495C5589276A1A /* PitchPerfectControllerTestCase.swift */,
 				63DC36D4151E9000007C46DB /* Supporting Files */,
 			);
 			path = pitchperfectTests;
@@ -929,8 +841,7 @@
 				634C898C15886230000D9AFE /* NoteHedz170.ttf in Resources */,
 				63DC36AC151E9000007C46DB /* InfoPlist.strings in Resources */,
 				C0AUTH001000000000000001 /* Localizable.strings in Resources */,
-				63DC36B5151E9000007C46DB /* MainStoryboard_iPhone.storyboard in Resources */,
-				63B403D41588703200FCA77C /* panobackground.png in Resources */,
+						63B403D41588703200FCA77C /* panobackground.png in Resources */,
 				63B403DC1588768700FCA77C /* pitchpipe.png in Resources */,
 				63B403DE1588771C00FCA77C /* pitchpipe@2x.png in Resources */,
 				6338EFC41979DFFA000187E2 /* Images.xcassets in Resources */,
@@ -1008,42 +919,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				63DC36AE151E9000007C46DB /* main.m in Sources */,
-				63DC36B2151E9000007C46DB /* DPAppDelegate.m in Sources */,
 				FB09AB52BFF83F0698A2AF46 /* DPAppLog.swift in Sources */,
-				A1F1C7132F8C18B200000008 /* DPTestAppDelegate.m in Sources */,
-				A1F1C7132F8C18B200000005 /* DPAppDelegate+Ads.m in Sources */,
-				63DC36BB151E9000007C46DB /* DPPitchPipeViewController.m in Sources */,
-				63DC36C2151E9000007C46DB /* DPNotesViewController.m in Sources */,
 				63A99D7A1588359700C78CC0 /* DPPitchPipeModel.m in Sources */,
 				1E989A3122F5063000EA9F2E /* DPAppDelegate.swift in Sources */,
-				634C898315885F6A000D9AFE /* AbstractLayoutView.m in Sources */,
-				634C898415885F6A000D9AFE /* GridLayoutView.m in Sources */,
-				634C898515885F6A000D9AFE /* HLayoutView.m in Sources */,
-				634C898815885F6A000D9AFE /* VLayoutView.m in Sources */,
-				631C912315945219004733F1 /* DPKeysViewController.m in Sources */,
-				631C912A15957B58004733F1 /* DPSongListViewController.m in Sources */,
 				ABBB00070000000000000007 /* PitchRadialLayout.swift in Sources */,
 				ABBB000A000000000000000A /* SongEditorView.swift in Sources */,
-				ABBB0000000000000000B007 /* AddSongsFromListController.swift in Sources */,
-				ABBB0000000000000000B005 /* SetListsController.swift in Sources */,
+				F4894DA333155429B1C25ED3 /* LoginScreen.swift in Sources */,
+				E65EDFC2976D88A001EA44A8 /* AddSongsScreen.swift in Sources */,
+				44E7D9830E8096A5A299F8A0 /* SetListsScreen.swift in Sources */,
+				B2976F1F9DCD202864F54EC8 /* PitchPerfectRoot.swift in Sources */,
+				46B1EE24731D112A7A825283 /* SongListScreen.swift in Sources */,
+				CA233395DC30C3E320623386 /* SettingsScreen.swift in Sources */,
+				B4BBE1C30AD69DF4361CD38F /* InstrumentScreens.swift in Sources */,
+				6D8FD38F5D9F1431C9935FF5 /* AdBanner.swift in Sources */,
+				F9F1588A1855E2F6BB5DCBF8 /* PitchInstrument.swift in Sources */,
+				0E3EF7071698241E6A8C6EF4 /* NotePlayer.swift in Sources */,
+				034385170E3FFBB8DAC2F600 /* PlateStyle.swift in Sources */,
 				ABBB0000000000000000B003 /* SetListPrompts.swift in Sources */,
 				ABBB0000000000000000B001 /* SetListSelectorView.swift in Sources */,
-				1E6A9AEF2682880700F029B0 /* DPLoginViewController.swift in Sources */,
 				1E95FFA12686560500B5299C /* DPCommon.swift in Sources */,
-				B8CFB4A02871405CB2CFB09A /* DPPitchInstrumentView.swift in Sources */,
 				ABBB00020000000000000002 /* PitchChord.swift in Sources */,
 				A7D10A020000000000000002 /* PitchWidgetAudio.swift in Sources */,
 				76053E32EE9E49339749B7E5 /* DPTheme.swift in Sources */,
-				631C912D15957D3C004733F1 /* DPSettingsModel.m in Sources */,
-				631C913015958022004733F1 /* DPSongsModel.m in Sources */,
-				63CB96E715964EAA00116907 /* DPSettingsViewController.m in Sources */,
-				1E72A35E28B950DD00226DE6 /* DPPitchPipeViewController.swift in Sources */,
-				63ED0BCB1AC0ADB100535ED1 /* DPLoginViewController.m in Sources */,
-				A1F1C7132F8C18B200000003 /* GoogleMobileAdsStub.m in Sources */,
 				1E989A3522F533F900EA9F2E /* DPSongsModel.swift in Sources */,
 				1E131316267FD07600F33385 /* DPSettingsModel.swift in Sources */,
-				63CB96EA1597D67400116907 /* DPSongEditorViewController.m in Sources */,
 				A010DC805B5A5035F99BE145 /* TelemetryConsent.swift in Sources */,
 				573C1CE4A2D1A988F5494345 /* AdConsent.swift in Sources */,
 			);
@@ -1054,27 +953,26 @@
 			buildActionMask = 2147483647;
 			files = (
 				63DC36DB151E9000007C46DB /* pitchperfectTests.m in Sources */,
-				C0DEFACE00000000000000B1 /* LayoutManagersTests.m in Sources */,
 				C0DEFACE00000000000000B2 /* DPSettingsModelTests.swift in Sources */,
 				C0DEFACE00000000000000B3 /* DPSongsModelTests.swift in Sources */,
 				C0DEFACE00000000000000B4 /* DPPitchPipeModelTests.swift in Sources */,
 				C0DEFACE00000000000000B5 /* NSString+UUIDFallback.m in Sources */,
-				C0DEFACE00000000000000B8 /* DPViewControllerLifecycleTests.m in Sources */,
 				C0NEWT0010000000000000F1 /* DPCommonTests.swift in Sources */,
 				C0NEWT0020000000000000F2 /* DPSongListEdgeCaseTests.swift in Sources */,
 				C0NEWT0030000000000000F3 /* DPSettingsModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0040000000000000F4 /* DPPitchPipeModelEdgeCaseTests.swift in Sources */,
 				C0NEWT0050000000000000F5 /* PitchChordTests.swift in Sources */,
 				1F162A3E6D015D56AB99FD87 /* PitchPerfectSongManagementTests.swift in Sources */,
+				3E96EB53A597815ADF403A0A /* PitchPerfectSettingsTests.swift in Sources */,
+				795E22A6227760EDF08EEA47 /* PitchPerfectNavigationTests.swift in Sources */,
+				2A8E10313E52D8DA9716F4F1 /* PitchPipeTests.swift in Sources */,
+				A89CCE7E56863DC12C781F79 /* PitchPerfectTestSupport.swift in Sources */,
+				2734B05CD1729026F41ADA83 /* PitchPerfectScreenCatalogTests.swift in Sources */,
 				63FAA36D7BFA7A6566AA76B4 /* SwiftUITestDriver.swift in Sources */,
 				7447E930B806FEFBFF2AA1F3 /* ScreenCatalog.swift in Sources */,
 				ABBB0000000000000000B00D /* DPSongsModelInitTests.swift in Sources */,
 				ABBB0000000000000000B00B /* DPSongListSyncEmulatorTests.swift in Sources */,
 				ABBB0000000000000000B009 /* DPSongsModelSetListsTests.swift in Sources */,
-				C763B0C291215D539AB8985E /* PitchPerfectSettingsPresentationTests.swift in Sources */,
-				4C675DB105B35F21BA509DAF /* PitchPerfectNoteAndKeyListTests.swift in Sources */,
-				EE2907DB0CD15B608722189D /* PitchPerfectNavigationTests.swift in Sources */,
-				4E11C49FE3985B4E884CC505 /* PitchPerfectControllerTestCase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1141,14 +1039,6 @@
 				63DC36AB151E9000007C46DB /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		63DC36B3151E9000007C46DB /* MainStoryboard_iPhone.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1EFEC59B228BA0FF00F4532A /* Base */,
-			);
-			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
 		};
 		63DC36D6151E9000007C46DB /* InfoPlist.strings */ = {
