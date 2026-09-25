@@ -249,35 +249,3 @@ class WearInstrumentRenderer(
         alpha: Int,
     ): Int = Color.argb(alpha.coerceIn(0, 255), Color.red(color), Color.green(color), Color.blue(color))
 }
-
-/** How the face names a note: engraved on its cell, in the readout, and to a screen reader. */
-internal object NoteNames {
-    private const val LETTERS = "CDEFGAB"
-
-    private fun sharpNameOf(note: Note): String {
-        if (note.accidental == Accidental.Sharp) return note.friendlyName
-        return LETTERS[(LETTERS.indexOf(note.friendlyName[0]) + 6) % LETTERS.length].toString()
-    }
-
-    private fun flatNameOf(note: Note): String {
-        if (note.accidental == Accidental.Flat) return note.friendlyName
-        return LETTERS[(LETTERS.indexOf(note.friendlyName[0]) + 1) % LETTERS.length].toString()
-    }
-
-    // A physical pitch pipe engraves the accidental cells with the glyphs alone;
-    // the center readout and accessibility names carry the full note names.
-    fun engraved(note: Note): String =
-        if (note.accidental == Accidental.Natural) note.friendlyName else "♯/♭"
-
-    fun readout(note: Note): String =
-        when (note.accidental) {
-            Accidental.Natural -> note.friendlyName
-            else -> "${sharpNameOf(note)}♯"
-        } + note.octave
-
-    fun spoken(note: Note): String =
-        when (note.accidental) {
-            Accidental.Natural -> "${note.friendlyName}, octave ${note.octave}"
-            else -> "${sharpNameOf(note)} sharp, ${flatNameOf(note)} flat, octave ${note.octave}"
-        }
-}

@@ -135,7 +135,7 @@ class PitchRowsTest {
         compose.onNodeWithTag(TestTags.noteRow(index)).performSemanticsAction(SemanticsActions.OnClick)
         settle()
         assertTrue(notes[index].isPlaying)
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(PitchInstrumentState.ACCESSIBILITY_NOTE_MS + 100))
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(InstrumentState.ACCESSIBILITY_NOTE_MS + 100))
         settle()
         assertFalse(notes[index].isPlaying)
     }

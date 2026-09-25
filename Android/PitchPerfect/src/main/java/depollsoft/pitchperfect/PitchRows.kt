@@ -185,7 +185,7 @@ object BriefNotes {
                     stop()
                 }
             pending[target] = later
-            main.postDelayed(later, PitchInstrumentState.ACCESSIBILITY_NOTE_MS)
+            main.postDelayed(later, InstrumentState.ACCESSIBILITY_NOTE_MS)
         }
         return true
     }

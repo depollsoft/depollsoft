@@ -108,6 +108,19 @@ class PitchInstrumentTest {
     }
 
     @Test
+    fun aHeldNoteStopsOnReleaseEvenIfToggleModeSwitchesOnMeanwhile() {
+        face().performTouchInput { down(cell(3)) }
+        compose.waitForIdle()
+        assertEquals(listOf(3), playing())
+
+        // A sync from another device turns "notes play until pressed again" on mid-press.
+        state.toggleMode = true
+        face().performTouchInput { up() }
+        compose.waitForIdle()
+        assertEquals("the held note still stops when the finger lifts", emptyList<Int>(), playing())
+    }
+
+    @Test
     fun severalFingersSoundAChord() {
         face().performTouchInput {
             down(0, cell(0))
@@ -227,7 +240,7 @@ class PitchInstrumentTest {
         compose.onNodeWithContentDescription("A, octave 4").performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         assertEquals(listOf(a4), playing())
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(PitchInstrumentState.ACCESSIBILITY_NOTE_MS + 100))
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(InstrumentState.ACCESSIBILITY_NOTE_MS + 100))
         compose.waitForIdle()
         assertEquals(emptyList<Int>(), playing())
 
@@ -275,16 +288,16 @@ class PitchInstrumentTest {
     @Test
     fun theGlowFollowsTheSystemAnimatorDurationScale() {
         // At 2x, as a ValueAnimator would, one breath takes eight seconds.
-        assertEquals(PI.toFloat(), PitchInstrumentState.breathePhaseAt(4_000, durationScale = 2f), 1e-4f)
-        assertEquals(PI.toFloat(), PitchInstrumentState.breathePhaseAt(1_000, durationScale = 0.5f), 1e-4f)
+        assertEquals(PI.toFloat(), InstrumentState.breathePhaseAt(4_000, durationScale = 2f), 1e-4f)
+        assertEquals(PI.toFloat(), InstrumentState.breathePhaseAt(1_000, durationScale = 0.5f), 1e-4f)
     }
 
     @Test
     fun theGlowBreathesOnceEveryFourSeconds() {
-        assertEquals(0f, PitchInstrumentState.breathePhaseAt(0))
-        assertEquals((PI / 2).toFloat(), PitchInstrumentState.breathePhaseAt(1_000), 1e-4f)
-        assertEquals(PI.toFloat(), PitchInstrumentState.breathePhaseAt(2_000), 1e-4f)
-        assertEquals("the cycle repeats", 0f, PitchInstrumentState.breathePhaseAt(4_000))
+        assertEquals(0f, InstrumentState.breathePhaseAt(0))
+        assertEquals((PI / 2).toFloat(), InstrumentState.breathePhaseAt(1_000), 1e-4f)
+        assertEquals(PI.toFloat(), InstrumentState.breathePhaseAt(2_000), 1e-4f)
+        assertEquals("the cycle repeats", 0f, InstrumentState.breathePhaseAt(4_000))
     }
 
     @Test
