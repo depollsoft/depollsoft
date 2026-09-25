@@ -123,6 +123,8 @@ private fun SearchScreen(
                 ) {
                     val searchInteractions = remember { MutableInteractionSource() }
                     val searchFocused by searchInteractions.collectIsFocusedAsState()
+                    val clearInteractions = remember { MutableInteractionSource() }
+                    val clearFocused by clearInteractions.collectIsFocusedAsState()
                     OutlinedField(
                         label = stringResource(R.string.SearchBoxHint),
                         value = text,
@@ -131,16 +133,18 @@ private fun SearchScreen(
                             model.query = it.text
                         },
                         startIcon = FieldIcon(R.drawable.ic_search),
-                        // The clear icon shows only while the field is focused and has text.
+                        // The clear icon shows while the field has text and it, or the icon itself
+                        // (reached by keyboard), has focus.
                         endIcon =
                             FieldIcon(
                                 com.google.android.material.R.drawable.mtrl_ic_cancel,
                                 stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
+                                interactionSource = clearInteractions,
                             ) {
                                 text = TextFieldValue("")
                                 model.query = ""
                             },
-                        endIconVisible = searchFocused && text.text.isNotEmpty(),
+                        endIconVisible = (searchFocused || clearFocused) && text.text.isNotEmpty(),
                         interactionSource = searchInteractions,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { onSearch() }),

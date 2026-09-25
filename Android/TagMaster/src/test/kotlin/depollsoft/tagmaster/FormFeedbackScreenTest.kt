@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
@@ -58,8 +59,13 @@ class FormFeedbackScreenTest : ComposeScreenTest() {
         node("searchTextBox").performTextInput("heart")
         idle()
         assertTrue("focused with text", shown())
-        // Focus moves on to the next control.
+        // Tab reaches the clear icon itself, which stays so a keyboard user can press it.
         node("searchTextBox").performKeyInput { pressKey(Key.Tab) }
+        idle()
+        assertTrue("the icon has focus", shown())
+        compose.onNode(hasContentDescription(clear), useUnmergedTree = true).assertIsFocused()
+        // Focus moves on to the next control.
+        compose.onNode(hasContentDescription(clear), useUnmergedTree = true).performKeyInput { pressKey(Key.Tab) }
         idle()
         assertFalse("text but no focus", shown())
     }
