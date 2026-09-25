@@ -2,6 +2,8 @@ package depollsoft.tagmaster
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
 import depollsoft.tagmaster.barbershop.Tag
@@ -61,6 +63,32 @@ class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
         idle()
         assertFalse(exists("part:4"))
         assertTrue(exists("part:0"))
+    }
+
+    /** Leaving the app stops a learning track, even one still downloading. */
+    @Test
+    fun pausingStopsATrack() {
+        val download = java.util.concurrent.CountDownLatch(1)
+        ScreenTestSupport.withTransport({
+            download.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            java.io.ByteArrayInputStream(ByteArray(0))
+        }) {
+            try {
+                open(ScreenTestSupport.fixtureTag(), 2)
+                click("part:0")
+                click("playPause")
+                node("playPause").assertIsNotEnabled()
+                node("stop").assertIsEnabled()
+
+                // The rule only sees resumed activities; coming back does not restart the track.
+                controller!!.pause().resume()
+                idle()
+                node("playPause").assertIsEnabled()
+                node("stop").assertIsNotEnabled()
+            } finally {
+                download.countDown()
+            }
+        }
     }
 
     @Test
