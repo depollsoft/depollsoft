@@ -11,7 +11,6 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,15 +19,21 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.isOutOfBounds
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntSize
+import androidx.lifecycle.compose.LifecycleStartEffect
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 
@@ -65,10 +70,11 @@ class NotePlayer {
     }
 }
 
+/** A [NotePlayer] that falls silent when its screen stops or it leaves the composition. */
 @Composable
 fun rememberNotePlayer(): NotePlayer {
     val player = remember { NotePlayer() }
-    DisposableEffect(player) { onDispose { player.stop() } }
+    LifecycleStartEffect(player) { onStopOrDispose { player.stop() } }
     return player
 }
 
@@ -90,35 +96,8 @@ fun Modifier.notePress(
 ): Modifier {
     if (!enabled) return this
     return this
-        .pointerInput(player) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
-                down.consume()
-                player.press(note())
-                val press = PressInteraction.Press(down.position)
-                interactionSource?.tryEmit(press)
-                var tapped = false
-                // The finally also covers the button leaving the screen mid-press.
-                try {
-                    while (true) {
-                        // Final pass: a scroll above that took the gesture has consumed it by now.
-                        val change = awaitPointerEvent(PointerEventPass.Final).changes.firstOrNull { it.id == down.id } ?: break
-                        // The down itself arrives here too, consumed by this handler.
-                        if (change.changedToDownIgnoreConsumed()) continue
-                        if (change.isConsumed) break
-                        if (!change.pressed) {
-                            change.consume()
-                            tapped = !change.isOutOfBounds(size, extendedTouchPadding)
-                            break
-                        }
-                    }
-                } finally {
-                    player.release()
-                    interactionSource?.tryEmit(if (tapped) PressInteraction.Release(press) else PressInteraction.Cancel(press))
-                    if (tapped) view?.playSoundEffect(SoundEffectConstants.CLICK)
-                }
-            }
-        }.onKeyEvent { event ->
+        .then(NotePressElement(player, note, view, interactionSource))
+        .onKeyEvent { event ->
             if (event.type == KeyEventType.KeyUp && (event.key == Key.Enter || event.key == Key.Spacebar || event.key == Key.DirectionCenter)) {
                 player.click(note())
                 true
@@ -135,6 +114,75 @@ fun Modifier.notePress(
                 true
             }
         }
+}
+
+/**
+ * The finger half of [notePress]. A node, so a recomposition hands it the latest [note] without
+ * restarting a press in progress: the button can outlive the tag it was composed for (the tablet
+ * pane showing the next tag), and a new press must play the note it shows now.
+ */
+private data class NotePressElement(
+    val player: NotePlayer,
+    val note: () -> Note?,
+    val view: View?,
+    val interactionSource: MutableInteractionSource?,
+) : ModifierNodeElement<NotePressNode>() {
+    override fun create() = NotePressNode(this)
+
+    override fun update(node: NotePressNode) = node.update(this)
+}
+
+private class NotePressNode(
+    private var element: NotePressElement,
+) : DelegatingNode(),
+    PointerInputModifierNode {
+    private val input =
+        delegate(
+            SuspendingPointerInputModifierNode {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+                    // This press belongs to the player and note current as the finger lands.
+                    val (player, note, view, interactionSource) = element
+                    player.press(note())
+                    val press = PressInteraction.Press(down.position)
+                    interactionSource?.tryEmit(press)
+                    var tapped = false
+                    // The finally also covers the button leaving the screen mid-press.
+                    try {
+                        while (true) {
+                            // Final pass: a scroll above that took the gesture has consumed it by now.
+                            val change = awaitPointerEvent(PointerEventPass.Final).changes.firstOrNull { it.id == down.id } ?: break
+                            // The down itself arrives here too, consumed by this handler.
+                            if (change.changedToDownIgnoreConsumed()) continue
+                            if (change.isConsumed) break
+                            if (!change.pressed) {
+                                change.consume()
+                                tapped = !change.isOutOfBounds(size, extendedTouchPadding)
+                                break
+                            }
+                        }
+                    } finally {
+                        player.release()
+                        interactionSource?.tryEmit(if (tapped) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+                        if (tapped) view?.playSoundEffect(SoundEffectConstants.CLICK)
+                    }
+                }
+            },
+        )
+
+    fun update(next: NotePressElement) {
+        if (next.player !== element.player) input.resetPointerInputHandler()
+        element = next
+    }
+
+    override fun onPointerEvent(
+        pointerEvent: PointerEvent,
+        pass: PointerEventPass,
+        bounds: IntSize,
+    ) = input.onPointerEvent(pointerEvent, pass, bounds)
+
+    override fun onCancelPointerInput() = input.onCancelPointerInput()
 }
 
 /** How a screen reader names a note: "B flat, A sharp, octave 4". */

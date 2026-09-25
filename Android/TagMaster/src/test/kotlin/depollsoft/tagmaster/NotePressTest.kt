@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,11 +23,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.Note
 import depollsoft.tagmaster.ui.notePress
 import depollsoft.tagmaster.ui.rememberNotePlayer
-import java.time.Duration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +38,7 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 
 /**
  * The key-note buttons: a touch sounds the note until the finger lifts, a click that is not a
@@ -198,5 +203,49 @@ class NotePressTest {
         compose.onNodeWithTag("key").performTouchInput { click() }
         compose.waitForIdle()
         Mockito.verify(view).playSoundEffect(SoundEffectConstants.CLICK)
+    }
+
+    @Test
+    fun aPressPlaysTheNoteTheButtonShowsNowNotTheOneItFirstShowed() {
+        // The summary passes { tag.keyNote } with the tag it was composed for; the tablet pane can
+        // keep the button while the tag changes underneath.
+        val first = note()
+        val second = note()
+        var shownNote by mutableStateOf(first)
+        compose.setContent {
+            val player = rememberNotePlayer()
+            val keyNote = shownNote
+            Box(Modifier.size(48.dp).testTag("key").notePress(player, { keyNote }))
+        }
+        compose.waitForIdle()
+        shownNote = second
+        compose.waitForIdle()
+        compose.onNodeWithTag("key").performTouchInput { click() }
+        compose.waitForIdle()
+        Mockito.verify(second).play()
+        Mockito.verify(first, Mockito.never()).play()
+    }
+
+    @Test
+    fun leavingTheScreenStopsANoteStillSounding() {
+        val note = note()
+        val owner =
+            object : LifecycleOwner {
+                val registry = LifecycleRegistry.createUnsafe(this)
+                override val lifecycle: Lifecycle get() = registry
+            }
+        owner.registry.currentState = Lifecycle.State.RESUMED
+        compose.setContent {
+            CompositionLocalProvider(LocalLifecycleOwner provides owner) {
+                val player = rememberNotePlayer()
+                Box(Modifier.size(48.dp).testTag("key").notePress(player, { note }))
+            }
+        }
+        compose.onNodeWithTag("key").performSemanticsAction(SemanticsActions.OnClick)
+        Mockito.verify(note).play()
+        // The app goes to the background within the click's 1.5 seconds.
+        compose.runOnIdle { owner.registry.currentState = Lifecycle.State.CREATED }
+        compose.waitForIdle()
+        Mockito.verify(note).stop()
     }
 }
