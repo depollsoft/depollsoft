@@ -31,7 +31,8 @@ final class SongManagementUITests: XCTestCase {
     func testCanSwipeOnSongIfExists() throws {
         // The Songs list is a SwiftUI List: a collection view, not a table.
         let table = app.collectionViews.firstMatch
-        guard table.waitForExistence(timeout: 2) else {
+        // A cold first launch can take a few seconds to lay out the tab.
+        guard table.waitForExistence(timeout: 10) else {
             XCTFail("Songs list not found")
             return
         }
