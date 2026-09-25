@@ -201,6 +201,20 @@ class TagDetailActivityScreenTest : ComposeScreenTest() {
         assertFalse(exists("pickerRow:$key"))
     }
 
+    /** A tap on a row drawn before its list was deleted must not bring the list back. */
+    @Test
+    fun aRowForAListDeletedSinceItWasDrawnDoesNothing() {
+        val key = TagLists.create("Afterglow set")
+        detail()
+        click("chip:add")
+        val staleTap = node("pickerRow:$key").fetchSemanticsNode().config[SemanticsActions.OnClick].action!!
+        TagLists.delete(key)
+        staleTap()
+        idle()
+        assertFalse(key in TagLists.allKeys())
+        assertFalse(ListModel(key).contains(fixture.id))
+    }
+
     @Test
     fun theNewListRowMakesTheListAndPutsTheTagInIt() {
         detail()
