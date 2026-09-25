@@ -3,8 +3,6 @@ package depollsoft.tagmaster
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -29,17 +27,13 @@ import depollsoft.tagmaster.ui.setTagMasterContent
  * screen; a delete anywhere closes it rather than leaving a screen onto nothing.
  */
 class TagListActivity :
-    AppCompatActivity(),
-    TagPaneHost {
+    TagPaneActivity() {
     val listKey: String
         get() = intent?.getStringExtra(EXTRA_LIST_KEY).orEmpty()
 
     /** The name this screen is currently titled with. */
     val listName: String
         get() = TagLists.name(listKey)
-
-    internal lateinit var tagPane: TagPaneState
-        private set
 
     lateinit var listEditor: SavedListEditor
         private set
@@ -96,35 +90,9 @@ class TagListActivity :
         tagPane.restore(savedInstanceState)
     }
 
-    override val hasDetailPane: Boolean
-        get() = tagPane.hasDetailPane
-
-    override var selectedTagId: Int?
-        get() = tagPane.selectedTagId
-        set(value) {
-            tagPane.selectedTagId = value
-        }
-
-    override fun showTag(id: Int) = tagPane.showTag(id)
-
-    override fun listedTagIds(): List<Int> = tagPane.listedTagIds()
-
-    override fun revealTag(id: Int) = tagPane.revealTag(id)
-
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean = (::tagPane.isInitialized && tagPane.onKeyDown(keyCode, event)) || super.onKeyDown(keyCode, event)
-
     override fun onSaveInstanceState(outState: Bundle) {
         if (::listEditor.isInitialized) outState.putBoolean(STATE_EDITING, listEditor.isEditing)
-        if (::tagPane.isInitialized) tagPane.save(outState)
         super.onSaveInstanceState(outState)
-    }
-
-    override fun onDestroy() {
-        if (::tagPane.isInitialized) tagPane.stop()
-        super.onDestroy()
     }
 
     override fun onSearchRequested(): Boolean {

@@ -37,13 +37,23 @@ class TabletListDetailTest : ComposeScreenTest() {
         return launch(TeachableTagsActivity::class.java)
     }
 
-    private fun awaitShown(host: TagPaneHost) {
-        val detail = (host as TeachableTagsActivity).tagPane.detail!!
+    private fun awaitShown(host: TagPaneActivity) {
+        val detail = host.tagPane.detail!!
         ScreenTestSupport.await("the pane's tag to load") { !detail.isLoading && detail.tag != null }
         idle()
     }
 
-    private fun key(code: Int) = KeyEvent(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), KeyEvent.ACTION_DOWN, code, 0, KeyEvent.META_CTRL_ON)
+    /** Presses Ctrl+[code] through the activity's real key dispatch, where Compose moves focus on arrows. */
+    private fun ctrl(
+        activity: TagPaneActivity,
+        code: Int,
+    ): Boolean {
+        val now = SystemClock.uptimeMillis()
+        val handled = activity.dispatchKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, KeyEvent.META_CTRL_ON))
+        activity.dispatchKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, code, 0, KeyEvent.META_CTRL_ON))
+        idle()
+        return handled
+    }
 
     @Test
     fun everyListScreenHasADetailPaneAtTabletWidth() {
@@ -96,12 +106,21 @@ class TabletListDetailTest : ComposeScreenTest() {
         val activity = teachable()
         activity.showTag(ids[0])
         awaitShown(activity)
-        assertTrue(activity.onKeyDown(KeyEvent.KEYCODE_DPAD_DOWN, key(KeyEvent.KEYCODE_DPAD_DOWN)))
+        // With the list focused, as a keyboard user's would be: plain arrows move that focus.
+        compose
+            .onAllNodes(
+                androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("savedTag:${ids[0]}")) and
+                    androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.RequestFocus),
+                useUnmergedTree = true,
+            ).onFirst()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.RequestFocus)
+        idle()
+        assertTrue(ctrl(activity, KeyEvent.KEYCODE_DPAD_DOWN))
         assertEquals(ids[1], activity.selectedTagId)
-        assertTrue(activity.onKeyDown(KeyEvent.KEYCODE_DPAD_UP, key(KeyEvent.KEYCODE_DPAD_UP)))
+        assertTrue(ctrl(activity, KeyEvent.KEYCODE_DPAD_UP))
         assertEquals(ids[0], activity.selectedTagId)
         // At the top there is nowhere to go, and the key is still the pane's.
-        assertTrue(activity.onKeyDown(KeyEvent.KEYCODE_DPAD_UP, key(KeyEvent.KEYCODE_DPAD_UP)))
+        assertTrue(ctrl(activity, KeyEvent.KEYCODE_DPAD_UP))
         assertEquals(ids[0], activity.selectedTagId)
     }
 

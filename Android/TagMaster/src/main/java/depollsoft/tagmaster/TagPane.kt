@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,23 +13,40 @@ import bolts.Task
 import depollsoft.tagmaster.barbershop.Tag
 
 /**
- * A tag list that can open a tag beside itself. Implemented by every list screen; on phones (and
- * any window narrower than the two-pane layout) [hasDetailPane] is false and rows keep opening
- * [TagDetailActivity] full-screen.
+ * A tag list screen that can open a tag beside itself in its [tagPane], which it creates in
+ * onCreate. On phones (and any window narrower than the two-pane layout) the pane has no detail
+ * and rows keep opening [TagDetailActivity] full-screen. The pane's selection and page are saved
+ * with the activity, and it stops with it.
  */
-interface TagPaneHost {
-    val hasDetailPane: Boolean
+abstract class TagPaneActivity : AppCompatActivity() {
+    internal lateinit var tagPane: TagPaneState
 
-    var selectedTagId: Int?
+    private val hasTagPane get() = ::tagPane.isInitialized
+
+    val hasDetailPane: Boolean get() = tagPane.hasDetailPane
+
+    val selectedTagId: Int? get() = tagPane.selectedTagId
 
     /** Opens [id] in the detail pane, keeping the page (Summary/Details/Tracks/Videos) in view. */
-    fun showTag(id: Int)
+    fun showTag(id: Int) = tagPane.showTag(id)
 
-    /** The ids of the list the user is looking at, in the order they are shown. */
-    fun listedTagIds(): List<Int>
+    /**
+     * Ctrl+Up / Ctrl+Down step the pane's tag before the view tree sees the keys: Compose moves
+     * focus on an arrow key while dispatching it, so onKeyDown would never be reached.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        (event.action == KeyEvent.ACTION_DOWN && hasTagPane && tagPane.onKeyDown(event.keyCode, event)) ||
+            super.dispatchKeyEvent(event)
 
-    /** Scrolls the row for [id] into view. */
-    fun revealTag(id: Int)
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (hasTagPane) tagPane.save(outState)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        if (hasTagPane) tagPane.stop()
+        super.onDestroy()
+    }
 }
 
 /** Whether a window is wide enough to show a tag beside its list (the w720dp-h480dp layout). */
@@ -38,20 +56,19 @@ fun hasTwoPanes(
 ): Boolean = widthDp >= 720 && heightDp >= 480
 
 /**
- * The shared half of [TagPaneHost]: which tag the pane shows, stepping to the previous or next
- * tag of the list, and the one [TagDetailState] every selection reuses so the open page survives
- * a tag change.
+ * A [TagPaneActivity]'s pane: which tag it shows, stepping to the previous or next tag of the
+ * list, and the one [TagDetailState] every selection reuses so the open page survives a tag change.
  */
 @Stable
 class TagPaneState(
     private val context: Context,
-    override val hasDetailPane: Boolean,
+    val hasDetailPane: Boolean,
     private val listedIds: () -> List<Int>,
     var reveal: (Int) -> Unit = {},
     private val hasMoreResults: () -> Boolean = { false },
     private val fetchMore: () -> Unit = {},
-) : TagPaneHost {
-    override var selectedTagId: Int? by mutableStateOf(null)
+) {
+    var selectedTagId: Int? by mutableStateOf(null)
 
     /** The pane's detail; null until a tag is chosen. */
     var detail: TagDetailState? by mutableStateOf(null)
@@ -64,7 +81,8 @@ class TagPaneState(
             if (value != null) detail?.loader = value
         }
 
-    override fun showTag(id: Int) {
+    /** Opens [id] in the detail pane, keeping the page (Summary/Details/Tracks/Videos) in view. */
+    fun showTag(id: Int) {
         if (!hasDetailPane) {
             context.startActivity(
                 Intent(context, TagDetailActivity::class.java)
@@ -86,10 +104,6 @@ class TagPaneState(
         }
         reveal(id)
     }
-
-    override fun listedTagIds(): List<Int> = listedIds()
-
-    override fun revealTag(id: Int) = reveal(id)
 
     fun canStep(delta: Int): Boolean {
         val ids = listedIds()
