@@ -173,7 +173,7 @@ struct SettingsScreen: View {
                               isOn: Binding(get: { model.wakeLock }, set: model.setWakeLock))
                     HStack {
                         Text("Theme")
-                        Spacer()
+                        Spacer(minLength: 16)
                         Picker("Theme", selection: Binding(get: { model.theme }, set: model.setTheme)) {
                             Text("Default").tag(0)
                             Text("Light").tag(1)
@@ -183,7 +183,7 @@ struct SettingsScreen: View {
                         .fixedSize()
                         .accessibilityIdentifier("settings.theme")
                     }
-                    .settingsRow()
+                    .settingsRow(height: 52)
                 } header: {
                     PlateHeader("Pitch Pipe")
                 }
@@ -209,7 +209,7 @@ struct SettingsScreen: View {
                                 .foregroundStyle(Color(uiColor: .tertiaryLabel))
                         }
                     }
-                    .settingsRow()
+                    .settingsRow(height: 51)
                 } header: {
                     PlateHeader("Privacy")
                 }
@@ -284,14 +284,18 @@ private struct SwitchRow: View {
 
     var body: some View {
         Toggle(isOn: $isOn) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: SettingsMetrics.subtitleSpacing) {
                 Text(title)
                 Text(detail)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
+            .padding(.top, SettingsMetrics.subtitleTop)
+            .padding(.bottom, SettingsMetrics.subtitleBottom)
         }
         .tint(nil)
+        // A cell's accessory view sits a little further in than its content.
+        .padding(.trailing, 4.0 / 3.0)
         .settingsRow()
     }
 }
@@ -309,13 +313,17 @@ private struct ActionRow: View {
                 if busy { ProgressView() }
             }
         }
-        .settingsRow()
+        .settingsRow(height: 51)
     }
 }
 
 extension View {
-    fileprivate func settingsRow() -> some View {
-        listRowBackground(Color.clear)
+    /// A UITableViewCell's frame: clear, 20 pt margins, and (for single-line
+    /// rows) the cell's height.
+    fileprivate func settingsRow(height: CGFloat? = nil) -> some View {
+        frame(minHeight: height)
+            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+            .listRowBackground(Color.clear)
     }
 
     /// Settings as every tab presents it: a sheet with its own navigation bar.
@@ -324,4 +332,11 @@ extension View {
             NavigationStack { SettingsScreen() }
         }
     }
+}
+
+/// UIKit's subtitle cell, measured.
+private enum SettingsMetrics {
+    static let subtitleTop: CGFloat = 9
+    static let subtitleBottom: CGFloat = 35.0 / 3.0
+    static let subtitleSpacing: CGFloat = 3
 }

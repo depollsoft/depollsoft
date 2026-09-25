@@ -273,8 +273,12 @@ struct LoginIntroScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
-            Button("Sign up or log in") { showingSignIn = true }
-                .buttonStyle(.borderless)
+            Button { showingSignIn = true } label: {
+                Text("Sign up or log in")
+                    .font(.system(size: 15))
+                    .frame(minHeight: 30)
+            }
+            .buttonStyle(.borderless)
         }
         .staffScreenBackground()
         .navigationTitle("Log In To Pitch Perfect")
@@ -290,12 +294,15 @@ struct LoginIntroScreen: View {
 
 private struct LoginExplanation: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 17) {
-            Text("**Recommended:** Log in to Pitch Perfect and we'll save your settings and song list to the cloud.")
+        // UIKit fonts rather than SwiftUI's .system(size:), which tracks its
+        // text differently from the HTML-typeset UIKit screen.
+        VStack(alignment: .leading, spacing: 50.0 / 3.0) {
+            Text("Recommended:").font(Font(UIFont.boldSystemFont(ofSize: 17) as CTFont))
+                + Text(" Log in to Pitch Perfect and we'll save your settings and song list to the cloud.")
             Text("When you log in to Pitch Perfect, we'll automatically synchronize your settings and song list from device to device. Whether you just want to back up your songs or are working with multiple phones or tablets, logging in ensures that your data goes where you go.")
             Text("Signing in syncs your song list and settings. You control optional analytics and crash reports in Privacy choices.")
         }
-        .font(.system(size: 17))
+        .font(Font(UIFont.systemFont(ofSize: 17) as CTFont))
         .foregroundStyle(Color(uiColor: .label))
     }
 }

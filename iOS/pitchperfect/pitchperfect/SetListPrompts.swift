@@ -12,6 +12,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 @Observable
 @MainActor
@@ -33,16 +34,6 @@ final class SetListPromptModel {
 
     init(model: DPSongsModel = .sharedInstance) {
         self.model = model
-    }
-
-    var isNaming: Bool {
-        get { if case .create = kind { return true }; if case .rename = kind { return true }; return false }
-        set { if !newValue { dismiss() } }
-    }
-
-    var isConfirmingDelete: Bool {
-        get { if case .delete = kind { return true }; return false }
-        set { if !newValue { dismiss() } }
     }
 
     func create(commit: @escaping (String) -> Void) {
@@ -130,33 +121,90 @@ final class SetListPromptModel {
 
 extension View {
     /// Presents whichever set-list alert `prompts` holds.
+    ///
+    /// These are system alerts presented directly rather than through SwiftUI's
+    /// `.alert`, whose content is fixed once shown: naming validates as the user
+    /// types, updating the message and enabling the confirming action live.
     func setListPrompts(_ prompts: SetListPromptModel) -> some View {
-        modifier(SetListPromptAlerts(prompts: prompts))
+        background(SetListAlertPresenter(prompts: prompts, kind: prompts.kind).frame(width: 0, height: 0))
     }
 }
 
-private struct SetListPromptAlerts: ViewModifier {
-    @Bindable var prompts: SetListPromptModel
+private struct SetListAlertPresenter: UIViewControllerRepresentable {
+    let prompts: SetListPromptModel
+    /// Read in the modifier's body so a change re-runs `updateUIViewController`.
+    let kind: SetListPromptModel.Kind?
 
-    func body(content: Content) -> some View {
-        content
-            .alert(prompts.title, isPresented: $prompts.isNaming) {
-                TextField("Set list name", text: $prompts.name)
-                    .textInputAutocapitalization(.sentences)
-                    .submitLabel(.done)
-                    .accessibilityIdentifier("setlist.name.field")
-                Button("Cancel", role: .cancel) { prompts.dismiss() }
-                Button(prompts.actionTitle) { prompts.confirmName() }
-                    .disabled(!prompts.canConfirm)
-                    .keyboardShortcut(.defaultAction)
-            } message: {
-                if let message = prompts.message { Text(message) }
+    final class Presenter: UIViewController {
+        var prompts: SetListPromptModel?
+        weak var alert: UIAlertController?
+        weak var confirm: UIAlertAction?
+        var shownKind: SetListPromptModel.Kind?
+
+        func sync(_ kind: SetListPromptModel.Kind?) {
+            guard kind != shownKind else { return }
+            // An action closes its alert itself; only a prompt withdrawn from
+            // code needs dismissing (and never one already on its way out).
+            if let alert, alert.presentingViewController != nil, !alert.isBeingDismissed {
+                alert.dismiss(animated: true)
             }
-            .alert(prompts.title, isPresented: $prompts.isConfirmingDelete) {
-                Button("Cancel", role: .cancel) { prompts.dismiss() }
-                Button("Delete", role: .destructive) { prompts.confirmDelete() }
-            } message: {
-                if let message = prompts.message { Text(message) }
+            alert = nil
+            shownKind = kind
+            guard let kind, let prompts else { return }
+            let alert = makeAlert(kind, prompts: prompts)
+            self.alert = alert
+            // Present once this controller is in a window; SwiftUI may update it first.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.alert === alert else { return }
+                var presenter: UIViewController = self
+                while let next = presenter.presentedViewController { presenter = next }
+                presenter.present(alert, animated: true)
             }
+        }
+
+        private func makeAlert(_ kind: SetListPromptModel.Kind, prompts: SetListPromptModel) -> UIAlertController {
+            let alert = UIAlertController(title: prompts.title, message: prompts.message, preferredStyle: .alert)
+            if case .delete = kind {
+                alert.view.accessibilityIdentifier = "setlist.delete.alert"
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in prompts.dismiss() })
+                alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in prompts.confirmDelete() })
+                return alert
+            }
+            alert.view.accessibilityIdentifier = "setlist.name.alert"
+            alert.addTextField { field in
+                field.placeholder = "Set list name"
+                field.text = prompts.name
+                field.autocapitalizationType = .sentences
+                field.clearButtonMode = .whileEditing
+                field.returnKeyType = .done
+                field.accessibilityIdentifier = "setlist.name.field"
+                field.addTarget(self, action: #selector(self.nameChanged(_:)), for: .editingChanged)
+            }
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in prompts.dismiss() })
+            let confirm = UIAlertAction(title: prompts.actionTitle, style: .default) { _ in prompts.confirmName() }
+            alert.addAction(confirm)
+            alert.preferredAction = confirm
+            self.confirm = confirm
+            confirm.isEnabled = prompts.canConfirm
+            return alert
+        }
+
+        @objc private func nameChanged(_ field: UITextField) {
+            guard let prompts else { return }
+            prompts.name = field.text ?? ""
+            confirm?.isEnabled = prompts.canConfirm
+            alert?.message = prompts.message
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Presenter {
+        let presenter = Presenter()
+        presenter.view.isHidden = true
+        return presenter
+    }
+
+    func updateUIViewController(_ presenter: Presenter, context: Context) {
+        presenter.prompts = prompts
+        presenter.sync(kind)
     }
 }

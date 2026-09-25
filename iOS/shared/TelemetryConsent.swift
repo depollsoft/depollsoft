@@ -112,6 +112,9 @@ struct PrivacyChoicesView: View {
         List {
             Section {
                 Text("Choose whether to share optional data to help improve this app. Both choices are off until you enable them. The app works either way. You can change these choices in Settings.")
+                    // A multi-line UITableViewCell label sat closer to the card's edges.
+                    .padding(.top, -3)
+                    .padding(.bottom, -10.0 / 3.0)
             }
             Section {
                 Toggle("Usage analytics", isOn: $model.analytics)
@@ -138,11 +141,13 @@ struct PrivacyChoicesView: View {
             .foregroundStyle(.tint)
         }
         .listStyle(.insetGrouped)
+        // UITableView's inset-grouped cards sit 20 pt in on a phone.
+        .contentMargins(.horizontal, 20, for: .scrollContent)
         .navigationTitle("Privacy choices")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", role: .cancel) { dismiss() }
+                CancelButton { dismiss() }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Save choices") {
@@ -163,5 +168,19 @@ extension TelemetryConsent {
         var top = presenter
         while let next = top.presentedViewController { top = next }
         showAdPrivacy?(top)
+    }
+}
+
+/// The system Cancel bar item: an ✕ on iOS 26, the word before it.
+private struct CancelButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .close, action: action)
+                .accessibilityLabel("Cancel")
+        } else {
+            Button("Cancel", role: .cancel, action: action)
+        }
     }
 }
