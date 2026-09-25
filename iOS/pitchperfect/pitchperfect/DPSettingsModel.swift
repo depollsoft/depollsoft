@@ -57,12 +57,14 @@ public extension Notification.Name {
             if (curUser!.providerData.count > 0) {
                 let providerData = curUser!.providerData.first!
                 switch(providerData.providerID) {
+                // Facebook and Google accounts can come without an email, and a
+                // phone account without its number; never crash reading them.
                 case FacebookAuthProviderID:
-                    return "Facebook \(providerData.email!)"
+                    return "Facebook \(providerData.email ?? "")"
                 case GoogleAuthProviderID:
-                    return "Google: \(providerData.email!)"
+                    return "Google: \(providerData.email ?? "")"
                 case PhoneAuthProviderID:
-                    return providerData.phoneNumber!
+                    return providerData.phoneNumber ?? "Current User: \(curUser!.uid)"
                 default:
                     return providerData.email ?? "Current User: \(curUser!.uid)"
                 }
@@ -99,9 +101,10 @@ public extension Notification.Name {
     
     @objc public static let sharedInstance: DPSettingsModel = DPSettingsModel()
     
-    private override init() {
+    /// Starts from whatever the user last chose. (Until the port this reset Toggle
+    /// Notes and Wake Lock to off at every launch, which the Objective-C model
+    /// and Android never did.) Internal so tests can make a fresh one.
+    override init() {
         super.init()
-        self.wakeLock = false
-        self.toggleNotes = false
     }
 }

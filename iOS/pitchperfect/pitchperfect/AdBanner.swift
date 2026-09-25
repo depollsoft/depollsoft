@@ -62,8 +62,16 @@ final class BannerHostView: UIView, BannerViewDelegate {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        banner.rootViewController = window?.rootViewController
+        banner.rootViewController = owningViewController
         reloadIfNeeded(force: true)
+    }
+
+    /// The controller the banner's screen belongs to, which presents the ad's
+    /// overlay (UIKit gave the banner its own screen's controller). The window's
+    /// root would already be presenting Settings when the banner is in it.
+    var owningViewController: UIViewController? {
+        sequence(first: self as UIResponder, next: \.next).lazy.compactMap { $0 as? UIViewController }.first
+            ?? window?.rootViewController
     }
 
     override func layoutSubviews() {

@@ -57,9 +57,24 @@ struct PrivacyChoices {
     }
 
     /// Presents Privacy choices from UIKit: a sheet with its own navigation bar.
+    /// `onDismiss` runs once the sheet has fully gone, however it closed.
     @objc static func present(from presenter: UIViewController) {
-        let host = UIHostingController(rootView: PrivacyChoicesSheet())
-        presenter.present(host, animated: true)
+        presenter.present(PrivacyChoicesHost(), animated: true)
+    }
+}
+
+/// Reports the dismissal only once it has finished: the ad-consent flow that
+/// follows presents from the root and gives up while anything is still
+/// presented. A form shown over the sheet (Ad privacy choices) is not a dismissal.
+final class PrivacyChoicesHost: UIHostingController<PrivacyChoicesSheet> {
+    init() { super.init(rootView: PrivacyChoicesSheet()) }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || presentingViewController == nil { TelemetryConsent.onDismiss?() }
     }
 }
 
@@ -93,13 +108,11 @@ final class PrivacyChoicesModel {
 }
 
 /// Privacy choices in its own navigation stack, as both apps present it.
-/// However it closes (Save, Cancel or a swipe), TelemetryConsent.onDismiss runs
-/// once, so the ad-consent flow can follow.
+/// Whoever presents it reports the dismissal (see PrivacyChoicesHost).
 struct PrivacyChoicesSheet: View {
     var body: some View {
         NavigationStack { PrivacyChoicesView() }
             .tint(Color(uiColor: .label))
-            .onDisappear { TelemetryConsent.onDismiss?() }
     }
 }
 

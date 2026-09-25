@@ -145,7 +145,8 @@ struct FirebaseAuthHost: View {
     let onSignIn: (Bool) -> Void
     let onDismiss: () -> Void
 
-    @State private var authService = FirebaseAuthHost.makeService()
+    @StateObject private var box = ModelBox(FirebaseAuthHost.makeService())
+    private var authService: AuthService { box.model }
     @State private var didFinish = false
 
     private static func makeService() -> AuthService {
@@ -251,10 +252,32 @@ extension View {
 
 // MARK: - The optional login screen
 
+/// When the login screen closes: at Skip, or once the sign-in sheet over it
+/// has gone after an account arrived (closing the screen while that sheet is
+/// still up would only take the sheet away).
+@Observable
+@MainActor
+final class LoginIntroModel {
+    var showingSignIn = false
+    private(set) var signedIn = false
+
+    func signIn() {
+        signedIn = false
+        showingSignIn = true
+    }
+
+    func accountArrived() { signedIn = true }
+
+    /// The sign-in sheet's presentation changed; true when the screen should close.
+    func signInSheetChanged(showing: Bool) -> Bool {
+        !showing && signedIn
+    }
+}
+
 /// Offered once, on the second launch, to anyone not signed in.
 struct LoginIntroScreen: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var showingSignIn = false
+    @State private var model = LoginIntroModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -265,7 +288,7 @@ struct LoginIntroScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
-            Button { showingSignIn = true } label: {
+            Button { model.signIn() } label: {
                 Text("Sign up or log in")
                     .font(.system(size: 15))
                     .frame(minHeight: 30)
@@ -280,7 +303,10 @@ struct LoginIntroScreen: View {
                 Button("Skip") { dismiss() }
             }
         }
-        .signInSheet(isPresented: $showingSignIn, onSignIn: { _ in dismiss() })
+        .signInSheet(isPresented: $model.showingSignIn, onSignIn: { _ in model.accountArrived() })
+        .onChange(of: model.showingSignIn) { _, showing in
+            if model.signInSheetChanged(showing: showing) { dismiss() }
+        }
     }
 }
 
