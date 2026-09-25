@@ -25,7 +25,7 @@ struct TagDetailScreen: View {
                 // keeps it off the column's unsafe strip, where the UIKit bar never went. (Drawing
                 // it back a pixel with an offset counts as touching again.)
                 pages
-                    .padding(.horizontal, 1 / displayScale)
+                    .padding(.horizontal, model.hasHorizontalSafeArea ? 1 / displayScale : 0)
             }
         }
         .navigationTitle(model.title)

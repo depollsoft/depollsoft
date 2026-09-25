@@ -117,6 +117,12 @@ final class TagDetailViewController: UIViewController {
         model.screenVisible = false
     }
 
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        let horizontal = view.safeAreaInsets.left > 0 || view.safeAreaInsets.right > 0
+        if model.hasHorizontalSafeArea != horizontal { model.hasHorizontalSafeArea = horizontal }
+    }
+
     private func updateExpanded() {
         let expanded = splitViewController.map { !$0.isCollapsed } ?? false
         if model.expanded != expanded { model.expanded = expanded }

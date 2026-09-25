@@ -121,6 +121,8 @@ final class TagDetailModel {
     weak var source: TMTagListSource? { didSet { sourceRevision += 1 } }
     /// Beside a list (the split is expanded); the bar grows the toggles and steppers.
     var expanded = false
+    /// The column has a horizontal safe area (beside a list on iPad, or landscape on iPhone).
+    var hasHorizontalSafeArea = false
     /// On screen, and the app active: the only time the quartet may move.
     var screenVisible = false
     var applicationActive = true
