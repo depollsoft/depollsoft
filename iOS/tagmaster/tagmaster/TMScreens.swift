@@ -117,6 +117,7 @@ import UIKit
         }
         navigator.controller = controller
         controller.searchModel = model
+        controller.pageColor = .systemGroupedBackground
         return controller
     }
 
@@ -128,6 +129,7 @@ import UIKit
         controller.onAppear = { _ in model.refresh() }
         navigator.controller = controller
         controller.settingsModel = model
+        controller.pageColor = .systemGroupedBackground
         return controller
     }
 

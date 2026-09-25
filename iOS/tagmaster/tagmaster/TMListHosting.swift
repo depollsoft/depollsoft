@@ -65,6 +65,8 @@ final class TMHostingController: UIHostingController<AnyView>, TMTagListSource {
     /// The models of screens that list no tags, for tests and the catalog.
     var searchModel: TMSearchModel?
     var settingsModel: TMSettingsModel?
+    /// The view's own colour beside the shared iPad watermark (grouped screens).
+    var pageColor: UIColor = .clear
     var onAppear: ((TMHostingController) -> Void)?
     var onWillDisappear: ((TMHostingController) -> Void)?
     var onDisappear: ((TMHostingController) -> Void)?
@@ -81,7 +83,7 @@ final class TMHostingController: UIHostingController<AnyView>, TMTagListSource {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .clear
+        view.backgroundColor = DPAppDelegate.hasSharedBackground() ? pageColor : .clear
         applyChrome()
     }
 

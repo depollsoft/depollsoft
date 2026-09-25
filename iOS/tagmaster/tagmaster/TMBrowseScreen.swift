@@ -53,6 +53,7 @@ struct TMBrowseScreen: View {
             ForEach(Array(TMBrowsePage.all.enumerated()), id: \.offset) { index, page in
                 // Each page draws the watermark in the one place Browse's own view held it.
                 TMQueryScreen(model: model.pages[index])
+                    .background { TMClearTabContainer() }
                     // Only the tab container is compact; pages keep the column's own size class.
                     .environment(\.horizontalSizeClass, sizeClass)
                     .tabItem {
@@ -65,7 +66,6 @@ struct TMBrowseScreen: View {
             }
         }
         .tint(TMTheme.accent)
-        .tmClearTabBackground()
         .tmTabBarNeverMinimizes()
         // A compact container keeps the bar at the foot of the screen on iPad too.
         .environment(\.horizontalSizeClass, .compact)
@@ -76,12 +76,6 @@ struct TMBrowseScreen: View {
 }
 
 extension View {
-    /// The page container stays clear, as TMPageViewController's did, so the
-    /// watermark behind it shows through.
-    func tmClearTabBackground() -> some View {
-        background { TMClearTabContainer() }
-    }
-
     @ViewBuilder
     func tmTabBarNeverMinimizes() -> some View {
         if #available(iOS 26.0, *) {
@@ -92,19 +86,19 @@ extension View {
     }
 }
 
-/// Finds the tab bar controller SwiftUI builds for a TabView and clears its view.
+/// Clears the views SwiftUI's TabView puts between a page and the screen (its
+/// tab bar controller's view and hosting views), as TMPageViewController's
+/// content view was clear, so the watermark behind shows through.
 private struct TMClearTabContainer: UIViewRepresentable {
     final class Probe: UIView {
         override func didMoveToWindow() {
             super.didMoveToWindow()
             DispatchQueue.main.async { [weak self] in
-                var responder: UIResponder? = self
-                while let next = responder?.next {
-                    if let tabs = next as? UITabBarController {
-                        tabs.view.backgroundColor = .clear
-                        return
-                    }
-                    responder = next
+                var view = self?.superview
+                while let current = view {
+                    if current.backgroundColor != nil { current.backgroundColor = .clear }
+                    if current.next is UITabBarController { break }
+                    view = current.superview
                 }
             }
         }

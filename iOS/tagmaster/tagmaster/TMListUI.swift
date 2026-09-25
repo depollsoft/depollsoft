@@ -94,7 +94,9 @@ struct TMWatermark: View {
 }
 
 /// A screen's backdrop: its page colour and the watermark. Beside the iPad split's
-/// one shared watermark every screen stays clear so it shows through once.
+/// one shared watermark it draws nothing: a grouped screen's colour then belongs
+/// on its hosting controller's view (`TMHostingController.pageColor`), where
+/// UIKit's sidebar treats it as the old screens' view background.
 struct TMScreenBackground: View {
     var grouped = false
 
