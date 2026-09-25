@@ -92,7 +92,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         let list = TMScreens.list(key: TagListBehaviorTests.key)
         let navigation = mountCapturingPushes(list)
         UIDriver(window).elements(labelPrefix: "Tag 1478").first?.accessibilityActivate()
-        let detail = navigation.pushed.last as? DPTagViewController
+        let detail = navigation.pushed.last as? TagDetailViewController
         XCTAssertEqual(detail?.tagId, 1478)
     }
 
@@ -181,8 +181,8 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
         ScreenCatalog.settle(0.1)
         alert?.tm_fire("Rename")
         ScreenCatalog.settle(0.1)
-        XCTAssertEqual(TMTagLists.name(for: TagListBehaviorTests.key), "Afterglow encore")
-        XCTAssertEqual(controller.navigationItem.title, "Afterglow encore")
+        spinUntil("the list is renamed") { TMTagLists.name(for: TagListBehaviorTests.key) == "Afterglow encore" }
+        spinUntil("the screen is retitled") { self.controller.navigationItem.title == "Afterglow encore" }
     }
 
     func testDeletingTheListConfirmsFirstAndThenLeavesTheScreen() {

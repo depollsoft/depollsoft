@@ -11,13 +11,6 @@
 import SwiftUI
 import UIKit
 
-/// A recoverable failure: what went wrong and, when it makes sense, how to try again.
-struct TMRecovery: Identifiable {
-    let id = UUID()
-    let message: String
-    let retry: (() -> Void)?
-}
-
 /// The Open Tag alert's field: digits only.
 struct TMOpenTagPrompt: Identifiable, Equatable {
     let id = UUID()
@@ -337,7 +330,7 @@ struct TMHomeScreen: View {
                     .foregroundStyle(loading ? Color(uiColor: .secondaryLabel) : Color(uiColor: .label))
                 Spacer(minLength: 8)
                 if loading {
-                    TMBarberPole(operationName: "Loading random tag").accessibilityHidden(true)
+                    TMBarberPole(compact: true).accessibilityHidden(true)
                 } else {
                     TMDisclosureChevron()
                 }
@@ -504,24 +497,6 @@ struct TMHomeCredits: View {
 }
 
 extension View {
-    /// "Couldn't complete request", with Retry when the failure can be retried.
-    func tmRecoveryAlert(_ recovery: Binding<TMRecovery?>) -> some View {
-        alert("Couldn't complete request",
-              isPresented: Binding(get: { recovery.wrappedValue != nil },
-                                   set: { if !$0 { recovery.wrappedValue = nil } }),
-              presenting: recovery.wrappedValue) { shown in
-            if let retry = shown.retry {
-                Button("Retry") {
-                    recovery.wrappedValue = nil
-                    retry()
-                }
-            }
-            Button("Cancel", role: .cancel) { recovery.wrappedValue = nil }
-        } message: { shown in
-            Text(shown.message)
-        }
-    }
-
     /// The Open Tag alert: a digits-only field, Cancel and Open.
     func tmOpenTagPrompt(_ prompt: Binding<TMOpenTagPrompt?>, open: @escaping () -> Void) -> some View {
         alert("Open Tag",
@@ -540,20 +515,3 @@ extension View {
     }
 }
 
-/// The barber-pole progress indicator.
-// Replace with the tag-detail branch's SwiftUI barber pole once both branches merge.
-struct TMBarberPole: UIViewRepresentable {
-    var operationName: String?
-
-    func makeUIView(context: Context) -> TMBarberPoleLoadingView {
-        let view = operationName.map { TMBarberPoleLoadingView(operationName: $0) } ?? TMBarberPoleLoadingView(frame: .zero)
-        view.startAnimating()
-        return view
-    }
-
-    func updateUIView(_ view: TMBarberPoleLoadingView, context: Context) {}
-
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: TMBarberPoleLoadingView, context: Context) -> CGSize? {
-        uiView.isCompact ? uiView.intrinsicContentSize : CGSize(width: proposal.width ?? uiView.intrinsicContentSize.width, height: 68)
-    }
-}

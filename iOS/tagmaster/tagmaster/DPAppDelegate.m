@@ -29,66 +29,10 @@
 
 #import "DPBarbershop.h"
 #import "DPJsonSerializer.h"
-#import "DPTagViewController.h"
-#import "TMQuartetStaffView.h"
-#import "TMQuartetArtwork.h"
 #import "tagmaster-Swift.h"
 
 NSNotificationName const TMTagListDidChangeNotification = @"TMTagListDidChangeNotification";
 NSNotificationName const TMTagSelectionDidChangeNotification = @"TMTagSelectionDidChangeNotification";
-
-/// Shown in the secondary column before a tag is chosen on iPad: the quartet
-/// staff at rest, over the same barber-pole background as the rest of the app.
-@interface TMTagPlaceholderController : UIViewController
-@end
-
-@implementation TMTagPlaceholderController
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    [DPAppDelegate setUpBackground:self.view];
-
-    TMQuartetStaffView *staff = [TMQuartetStaffView new];
-    staff.animationAllowed = NO;
-    staff.translatesAutoresizingMaskIntoConstraints = NO;
-
-    UILabel *heading = [UILabel new];
-    heading.text = @"Pick a tag";
-    UIFontDescriptor *descriptor = [[UIFont preferredFontForTextStyle:UIFontTextStyleTitle2].fontDescriptor
-        fontDescriptorByAddingAttributes:@{UIFontDescriptorTraitsAttribute: @{UIFontWeightTrait: @(UIFontWeightSemibold)}}];
-    heading.font = [UIFont fontWithDescriptor:descriptor size:0];
-    heading.adjustsFontForContentSizeCategory = YES;
-    heading.numberOfLines = 0;
-    heading.textAlignment = NSTextAlignmentCenter;
-    heading.textColor = UIColor.labelColor;
-    heading.accessibilityTraits |= UIAccessibilityTraitHeader;
-
-    UILabel *body = [UILabel new];
-    body.text = @"Choose a tag from the list. Its summary, tracks, sheet music, and videos open here.";
-    body.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
-    body.adjustsFontForContentSizeCategory = YES;
-    body.numberOfLines = 0;
-    body.textAlignment = NSTextAlignmentCenter;
-    body.textColor = UIColor.secondaryLabelColor;
-
-    UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[staff, heading, body]];
-    stack.axis = UILayoutConstraintAxisVertical;
-    stack.alignment = UIStackViewAlignmentCenter;
-    stack.spacing = 8;
-    [stack setCustomSpacing:24 afterView:staff];
-    stack.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:stack];
-    [NSLayoutConstraint activateConstraints:@[
-        [stack.centerXAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerXAnchor],
-        [stack.centerYAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerYAnchor],
-        [stack.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:24],
-        [stack.trailingAnchor constraintLessThanOrEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:-24],
-        [heading.widthAnchor constraintLessThanOrEqualToConstant:480],
-        [body.widthAnchor constraintLessThanOrEqualToConstant:480],
-        [staff.widthAnchor constraintEqualToConstant:TMQuartetWidth],
-        [staff.heightAnchor constraintEqualToConstant:TMQuartetHeight]
-    ]];
-}
-@end
 
 @interface DPAppDelegate () <UISplitViewControllerDelegate>
 @end

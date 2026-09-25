@@ -176,11 +176,9 @@ struct TMQueryScreen: View {
                     .onAppear { model.rowAppeared(index) }
                 }
                 if model.isLoading {
-                    TMBarberPole()
+                    TMBarberPole.listLoading()
                         .frame(maxWidth: .infinity)
                         .frame(height: 68)
-                        .accessibilityLabel("Loading tags")
-                        .accessibilityIdentifier("query.loading.barberpole")
                         .listRowInsets(EdgeInsets())
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
