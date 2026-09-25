@@ -107,7 +107,10 @@ new screens and changes need to keep doing:
   a difference and `:<App>:compareRoborazziDebug` writes `*_compare.png` diff images next to them.
   Roborazzi's comparison tolerates small differences by default, so judge an intended pixel-exact
   change by comparing the PNGs themselves. The goldens were first recorded from the View
-  implementation, and each Compose screen was diffed against them during the port.
+  implementation, and each Compose screen was diffed against them during the port. CI runs
+  `verifyRoborazziDebug` for every selected app and uploads the actual and comparison images when a
+  golden no longer matches. The screenshot setups pin the version name the about footers show, so
+  a release doesn't change the goldens.
 * Pitfalls:
   * An infinite `withFrameMillis` loop never lets the test clock go idle; use
     `withInfiniteAnimationFrameMillis`, which tests park, and test the animation's maths directly.
@@ -117,6 +120,9 @@ new screens and changes need to keep doing:
     synchronizes, so a loop polling model state must call `mainClock.advanceTimeBy` for animations
     to run. Semantics queries must not run on the main thread.
   * Test tags on nodes merged into a parent need `useUnmergedTree = true`.
-* Device-only suites (`src/androidTest`: store captures, drags, privacy consent, PDF rendering) have
-  no CI runner; run them with `./gradlew :<App>:connectedDebugAndroidTest` on an emulator, and the
-  store captures with `-Pandroid.testInstrumentationRunnerArguments.storeScreenshots=true`.
+* Device-only suites (`src/androidTest`: store captures, drags, privacy consent, PDF rendering)
+  are compiled by CI but not run; run them with `./gradlew :<App>:connectedDebugAndroidTest` on an
+  emulator, and the store captures with
+  `-Pandroid.testInstrumentationRunnerArguments.storeScreenshots=true`. Tag Master's suites that
+  change saved lists use `SavedListsSandbox`, which refuses to run while signed in and restores the
+  device's lists afterwards.
