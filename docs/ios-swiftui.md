@@ -246,16 +246,25 @@ each over an `@Observable` model.
   320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
   one watermark behind both columns (screens inside the split leave their own
   backdrop clear through `tmSharedWatermark` and `tmClearColumnBackground`), and
-  a chosen tag kept on top when the split collapses.
+  a chosen tag kept on top when the split collapses. The collapsed column is
+  stored (`preferredCompactColumn`), decided at collapse and then following
+  Back, as UIKit's top-column choice applied only at the moment of collapse.
+  The columns can only be made clear from iOS 18, so on iOS 17 every screen
+  keeps its own watermark (`TMSplitRoot.columnsCanBeClear`).
 - **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
   sheet music reader) and the tag beside the list, which it reuses from tag to
   tag so the open page survives. `show(_:)` makes each screen's model with its
   route, so a screen's `TMRouteNavigator` can remove exactly that screen and the
   tags it opens step through it (`TMListingSource`). Deep links
   (`tagmaster://tag/<id>`, `tagmaster:///open/tag/<id>`) keep the Objective-C
-  delegate's exact grammar in `TMDeepLink`.
+  delegate's exact grammar in `TMDeepLink`, and a linked tag steps through the
+  list on top of the list stack (`topListingSource`), as the delegate adopted
+  it. Each Browse page is its own list, so a tag keeps stepping through the page
+  it was opened from.
 - **Keyboard.** ⌘↑ / ⌘↓ are keyboard shortcuts on the detail's stepper buttons,
-  so they reach the detail from either column.
+  so they reach the detail from either column. SwiftUI keeps them registered on
+  the scene's root while the sheet music reader covers the detail, so they
+  still step (and close the reader) there.
 - **The bar.** Each screen's bar is SwiftUI toolbar content (`TMScreens`), with
   `TMEditButton` for Edit/Done. `tmCharcoalBar` reaches the UIKit navigation
   controller SwiftUI draws with to give it the charcoal appearance, set back
@@ -280,6 +289,27 @@ each over an `@Observable` model.
 - **Search.** The field keeps the bar and its Search action while in use
   (`searchPresentationToolbarBehavior(.avoidHidingContent)`), as the UIKit
   search controller did.
+- **Text size.** List text is set with `tmFont` / `tmLabelMetrics` and the
+  facts layout with the environment's `DynamicTypeSize`, so a text size change
+  (or a window's trait override in tests) re-renders it, as UILabel's
+  `adjustsFontForContentSizeCategory` did.
+- **Rows.** `TMTagStore` asks again for a tag that failed to load after 30
+  seconds, when the app becomes active and when the lists change, as the UIKit
+  cell fetched on every configure. A list naming a tag twice keys each row by
+  tag and occurrence (`TMListedTag`); catalog pages drop tags already shown.
+- **Deliberate differences, from the behaviour review.**
+  - Stepping to another tag rebuilds the pages, so each page starts at its top;
+    the selected page is kept. UIKit kept each scroll view's offset, which would
+    need the pages to go on showing the previous tag while the next loads.
+  - The detail counts as visible from the start of its appearance transition
+    (`onAppear`) to the end of its disappearance (`onDisappear`), not from
+    `viewDidAppear` to `viewWillDisappear`: a track keeps playing through a pop
+    transition, and a back swipe the user abandons no longer stops it.
+  - "Rated" survives a refresh of the same tag; UIKit reset it to "Rate".
+  - Before iOS 18 a list change arriving mid-scroll applies at once;
+    `onScrollPhaseChange` (iOS 18) is what holds it until the scroll ends.
+  - Swiping to delete a list closes the swipe before the confirmation, rather
+    than holding it half-open under it.
 - **Remaining differences from UIKit.** The detail catalog's iPad goldens were
   recaptured with the real Home in the list column (the first ones used an
   empty stand-in). In the iPad sidebar, tag rows' media marks sit about 1.7 pt
