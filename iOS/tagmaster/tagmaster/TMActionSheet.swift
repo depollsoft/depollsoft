@@ -74,7 +74,7 @@ struct TMActionSheet: UIViewControllerRepresentable {
             controller.sheet = sheet
             DispatchQueue.main.async {
                 guard controller.view.window != nil, controller.presentedViewController == nil else {
-                    isPresented = false
+                    controller.sheet = nil
                     return
                 }
                 controller.present(sheet, animated: true)

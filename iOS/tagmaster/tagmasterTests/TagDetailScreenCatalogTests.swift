@@ -313,7 +313,7 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         snap("phone-actions-light", settle: 1.5)
         dismissPresentations(in: detail)
         showPicker(in: detail)
-        snap("phone-picker-light", settle: 1.5)
+        snap("phone-picker-light", settle: 3)
         dismissPresentations(in: detail)
         showRating(in: detail)
         snap("phone-rating-light", settle: 1.5)
@@ -377,7 +377,7 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         _ = showOnPad(detail)
         waitForLoad(detail)
         showPicker(in: detail)
-        snap("pad-picker-light", settle: 1.5)
+        snap("pad-picker-light", settle: 3)
         dismissPresentations(in: detail)
     }
 }

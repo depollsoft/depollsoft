@@ -31,6 +31,8 @@ struct TagDetailScreen: View {
         .navigationTitle(model.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
+
+
         .focusEffectDisabled()
         .tmFollowsUIKitTint()
 
@@ -93,6 +95,7 @@ struct TagDetailScreen: View {
                                 label: model.isTeachable ? "Unmark as Teachable" : "Mark as Teachable",
                                 action: model.toggleTeachable)
                     TMBarButton("text.badge.plus", label: "Add to list") { model.showListPicker(from: .toolbar) }
+                        .accessibilityIdentifier("tag.addToList")
                         .tmListPicker(model: model, source: .toolbar)
                     refreshItem
                     shareItem
@@ -101,6 +104,7 @@ struct TagDetailScreen: View {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     refreshItem
                     TMBarButton("tag", label: "Favorite and Teachable options", action: model.showActions)
+                        .accessibilityIdentifier("tag.actions")
                         .background(TMActionSheet(isPresented: $model.actionsPresented, actions: model.tagActions))
                         .tmListPicker(model: model, source: .actions)
                     shareItem

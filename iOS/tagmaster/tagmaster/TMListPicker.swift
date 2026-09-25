@@ -87,8 +87,9 @@ final class TMListPickerModel {
 struct TMListPicker: View {
     /// The rows set their accent explicitly, as the UIKit cells did.
     private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @State var model: TMListPickerModel
+    /// Closes the picker; the presenter owns how.
+    var onDone: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -105,6 +106,11 @@ struct TMListPicker: View {
                 .accessibilityIdentifier("picker.row.new")
             }
             .listStyle(.insetGrouped)
+            // Popovers and sheets draw their own glass, which UIKit's table let show through.
+            .scrollContentBackground(.hidden)
+            // A hardware keyboard would otherwise light the first row as focused.
+            .focusEffectDisabled()
+            .modifier(TMClearNavigationContainer())
             .modifier(TMInsetGroupMargins())
             .focusEffectDisabled()
             .accessibilityIdentifier("picker.table")
@@ -112,12 +118,10 @@ struct TMListPicker: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    TMDoneButton { dismiss() }
+                    TMDoneButton { if let onDone { onDone() } else { dismiss() } }
                         .accessibilityIdentifier("picker.done")
                 }
             }
-            // The grabber belongs to the iPhone sheet, not the iPad popover.
-            .presentationDragIndicator(sizeClass == .compact ? .visible : .hidden)
             .alert("New list", isPresented: $model.namingNewList) {
                 TextField("List name", text: $model.newListName)
                     .textInputAutocapitalization(.sentences)
@@ -150,16 +154,129 @@ struct TMListPicker: View {
 }
 
 extension View {
-    /// Presents the list picker for the detail's tag while `source` is the one that opened it.
+    /// Presents the list picker for the detail's tag while `source` is the one that opened
+    /// it, anchored to this view.
     func tmListPicker(model: TagDetailModel, source: TMPickerSource) -> some View {
-        popover(isPresented: Binding(get: { model.pickerPresented(from: source) },
-                                     set: { if !$0, model.pickerSource == source { model.pickerSource = nil } }),
-                attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-            TMListPicker(model: TMListPickerModel(tagId: model.tagId))
-                .frame(idealWidth: 340, idealHeight: 420)
-                .presentationCompactAdaptation(.sheet)
-                .presentationDetents([.medium, .large])
+        background(TMListPickerPresenter(
+            isPresented: Binding(get: { model.pickerPresented(from: source) },
+                                 set: { if !$0, model.pickerSource == source { model.pickerSource = nil } }),
+            tagId: model.tagId))
+    }
+}
+
+/// Presents the picker the way UIKit did: a popover with its arrow on whatever opened it
+/// on iPad (a bar button, a chip), a half-height sheet with a grabber on iPhone.
+/// SwiftUI's popover inside a toolbar lands on top of the button without an arrow.
+struct TMListPickerPresenter: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
+    let tagId: Int32
+
+    /// Reports when it lands in a window: SwiftUI builds toolbar items twice (once off
+    /// screen to measure them), and only the copy in the window may present.
+    final class AnchorView: UIView {
+        var movedToWindow: () -> Void = {}
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            movedToWindow()
         }
+    }
+
+    final class Controller: UIViewController {
+        weak var picker: UIViewController?
+        var wanted = false
+        var makePicker: (Controller) -> UIViewController = { _ in UIViewController() }
+
+        override func loadView() {
+            let anchor = AnchorView()
+            anchor.isUserInteractionEnabled = false
+            anchor.backgroundColor = .clear
+            anchor.movedToWindow = { [weak self] in self?.sync() }
+            view = anchor
+        }
+
+        /// Presents or dismisses to match `wanted`, once this copy is on screen.
+        func sync() {
+            if wanted, picker == nil, let window = view.window, let root = window.rootViewController {
+                // Another copy of this control may already have put a picker up.
+                let top = TMListPickerPresenter.top(root)
+                guard !(top is TMListPickerPresenter.TMListPickerHost) else { return }
+                let picker = makePicker(self)
+                self.picker = picker
+                top.present(picker, animated: UIView.areAnimationsEnabled)
+            } else if !wanted, let picker {
+                self.picker = nil
+                if picker.presentingViewController != nil { picker.dismiss(animated: true) }
+            }
+        }
+    }
+
+    final class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate, UIPopoverPresentationControllerDelegate {
+        var dismissed: () -> Void = {}
+        func presentationControllerDidDismiss(_ presentationController: UIPresentationController) { dismissed() }
+        // A popover stays a popover on iPad even in a narrow column.
+        func adaptivePresentationStyle(for controller: UIPresentationController,
+                                       traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+            traitCollection.userInterfaceIdiom == .pad ? .none : .pageSheet
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        let binding = $isPresented
+        let coordinator = context.coordinator
+        coordinator.dismissed = { binding.wrappedValue = false }
+        let tagId = tagId
+        controller.makePicker = { controller in
+            let picker = TMListPickerHost(rootView: TMListPicker(
+                model: TMListPickerModel(tagId: tagId),
+                onDone: { [weak controller] in
+                    controller?.picker?.dismiss(animated: true)
+                    controller?.picker = nil
+                    binding.wrappedValue = false
+                }))
+            picker.view.backgroundColor = .clear
+            if controller.traitCollection.userInterfaceIdiom == .pad {
+                picker.modalPresentationStyle = .popover
+                // UIKit sized the navigation controller's list at 340 × 420 and added its bar.
+                picker.preferredContentSize = CGSize(width: 340, height: 420 + 63)
+                let popover = picker.popoverPresentationController
+                // Anchored to the button's rect in the window rather than to the view inside
+                // the bar's glass, so the popover sits below the bar with its arrow, as a
+                // bar button item's did.
+                if let window = controller.view.window {
+                    popover?.sourceView = window
+                    let button = controller.view.convert(controller.view.bounds, to: window)
+                    popover?.sourceRect = button
+                } else {
+                    popover?.sourceView = controller.view
+                    popover?.sourceRect = controller.view.bounds
+                }
+                popover?.permittedArrowDirections = [.up, .down]
+                popover?.delegate = coordinator
+            } else {
+                picker.modalPresentationStyle = .pageSheet
+                picker.sheetPresentationController?.detents = [.medium(), .large()]
+                picker.sheetPresentationController?.prefersGrabberVisible = true
+                picker.presentationController?.delegate = coordinator
+            }
+            return picker
+        }
+        controller.wanted = isPresented
+        // Let the bar finish placing this copy before anchoring to it.
+        DispatchQueue.main.async { controller.sync() }
+    }
+
+    /// Marks a presented picker, so only one is ever up.
+    final class TMListPickerHost: UIHostingController<TMListPicker> {}
+
+    /// The controller currently on top, which is the one that may present.
+    static func top(_ controller: UIViewController) -> UIViewController {
+        var top = controller
+        while let presented = top.presentedViewController, !presented.isBeingDismissed { top = presented }
+        return top
     }
 }
 
@@ -224,6 +341,18 @@ private struct TMInsetGroupMargins: ViewModifier {
     func body(content: Content) -> some View {
         if sizeClass == .compact {
             content.contentMargins(.horizontal, 25.33, for: .scrollContent)
+        } else {
+            content
+        }
+    }
+}
+
+
+/// Lets the popover's or sheet's own glass show through the navigation container.
+private struct TMClearNavigationContainer: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.containerBackground(.clear, for: .navigation)
         } else {
             content
         }
