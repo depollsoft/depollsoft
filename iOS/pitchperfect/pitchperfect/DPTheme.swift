@@ -24,11 +24,6 @@ import UIKit
 
     @objc public static let plateGround = dyn(rgb(0xDADBDC), rgb(0x0E0F10))
     @objc public static let plateSurface = dyn(rgb(0xE7E8E9), rgb(0x16181A))
-    @objc public static func styleListCell(_ cell: UITableViewCell) {
-        cell.backgroundColor = .clear
-        cell.contentView.backgroundColor = .clear
-        cell.backgroundConfiguration = UIBackgroundConfiguration.clear()
-    }
     @objc public static let plateInk = dyn(rgb(0x1C1E20), rgb(0xD9DBDD))
     @objc public static let plateInkSecondary = dyn(rgb(0x55585C), rgb(0x898D92))
     @objc public static let plateHairline = dyn(rgb(0xB7B9BC), rgb(0x2C2F33))
@@ -54,6 +49,16 @@ import UIKit
         UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
     }
 
+    private static var staffTiles: [Bool: UIImage] = [:]
+
+    /// One tile of the etched-staff panel, drawn once per appearance.
+    static func staffTileImage(dark: Bool) -> UIImage {
+        if let tile = staffTiles[dark] { return tile }
+        let tile = staffTile(dark: dark)
+        staffTiles[dark] = tile
+        return tile
+    }
+
     private static func staffTile(dark: Bool) -> UIImage {
         let size = CGSize(width: 430, height: 239)
         let markColor = dark ? rgb(0x898D92) : rgb(0x55585C)
@@ -68,12 +73,6 @@ import UIKit
         }
     }
 
-    /// The etched-staff panel: the app's heritage staff background as engraving.
-    @objc public static func staffBackgroundColor() -> UIColor {
-        UIColor { traits in
-            UIColor(patternImage: staffTile(dark: traits.userInterfaceStyle == .dark))
-        }
-    }
 
     private static let themeKey = "depollsoft.pitchperfect.theme"
 

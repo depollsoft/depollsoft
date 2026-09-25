@@ -6,31 +6,10 @@
 //  Copyright © 2021 DepollSoft. All rights reserved.
 //
 
+import Combine
 import Foundation
 
-@objc public class DPCommon: NSObject {
-    @objc public static func openSettings(_ viewController: UIViewController, barButtonItem: UIBarButtonItem) {
-        let settings = DPSettingsViewController.sharedInstance()!
-        let navigationController = UINavigationController(
-            rootViewController: settings
-        )
-        configureInstrumentChrome(navigationController)
-        navigationController.modalTransitionStyle = .coverVertical
-        navigationController.modalPresentationStyle = .automatic
-        viewController.present(navigationController, animated: true)
-    }
-    
-    @objc public static func configureInstrumentChrome(_ navigationController: UINavigationController) {
-        // Leave the Liquid Glass background untouched; only the Oswald title
-        // and label tint ride on top via the legacy attributes.
-        navigationController.navigationBar.titleTextAttributes = [
-            .foregroundColor: UIColor.label,
-            .font: UIFont(name: "Oswald-Medium", size: 19)
-                ?? UIFont.preferredFont(forTextStyle: .headline),
-        ]
-        navigationController.navigationBar.tintColor = .label
-    }
-
+enum DPCommon {
     private static let barButtonLabels = [
         "checkmark": "Done",
         "xmark": "Close",
@@ -44,51 +23,18 @@ import Foundation
         "list.bullet": "Set lists",
     ]
 
-    private static func barButtonImage(_ systemName: String) -> UIImage? {
-        UIImage(
-            systemName: systemName,
-            withConfiguration: UIImage.SymbolConfiguration(
-                pointSize: 17,
-                weight: .regular,
-                scale: .medium
-            )
-        )
+    /// What VoiceOver (and the UI tests) call a bar button drawn from `systemName`.
+    static func accessibilityLabel(forSymbol systemName: String) -> String {
+        barButtonLabels[systemName] ?? systemName
     }
+}
 
-    private static func label(_ item: UIBarButtonItem, systemName: String) -> UIBarButtonItem {
-        item.accessibilityIdentifier = systemName
-        item.accessibilityLabel = barButtonLabels[systemName] ?? systemName
-        return item
-    }
-
-    @objc public static func barButton(
-        systemName: String,
-        target: Any,
-        selector: Selector
-    ) -> UIBarButtonItem {
-        label(
-            UIBarButtonItem(
-                image: barButtonImage(systemName),
-                style: .plain,
-                target: target,
-                action: selector
-            ),
-            systemName: systemName
-        )
-    }
-
-    /// The same bar button, but presenting a menu instead of firing an action.
-    @objc public static func menuBarButton(
-        systemName: String,
-        menu: UIMenu
-    ) -> UIBarButtonItem {
-        label(
-            UIBarButtonItem(image: barButtonImage(systemName), menu: menu),
-            systemName: systemName
-        )
-    }
-
-    @objc public static func getSettingsButton(target: Any, selector: Selector) -> UIBarButtonItem {
-        barButton(systemName: "gearshape", target: target, selector: selector)
-    }
+/// Holds a view's model for as long as the view lives, building it once.
+/// `@State`'s initial value is evaluated every time the view struct is
+/// recreated (and then discarded), which for a model that observes
+/// notifications or starts an auth listener is real work; `@StateObject`
+/// evaluates its initial value only once.
+final class ModelBox<Model: AnyObject>: ObservableObject {
+    let model: Model
+    init(_ model: Model) { self.model = model }
 }

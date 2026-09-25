@@ -11,113 +11,200 @@
 //  empty field is not yet a mistake, so it keeps the example hint instead.
 //
 
-import Foundation
-import ObjectiveC
+import SwiftUI
 import UIKit
 
-@objc public final class SetListPrompts: NSObject {
+@Observable
+@MainActor
+final class SetListPromptModel {
     /// Shown under the field of the new-set-list alert until the name needs correcting.
-    @objc public static let exampleHint = "For example “Saturday show”"
+    static let exampleHint = "For example “Saturday show”"
 
-    /// Address-only key for the association that keeps a validator alive.
-    private static var validatorKey: UInt8 = 0
-
-    private let excluding: String?
-    private let defaultMessage: String?
-    private weak var alert: UIAlertController?
-    private weak var confirmAction: UIAlertAction?
-
-    private init(excluding: String?, defaultMessage: String?) {
-        self.excluding = excluding
-        self.defaultMessage = defaultMessage
+    enum Kind: Equatable {
+        case create
+        case rename(DPSongList)
+        case delete(DPSongList)
     }
 
-    /// The "New set list" alert. `commit` receives the normalized, already-validated name.
-    @objc public static func createAlert(commit: @escaping (String) -> Void) -> UIAlertController {
-        makeAlert(title: "New set list",
-                  actionTitle: "Create",
-                  initialName: nil,
-                  excluding: nil,
-                  defaultMessage: exampleHint,
-                  commit: commit)
+    private let model: DPSongsModel
+    private(set) var kind: Kind?
+    var name = ""
+    private var commitName: ((String) -> Void)?
+    private var commitDelete: (() -> Void)?
+
+    init(model: DPSongsModel = .sharedInstance) {
+        self.model = model
     }
 
-    /// The "Rename set list" alert, prefilled with the list's display name.
-    @objc public static func renameAlert(for list: DPSongList,
-                                         commit: @escaping (String) -> Void) -> UIAlertController {
-        makeAlert(title: "Rename set list",
-                  actionTitle: "Rename",
-                  initialName: DPSongsModel.sharedInstance.displayName(for: list),
-                  excluding: list.id,
-                  defaultMessage: nil,
-                  commit: commit)
+    func create(commit: @escaping (String) -> Void) {
+        name = ""
+        commitName = commit
+        kind = .create
     }
 
-    private static func makeAlert(title: String,
-                                  actionTitle: String,
-                                  initialName: String?,
-                                  excluding: String?,
-                                  defaultMessage: String?,
-                                  commit: @escaping (String) -> Void) -> UIAlertController {
-        let prompt = SetListPrompts(excluding: excluding, defaultMessage: defaultMessage)
-        let alert = UIAlertController(title: title, message: defaultMessage, preferredStyle: .alert)
-        alert.view.accessibilityIdentifier = "setlist.name.alert"
-        alert.addTextField { field in
-            field.placeholder = "Set list name"
-            field.text = initialName
-            field.autocapitalizationType = .sentences
-            field.clearButtonMode = .whileEditing
-            field.returnKeyType = .done
-            field.accessibilityIdentifier = "setlist.name.field"
-            field.addTarget(prompt, action: #selector(nameChanged(_:)), for: .editingChanged)
+    func rename(_ list: DPSongList, commit: @escaping (String) -> Void) {
+        name = model.displayName(for: list)
+        commitName = commit
+        kind = .rename(list)
+    }
+
+    func delete(_ list: DPSongList, confirm: @escaping () -> Void) {
+        commitDelete = confirm
+        kind = .delete(list)
+    }
+
+    func dismiss() {
+        kind = nil
+        commitName = nil
+        commitDelete = nil
+    }
+
+    // MARK: Naming
+
+    var title: String {
+        switch kind {
+        case .create: return "New set list"
+        case .rename: return "Rename set list"
+        case .delete(let list): return "Delete “\(model.displayName(for: list))”?"
+        case nil: return ""
         }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        let confirm = UIAlertAction(title: actionTitle, style: .default) { [weak alert] _ in
-            let typed = alert?.textFields?.first?.text ?? ""
-            guard DPSongsModel.sharedInstance.validateName(typed, excluding: excluding) == nil else { return }
-            commit(DPSongsModel.normalizeName(typed))
-        }
-        alert.addAction(confirm)
-        alert.preferredAction = confirm
-        prompt.alert = alert
-        prompt.confirmAction = confirm
-        // The text field does not retain its target, and nothing else owns the
-        // validator; the alert it validates does, for exactly as long as it lives.
-        objc_setAssociatedObject(alert, &SetListPrompts.validatorKey, prompt, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        prompt.validate(initialName ?? "")
-        return alert
     }
 
-    @objc private func nameChanged(_ field: UITextField) {
-        validate(field.text ?? "")
+    var actionTitle: String {
+        if case .rename = kind { return "Rename" }
+        return "Create"
     }
 
-    private func validate(_ name: String) {
-        let problem = DPSongsModel.sharedInstance.nameErrorMessage(name, excluding: excluding)
-        confirmAction?.isEnabled = problem == nil
-        // Nothing typed yet is not a mistake worth reporting; keep the hint.
+    private var excluding: String? {
+        if case .rename(let list) = kind { return list.id }
+        return nil
+    }
+
+    private var defaultMessage: String? {
+        if case .create = kind { return Self.exampleHint }
+        return nil
+    }
+
+    var problem: String? { model.nameErrorMessage(name, excluding: excluding) }
+    var canConfirm: Bool { problem == nil }
+
+    /// The hint while nothing is typed; the reason once a typed name is unusable.
+    var message: String? {
+        if case .delete(let list) = kind { return Self.deleteMessage(songCount: list.songs.count) }
         let untouched = DPSongsModel.normalizeName(name).isEmpty
-        alert?.message = untouched ? defaultMessage : (problem ?? defaultMessage)
+        return untouched ? defaultMessage : (problem ?? defaultMessage)
     }
 
-    /// The confirmation every set-list delete goes through, naming the list and
-    /// the songs that leave with it.
-    @objc public static func deleteAlert(for list: DPSongList,
-                                         confirm: @escaping () -> Void) -> UIAlertController {
-        let model = DPSongsModel.sharedInstance
-        let count = list.songs.count
-        let message: String
+    func confirmName() {
+        let commit = commitName
+        let typed = name
+        let excluded = excluding
+        dismiss()
+        guard model.validateName(typed, excluding: excluded) == nil else { return }
+        commit?(DPSongsModel.normalizeName(typed))
+    }
+
+    func confirmDelete() {
+        let confirm = commitDelete
+        dismiss()
+        confirm?()
+    }
+
+    static func deleteMessage(songCount count: Int) -> String {
         switch count {
-        case 0: message = "This set list is empty."
-        case 1: message = "This removes the set list and its 1 song. My Songs is not affected."
-        default: message = "This removes the set list and its \(count) songs. My Songs is not affected."
+        case 0: return "This set list is empty."
+        case 1: return "This removes the set list and its 1 song. My Songs is not affected."
+        default: return "This removes the set list and its \(count) songs. My Songs is not affected."
         }
-        let alert = UIAlertController(title: "Delete “\(model.displayName(for: list))”?",
-                                      message: message,
-                                      preferredStyle: .alert)
-        alert.view.accessibilityIdentifier = "setlist.delete.alert"
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in confirm() })
-        return alert
+    }
+}
+
+extension View {
+    /// Presents whichever set-list alert `prompts` holds.
+    ///
+    /// These are system alerts presented directly rather than through SwiftUI's
+    /// `.alert`, whose content is fixed once shown: naming validates as the user
+    /// types, updating the message and enabling the confirming action live.
+    func setListPrompts(_ prompts: SetListPromptModel) -> some View {
+        background(SetListAlertPresenter(prompts: prompts, kind: prompts.kind).frame(width: 0, height: 0))
+    }
+}
+
+private struct SetListAlertPresenter: UIViewControllerRepresentable {
+    let prompts: SetListPromptModel
+    /// Read in the modifier's body so a change re-runs `updateUIViewController`.
+    let kind: SetListPromptModel.Kind?
+
+    final class Presenter: UIViewController {
+        var prompts: SetListPromptModel?
+        weak var alert: UIAlertController?
+        weak var confirm: UIAlertAction?
+        var shownKind: SetListPromptModel.Kind?
+
+        func sync(_ kind: SetListPromptModel.Kind?) {
+            guard kind != shownKind else { return }
+            // An action closes its alert itself; only a prompt withdrawn from
+            // code needs dismissing (and never one already on its way out).
+            if let alert, alert.presentingViewController != nil, !alert.isBeingDismissed {
+                alert.dismiss(animated: true)
+            }
+            alert = nil
+            shownKind = kind
+            guard let kind, let prompts else { return }
+            let alert = makeAlert(kind, prompts: prompts)
+            self.alert = alert
+            // Present once this controller is in a window; SwiftUI may update it first.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.alert === alert else { return }
+                var presenter: UIViewController = self
+                while let next = presenter.presentedViewController { presenter = next }
+                presenter.present(alert, animated: true)
+            }
+        }
+
+        private func makeAlert(_ kind: SetListPromptModel.Kind, prompts: SetListPromptModel) -> UIAlertController {
+            let alert = UIAlertController(title: prompts.title, message: prompts.message, preferredStyle: .alert)
+            if case .delete = kind {
+                alert.view.accessibilityIdentifier = "setlist.delete.alert"
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in prompts.dismiss() })
+                alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in prompts.confirmDelete() })
+                return alert
+            }
+            alert.view.accessibilityIdentifier = "setlist.name.alert"
+            alert.addTextField { field in
+                field.placeholder = "Set list name"
+                field.text = prompts.name
+                field.autocapitalizationType = .sentences
+                field.clearButtonMode = .whileEditing
+                field.returnKeyType = .done
+                field.accessibilityIdentifier = "setlist.name.field"
+                field.addTarget(self, action: #selector(self.nameChanged(_:)), for: .editingChanged)
+            }
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in prompts.dismiss() })
+            let confirm = UIAlertAction(title: prompts.actionTitle, style: .default) { _ in prompts.confirmName() }
+            alert.addAction(confirm)
+            alert.preferredAction = confirm
+            self.confirm = confirm
+            confirm.isEnabled = prompts.canConfirm
+            return alert
+        }
+
+        @objc private func nameChanged(_ field: UITextField) {
+            guard let prompts else { return }
+            prompts.name = field.text ?? ""
+            confirm?.isEnabled = prompts.canConfirm
+            alert?.message = prompts.message
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Presenter {
+        let presenter = Presenter()
+        presenter.view.isHidden = true
+        return presenter
+    }
+
+    func updateUIViewController(_ presenter: Presenter, context: Context) {
+        presenter.prompts = prompts
+        presenter.sync(kind)
     }
 }

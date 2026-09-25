@@ -2,521 +2,491 @@
 //  FavoritesBehaviorTests.swift
 //  tagmasterTests
 //
-//  In-process replacements for FavoritesUITests and the home-screen half of
-//  tagmasterUITests. The XCUITests seeded favourites with the launch argument
-//  `-depollsoft.pitchperfect.lists`, which is only a UserDefaults override, so
-//  these tests write the same key and drive the real DPHomeViewController.
-//
-//  Home now has three groups - destinations, Lists, Favorites - so the same
-//  tests also cover the Lists group: its rows, its editing and its menus.
+//  Home: its destinations, the Lists group, the Favorites and the credits.
+//  The model is exercised directly for its rules; the mounted SwiftUI screen
+//  is driven through its accessibility tree for what the user sees and taps.
+//  Favourites and lists are seeded through the same defaults keys the app
+//  reads, so the storage path under test is the production one.
 //
 
 import XCTest
 import UIKit
 @testable import tagmaster
 
-/// Home's sections, as `TMHomeSection` names them in DPHomeViewController.h.
-private let navigationSection = 0
-private let listsSection = 1
-private let favoritesSection = 2
-
+@MainActor
 final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
-    private var navigation: PushCapturingNavigation!
+    private var navigator: RecordingNavigator!
+    private var controller: TMHostedScreen!
+    private var driver: UIDriver!
 
-    @discardableResult
-    private func home(favorites: [Int] = [],
-                      lists: [(key: String, name: String, ids: [Int])] = []) -> DPHomeViewController {
-        // Every favourite row must resolve from the cache. An uncached row sends
-        // DPTagCell to the live catalog and reloads its row from the completion,
-        // which would land in whichever test is running by then.
-        favorites.forEach { seedCachedTag(id: Int32($0), title: "Tag \($0)") }
-        if !favorites.isEmpty || !lists.isEmpty { seedLists(favorite: favorites, lists: lists) }
-        let home = DPHomeViewController(style: .grouped)
-        navigation = mountCapturingPushes(home)
-        home.viewWillAppear(false)
-        home.viewDidAppear(false)
-        settle()
-        return home
-    }
-
-    private func rowTitles(_ home: DPHomeViewController, section: Int) -> [String] {
-        let table = home.tableView!
-        return (0..<table.numberOfRows(inSection: section)).map {
-            home.tableView(table, cellForRowAt: IndexPath(row: $0, section: section)).textLabel?.text ?? ""
-        }
-    }
-
-    private func detailTitles(_ home: DPHomeViewController, section: Int) -> [String?] {
-        let table = home.tableView!
-        return (0..<table.numberOfRows(inSection: section)).map {
-            home.tableView(table, cellForRowAt: IndexPath(row: $0, section: section)).detailTextLabel?.text
-        }
-    }
+    private var model: TMHomeModel { controller.listing as! TMHomeModel }
 
     private static let twoLists: [(key: String, name: String, ids: [Int])] = [
         (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [669, 1478]),
         (key: "chorus-warmups-list", name: "Chorus warmups", ids: [122])
     ]
 
+    nonisolated override func tearDown() {
+        MainActor.assumeIsolated {
+            if window != nil { dismissPresented() }
+            driver = nil
+            controller = nil
+            navigator = nil
+        }
+        super.tearDown()
+    }
+
+    @discardableResult
+    private func home(favorites: [Int] = [],
+                      lists: [(key: String, name: String, ids: [Int])] = [],
+                      catalog: TMCatalog = TMFixtureCatalog().catalog) -> TMHomeModel {
+        // Every favourite row resolves from the cache, never the catalog.
+        favorites.forEach { seedCachedTag(id: Int32($0), title: "Tag \($0)") }
+        if !favorites.isEmpty || !lists.isEmpty { seedLists(favorite: favorites, lists: lists) }
+        navigator = RecordingNavigator()
+        controller = TMScreens.home(navigator: navigator, catalog: catalog)
+        driver = mountScreen(controller)
+        return model
+    }
+
+    private func index(of label: String) -> Int? { driver.labels.firstIndex(of: label) }
+
     // MARK: - Home list contents
-    // Replaces tagmasterUITests.testAppHasContent / testMainContentExists /
-    // testFavoritesOrListExists and FavoritesUITests.testHasListOrContent /
-    // testFavoritesLabelExists, which only asserted that *something* existed.
 
     func testHomeListsEveryNavigationRowInOrder() {
-        let home = self.home()
-        XCTAssertEqual(home.numberOfSections(in: home.tableView), 3)
-        XCTAssertEqual(rowTitles(home, section: navigationSection),
-                       ["Browse", "Random Tag", "Open Tag"])
+        home()
+        XCTAssertEqual(TMHomeModel.navigationTitles, ["Browse", "Random Tag", "Open Tag"])
+        let positions = TMHomeModel.navigationTitles.compactMap(index(of:))
+        XCTAssertEqual(positions.count, 3)
+        XCTAssertEqual(positions, positions.sorted(), "Browse, Random Tag, Open Tag, top to bottom")
     }
 
     func testHomeNamesItsGroups() {
-        let home = self.home(favorites: [669])
-        XCTAssertNil(home.tableView(home.tableView, titleForHeaderInSection: navigationSection))
-        XCTAssertEqual(home.tableView(home.tableView, titleForHeaderInSection: listsSection), "Lists")
-        XCTAssertEqual(home.tableView(home.tableView, titleForHeaderInSection: favoritesSection), "Favorites")
+        home(favorites: [669])
+        let lists = index(of: "Lists"), favorites = index(of: "Favorites"), open = index(of: "Open Tag")
+        XCTAssertNotNil(lists)
+        XCTAssertNotNil(favorites)
+        XCTAssertLessThan(open ?? .max, lists ?? 0, "The destinations have no header of their own")
+        XCTAssertLessThan(lists ?? .max, favorites ?? 0)
     }
 
     func testHomeExplainsHowToAddFavoritesWhenThereAreNone() {
-        let home = self.home()
-        XCTAssertEqual(home.tableView.numberOfRows(inSection: favoritesSection), 0)
-        XCTAssertEqual(home.tableView(home.tableView, titleForFooterInSection: favoritesSection),
+        home()
+        XCTAssertTrue(model.favorites.isEmpty)
+        XCTAssertTrue(driver.exists(label: TMHomeModel.noFavoritesFooter))
+        XCTAssertEqual(TMHomeModel.noFavoritesFooter,
                        "No favorites yet. Open a tag and use Favorite and Teachable options to add a favorite.")
+    }
+
+    func testTheFavoritesExplanationGoesOnceThereIsAFavorite() {
+        home(favorites: [669])
+        XCTAssertFalse(driver.exists(label: TMHomeModel.noFavoritesFooter))
     }
 
     // MARK: - The Lists group
 
     func testListsGroupHoldsTeachableThenEveryCustomListThenNewList() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
-        XCTAssertEqual(detailTitles(home, section: listsSection), ["0 tags", "2 tags", "1 tag", nil])
+        home(lists: FavoritesBehaviorTests.twoLists)
+        let ids = driver.identifiers.filter { $0.hasPrefix("home.list") }
+        XCTAssertEqual(ids, ["home.lists.teachable", "home.list.afterglow-set-k3f9",
+                             "home.list.chorus-warmups-list", "home.lists.new"])
+        XCTAssertEqual(model.listNames["afterglow-set-k3f9"], "Afterglow set")
+        XCTAssertEqual(model.listCounts, ["afterglow-set-k3f9": 2, "chorus-warmups-list": 1])
+        XCTAssertEqual(model.teachableCount, 0)
+        XCTAssertEqual(driver.label(id: "home.lists.teachable")?.contains("0 tags"), true)
+        XCTAssertEqual(driver.label(id: "home.list.afterglow-set-k3f9")?.contains("2 tags"), true)
+        XCTAssertEqual(driver.label(id: "home.list.chorus-warmups-list")?.contains("1 tag"), true)
+        XCTAssertEqual(TMHomeModel.countLabel(1), "1 tag")
+        XCTAssertEqual(TMHomeModel.countLabel(0), "0 tags")
     }
 
     func testListsGroupIsJustTeachableAndNewListWhenNoListsExist() {
-        let home = self.home()
-        XCTAssertEqual(rowTitles(home, section: listsSection), ["Teachable Tags", "New list…"])
-    }
-
-    func testEveryListsRowIsIdentifiedAndReachable() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-        let table = home.tableView!
-        let identifiers = (0..<table.numberOfRows(inSection: listsSection)).map {
-            home.tableView(table, cellForRowAt: IndexPath(row: $0, section: listsSection)).accessibilityIdentifier
-        }
-        XCTAssertEqual(identifiers, ["home.lists.teachable",
-                                     "home.list.afterglow-set-k3f9",
-                                     "home.list.chorus-warmups-list",
-                                     "home.lists.new"])
-        let newList = home.tableView(table, cellForRowAt: IndexPath(row: 3, section: listsSection))
-        XCTAssertNotNil(newList.imageView?.image, "New list carries the plus symbol")
+        home()
+        XCTAssertEqual(driver.identifiers.filter { $0.hasPrefix("home.list") },
+                       ["home.lists.teachable", "home.lists.new"])
+        XCTAssertEqual(driver.label(id: "home.lists.new")?.contains("New list…"), true)
     }
 
     func testTappingTeachableAndACustomListOpensThoseScreens() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-
-        home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 0, section: listsSection))
-        XCTAssertTrue(navigation.pushed.last is DPTeachableTagsController)
-
-        home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 2, section: listsSection))
-        let list = try? XCTUnwrap(navigation.pushed.last as? TMTagListController)
-        XCTAssertEqual(list?.listKey, "chorus-warmups-list")
+        home(lists: FavoritesBehaviorTests.twoLists)
+        driver.tap(id: "home.lists.teachable")
+        driver.tap(id: "home.list.chorus-warmups-list")
+        XCTAssertEqual(navigator.destinations, [.teachable, .list("chorus-warmups-list")])
     }
 
-    func testOnlyCustomListRowsCanBeEditedOrMoved() {
-        let home = self.home(favorites: [669], lists: FavoritesBehaviorTests.twoLists)
-        let table = home.tableView!
-
-        for row in 0..<table.numberOfRows(inSection: navigationSection) {
-            let path = IndexPath(row: row, section: navigationSection)
-            XCTAssertFalse(home.tableView(table, canEditRowAt: path))
-            XCTAssertFalse(home.tableView(table, canMoveRowAt: path))
-        }
-        // Teachable Tags (0) and New list (3) are permanent.
-        for (row, editable) in [(0, false), (1, true), (2, true), (3, false)] {
-            let path = IndexPath(row: row, section: listsSection)
-            XCTAssertEqual(home.tableView(table, canEditRowAt: path), editable, "Lists row \(row)")
-            XCTAssertEqual(home.tableView(table, canMoveRowAt: path), editable, "Lists row \(row)")
-        }
-        XCTAssertTrue(home.tableView(table, canEditRowAt: IndexPath(row: 0, section: favoritesSection)))
-    }
-
-    func testDraggingAListStaysBetweenTeachableAndNewList() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-        let source = IndexPath(row: 2, section: listsSection)
-
-        for proposed in [IndexPath(row: 0, section: listsSection),
-                         IndexPath(row: 2, section: navigationSection)] {
-            XCTAssertEqual(home.tableView(home.tableView, targetIndexPathForMoveFromRowAt: source,
-                                          toProposedIndexPath: proposed),
-                           IndexPath(row: 1, section: listsSection))
-        }
-        for proposed in [IndexPath(row: 3, section: listsSection),
-                         IndexPath(row: 0, section: favoritesSection)] {
-            XCTAssertEqual(home.tableView(home.tableView, targetIndexPathForMoveFromRowAt: source,
-                                          toProposedIndexPath: proposed),
-                           IndexPath(row: 2, section: listsSection))
-        }
+    func testTheRealNavigatorPushesTheListScreens() {
+        seedLists(lists: FavoritesBehaviorTests.twoLists)
+        let home = TMScreens.home()
+        mountInNavigation(home)
+        ScreenCatalog.settle(0.2)
+        let driver = UIDriver(window)
+        driver.tap(id: "home.lists.teachable")
+        driver.tap(id: "home.list.chorus-warmups-list")
+        let path = home.router?.path ?? []
+        XCTAssertEqual(path.count, 2)
+        XCTAssertTrue(path[0].opensList(key: TMTagLists.teachableKey))
+        XCTAssertTrue(path[1].opensList(key: "chorus-warmups-list"))
+        XCTAssertTrue(TMScreens.isHome(home))
     }
 
     func testReorderingAListRowReordersTheStoredLists() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-        home.tableView(home.tableView,
-                       moveRowAt: IndexPath(row: 1, section: listsSection),
-                       to: IndexPath(row: 2, section: listsSection))
-
+        home(lists: FavoritesBehaviorTests.twoLists)
+        // SwiftUI reports a drop as the gap below the last custom list.
+        model.moveList(from: [0], to: 2)
         XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list", "afterglow-set-k3f9"])
-        home.tableView.reloadData()
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Chorus warmups", "Afterglow set", "New list…"])
+        XCTAssertEqual(model.customKeys, ["chorus-warmups-list", "afterglow-set-k3f9"])
+        model.moveList(from: [1], to: 0)
+        XCTAssertEqual(TMTagLists.customKeys(), ["afterglow-set-k3f9", "chorus-warmups-list"])
     }
 
     func testDeletingAListRowAsksBeforeAnythingIsLost() {
-        let home = HomePresentationFixture(style: .grouped)
-        seedLists(lists: FavoritesBehaviorTests.twoLists)
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-
-        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: listsSection))
-        let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
-        XCTAssertEqual(alert?.title, "Delete “Afterglow set”?")
-        XCTAssertEqual(alert?.message,
+        home(lists: FavoritesBehaviorTests.twoLists)
+        model.confirmDelete("afterglow-set-k3f9")
+        XCTAssertEqual(model.deletePrompt?.title, "Delete “Afterglow set”?")
+        XCTAssertEqual(model.deletePrompt?.message,
                        "This removes the list and its 2 tags from your lists. Tags stay in the catalog.")
-        XCTAssertEqual(alert?.actions.map { $0.title ?? "" }, ["Cancel", "Delete"])
-        XCTAssertEqual(alert?.actions.last?.style, .destructive)
         XCTAssertEqual(TMTagLists.customKeys().count, 2, "Nothing goes before the confirmation is answered")
 
+        let alert = presentedAlert()
+        XCTAssertEqual(alert?.title, "Delete “Afterglow set”?")
+        XCTAssertEqual(Set(alert?.actions.map { $0.title ?? "" } ?? []), ["Cancel", "Delete"])
+        XCTAssertEqual(alert?.actions.first { $0.title == "Delete" }?.style, .destructive)
+        XCTAssertEqual(alert?.actions.first { $0.title == "Cancel" }?.style, .cancel)
         alert?.tm_fire("Delete")
         XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list"])
-        home.requestedPresentation = nil
+        XCTAssertEqual(model.customKeys, ["chorus-warmups-list"])
     }
 
-    func testASwipedListRowStaysOpenUnderTheConfirmationAndClosesOnlyOnce() throws {
-        let home = HomePresentationFixture(style: .grouped)
-        seedLists(lists: FavoritesBehaviorTests.twoLists)
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-        // What a swipe leaves behind: the table is editing a row although the
-        // screen as a whole is not.
-        home.tableView.setEditing(true, animated: false)
-
-        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: listsSection))
-        XCTAssertTrue(home.tableView.isEditing,
-                      "The swipe holds its place while the confirmation is up")
-        XCTAssertFalse(home.isEditing)
-
-        let alert = try XCTUnwrap(home.requestedPresentation as? UIAlertController)
-        alert.tm_fire("Cancel")
-        settle()
-        XCTAssertFalse(home.tableView.isEditing, "Answering the alert closes the swipe")
-        XCTAssertEqual(TMTagLists.customKeys().count, 2, "Cancel keeps the list")
-        home.requestedPresentation = nil
+    func testCancellingADeleteKeepsTheList() {
+        home(lists: FavoritesBehaviorTests.twoLists)
+        model.confirmDelete("afterglow-set-k3f9")
+        presentedAlert()?.tm_fire("Cancel")
+        ScreenCatalog.settle(0.1)
+        XCTAssertNil(model.deletePrompt)
+        XCTAssertEqual(TMTagLists.customKeys().count, 2)
     }
 
-    func testDeletingFromTheEditButtonLeavesEditModeAlone() throws {
-        let home = HomePresentationFixture(style: .grouped)
-        seedLists(lists: FavoritesBehaviorTests.twoLists)
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-        home.setEditing(true, animated: false)
-
-        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: listsSection))
-        let alert = try XCTUnwrap(home.requestedPresentation as? UIAlertController)
-        alert.tm_fire("Delete")
-        settle()
-
-        XCTAssertTrue(home.isEditing, "A red-circle delete does not end the edit session")
+    func testDeletingFromTheEditButtonLeavesEditModeAlone() {
+        home(lists: FavoritesBehaviorTests.twoLists)
+        driver.tap(label: "Edit")
+        XCTAssertTrue(model.isEditing)
+        model.deleteList("afterglow-set-k3f9")
+        XCTAssertTrue(model.isEditing, "A red-circle delete does not end the edit session")
         XCTAssertEqual(TMTagLists.customKeys(), ["chorus-warmups-list"])
-        home.setEditing(false, animated: false)
-        home.requestedPresentation = nil
+        model.deleteList("chorus-warmups-list")
+        XCTAssertFalse(model.isEditing, "…until nothing is left to edit")
+        ScreenCatalog.settle(0.1)
+        XCTAssertFalse(driver.isEnabled(label: "Edit"))
+        XCTAssertFalse(driver.exists(label: "Done"))
     }
 
-    func testAListRowOffersRenameAndDeleteFromItsContextMenu() {
-        let home = self.home(lists: FavoritesBehaviorTests.twoLists)
-        XCTAssertNotNil(home.tableView(home.tableView,
-                                       contextMenuConfigurationForRowAt: IndexPath(row: 1, section: listsSection),
-                                       point: .zero))
-        let menu = home.tm_menu(forListKey: "afterglow-set-k3f9")
-        XCTAssertEqual(menu?.children.compactMap { ($0 as? UIAction)?.title }, ["Rename…", "Delete…"])
-        XCTAssertEqual((menu?.children.last as? UIAction)?.attributes.contains(.destructive), true)
-
-        XCTAssertNil(home.tableView(home.tableView,
-                                    contextMenuConfigurationForRowAt: IndexPath(row: 0, section: listsSection),
-                                    point: .zero),
-                     "Teachable Tags cannot be renamed or deleted")
-        XCTAssertNil(home.tableView(home.tableView,
-                                    contextMenuConfigurationForRowAt: IndexPath(row: 3, section: listsSection),
-                                    point: .zero))
+    func testAListRowOffersRenameAndDeleteFromItsMenu() {
+        home(lists: FavoritesBehaviorTests.twoLists)
+        model.rename("afterglow-set-k3f9")
+        XCTAssertEqual(model.namePrompt?.title, "Rename list")
+        XCTAssertEqual(model.namePrompt?.text, "Afterglow set")
+        model.namePrompt = nil
+        model.confirmDelete("chorus-warmups-list")
+        XCTAssertEqual(model.deletePrompt?.key, "chorus-warmups-list")
     }
 
     func testNewListRowNamesAndCreatesTheListInPlace() {
-        let home = HomePresentationFixture(style: .grouped)
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-
-        home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 1, section: listsSection))
-        let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
+        home()
+        driver.tap(id: "home.lists.new")
+        let alert = presentedAlert()
         XCTAssertEqual(alert?.title, "New list")
         XCTAssertEqual(alert?.message, "For example “Easy tags” or “High and lows”")
         XCTAssertEqual(alert?.textFields?.first?.placeholder, "List name")
         XCTAssertEqual(alert?.actions.map { $0.title ?? "" }, ["Cancel", "Create"])
 
         alert?.tm_type("Afterglow set")
+        ScreenCatalog.settle(0.1)
         alert?.tm_fire("Create")
+        ScreenCatalog.settle(0.1)
         XCTAssertEqual(TMTagLists.customKeys().map { TMTagLists.name(for: $0) }, ["Afterglow set"])
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow set", "New list…"])
-        home.requestedPresentation = nil
+        XCTAssertEqual(model.customKeys.map { model.listNames[$0] }, ["Afterglow set"])
+        XCTAssertFalse(model.pendingRefresh, "Home's own change leaves nothing waiting behind it")
     }
 
     func testRenamingAListFromHomeRewritesItsRow() {
-        let home = HomePresentationFixture(style: .grouped)
-        seedLists(lists: FavoritesBehaviorTests.twoLists)
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-
-        home.promptRenameList("afterglow-set-k3f9")
-        let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
+        home(lists: FavoritesBehaviorTests.twoLists)
+        model.rename("afterglow-set-k3f9")
+        let alert = presentedAlert()
         XCTAssertEqual(alert?.title, "Rename list")
         XCTAssertEqual(alert?.textFields?.first?.text, "Afterglow set")
-
         alert?.tm_type("Afterglow encore")
+        ScreenCatalog.settle(0.1)
         alert?.tm_fire("Rename")
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow encore", "Chorus warmups", "New list…"])
-        home.requestedPresentation = nil
+        ScreenCatalog.settle(0.1)
+        XCTAssertEqual(TMTagLists.name(for: "afterglow-set-k3f9"), "Afterglow encore")
+        XCTAssertEqual(driver.label(id: "home.list.afterglow-set-k3f9")?.contains("Afterglow encore"), true)
     }
 
     // MARK: - Seeded favourites
-    // Replaces FavoritesUITests' reliance on the launch-argument fixture.
 
     func testFavoritesSeededInDefaultsBecomeHomeRowsInOrder() {
         let seeded = [669, 1478, 122]
-        let home = self.home(favorites: seeded)
-
+        home(favorites: seeded)
         XCTAssertEqual(DPAppDelegate.favorites(), seeded,
                        "The lists defaults key is the app's own favourites storage")
-        XCTAssertEqual(home.tableView.numberOfRows(inSection: favoritesSection), seeded.count)
-
-        for (row, tagId) in seeded.enumerated() {
-            let cell = home.tableView(home.tableView, cellForRowAt: IndexPath(row: row, section: favoritesSection))
-            let tagCell = try? XCTUnwrap(cell as? DPTagCell)
-            XCTAssertEqual(tagCell?.tagId, Int32(tagId), "Row \(row) is bound to tag \(tagId)")
-            XCTAssertEqual(cell.accessoryType, .disclosureIndicator)
-        }
+        XCTAssertEqual(model.favorites, seeded)
+        // The list is lazy: bring the last favourite into view before reading the rows.
+        model.didStep(to: 122)
+        ScreenCatalog.settle(0.3)
+        let rows = driver.elements(labelPrefix: "Tag ").compactMap(\.accessibilityLabel)
+        let shown = seeded.filter { id in rows.contains { $0.contains("Tag ID \(id)") } }
+        XCTAssertTrue(shown.contains(122), "The last favourite can be brought into view")
+        let order = shown.compactMap { id in rows.firstIndex { $0.contains("Tag ID \(id)") } }
+        XCTAssertEqual(order, order.sorted(), "Rows keep the stored order")
     }
 
     func testAFavoriteRowAnnouncesItsTagBeforeTheTagHasLoaded() {
-        let tagId: Int32 = 990_001
-        seedCachedTag(id: tagId)
-        let cell = DPTagCell(style: .default, reuseIdentifier: "Tag")
-        cell.tagId = tagId
-        // Back to the not-yet-loaded state the row starts in.
-        cell.tagInstance = nil
-
-        XCTAssertEqual(cell.accessibilityLabel, "Tag 990001. Open to load details.")
+        XCTAssertEqual(TMTagRowContent(tagId: 990_001, tag: nil).accessibilityLabel,
+                       "Tag 990001. Open to load details.")
+        XCTAssertEqual(TMTagRowContent(tagId: 990_001, tag: nil).details, "Open tag to load details")
+        XCTAssertEqual(TMTagRowContent(tagId: 990_001, tag: nil).title, "Tag")
     }
 
     func testFavoriteRowDescribesItsTagOnceLoadedFromCache() {
-        let home = self.home(favorites: [669])
         seedCachedTag(id: 669, title: "Cheer Up, Charlie")
-        home.tableView.reloadData()
-        let cell = home.tableView(home.tableView, cellForRowAt: IndexPath(row: 0, section: favoritesSection))
-
-        XCTAssertEqual(cell.accessibilityLabel?.contains("Cheer Up, Charlie"), true)
-        XCTAssertEqual(cell.accessibilityLabel?.contains("Tag ID 669"), true)
-        XCTAssertEqual(cell.accessibilityLabel?.contains("Sheet music available"), true)
-        XCTAssertEqual(cell.accessibilityLabel?.contains("Learning tracks available"), true)
+        seedLists(favorite: [669])
+        navigator = RecordingNavigator()
+        controller = TMScreens.home(navigator: navigator)
+        driver = mountScreen(controller)
+        let label = driver.elements(labelPrefix: "Cheer Up, Charlie").first?.accessibilityLabel
+        XCTAssertEqual(label?.contains("Tag ID 669"), true)
+        XCTAssertEqual(label?.contains("Sheet music available"), true)
+        XCTAssertEqual(label?.contains("Learning tracks available"), true)
     }
 
     // MARK: - Editing
-    // Replaces FavoritesUITests.testSwipeOnFavoriteIfExists, which only checked
-    // that a swipe did not crash.
 
     func testDeletingAFavoriteRowRemovesThatFavorite() {
-        let home = self.home(favorites: [669, 1478, 122])
-        home.tableView(home.tableView, commit: .delete, forRowAt: IndexPath(row: 1, section: favoritesSection))
-
+        home(favorites: [669, 1478, 122])
+        model.removeFavorites(at: [1])
         XCTAssertEqual(DPAppDelegate.favorites(), [669, 122])
-        home.tableView.reloadData()
-        XCTAssertEqual(home.tableView.numberOfRows(inSection: favoritesSection), 2)
+        XCTAssertEqual(model.favorites, [669, 122])
     }
 
     func testReorderingAFavoriteRowReordersTheStoredList() {
-        let home = self.home(favorites: [669, 1478, 122])
-        home.tableView(home.tableView,
-                       moveRowAt: IndexPath(row: 0, section: favoritesSection),
-                       to: IndexPath(row: 2, section: favoritesSection))
+        home(favorites: [669, 1478, 122])
+        model.moveFavorite(from: [0], to: 3)
         XCTAssertEqual(DPAppDelegate.favorites(), [1478, 122, 669])
-    }
-
-    func testDraggingAFavoriteIntoAnotherGroupKeepsItInFavorites() {
-        let home = self.home(favorites: [669, 1478])
-        let target = home.tableView(home.tableView,
-                                    targetIndexPathForMoveFromRowAt: IndexPath(row: 1, section: favoritesSection),
-                                    toProposedIndexPath: IndexPath(row: 2, section: navigationSection))
-        XCTAssertEqual(target, IndexPath(row: 0, section: favoritesSection))
+        model.moveFavorite(from: [2], to: 0)
+        XCTAssertEqual(DPAppDelegate.favorites(), [669, 1478, 122])
     }
 
     func testEditButtonIsEnabledForFavoritesOrForListsOfTheirOwn() {
-        let empty = self.home()
-        XCTAssertFalse(empty.editButtonItem.isEnabled)
+        home()
+        XCTAssertFalse(driver.isEnabled(label: "Edit"))
+        clearLists()
+        home(favorites: [669])
+        XCTAssertTrue(driver.isEnabled(label: "Edit"))
+        clearLists()
+        home(lists: FavoritesBehaviorTests.twoLists)
+        XCTAssertTrue(driver.isEnabled(label: "Edit"), "Lists alone are worth an Edit button")
+    }
 
-        let favorited = self.home(favorites: [669])
-        XCTAssertTrue(favorited.editButtonItem.isEnabled)
-
-        let listed = self.home(lists: FavoritesBehaviorTests.twoLists)
-        XCTAssertTrue(listed.editButtonItem.isEnabled, "Lists alone are worth an Edit button")
+    func testTheEditButtonDrivesTheListsEditMode() {
+        home(favorites: [669])
+        driver.tap(label: "Edit")
+        XCTAssertTrue(model.isEditing)
+        driver.tap(label: "Done")
+        XCTAssertFalse(model.isEditing)
     }
 
     // MARK: - Navigation
-    // Replaces tagmasterUITests.testCanTapContentIfExists /
-    // testSearchButtonOrFieldExists / testCanInteractWithSearch and
-    // FavoritesUITests.testCanTapFavoriteIfExists, all of which only asserted
-    // that the app stayed in the foreground.
 
-    func testHomeOffersSearchInItsNavigationBar() {
-        let home = self.home()
-        let search = home.navigationItem.rightBarButtonItem
-        XCTAssertNotNil(search)
-        XCTAssertEqual(search?.accessibilityLabel, "Search")
-        XCTAssertEqual(home.navigationItem.title, "Tag Master")
-        XCTAssertEqual(home.navigationItem.leftBarButtonItem, home.editButtonItem)
+    func testHomeOffersSearchAndSettingsInItsNavigationBar() {
+        home()
+        XCTAssertEqual(controller.navigationItem.title, "Tag Master")
+        XCTAssertEqual(controller.navigationItem.largeTitleDisplayMode, .always)
+        let edit = driver.element(label: "Edit")?.accessibilityFrame ?? .null
+        let search = driver.element(label: "Search")?.accessibilityFrame ?? .null
+        let settings = driver.element(label: "Settings")?.accessibilityFrame ?? .null
+        XCTAssertLessThan(edit.midX, settings.midX, "Edit leads")
+        XCTAssertLessThan(settings.midX, search.midX, "Search stays outermost")
+        driver.tap(label: "Search")
+        driver.tap(label: "Settings")
+        XCTAssertEqual(navigator.destinations, [.search, .settings])
+        XCTAssertEqual(controller.navigationItem.backButtonTitle, "Home")
+        XCTAssertFalse(driver.exists(label: "Settings") && TMHomeModel.navigationTitles.contains("Settings"))
     }
 
-    func testHomeOffersSettingsAsAnIconBesideSearchNotAsARow() {
-        let home = self.home()
-        let labels = home.navigationItem.rightBarButtonItems?.map { $0.accessibilityLabel ?? "" }
-        XCTAssertEqual(labels, ["Search", "Settings"])
-        XCTAssertFalse(rowTitles(home, section: 0).contains("Settings"))
+    func testTappingTheBarIconsOpensSettingsAndSearch() {
+        home()
+        driver.tap(label: "Settings")
+        driver.tap(label: "Search")
+        XCTAssertEqual(navigator.destinations, [.settings, .search])
     }
 
-    func testTappingTheSettingsIconOpensSettings() {
-        let home = self.home()
-        let settings = home.navigationItem.rightBarButtonItems!.last!
-        _ = settings.target?.perform(settings.action, with: settings)
-        XCTAssertTrue(navigation.pushed.last is DPSettingsController)
-    }
-
-    func testTappingSearchOpensTheSearchScreen() {
-        let home = self.home()
-        let search = home.navigationItem.rightBarButtonItem!
-
-        _ = search.target?.perform(search.action, with: search)
-
-        XCTAssertTrue(navigation.pushed.last is DPSearchViewController)
-    }
-
-    func testEachNavigationRowOpensItsOwnScreen() {
-        let home = self.home()
-        // Settings lives in the navigation bar now, so Browse is the only row that pushes a screen.
-        let expected: [(row: Int, destination: AnyClass)] = [
-            (0, DPBrowseViewController.self)
-        ]
-        for (row, destination) in expected {
-            home.tableView(home.tableView, didSelectRowAt: IndexPath(row: row, section: navigationSection))
-            XCTAssertTrue(type(of: navigation.pushed.last!) == destination,
-                          "Row \(row) should open \(destination)")
-        }
-        XCTAssertEqual(navigation.pushed.count, expected.count)
+    func testBrowseRowOpensBrowse() {
+        home()
+        driver.tap(label: "Browse")
+        XCTAssertEqual(navigator.destinations, [.browse])
     }
 
     func testTappingAFavoriteOpensThatTag() {
-        let home = self.home(favorites: [669, 1478])
+        home(favorites: [669, 1478])
+        let row = driver.elements(labelPrefix: "Tag 669").first
+        XCTAssertNotNil(row)
+        XCTAssertTrue(row?.accessibilityActivate() ?? false)
+        ScreenCatalog.settle(0.05)
+        XCTAssertEqual(navigator.shownTags, [669])
+    }
 
-        home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 0, section: favoritesSection))
+    // MARK: - Open Tag
 
-        let detail = try? XCTUnwrap(navigation.pushed.last as? DPTagViewController)
-        XCTAssertEqual(detail?.tagId, 669)
+    func testOpenTagAsksForAnIdAndOpensIt() {
+        home()
+        driver.tap(label: "Open Tag")
+        let alert = presentedAlert()
+        XCTAssertEqual(alert?.title, "Open Tag")
+        XCTAssertEqual(alert?.message, "Enter Tag ID")
+        XCTAssertEqual(alert?.textFields?.count, 1)
+        XCTAssertEqual(alert?.textFields?.first?.keyboardType, .decimalPad)
+        XCTAssertEqual(Set(alert?.actions.map { $0.title ?? "" } ?? []), ["Cancel", "Open"])
+        XCTAssertEqual(alert?.actions.first { $0.title == "Cancel" }?.style, .cancel)
+        alert?.tm_type("1809")
+        ScreenCatalog.settle(0.1)
+        alert?.tm_fire("Open")
+        ScreenCatalog.settle(0.1)
+        XCTAssertEqual(navigator.shownTags, [1809])
+    }
+
+    func testOpenTagKeepsOnlyDigitsAndIgnoresAnEmptyOrZeroId() {
+        XCTAssertEqual(TMOpenTagPrompt.filter("12a3-4 "), "1234")
+        XCTAssertEqual(TMOpenTagPrompt.filter("abc"), "")
+        XCTAssertNil(TMOpenTagPrompt(text: "").tagId)
+        XCTAssertNil(TMOpenTagPrompt(text: "0").tagId)
+        XCTAssertNil(TMOpenTagPrompt(text: "99999999999").tagId, "Beyond a tag id's range")
+        XCTAssertEqual(TMOpenTagPrompt(text: "42").tagId, 42)
+
+        home()
+        model.openTagPrompt = TMOpenTagPrompt(text: "")
+        model.commitOpenTag()
+        XCTAssertEqual(navigator.shownTags, [])
+        XCTAssertNil(model.openTagPrompt)
+    }
+
+    // MARK: - Random Tag
+
+    func testRandomTagPicksFromEverythingMatchingTheFilters() {
+        let fixtures = TMFixtureCatalog(available: 45)
+        home(catalog: fixtures.catalog)
+        model.randomTag()
+        spinUntil("a tag opens") { !self.navigator.shownTags.isEmpty }
+        XCTAssertEqual(fixtures.queries.count, 2, "One query counts the matches, one fetches the pick")
+        XCTAssertEqual(fixtures.queries.first?.count, 0)
+        XCTAssertEqual(fixtures.queries.last?.count, 1)
+        XCTAssertEqual(fixtures.queries.first?.query, TMRandomTagFilters.query())
+        XCTAssertEqual(fixtures.queries.first?.query.fieldList, "id")
+        let start = fixtures.queries.last?.start ?? -1
+        XCTAssertTrue((0..<45).contains(start))
+        XCTAssertEqual(navigator.shownTags, [3000 + start])
+        XCTAssertFalse(model.randomBusy)
+    }
+
+    func testRandomTagShowsItsProgressOnItsOwnRowAndIgnoresRepeatTaps() {
+        let fixtures = TMFixtureCatalog(available: 45)
+        let gate = DispatchSemaphore(value: 0)
+        fixtures.gate = gate
+        home(catalog: fixtures.catalog)
+        driver.tap(label: "Random Tag")
+        XCTAssertTrue(model.randomBusy)
+        spinUntil("the row says it is loading") { self.driver.exists(label: "Random Tag, loading") }
+        model.randomTag()
+        gate.signal()
+        gate.signal()
+        spinUntil("a tag opens") { !self.navigator.shownTags.isEmpty }
+        XCTAssertEqual(fixtures.queries.count, 2, "A second tap while busy starts nothing")
+        spinUntil("the row settles") { self.driver.exists(label: "Random Tag") }
+    }
+
+    func testRandomTagExplainsWhenNothingMatchesAndCanRetry() {
+        let fixtures = TMFixtureCatalog(available: 0)
+        home(catalog: fixtures.catalog)
+        model.randomTag()
+        spinUntil("a recovery is offered") { self.model.recovery != nil }
+        XCTAssertEqual(model.recovery?.message,
+                       "No tag could be selected. Check your connection or adjust Random Tag Filters in Settings, then try again.")
+        let alert = presentedAlert()
+        XCTAssertEqual(alert?.title, "Couldn't complete request")
+        XCTAssertEqual(alert?.actions.map { $0.title ?? "" }.sorted(), ["Cancel", "Retry"])
+        fixtures.available = 3
+        alert?.tm_fire("Retry")
+        spinUntil("the retry opens a tag") { !self.navigator.shownTags.isEmpty }
+    }
+
+    func testRandomTagSaysWhenTheCatalogCannotBeReached() {
+        home(catalog: TMFixtureCatalog(available: nil).catalog)
+        model.randomTag()
+        spinUntil("a recovery is offered") { self.model.recovery != nil }
+        XCTAssertEqual(model.recovery?.message,
+                       "A random tag couldn't be loaded. Check your connection and try again.")
+    }
+
+    // MARK: - Credits
+
+    func testCreditsLinkToTheirPages() {
+        home()
+        let expected = ["home.credit.attribution": "https://www.barbershoptags.com",
+                        "home.credit.developer": "https://apps.depoll.com",
+                        "home.credit.terms": "https://apps.depoll.com/terms-of-use",
+                        "home.credit.donate": "https://www.davidpoll.com/applications/tag-master/donate"]
+        for (id, url) in expected.sorted(by: { $0.key < $1.key }) {
+            XCTAssertTrue(driver.traits(id: id).contains(.link), "\(id) reads as a link")
+            driver.tap(id: id)
+            XCTAssertEqual(navigator.openedURLs.last?.absoluteString, url)
+        }
+        let year = Calendar.current.component(.year, from: Date())
+        XCTAssertEqual(driver.label(id: "home.credit.developer"), "DepollSoft © \(year)")
     }
 
     // MARK: - Reacting to changes elsewhere
 
     func testHomeReportsItsFavoritesAsTheListSourceForStepping() {
-        let home = self.home(favorites: [669, 1478, 122])
-        XCTAssertEqual(home.tm_listedTagIds().map(\.intValue), [669, 1478, 122])
+        home(favorites: [669, 1478, 122])
+        XCTAssertEqual(controller.tm_listedTagIds().map(\.intValue), [669, 1478, 122])
+        controller.tm_didStep(toTagId: 1478)
+        XCTAssertEqual(model.selectedTagId, 1478)
+        XCTAssertEqual(model.scrollTarget, 1478)
     }
 
-    func testAListArrivingWhileHomeIsBusyIsShownAsSoonAsItIsNot() {
-        let home = self.home(lists: [FavoritesBehaviorTests.twoLists[0]])
-        let listsRows = { home.tableView.numberOfRows(inSection: listsSection) }
-        XCTAssertEqual(listsRows(), 3)
-
-        // A sync from another device lands while Home is animating a change of
-        // its own, the one moment a reload would fight that animation.
-        home.tm_applyingLocalListChange = true
+    func testAListArrivingMidScrollIsShownOnceTheScrollEnds() {
+        home(lists: [FavoritesBehaviorTests.twoLists[0]])
+        model.isScrolling = true
         _ = TMTagLists.createList(named: "Chorus warmups")
-        home.tm_applyingLocalListChange = false
-        settle()
-        XCTAssertEqual(listsRows(), 3, "Home leaves its table alone while it is busy")
-        XCTAssertTrue(home.tm_pendingListRefresh, "…but remembers what it has not shown")
-
-        // Any moment the table is settled again replays it; a scroll ending is one.
-        (home as UIScrollViewDelegate).scrollViewDidEndDragging?(home.tableView, willDecelerate: false)
-        settle()
-        XCTAssertFalse(home.tm_pendingListRefresh)
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
-    }
-
-    func testHomesOwnListChangeLeavesNothingWaitingBehindIt() {
-        let home = HomePresentationFixture(style: .grouped)
-        seedLists(lists: [FavoritesBehaviorTests.twoLists[0]])
-        mountCapturingPushes(home)
-        home.viewDidAppear(false)
-        settle()
-
-        // Creating a list posts the same notification a remote change does; the
-        // row animation runs, and its completion settles what that notification
-        // left pending.
-        home.promptNewList()
-        let alert = try? XCTUnwrap(home.requestedPresentation as? UIAlertController)
-        alert?.tm_type("Chorus warmups")
-        alert?.tm_fire("Create")
-        settle()
-
-        XCTAssertFalse(home.tm_pendingListRefresh, "The completion cleared it")
-        XCTAssertEqual(home.tableView.numberOfRows(inSection: listsSection), 4)
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
-        home.requestedPresentation = nil
+        XCTAssertEqual(model.customKeys.count, 1, "Home leaves its rows alone while the user scrolls")
+        XCTAssertTrue(model.pendingRefresh, "…but remembers what it has not shown")
+        model.isScrolling = false
+        XCTAssertFalse(model.pendingRefresh)
+        XCTAssertEqual(model.customKeys.map { model.listNames[$0] }, ["Afterglow set", "Chorus warmups"])
     }
 
     func testAListAddedElsewhereAppearsOnHome() {
-        let home = self.home(lists: [FavoritesBehaviorTests.twoLists[0]])
+        home(lists: [FavoritesBehaviorTests.twoLists[0]])
         _ = TMTagLists.createList(named: "Chorus warmups")
-        settle()
-
-        XCTAssertEqual(rowTitles(home, section: listsSection),
-                       ["Teachable Tags", "Afterglow set", "Chorus warmups", "New list…"])
+        ScreenCatalog.settle(0.1)
+        XCTAssertEqual(model.customKeys.count, 2)
+        XCTAssertTrue(driver.identifiers.contains { $0.hasPrefix("home.list.chorus-warmups") })
     }
 
-    // MARK: - Screenshot
-
-    func testCaptureHomeWithLists() {
-        let home = self.home(favorites: [669, 1478], lists: FavoritesBehaviorTests.twoLists)
-        home.tableView.reloadData()
-        capture("ios-home-lists")
-        XCTAssertEqual(home.numberOfSections(in: home.tableView), 3)
-    }
-}
-
-/// Home, with its presentations captured instead of performed, so the alerts
-/// the list rows raise can be inspected without system keyboard services.
-final class HomePresentationFixture: DPHomeViewController {
-    var requestedPresentation: UIViewController?
-
-    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
-                          completion: (() -> Void)? = nil) {
-        requestedPresentation = viewControllerToPresent
-        completion?()
+    func testTheOpenFavoriteStaysLitBesideTheDetail() {
+        home(favorites: [669, 1478])
+        navigator.isExpandedSplit = true
+        navigator.currentSplitTagId = 1478
+        NotificationCenter.default.post(name: .TMTagSelectionDidChange, object: nil)
+        XCTAssertTrue(model.expanded)
+        XCTAssertEqual(model.selectedTagId, 1478)
+        controller.tm_didStep(toTagId: 1478)
+        ScreenCatalog.settle(0.3)
+        XCTAssertEqual(driver.elements(labelPrefix: "Tag 1478").first?.accessibilityTraits.contains(.selected), true)
+        XCTAssertEqual(driver.elements(labelPrefix: "Tag 669").first?.accessibilityTraits.contains(.selected), false)
+        navigator.currentSplitTagId = 42
+        model.syncSelection()
+        XCTAssertNil(model.selectedTagId, "A tag that is not a favorite lights no row")
     }
 }
 

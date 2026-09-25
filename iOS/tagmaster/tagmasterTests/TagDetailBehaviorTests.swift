@@ -2,624 +2,561 @@
 //  TagDetailBehaviorTests.swift
 //  tagmasterTests
 //
-//  In-process replacements for TagDetailUITests and the detail-screen half of
-//  TagMasterPolishUITests. The XCUITests reached the detail screen over the
-//  live catalog; these seed the production tag cache instead, so the same
-//  controller renders the same content deterministically.
+//  The SwiftUI tag detail mounted the way the app mounts it, driven through its
+//  accessibility tree (UIDriver) the way VoiceOver and the UI tests reach it:
+//  what each page says, which controls the bar offers, and that each control
+//  does its job. Tags come from the production cache (seeded) or, when missing,
+//  from the real catalog path with the network blocked.
 //
 
+import SafariServices
+import SwiftUI
 import XCTest
 import UIKit
 @testable import tagmaster
 
-/// Captures what the detail screen tries to present instead of presenting it,
-/// so the action sheets and the share sheet can be inspected in-process.
-private final class TMPresentationCapturingDetail: DPTagViewController {
-    var presented: [UIViewController] = []
-    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
-                          completion: (() -> Void)? = nil) {
-        presented.append(viewControllerToPresent)
-        completion?()
-    }
-}
-
-private final class TMPresentationCapturingSummary: DPTagSummaryController {
-    var presented: [UIViewController] = []
-    override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool,
-                          completion: (() -> Void)? = nil) {
-        presented.append(viewControllerToPresent)
-        completion?()
-    }
-}
-
+@MainActor
 final class TagDetailBehaviorTests: TMBehaviorTestCase {
+    private var shownLists: [String] = []
 
-    // MARK: - Reaching the detail screen
-    // Replaces TagDetailUITests.testCanNavigateToTagDetail /
-    // testTagDetailHasContent, which skipped whenever navigation failed and
-    // otherwise only asserted the app was still in the foreground.
-
-    func testDetailLeavesItsLoadingStateAndShowsItsPagesOnceTheTagIsAvailable() {
-        seedCachedTag(id: 1809, title: "Lost")
-        let detail = loadedDetail(tagId: 1809)
-
-        XCTAssertEqual(detail.tagId, 1809)
-        XCTAssertEqual((detail.value(forKey: "tag") as? DPTag)?.title, "Lost")
-        XCTAssertFalse(detail.rootView.isHidden, "The pages replace the loading state")
-        XCTAssertFalse(detail.tabBar.isHidden)
-        XCTAssertEqual(detail.viewControllers.count, 4)
-        let loading = detail.value(forKey: "initialLoadingView") as? UIView
-        XCTAssertEqual(loading?.isHidden, true)
+    /// Mounts the detail in a navigation stack, as the app pushes it, and waits for the tag.
+    private func mountDetail(_ tagId: Int32 = 1809, wait: Bool = true) -> TagDetailViewController {
+        let detail = TagDetailViewController()
+        detail.tagId = tagId
+        mountInNavigation(detail)
+        if wait { spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending } }
+        ScreenCatalog.settle(0.3)
+        return detail
     }
 
-    func testDetailDescribesAnUnavailableTagInsteadOfShowingEmptyPages() {
-        // Nothing cached for this id and the catalog boundary is blocked (see
-        // TMBlockedNetwork), so the real load path - cache miss, query, parse,
-        // failure - runs and resolves at once. The screen must say so rather
-        // than present four blank pages.
-        let detail = DPTagViewController()
-        detail.tagId = 999_999
-        mountInNavigation(detail)
-        spinUntil("the load resolves") {
-            (detail.value(forKey: "tagFetchPending") as? Bool) == false
-        }
-        settle()
+    private func driver() -> UIDriver { UIDriver(window) }
 
+    private func select(_ page: TagDetailModel.Page, in detail: TagDetailViewController) {
+        detail.model.selectedPage = page
+        ScreenCatalog.settle(0.4)
+    }
+
+    // MARK: - Reaching the detail
+
+    func testTheDetailLeavesItsLoadingStateAndOffersItsFourPages() throws {
+        seedCachedTag(id: 1809, title: "Lost")
+        let detail = mountDetail()
+        XCTAssertEqual(detail.tagId, 1809)
+        XCTAssertEqual(detail.model.tag?.title, "Lost")
+        XCTAssertEqual(detail.navigationItem.title, "Lost")
+        XCTAssertFalse(driver().exists(id: "tag.initialLoading"), "The pages replace the loading state")
+        let bar = try XCTUnwrap(firstDescendant(of: detail.view) {
+            ($0 as? UITabBar)?.accessibilityIdentifier == "page-tab-bar"
+        } as? UITabBar)
+        XCTAssertEqual(bar.items?.map { $0.title ?? "" }, ["Summary", "Details", "Tracks", "Videos"])
+        XCTAssertEqual(bar.items?.map { $0.accessibilityIdentifier ?? "" },
+                       ["page-Summary", "page-Details", "page-Tracks", "page-Videos"])
+        XCTAssertEqual(bar.selectedItem?.title, "Summary")
+    }
+
+    func testAnUnavailableTagSaysSoInsteadOfShowingEmptyPages() {
+        // Nothing cached and the catalog blocked: the real load path runs and fails at once.
+        let detail = mountDetail(999_999)
         XCTAssertFalse(network.attemptedURLs.isEmpty,
                        "The failure came from the app's own catalog request, not from a short-circuit")
         XCTAssertEqual(Set(network.attemptedURLs.compactMap(\.host)), ["www.barbershoptags.com"])
-
-        XCTAssertTrue(detail.rootView.isHidden)
-        let heading = detail.value(forKey: "loadingHeading") as! UILabel
-        let status = detail.value(forKey: "loadingStatus") as! UILabel
-        let retry = detail.value(forKey: "retryButton") as! UIButton
-        XCTAssertEqual(heading.text, "Tag unavailable")
-        XCTAssertEqual(status.text,
+        XCTAssertNil(detail.model.tag)
+        XCTAssertEqual(driver().label(id: "tag.loadingStatus"),
                        "Couldn't load tag 999999. Check your connection and tag ID, then try again.")
-        XCTAssertFalse(retry.isHidden, "Retry stays available")
+        XCTAssertTrue(driver().exists(label: "Retry"), "Retry stays available")
+        XCTAssertFalse(driver().exists(label: "Share"), "There is nothing to share without a tag")
+        XCTAssertNil(firstDescendant(of: detail.view) { $0 is UITabBar }, "No empty pages")
     }
 
-    // MARK: - Detail navigation bar
-    // Replaces testDetailContentControls' navigation-bar assertions.
+    func testRetryingAnUnavailableTagRunsTheLoadAgain() {
+        let detail = mountDetail(999_998)
+        let attempts = network.attemptedURLs.count
+        driver().tap(label: "Retry")
+        spinUntil("the retry resolves", timeout: 5) { !detail.model.fetchPending }
+        XCTAssertGreaterThan(network.attemptedURLs.count, attempts)
+        XCTAssertTrue(detail.model.loadFailed)
+    }
 
-    func testDetailNavigationBarOffersShareTagActionsAndRefresh() {
+    // MARK: - The bar
+
+    func testTheDetailAddsNothingButItselfToTheNavigationStack() throws {
+        // Presenters sit in the bar; were they view controllers, UIKit would adopt them
+        // as pushed screens and Back would land on an empty page.
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        let navigation = try XCTUnwrap(detail.navigationController)
+        detail.model.showActions()
+        ScreenCatalog.settle(0.5)
+        detail.model.actionsPresented = false
+        detail.model.showListPicker(from: .actions)
+        ScreenCatalog.settle(0.5)
+        detail.model.pickerSource = nil
+        ScreenCatalog.settle(0.5)
+        XCTAssertEqual(navigation.viewControllers.count, 1)
+        XCTAssertTrue(navigation.viewControllers.first === detail)
+        XCTAssertTrue(navigation.topViewController === detail)
+    }
+
+    func testOnIPhoneTheBarOffersRefreshTagActionsAndShare() {
         seedCachedTag()
-        let detail = loadedDetail()
-        let labels = detail.navigationItem.rightBarButtonItems?.map { $0.accessibilityLabel ?? "" }
-        XCTAssertEqual(labels, ["Share", "Favorite and Teachable options", "Refresh"])
-        XCTAssertEqual(detail.navigationItem.largeTitleDisplayMode, .never)
-    }
-
-    // MARK: - Favourite and teachable
-    // Replaces TagDetailUITests.testFavoriteButtonIfExists, which tapped a
-    // guessed button twice and asserted only that the app survived.
-
-    func testTagActionsOfferAddFavoriteThenRemoveFavorite() {
-        seedCachedTag(id: 1809)
-        let detail = TMPresentationCapturingDetail()
-        detail.tagId = 1809
-        mountInNavigation(detail)
-        waitUntil("detail loads") { detail.value(forKey: "tag") != nil }
-        settle()
-
-        detail.perform(Selector(("showActions")))
-        let sheet = try? XCTUnwrap(detail.presented.last as? UIAlertController)
-        XCTAssertEqual(sheet?.actions.map { $0.title ?? "" },
-                       ["Add Favorite", "Mark as Teachable", "Add to List…", "Cancel"])
-        XCTAssertEqual(sheet?.actions.last?.style, .cancel)
-
-        detail.perform(Selector(("toggleFavorite")))
-        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
-
-        detail.presented.removeAll()
-        detail.perform(Selector(("showActions")))
-        let afterFavoriting = try? XCTUnwrap(detail.presented.last as? UIAlertController)
-        XCTAssertEqual(afterFavoriting?.actions.map { $0.title ?? "" },
-                       ["Remove Favorite", "Mark as Teachable", "Add to List…", "Cancel"])
-
-        detail.perform(Selector(("toggleFavorite")))
-        XCTAssertEqual(DPAppDelegate.favorites(), [])
-    }
-
-    func testTogglingTeachableFromTheDetailScreenUpdatesTheStoredList() {
-        seedCachedTag(id: 1809)
-        let detail = loadedDetail(tagId: 1809)
-
-        detail.perform(Selector(("toggleTeachable")))
-        XCTAssertEqual(DPAppDelegate.teachable(), [1809])
-        detail.perform(Selector(("toggleTeachable")))
-        XCTAssertEqual(DPAppDelegate.teachable(), [])
-    }
-
-    // MARK: - Add to list
-
-    func testTheTagActionsOpenTheListPicker() {
-        seedCachedTag(id: 1809)
-        let detail = TMPresentationCapturingDetail()
-        detail.tagId = 1809
-        mountInNavigation(detail)
-        waitUntil("detail loads") { detail.value(forKey: "tag") != nil }
-        settle()
-
-        detail.perform(Selector(("showActions")))
-        let sheet = try? XCTUnwrap(detail.presented.last as? UIAlertController)
-        sheet?.tm_fire("Add to List…")
-
-        let picker = (detail.presented.last as? UINavigationController)?.viewControllers.first
-        XCTAssertTrue(picker is TMListPickerController)
-        XCTAssertEqual((picker as? TMListPickerController)?.tagId, 1809)
-        detail.presented.removeAll()
-    }
-
-    func testTheDetailCarriesAnAddToListButtonForTheWideLayout() {
-        seedCachedTag(id: 1809)
-        let detail = loadedDetail(tagId: 1809)
-        let item = try? XCTUnwrap(detail.value(forKey: "addToListBarButton") as? UIBarButtonItem)
-
-        XCTAssertEqual(item?.accessibilityLabel, "Add to list")
-        XCTAssertEqual(item?.isEnabled, true)
-        XCTAssertNotNil(item?.image)
-    }
-
-    func testTheWideLayoutHeartAndPeopleButtonsFollowChangesMadeFromThePickerOrElsewhere() throws {
-        seedCachedTag(id: 1809)
-        let detail = loadedDetail(tagId: 1809)
-        let heart = try XCTUnwrap(detail.value(forKey: "favoriteBarButton") as? UIBarButtonItem)
-        let people = try XCTUnwrap(detail.value(forKey: "teachableBarButton") as? UIBarButtonItem)
-        XCTAssertEqual(heart.accessibilityLabel, "Add Favorite")
-        XCTAssertEqual(people.accessibilityLabel, "Mark as Teachable")
-
-        // The picker, a chip or another device adds the tag: no toolbar toggle is involved.
-        TMTagLists.add(1809, to: TMTagLists.favoriteKey)
-        TMTagLists.add(1809, to: TMTagLists.teachableKey)
-        settle()
-        XCTAssertEqual(heart.accessibilityLabel, "Remove Favorite")
-        XCTAssertEqual(people.accessibilityLabel, "Unmark as Teachable")
-
-        TMTagLists.remove(1809, from: TMTagLists.favoriteKey)
-        settle()
-        XCTAssertEqual(heart.accessibilityLabel, "Add Favorite")
-        XCTAssertEqual(people.accessibilityLabel, "Unmark as Teachable")
-    }
-
-    // MARK: - The chips under a tag's title
-
-    private func chips(in summary: DPTagSummaryController) -> TMListChipsView {
-        summary.value(forKey: "listChips") as! TMListChipsView
-    }
-
-    private func capsules(_ view: TMListChipsView) -> [TMListChipView] {
-        view.subviews.compactMap { $0 as? TMListChipView }
-    }
-
-    private func chipTitles(_ view: TMListChipsView) -> [String] {
-        capsules(view).map(\.title)
-    }
-
-    /// A capsule is two controls now - the name opens the list, the button beside
-    /// it removes the tag - so a chip is found by descending into it.
-    private func chip(_ view: TMListChipsView, identifier: String) -> UIButton? {
-        firstDescendant(of: view) { $0.accessibilityIdentifier == identifier } as? UIButton
-    }
-
-    func testTheChipsNameEveryListTheTagIsOnAndAlwaysOfferToAddAnother() {
-        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
-        let tag = seedCachedTag(id: 1809, title: "Lost")
-        let summary = self.summary(for: tag)
-        let chips = self.chips(in: summary)
-
-        XCTAssertEqual(chipTitles(chips), ["Favorites", "Afterglow set", "Add to list"])
-        XCTAssertEqual(chips.accessibilityLabel, "In lists")
-        XCTAssertEqual(chips.accessibilityIdentifier, "summary.chips")
-        XCTAssertNotNil(chip(chips, identifier: "summary.chip.favorite"))
-        XCTAssertNotNil(chip(chips, identifier: "summary.chip.afterglow-set-k3f9"))
-        XCTAssertNotNil(chip(chips, identifier: "summary.chip.add"))
-        for capsule in chips.subviews {
-            XCTAssertGreaterThanOrEqual(capsule.bounds.height, 44, "Every chip is a full touch target")
+        _ = mountDetail()
+        let driver = driver()
+        for label in ["Refresh", "Favorite and Teachable options", "Share"] {
+            XCTAssertTrue(driver.exists(label: label), "\(label) is in the bar")
+        }
+        for label in ["Previous tag", "Next tag", "Add Favorite", "Mark as Teachable"] {
+            XCTAssertFalse(driver.exists(label: label), "\(label) belongs beside a list")
         }
     }
 
-    func testATagOnNoListStillOffersAddToList() {
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-        XCTAssertEqual(chipTitles(chips), ["Add to list"])
-        XCTAssertFalse(chips.isHidden)
+    func testTheTagActionsButtonPresentsTheActionSheet() throws {
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        driver().tap(label: "Favorite and Teachable options")
+        spinUntil("the sheet is up") { detail.presentedViewController is UIAlertController }
+        let sheet = try XCTUnwrap(detail.presentedViewController as? UIAlertController)
+        XCTAssertEqual(sheet.preferredStyle, .actionSheet)
+        XCTAssertEqual(sheet.actions.map { $0.title ?? "" },
+                       ["Add Favorite", "Mark as Teachable", "Add to List…", "Cancel"])
+        XCTAssertEqual(sheet.actions.last?.style, .cancel)
+        sheet.tm_fire("Add Favorite")
+        spinUntil("the sheet goes") { detail.presentedViewController == nil }
+        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertFalse(detail.model.actionsPresented)
+    }
+
+    func testBesideAListTheBarCarriesTheStepperTogglesAndAddToList() throws {
+        // The expanded bar is an iPad layout; on iPhone the model tests cover the same rules.
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Beside-a-list layout is iPad only")
+        seedCachedTag(id: 1809)
+        seedCachedTag(id: 4243, title: "Short")
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("the split is expanded") { router.expanded }
+        let source = TMTestSource([4243, 1809])
+        router.showTag(1809, source: source)
+        let model = router.detail
+        spinUntil("the detail settles", timeout: 5) { !model.fetchPending && model.expanded && model.tag != nil }
+        ScreenCatalog.settle(0.3)
+
+        let driver = driver()
+        for label in ["Previous tag", "Next tag", "Add Favorite", "Mark as Teachable", "Add to list", "Refresh", "Share"] {
+            XCTAssertTrue(driver.exists(label: label), "\(label) is beside the list")
+        }
+        XCTAssertFalse(driver.exists(label: "Favorite and Teachable options"))
+        XCTAssertTrue(driver.isEnabled(label: "Previous tag"))
+        XCTAssertFalse(driver.isEnabled(label: "Next tag"), "The last tag in the list has no next")
+        // ⌘↑ / ⌘↓ ride on these two buttons, so they step from either column.
+        XCTAssertTrue(model.canStep && model.hasPreviousTag)
+        XCTAssertFalse(model.hasNextTag)
+
+        driver.tap(label: "Add Favorite")
+        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertTrue(driver.exists(label: "Remove Favorite"), "The heart fills and names its next action")
+        driver.tap(label: "Mark as Teachable")
+        XCTAssertEqual(DPAppDelegate.teachable(), [1809])
+        XCTAssertTrue(driver.exists(label: "Unmark as Teachable"))
+
+        // Changes made anywhere else show up in the bar too.
+        TMTagLists.remove(1809, from: TMTagLists.favoriteKey)
+        ScreenCatalog.settle(0.2)
+        XCTAssertTrue(driver.exists(label: "Add Favorite"))
+
+        // The assist chip shares the name; the bar's button is the later element.
+        let barButton = try XCTUnwrap(driver.elements.last { $0.isAccessibilityElement && $0.accessibilityLabel == "Add to list" })
+        XCTAssertTrue(barButton.accessibilityActivate())
+        ScreenCatalog.settle(0.1)
+        XCTAssertEqual(model.pickerSource, .toolbar)
+        model.pickerSource = nil
+        ScreenCatalog.settle(0.5)
+    }
+
+    func testTheSplitReusesTheDetailKeepsItsPageAndFollowsTheListItCameFrom() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
+        seedCachedTag(id: 1809)
+        seedCachedTag(id: 42, title: "Other")
+        let router = TMRouter()
+        mountShell(router, split: true)
+        spinUntil("the split is expanded") { router.expanded }
+        XCTAssertTrue(driver().exists(label: "Pick a tag"), "The placeholder holds the column until a tag is chosen")
+        let list = TMTestListController(ids: [1809, 42])
+
+        router.showTag(1809, source: list)
+        let detail = router.detail
+        spinUntil("the tag loads", timeout: 5) { detail.tag != nil && detail.expanded }
+        XCTAssertTrue(detail.source === list)
+        XCTAssertEqual(router.currentSplitTagId, 1809)
+        XCTAssertTrue(router.path.isEmpty, "The tag opens beside the list, not on its stack")
+        detail.selectedPage = .tracks
+
+        detail.stepToNextTag()
+        XCTAssertTrue(router.detail === detail, "Stepping reuses the detail")
+        XCTAssertEqual(detail.tagId, 42)
+        XCTAssertEqual(detail.selectedPage, .tracks, "The open page survives the tag change")
+        XCTAssertEqual(list.steppedTo, [1809, 42], "The list follows the open tag")
+        spinUntil("the next tag loads", timeout: 5) { detail.tag?.tagId == 42 }
+        XCTAssertFalse(detail.hasNextTag)
+
+        router.showTag(42, source: nil)
+        XCTAssertNil(detail.source, "Opened from nowhere in particular, there is nothing to step through")
+        XCTAssertFalse(detail.canStep)
+    }
+
+    func testOnAPhoneATagIsPushedOverTheListItCameFrom() {
+        seedCachedTag(id: 1809)
+        let router = TMRouter()
+        mountShell(router)
+        let list = TMTestListController(ids: [1809])
+        router.showTag(1809, source: list)
+        let pushed = router.path.last?.tagModel
+        XCTAssertEqual(pushed?.tagId, 1809)
+        XCTAssertTrue(pushed?.source === list)
+        XCTAssertFalse(pushed?.canStep ?? true, "Stepping belongs beside a list")
+        XCTAssertNil(router.currentSplitTagId)
+        spinUntil("the tag shows", timeout: 5) { self.driver().exists(label: "Summary") }
+    }
+
+    // MARK: - Summary
+
+    func testTheSummaryOffersSheetMusicRatingAndTheKeyAsFullSizeTargets() {
+        seedCachedTag(id: 1809, title: "Lost")
+        _ = mountDetail()
+        let driver = driver()
+        XCTAssertTrue(driver.exists(label: "Sheet Music"))
+        XCTAssertTrue(driver.exists(id: "summary.rate"))
+        XCTAssertEqual(driver.label(id: "summary.rate"), "Rate tag")
+        XCTAssertEqual(driver.label(id: "summary.key")?.hasPrefix("Play key note"), true)
+        for element in [driver.element(label: "Sheet Music"), driver.element(id: "summary.rate"), driver.element(id: "summary.key")] {
+            let frame = element?.accessibilityFrame ?? .zero
+            XCTAssertGreaterThanOrEqual(frame.height, 44)
+            XCTAssertGreaterThanOrEqual(frame.width, 44)
+        }
+    }
+
+    /// Sheet Music, Rate and the key share one height, as the UIKit summary's
+    /// branded buttons and pitch button did.
+    func testTheSummaryButtonsShareOneHeight() throws {
+        seedCachedTag(id: 1809, title: "Lost")
+        _ = mountDetail()
+        let driver = driver()
+        spinUntil("the summary buttons show") {
+            driver.exists(label: "Sheet Music") && driver.exists(id: "summary.rate") && driver.exists(id: "summary.key")
+        }
+        let heights = [driver.element(label: "Sheet Music"), driver.element(id: "summary.rate"), driver.element(id: "summary.key")]
+            .map { $0?.accessibilityFrame.height ?? 0 }
+        XCTAssertEqual(heights.count, 3)
+        for height in heights {
+            XCTAssertEqual(height, heights[0], accuracy: 1, "\(heights)")
+            XCTAssertGreaterThanOrEqual(height, 44)
+        }
+    }
+
+    func testActivatingTheKeyPlaysItsNoteForAMoment() throws {
+        TagSummaryModel.timedKeyNoteDuration = 0.1
+        defer { TagSummaryModel.timedKeyNoteDuration = 1.5 }
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        let note = try XCTUnwrap(detail.model.summary.keyNote)
+        driver().tap(id: "summary.key")
+        XCTAssertTrue(note.isPlaying)
+        spinUntil("the timed note stops") { !note.isPlaying }
+    }
+
+    func testRateOpensTheRatingChoices() {
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        driver().tap(id: "summary.rate")
+        XCTAssertTrue(detail.model.summary.ratingDialogPresented)
+        detail.model.summary.ratingDialogPresented = false
+        ScreenCatalog.settle(0.4)
+    }
+
+    func testTheSummaryShowsItsLyricsAndDropsThemWhenThereAreNone() {
+        seedCachedTag(id: 1809, lyrics: "And I will wait to face the skies")
+        _ = mountDetail()
+        XCTAssertTrue(driver().exists(label: "Lyrics"))
+        XCTAssertEqual(driver().label(id: "summary.lyrics"), "And I will wait to face the skies")
+
+        seedCachedTag(id: 4243, lyrics: nil)
+        _ = mountDetail(4243)
+        XCTAssertFalse(driver().exists(label: "Lyrics"))
+    }
+
+    /// Lyrics and notes each appear only when the tag has them, in every
+    /// combination, with or without sheet music.
+    func testLyricsAndNotesEachShowOnlyWhenTheTagHasThem() {
+        var id: Int32 = 5000
+        for sheet in [false, true] {
+            for (lyrics, notes) in [(nil, nil), ("Sing it", nil), (nil, "Hold it"), ("Sing it", "Hold it")] as [(String?, String?)] {
+                id += 1
+                let tag = seedCachedTag(id: id, lyrics: lyrics, withSheetMusic: sheet)
+                tag.notes = notes
+                tag.cache()
+                _ = mountDetail(id)
+                let driver = driver()
+                let context = "sheet \(sheet), lyrics \(lyrics ?? "none"), notes \(notes ?? "none")"
+                XCTAssertEqual(driver.exists(label: "Lyrics"), lyrics != nil, context)
+                XCTAssertEqual(driver.exists(label: "Notes"), notes != nil, context)
+                XCTAssertEqual(driver.exists(label: "Sheet Music"), sheet, context)
+                if let notes { XCTAssertTrue(driver.exists(label: notes), context) }
+            }
+        }
+    }
+
+    func testLyricsRemainAfterVisitingAnotherPage() {
+        seedCachedTag(id: 1809, lyrics: "And I will wait to face the skies")
+        let detail = mountDetail()
+        select(.details, in: detail)
+        select(.summary, in: detail)
+        XCTAssertEqual(driver().label(id: "summary.lyrics"), "And I will wait to face the skies")
+        XCTAssertEqual(driver().label(id: "summary.rate"), "Rate tag", "Rating is still offered")
+    }
+
+    // MARK: - Chips
+
+    func testTheChipsNameEveryListTheTagIsOnAndAlwaysOfferToAddAnother() {
+        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
+        seedCachedTag(id: 1809)
+        _ = mountDetail()
+        let driver = driver()
+        XCTAssertEqual(driver.label(id: "summary.chip.favorite"), "Favorites")
+        XCTAssertEqual(driver.label(id: "summary.chip.afterglow-set-k3f9"), "Afterglow set")
+        XCTAssertEqual(driver.label(id: "summary.chip.add"), "Add to list")
+        XCTAssertEqual(driver.label(id: "summary.chip.favorite.remove"), "Remove from Favorites")
+        XCTAssertEqual(driver.label(id: "summary.chip.afterglow-set-k3f9.remove"), "Remove from Afterglow set")
+        XCTAssertFalse(driver.exists(id: "summary.chip.add.remove"), "Nothing is removed from the assist chip")
+        for id in ["summary.chip.favorite", "summary.chip.favorite.remove", "summary.chip.add"] {
+            let frame = driver.element(id: id)?.accessibilityFrame ?? .zero
+            XCTAssertGreaterThanOrEqual(frame.height, 43.99, "\(id) is a full target")
+            XCTAssertGreaterThanOrEqual(frame.width, 43.99, "\(id) is a full target")
+        }
+    }
+
+    func testAChipOpensItsListTheAddChipOpensThePickerAndRemovalIsUndoable() {
+        seedLists(lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [669, 1809, 122])])
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        detail.model.navigator.showList = { [unowned self] in self.shownLists.append($0) }
+        let driver = driver()
+        // The accessibility tree is rebuilt lazily after the page settles.
+        driver.wait { driver.exists(id: "summary.chip.afterglow-set-k3f9") }
+
+        driver.tap(id: "summary.chip.afterglow-set-k3f9")
+        XCTAssertEqual(shownLists, ["afterglow-set-k3f9"])
+
+        driver.tap(id: "summary.chip.add")
+        XCTAssertEqual(detail.model.pickerSource, .chip)
+        detail.model.pickerSource = nil
+        ScreenCatalog.settle(0.5)
+
+        driver.tap(id: "summary.chip.afterglow-set-k3f9.remove")
+        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 122])
+        ScreenCatalog.settle(0.2)
+        XCTAssertFalse(driver.exists(id: "summary.chip.afterglow-set-k3f9"))
+        XCTAssertEqual(detail.undoManager?.undoActionName, "Remove from Afterglow set")
+        detail.undoManager?.undo()
+        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 1809, 122])
+        ScreenCatalog.settle(0.2)
+        XCTAssertTrue(driver.exists(id: "summary.chip.afterglow-set-k3f9"))
+    }
+
+    func testAChipsNameOffersItsRemovalAsAnAccessibilityAction() {
+        seedLists(favorite: [1809])
+        seedCachedTag(id: 1809)
+        _ = mountDetail()
+        driver().perform(action: "Remove from Favorites", id: "summary.chip.favorite")
+        XCTAssertEqual(DPAppDelegate.favorites(), [])
     }
 
     func testTheChipsFollowChangesMadeAnywhereElse() {
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-
+        seedCachedTag(id: 1809)
+        _ = mountDetail()
+        XCTAssertFalse(driver().exists(id: "summary.chip.teachable"))
         DPAppDelegate.addTeachable(1809)
-        XCTAssertEqual(chipTitles(chips), ["Teachable Tags", "Add to list"])
-
+        ScreenCatalog.settle(0.2)
+        XCTAssertEqual(driver().label(id: "summary.chip.teachable"), "Teachable Tags")
         DPAppDelegate.removeTeachable(1809)
-        XCTAssertEqual(chipTitles(chips), ["Add to list"])
+        ScreenCatalog.settle(0.2)
+        XCTAssertFalse(driver().exists(id: "summary.chip.teachable"))
     }
 
-    func testTappingAChipOpensThatList() {
-        seedLists(teachable: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
-        let tag = seedCachedTag(id: 1809)
-        let summary = DPTagSummaryController()
-        summary.busyIndicator = DPBusyIndicator()
-        summary.tag = tag
-        let navigation = mountCapturingPushes(summary)
-        settle()
-        let chips = self.chips(in: summary)
-
-        chip(chips, identifier: "summary.chip.teachable")?.sendActions(for: .touchUpInside)
-        XCTAssertTrue(navigation.pushed.last is DPTeachableTagsController)
-
-        chip(chips, identifier: "summary.chip.afterglow-set-k3f9")?.sendActions(for: .touchUpInside)
-        XCTAssertEqual((navigation.pushed.last as? TMTagListController)?.listKey, "afterglow-set-k3f9")
-    }
-
-    func testAChipRemovesItsTagFromThatListThroughItsAccessibilityAction() {
-        seedLists(favorite: [1809])
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-        let favorite = try? XCTUnwrap(chip(chips, identifier: "summary.chip.favorite"))
-
-        let action = try? XCTUnwrap(favorite?.accessibilityCustomActions?.first)
-        XCTAssertEqual(action?.name, "Remove from Favorites")
-        _ = action?.actionHandler?(action!)
-
-        XCTAssertEqual(DPAppDelegate.favorites(), [])
-        XCTAssertEqual(chipTitles(chips), ["Add to list"])
-    }
-
-    func testTheFavoritesChipGoesBackToHomeWhereFavoritesLive() {
-        seedLists(favorite: [1809])
-        let tag = seedCachedTag(id: 1809)
-        let home = DPHomeViewController(style: .grouped)
-        let summary = DPTagSummaryController()
-        summary.busyIndicator = DPBusyIndicator()
-        summary.tag = tag
-        let navigation = UINavigationController(rootViewController: home)
-        navigation.pushViewController(summary, animated: false)
-        mount(navigation)
-        settle()
-
-        let chips = self.chips(in: summary)
-        chip(chips, identifier: "summary.chip.favorite")?.sendActions(for: .touchUpInside)
-        waitUntil("Home comes back to the top of the stack") { navigation.topViewController === home }
-    }
-
-    func testTheAddChipOpensThePicker() {
-        let tag = seedCachedTag(id: 1809)
-        let summary = TMPresentationCapturingSummary()
-        summary.busyIndicator = DPBusyIndicator()
-        summary.tag = tag
-        mountInNavigation(summary)
-        settle()
-
-        let chips = summary.value(forKey: "listChips") as! TMListChipsView
-        chip(chips, identifier: "summary.chip.add")?.sendActions(for: .touchUpInside)
-
-        let picker = (summary.presented.last as? UINavigationController)?.viewControllers.first
-        XCTAssertEqual((picker as? TMListPickerController)?.tagId, 1809)
-        summary.presented.removeAll()
-    }
-
-    func testTheChipsWrapOntoMoreThanOneLineWhenTheyHaveTo() {
+    func testTheChipsWrapWithoutOverflowingTheRow() {
         seedLists(favorite: [1809], teachable: [1809], lists: [
             (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809]),
             (key: "chorus-warmups-list", name: "Chorus warmups for Tuesday evening", ids: [1809])
         ])
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-
-        XCTAssertEqual(chipTitles(chips).count, 5)
-        let lines = Set(chips.subviews.map { $0.frame.minY })
-        XCTAssertGreaterThan(lines.count, 1, "Five capsules do not fit one phone-width line")
-        for capsule in chips.subviews {
-            XCTAssertLessThanOrEqual(capsule.frame.maxX, chips.bounds.width + 0.5, "No capsule overflows the row")
-        }
-        XCTAssertGreaterThan(chips.bounds.height, 44, "The row grew to hold both lines")
-    }
-
-    func testEveryMembershipChipCarriesItsOwnVisibleRemoveButton() throws {
-        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-
-        for (key, name) in [("favorite", "Favorites"), ("afterglow-set-k3f9", "Afterglow set")] {
-            let remove = try XCTUnwrap(chip(chips, identifier: "summary.chip.\(key).remove"),
-                                       "\(name) needs a remove button anyone can see")
-            XCTAssertEqual(remove.accessibilityLabel, "Remove from \(name)")
-            XCTAssertFalse(remove.isHidden)
-            XCTAssertEqual(remove.alpha, 1)
-            XCTAssertNotNil(remove.configuration?.image)
-            XCTAssertGreaterThanOrEqual(remove.bounds.width, 44, "A remove button is a full target")
-            XCTAssertGreaterThanOrEqual(remove.bounds.height, 44)
-        }
-        XCTAssertNil(chip(chips, identifier: "summary.chip.add.remove"),
-                     "Nothing is removed from the assist chip")
-    }
-
-    func testTheRemoveButtonTakesTheTagOutOfThatListAndUndoPutsItBackWhereItWas() throws {
-        seedLists(lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [669, 1809, 122])])
-        let tag = seedCachedTag(id: 1809)
-        let summary = self.summary(for: tag)
-        let chips = self.chips(in: summary)
-
-        let remove = try XCTUnwrap(chip(chips, identifier: "summary.chip.afterglow-set-k3f9.remove"))
-        remove.sendActions(for: .touchUpInside)
-
-        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 122])
-        XCTAssertEqual(chipTitles(chips), ["Add to list"])
-
-        let undo = try XCTUnwrap(summary.undoManager)
-        XCTAssertTrue(undo.canUndo, "A removal is undoable")
-        XCTAssertEqual(undo.undoActionName, "Remove from Afterglow set")
-
-        undo.undo()
-        settle()
-        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [669, 1809, 122],
-                       "The tag comes back at the position it held")
-        XCTAssertEqual(chipTitles(chips), ["Afterglow set", "Add to list"])
-        XCTAssertTrue(undo.canRedo, "And can be taken out again")
-    }
-
-    func testAMembershipChipStillOffersItsRemovalOnALongPress() throws {
-        seedLists(favorite: [1809])
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-        let capsule = try XCTUnwrap(capsules(chips).first { $0.listKey == "favorite" })
-        let interaction = try XCTUnwrap(capsule.interactions.compactMap { $0 as? UIContextMenuInteraction }.first)
-
-        XCTAssertNotNil(chips.contextMenuInteraction(interaction, configurationForMenuAtLocation: .zero),
-                        "The long press still offers Remove from Favorites")
-        let add = try XCTUnwrap(capsules(chips).first { $0.listKey == nil })
-        XCTAssertTrue(add.interactions.compactMap { $0 as? UIContextMenuInteraction }.isEmpty,
-                      "There is nothing to remove from the assist chip")
-    }
-
-    func testMembershipChipsAreOutlinedAndNeutralWhileOnlyTheAddChipTakesTheAccent() throws {
-        seedLists(favorite: [1809])
-        let tag = seedCachedTag(id: 1809)
-        let chips = self.chips(in: self.summary(for: tag))
-
-        for capsule in capsules(chips) {
-            XCTAssertEqual(capsule.layer.borderWidth, 1, "Every capsule is outlined, none of them filled")
-            XCTAssertEqual(capsule.layer.borderColor,
-                           UIColor.separator.resolvedColor(with: capsule.traitCollection).cgColor)
-            XCTAssertEqual(capsule.layer.cornerRadius, capsule.bounds.height / 2)
-            XCTAssertEqual(capsule.nameButton.configuration?.background.backgroundColor, .clear,
-                           "A capsule has no fill behind its name")
-        }
-        let favorite = try XCTUnwrap(chip(chips, identifier: "summary.chip.favorite"))
-        XCTAssertEqual(favorite.configuration?.baseForegroundColor, .label)
-        let add = try XCTUnwrap(chip(chips, identifier: "summary.chip.add"))
-        XCTAssertEqual(add.configuration?.baseForegroundColor, DPAppDelegate.accentColor())
-    }
-
-    func testTheChipsStayInsideTheRowAndStayTargetsAtAnAccessibilityTextSize() {
-        seedLists(favorite: [1809], teachable: [1809],
-                  lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
-        let tag = seedCachedTag(id: 1809)
-        let summary = self.summary(for: tag)
-        window.traitOverrides.preferredContentSizeCategory = .accessibilityExtraExtraExtraLarge
-        settle()
-        let chips = self.chips(in: summary)
-
-        XCTAssertEqual(chipTitles(chips).count, 4)
-        for capsule in capsules(chips) {
-            XCTAssertLessThanOrEqual(capsule.frame.maxX, chips.bounds.width + 0.5,
-                                     "\(capsule.title) overflows the row at the largest text size")
-            XCTAssertGreaterThanOrEqual(capsule.bounds.height, 44)
-            guard let remove = capsule.removeButton else { continue }
-            XCTAssertGreaterThanOrEqual(remove.bounds.width, 44)
-            XCTAssertGreaterThanOrEqual(remove.bounds.height, 44)
-            XCTAssertGreaterThan(capsule.nameButton.bounds.width, 0,
-                                 "The name keeps room of its own next to the remove button")
-        }
-        window.traitOverrides.preferredContentSizeCategory = .large
-    }
-
-    func testCaptureTheSummaryChips() {
-        seedLists(favorite: [1809], lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809])])
-        let tag = seedCachedTag(id: 1809, title: "Lost")
-        let summary = self.summary(for: tag)
-        capture("ios-summary-chips")
-        XCTAssertFalse(self.chips(in: summary).isHidden)
-    }
-
-    // MARK: - Share
-    // Replaces TagDetailUITests.testShareButtonIfExists and the app-side half of
-    // testDetailShareDismissal. What the share sheet itself does once open is
-    // system UI and stays in the UITests.
-
-    func testSharingOffersTheTagTitleAndItsCatalogLink() {
-        let tag = seedCachedTag(id: 1809, title: "Lost")
-        let detail = TMPresentationCapturingDetail()
-        detail.tagId = 1809
-        mountInNavigation(detail)
-        waitUntil("detail loads") { detail.value(forKey: "tag") != nil }
-        settle()
-
-        detail.perform(Selector(("sendTag")))
-        let share = try? XCTUnwrap(detail.presented.last as? UIActivityViewController)
-        XCTAssertNotNil(share)
-        XCTAssertNotNil(share?.popoverPresentationController?.barButtonItem,
-                        "The sheet is anchored to the Share button")
-
-        // The two things the app contributes to the sheet: how the tag is
-        // described, and the link people receive.
-        let items = share?.value(forKey: "activityItems") as? [Any]
-        XCTAssertEqual(items?.count, 2)
-        XCTAssertEqual(items?.first as? String, "Lost - Tag Master for iOS")
-        XCTAssertEqual(items?.last as? URL, tag.tagUri())
-        XCTAssertEqual(tag.tagUri()?.absoluteString.contains("1809"), true)
-    }
-
-    func testSharingIsRefusedUntilTheTagIsAvailable() {
-        let detail = TMPresentationCapturingDetail()
-        detail.tagId = 999_998
-        mountInNavigation(detail)
-        settle()
-
-        // Before the tag is available.
-        detail.perform(Selector(("sendTag")))
-        XCTAssertTrue(detail.presented.isEmpty,
-                      "There is nothing to share before the tag loads")
-
-        // And once it has resolved without a tag. Waiting here also means the
-        // request is finished rather than still running past the test.
-        spinUntil("the load resolves") {
-            (detail.value(forKey: "tagFetchPending") as? Bool) == false
-        }
-        settle()
-        XCTAssertNil(detail.value(forKey: "tag"))
-        detail.perform(Selector(("sendTag")))
-        XCTAssertTrue(detail.presented.isEmpty,
-                      "There is still nothing to share after the load fails")
-    }
-
-    // MARK: - Summary page controls
-    // Replaces testDetailContentControls' content assertions and
-    // testSummaryLyricsRemainReachableAfterChangingPages.
-
-    private func summary(for tag: DPTag) -> DPTagSummaryController {
-        let summary = DPTagSummaryController()
-        summary.busyIndicator = DPBusyIndicator()
-        summary.tag = tag
-        mountInNavigation(summary)
-        settle()
-        return summary
-    }
-
-    func testSummaryOffersSheetMusicRatingAndTheKeyNoteAsFullSizeTargets() {
-        let tag = seedCachedTag(id: 1809, title: "Lost")
-        let summary = self.summary(for: tag)
-
-        let sheetMusic = summary.value(forKey: "sheetMusicButton") as! UIButton
-        let rating = summary.value(forKey: "ratingButton") as! UIButton
-        let keyRow = summary.value(forKey: "keyButton") as AnyObject
-        let key = keyRow.value(forKey: "button") as! UIButton
-
-        XCTAssertEqual(sheetMusic.currentTitle, "Sheet Music")
-        XCTAssertEqual(rating.accessibilityLabel, "Rate tag")
-        XCTAssertEqual(key.accessibilityLabel?.hasPrefix("Play key note"), true)
-
-        for button in [sheetMusic, rating, key] {
-            XCTAssertGreaterThanOrEqual(button.bounds.height, 44)
-            XCTAssertGreaterThanOrEqual(button.bounds.width, 44)
-        }
-    }
-
-    func testSummaryShowsTheLyricsItWasGiven() {
-        let tag = seedCachedTag(id: 1809, lyrics: "And I will wait to face the skies")
-        let summary = self.summary(for: tag)
-        let lyrics = summary.value(forKey: "lyricsLabel") as! UILabel
-        let section = summary.value(forKey: "lyricsSection") as! UIStackView
-
-        XCTAssertEqual(lyrics.text, "And I will wait to face the skies")
-        XCTAssertFalse(section.isHidden)
-        XCTAssertGreaterThan(lyrics.bounds.height, 0, "The lyrics occupy real space")
-    }
-
-    func testSummaryHidesTheLyricsSectionWhenTheTagHasNone() {
-        let tag = seedCachedTag(id: 4243, lyrics: nil)
-        let summary = self.summary(for: tag)
-        XCTAssertTrue((summary.value(forKey: "lyricsSection") as! UIStackView).isHidden)
-    }
-
-    func testLyricsRemainOnScreenAfterSwitchingPagesAndBack() {
-        seedCachedTag(id: 1809, lyrics: "And I will wait to face the skies")
-        let detail = loadedDetail(tagId: 1809)
-
-        detail.selectedIndex = 1
-        settle()
-        detail.selectedIndex = 0
-        settle()
-
-        let summary = detail.viewControllers[0] as! DPTagSummaryController
-        let lyrics = summary.value(forKey: "lyricsLabel") as! UILabel
-        XCTAssertEqual(lyrics.text, "And I will wait to face the skies")
-        XCTAssertFalse((summary.value(forKey: "lyricsSection") as! UIStackView).isHidden)
-        waitUntil("the summary page is remounted") { lyrics.window != nil }
-        XCTAssertGreaterThan(lyrics.bounds.height, 0, "The lyrics still occupy real space")
-    }
-
-    // MARK: - Rating
-    // Replaces testLayoutNativeRatingScrollAndCancel and
-    // testRatingAfterReturningFromDetails. Scrolling a native action sheet is
-    // UIKit's behaviour; the app's contribution is the set of choices and that
-    // cancelling rates nothing.
-
-    func testRatingOffersFiveDownToOneStarPlusCancel() {
-        let tag = seedCachedTag(id: 1809)
-        let summary = TMPresentationCapturingSummary()
-        summary.busyIndicator = DPBusyIndicator()
-        summary.tag = tag
-        mountInNavigation(summary)
-        settle()
-
-        summary.perform(Selector(("rate")))
-        let sheet = try? XCTUnwrap(summary.presented.last as? UIAlertController)
-        XCTAssertEqual(sheet?.title, "Rating")
-        XCTAssertEqual(sheet?.message, "Rate the tag on a scale of 1-5 stars")
-        XCTAssertEqual(sheet?.actions.map { $0.title ?? "" },
-                       ["5 stars", "4 stars", "3 stars", "2 stars", "1 star", "Cancel"])
-        XCTAssertEqual(sheet?.actions.last?.style, .cancel)
-        XCTAssertNotNil(sheet?.popoverPresentationController?.sourceView,
-                        "The sheet is anchored to the rating button")
-    }
-
-    func testRatingIsStillOfferedAfterVisitingAnotherPage() {
         seedCachedTag(id: 1809)
-        let detail = loadedDetail(tagId: 1809)
-        detail.selectedIndex = 1
-        settle()
-        detail.selectedIndex = 0
-        settle()
-
-        let summary = detail.viewControllers[0] as! DPTagSummaryController
-        let rating = summary.value(forKey: "ratingButton") as! UIButton
-        XCTAssertEqual(rating.accessibilityLabel, "Rate tag")
-        XCTAssertTrue(rating.isEnabled)
-        XCTAssertGreaterThanOrEqual(rating.bounds.height, 44)
+        let detail = mountDetail()
+        let driver = driver()
+        let ids = ["favorite", "teachable", "afterglow-set-k3f9", "chorus-warmups-list", "add"].map { "summary.chip.\($0)" }
+        let frames = ids.compactMap { driver.element(id: $0)?.accessibilityFrame }
+        XCTAssertEqual(frames.count, 5)
+        XCTAssertGreaterThan(Set(frames.map { $0.minY.rounded() }).count, 1, "Five capsules do not fit one phone-width line")
+        let width = detail.view.window!.bounds.width
+        for frame in frames { XCTAssertLessThanOrEqual(frame.maxX, width + 0.5) }
     }
 
-    // MARK: - Details, Tracks and Videos pages
-    // Replaces testDetailMediaTabs and the Details half of testDetailLayout*.
+    // MARK: - Details, Tracks and Videos
 
-    func testDetailsPageShowsWhenTheTagWasLastRefreshed() {
+    func testTheDetailsPageShowsWhereTheTagCameFrom() {
         seedCachedTag(id: 1809)
-        let detail = loadedDetail(tagId: 1809)
-        detail.selectedIndex = 1
-        settle()
-
-        let details = detail.viewControllers[1] as! DPTagDetailController
-        XCTAssertNotNil(label(in: details.view, text: "Last Refreshed"),
-                        "The Details page labels the refresh time")
+        let detail = mountDetail()
+        select(.details, in: detail)
+        let driver = driver()
+        for caption in ["Last Refreshed", "Downloads", "Link", "Posted", "Arranged by"] {
+            XCTAssertTrue(driver.exists(label: caption), "\(caption) is shown")
+        }
+        XCTAssertTrue(driver.exists(label: "BarbershopTags.com"))
+        XCTAssertTrue(driver.element(label: "BarbershopTags.com")?.accessibilityTraits.contains(.link) ?? false)
+        XCTAssertFalse(driver.element(label: "A. Arranger")?.accessibilityTraits.contains(.link) ?? true,
+                       "A name without a website is plain information")
+        XCTAssertFalse(driver.exists(label: "Sung by"), "Empty facts are left out")
     }
 
-    func testTracksPageApologisesWhenTheTagHasNoTracks() {
-        let tag = seedCachedTag(id: 4244, withTracks: false)
-        let tracks = DPTagTracksController()
-        tracks.busyIndicator = DPBusyIndicator()
-        tracks.tag = tag
-        mountInNavigation(tracks)
-        settle()
-
-        XCTAssertEqual(tag.tracks.count, 0)
-        let apology = tracks.value(forKey: "apology") as! UILabel
-        XCTAssertEqual(apology.text, "Sorry, no tracks could be found for this tag.")
-        XCTAssertFalse(apology.isHidden)
+    func testTheTracksPageApologisesWhenTheTagHasNoTracks() {
+        seedCachedTag(id: 4244, withTracks: false)
+        let detail = mountDetail(4244)
+        select(.tracks, in: detail)
+        XCTAssertTrue(driver().exists(label: "Sorry, no tracks could be found for this tag."))
     }
 
-    func testTracksPageListsEveryVoicePartTheTagProvides() {
+    func testTheTracksPageListsEveryVoicePartAsSomethingToPlay() {
         let tag = seedCachedTag(id: 1809, withTracks: true)
-        let tracks = DPTagTracksController()
-        tracks.busyIndicator = DPBusyIndicator()
-        tracks.tag = tag
-        mountInNavigation(tracks)
-        settle()
-
-        let table = tracks.value(forKey: "partsTable") as! UITableView
-        XCTAssertEqual(table.numberOfRows(inSection: 0), tag.tracks.count)
+        let detail = mountDetail()
+        select(.tracks, in: detail)
         XCTAssertEqual(tag.tracks.map(\.title), ["All Parts", "Tenor", "Lead", "Baritone", "Bass"])
+        for title in ["All Parts", "Tenor", "Lead", "Baritone", "Bass"] {
+            let row = driver().element(label: title)
+            XCTAssertNotNil(row, "\(title) is listed")
+            XCTAssertEqual(row?.accessibilityHint, "Plays the learning track")
+        }
     }
+
+    func testTheVideosPageDescribesEachVideoAndOpensItInTheApp() throws {
+        let tag = seedCachedTag(id: 1809)
+        tag.teachingVideo = "teach12345"
+        tag.teacher = "Tag Teacher"
+        let video = DPVideo()
+        video.youTubeCode = "video12345"
+        video.sungBy = "Main Street"
+        video.sungKey = "Bb"
+        video.isMultitrack = true
+        video.posted = Date(timeIntervalSince1970: 1_650_000_000)
+        tag.videos = [video]
+        tag.cache()
+        let detail = mountDetail()
+        select(.videos, in: detail)
+        let driver = driver()
+        XCTAssertTrue(driver.exists(label: "Teaching video by Tag Teacher"))
+        let posted = DateFormatter()
+        posted.dateStyle = .long
+        let spoken = "Video sung by Main Street in Bb. Posted \(posted.string(from: video.posted)). Multitrack."
+        XCTAssertTrue(driver.exists(label: spoken))
+        XCTAssertTrue(driver.exists(label: "Videos open on YouTube inside Tag Master."))
+        driver.tap(label: spoken)
+        spinUntil("the browser opens") { detail.presentedViewController != nil }
+        func hostsBrowser(_ controller: UIViewController) -> Bool {
+            controller is SFSafariViewController || controller.children.contains(where: hostsBrowser)
+        }
+        XCTAssertTrue(hostsBrowser(try XCTUnwrap(detail.presentedViewController)), "YouTube opens in the in-app browser")
+        detail.presentedViewController?.dismiss(animated: false)
+        ScreenCatalog.settle(0.3)
+    }
+
+    func testAVideolessTagSaysSo() {
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        select(.videos, in: detail)
+        XCTAssertTrue(driver().exists(label: "Sorry, this tag does not have any videos associated with it."))
+    }
+
+    // MARK: - The picker
+
+    private func mountPicker(tagId: Int32 = 1809) -> TMListPickerModel {
+        let model = TMListPickerModel(tagId: tagId)
+        mount(UIHostingController(rootView: TMListPicker(model: model)))
+        ScreenCatalog.settle(0.3)
+        return model
+    }
+
+    func testThePickerListsEveryListWithItsSizeAndTheTagsMembership() {
+        seedLists(favorite: [1809], lists: [
+            (key: "afterglow-set-k3f9", name: "Afterglow set", ids: [1809]),
+            (key: "chorus-warmups-list", name: "Chorus warmups", ids: [])
+        ])
+        _ = mountPicker()
+        let driver = driver()
+        XCTAssertTrue(driver.exists(label: "Add to list"), "The picker is titled")
+        XCTAssertTrue(driver.exists(id: "picker.done"))
+        let expected: [(String, String, String, Bool)] = [
+            ("favorite", "Favorites", "1 tag", true), ("teachable", "Teachable Tags", "0 tags", false),
+            ("afterglow-set-k3f9", "Afterglow set", "1 tag", true), ("chorus-warmups-list", "Chorus warmups", "0 tags", false),
+        ]
+        for (key, name, count, member) in expected {
+            XCTAssertEqual(driver.label(id: "picker.row.\(key)"), name)
+            XCTAssertEqual(driver.value(id: "picker.row.\(key)"), count)
+            XCTAssertEqual(driver.isSelected(id: "picker.row.\(key)"), member, "\(name) says whether the tag is in it")
+        }
+        XCTAssertTrue(driver.exists(id: "picker.row.new"))
+    }
+
+    func testTappingAPickerRowMovesTheTagInAndOutOfThatList() {
+        seedLists(lists: [(key: "afterglow-set-k3f9", name: "Afterglow set", ids: [])])
+        _ = mountPicker()
+        let driver = driver()
+        driver.tap(id: "picker.row.favorite")
+        XCTAssertEqual(DPAppDelegate.favorites(), [1809])
+        XCTAssertTrue(driver.isSelected(id: "picker.row.favorite"))
+        driver.tap(id: "picker.row.favorite")
+        XCTAssertEqual(DPAppDelegate.favorites(), [])
+        driver.tap(id: "picker.row.afterglow-set-k3f9")
+        XCTAssertEqual(TMTagLists.ids(for: "afterglow-set-k3f9"), [1809])
+    }
+
+    func testThePickersNewListRowNamesAListAndPutsTheTagStraightIntoIt() throws {
+        let model = mountPicker()
+        driver().tap(id: "picker.row.new")
+        var prompt = try XCTUnwrap(model.namePrompt)
+        XCTAssertEqual(prompt.title, "New list")
+        XCTAssertEqual(prompt.message, TMNamePrompt.exampleHint)
+        XCTAssertFalse(prompt.canConfirm, "An empty name cannot be created")
+        prompt.text = "Favorites"
+        XCTAssertFalse(prompt.canConfirm, "A reserved name is refused")
+        XCTAssertEqual(prompt.message, prompt.problem)
+        prompt.text = "  Afterglow   set "
+        XCTAssertTrue(prompt.canConfirm)
+        // The alert is the shared UIKit one, whose message follows the typing.
+        let alert = presentedAlert()
+        XCTAssertEqual(alert?.title, "New list")
+        alert?.tm_type("  Afterglow   set ")
+        ScreenCatalog.settle(0.1)
+        alert?.tm_fire("Create")
+        ScreenCatalog.settle(0.1)
+        XCTAssertNil(model.namePrompt)
+        let key = try XCTUnwrap(TMTagLists.customKeys().first)
+        XCTAssertEqual(TMTagLists.name(for: key), "Afterglow set")
+        XCTAssertEqual(TMTagLists.ids(for: key), [1809])
+        ScreenCatalog.settle(0.3)
+        XCTAssertTrue(driver().isSelected(id: "picker.row.\(key)"), "A list made elsewhere shows up at once")
+    }
+
+    // MARK: - iPad placeholder
+
+    func testThePlaceholderSaysWhatWillOpenThere() {
+        mount(UIHostingController(rootView: TMTagPlaceholder()))
+        let driver = driver()
+        XCTAssertTrue(driver.exists(label: "Pick a tag"))
+        XCTAssertTrue(driver.element(label: "Pick a tag")?.accessibilityTraits.contains(.header) ?? false)
+        XCTAssertTrue(driver.exists(label: "Choose a tag from the list. Its summary, tracks, sheet music, and videos open here."))
+    }
+}
+
+/// A plain list screen that opens tags, as Home or a query list does.
+final class TMTestListController: UIViewController, TMTagListSource {
+    let ids: [Int]
+    private(set) var steppedTo: [Int32] = []
+    init(ids: [Int]) { self.ids = ids; super.init(nibName: nil, bundle: nil) }
+    required init?(coder: NSCoder) { fatalError() }
+    func tm_listedTagIds() -> [NSNumber] { ids.map { NSNumber(value: $0) } }
+    func tm_didStep(toTagId tagId: Int32) { steppedTo.append(tagId) }
 }

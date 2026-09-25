@@ -14,20 +14,21 @@ import Combine
 import SwiftUI
 import UIKit
 
-final class SongEditorModel: ObservableObject {
-    @Published var title: String
-    @Published private(set) var selectedKey: DPKey
-    @Published var isMinor: Bool {
+@Observable
+final class SongEditorModel {
+    var title: String
+    private(set) var selectedKey: DPKey
+    var isMinor: Bool {
         didSet { if isMinor != oldValue { modeChanged() } }
     }
-    @Published var titleErrorVisible = false
+    var titleErrorVisible = false
     /// Incremented when the controller wants the title field focused.
-    @Published var titleFocusRequest = 0
+    var titleFocusRequest = 0
 
     let majorKeys = DPKey.majorKeys() as? [DPKey] ?? []
     let minorKeys = DPKey.minorKeys() as? [DPKey] ?? []
 
-    private let rowFeedback = UISelectionFeedbackGenerator()
+    @ObservationIgnored private let rowFeedback = UISelectionFeedbackGenerator()
 
     init(title: String, key: DPKey?) {
         self.title = title
@@ -72,59 +73,17 @@ final class SongEditorModel: ObservableObject {
         }
     }
 
-}
-
-/// The Objective-C face of the editor: owns the model and builds the hosted view.
-@objc public final class DPSongEditor: NSObject {
-    let model: SongEditorModel
-
-    @objc public init(title: String, key: DPKey?) {
-        model = SongEditorModel(title: title, key: key)
-    }
-
-    @objc public var title: String {
-        get { model.trimmedTitle }
-        set { model.title = newValue }
-    }
-    @objc public var selectedKey: DPKey { model.selectedKey }
-    @objc public var isMinor: Bool { model.isMinor }
-    @objc public var titleErrorVisible: Bool { model.titleErrorVisible }
-
-    @objc public func select(_ key: DPKey) { model.select(key) }
-
     /// Shows the inline requirement and focuses the field when the title is blank.
-    @objc public func requireTitle() -> Bool {
-        guard model.trimmedTitle.isEmpty else { return true }
-        model.titleErrorVisible = true
-        model.titleFocusRequest += 1
+    func requireTitle() -> Bool {
+        guard trimmedTitle.isEmpty else { return true }
+        titleErrorVisible = true
+        titleFocusRequest += 1
         return false
     }
 
-    @objc public func focusTitle() { model.titleFocusRequest += 1 }
-
-    @objc public func makeViewController() -> UIViewController {
-        let host = UIHostingController(rootView: SongEditorView(model: model))
-        host.view.backgroundColor = .clear
-        return host
-    }
 }
 
 // MARK: - Views
-
-private enum Plate {
-    static let ink = Color(DPTheme.plateInk)
-    static let inkSecondary = Color(DPTheme.plateInkSecondary)
-    static let surface = Color(DPTheme.plateSurface)
-    static let hairline = Color(DPTheme.plateHairline)
-    static let lit = Color(DPTheme.plateLit)
-    static let onLit = Color(DPTheme.plateOnLit)
-
-    static func display(_ size: CGFloat) -> Font { Font(DPTheme.condensedFont(size: size) as CTFont) }
-    static func text(_ size: CGFloat) -> Font { Font(DPTheme.listTitleFont(size: size) as CTFont) }
-    static func mono(_ size: CGFloat) -> Font { Font(DPTheme.monospacedFont(size: size) as CTFont) }
-    static func music(_ size: CGFloat) -> Font { Font.custom("MusiQwik", size: size) }
-    static func noteHedz(_ size: CGFloat) -> Font { Font.custom("NoteHedz", size: size) }
-}
 
 /// Engraved plate label: tracked monospaced capitals in secondary ink.
 private struct PlateLabel: View {
@@ -140,7 +99,7 @@ private struct PlateLabel: View {
 }
 
 struct SongEditorView: View {
-    @ObservedObject var model: SongEditorModel
+    @Bindable var model: SongEditorModel
     @FocusState private var titleFocused: Bool
 
     var body: some View {
@@ -200,7 +159,7 @@ struct SongEditorView: View {
 /// The Keys screen's list: signature left, name right, hairline rules, and
 /// the chosen row lit. Opens scrolled to the chosen key.
 private struct KeySignatureList: View {
-    @ObservedObject var model: SongEditorModel
+    @Bindable var model: SongEditorModel
     let dismissKeyboard: () -> Void
 
     var body: some View {
@@ -221,6 +180,12 @@ private struct KeySignatureList: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .onAppear { scrollToSelection(proxy, animated: false) }
+            // On iPad the form sheet rises for the keyboard (a required title) and
+            // the list re-fits; UIKit's kept the chosen key centred.
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+                scrollToSelection(proxy, animated: false)
+            }
             .onChange(of: model.isMinor) { _, _ in scrollToSelection(proxy, animated: true) }
         }
         .accessibilityIdentifier("keyList")
@@ -313,4 +278,79 @@ enum SongEditorSpeech {
         let spelled = accidental == Int(Sharp.rawValue) ? "\(letter) sharp" : (accidental == Int(Flat.rawValue) ? "\(letter) flat" : letter)
         return "\(spelled) \(minor ? "minor" : "major"), \(accidentalCount(numAccidentals: Int(key.numAccidentals)))"
     }
+}
+
+// MARK: - Screen
+
+/// One editing of one song: the editor's state and what Close and Done do.
+@MainActor
+final class SongEditorSession {
+    let request: SongEditorRequest
+    let model: SongEditorModel
+
+    init(request: SongEditorRequest) {
+        self.request = request
+        model = SongEditorModel(title: request.song.name ?? "", key: request.song.key)
+    }
+
+    var title: String { (request.song.name ?? "").isEmpty ? "Add Song" : "Edit Song" }
+
+    /// Done: a blank title is refused (with the error haptic and announcement);
+    /// otherwise the song takes the title and key and the Songs screen closes the editor.
+    func complete() {
+        guard model.requireTitle() else {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            UIAccessibility.post(notification: .announcement, argument: "Song title is required")
+            return
+        }
+        request.song.name = model.trimmedTitle
+        request.song.key = model.selectedKey
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        request.completion(true)
+    }
+
+    func cancel() {
+        request.completion(false)
+    }
+}
+
+/// The editor's content: the form over the staff, the banner docked below on iPhone.
+struct SongEditorScreen: View {
+    let session: SongEditorSession
+
+    private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SongEditorView(model: session.model)
+                .padding(.bottom, 8)
+            if isPhone {
+                BannerAdSlot()
+                    .accessibilityHidden(true)
+            }
+        }
+        .staffScreenBackground()
+    }
+}
+
+/// The editor as the Songs tab presents it, built as the UIKit editor was: its
+/// own navigation controller, titled Add Song or Edit Song, with Close and Done
+/// bar items. (A SwiftUI NavigationStack in a UIKit-presented controller hands
+/// its title and toolbar to the presenting screen's bar instead.)
+final class SongEditorController: UIHostingController<SongEditorScreen> {
+    let session: SongEditorSession
+
+    init(request: SongEditorRequest) {
+        session = SongEditorSession(request: request)
+        super.init(rootView: SongEditorScreen(session: session))
+        navigationItem.title = session.title
+        navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
+    }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func close() { session.cancel() }
+    @objc private func done() { session.complete() }
 }

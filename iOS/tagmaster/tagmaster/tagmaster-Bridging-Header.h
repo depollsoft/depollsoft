@@ -3,13 +3,9 @@
 //
 
 #import "DPAppDelegate.h"
-#import "DPHomeViewController.h"
-#import "DPTeachableTagsController.h"
-#import "DPSettingsController.h"
-#import "DPTagTracksController.h"
-#import "TMBarberPoleLoadingView.h"
-#import "DPTagViewController.h"
-#import "DPBrowseViewController.h"
-#import "DPTagCell.h"
+#import "DPBarbershop.h"
 #import "DPFileCache.h"
 #import "DPRemoteLocation.h"
+#import "TMObjC.h"
+#import "TMQuartetArtwork.h"
+#import "TMLogoArtwork.h"

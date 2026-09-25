@@ -282,16 +282,6 @@ class TMBehaviorTestCase: XCTestCase {
         return navigation
     }
 
-    /// Stops a page-based screen's query lists from fetching from the live
-    /// catalog when they appear. `isLoading` is the controller's own guard, so
-    /// this suppresses the request without altering anything else.
-    func quiesceQueries(in pages: TMPageViewController) {
-        pages.loadViewIfNeeded()
-        for page in pages.viewControllers {
-            (page as? DPTagQueryViewController)?.isLoading = true
-        }
-    }
-
     func resize(to size: CGSize) {
         window.frame = CGRect(origin: .zero, size: size)
         settle()
@@ -400,12 +390,13 @@ class TMBehaviorTestCase: XCTestCase {
     }
 
     /// Drives a detail controller to its loaded state from the seeded cache.
+    @MainActor
     func loadedDetail(tagId: Int32 = 1809,
-                      size: CGSize = TMBehaviorTestCase.portrait) -> DPTagViewController {
-        let detail = DPTagViewController()
+                      size: CGSize = TMBehaviorTestCase.portrait) -> TagDetailViewController {
+        let detail = TagDetailViewController()
         detail.tagId = tagId
         mountInNavigation(detail, size: size)
-        waitUntil("detail leaves its loading state") { detail.value(forKey: "tag") != nil }
+        spinUntil("detail leaves its loading state", timeout: 5) { detail.model.tag != nil }
         settle()
         return detail
     }

@@ -78,9 +78,10 @@ npm run deploy                     # Deploy to Firebase
 
 ### iOS Architecture
 
-- Mixed Objective-C and Swift codebase with Swift bridging headers
+- Both apps' UI is SwiftUI (a SwiftUI `App`, `@Observable` models per screen; Tag Master routes through `TMRouter`); see `docs/ios-swiftui.md`
+- Model layers stay mixed Objective-C and Swift (DPTag, DPNote, DPKey, stores) behind Swift bridging headers; the UI is Swift
 - Swift Package Manager for Firebase, FirebaseUI, and Google Mobile Ads dependencies
-- Custom UI components in depolllib (has test coverage)
+- depolllib holds the shared non-UI pieces: JSON serialization, the file cache, NSString helpers, analytics and `DPAppLog` (has test coverage; not run in CI)
 - Both apps share common Firebase and authentication dependencies
 
 ### Backend Architecture
@@ -152,9 +153,11 @@ npm run deploy                     # Deploy to Firebase
   - TagMaster / PitchPerfect: screen behaviour is tested on the JVM with Robolectric (`src/test`); `src/androidTest` holds only a small device-only residue (drags, IME geometry, PdfRenderer, store screenshots, FirebaseUI patch check) that CI does not run
 - **Pitch Perfect set list sync**: `SongListSyncEmulatorTest` (Android) and `DPSongListSyncEmulatorTests` (iOS, needs a signed build) exercise the real Firestore sync against the local emulators started by `scripts/firestore-emulator.sh pitchperfect`, and skip when none is running; see `docs/pitchperfect-set-lists.md`
 - **iOS**:
-  - depolllib: Has tests
+  - depolllib: Has tests (`xcodebuild test -scheme depolllib`; not part of the CI suites)
   - pitchperfectlib: Has tests
-  - pitchperfect / tagmaster: behaviour is tested in-process in the hosted `*Tests` bundles (real view controllers in a test `UIWindow`); the `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`), and run only on the weekly extended iOS CI run
+  - pitchperfect: SwiftUI screens (see `docs/ios-swiftui.md`); models are tested directly and the real controls are driven in-process through the accessibility tree (`iOS/shared/SwiftUITestDriver.swift`), and `PitchPerfectScreenCatalogTests` renders every screen state (set `TEST_RUNNER_SCREEN_CATALOG_DIR` to write captures)
+  - tagmaster: behaviour is tested in-process in the hosted `tagmasterTests` bundle: models directly, and the real SwiftUI screens and shell driven through `UIDriver` (`iOS/shared/SwiftUITestDriver.swift`)
+  - both apps: the `*UITests` bundles hold only launch metrics, keyboard/rotation/system-sheet cases and `StoreScreenshotTests` (used by `scripts/release/capture.py`), and run only on the weekly extended iOS CI run
 
 ### Running Tests
 
