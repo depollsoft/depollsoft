@@ -51,20 +51,11 @@ internal object ScreenshotSupport {
     /** The test's compose rule, which finds nodes in whichever activity is showing. */
     lateinit var compose: ComposeTestRule
 
-    /** A silent player: the goldens are about pixels, and Robolectric's audio is irrelevant. */
-    private val silentPlayer =
-        object : Note.NotePlayer {
-            override fun play(n: Note) = Unit
-
-            override fun stop(n: Note) = Unit
-        }
-
     fun setUp(rule: ComposeTestRule) {
         compose = rule
         ScreenTestSupport.startFromFirstLaunch()
         ScreenTestSupport.ensureFirebaseApp()
         PurchaseService.areAdsRemoved = true
-        Note.setPlayer(silentPlayer)
         val context = ApplicationProvider.getApplicationContext<Context>()
         // A returning user who already answered the telemetry prompt, so no dialog covers a screen.
         PrivacyChoices(context).save(analytics = false, crashes = false)

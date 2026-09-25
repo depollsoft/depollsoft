@@ -100,13 +100,13 @@ class MainScreenTest {
     }
 
     @Test
-    fun theActivitySurvivesRecreation() {
+    fun theActivitySurvivesRecreationOnTheSameTab() {
         val controller = screens.launch(PitchPerfectActivity::class.java)
         controller.get().tap(MainTab.KEYS)
         controller.recreate()
         screens.settle()
         compose.onNodeWithTag(TestTags.PAGER).assertIsDisplayed()
-        compose.onNodeWithTag(TestTags.TAB_SONGS).assertIsDisplayed()
+        controller.get().assertOn(MainTab.KEYS)
     }
 
     @Test

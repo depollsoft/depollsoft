@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -80,15 +81,26 @@ class PitchRowsTest {
     @Test
     fun theNotesListCoversEveryPitchOnceStartingNearMiddleC() {
         showNotes()
-        assertTrue("enharmonic twins share a row", notes.zipWithNext().none { (a, b) -> a.frequency == b.frequency })
-        assertTrue("the rows climb in pitch", notes.zipWithNext().all { (a, b) -> a.frequency < b.frequency })
         val middle = notes.indexOfFirst { it.friendlyName == "C" && it.octave == 4 }
-        val c4 = compose.onNodeWithTag(TestTags.noteRow(middle))
-        c4.assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.noteRow(middle)).assertIsDisplayed()
         assertTrue(
             "the list opens with middle C in view",
             compose.onAllNodesWithTag(TestTags.noteRow(0)).fetchSemanticsNodes().isEmpty(),
         )
+
+        // Read every row as shown: eight octaves, C0 to B7, one row per pitch, climbing.
+        val list = compose.onNodeWithTag(TestTags.NOTE_LIST)
+        val shown =
+            (0 until 96).map { index ->
+                list.performScrollToNode(hasTestTag(TestTags.noteRow(index)))
+                compose.onNodeWithTag(TestTags.noteRow(index)).fetchSemanticsNode().config
+                    .getOrNull(SemanticsProperties.Text)?.joinToString(" ").orEmpty()
+            }
+        assertTrue(shown.first(), shown.first().startsWith("C0 "))
+        assertTrue(shown.last(), shown.last().startsWith("B7 "))
+        assertTrue("no row after B7", compose.onAllNodesWithTag(TestTags.noteRow(96)).fetchSemanticsNodes().isEmpty())
+        val hertz = shown.map { Regex("([0-9.]+) Hz").find(it)!!.groupValues[1].toDouble() }
+        assertTrue("each pitch once, climbing: $hertz", hertz.zipWithNext().all { (a, b) -> a < b })
     }
 
     @Test

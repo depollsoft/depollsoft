@@ -35,13 +35,7 @@ class PitchPipeScreenTest {
         Preferences.clearTestValues()
         ScreenTestSupport.seedSettingsDefaults()
         widgets = Mockito.mockStatic(PitchPipeAppWidget::class.java)
-        Note.setPlayer(
-            object : Note.NotePlayer {
-                override fun play(n: Note) = Unit
-
-                override fun stop(n: Note) = Unit
-            },
-        )
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
     }
 
     @After
