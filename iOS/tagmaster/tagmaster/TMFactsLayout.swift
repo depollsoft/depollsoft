@@ -119,9 +119,13 @@ struct TMFactsLayout: Layout {
         var y = bounds.minY
         for (index, row) in rows(width: bounds.width, subviews: subviews).enumerated() {
             y += row.gapBefore
-            subviews[index * 2].place(at: CGPoint(x: bounds.minX + row.captionFrame.minX, y: y + row.captionFrame.minY),
+            // UILabel's text lands on the pixel above a fractional frame origin.
+            let scale = UIScreen.main.scale
+            let captionY = ((y + row.captionFrame.minY) * scale).rounded(.down) / scale
+            subviews[index * 2].place(at: CGPoint(x: bounds.minX + row.captionFrame.minX, y: captionY),
                                       proposal: ProposedViewSize(row.captionFrame.size))
-            subviews[index * 2 + 1].place(at: CGPoint(x: bounds.minX + row.valueFrame.minX, y: y + row.valueFrame.minY),
+            let valueY = ((y + row.valueFrame.minY) * scale).rounded(.down) / scale
+            subviews[index * 2 + 1].place(at: CGPoint(x: bounds.minX + row.valueFrame.minX, y: valueY),
                                           proposal: ProposedViewSize(row.valueFrame.size))
             y += row.height
         }
