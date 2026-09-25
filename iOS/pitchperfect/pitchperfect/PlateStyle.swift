@@ -165,6 +165,15 @@ struct BarSymbol: View {
 
     private static let configuration = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular, scale: .medium)
 
+    /// The same symbol as a UIKit bar item, named and identified the same way.
+    static func item(systemName: String, target: Any, action: Selector) -> UIBarButtonItem {
+        let item = UIBarButtonItem(image: UIImage(systemName: systemName, withConfiguration: configuration),
+                                   style: .plain, target: target, action: action)
+        item.accessibilityIdentifier = systemName
+        item.accessibilityLabel = DPCommon.accessibilityLabel(forSymbol: systemName)
+        return item
+    }
+
     var body: some View {
         Image(uiImage: UIImage(systemName: systemName, withConfiguration: Self.configuration) ?? UIImage())
             .renderingMode(.template)

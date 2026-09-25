@@ -41,6 +41,23 @@ enum SetListSelectorMetrics {
         ])
     }
 
+    /// Where each position sits along the row, as ProportionalRow places them:
+    /// hairlines between positions, one more and the fixed "+" at the end, and
+    /// the positions sharing any spare width in proportion to their natural widths.
+    static func positionSpans(titles: [String], width: CGFloat) -> [Range<CGFloat>] {
+        let naturals = titles.map(naturalWidth(for:))
+        let fixed = CGFloat(titles.count) + newPositionWidth
+        let flexible = naturals.reduce(0, +)
+        let scale = flexible > 0 ? max(1, (width - fixed) / flexible) : 1
+        var x: CGFloat = 0
+        return naturals.enumerated().map { index, natural in
+            if index > 0 { x += 1 }
+            let start = x
+            x += natural * scale
+            return start..<x
+        }
+    }
+
     /// The width a position would like: its label (capped) plus both paddings.
     static func naturalWidth(for title: String) -> CGFloat {
         let label = ceil(labelText(title).size().width)
@@ -50,34 +67,55 @@ enum SetListSelectorMetrics {
 
 struct SetListSelector: View {
     let model: SongListModel
-    private let feedback = UISelectionFeedbackGenerator()
+    @State private var scroller = ScrollViewHandle()
 
     var body: some View {
         let lists = model.lists
         let currentId = model.currentListId
         GeometryReader { frame in
-        ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 ProportionalRow(minimumWidth: frame.size.width) {
                     ForEach(Array(lists.enumerated()), id: \.element.id) { index, list in
                         if index > 0 { Hairline() }
                         position(list, selected: list.id == currentId)
-                            .id(list.id)
                     }
                     Hairline()
                     newPosition
                 }
+                .background(ScrollViewFinder { scroller.view = $0 }.frame(width: 0, height: 0))
             }
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-            .onAppear { proxy.scrollTo(currentId) }
-            .onChange(of: currentId) { _, id in proxy.scrollTo(id) }
-        }
+            // Keeps the chosen position in view whenever the positions change
+            // size or place, as the UIKit selector did on every layout.
+            .onAppear { reveal(lists: lists, currentId: currentId, width: frame.size.width) }
+            .onChange(of: SelectorLayout(currentId: currentId, width: frame.size.width,
+                                         positions: lists.map { "\($0.id)\u{0}\(model.displayName($0))" })) { _, layout in
+                reveal(lists: lists, currentId: layout.currentId, width: layout.width)
+            }
         }
         .frame(height: SetListSelectorMetrics.height)
         .clipShape(RoundedRectangle(cornerRadius: SetListSelectorMetrics.cornerRadius))
         .overlay {
             RoundedRectangle(cornerRadius: SetListSelectorMetrics.cornerRadius)
                 .strokeBorder(Plate.hairline, lineWidth: SetListSelectorMetrics.frameStroke)
+        }
+    }
+
+    /// Scrolls the chosen position into view (with its frame's stroke) once the
+    /// row has been laid out with the change, as scrollRectToVisible in the UIKit
+    /// selector's layoutSubviews did. (ScrollViewReader cannot reach views placed
+    /// by a custom Layout, so the rect comes from the same arithmetic.)
+    private func reveal(lists: [DPSongList], currentId: String, width: CGFloat) {
+        guard let index = lists.firstIndex(where: { $0.id == currentId }) else { return }
+        let spans = SetListSelectorMetrics.positionSpans(titles: lists.map(model.displayName), width: width)
+        let span = spans[index]
+        DispatchQueue.main.async {
+            guard let scrollView = scroller.view, scrollView.bounds.width > 0,
+                  scrollView.contentSize.width > scrollView.bounds.width else { return }
+            let rect = CGRect(x: span.lowerBound, y: 0, width: span.upperBound - span.lowerBound,
+                              height: SetListSelectorMetrics.height)
+                .insetBy(dx: -SetListSelectorMetrics.frameStroke, dy: 0)
+            scrollView.scrollRectToVisible(rect, animated: false)
         }
     }
 
@@ -88,9 +126,7 @@ struct SetListSelector: View {
         } label: {
             PositionLabel(title: title, selected: selected)
         } primaryAction: {
-            feedback.selectionChanged()
-            feedback.prepare()
-            model.select(listId: list.id)
+            model.choosePosition(listId: list.id)
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
@@ -114,6 +150,42 @@ struct SetListSelector: View {
         .accessibilityIdentifier("setlist.new")
         .layoutValue(key: FixedWidth.self, value: SetListSelectorMetrics.newPositionWidth)
     }
+}
+
+/// The selector's scroll view, once found.
+private final class ScrollViewHandle {
+    weak var view: UIScrollView?
+}
+
+/// Hands over the scroll view this sits in.
+private struct ScrollViewFinder: UIViewRepresentable {
+    let found: (UIScrollView) -> Void
+
+    final class Finder: UIView {
+        var found: (UIScrollView) -> Void = { _ in }
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            var view = superview
+            while let current = view, !(current is UIScrollView) { view = current.superview }
+            if let scrollView = view as? UIScrollView { found(scrollView) }
+        }
+    }
+
+    func makeUIView(context: Context) -> Finder {
+        let finder = Finder()
+        finder.isUserInteractionEnabled = false
+        finder.isAccessibilityElement = false
+        return finder
+    }
+
+    func updateUIView(_ finder: Finder, context: Context) { finder.found = found }
+}
+
+/// What the selector's scroll position depends on.
+private struct SelectorLayout: Equatable {
+    var currentId: String
+    var width: CGFloat
+    var positions: [String]
 }
 
 private struct PositionLabel: View {

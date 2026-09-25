@@ -66,11 +66,12 @@ final class AddSongsModel {
 }
 
 struct AddSongsScreen: View {
-    @State private var model: AddSongsModel
+    @StateObject private var box: ModelBox<AddSongsModel>
+    private var model: AddSongsModel { box.model }
     @Environment(\.dismiss) private var dismiss
 
     init(target: DPSongList) {
-        _model = State(initialValue: AddSongsModel(target: target))
+        _box = StateObject(wrappedValue: ModelBox(AddSongsModel(target: target)))
     }
 
     var body: some View {

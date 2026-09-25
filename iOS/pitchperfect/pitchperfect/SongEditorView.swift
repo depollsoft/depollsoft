@@ -180,6 +180,12 @@ private struct KeySignatureList: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .onAppear { scrollToSelection(proxy, animated: false) }
+            // On iPad the form sheet rises for the keyboard (a required title) and
+            // the list re-fits; UIKit's kept the chosen key centred.
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { _ in
+                guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+                scrollToSelection(proxy, animated: false)
+            }
             .onChange(of: model.isMinor) { _, _ in scrollToSelection(proxy, animated: true) }
         }
         .accessibilityIdentifier("keyList")
@@ -276,42 +282,21 @@ enum SongEditorSpeech {
 
 // MARK: - Screen
 
-/// The editor as the Songs tab presents it: a sheet titled Add Song or Edit
-/// Song, Close and Done in the bar, the banner docked below on iPhone.
-struct SongEditorScreen: View {
+/// One editing of one song: the editor's state and what Close and Done do.
+@MainActor
+final class SongEditorSession {
     let request: SongEditorRequest
-    @State private var model: SongEditorModel
-    @Environment(\.dismiss) private var dismiss
+    let model: SongEditorModel
 
     init(request: SongEditorRequest) {
         self.request = request
-        _model = State(initialValue: SongEditorModel(title: request.song.name ?? "", key: request.song.key))
+        model = SongEditorModel(title: request.song.name ?? "", key: request.song.key)
     }
 
-    private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+    var title: String { (request.song.name ?? "").isEmpty ? "Add Song" : "Edit Song" }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            SongEditorView(model: model)
-                .padding(.bottom, 8)
-            if isPhone {
-                BannerAdSlot()
-                    .accessibilityHidden(true)
-            }
-        }
-        .staffScreenBackground()
-        .navigationTitle((request.song.name ?? "").isEmpty ? "Add Song" : "Edit Song")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BarSymbolButton(systemName: "xmark") { cancel() }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                BarSymbolButton(systemName: "checkmark") { complete() }
-            }
-        }
-    }
-
+    /// Done: a blank title is refused (with the error haptic and announcement);
+    /// otherwise the song takes the title and key and the Songs screen closes the editor.
     func complete() {
         guard model.requireTitle() else {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
@@ -322,11 +307,50 @@ struct SongEditorScreen: View {
         request.song.key = model.selectedKey
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         request.completion(true)
-        dismiss()
     }
 
     func cancel() {
         request.completion(false)
-        dismiss()
     }
+}
+
+/// The editor's content: the form over the staff, the banner docked below on iPhone.
+struct SongEditorScreen: View {
+    let session: SongEditorSession
+
+    private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SongEditorView(model: session.model)
+                .padding(.bottom, 8)
+            if isPhone {
+                BannerAdSlot()
+                    .accessibilityHidden(true)
+            }
+        }
+        .staffScreenBackground()
+    }
+}
+
+/// The editor as the Songs tab presents it, built as the UIKit editor was: its
+/// own navigation controller, titled Add Song or Edit Song, with Close and Done
+/// bar items. (A SwiftUI NavigationStack in a UIKit-presented controller hands
+/// its title and toolbar to the presenting screen's bar instead.)
+final class SongEditorController: UIHostingController<SongEditorScreen> {
+    let session: SongEditorSession
+
+    init(request: SongEditorRequest) {
+        session = SongEditorSession(request: request)
+        super.init(rootView: SongEditorScreen(session: session))
+        navigationItem.title = session.title
+        navigationItem.leftBarButtonItem = BarSymbol.item(systemName: "xmark", target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem = BarSymbol.item(systemName: "checkmark", target: self, action: #selector(done))
+    }
+
+    @available(*, unavailable)
+    @MainActor required dynamic init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    @objc private func close() { session.cancel() }
+    @objc private func done() { session.complete() }
 }
