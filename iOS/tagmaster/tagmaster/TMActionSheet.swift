@@ -83,6 +83,10 @@ struct TMActionSheet: UIViewRepresentable {
     let actions: [TMSheetAction]
     var title: String?
     var message: String?
+    /// Hang the sheet from the control on every device. UIKit anchors any action
+    /// sheet given a source view, so on iOS 26 an anchored iPhone sheet is a
+    /// bubble at the control (no Cancel row), as the rating sheet always was.
+    var anchoredEverywhere = false
 
     /// Hears a popover dismissed by a tap outside it, which runs no action.
     final class Coordinator: NSObject, UIPopoverPresentationControllerDelegate {
@@ -103,7 +107,7 @@ struct TMActionSheet: UIViewRepresentable {
             anchor?.forget()
             binding.wrappedValue = false
         }
-        let actions = actions, title = title, message = message
+        let actions = actions, title = title, message = message, anchoredEverywhere = anchoredEverywhere
         anchor.alreadyUp = { $0 is UIAlertController }
         anchor.make = { anchor in
             let sheet = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
@@ -119,7 +123,7 @@ struct TMActionSheet: UIViewRepresentable {
                 })
             }
             // iPhone shows the classic centred card; iPad needs a popover source.
-            if anchor.traitCollection.userInterfaceIdiom == .pad {
+            if anchoredEverywhere || anchor.traitCollection.userInterfaceIdiom == .pad {
                 sheet.popoverPresentationController?.delegate = coordinator
                 sheet.popoverPresentationController?.sourceView = anchor
                 sheet.popoverPresentationController?.sourceRect = anchor.bounds

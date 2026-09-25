@@ -332,8 +332,8 @@ struct TMHomeScreen: View {
                 Spacer(minLength: 8)
                 if loading {
                     TMBarberPole(compact: true).accessibilityHidden(true)
-                } else if !model.isEditing {
-                    // A table in edit mode hid every row's accessory.
+                } else {
+                    // These rows cannot be edited, so UIKit kept their chevrons in edit mode.
                     TMDisclosureChevron()
                 }
             }
@@ -348,7 +348,7 @@ struct TMHomeScreen: View {
     @ViewBuilder
     private var listsRows: some View {
         Button { model.openTeachable() } label: {
-            TMListCountRow(title: "Teachable Tags", count: model.teachableCount, showsChevron: !model.isEditing)
+            TMListCountRow(title: "Teachable Tags", count: model.teachableCount)
         }
         .accessibilityIdentifier("home.lists.teachable")
         .tmTextRow()

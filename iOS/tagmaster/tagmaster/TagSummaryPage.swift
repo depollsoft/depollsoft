@@ -251,14 +251,14 @@ struct TMRatingUnit: View {
             .disabled(model.rated || model.ratingBusy)
             .accessibilityLabel(model.rated ? "Rating submitted" : "Rate tag")
             .accessibilityIdentifier("summary.rate")
-            // UIKit's classic action sheet: a centred card with Cancel on iPhone,
-            // hanging from Rate on iPad. SwiftUI's confirmationDialog is a bubble
-            // without Cancel on iOS 26.
+            // UIKit's action sheet with Rate as its source, as the UIKit page presented
+            // it: hanging from Rate on every device.
             .background(TMActionSheet(isPresented: Binding(get: { model.ratingDialogPresented },
                                                            set: { model.ratingDialogPresented = $0 }),
                                       actions: model.ratingActions,
                                       title: "Rating",
-                                      message: "Rate the tag on a scale of 1-5 stars"))
+                                      message: "Rate the tag on a scale of 1-5 stars",
+                                      anchoredEverywhere: true))
             TMBarberPole.operation("Sending rating…", active: model.ratingBusy)
         }
         .fixedSize()

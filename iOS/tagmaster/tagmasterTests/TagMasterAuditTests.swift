@@ -82,7 +82,7 @@ final class TagDetailAuditTests: TMBehaviorTestCase {
         active.cancel()
     }
 
-    func testRatePresentsUIKitsClassicActionSheetWithCancel() throws {
+    func testRatePresentsUIKitsActionSheetHangingFromRate() throws {
         seedCachedTag(id: 1809)
         let detail = mountDetail()
         UIDriver(window).tap(id: "summary.rate")
@@ -93,6 +93,7 @@ final class TagDetailAuditTests: TMBehaviorTestCase {
         XCTAssertEqual(sheet.message, "Rate the tag on a scale of 1-5 stars")
         XCTAssertEqual(sheet.actions.map(\.title), ["5 stars", "4 stars", "3 stars", "2 stars", "1 star", "Cancel"])
         XCTAssertEqual(sheet.actions.last?.style, .cancel)
+        XCTAssertNotNil(sheet.popoverPresentationController?.sourceView, "It hangs from Rate, as the UIKit sheet did")
         sheet.dismiss(animated: false)
         detail.model.summary.ratingDialogPresented = false
         ScreenCatalog.settle(0.3)
