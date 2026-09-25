@@ -64,6 +64,7 @@ class TagMasterScreenshotTest {
         ScreenTestSupport.clearTagCaches()
         ScreenshotFixtures.forgetPrivacy()
         ScreenshotFixtures.cacheTags()
+        ScreenshotFixtures.pinVersion()
         AuthState.setTestSource { false }
     }
 
@@ -102,13 +103,11 @@ class TagMasterScreenshotTest {
         name: String,
     ) {
         settleAll()
-        driver.dumpLayout(name)
         activity.window.decorView.captureRoboImage("src/test/screenshots/$name.png")
     }
 
     private fun captureScreen(name: String) {
         settleAll()
-        driver.dumpLayout(name)
         captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 
