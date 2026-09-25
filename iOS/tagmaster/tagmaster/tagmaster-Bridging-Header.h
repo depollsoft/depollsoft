@@ -13,3 +13,5 @@
 #import "DPTagCell.h"
 #import "DPFileCache.h"
 #import "DPRemoteLocation.h"
+#import "TMQuartetArtwork.h"
+#import "TMLogoArtwork.h"

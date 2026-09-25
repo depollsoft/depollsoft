@@ -26,6 +26,7 @@
 		B4A1B0000000000000000007 /* TMListPickerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000006 /* TMListPickerController.swift */; };
 		B4A1B0000000000000000009 /* TMListChipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B0000000000000000008 /* TMListChipsView.swift */; };
 		B4A1B000000000000000000B /* TMTagListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1B000000000000000000A /* TMTagListController.swift */; };
+		523346955E2C4736E2847840 /* TMArtworkViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB35CE032697AEC7BE082E98 /* TMArtworkViews.swift */; };
 		B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000012 /* TMTrackPlayerView.swift */; };
 		B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */; };
 		B4A1A0000000000000000004 /* TMTrackPlayerCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */; };
@@ -187,6 +188,7 @@
 		B4A1B0000000000000000006 /* TMListPickerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListPickerController.swift; sourceTree = "<group>"; };
 		B4A1B0000000000000000008 /* TMListChipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMListChipsView.swift; sourceTree = "<group>"; };
 		B4A1B000000000000000000A /* TMTagListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTagListController.swift; sourceTree = "<group>"; };
+		EB35CE032697AEC7BE082E98 /* TMArtworkViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMArtworkViews.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000012 /* TMTrackPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerView.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBalanceAudioPlayerTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000014 /* TMTrackPlayerCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMTrackPlayerCaptureTests.swift; sourceTree = "<group>"; };
@@ -516,6 +518,7 @@
 				1E989A2422F3EA1800EA9F2E /* DPTagTracksController.swift */,
 				B4A1A0000000000000000011 /* TMBalanceAudioPlayer.swift */,
 				B4A1A0000000000000000012 /* TMTrackPlayerView.swift */,
+				EB35CE032697AEC7BE082E98 /* TMArtworkViews.swift */,
 				B4A1B000000000000000000A /* TMTagListController.swift */,
 				B4A1B0000000000000000008 /* TMListChipsView.swift */,
 				B4A1B0000000000000000006 /* TMListPickerController.swift */,
@@ -857,6 +860,7 @@
 				1E989A2522F3EA1800EA9F2E /* DPTagTracksController.swift in Sources */,
 				B4A1A0000000000000000001 /* TMBalanceAudioPlayer.swift in Sources */,
 				B4A1A0000000000000000002 /* TMTrackPlayerView.swift in Sources */,
+				523346955E2C4736E2847840 /* TMArtworkViews.swift in Sources */,
 				B4A1B000000000000000000B /* TMTagListController.swift in Sources */,
 				B4A1B0000000000000000009 /* TMListChipsView.swift in Sources */,
 				B4A1B0000000000000000007 /* TMListPickerController.swift in Sources */,
