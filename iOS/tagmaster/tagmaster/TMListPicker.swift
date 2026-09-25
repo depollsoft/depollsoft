@@ -167,48 +167,12 @@ extension View {
 /// Presents the picker the way UIKit did: a popover with its arrow on whatever opened it
 /// on iPad (a bar button, a chip), a half-height sheet with a grabber on iPhone.
 /// SwiftUI's popover inside a toolbar lands on top of the button without an arrow.
-struct TMListPickerPresenter: UIViewControllerRepresentable {
+struct TMListPickerPresenter: UIViewRepresentable {
     @Binding var isPresented: Bool
     let tagId: Int32
 
-    /// Reports when it lands in a window: SwiftUI builds toolbar items twice (once off
-    /// screen to measure them), and only the copy in the window may present.
-    final class AnchorView: UIView {
-        var movedToWindow: () -> Void = {}
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            movedToWindow()
-        }
-    }
-
-    final class Controller: UIViewController {
-        weak var picker: UIViewController?
-        var wanted = false
-        var makePicker: (Controller) -> UIViewController = { _ in UIViewController() }
-
-        override func loadView() {
-            let anchor = AnchorView()
-            anchor.isUserInteractionEnabled = false
-            anchor.backgroundColor = .clear
-            anchor.movedToWindow = { [weak self] in self?.sync() }
-            view = anchor
-        }
-
-        /// Presents or dismisses to match `wanted`, once this copy is on screen.
-        func sync() {
-            if wanted, picker == nil, let window = view.window, let root = window.rootViewController {
-                // Another copy of this control may already have put a picker up.
-                let top = TMListPickerPresenter.top(root)
-                guard !(top is TMListPickerPresenter.TMListPickerHost) else { return }
-                let picker = makePicker(self)
-                self.picker = picker
-                top.present(picker, animated: UIView.areAnimationsEnabled)
-            } else if !wanted, let picker {
-                self.picker = nil
-                if picker.presentingViewController != nil { picker.dismiss(animated: true) }
-            }
-        }
-    }
+    /// Marks a presented picker, so only one is ever up.
+    final class Host: UIHostingController<TMListPicker> {}
 
     final class Coordinator: NSObject, UIAdaptivePresentationControllerDelegate, UIPopoverPresentationControllerDelegate {
         var dismissed: () -> Void = {}
@@ -222,38 +186,33 @@ struct TMListPickerPresenter: UIViewControllerRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
 
-    func updateUIViewController(_ controller: Controller, context: Context) {
+    func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
         let binding = $isPresented
         let coordinator = context.coordinator
-        coordinator.dismissed = { binding.wrappedValue = false }
+        coordinator.dismissed = { [weak anchor] in
+            anchor?.forget()
+            binding.wrappedValue = false
+        }
         let tagId = tagId
-        controller.makePicker = { controller in
-            let picker = TMListPickerHost(rootView: TMListPicker(
+        anchor.alreadyUp = { $0 is Host }
+        anchor.make = { anchor in
+            let picker = Host(rootView: TMListPicker(
                 model: TMListPickerModel(tagId: tagId),
-                onDone: { [weak controller] in
-                    controller?.picker?.dismiss(animated: true)
-                    controller?.picker = nil
+                onDone: { [weak anchor] in
                     binding.wrappedValue = false
+                    anchor?.wanted = false
+                    anchor?.sync()
                 }))
             picker.view.backgroundColor = .clear
-            if controller.traitCollection.userInterfaceIdiom == .pad {
+            if anchor.traitCollection.userInterfaceIdiom == .pad {
                 picker.modalPresentationStyle = .popover
                 // UIKit sized the navigation controller's list at 340 × 420 and added its bar.
                 picker.preferredContentSize = CGSize(width: 340, height: 420 + 63)
                 let popover = picker.popoverPresentationController
-                // Anchored to the button's rect in the window rather than to the view inside
-                // the bar's glass, so the popover sits below the bar with its arrow, as a
-                // bar button item's did.
-                if let window = controller.view.window {
-                    popover?.sourceView = window
-                    let button = controller.view.convert(controller.view.bounds, to: window)
-                    popover?.sourceRect = button
-                } else {
-                    popover?.sourceView = controller.view
-                    popover?.sourceRect = controller.view.bounds
-                }
+                popover?.sourceView = anchor
+                popover?.sourceRect = anchor.bounds
                 popover?.permittedArrowDirections = [.up, .down]
                 popover?.delegate = coordinator
             } else {
@@ -264,19 +223,9 @@ struct TMListPickerPresenter: UIViewControllerRepresentable {
             }
             return picker
         }
-        controller.wanted = isPresented
+        anchor.wanted = isPresented
         // Let the bar finish placing this copy before anchoring to it.
-        DispatchQueue.main.async { controller.sync() }
-    }
-
-    /// Marks a presented picker, so only one is ever up.
-    final class TMListPickerHost: UIHostingController<TMListPicker> {}
-
-    /// The controller currently on top, which is the one that may present.
-    static func top(_ controller: UIViewController) -> UIViewController {
-        var top = controller
-        while let presented = top.presentedViewController, !presented.isBeingDismissed { top = presented }
-        return top
+        DispatchQueue.main.async { anchor.sync() }
     }
 }
 

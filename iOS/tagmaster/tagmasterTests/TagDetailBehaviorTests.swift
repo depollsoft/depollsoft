@@ -79,6 +79,24 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
 
     // MARK: - The bar
 
+    func testTheDetailAddsNothingButItselfToTheNavigationStack() throws {
+        // Presenters sit in the bar; were they view controllers, UIKit would adopt them
+        // as pushed screens and Back would land on an empty page.
+        seedCachedTag(id: 1809)
+        let detail = mountDetail()
+        let navigation = try XCTUnwrap(detail.navigationController)
+        detail.model.showActions()
+        ScreenCatalog.settle(0.5)
+        detail.model.actionsPresented = false
+        detail.model.showListPicker(from: .actions)
+        ScreenCatalog.settle(0.5)
+        detail.model.pickerSource = nil
+        ScreenCatalog.settle(0.5)
+        XCTAssertEqual(navigation.viewControllers.count, 1)
+        XCTAssertTrue(navigation.viewControllers.first === detail)
+        XCTAssertTrue(navigation.topViewController === detail)
+    }
+
     func testOnIPhoneTheBarOffersRefreshTagActionsAndShare() {
         seedCachedTag()
         _ = mountDetail()

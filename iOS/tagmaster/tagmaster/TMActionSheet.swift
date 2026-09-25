@@ -22,16 +22,61 @@ struct TMSheetAction: Identifiable {
     let handler: () -> Void
 }
 
+/// A plain view that presents a controller from the window it sits in. Presenters
+/// live in toolbars, where a view *controller* representable would be adopted by the
+/// navigation controller as a pushed screen; a view stays a view. SwiftUI also builds
+/// toolbar items twice (once off screen to measure them), so only the copy in a window
+/// presents, and never while something of the same kind is already up.
+final class TMPresentingAnchor: UIView {
+    var wanted = false
+    var make: (TMPresentingAnchor) -> UIViewController = { _ in UIViewController() }
+    /// Something like this is already presented (by another copy of this control).
+    var alreadyUp: (UIViewController) -> Bool = { _ in false }
+    private(set) weak var presented: UIViewController?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        backgroundColor = .clear
+        isAccessibilityElement = false
+    }
+
+    required init?(coder: NSCoder) { fatalError("TMPresentingAnchor is created in code") }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        sync()
+    }
+
+    func sync() {
+        if wanted, presented == nil, let root = window?.rootViewController {
+            let top = TMPresentingAnchor.top(root)
+            guard !alreadyUp(top) else { return }
+            let controller = make(self)
+            presented = controller
+            top.present(controller, animated: UIView.areAnimationsEnabled)
+        } else if !wanted, let controller = presented {
+            presented = nil
+            if controller.presentingViewController != nil { controller.dismiss(animated: true) }
+        }
+    }
+
+    func forget() { presented = nil }
+
+    /// The controller currently on top, which is the one that may present.
+    static func top(_ controller: UIViewController) -> UIViewController {
+        var top = controller
+        while let next = top.presentedViewController, !next.isBeingDismissed { top = next }
+        return top
+    }
+}
+
 /// Put in the background of the control the sheet belongs to.
-struct TMActionSheet: UIViewControllerRepresentable {
+struct TMActionSheet: UIViewRepresentable {
     @Binding var isPresented: Bool
     let actions: [TMSheetAction]
     var title: String?
     var message: String?
-
-    final class Controller: UIViewController {
-        weak var sheet: UIAlertController?
-    }
 
     /// Hears a popover dismissed by a tap outside it, which runs no action.
     final class Coordinator: NSObject, UIPopoverPresentationControllerDelegate {
@@ -43,15 +88,18 @@ struct TMActionSheet: UIViewControllerRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    func makeUIViewController(context: Context) -> Controller {
-        let controller = Controller()
-        controller.view.isUserInteractionEnabled = false
-        controller.view.backgroundColor = .clear
-        return controller
-    }
+    func makeUIView(context: Context) -> TMPresentingAnchor { TMPresentingAnchor() }
 
-    func updateUIViewController(_ controller: Controller, context: Context) {
-        if isPresented, controller.sheet == nil {
+    func updateUIView(_ anchor: TMPresentingAnchor, context: Context) {
+        let binding = $isPresented
+        let coordinator = context.coordinator
+        coordinator.dismissed = { [weak anchor] in
+            anchor?.forget()
+            binding.wrappedValue = false
+        }
+        let actions = actions, title = title, message = message
+        anchor.alreadyUp = { $0 is UIAlertController }
+        anchor.make = { anchor in
             let sheet = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
             for action in actions {
                 let style: UIAlertAction.Style = switch action.style {
@@ -60,28 +108,20 @@ struct TMActionSheet: UIViewControllerRepresentable {
                 case .destructive: .destructive
                 }
                 sheet.addAction(UIAlertAction(title: action.title, style: style) { _ in
-                    isPresented = false
+                    binding.wrappedValue = false
                     action.handler()
                 })
             }
             // iPhone shows the classic centred card; iPad needs a popover source.
-            if controller.traitCollection.userInterfaceIdiom == .pad {
-                context.coordinator.dismissed = { isPresented = false }
-                sheet.popoverPresentationController?.delegate = context.coordinator
-                sheet.popoverPresentationController?.sourceView = controller.view
-                sheet.popoverPresentationController?.sourceRect = controller.view.bounds
+            if anchor.traitCollection.userInterfaceIdiom == .pad {
+                sheet.popoverPresentationController?.delegate = coordinator
+                sheet.popoverPresentationController?.sourceView = anchor
+                sheet.popoverPresentationController?.sourceRect = anchor.bounds
             }
-            controller.sheet = sheet
-            DispatchQueue.main.async {
-                guard controller.view.window != nil, controller.presentedViewController == nil else {
-                    controller.sheet = nil
-                    return
-                }
-                controller.present(sheet, animated: true)
-            }
-        } else if !isPresented, let sheet = controller.sheet {
-            controller.sheet = nil
-            if sheet.presentingViewController != nil { sheet.dismiss(animated: true) }
+            return sheet
         }
+        anchor.wanted = isPresented
+        // Let the bar finish placing this copy before anchoring to it.
+        DispatchQueue.main.async { anchor.sync() }
     }
 }
