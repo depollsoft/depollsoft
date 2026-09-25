@@ -129,15 +129,9 @@ user's own lists are SwiftUI (`TMHomeScreen`, `TMBrowseScreen`,
 each over an `@Observable` model.
 
 - **Navigation goes through `TMNavigator`.** Models ask it to open a tag, push a
-  destination (`TMDestination`), remove their own screen or open a URL. The
-  UIKit shell supplies `TMUIKitNavigator`, and tests pass `RecordingNavigator`.
-  `TMScreens` builds each screen with its model and bar items.
-- **The UIKit shell still carries the screens.** `TMHostingController` hosts a
-  screen on the navigation stack or in the split, owns its bar items
-  (`TMChrome`, rebuilt through observation tracking) and is the
-  `TMTagListSource` the detail steps through. When the shell moves to
-  SwiftUI, `TMChrome` becomes `.toolbar` content and `TMUIKitNavigator` becomes
-  a `NavigationPath`/split-selection router. Nothing in the models changes.
+  destination (`TMDestination`), remove their own screen or open a URL. The app
+  supplies a `TMRouteNavigator` per screen (see *Tag Master shell*), and tests
+  pass `RecordingNavigator`. `TMScreens` puts each screen and its bar together.
 - **Catalog access is injected.** `TMCatalog` runs queries (tests pass
   `TMFixtureCatalog`), and `TMTagStore` loads rows on demand.
   `DPTagQueryResult.failed` separates "no matches" from "catalog unreachable".
@@ -161,12 +155,10 @@ each over an `@Observable` model.
   and `TagVideosPage`; `TMListChips`, `TMListPicker`, `TMSheetMusicScreen` and
   `TMTagPlaceholder` complete it. Tags come through `TMTagLoading` (production:
   `TMCatalogTagLoader`), so tests finish loads in any order without swizzling.
-- **Staging.** `TagDetailViewController` keeps the Objective-C name
-  `DPTagViewController` and hosts the screen on the UIKit shell: it answers `tagId`,
-  `source`, ⌘↑/⌘↓ and `canPerformAction:`, and supplies `TMDetailNavigator` (open a tag,
-  a list, the sheet music reader). In a SwiftUI shell the screen can sit directly in a
-  `NavigationSplitView` detail column: pass a model, set `navigator`, `expanded` and
-  `screenVisible`.
+- **In the shell.** `TMTagRoute` carries the screen on a stack or in the split's
+  detail column: it adds the backdrop, the horizontal-safe-area reading that keeps
+  the page bar clear of the floating list, and the undo manager shake-to-undo
+  reaches. The router sets `navigator` and `expanded`; the screen sets `screenVisible`.
 - **Shared artwork.** `TMQuartetStaff(animating:)` and `TMBarberPole(compact:darkSurface:animating:)`
   (TMArtworkViews.swift) draw the vector artwork and hold still under Reduce Motion,
   in an inactive scene, or when told to. `TMBarberPole.listLoading()` and
@@ -187,3 +179,42 @@ each over an `@Observable` model.
   colours dim behind sheets as UIKit's did. Beside a list on iPad the TabView sits one
   pixel inside the column's safe area; flush, it grows into the unsafe strip under the
   floating list. That pixel is the remaining iPad difference.
+
+## Tag Master shell
+
+- **Entry.** `TagMasterMain` (`TMShell.swift`) starts the SwiftUI `TagMasterApp`,
+  or a bare `TMTestAppDelegate` host under XCTest. `DPAppDelegate` keeps the
+  launch work (Firebase, consent, the cache serializers, list sync) through
+  `@UIApplicationDelegateAdaptor`. Opened URLs go to the sign-in providers first
+  (`+[DPAppDelegate handleAuthURL:]`) and otherwise to the router; Privacy
+  choices is offered whenever the scene becomes active.
+- **Layout.** iPhone is one `NavigationStack` (`TMStackRoot`) with Home at its
+  root. iPad is a `NavigationSplitView` (`TMSplitRoot`): Home's stack in a
+  320–400 pt column (36% of the width), the tag or `TMTagPlaceholder` beside it,
+  one watermark behind both columns (screens inside the split leave their own
+  backdrop clear through `tmSharedWatermark` and `tmClearColumnBackground`), and
+  a chosen tag kept on top when the split collapses.
+- **Routing.** `TMRouter` owns the list stack, the detail column's stack (the
+  sheet music reader) and the tag beside the list, which it reuses from tag to
+  tag so the open page survives. `show(_:)` makes each screen's model with its
+  route, so a screen's `TMRouteNavigator` can remove exactly that screen and the
+  tags it opens step through it (`TMListingSource`). Deep links
+  (`tagmaster://tag/<id>`, `tagmaster:///open/tag/<id>`) keep the Objective-C
+  delegate's exact grammar in `TMDeepLink`.
+- **Keyboard.** ⌘↑ / ⌘↓ are keyboard shortcuts on the detail's stepper buttons,
+  so they reach the detail from either column.
+- **The bar.** Each screen's bar is SwiftUI toolbar content (`TMScreens`), with
+  `TMEditButton` for Edit/Done. `tmCharcoalBar` reaches the UIKit navigation
+  controller SwiftUI draws with to give it the charcoal appearance, set back
+  titles and, on Home, the Wickhop title (`TMHomeTitle`); SwiftUI has no
+  modifiers for those.
+- **Tests.** `TMShellTestSupport.swift` hosts screens on a plain UIKit stack
+  (`TMHostedScreen`, a test-only `TagDetailViewController`) and mounts the real
+  shell (`mountShell`). `TMRouterTests` covers routing and the deep-link
+  grammar; the catalogs capture through the real shell.
+- **Differences from UIKit.** On iPad the list column is SwiftUI's sidebar and
+  is opaque over the watermark, where the UIKit list was translucent; the old
+  catalogs' iPad goldens used an empty stand-in list, so their list column
+  differs by design. Edit's Done is semibold text rather than UIKit's done-style
+  glass button.
+

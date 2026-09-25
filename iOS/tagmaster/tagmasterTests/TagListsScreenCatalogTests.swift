@@ -150,6 +150,11 @@ final class TagListsScreenCatalogTests: TMBehaviorTestCase {
     }
 
     private func shoot(_ name: String, settle: TimeInterval = 0.5) {
+        // SwiftUI presents an alert a moment after its state changes; wait for any in flight.
+        let deadline = Date().addingTimeInterval(name.contains("alert") || name.contains("error") ? 2 : 0)
+        while Date() < deadline, catalogWindow?.rootViewController?.presentedViewController == nil {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+        }
         guard let catalogWindow else { return XCTFail("nothing mounted") }
         ScreenCatalog.capture("\(prefix)-\(name)", window: catalogWindow, settle: settle)
     }

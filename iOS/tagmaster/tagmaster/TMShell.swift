@@ -140,13 +140,16 @@ struct TMDetailColumn: View {
     let router: TMRouter
 
     var body: some View {
-        if router.hasDetail {
-            TMTagRoute(model: router.detail)
-        } else {
-            TMTagPlaceholder()
-                .background(TMScreenBackground())
-                .tmCharcoalBar()
+        Group {
+            if router.hasDetail {
+                TMTagRoute(model: router.detail)
+            } else {
+                TMTagPlaceholder()
+                    .background(TMScreenBackground())
+                    .tmCharcoalBar()
+            }
         }
+        .tmClearColumnBackground()
     }
 }
 
@@ -158,14 +161,17 @@ struct TMRouteScreen: View {
     let router: TMRouter
 
     var body: some View {
-        switch route.kind {
-        case .screen(_, let screen):
-            TMDestinationScreen(screen: screen)
-        case .tag(let model):
-            TMTagRoute(model: model)
-        case .sheetMusic(let document, let summary):
-            TMSheetMusicRoute(document: document, summary: summary, router: router)
+        Group {
+            switch route.kind {
+            case .screen(_, let screen):
+                TMDestinationScreen(screen: screen)
+            case .tag(let model):
+                TMTagRoute(model: model)
+            case .sheetMusic(let document, let summary):
+                TMSheetMusicRoute(document: document, summary: summary, router: router)
+            }
         }
+        .tmClearColumnBackground()
     }
 }
 
@@ -175,6 +181,7 @@ struct TMHomeRoute: View {
 
     var body: some View {
         TMScreens.home(router.home)
+            .tmClearColumnBackground()
     }
 }
 
@@ -386,6 +393,29 @@ struct TMEditButton: View {
         } label: {
             Text(isEditing ? "Done" : "Edit")
                 .fontWeight(isEditing ? .semibold : .regular)
+        }
+    }
+}
+
+// MARK: - Column backgrounds
+
+extension View {
+    /// Inside the iPad split the columns let the one shared watermark show through.
+    func tmClearColumnBackground() -> some View {
+        modifier(TMClearColumnBackground())
+    }
+}
+
+private struct TMClearColumnBackground: ViewModifier {
+    @Environment(\.tmSharedWatermark) private var sharedWatermark
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), sharedWatermark {
+            content
+                .containerBackground(.clear, for: .navigation)
+                .containerBackground(.clear, for: .navigationSplitView)
+        } else {
+            content
         }
     }
 }
