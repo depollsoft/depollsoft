@@ -3,6 +3,7 @@ package depollsoft.pitchperfect
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsPropertiesAndroid
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsNotSelected
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performSemanticsAction
@@ -85,7 +87,7 @@ class WearPitchPipeScreenTest {
     fun theFaceIsFoundByTheReleaseCaptureAsResourceIdPitchInstrument() {
         compose
             .onNodeWithTag("pitchInstrument")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.TestTagsAsResourceId, true))
+            .assert(SemanticsMatcher.expectValue(SemanticsPropertiesAndroid.TestTagsAsResourceId, true))
     }
 
     @Test
