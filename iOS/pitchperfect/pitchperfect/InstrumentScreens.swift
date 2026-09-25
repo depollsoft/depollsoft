@@ -328,6 +328,8 @@ struct KeyRow: View {
             .fixedSize()
         }
         .padding(.horizontal, 8)
+        // The 1 pt a self-sizing UIKit cell adds for its separator.
+        .padding(.bottom, 1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(SongEditorSpeech.name(for: key, minor: Int(key.keyType.get()) == Int(Minor.rawValue)))
     }
