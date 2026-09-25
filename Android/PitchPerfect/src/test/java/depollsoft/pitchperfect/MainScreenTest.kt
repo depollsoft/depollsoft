@@ -34,7 +34,7 @@ import org.robolectric.annotation.Config
  * The main screen — its tabs, its action bar and the Songs tab — and the song editor it opens.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class MainScreenTest {
     @get:Rule
     val compose = createEmptyComposeRule()
@@ -100,13 +100,13 @@ class MainScreenTest {
     }
 
     @Test
-    fun theActivitySurvivesRecreation() {
+    fun theActivitySurvivesRecreationOnTheSameTab() {
         val controller = screens.launch(PitchPerfectActivity::class.java)
         controller.get().tap(MainTab.KEYS)
         controller.recreate()
         screens.settle()
         compose.onNodeWithTag(TestTags.PAGER).assertIsDisplayed()
-        compose.onNodeWithTag(TestTags.TAB_SONGS).assertIsDisplayed()
+        controller.get().assertOn(MainTab.KEYS)
     }
 
     @Test

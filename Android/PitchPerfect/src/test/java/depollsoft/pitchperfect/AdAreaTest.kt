@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 
 /** The banner slot hosts whichever ad view the activity currently holds. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class)
+@Config(application = RichApplication::class)
 class AdAreaTest {
     @get:Rule
     val compose = createComposeRule()

@@ -18,9 +18,7 @@ public class TagCacheTest {
     @Test
     public void loads_persisted_tag_then_reuses_memory_cache() throws Exception {
         android.content.Context app = RuntimeEnvironment.getApplication();
-        java.lang.reflect.Field context = depollsoft.lib.activity.RichApplication.class.getDeclaredField("context");
-        context.setAccessible(true);
-        context.set(null, app);
+        depollsoft.lib.activity.RichApplication.setAppContextForTesting(app);
         File dir = new File(app.getFilesDir(), "TagCache");
         dir.mkdirs();
         Tag.Companion.clearCache();
@@ -45,9 +43,7 @@ public class TagCacheTest {
     @Test
     public void empty_cache_directory_is_safe() throws Exception {
         android.content.Context app = RuntimeEnvironment.getApplication();
-        java.lang.reflect.Field context = depollsoft.lib.activity.RichApplication.class.getDeclaredField("context");
-        context.setAccessible(true);
-        context.set(null, app);
+        depollsoft.lib.activity.RichApplication.setAppContextForTesting(app);
         Tag.Companion.clearCache();
         new File(app.getFilesDir(), "TagCache").delete();
         assertEquals(0L, Tag.Companion.getCurrentCacheSize());
@@ -58,9 +54,7 @@ public class TagCacheTest {
     public void caches_and_clears_cache_directory() throws Exception {
         // Seed RichApplication context
         android.content.Context app = RuntimeEnvironment.getApplication();
-        java.lang.reflect.Field f = depollsoft.lib.activity.RichApplication.class.getDeclaredField("context");
-        f.setAccessible(true);
-        f.set(null, app);
+        depollsoft.lib.activity.RichApplication.setAppContextForTesting(app);
 
         // Ensure cache directory exists and is empty
         File dir = new File(app.getFilesDir(), "TagCache");

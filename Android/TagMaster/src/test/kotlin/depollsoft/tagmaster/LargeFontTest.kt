@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
  * and rounding a size to whole pixels must go back through that same curve.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "xxhdpi", fontScale = 2f)
+@Config(application = Application::class, qualifiers = "xxhdpi", fontScale = 2f)
 class LargeFontTest {
     @get:Rule
     val compose = createComposeRule()
@@ -40,7 +40,7 @@ class LargeFontTest {
         // The curve flattens large sizes: 24sp at 200% is well under 48dp.
         assertTrue("non-linear scaling applies: ${sizes.last().second}px", sizes.last().second < metrics.density * 2f * 24f - 2f)
         for ((shown, textView) in sizes) {
-            assertEquals("a ${textView}px TextView size", (textView + 0.5f).toInt().toFloat(), shown, 0.51f)
+            assertEquals("a ${textView}px TextView size", (textView + 0.5f).toInt().toFloat(), shown, 0.01f)
         }
     }
 }

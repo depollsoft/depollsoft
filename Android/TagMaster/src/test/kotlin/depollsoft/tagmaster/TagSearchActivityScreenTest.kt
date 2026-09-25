@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 
 /** The search form: every field reaches the query the results screen runs, and survives recreation. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class TagSearchActivityScreenTest : ComposeScreenTest() {
     private fun search(): TagSearchActivity = launch(TagSearchActivity::class.java)
 

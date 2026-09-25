@@ -9,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -52,24 +51,17 @@ internal object ScreenshotSupport {
     /** The test's compose rule, which finds nodes in whichever activity is showing. */
     lateinit var compose: ComposeTestRule
 
-    /** A silent player: the goldens are about pixels, and Robolectric's audio is irrelevant. */
-    private val silentPlayer =
-        object : Note.NotePlayer {
-            override fun play(n: Note) = Unit
-
-            override fun stop(n: Note) = Unit
-        }
-
     fun setUp(rule: ComposeTestRule) {
         compose = rule
         ScreenTestSupport.startFromFirstLaunch()
         ScreenTestSupport.ensureFirebaseApp()
         PurchaseService.areAdsRemoved = true
-        Note.setPlayer(silentPlayer)
         val context = ApplicationProvider.getApplicationContext<Context>()
         // A returning user who already answered the telemetry prompt, so no dialog covers a screen.
         PrivacyChoices(context).save(analytics = false, crashes = false)
         SongsModel.get().clearAll()
+        // The version the goldens show; release commits change the real one.
+        shadowOf(context.packageManager).getInternalMutablePackageInfo(context.packageName).versionName = "5.1.1"
     }
 
     fun tearDown() {
@@ -151,11 +143,6 @@ internal object ScreenshotSupport {
         compose.onNodeWithTag(TestTags.LOG_IN).performClick()
         settle()
         check((this as SettingsActivity).dialog == SettingsDialog.LOG_IN)
-    }
-
-    fun Activity.scrollSettingsToEnd() {
-        compose.onNodeWithTag(TestTags.PRIVACY_CHOICES).performScrollTo()
-        settle()
     }
 
     fun Activity.pressSaveSong() {

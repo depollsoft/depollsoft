@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config
 
 /** Small flows across screens: opening a tag by id, and rating a tag. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class PolishFlowScreenTest : ComposeScreenTest() {
     @Test
     fun enterTagIdRejectsAnOutOfRangeIdAndOpensAValidOne() {

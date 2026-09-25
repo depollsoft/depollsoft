@@ -24,7 +24,7 @@ import org.robolectric.annotation.Config
 
 /** A page that plays sound stops when another tab becomes current, as a paused fragment did. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class StopWhenNotCurrentTest {
     @get:Rule
     val compose = createComposeRule()

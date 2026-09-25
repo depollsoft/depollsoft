@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
  * were written by that code, before its models moved to snapshot state.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], manifest = Config.NONE)
+@Config(manifest = Config.NONE)
 class StoredDataTest {
     @Before
     fun setUp() {
@@ -74,6 +74,25 @@ class StoredDataTest {
         assertEquals(listOf("Heart of My Heart", "The Old Songs"), songs.map { it.name })
         assertEquals(-6, songs[0].key.numAccidentals)
         assertEquals(KeyType.Minor, songs[1].key.keyType)
+    }
+
+    /** The app's own migration: the single stored list becomes My Songs and the old key goes. */
+    @Test
+    fun startingWithTheOldestFormatMovesItsSongsIntoMySongs() {
+        val oldKey = "depollsoft.pitchperfect.SongsModel"
+        Preferences.set(oldKey, JsonSerializer.deserialize(fixture("songs_legacy.json")))
+
+        val model =
+            SongsModel::class.java
+                .getDeclaredConstructor()
+                .apply { isAccessible = true }
+                .newInstance()
+
+        val mySongs = model.songLists.getValue(SongsModel.DEFAULT_ID)
+        assertEquals("Default", mySongs.name)
+        assertEquals(listOf("Heart of My Heart", "The Old Songs"), mySongs.songs.map { it.name })
+        assertEquals(KeyType.Minor, mySongs.songs[1].key.keyType)
+        assertNull("the old key is cleared once migrated", Preferences.get<Any?>(oldKey))
     }
 
     @Test

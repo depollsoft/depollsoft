@@ -33,7 +33,7 @@ import java.io.File
  * lets a download or a prepare that belongs to a stopped, replaced or released track start playing.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class MediaPlayerLifecycleTest {
     private var failures = 0
 

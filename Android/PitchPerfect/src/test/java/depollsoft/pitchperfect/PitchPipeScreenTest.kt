@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 
 /** The Pitch Pipe tab around its face: when it re-reads the toggle setting. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class PitchPipeScreenTest {
     @get:Rule
     val compose = createComposeRule()
@@ -35,13 +35,7 @@ class PitchPipeScreenTest {
         Preferences.clearTestValues()
         ScreenTestSupport.seedSettingsDefaults()
         widgets = Mockito.mockStatic(PitchPipeAppWidget::class.java)
-        Note.setPlayer(
-            object : Note.NotePlayer {
-                override fun play(n: Note) = Unit
-
-                override fun stop(n: Note) = Unit
-            },
-        )
+        Note.setPlayer(ScreenTestSupport.silentPlayer)
     }
 
     @After

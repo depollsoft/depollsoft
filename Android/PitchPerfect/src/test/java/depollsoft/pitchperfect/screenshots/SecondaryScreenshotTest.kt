@@ -13,7 +13,6 @@ import depollsoft.pitchperfect.screenshots.ScreenshotSupport.capture
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.chooseMinorKeys
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.launch
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.pressSaveSong
-import depollsoft.pitchperfect.screenshots.ScreenshotSupport.scrollSettingsToEnd
 import depollsoft.pitchperfect.screenshots.ScreenshotSupport.tickAddableSong
 import org.junit.After
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -28,7 +27,7 @@ import org.robolectric.annotation.GraphicsMode
 /** The screens the main screen opens: the song editor, add-from-list, set lists and settings. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
+@Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class SecondaryScreenshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()
@@ -151,13 +150,6 @@ class SecondaryScreenshotTest {
     @Test
     @Config(qualifiers = ScreenshotSupport.PHONE_420)
     fun settings420() = launch(SettingsActivity::class.java).capture("dpi420_settings")
-
-    @Test
-    fun settingsEnd() {
-        val activity = launch(SettingsActivity::class.java)
-        activity.scrollSettingsToEnd()
-        activity.capture("settings_end")
-    }
 
     @Test
     fun settingsWithOptionsOn() {

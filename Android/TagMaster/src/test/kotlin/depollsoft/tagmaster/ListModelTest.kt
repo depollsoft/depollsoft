@@ -26,9 +26,7 @@ class ListModelTest {
         
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
-        val contextField = RichApplication::class.java.getDeclaredField("context")
-        contextField.isAccessible = true
-        contextField.set(null, app)
+        RichApplication.setAppContextForTesting(app)
         
         // Reset the singleton instances before each test
         resetModelInstances()
@@ -299,32 +297,17 @@ class ListModelTest {
         assertTrue(model.ids.contains(Int.MAX_VALUE))
     }
 
-    /**
-     * Creates a test ListModel instance bypassing normal initialization.
-     */
-    private fun createTestListModel(listName: String): ListModel {
-        // Use reflection to create instance without Firebase tracking
-        val constructor = ListModel::class.java.getDeclaredConstructor(String::class.java)
-        constructor.isAccessible = true
-        return constructor.newInstance(listName)
-    }
+    /** The model for [listName], from the same factory the app uses. */
+    private fun createTestListModel(listName: String): ListModel = ListModel(listName)
 
-    /**
-     * Resets the static modelInstances map.
-     */
+    /** Forgets every cached model, so each test starts from a fresh one. */
     private fun resetModelInstances() {
-        try {
-            val companion = ListModel::class.java.getDeclaredField("Companion")
-            companion.isAccessible = true
-            val companionInstance = companion.get(null)
-            
-            val modelInstancesField = companionInstance.javaClass.getDeclaredField("modelInstances")
-            modelInstancesField.isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            val map = modelInstancesField.get(companionInstance) as MutableMap<String, *>
-            map.clear()
-        } catch (e: Exception) {
-            // May fail in some test configurations, that's okay
-        }
+        @Suppress("UNCHECKED_CAST")
+        (
+            ListModel::class.java
+                .getDeclaredField("modelInstances")
+                .apply { isAccessible = true }
+                .get(null) as MutableMap<String, *>
+        ).clear()
     }
 }

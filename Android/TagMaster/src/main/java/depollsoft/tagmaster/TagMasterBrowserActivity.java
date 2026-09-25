@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import depollsoft.lib.activity.BrowserActivity;
-import depollsoft.lib.compat.ui.ActionBars;
 
 public class TagMasterBrowserActivity extends BrowserActivity {
 
@@ -14,7 +13,7 @@ public class TagMasterBrowserActivity extends BrowserActivity {
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
-    if (item.getItemId() == ActionBars.HOME_MENU_ITEM_ID) {
+    if (item.getItemId() == android.R.id.home) {
       Intent intent = new Intent(this, MeActivity.class);
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
       this.startActivity(intent);

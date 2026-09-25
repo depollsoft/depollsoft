@@ -28,7 +28,7 @@ import org.robolectric.annotation.Config
 
 /** The Songs tab's set list selector and the list actions around it. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class SetListSelectorTest {
     @get:Rule
     val compose = createEmptyComposeRule()

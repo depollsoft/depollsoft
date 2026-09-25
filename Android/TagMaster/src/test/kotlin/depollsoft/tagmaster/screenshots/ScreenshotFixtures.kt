@@ -1,6 +1,5 @@
 package depollsoft.tagmaster.screenshots
 
-import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -151,13 +150,36 @@ internal object ScreenshotFixtures {
         return afterglow to easy
     }
 
-    /** Lets background tag loads finish and the looper settle. */
+    /**
+     * Lets background tag loads finish and the looper settle: returns once the main looper is idle
+     * and no background worker is running for three checks in a row, or after [rounds] checks.
+     */
     fun settle(rounds: Int = 40) {
+        val looper = shadowOf(Looper.getMainLooper())
+        var quiet = 0
         repeat(rounds) {
-            shadowOf(Looper.getMainLooper()).idle()
+            looper.idle()
+            quiet = if (looper.isIdle && backgroundIsIdle()) quiet + 1 else 0
+            if (quiet >= 3) return
             Thread.sleep(15)
         }
-        shadowOf(Looper.getMainLooper()).idle()
+        looper.idle()
+    }
+
+    /** Bolts' executor threads (`pool-…`) and coroutine workers are parked, not working. */
+    private fun backgroundIsIdle(): Boolean =
+        Thread.getAllStackTraces().keys.none { thread ->
+            (thread.name.startsWith("pool-") || thread.name.startsWith("DefaultDispatcher-worker")) &&
+                (thread.state == Thread.State.RUNNABLE || thread.state == Thread.State.BLOCKED)
+        }
+
+    /**
+     * The version the goldens show. Release commits change the real one, which would otherwise
+     * change the Home footer in every golden that shows it.
+     */
+    fun pinVersion() {
+        val app = RuntimeEnvironment.getApplication()
+        shadowOf(app.packageManager).getInternalMutablePackageInfo(app.packageName).versionName = "6.1.0"
     }
 
     /** Removes the changelog and privacy prompts that launch screens open over themselves. */
@@ -166,11 +188,8 @@ internal object ScreenshotFixtures {
         shadowOf(Looper.getMainLooper()).idle()
     }
 
-    fun choosePrivacy(activity: Activity) {
-        depollsoft.lib.privacy.PrivacyChoices(activity).save(analytics = false, crashes = false)
-    }
-
-    fun forgetPrivacy() {
+    /** Clears the saved telemetry choices, so the privacy prompt shows as on a first launch. */
+    fun clearPrivacyChoices() {
         RuntimeEnvironment
             .getApplication()
             .getSharedPreferences("telemetry_consent", android.content.Context.MODE_PRIVATE)

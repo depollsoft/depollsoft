@@ -27,14 +27,11 @@ import org.robolectric.annotation.Config
  * nothing here needs — or can reach — a FirebaseApp.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class)
 class TagListsTest {
     @Before
     fun setUp() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
         Preferences.setTestMode(true)
         Preferences.clearTestValues()

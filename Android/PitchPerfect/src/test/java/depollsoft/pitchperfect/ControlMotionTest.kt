@@ -51,7 +51,7 @@ import java.time.Duration
 /** How the plate's controls move: buttons lift, the Keys switch comes and goes, scrollbars fade. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class ControlMotionTest {
     @get:Rule
     val compose = createComposeRule()

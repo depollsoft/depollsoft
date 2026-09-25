@@ -22,7 +22,6 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds" tools:targetApi="lollipop">true</item>
-        <item name="bottomNavigationStyle">@style/Widget.Plate.BottomNavigation</item>
         <item name="actionBarStyle">@style/Widget.Plate.ActionBar</item>
         <item name="actionBarTheme">@style/ThemeOverlay.Plate.ActionBar</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
@@ -64,12 +63,6 @@
         <item name="android:textColorPrimary">@color/plate_ink</item>
     </style>
 
-    <style name="Widget.Plate.BottomNavigation" parent="Widget.MaterialComponents.BottomNavigationView">
-        <item name="android:background">@drawable/bar_surface_top_edge</item>
-        <item name="elevation">0dp</item>
-        <item name="itemIconTint">@color/bottom_nav_item</item>
-        <item name="itemTextColor">@color/bottom_nav_item</item>
-    </style>
 
     <style name="TextAppearance.Plate.ActionBarTitle" parent="TextAppearance.MaterialComponents.Headline6">
         <item name="android:textColor">@color/plate_ink</item>

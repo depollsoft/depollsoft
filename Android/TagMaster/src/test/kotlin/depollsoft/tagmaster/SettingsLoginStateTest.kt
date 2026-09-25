@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config
 
 /** Settings shows Log in or Log out from the real auth state, with no activity result needed. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class SettingsLoginStateTest : ComposeScreenTest() {
     private var signedIn = false
 

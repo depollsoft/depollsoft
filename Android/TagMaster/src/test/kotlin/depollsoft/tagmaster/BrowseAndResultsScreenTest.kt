@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
  * Refresh asks the catalog again.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class BrowseAndResultsScreenTest : ComposeScreenTest() {
     private val requested = mutableListOf<String>()
     private var respond: (URL) -> InputStream = { ScreenshotFixtures.catalogPage(it) }

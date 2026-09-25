@@ -10,7 +10,7 @@ import org.robolectric.annotation.Config
 
 /** In a right-to-left language the custom-laid-out bars mirror, as the Toolbar and TabLayout did. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "ar-ldrtl-w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "ar-ldrtl-w411dp-h891dp-xxhdpi")
 class RightToLeftScreenTest : ComposeScreenTest() {
     private fun bounds(tag: String) = node(tag).fetchSemanticsNode().boundsInRoot
 

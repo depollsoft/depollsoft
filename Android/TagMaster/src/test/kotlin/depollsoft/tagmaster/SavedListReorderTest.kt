@@ -21,13 +21,10 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class SavedListReorderTest {
     @Before fun setup() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
         Preferences.setTestMode(false)
         // Robolectric gives each test a new Application; reset the cached preferences Context too.

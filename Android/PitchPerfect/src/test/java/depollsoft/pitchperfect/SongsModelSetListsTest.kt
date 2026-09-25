@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config
  * `default` list rather than trying to make a second instance.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class)
+@Config(application = RichApplication::class)
 class SongsModelSetListsTest {
     private val model get() = SongsModel.get()
 

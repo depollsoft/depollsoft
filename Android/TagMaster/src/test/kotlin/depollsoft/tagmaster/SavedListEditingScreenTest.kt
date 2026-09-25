@@ -1,10 +1,15 @@
 package depollsoft.tagmaster
 
 import android.app.Application
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import org.junit.Assert.assertEquals
@@ -22,7 +27,7 @@ import org.robolectric.annotation.Config
  * open tags while editing, and editing ends when the list empties.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class SavedListEditingScreenTest : ComposeScreenTest() {
     private val ids = listOf(2147483017, 2147483018, 2147483019)
 
@@ -80,6 +85,22 @@ class SavedListEditingScreenTest : ComposeScreenTest() {
         customAction("savedTag:$first", string(R.string.MoveDown))
         assertEquals(listOf(second, first, third), TeachableTagsModel.teachableTagIds.toList())
         assertTrue(customActions("savedTag:$first").contains(string(R.string.MoveUp)))
+    }
+
+    /** Alt+Down and Alt+Up on a focused drag handle move its row, as on the View screens. */
+    @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+    @Test
+    fun altArrowsOnAHandleMoveItsRow() {
+        val (first, second, third) = populate()
+        teachable()
+        click("editSavedList")
+        node("drag:$first").requestFocus()
+        node("drag:$first").performKeyInput { withKeyDown(Key.AltLeft) { pressKey(Key.DirectionDown) } }
+        idle()
+        assertEquals(listOf(second, first, third), TeachableTagsModel.teachableTagIds.toList())
+        node("drag:$first").performKeyInput { withKeyDown(Key.AltLeft) { pressKey(Key.DirectionUp) } }
+        idle()
+        assertEquals(listOf(first, second, third), TeachableTagsModel.teachableTagIds.toList())
     }
 
     @Test

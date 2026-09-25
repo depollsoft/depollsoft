@@ -27,7 +27,7 @@ import org.robolectric.shadows.ShadowDialog
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class FormFeedbackScreenTest : ComposeScreenTest() {
     @Test
     fun dialogsUseMaterialsWindowAnimation() {

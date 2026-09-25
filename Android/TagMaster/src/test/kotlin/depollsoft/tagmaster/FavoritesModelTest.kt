@@ -31,9 +31,7 @@ class FavoritesModelTest {
         ListModel.setTestMode(true)
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
-        val contextField = RichApplication::class.java.getDeclaredField("context")
-        contextField.isAccessible = true
-        contextField.set(null, app)
+        RichApplication.setAppContextForTesting(app)
         
         // Reset the ListModel backing the FavoritesModel
         resetFavoritesModelState()
@@ -250,20 +248,8 @@ class FavoritesModelTest {
         assertFalse(FavoritesModel.favoriteIds.contains(1))
     }
 
-    /**
-     * Helper method to reset and set favorite ids.
-     */
     private fun setFavoriteIds(ids: List<Int>) {
-        try {
-            // Get the backing ListModel
-            val modelField = FavoritesModel::class.java.getDeclaredField("model")
-            modelField.isAccessible = true
-            val listModel = modelField.get(FavoritesModel) as ListModel
-            listModel.ids = ids
-        } catch (e: Exception) {
-            // Fallback: direct assignment
-            FavoritesModel.favoriteIds = ids
-        }
+        FavoritesModel.favoriteIds = ids
     }
 
     /**

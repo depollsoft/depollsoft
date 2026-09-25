@@ -29,8 +29,6 @@ internal class ComposeScreens(
 ) {
     private val controllers = mutableListOf<ActivityController<*>>()
 
-    val latest: ActivityController<*>? get() = controllers.lastOrNull()
-
     /** Lets posted work and animations finish: the main looper's, then Compose's own clock. */
     fun settle() {
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2))

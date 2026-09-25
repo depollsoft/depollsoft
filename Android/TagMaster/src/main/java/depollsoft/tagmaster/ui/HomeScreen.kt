@@ -8,6 +8,7 @@ import depollsoft.compose.recyclerScrollbar
 import depollsoft.compose.revealItem
 import depollsoft.compose.rememberReorderState
 import depollsoft.compose.ViewAlign
+import depollsoft.lib.util.appVersionName
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
@@ -367,8 +368,9 @@ private fun AboutFooter() {
             .padding(vertical = 8.dp),
     ) {
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            for (part in listOf(R.string.app_name, R.string.home_version_separator, R.string.app_version)) {
-                val text = stringResource(part)
+            val context = LocalContext.current
+            val version = stringResource(R.string.version_label, remember(context) { appVersionName(context) })
+            for (text in listOf(stringResource(R.string.app_name), stringResource(R.string.home_version_separator), version)) {
                 Text(text, Modifier.textViewWidth(text, secondary), style = secondary, color = colors.onSurfaceVariant, maxLines = 1)
             }
         }

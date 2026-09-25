@@ -27,7 +27,7 @@ import org.robolectric.annotation.GraphicsMode
 /** The four tabs of the main screen, on a phone, in both themes and on a tablet. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
+@Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class MainScreenshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()

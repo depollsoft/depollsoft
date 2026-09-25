@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
  * Favorites, the footer, list management from the rows, and edit mode.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class MeActivityScreenTest : ComposeScreenTest() {
     private val fixture = ScreenTestSupport.fixtureTag()
 
@@ -215,9 +215,12 @@ class MeActivityScreenTest : ComposeScreenTest() {
     }
 
     @Test
-    fun theFooterNamesTheApplicationAndItsVersion() {
+    fun theFooterNamesTheApplicationAndItsInstalledVersion() {
+        // Release builds set the version name from the release plan, not from resources.
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        org.robolectric.Shadows.shadowOf(app.packageManager).getInternalMutablePackageInfo(app.packageName).versionName = "9.8.7"
         home()
-        val version = hasText(string(R.string.app_version))
+        val version = hasText("Version 9.8.7")
         node("homeList").performScrollToNode(version)
         idle()
         assertTrue(compose.onAllNodes(version, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())

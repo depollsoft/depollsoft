@@ -44,7 +44,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class)
+@Config(application = RichApplication::class)
 class WatchCompanionTest {
     @get:Rule
     val compose = createEmptyComposeRule()

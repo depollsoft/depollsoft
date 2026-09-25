@@ -138,13 +138,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Cache Gradle dependencies and wrapper for faster builds
+      # Cache Gradle dependencies and wrapper for faster builds, and the Android
+      # runtime jars Robolectric downloads into the Maven local repository.
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            ~/.m2/repository/org/robolectric
           key: >-
             gradle-unit-${{ runner.os }}-${{ hashFiles('**/*.gradle*',
             '**/gradle-wrapper.properties') }}
@@ -159,6 +161,11 @@ jobs:
       # Shared code runs every module's unit tests (the root alias covers the
       # libraries too); app-only changes run just the selected apps' modules
       # and compile just their release variants.
+      #
+      # For each selected app module, verifyRoborazziDebug runs that module's
+      # unit tests once with the screenshot goldens compared (without it the
+      # captures are skipped), and compileDebugAndroidTestKotlin compiles the
+      # device-only tests and the store screenshot capture, which no job runs.
       - name: Run unit tests and compile production variants
         env:
           # Increase Gradle memory for containerized runners
@@ -181,11 +188,17 @@ jobs:
           fi
           for module in "${modules[@]}"; do
             case "$module" in
-              # Java-only application modules have no Kotlin compile task.
-              PitchPerfectWear|PitchPerfectLicense)
+              # The license stub has no sources, so it has no Kotlin compile task.
+              PitchPerfectLicense)
                 tasks+=(":$module:compileReleaseJavaWithJavac") ;;
               *)
                 tasks+=(":$module:compileReleaseKotlin") ;;
+            esac
+            case "$module" in
+              PitchPerfect|TagMaster)
+                tasks+=(":$module:verifyRoborazziDebug" ":$module:compileDebugAndroidTestKotlin") ;;
+              PitchPerfectWear)
+                tasks+=(":$module:verifyRoborazziDebug") ;;
             esac
           done
           echo "Gradle tasks: ${tasks[*]}"
@@ -301,6 +314,20 @@ jobs:
           path: Android/**/build/test-results/
           retention-days: 7
 
+      # When a golden no longer matches, Roborazzi writes the actual image and a
+      # side-by-side comparison next to it; keep them so the change can be seen.
+      - name: Upload screenshot differences
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: android-screenshot-differences
+          path: |
+            Android/**/src/test/screenshots/*_compare.png
+            Android/**/src/test/screenshots/*_actual.png
+            Android/**/build/test-results/roborazzi/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload unit test coverage reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -324,5 +351,5 @@ jobs:
 # in Android/{PitchPerfect,TagMaster}/src/test, via `testDebugUnitTest` above.
 # What remains in src/androidTest is a small device-only residue (native
 # pointer drags, IME window geometry, PdfRenderer, store-screenshot capture and
-# the FirebaseUI bytecode-patch check) with no CI runner; it has to be run on a
-# device or emulator by hand.
+# the FirebaseUI bytecode-patch check). The test job compiles it but nothing
+# runs it; it has to be run on a device or emulator by hand.

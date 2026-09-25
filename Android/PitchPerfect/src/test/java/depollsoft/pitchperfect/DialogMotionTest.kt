@@ -46,7 +46,7 @@ import org.robolectric.shadows.ShadowDialog
 /** How the plate dialogs and their text fields move: in, out, around the keyboard. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class DialogMotionTest {
     @get:Rule
     val compose = createComposeRule()

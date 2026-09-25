@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
  * goldens pin the exact pixels at the recorded sizes; these hold the rules themselves.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class LayoutRegressionTest : ComposeScreenTest() {
     private val fixture = ScreenTestSupport.fixtureTag().apply { sheetMusicUri = ScreenTestSupport.track("sheet").apply { type = "pdf" } }
 

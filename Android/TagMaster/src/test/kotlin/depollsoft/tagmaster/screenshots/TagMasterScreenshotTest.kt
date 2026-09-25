@@ -49,7 +49,7 @@ import java.net.URL
 @OptIn(ExperimentalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(application = Application::class, sdk = [35], qualifiers = PHONE)
+@Config(application = Application::class, qualifiers = PHONE)
 class TagMasterScreenshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()
@@ -62,8 +62,9 @@ class TagMasterScreenshotTest {
     fun setUp() {
         ScreenTestSupport.startClean()
         ScreenTestSupport.clearTagCaches()
-        ScreenshotFixtures.forgetPrivacy()
+        ScreenshotFixtures.clearPrivacyChoices()
         ScreenshotFixtures.cacheTags()
+        ScreenshotFixtures.pinVersion()
         AuthState.setTestSource { false }
     }
 
@@ -102,13 +103,11 @@ class TagMasterScreenshotTest {
         name: String,
     ) {
         settleAll()
-        driver.dumpLayout(name)
         activity.window.decorView.captureRoboImage("src/test/screenshots/$name.png")
     }
 
     private fun captureScreen(name: String) {
         settleAll()
-        driver.dumpLayout(name)
         captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 

@@ -70,64 +70,34 @@ subprojects {
                     excludes = ['jdk.internal.*']
                 }
 
-                def baseExcludes = [
+                def excludes = [
                     '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
                     '**/*Test*.*', 'android/**/*.*', 'androidx/**/*.*',
-                    '**/BottomNavigationUtils*.*',
-                    '**/Analytics*.*',
-                    '**/depollsoft/lib/util/Util*.*',
-                    '**/TrackingScope*.*'
                 ]
-
-                // TagMaster is UI-heavy; unit tests primarily cover core parsing/models.
-                // Excluding UI surfaces keeps the coverage metric meaningful and stable.
-                if (project.name == 'TagMaster') {
-                    baseExcludes += [
-                        'depollsoft/tagmaster/**/*Activity*.*',
-                        'depollsoft/tagmaster/**/*Fragment*.*',
-                        'depollsoft/tagmaster/**/*View*.*',
-                        'depollsoft/tagmaster/**/*Popup*.*',
-                        'depollsoft/tagmaster/**/*Display*.*',
-                        'depollsoft/tagmaster/**/*Browser*.*',
-                        'depollsoft/tagmaster/**/*Application*.*'
-                    ]
-                }
                 def includes = ['**/*.class']
-                if (project.name == 'PitchPerfect') {
-                    includes = ['depollsoft/pitchperfect/**/*.class']
-                }
-                if (project.name == 'PitchPerfectWear') {
+                if (project.name in ['PitchPerfect', 'PitchPerfectWear']) {
                     includes = ['depollsoft/pitchperfect/**/*.class']
                 }
                 if (project.name == 'TagMaster') {
                     includes = ['depollsoft/tagmaster/**/*.class']
                 }
-
-                project.ext.coverageExcludes = new ArrayList<>(baseExcludes)
-                project.ext.coverageIncludes = new ArrayList<>(includes)
-                println "Excludes for ${project.name}: ${project.ext.coverageExcludes}"
+                project.ext.coverageExcludes = excludes
+                project.ext.coverageIncludes = includes
+                // Kotlin and Java classes: Tag Master still has a few Java models.
+                def classTree = files(
+                    fileTree(dir: "$buildDir/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes", excludes: excludes, includes: includes),
+                    fileTree(dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes", excludes: excludes, includes: includes)
+                )
 
                 tasks.register('jacocoTestReport', JacocoReport) {
-                    println "Creating jacocoTestReport for ${project.name}"
-                    println "Build dir for ${project.name}: ${buildDir}"
                     dependsOn unitTestTask
                     reports {
                         xml.required.set(true)
                         html.required.set(true)
                     }
-                    def classTree = fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
                     classDirectories.setFrom(classTree)
                     sourceDirectories.setFrom(files('src/main/java', 'src/main/kotlin', 'src'))
-                    
-                    def execPath = "${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
-                    println "Checking if file exists at config time for ${project.name}: ${execPath}"
-                    println "Exists: ${file(execPath).exists()}"
-                    executionData.setFrom(files(execPath))
-
-                    doFirst {
-                        println "Executing JacocoReport for ${project.name}"
-                        println "Execution Data: ${executionData.files}"
-                    }
+                    executionData.setFrom(files("${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"))
                 }
 
                 tasks.register('jacocoTestCoverageVerification', JacocoCoverageVerification) {
@@ -141,7 +111,7 @@ subprojects {
                             limit { minimum = minCoverage }
                         }
                     }
-                    classDirectories.setFrom(fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes))
+                    classDirectories.setFrom(classTree)
                     executionData.setFrom(files("${buildDir}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"))
                 }
             }
@@ -181,43 +151,28 @@ subprojects {
                     excludes = ['jdk.internal.*']
                 }
 
-                def baseExcludes = [
+                def excludes = [
                     '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
                     '**/*Test*.*', 'android/**/*.*', 'androidx/**/*.*',
+                    // Firebase and platform glue that unit tests cannot reach.
                     '**/Analytics*.*',
                     '**/depollsoft/lib/util/Util*.*',
-                    '**/TrackingScope*.*',
-                    // Exclude Kotlin inline function anonymous classes - these can't be covered
-                    // because inline code gets copied to the call site at compile time
-                    '**/*Kt$trackable$*.class',
-                    '**/*Kt$trackableNullable$*.class',
-                    '**/*Kt$bind$*.class',
-                    '**/*Kt$uibind$*.class',
-                    '**/*Kt$bindTo$*.class',
-                    '**/*Kt$weakBind$*.class',
-                    '**/*Kt$weakProp$*.class',
-                    '**/*Kt$compiledProp$*.class',
-                    '**/*Kt$converter$*.class',
-                    '**/*Kt$transaction$*.class',
-                    // Exclude SAM adapter classes
+                    // SAM adapters the compiler generates.
                     '**/*$sam$*.class'
                 ]
                 def includes = ['**/*.class']
-                project.ext.coverageExcludes = new ArrayList<>(baseExcludes)
-                project.ext.coverageIncludes = new ArrayList<>(includes)
-                println "Excludes for library ${project.name}: ${project.ext.coverageExcludes}"
+                project.ext.coverageExcludes = excludes
+                project.ext.coverageIncludes = includes
 
                 tasks.register('jacocoTestReport', JacocoReport) {
-                    println "Creating jacocoTestReport for library ${project.name}"
-                    println "Build dir for ${project.name}: ${buildDir}"
                     dependsOn unitTestTask
                     reports {
                         xml.required.set(true)
                         html.required.set(true)
                     }
                     def classTree = files(
-                        fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
-                        fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
+                        fileTree(dir: "$buildDir/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes", excludes: excludes, includes: includes),
+                        fileTree(dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes", excludes: excludes, includes: includes)
                     )
                     classDirectories.setFrom(classTree)
                     sourceDirectories.setFrom(files('src/main/java', 'src/main/kotlin', 'src'))
@@ -238,8 +193,8 @@ subprojects {
                         rule { limit { minimum = minCoverage } }
                     }
                     classDirectories.setFrom(files(
-                        fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
-                        fileTree(dir: "$buildDir/intermediates/javac/debug/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
+                        fileTree(dir: "$buildDir/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes),
+                        fileTree(dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes", excludes: project.ext.coverageExcludes, includes: project.ext.coverageIncludes)
                     ))
                     executionData.setFrom(fileTree(dir: buildDir, includes: [
                         'jacoco/testDebugUnitTest.exec',

@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -41,6 +42,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.LifecycleResumeEffect
 
@@ -73,7 +75,11 @@ fun WearPitchPipeScreen(
         focusRequester.requestFocus()
         onPauseOrDispose { state.stopAll() }
     }
-    WearPitchInstrument(state, Modifier.fillMaxSize().focusRequester(focusRequester))
+    // The release capture (scripts/release/wear.py) waits for this resource id.
+    WearPitchInstrument(
+        state,
+        Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }.testTag("pitchInstrument").focusRequester(focusRequester),
+    )
 }
 
 /**

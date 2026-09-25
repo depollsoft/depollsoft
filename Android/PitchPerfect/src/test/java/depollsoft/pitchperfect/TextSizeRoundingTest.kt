@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
 
 /** Text sizes rounded to whole pixels, as a TextView read them, at every font scale. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "xxhdpi")
+@Config(application = RichApplication::class, qualifiers = "xxhdpi")
 class TextSizeRoundingTest {
     private fun densityAt(fontScale: Float): Density {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()

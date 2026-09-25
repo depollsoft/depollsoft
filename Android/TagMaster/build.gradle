@@ -25,7 +25,6 @@ ext {
 dependencies {
     implementation platform(compose_bom)
     implementation 'androidx.compose.ui:ui'
-    implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.compose.foundation:foundation'
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.activity:activity-compose:1.13.0'
@@ -41,9 +40,7 @@ dependencies {
     implementation project(':DepollSoftCommon')
     implementation project(':DepollSoftCompose')
     implementation project(':PitchPerfectLib')
-    implementation project(':DepollSoftCommon.Compat')
     implementation project(':depollsoft.lib.kotlin')
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'com.facebook.android:facebook-login:18.3.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
@@ -55,7 +52,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0'
     // play-services-auth 22.0.0 removed the legacy GoogleSignIn API that firebase-ui-auth 9.x
     // still calls from GoogleSignInHandler, so tapping "Sign in with Google" crashed with
     // NoClassDefFoundError (Crashlytics issue 588e5ce8). Stay on the last 21.x until FirebaseUI

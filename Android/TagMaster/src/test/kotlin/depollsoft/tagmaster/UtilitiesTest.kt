@@ -113,7 +113,6 @@ class UtilitiesTest {
 @Config(
     application = Application::class,
     manifest = Config.NONE,
-    sdk = [28],
 )
 class CorrectnessInteractionTest {
     @Test

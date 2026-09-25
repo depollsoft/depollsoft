@@ -26,7 +26,7 @@ import org.robolectric.annotation.Config
  * editor does with a song before and after Save.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], manifest = Config.NONE)
+@Config(manifest = Config.NONE)
 class SongModelsTest {
     private lateinit var document: DocumentReference
 

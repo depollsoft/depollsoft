@@ -25,10 +25,9 @@
     <string name="Settings">Settings</string>
     <string name="HomePage">apps.depoll.com</string>
     <string name="NotesToggle">Notes play until pressed again</string>
-    <string name="Purchase">Purchase to remove ads</string>
     <string name="Purchased">(Licensed)</string>
+    <string name="version_label">Version %1$s</string>
     <string name="DepollSoft">DepollSoft</string>
-    <string name="RateReview">Rate &amp; Review</string>
     <string name="TermsOfUse">Terms of Use</string>
     <string name="SortAll">Sort all songs by title</string>
     <string name="WakeLock">Prevent screen from turning off or locking while Pitch Perfect is in use</string>

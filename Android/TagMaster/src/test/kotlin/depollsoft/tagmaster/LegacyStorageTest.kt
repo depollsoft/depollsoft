@@ -26,7 +26,7 @@ import java.util.TimeZone
  * pre-lists favorites format, a cached tag, the rated-tag set and a saved search.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class LegacyStorageTest {
     private val app get() = RuntimeEnvironment.getApplication()
     private val defaultZone = TimeZone.getDefault()
@@ -39,10 +39,7 @@ class LegacyStorageTest {
     @Before
     fun setUp() {
         TagMasterApplication.registerStorageAliases()
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, app)
+        RichApplication.setAppContextForTesting(app)
         rebindPreferences()
     }
 
@@ -86,6 +83,34 @@ class LegacyStorageTest {
     fun preListsFavoritesStillMigrate() {
         val favorites = JsonSerializer.deserialize(fixture("favorites-v1")) as Collection<*>
         assertEquals(listOf(5, 6), favorites.filterIsInstance<Int>())
+    }
+
+    /**
+     * The app's own migration. It runs once, from ListModel's companion, which earlier test classes
+     * have already initialized in this sandbox, so it is called directly.
+     */
+    @Test
+    fun preListsFavoritesMoveIntoTheFavoritesList() {
+        app
+            .getSharedPreferences("depollsoft.lib.Preferences", Context.MODE_PRIVATE)
+            .edit()
+            .remove("tagmaster.lists")
+            .putString("tagmaster.Favorites", fixture("favorites-v1"))
+            .commit()
+        rebindPreferences()
+        ListModel.setTestMode(true)
+        try {
+            ListModel.Companion::class.java
+                .getDeclaredMethod("migrateOldFavorites")
+                .apply { isAccessible = true }
+                .invoke(ListModel.Companion)
+
+            assertEquals(listOf(5, 6), FavoritesModel.favoriteIds)
+            assertEquals(null, Preferences.get<Any?>("tagmaster.Favorites"))
+        } finally {
+            FavoritesModel.favoriteIds = emptyList()
+            ListModel.setTestMode(false)
+        }
     }
 
     @Test

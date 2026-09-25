@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config
 
 /** A long press shows the tooltip with the long-press haptic, and it goes after 2.5 seconds, as TooltipCompat's did. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class TooltipTest {
     @get:Rule
     val compose = createComposeRule()
