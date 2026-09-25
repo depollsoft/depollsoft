@@ -433,7 +433,7 @@ final class FavoritesBehaviorTests: TMBehaviorTestCase {
 
         home.tableView(home.tableView, didSelectRowAt: IndexPath(row: 0, section: favoritesSection))
 
-        let detail = try? XCTUnwrap(navigation.pushed.last as? DPTagViewController)
+        let detail = try? XCTUnwrap(navigation.pushed.last as? TagDetailViewController)
         XCTAssertEqual(detail?.tagId, 669)
     }
 

@@ -400,12 +400,13 @@ class TMBehaviorTestCase: XCTestCase {
     }
 
     /// Drives a detail controller to its loaded state from the seeded cache.
+    @MainActor
     func loadedDetail(tagId: Int32 = 1809,
-                      size: CGSize = TMBehaviorTestCase.portrait) -> DPTagViewController {
-        let detail = DPTagViewController()
+                      size: CGSize = TMBehaviorTestCase.portrait) -> TagDetailViewController {
+        let detail = TagDetailViewController()
         detail.tagId = tagId
         mountInNavigation(detail, size: size)
-        waitUntil("detail leaves its loading state") { detail.value(forKey: "tag") != nil }
+        spinUntil("detail leaves its loading state", timeout: 5) { detail.model.tag != nil }
         settle()
         return detail
     }

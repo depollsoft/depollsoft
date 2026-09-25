@@ -13,7 +13,6 @@
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"
 #import "DPBrowseViewController.h"
-#import "DPTagViewController.h"
 #import "DPTeachableTagsController.h"
 #import "DPSearchViewController.h"
 #import "DPSettingsController.h"

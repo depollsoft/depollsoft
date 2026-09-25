@@ -18,6 +18,7 @@ private final class TMSignedOutSettings: DPSettingsController {
     override func isSignedIn() -> Bool { false }
 }
 
+@MainActor
 final class AppPolishTests: TMBehaviorTestCase {
 
     // MARK: - Page tab bars
@@ -29,8 +30,12 @@ final class AppPolishTests: TMBehaviorTestCase {
     /// stacks of the same buttons for its glass lens, so identical frames are
     /// one button seen twice.
     private func tabButtons(_ pages: TMPageViewController) -> [UIView] {
+        tabButtons(pages.tabBar)
+    }
+
+    private func tabButtons(_ bar: UITabBar) -> [UIView] {
         var seen = Set<String>()
-        return descendants(of: pages.tabBar) { $0 is UIControl && !$0.isHidden }
+        return descendants(of: bar) { $0 is UIControl && !$0.isHidden }
             .filter { $0.bounds.width > 0 && $0.bounds.height > 0 }
             .sorted { $0.convert($0.bounds, to: nil).minX < $1.convert($1.bounds, to: nil).minX }
             .filter {
@@ -46,7 +51,21 @@ final class AppPolishTests: TMBehaviorTestCase {
                                    titles: [String],
                                    file: StaticString = #filePath,
                                    line: UInt = #line) {
-        let bar = pages.tabBar!
+        assertTabContract(bar: pages.tabBar, in: pages, pageCount: pages.viewControllers.count,
+                          titles: titles, file: file, line: line)
+    }
+
+    /// The SwiftUI detail's page bar, which its TabView builds.
+    private func detailTabBar(_ detail: TagDetailViewController) -> UITabBar? {
+        firstDescendant(of: detail.view) { ($0 as? UITabBar)?.accessibilityIdentifier == "page-tab-bar" } as? UITabBar
+    }
+
+    private func assertTabContract(bar: UITabBar,
+                                   in pages: UIViewController,
+                                   pageCount: Int,
+                                   titles: [String],
+                                   file: StaticString = #filePath,
+                                   line: UInt = #line) {
         XCTAssertEqual(bar.accessibilityIdentifier, "page-tab-bar", file: file, line: line)
         XCTAssertFalse(bar.isHidden, file: file, line: line)
 
@@ -54,7 +73,7 @@ final class AppPolishTests: TMBehaviorTestCase {
         XCTAssertEqual(bar.items?.map { $0.title ?? "" }, titles, file: file, line: line)
         XCTAssertEqual(bar.items?.map { $0.accessibilityIdentifier ?? "" },
                        titles.map { "page-\($0)" }, file: file, line: line)
-        XCTAssertEqual(bar.items?.count, pages.viewControllers.count, file: file, line: line)
+        XCTAssertEqual(bar.items?.count, pageCount, file: file, line: line)
 
         // Exactly one page is selected.
         XCTAssertNotNil(bar.selectedItem, file: file, line: line)
@@ -67,7 +86,7 @@ final class AppPolishTests: TMBehaviorTestCase {
         XCTAssertLessThanOrEqual(barFrame.maxY, pages.view.bounds.maxY + 1, file: file, line: line)
 
         // One rendered button per page, each inside the bar.
-        let buttons = tabButtons(pages)
+        let buttons = tabButtons(bar)
         XCTAssertEqual(buttons.count, titles.count,
                        "One rendered tab per page", file: file, line: line)
         for button in buttons {
@@ -84,8 +103,15 @@ final class AppPolishTests: TMBehaviorTestCase {
                                   titles: [String],
                                   file: StaticString = #filePath,
                                   line: UInt = #line) {
+        assertTabTargets(bar: pages.tabBar, in: pages, file: file, line: line)
+    }
+
+    private func assertTabTargets(bar: UITabBar,
+                                  in pages: UIViewController,
+                                  file: StaticString = #filePath,
+                                  line: UInt = #line) {
         var previousTarget: CGRect?
-        for button in tabButtons(pages) {
+        for button in tabButtons(bar) {
             let frame = button.convert(button.bounds, to: pages.view)
             XCTAssertGreaterThanOrEqual(frame.height, 44, file: file, line: line)
             XCTAssertGreaterThanOrEqual(frame.width, 44, file: file, line: line)
@@ -104,8 +130,9 @@ final class AppPolishTests: TMBehaviorTestCase {
     func testDetailTabBarNamesEveryPageAndMeetsItsTargetContract() {
         seedCachedTag()
         let detail = loadedDetail()
-        assertTabContract(detail, titles: Self.detailTabs)
-        assertTabTargets(detail, titles: Self.detailTabs)
+        let bar = try! XCTUnwrap(detailTabBar(detail))
+        assertTabContract(bar: bar, in: detail, pageCount: 4, titles: Self.detailTabs)
+        assertTabTargets(bar: bar, in: detail)
     }
 
     func testBrowseTabBarNamesEveryPageAndMeetsItsTargetContract() {
@@ -121,15 +148,12 @@ final class AppPolishTests: TMBehaviorTestCase {
         seedCachedTag()
         let detail = loadedDetail()
 
+        let bar = try! XCTUnwrap(detailTabBar(detail))
         for (index, title) in Self.detailTabs.enumerated() {
-            detail.selectedIndex = UInt(index)
+            detail.model.selectedPage = TagDetailModel.Page(rawValue: index)!
             settle()
-            XCTAssertEqual(detail.selectedIndex, UInt(index))
-            XCTAssertEqual(detail.tabBar.selectedItem?.title, title)
-            XCTAssertEqual(detail.tabBar.selectedItem, detail.viewControllers[index].tabBarItem)
-            waitUntil("page \(title) is mounted") {
-                detail.viewControllers[index].view.isDescendant(of: detail.rootView)
-            }
+            XCTAssertEqual(bar.selectedItem?.title, title)
+            XCTAssertEqual(bar.items?.firstIndex { $0 === bar.selectedItem }, index)
         }
     }
 
@@ -155,13 +179,14 @@ final class AppPolishTests: TMBehaviorTestCase {
     func testDetailTabsAndSelectionSurviveASizeChange() {
         seedCachedTag()
         let detail = loadedDetail()
-        detail.selectedIndex = 1
+        detail.model.selectedPage = .details
         settle()
 
         for size in [TMBehaviorTestCase.landscape, TMBehaviorTestCase.portrait] {
             resize(to: size)
-            assertTabContract(detail, titles: Self.detailTabs)
-            XCTAssertEqual(detail.tabBar.selectedItem?.title, "Details",
+            let bar = try! XCTUnwrap(detailTabBar(detail))
+            assertTabContract(bar: bar, in: detail, pageCount: 4, titles: Self.detailTabs)
+            XCTAssertEqual(bar.selectedItem?.title, "Details",
                            "The open page survives the size change")
         }
     }

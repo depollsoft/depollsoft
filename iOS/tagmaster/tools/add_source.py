@@ -5,7 +5,7 @@ Usage: add_source.py <File.swift|.m|.h> [--target app|tests]
        add_source.py --shared <File.swift> --target app|tests   (a file in iOS/shared)
        add_source.py --remove <File>...
 
-New files are placed beside TMTrackPlayerView.swift (app) or TMBehaviorTestSupport.swift (tests).
+New files are placed beside TMTagLists.swift (app) or TMBehaviorTestSupport.swift (tests).
 See ../../tools/xcodeproj_files.py; ids are hash-derived so parallel branches merge.
 """
 import subprocess
@@ -15,7 +15,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent / "tagmaster.xcodeproj" / "project.pbxproj"
 TOOL = HERE.parents[1] / "tools" / "xcodeproj_files.py"
-ANCHORS = {"app": "TMTrackPlayerView.swift", "tests": "TMBehaviorTestSupport.swift"}
+ANCHORS = {"app": "TMTagLists.swift", "tests": "TMBehaviorTestSupport.swift"}
 SHARED_ANCHOR = "TelemetryConsent.swift"
 
 

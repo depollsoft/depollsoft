@@ -1,14 +1,15 @@
 //
-//  DPTagTracksController.swift
+//  TagTracksModel.swift
 //  tagmaster
 //
-//  Created by David Poll on 8/1/19.
-//  Copyright © 2019 DepollSoft. All rights reserved.
+//  The Tracks page's behaviour: bringing a learning track into the inline
+//  balance player (from the file cache or the network, with a readiness
+//  timeout, one row busy at a time), and the player's own transport state.
 //
 
-// Playback ownership spans fetching, decoding, and the inline balance player.
-import Foundation
 import AVFoundation
+import Foundation
+import Observation
 import os
 
 /// Fetches a track (from the file cache or the network) and decodes it into a
@@ -199,96 +200,185 @@ import os
     deinit { cancel() }
 }
 
-extension DPTagTracksController: UITableViewDelegate {
-    // Factory and presentation hooks keep the real loading flow testable without network requests.
-    @objc dynamic func makeTrackLoader(url: URL, cacheKey: String) -> TMTrackLoader { TMTrackLoader(url: url, cacheKey: cacheKey) }
-    @objc dynamic var playbackReadyTimeout: TimeInterval { 30 }
+// MARK: - The inline player
 
-    /// Shows a decoded track in the inline player and starts it.
-    @objc dynamic func presentPlayer(for track: DPTrack, buffer: AVAudioPCMBuffer) {
-        guard let playerView else { return }
-        playerView.load(track: track, buffer: buffer)
-        playerView.isHidden = false
-        view.setNeedsLayout()
-        playerView.play()
-        UIAccessibility.post(notification: .layoutChanged, argument: playerView.playPauseButton)
+/// The balance player's transport, as the inline player shows it. Mirrors Android's MediaPlayerView.
+@Observable @MainActor
+final class TMTrackPlayerModel {
+    let player = TMBalanceAudioPlayer()
+    private(set) var track: DPTrack?
+    private(set) var isPlaying = false
+    private(set) var isLoaded = false
+    private(set) var position: TimeInterval = 0
+    private(set) var duration: TimeInterval = 0
+    private(set) var balance: Float = TMBalanceAudioPlayer.centeredBalance
+    /// While a finger is on the scrub bar the timer must not move its thumb.
+    var scrubbing = false
+
+    init() {
+        player.onProgress = { [weak self] in MainActor.assumeIsolated { self?.refresh() } }
+        player.onEnded = { [weak self] in
+            MainActor.assumeIsolated {
+                self?.player.stop()
+                self?.refresh()
+            }
+        }
+        player.onInterrupted = { [weak self] in MainActor.assumeIsolated { self?.refresh() } }
     }
 
-    /// Cancels an in-flight load. Playback already in the inline player is left alone.
-    @objc func cancelPlayback() {
-        let session = playbackSession
-        playbackSession = nil
-        session?.cancel()
+    /// Shows a decoded track. Playback does not start until `play()`.
+    func load(track: DPTrack, buffer: AVAudioPCMBuffer) {
+        self.track = track
+        player.load(buffer)
+        scrubbing = false
+        refresh()
     }
 
-    /// Cancels loading and stops the inline player, e.g. when the page or tag goes away.
-    @objc func stopPlayback() {
-        cancelPlayback()
-        guard let playerView else { return }
-        playerView.unload()
-        playerView.isHidden = true
-        if isViewLoaded { view.setNeedsLayout() }
+    func play() { _ = player.play(); refresh() }
+    func pause() { player.pause(); refresh() }
+    func stop() { player.stop(); refresh() }
+
+    func togglePlayPause() {
+        if player.isPlaying { player.pause() } else { _ = player.play() }
+        refresh()
     }
 
-    @objc func playbackViewWillDisappear() {
-        playbackHasLeft = true
+    func unload() {
+        track = nil
+        player.unload()
+        refresh()
+    }
+
+    func seek(to time: TimeInterval) {
+        player.seek(to: time)
+        position = player.currentTime
+    }
+
+    func setBalance(_ value: Float) {
+        player.setBalance(value)
+        balance = player.balance
+    }
+
+    func centerBalance() { setBalance(TMBalanceAudioPlayer.centeredBalance) }
+
+    func refresh() {
+        isPlaying = player.isPlaying
+        isLoaded = player.isLoaded
+        duration = player.duration
+        if !scrubbing { position = player.currentTime }
+        balance = player.balance
+    }
+
+    var canStop: Bool { isLoaded && (isPlaying || position > 0) }
+
+    /// Android's `%1.1f/%1.1fs` counter.
+    nonisolated static func counterText(position: TimeInterval, length: TimeInterval) -> String {
+        String(format: "%1.1f/%1.1fs", max(0, position), max(0, length))
+    }
+
+    var counterText: String { TMTrackPlayerModel.counterText(position: position, length: duration) }
+
+    var balanceDescription: String {
+        let gains = TMBalanceGains(balance: balance)
+        let left = Int((gains.left * 100).rounded()), right = Int((gains.right * 100).rounded())
+        return left == right ? "Centered" : "Left \(left) percent, right \(right) percent"
+    }
+}
+
+// MARK: - The page
+
+@Observable @MainActor
+final class TagTracksModel {
+    weak var detail: TagDetailModel?
+    let busy: TMBusyCount
+    let player = TMTrackPlayerModel()
+
+    /// Whether the inline player is showing (a track has been brought in).
+    private(set) var playerVisible = false
+    /// The row whose track is loading, if any.
+    private(set) var loadingTrack: DPTrack?
+    private(set) var session: TMTrackPlaybackSession?
+    /// The page is off screen: nothing may start or present.
+    private(set) var hasLeft = false
+
+    // Seams for tests: how a track is fetched, and how long it may take.
+    var makeLoader: (URL, String) -> TMTrackLoader = { TMTrackLoader(url: $0, cacheKey: $1) }
+    var readyTimeout: TimeInterval = 30
+
+    init(busy: TMBusyCount) {
+        self.busy = busy
+    }
+
+    var tag: DPTag? { detail?.tag }
+    var tracks: [DPTrack] { tag?.tracks ?? [] }
+
+    func appeared() { hasLeft = false }
+
+    func disappeared() {
+        hasLeft = true
         stopPlayback()
     }
 
-    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        guard !playbackHasLeft, indexPath.row >= 0, indexPath.row < tag.tracks.count,
-              busyIndicator.busyCount == 0 else { return }
-        let selectedTag = tag!
-        let track = selectedTag.tracks[indexPath.row]
-        cancelPlayback()
-        if let playerView, playerView.track === track, playerView.player.isLoaded {
+    /// Cancels an in-flight load. Playback already in the player is left alone.
+    func cancelLoading() {
+        let current = session
+        session = nil
+        current?.cancel()
+    }
+
+    /// Cancels loading and stops the player, e.g. when the page or the tag goes away.
+    func stopPlayback() {
+        cancelLoading()
+        player.unload()
+        playerVisible = false
+    }
+
+    func select(_ track: DPTrack) {
+        guard !hasLeft, let tag, tag.tracks.contains(where: { $0 === track }), !busy.isBusy else { return }
+        cancelLoading()
+        if player.track === track, player.isLoaded {
             // Same track again: restart it rather than reloading.
-            playerView.stop()
-            playerView.play()
+            player.stop()
+            player.play()
             return
         }
         // Android stops the old track as soon as a new one is chosen.
-        playerView?.stop()
+        player.stop()
 
-        let cell = tableView.cellForRow(at: indexPath)
-        let spinner = TMBarberPoleLoadingView(operationName: "Loading track")
-        spinner.isAccessibilityElement = false
-        spinner.startAnimating()
-        cell?.accessoryView = spinner
-        cell?.accessibilityLabel = "\(track.title ?? "Track"), loading"
-        let busy = busyIndicator!
-        busy.incrementBusyCount()
-
+        loadingTrack = track
+        busy.begin()
+        let source = track.source!
         // Prefer the offline copy under the existing cache key; otherwise download into it.
-        let cachedPath = DPFileCache.path(forKey: track.source.cacheKey) ?? ""
+        let cachedPath = DPFileCache.path(forKey: source.cacheKey) ?? ""
         let isCached = !cachedPath.isEmpty && FileManager.default.fileExists(atPath: cachedPath)
-        let sourceURL: URL = isCached ? URL(fileURLWithPath: cachedPath) : track.source.uri
-        let loader = makeTrackLoader(url: sourceURL, cacheKey: track.source.cacheKey)
-        let session = TMTrackPlaybackSession(track: track, loader: loader) { [weak cell] in
-            // Do not depend on the page surviving to balance its busy indicator.
-            spinner.stopAnimating()
-            busy.decrementBusyCount()
-            if cell?.accessoryView === spinner {
-                cell?.accessoryView = nil
-                cell?.accessibilityLabel = nil
+        let url: URL = isCached ? URL(fileURLWithPath: cachedPath) : source.uri
+        let session = TMTrackPlaybackSession(track: track, loader: makeLoader(url, source.cacheKey)) { [weak self, busy] in
+            // Balanced whether or not the page survives.
+            busy.end()
+            MainActor.assumeIsolated {
+                if self?.loadingTrack === track { self?.loadingTrack = nil }
             }
         }
-        playbackSession = session
-        session.start(timeoutInterval: playbackReadyTimeout, onReady: { [weak self, weak session] buffer in
-            guard let self, let session, self.playbackSession === session,
-                  !self.playbackHasLeft, self.tag === selectedTag else { return }
-            self.playbackSession = nil
-            self.presentPlayer(for: track, buffer: buffer)
-        }, onFailure: { [weak self, weak session, weak tableView] in
-            guard let self, let session, self.playbackSession === session,
-                  !self.playbackHasLeft, self.tag === selectedTag else { return }
-            // The failed session stays current so only its own retry can start a fresh one.
-            self.tm_showError("The learning track couldn't be played. Check your connection and try again.") { [weak self, weak session, weak tableView] in
-                guard let self, let session, let tableView, self.playbackSession === session,
-                      !self.playbackHasLeft, self.tag === selectedTag,
-                      let row = self.tag.tracks.firstIndex(where: { $0 === track }) else { return }
-                self.tableView(tableView, didSelectRowAt: IndexPath(row: row, section: 0))
+        self.session = session
+        session.start(timeoutInterval: readyTimeout, onReady: { [weak self, weak session] buffer in
+            MainActor.assumeIsolated {
+                guard let self, let session, self.session === session, !self.hasLeft, self.tag === tag else { return }
+                self.session = nil
+                self.player.load(track: track, buffer: buffer)
+                self.playerVisible = true
+                self.player.play()
+            }
+        }, onFailure: { [weak self, weak session] in
+            MainActor.assumeIsolated {
+                guard let self, let session, self.session === session, !self.hasLeft, self.tag === tag else { return }
+                // The failed session stays current so only its own retry can start a fresh one.
+                self.detail?.error = TMRecoverableError(
+                    message: "The learning track couldn't be played. Check your connection and try again.",
+                    retry: { [weak self, weak session] in
+                        guard let self, let session, self.session === session, !self.hasLeft, self.tag === tag else { return }
+                        self.session = nil
+                        self.select(track)
+                    })
             }
         })
     }

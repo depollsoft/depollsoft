@@ -9,7 +9,5 @@
 
 #import "DPSearchViewController.h"
 #import "DPBrowseViewController.h"
-#import "DPTagSummaryController.h"
-#import "DPTagDetailController.h"
 #import "DPTagQueryViewController.h"
 #import "DPTagCell.h"

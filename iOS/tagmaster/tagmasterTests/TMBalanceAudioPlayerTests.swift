@@ -181,8 +181,8 @@ final class TMBalanceAudioPlayerTests: XCTestCase {
     }
 
     func testCounterTextMatchesAndroid() {
-        XCTAssertEqual(TMTrackPlayerView.counterText(position: 1.26, length: 12.04), "1.3/12.0s")
-        XCTAssertEqual(TMTrackPlayerView.counterText(position: -1, length: 0), "0.0/0.0s")
+        XCTAssertEqual(TMTrackPlayerModel.counterText(position: 1.26, length: 12.04), "1.3/12.0s")
+        XCTAssertEqual(TMTrackPlayerModel.counterText(position: -1, length: 0), "0.0/0.0s")
     }
 
     /// Renders the real engine graph offline and checks each output channel's level.

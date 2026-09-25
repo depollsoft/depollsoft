@@ -10,7 +10,6 @@
 #import "DPAppDelegate.h"
 #import "DPTagCell.h"
 #import "DPBrowseViewController.h"
-#import "DPTagViewController.h"
 #import "tagmaster-Swift.h"
 
 @interface DPTeachableTagsController ()

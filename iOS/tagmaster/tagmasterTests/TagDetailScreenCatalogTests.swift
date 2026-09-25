@@ -190,42 +190,44 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
 
     // MARK: - Driving the detail (the part that changes with the implementation)
 
-    func makeDetail(tagId: Int32, source: TMTagListSource? = nil) -> DPTagViewController {
-        let detail = DPTagViewController()
+    func makeDetail(tagId: Int32, source: TMTagListSource? = nil) -> TagDetailViewController {
+        let detail = TagDetailViewController()
         detail.tagId = tagId
         detail.source = source
         return detail
     }
 
-    func waitForLoad(_ detail: DPTagViewController) {
-        spinUntil("the detail settles", timeout: 5) {
-            (detail.value(forKey: "tagFetchPending") as? Bool) == false
-        }
+    func waitForLoad(_ detail: TagDetailViewController) {
+        spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending }
     }
 
-    func select(page: Int, in detail: DPTagViewController) {
-        detail.selectedIndex = UInt(page)
-        spinUntil("page \(page) is on screen", timeout: 3) {
-            detail.viewControllers[page].viewIfLoaded?.window != nil
-        }
+    func select(page: Int, in detail: TagDetailViewController) {
+        detail.model.selectedPage = TagDetailModel.Page(rawValue: page)!
         ScreenCatalog.settle(0.6)
     }
 
     /// Stops the quartet so it is captured at rest.
-    func stillQuartet(in detail: DPTagViewController) {
-        (detail.value(forKey: "quartetStaff") as? NSObject)?.setValue(false, forKey: "animationAllowed")
+    func stillQuartet(in detail: TagDetailViewController) {
+        detail.model.applicationActive = false
     }
 
-    func showActions(in detail: DPTagViewController) {
-        detail.perform(NSSelectorFromString("showActions"))
+    func showActions(in detail: TagDetailViewController) {
+        detail.model.showActions()
     }
 
-    func showPicker(in detail: DPTagViewController) {
-        detail.perform(NSSelectorFromString("showListPicker"))
+    func showPicker(in detail: TagDetailViewController) {
+        detail.model.showListPicker(from: detail.model.expanded ? .toolbar : .actions)
     }
 
-    func showRating(in detail: DPTagViewController) {
-        (detail.viewControllers[0]).perform(NSSelectorFromString("rate"))
+    func showRating(in detail: TagDetailViewController) {
+        detail.model.summary.showRating()
+    }
+
+    func dismissPresentations(in detail: TagDetailViewController) {
+        detail.model.actionsPresented = false
+        detail.model.pickerSource = nil
+        detail.model.summary.ratingDialogPresented = false
+        ScreenCatalog.settle(0.5)
     }
 
     // MARK: - iPhone
@@ -309,17 +311,13 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         waitForLoad(detail)
         showActions(in: detail)
         snap("phone-actions-light", settle: 1.5)
-        detail.dismiss(animated: false)
-        ScreenCatalog.settle(0.3)
+        dismissPresentations(in: detail)
         showPicker(in: detail)
         snap("phone-picker-light", settle: 1.5)
-        detail.presentedViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.3)
+        dismissPresentations(in: detail)
         showRating(in: detail)
         snap("phone-rating-light", settle: 1.5)
-        detail.presentedViewController?.dismiss(animated: false)
-        detail.viewControllers[0].presentedViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.3)
+        dismissPresentations(in: detail)
     }
 
     // MARK: - iPad
@@ -380,7 +378,6 @@ class TagDetailScreenCatalogTests: TMBehaviorTestCase {
         waitForLoad(detail)
         showPicker(in: detail)
         snap("pad-picker-light", settle: 1.5)
-        detail.presentedViewController?.dismiss(animated: false)
-        ScreenCatalog.settle(0.3)
+        dismissPresentations(in: detail)
     }
 }

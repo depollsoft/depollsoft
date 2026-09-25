@@ -88,7 +88,7 @@ final class TagListBehaviorTests: TMBehaviorTestCase {
     func testTappingARowOpensThatTag() {
         let list = self.list()
         list.tableView(list.tableView, didSelectRowAt: IndexPath(row: 1, section: 0))
-        let detail = try? XCTUnwrap(navigation.pushed.last as? DPTagViewController)
+        let detail = try? XCTUnwrap(navigation.pushed.last as? TagDetailViewController)
         XCTAssertEqual(detail?.tagId, 1478)
     }
 

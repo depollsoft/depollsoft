@@ -8,8 +8,8 @@
 
 #import "DPTagQueryViewController.h"
 #import "DPTagCell.h"
+#import "TMPageViewController.h"
 #import "DPUtils+Subscripts.h"
-#import "DPTagViewController.h"
 #import "DPAppDelegate.h"
 #import "DPTagPageControllerBase.h"
 
