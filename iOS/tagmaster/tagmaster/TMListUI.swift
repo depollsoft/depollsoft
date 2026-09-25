@@ -94,20 +94,16 @@ struct TMWatermark: View {
 }
 
 /// A screen's backdrop: its page colour and the watermark. Beside the iPad split's
-/// one shared watermark a plain screen stays clear so it shows through; a
-/// grouped screen keeps its grouped page colour, as the UIKit screens did.
+/// one shared watermark every screen stays clear so it shows through once.
 struct TMScreenBackground: View {
     var grouped = false
 
     var body: some View {
-        let shared = DPAppDelegate.hasSharedBackground()
-        ZStack {
-            if grouped {
-                Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
-            } else if !shared {
-                Color(uiColor: .systemBackground).ignoresSafeArea()
+        if !DPAppDelegate.hasSharedBackground() {
+            ZStack {
+                Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
+                TMWatermark()
             }
-            if !shared { TMWatermark() }
         }
     }
 }

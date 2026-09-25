@@ -65,6 +65,7 @@ struct TMBrowseScreen: View {
             }
         }
         .tint(TMTheme.accent)
+        .tmClearTabBackground()
         .tmTabBarNeverMinimizes()
         // A compact container keeps the bar at the foot of the screen on iPad too.
         .environment(\.horizontalSizeClass, .compact)
@@ -75,6 +76,12 @@ struct TMBrowseScreen: View {
 }
 
 extension View {
+    /// The page container stays clear, as TMPageViewController's did, so the
+    /// watermark behind it shows through.
+    func tmClearTabBackground() -> some View {
+        background { TMClearTabContainer() }
+    }
+
     @ViewBuilder
     func tmTabBarNeverMinimizes() -> some View {
         if #available(iOS 26.0, *) {
@@ -83,4 +90,26 @@ extension View {
             self
         }
     }
+}
+
+/// Finds the tab bar controller SwiftUI builds for a TabView and clears its view.
+private struct TMClearTabContainer: UIViewRepresentable {
+    final class Probe: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            DispatchQueue.main.async { [weak self] in
+                var responder: UIResponder? = self
+                while let next = responder?.next {
+                    if let tabs = next as? UITabBarController {
+                        tabs.view.backgroundColor = .clear
+                        return
+                    }
+                    responder = next
+                }
+            }
+        }
+    }
+
+    func makeUIView(context: Context) -> Probe { Probe() }
+    func updateUIView(_ view: Probe, context: Context) {}
 }

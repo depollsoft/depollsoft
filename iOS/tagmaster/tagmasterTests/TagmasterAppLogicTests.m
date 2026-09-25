@@ -2540,6 +2540,7 @@ TM_CAPTURE_IMPL
     self.table = [[UITableView alloc] initWithFrame:self.view.bounds];
     self.table.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self.view addSubview:self.table];
+    [DPAppDelegate setUpBackground:self.table]; // the list's watermark, as the results lists draw it
     self.pole = [[TMBarberPoleLoadingView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 68)];
     self.table.tableFooterView = self.pole;
     [self.pole startAnimating];
