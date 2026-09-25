@@ -88,6 +88,34 @@ class LegacyStorageTest {
         assertEquals(listOf(5, 6), favorites.filterIsInstance<Int>())
     }
 
+    /**
+     * The app's own migration. It runs once, from ListModel's companion, which earlier test classes
+     * have already initialized in this sandbox, so it is called directly.
+     */
+    @Test
+    fun preListsFavoritesMoveIntoTheFavoritesList() {
+        app
+            .getSharedPreferences("depollsoft.lib.Preferences", Context.MODE_PRIVATE)
+            .edit()
+            .remove("tagmaster.lists")
+            .putString("tagmaster.Favorites", fixture("favorites-v1"))
+            .commit()
+        rebindPreferences()
+        ListModel.setTestMode(true)
+        try {
+            ListModel.Companion::class.java
+                .getDeclaredMethod("migrateOldFavorites")
+                .apply { isAccessible = true }
+                .invoke(ListModel.Companion)
+
+            assertEquals(listOf(5, 6), FavoritesModel.favoriteIds)
+            assertEquals(null, Preferences.get<Any?>("tagmaster.Favorites"))
+        } finally {
+            FavoritesModel.favoriteIds = emptyList()
+            ListModel.setTestMode(false)
+        }
+    }
+
     @Test
     fun cachedTagLoads() {
         // A stored Date carries its local-time fields beside Time, and loading applies them in

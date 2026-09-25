@@ -76,6 +76,25 @@ class StoredDataTest {
         assertEquals(KeyType.Minor, songs[1].key.keyType)
     }
 
+    /** The app's own migration: the single stored list becomes My Songs and the old key goes. */
+    @Test
+    fun startingWithTheOldestFormatMovesItsSongsIntoMySongs() {
+        val oldKey = "depollsoft.pitchperfect.SongsModel"
+        Preferences.set(oldKey, JsonSerializer.deserialize(fixture("songs_legacy.json")))
+
+        val model =
+            SongsModel::class.java
+                .getDeclaredConstructor()
+                .apply { isAccessible = true }
+                .newInstance()
+
+        val mySongs = model.songLists.getValue(SongsModel.DEFAULT_ID)
+        assertEquals("Default", mySongs.name)
+        assertEquals(listOf("Heart of My Heart", "The Old Songs"), mySongs.songs.map { it.name })
+        assertEquals(KeyType.Minor, mySongs.songs[1].key.keyType)
+        assertNull("the old key is cleared once migrated", Preferences.get<Any?>(oldKey))
+    }
+
     @Test
     fun listsSaveUnderTheSameNamesTheyLoadedFrom() {
         val list = SongList("default")

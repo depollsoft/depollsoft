@@ -250,20 +250,8 @@ class FavoritesModelTest {
         assertFalse(FavoritesModel.favoriteIds.contains(1))
     }
 
-    /**
-     * Helper method to reset and set favorite ids.
-     */
     private fun setFavoriteIds(ids: List<Int>) {
-        try {
-            // Get the backing ListModel
-            val modelField = FavoritesModel::class.java.getDeclaredField("model")
-            modelField.isAccessible = true
-            val listModel = modelField.get(FavoritesModel) as ListModel
-            listModel.ids = ids
-        } catch (e: Exception) {
-            // Fallback: direct assignment
-            FavoritesModel.favoriteIds = ids
-        }
+        FavoritesModel.favoriteIds = ids
     }
 
     /**

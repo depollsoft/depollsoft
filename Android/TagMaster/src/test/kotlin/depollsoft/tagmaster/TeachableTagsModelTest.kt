@@ -280,20 +280,8 @@ class TeachableTagsModelTest {
         assertTrue(TeachableTagsModel.teachableTagIds.contains(Int.MAX_VALUE))
     }
 
-    /**
-     * Helper method to reset and set teachable tag ids.
-     */
     private fun setTeachableTagIds(ids: List<Int>) {
-        try {
-            // Get the backing ListModel
-            val modelField = TeachableTagsModel::class.java.getDeclaredField("model")
-            modelField.isAccessible = true
-            val listModel = modelField.get(TeachableTagsModel) as ListModel
-            listModel.ids = ids
-        } catch (e: Exception) {
-            // Fallback: direct assignment
-            TeachableTagsModel.teachableTagIds = ids
-        }
+        TeachableTagsModel.teachableTagIds = ids
     }
 
     /**
