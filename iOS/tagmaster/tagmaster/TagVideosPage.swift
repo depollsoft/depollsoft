@@ -75,6 +75,7 @@ struct TagVideosPage: View {
                     Text(videos.isEmpty
                          ? "Sorry, this tag does not have any videos associated with it."
                          : "Videos open on YouTube inside Tag Master.")
+                        .padding(.leading, 4)
                 }
             }
             .tmGroupedTableMetrics()
@@ -199,6 +200,7 @@ struct TMGroupedHeader: View {
     let text: String
     var body: some View {
         Text(text)
+            .padding(.leading, 4)
             .padding(.bottom, -3.67)
     }
 }
