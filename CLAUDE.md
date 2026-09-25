@@ -69,6 +69,7 @@ npm run deploy                     # Deploy to Firebase
 - **State**: models keep observable state in Compose snapshot state via `depollsoft.lib.state` (`StateField`, `StateList`, `ChangeSignal`, `watchState`) in DepollSoftCommon; screen composables take a model and callbacks
 - **Shared Libraries**:
   - DepollSoftCommon: Shared utilities across Android apps, including the snapshot-state helpers
+  - DepollSoftCompose: Compose code both apps share (list motion and drag reordering, scrollbars, snackbar timing, tooltips, the Menu key, the View pixel rules); Compose UI and foundation only, each app brings its Material version
   - depollsoft.lib.kotlin: Kotlin extensions (also has tests)
   - PitchPerfectLib: Shared components for PitchPerfect
 - **Build System**: Gradle with dynamic version codes (YYMMDD *1000 + build* 10 + suffix)

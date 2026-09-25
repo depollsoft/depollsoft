@@ -56,21 +56,44 @@ serialized by the Bindroid-era code to keep that true.
   fragment's loaded pages) is kept too: in `rememberSaveable`, the activity's `SavedStateRegistry`,
   or a `ViewModel`.
 
+## Shared Compose code
+
+`DepollSoftCompose` (package `depollsoft.compose`) holds what both apps' screens use. It depends
+on Compose UI and foundation only; each app keeps its own Material version and draws the visible
+parts (the snackbar, the tooltip) itself:
+
+* `ListMotion` and `listItemMotion`: how list rows move.
+* `ReorderState`, `reorderHandle`, `reorderRow`, `shownOrder`: drag-to-reorder.
+* `listViewScrollbar`, `recyclerScrollbar`, `scrollViewScrollbar`, `revealItem`: View scrollbars
+  and smooth scrolling to a row.
+* `SnackbarState`, `SlidingSnackbarHost`, `SnackbarTiming`: one snackbar at a time, MDC's timing.
+* `LabelTooltipState`, `tooltipOnHover`: icon labels on long press and mouse hover.
+* `MenuKey`, `OpensOnMenuKey`: the hardware Menu key.
+* `inWholePixels`, `viewPx`, `viewDp`, `ViewAlign`, `dialogTitleFits`, `dialogWindowWidth`,
+  `rememberDrawable`, `drawPlatform`: the pixel rules below.
+
+Anything both apps need goes there rather than into a second copy: the two copies this module
+replaced had already drifted apart (one app got a fix the other did not).
+
 ## Motion and interaction
 
 Both apps move the same way. Keep new screens consistent with this:
 
-* **List rows** that can be added, removed, moved or changed use `Modifier.animateItem` with each
-  app's `ListMotion` (RecyclerView's default animator: 120ms fades, 250ms moves). A reorder the
-  app makes itself (Sort, Move up/down, keyboard and accessibility moves) holds the scroll
-  position by index, so the list doesn't follow its old top row.
-* **Dragged rows** (`RowDrag` in Pitch Perfect, `ReorderState` in Tag Master) start on touch-down
-  of the handle, lift to a 6dp shadow in 150ms, tick on each swap, and settle into their slot in
-  200ms before the order is committed. The dragged row never gets a placement animation.
-* **Snackbars** last 1.5s (short) or 2.75s (long), as MDC's did, stretched to the accessibility
-  timeout the user asked for.
-* **Icon buttons and tabs** show their label as a tooltip on long-press and hover, as AppCompat's
-  did. The hardware Menu key opens the screen's overflow menu.
+* **List rows** that can be added, removed, moved or changed use `listItemMotion`
+  (RecyclerView's default animator: 120ms fades, 250ms moves). A list that can be reordered
+  shows `shownOrder`, which holds the scroll position by index whenever the rows only trade
+  places (a drag, Sort, Move up/down, a sync), so the list doesn't follow its old top row.
+* **Dragged rows** (`ReorderState`) start on touch-down of the handle, lift to a 6dp shadow in
+  150ms, trade places once they pass a neighbour's far edge, and settle into their slot in 200ms.
+  The new order is committed once, on the drop, and only if it changed. A refused drop or a drag
+  abandoned by `sourceChanged` settles the row the same way. The haptics are Android 14's gesture
+  feedback, and a single long-press buzz at the start on older versions.
+* **Snackbars** last 1.5s (short) or 2.75s (long) once they have slid in, as MDC's did,
+  stretched to the accessibility timeout the user asked for. A new one waits for the one it
+  replaces to slide away. Screen readers hear them (a polite live region).
+* **Icon buttons and tabs** show their label as a tooltip on long-press and mouse hover, as
+  AppCompat's did. The long press buzzes once: `combinedClickable`'s buzz. The hardware Menu key
+  opens the screen's overflow menu.
 * **Dialogs and popup menus** animate in and out. Pagers select a tapped tab at once and a swiped
   one when it settles; side effects of "the current page" (stopping a track) wait for
   `settledPage`.
@@ -88,9 +111,9 @@ new screens and changes need to keep doing:
   `setTextSize`, MDC's chip text and `TextInputLayout`'s floating label keep the fraction, and so
   do their Compose counterparts.
 * **View code truncated dp.** Custom Views computed `(dp * density).toInt()`; where they did, the
-  Compose layouts use `viewPx` (Tag Master) or `viewDp` (Pitch Perfect) rather than
-  `roundToPx()`.
-* **Centring** uses the View rule (an odd leftover pixel goes below or after); see `ViewAlign`.
+  Compose layouts use `viewPx` (or `viewDp`) rather than `roundToPx()`.
+* **Centring** uses the View rule (an odd leftover pixel goes below or after); see `ViewAlign`,
+  whose start and end alignments mirror in a right-to-left layout.
 * **Dialog titles** follow AppCompat's DialogTitle: a wrap-content dialog window is first measured
   at the platform's preferred width, 320dp, and a title that would ellipsize there switches to
   18sp over two lines for good, even if it fits the dialog that opens.
