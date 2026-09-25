@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.compose.scrollViewScrollbar
+import depollsoft.compose.ViewAlign
 import android.animation.ValueAnimator
 import android.content.Context
 import androidx.compose.animation.core.Animatable
@@ -52,9 +54,7 @@ import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.UsualTouchSlop
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.rememberPagerTabs
-import depollsoft.tagmaster.ui.scrollViewScrollbar
 
 /**
  * One tag's detail below its toolbar: the quartet while the first load runs, the error and Retry

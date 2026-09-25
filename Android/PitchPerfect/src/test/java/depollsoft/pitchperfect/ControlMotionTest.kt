@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.listViewScrollbar
 import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,7 +34,6 @@ import depollsoft.pitchperfect.ui.PlateBottomNavigation
 import depollsoft.pitchperfect.ui.PlateDestination
 import depollsoft.pitchperfect.ui.PlateExtendedFab
 import depollsoft.pitchperfect.ui.PlateTheme
-import depollsoft.pitchperfect.ui.listViewScrollbar
 import depollsoft.pitchperfect.ui.pressLift
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals

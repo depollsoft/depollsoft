@@ -142,15 +142,16 @@ class SongList constructor() {
     }
 
     /**
-     * One step of a drag: moves the song without storing, since a drag commits once, on drop,
-     * through [notifyOfChange].
+     * Puts the songs in [order] (their ids), any others after them as they were, and stores the
+     * list once: a drag's drop.
      */
-    fun moveWithoutStoring(
-        from: Int,
-        to: Int,
-    ) {
-        if (from == to || from !in songs.indices || to !in songs.indices) return
-        move(from, to)
+    fun reorder(order: List<String>) {
+        val byId = songs.associateBy { it.id }
+        val placed = order.mapNotNull { byId[it] }
+        val next = placed + songs.filter { it !in placed }
+        if (next == songs.toList()) return
+        songs.replaceWith(next)
+        changed()
     }
 
     private fun move(
@@ -172,7 +173,7 @@ class SongList constructor() {
         changed()
     }
 
-    /** Stores the list after a change made to one of its songs, or a drag's drop. */
+    /** Stores the list after a change made to one of its songs. */
     fun notifyOfChange() = changed()
 
     private fun changed() {

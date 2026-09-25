@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import depollsoft.pitchperfect.lib.PitchedSong
-import depollsoft.pitchperfect.ui.holdScrollPosition
 
 /** A request for the set list name dialog: a new list, or a new name for [listId]. */
 data class NameRequest(
@@ -69,9 +68,8 @@ class SongListState(
         editing = !editing
     }
 
-    /** Sorts the current list, keeping the list where it is on screen while the rows slide. */
+    /** Sorts the current list; the list stays where it is on screen while the rows slide. */
     fun sortSongs() {
-        scrollStateFor(model.currentListId).holdScrollPosition()
         model.currentList.sortSongs()
     }
 

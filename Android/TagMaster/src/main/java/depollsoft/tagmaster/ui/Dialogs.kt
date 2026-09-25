@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.inWholePixels
+import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,12 +34,13 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import depollsoft.compose.DIALOG_MIN_WIDTH_FRACTION
+import depollsoft.compose.dialogTitleFits
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
 
 /** One dialog button: a text button, optionally in the error color for a destructive choice. */
@@ -77,7 +80,7 @@ fun TagMasterDialog(
             modifier
                 .then(
                     if (wrapWidth) {
-                        Modifier.width(minOf(screenWidth * 0.95f, screenWidth) - 48.dp)
+                        Modifier.width(screenWidth * DIALOG_MIN_WIDTH_FRACTION - 48.dp)
                     } else {
                         Modifier
                             .widthIn(max = screenWidth - 48.dp)
@@ -137,8 +140,8 @@ fun MaterialDialogMotion() {
 }
 
 /**
- * AppCompat's DialogTitle: one line at 24sp, or — when that would not fit in the window's first,
- * preferred-width measuring pass — up to two lines at 18sp rather than an ellipsis.
+ * AppCompat's DialogTitle: one line at 24sp, or, when that would not fit the window's first
+ * measuring pass ([dialogTitleFits]), up to two lines at 18sp rather than an ellipsis.
  */
 @Composable
 private fun DialogTitle(
@@ -156,18 +159,8 @@ private fun DialogTitle(
             Text(title, style = small, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
         },
     ) { measurables, constraints ->
-        // A wrap-content dialog window is first measured at the platform's preferred dialog width,
-        // 320dp, less the card's 24dp insets and the title's 24dp padding on each side. A title
-        // that would ellipsize in that pass shrinks for good, however wide the dialog then opens.
-        val firstPass = 320.dp.roundToPx() - 4 * 24.dp.roundToPx()
-        val fits =
-            measurer.measure(
-                title,
-                large,
-                maxLines = 1,
-                constraints = Constraints(maxWidth = minOf(constraints.maxWidth, firstPass)),
-            )
-        val chosen = if (fits.hasVisualOverflow) measurables[1] else measurables[0]
+        val fits = measurer.dialogTitleFits(title, large, this, cardInset = 24.dp, finalWidth = constraints.maxWidth)
+        val chosen = if (fits) measurables[0] else measurables[1]
         val placeable = chosen.measure(constraints.copy(minWidth = 0))
         layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
     }

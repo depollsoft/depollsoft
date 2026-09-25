@@ -1,5 +1,8 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.compose.listViewScrollbar
+import depollsoft.compose.scrollViewScrollbar
+import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -46,12 +49,9 @@ import depollsoft.tagmaster.ui.StatusIndicator
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.formatDate
 import depollsoft.tagmaster.ui.isPresent
-import depollsoft.tagmaster.ui.listViewScrollbar
 import depollsoft.tagmaster.ui.rememberTextViewPaint
-import depollsoft.tagmaster.ui.scrollViewScrollbar
 import kotlin.math.ceil
 
 /**

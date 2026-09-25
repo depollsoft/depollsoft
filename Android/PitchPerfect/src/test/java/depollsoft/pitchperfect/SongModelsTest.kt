@@ -80,16 +80,27 @@ class SongModelsTest {
     }
 
     @Test
-    fun aDragStoresOnceOnDropNotOnEveryStep() {
+    fun aDropStoresTheNewOrderOnceAndAnUnchangedOneNotAtAll() {
         val list = attachedList()
         list.addSongs(listOf(song("A"), song("B"), song("C")))
+        val ids = list.songs.map { it.id }
         val before = writes()
-        list.moveWithoutStoring(0, 1)
-        list.moveWithoutStoring(1, 2)
-        assertEquals("steps are not stored", before, writes())
+        list.reorder(ids)
+        assertEquals("the same order is not stored", before, writes())
+        list.reorder(listOf(ids[1], ids[2], ids[0]))
         assertEquals(listOf("B", "C", "A"), list.songs.map { it.name })
-        list.notifyOfChange()
         assertEquals(before + 1, writes())
+    }
+
+    @Test
+    fun aDropKeepsSongsTheDragDidNotKnowAbout() {
+        val list = attachedList()
+        list.addSongs(listOf(song("A"), song("B")))
+        val ids = list.songs.map { it.id }
+        // A song synced in while the drag was held, and one deleted.
+        list.addSong(song("C"))
+        list.reorder(listOf(ids[1], "gone", ids[0]))
+        assertEquals(listOf("B", "A", "C"), list.songs.map { it.name })
     }
 
     @Test

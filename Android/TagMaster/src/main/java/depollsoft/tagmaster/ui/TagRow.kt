@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi

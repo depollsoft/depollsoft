@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect.ui
 
+import depollsoft.compose.OpensOnMenuKey
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,22 +40,6 @@ class PlateMenuItem(
 )
 
 /**
- * Presses of the keyboard's Menu key, which an activity forwards from `onKeyUp`; the screen's
- * overflow menu opens on each, as the window action bar's did.
- */
-@Stable
-class MenuKeySignal {
-    var presses by mutableIntStateOf(0)
-        private set
-
-    fun press() {
-        presses++
-    }
-}
-
-val LocalMenuKey = staticCompositionLocalOf { MenuKeySignal() }
-
-/**
  * The action bar's overflow button and its menu, as the window action bar's "More options"
  * button: 40dp wide, the three-dot icon 6dp in from its leading edge. The menu opens over the
  * button, and the Menu key opens it too.
@@ -64,9 +49,7 @@ fun PlateOverflowMenu(items: List<PlateMenuItem>) {
     val colors = plateColors
     var open by remember { mutableStateOf(false) }
     val description = stringResource(androidx.appcompat.R.string.abc_action_menu_overflow_description)
-    val menuKey = LocalMenuKey.current
-    val pressesAtStart = remember { menuKey.presses }
-    LaunchedEffect(menuKey.presses) { if (menuKey.presses != pressesAtStart) open = true }
+    OpensOnMenuKey { open = true }
     WithTooltip(description) { showTooltip ->
         Box(
             Modifier

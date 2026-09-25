@@ -1,11 +1,12 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.scrollViewScrollbar
+import depollsoft.compose.ViewAlign
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
-import depollsoft.pitchperfect.ui.scrollViewScrollbar
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -229,7 +230,7 @@ private fun SettingSwitch(
             .heightIn(min = 56.dp)
             .testTag(tag)
             .toggleable(checked, role = Role.Switch, onValueChange = onChange),
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlateText(label, style = plateText(16.sp, colors.ink), modifier = Modifier.weight(1f))
         Switch(
@@ -271,7 +272,7 @@ private fun ThemeChoice(
             .height(48.dp)
             .testTag(tag)
             .selectable(selected, role = Role.RadioButton) { state.themeMode = mode },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         Box(
             Modifier
@@ -301,7 +302,7 @@ private fun AboutFooter(
     val link = style.copy(textDecoration = TextDecoration.Underline)
     Column(
         Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
-        horizontalAlignment = ViewCenterHorizontally,
+        horizontalAlignment = ViewAlign.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             PlateText(stringResource(R.string.app_name), style = style)

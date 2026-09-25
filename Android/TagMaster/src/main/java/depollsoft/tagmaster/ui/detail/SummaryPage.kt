@@ -1,5 +1,9 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.compose.rememberDrawable
+import depollsoft.compose.drawPlatform
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -75,20 +79,16 @@ import depollsoft.tagmaster.ui.CompactBarberPole
 import depollsoft.tagmaster.ui.DialogButton
 import depollsoft.tagmaster.ui.ListDialogs
 import depollsoft.tagmaster.ui.LocalSnackbars
-import depollsoft.tagmaster.ui.PlatformIcon
 import depollsoft.tagmaster.ui.TagMasterButton
 import depollsoft.tagmaster.ui.TagMasterDialog
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.WithTooltip
-import depollsoft.tagmaster.ui.drawPlatform
 import depollsoft.tagmaster.ui.isPresent
 import depollsoft.tagmaster.ui.listIconRes
 import depollsoft.tagmaster.ui.noteDescription
 import depollsoft.tagmaster.ui.notePress
-import depollsoft.tagmaster.ui.rememberDrawable
 import depollsoft.tagmaster.ui.rememberNotePlayer
 import depollsoft.tagmaster.ui.rememberTextViewPaint
 import depollsoft.tagmaster.ui.textViewWidth

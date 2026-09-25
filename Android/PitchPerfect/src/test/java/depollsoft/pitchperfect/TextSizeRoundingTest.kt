@@ -1,11 +1,11 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.inWholePixels
 import android.content.res.Configuration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import androidx.test.core.app.ApplicationProvider
 import depollsoft.lib.activity.RichApplication
-import depollsoft.pitchperfect.ui.inWholePixels
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

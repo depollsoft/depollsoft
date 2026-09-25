@@ -1,5 +1,7 @@
 package depollsoft.tagmaster
 
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
@@ -56,14 +58,12 @@ import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.BarAction
 import depollsoft.tagmaster.ui.CompactBarberPole
 import depollsoft.tagmaster.ui.LocalSnackbars
-import depollsoft.tagmaster.ui.PlatformIcon
 import depollsoft.tagmaster.ui.ShowAs
 import depollsoft.tagmaster.ui.Snackbars
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.ZoomableImage
 import depollsoft.tagmaster.ui.navigateUpOrHome
 import depollsoft.tagmaster.ui.notePress

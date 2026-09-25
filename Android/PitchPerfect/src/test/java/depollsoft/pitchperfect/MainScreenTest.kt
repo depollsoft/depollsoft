@@ -260,11 +260,12 @@ class MainScreenTest {
             repeat(6) { moveBy(androidx.compose.ui.geometry.Offset(0f, rowHeight / 4f)) }
         }
         screens.settle()
-        assertEquals("the top song traded places with the next", 1, songs.indexOf(all[0]))
         assertEquals("the list did not scroll to follow it", 0, listState.firstVisibleItemIndex)
         assertEquals(0, listState.firstVisibleItemScrollOffset)
         handleOf(all[0]).performTouchInput { up() }
         screens.settle()
+        assertEquals("the top song traded places with the next", 1, songs.indexOf(all[0]))
+        assertEquals(0, listState.firstVisibleItemIndex)
     }
 
     @Test

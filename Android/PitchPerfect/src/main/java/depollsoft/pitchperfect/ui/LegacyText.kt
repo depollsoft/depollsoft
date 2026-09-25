@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect.ui
 
+import depollsoft.compose.inWholePixels
 import android.graphics.Typeface
 import android.text.BoringLayout
 import android.text.Layout

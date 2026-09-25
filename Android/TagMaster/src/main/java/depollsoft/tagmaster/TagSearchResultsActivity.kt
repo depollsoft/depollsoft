@@ -1,6 +1,6 @@
 package depollsoft.tagmaster
 
-import depollsoft.tagmaster.ui.revealItem
+import depollsoft.compose.revealItem
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.compose.foundation.lazy.rememberLazyListState

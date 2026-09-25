@@ -1,5 +1,12 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.shownOrder
+import depollsoft.compose.reorderRow
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.ReorderState
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.ViewAlign
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -19,9 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import depollsoft.pitchperfect.ui.RowDrag
-import depollsoft.pitchperfect.ui.holdScrollPosition
-import depollsoft.pitchperfect.ui.reorderableRow
 import androidx.compose.ui.platform.LocalHapticFeedback
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.material.ripple
@@ -60,40 +64,23 @@ import depollsoft.pitchperfect.ui.plateColors
 import depollsoft.pitchperfect.ui.plateText
 
 /**
- * The Set Lists screen's state. A drag reorders a working copy of the rows and commits the new
- * order once, on drop, rewriting `order` on every custom list, as the design contract requires.
+ * The Set Lists screen's state. A drag previews a new order of the custom lists and commits it
+ * once, on drop, rewriting `order` on every custom list, as the design contract requires.
  */
 @Stable
 class ManageSetListsState(
     val model: SongsModel,
 ) : SetListPrompts {
-    private var dragged: List<SongList>? by mutableStateOf(null)
-
-    /** The rows: the model's order, or the order a drag in progress has made. */
-    val rows: List<SongList> get() = dragged ?: model.orderedLists
+    /** The rows in the model's order: My Songs first, then the custom lists. */
+    val rows: List<SongList> get() = model.orderedLists
 
     override var nameRequest by mutableStateOf<NameRequest?>(null)
     override var pendingDelete by mutableStateOf<String?>(null)
 
     fun isCustom(list: SongList): Boolean = list.id != SongsModel.DEFAULT_ID
 
-    /** One step of a drag between custom rows; not stored until [commitOrder]. */
-    fun move(
-        from: Int,
-        to: Int,
-    ) {
-        val current = rows
-        if (from !in current.indices || to !in current.indices) return
-        if (!isCustom(current[from]) || !isCustom(current[to])) return
-        dragged = current.toMutableList().apply { add(to, removeAt(from)) }
-    }
-
-    /** Commits the dropped order once. */
-    fun commitOrder() {
-        val order = dragged ?: return
-        dragged = null
-        model.reorderLists(order.map { it.id })
-    }
+    /** The custom lists' ids in order: what a drag reorders. My Songs stays pinned first. */
+    val customIds: List<String> get() = rows.filter(::isCustom).map { it.id }
 
     /** Moves [list] one step among the custom lists and commits at once: the screen reader's reorder. */
     fun moveList(
@@ -160,19 +147,14 @@ fun ManageSetListsScreen(
 ) {
     state.model.trackLists()
     val listState = rememberLazyListState()
-    val haptics = LocalHapticFeedback.current
-    val drag =
-        remember(state, haptics) {
-            RowDrag(
-                listState,
-                indexOf = { key -> state.rows.indexOfFirst { it.id == key } },
-                // My Songs stays pinned first: only custom lists trade places.
-                canMove = { from, to -> state.isCustom(state.rows[from]) && state.isCustom(state.rows[to]) },
-                move = state::move,
-                onDrop = state::commitOrder,
-                haptics = haptics,
-            )
+    // Only the custom lists trade places; other devices' changes wait until the drop.
+    val reorder =
+        rememberReorderState<String>(listState, state, keyOf = { it }) { _, order ->
+            state.model.reorderLists(order)
+            true
         }
+    val byId = state.rows.associateBy { it.id }
+    val rows = state.rows.filterNot(state::isCustom) + reorder.shownOrder(state.customIds, listState).mapNotNull { byId[it] }
     val surface = plateColors.surface
     PlateBackground {
         LazyColumn(
@@ -180,12 +162,13 @@ fun ManageSetListsScreen(
             state = listState,
             contentPadding = PaddingValues(bottom = 90.dp),
         ) {
-            items(state.rows, key = { it.id }) { list ->
-                Column(reorderableRow(drag, list.id, surface)) {
-                    SetListRow(state, list, drag, onSwitch) { delta ->
-                        listState.holdScrollPosition()
-                        state.moveList(list, delta)
-                    }
+            items(rows, key = { it.id }) { list ->
+                Column(
+                    Modifier
+                        .listItemMotion(this, animatePlacement = !reorder.isMoving(list.id))
+                        .reorderRow(reorder, list.id, surface),
+                ) {
+                    SetListRow(state, list, reorder, onSwitch) { delta -> state.moveList(list, delta) }
                     Hairline()
                 }
             }
@@ -209,7 +192,7 @@ fun ManageSetListsScreen(
 private fun SetListRow(
     state: ManageSetListsState,
     list: SongList,
-    drag: RowDrag,
+    reorder: ReorderState<String>,
     onSwitch: (SongList) -> Unit,
     moveList: (delta: Int) -> Boolean,
 ) {
@@ -247,7 +230,7 @@ private fun SetListRow(
                         )
                 }
             },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         Box(
             Modifier
@@ -298,7 +281,7 @@ private fun SetListRow(
                         Modifier
                             .testTag(TestTags.DRAG_HANDLE)
                             .semantics { contentDescription = handleDescription }
-                            .pointerInput(list.id) { drag.track(this, list.id) }
+                            .reorderHandle(reorder, list.id, { state.customIds }, enabled = true)
                     } else {
                         Modifier
                     },

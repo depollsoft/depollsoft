@@ -1,7 +1,8 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.listViewScrollbar
+import depollsoft.compose.ViewAlign
 import depollsoft.pitchperfect.ui.hairlineWidth
-import depollsoft.pitchperfect.ui.listViewScrollbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -149,7 +150,7 @@ private fun KeyRow(
                 selected = lit
                 onClick { BriefNotes.activate(note) }
             },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)

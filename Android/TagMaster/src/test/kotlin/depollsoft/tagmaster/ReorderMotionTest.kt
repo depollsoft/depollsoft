@@ -1,5 +1,13 @@
 package depollsoft.tagmaster
 
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.shownOrder
+import depollsoft.compose.reorderRow
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.revealItem
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ReorderState
+import depollsoft.compose.rememberReorderState
 import android.app.Application
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,14 +34,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
-import depollsoft.tagmaster.ui.ListMotion
-import depollsoft.tagmaster.ui.ReorderState
-import depollsoft.tagmaster.ui.listItemMotion
-import depollsoft.tagmaster.ui.rememberReorderState
-import depollsoft.tagmaster.ui.reorderHandle
-import depollsoft.tagmaster.ui.reorderRow
-import depollsoft.tagmaster.ui.revealItem
-import depollsoft.tagmaster.ui.shownOrder
 import kotlinx.coroutines.launch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -138,7 +138,8 @@ class ReorderMotionTest {
         compose.mainClock.autoAdvance = false
         compose.onNodeWithTag("handle:0").performTouchInput {
             down(center)
-            moveBy(Offset(0f, row * 0.8f))
+            // Past the whole of row 1, as ItemTouchHelper required, and a little further.
+            moveBy(Offset(0f, row * 1.2f))
         }
         compose.waitForIdle()
         assertEquals(listOf(1, 0), state.preview!!.take(2))
@@ -150,7 +151,7 @@ class ReorderMotionTest {
         advance(ListMotion.MOVE_MILLIS.toLong())
         assertEquals(secondTop - row, top(1), 1f)
 
-        // Let go short of the slot: the order is stored at once, and the row glides the rest.
+        // Let go a little past the slot: the order is stored at once, and the row glides back up.
         compose.onNodeWithTag("handle:0").performTouchInput { up() }
         compose.waitForIdle()
         assertEquals(listOf(1, 0), items.take(2))
@@ -158,10 +159,10 @@ class ReorderMotionTest {
         assertEquals(0, state.settling)
         val slot = secondTop
         val released = top(0)
-        assertTrue("the row starts where the finger left it", released < slot - 1f)
+        assertTrue("the row starts where the finger left it", released > slot + 1f)
         advance(ListMotion.SETTLE_MILLIS / 2L)
         val gliding = top(0)
-        assertTrue("gliding: $gliding between $released and $slot", gliding > released + 0.5f && gliding < slot - 0.5f)
+        assertTrue("gliding: $gliding between $slot and $released", gliding < released - 0.5f && gliding > slot + 0.5f)
         advance(ListMotion.SETTLE_MILLIS.toLong())
         assertEquals(slot, top(0), 0.5f)
         assertEquals(null, state.settling)

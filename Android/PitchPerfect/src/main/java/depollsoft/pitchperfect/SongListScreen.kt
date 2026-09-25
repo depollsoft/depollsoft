@@ -1,5 +1,15 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.listItemMotion
+import depollsoft.compose.shownOrder
+import depollsoft.compose.reorderRow
+import depollsoft.compose.reorderHandle
+import depollsoft.compose.ReorderState
+import depollsoft.compose.rememberReorderState
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.SnackbarTiming
+import depollsoft.compose.rememberSnackbarState
+import depollsoft.compose.SlidingSnackbarHost
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -14,28 +24,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Snackbar
-import androidx.compose.material.SnackbarData
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
-import depollsoft.pitchperfect.ui.RowDrag
-import depollsoft.pitchperfect.ui.holdScrollPosition
-import depollsoft.pitchperfect.ui.reorderableRow
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import depollsoft.pitchperfect.ui.PlateText
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -75,6 +72,7 @@ import depollsoft.pitchperfect.ui.PlatePopupMenu
 import depollsoft.pitchperfect.ui.PopupMenuItem
 import depollsoft.pitchperfect.ui.PlateOverflowMenu
 import depollsoft.pitchperfect.ui.plateColors
+import depollsoft.pitchperfect.ui.isTablet
 import depollsoft.pitchperfect.ui.plateText
 
 /**
@@ -147,60 +145,37 @@ fun SongListScreen(
 /**
  * The Songs tab's snackbar: Duplicate's and Delete's announcements, the latter with Undo. The main
  * screen hosts it at the bottom of the window, over the navigation, where Snackbar.make put it, so
- * it stays up across a tab switch. It slides up and away as MaterialComponents' did, and stays up
- * as long as its short and long snackbars did, stretched to the accessibility timeout a person
- * has asked for.
+ * it stays up across a tab switch.
  */
 @Composable
 fun SongAnnouncements(
     state: SongListState,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val host = remember { SnackbarHostState() }
+    val snackbars = rememberSnackbarState()
     val announcement = state.announcement
     LaunchedEffect(announcement) {
         if (announcement == null) return@LaunchedEffect
-        coroutineScope {
-            val shownFor =
-                SnackbarTiming.timeoutMillis(
-                    context,
-                    if (announcement.long) SnackbarTiming.LONG_MS else SnackbarTiming.SHORT_MS,
-                    hasAction = announcement.actionLabel != null,
-                )
-            val dismiss =
-                shownFor?.let {
-                    launch {
-                        delay(it)
-                        host.currentSnackbarData?.dismiss()
-                    }
-                }
-            val result = host.showSnackbar(announcement.text, announcement.actionLabel, SnackbarDuration.Indefinite)
-            dismiss?.cancel()
-            if (result == SnackbarResult.ActionPerformed) announcement.onAction?.invoke()
-        }
+        val duration = if (announcement.long) SnackbarTiming.LONG_MILLIS else SnackbarTiming.SHORT_MILLIS
+        if (snackbars.show(announcement.text, announcement.actionLabel, duration)) announcement.onAction?.invoke()
         if (state.announcement == announcement) state.announcement = null
     }
-    SlidingSnackbarHost(host, modifier)
-}
-
-/** A snackbar host that slides its snackbar up from below and back down, as Material's did. */
-@Composable
-private fun SlidingSnackbarHost(
-    host: SnackbarHostState,
-    modifier: Modifier,
-) {
-    val data = host.currentSnackbarData
-    // The last snackbar shown, kept on screen while it slides away.
-    val last = remember { arrayOfNulls<SnackbarData>(1) }
-    if (data != null) last[0] = data
-    AnimatedVisibility(
-        visible = data != null,
-        modifier = modifier,
-        enter = slideInVertically(tween(SnackbarTiming.SLIDE_MS, easing = FastOutSlowInEasing)) { it },
-        exit = slideOutVertically(tween(SnackbarTiming.SLIDE_MS, easing = FastOutSlowInEasing)) { it },
-    ) {
-        last[0]?.let { Snackbar(it) }
+    val colors = plateColors
+    // MaterialComponents' snackbar: 8dp in from the window's edges, between 320dp and 576dp wide
+    // on a tablet, and its action in the theme's colorPrimary, the plate's surface.
+    val size = if (isTablet) Modifier.widthIn(min = 320.dp, max = 576.dp) else Modifier
+    SlidingSnackbarHost(snackbars, modifier) { shown ->
+        Snackbar(
+            Modifier.padding(8.dp).then(size),
+            action =
+                shown.actionLabel?.let { label ->
+                    {
+                        TextButton(onClick = shown::performAction, colors = ButtonDefaults.textButtonColors(contentColor = colors.surface)) {
+                            Text(label)
+                        }
+                    }
+                },
+        ) { Text(shown.message) }
     }
 }
 
@@ -210,27 +185,28 @@ private fun SongRows(
     list: SongList,
     listState: LazyListState,
 ) {
-    val haptics = LocalHapticFeedback.current
-    val drag =
-        remember(list, haptics) {
-            RowDrag(
-                listState,
-                indexOf = { key -> list.songs.indexOfFirst { it.id == key } },
-                canMove = { _, _ -> true },
-                move = list::moveWithoutStoring,
-                onDrop = list::notifyOfChange,
-                haptics = haptics,
-            )
+    // Songs trade places by id; a synced change waits until the drop, as the View list, which
+    // skipped refreshing mid-drag, did.
+    val reorder =
+        rememberReorderState<String>(listState, list, keyOf = { it }) { _, order ->
+            list.reorder(order)
+            true
         }
+    val byId = list.songs.associateBy { it.id }
+    val songs = reorder.shownOrder(list.songs.map { it.id }, listState).mapNotNull { byId[it] }
     val surface = plateColors.surface
     LazyColumn(
         Modifier.fillMaxSize().testTag(TestTags.SONG_LIST),
         state = listState,
         contentPadding = PaddingValues(bottom = 90.dp),
     ) {
-        items(list.songs, key = { it.id }) { song ->
-            Column(reorderableRow(drag, song.id, surface)) {
-                SongRow(state, list, song, drag, listState)
+        items(songs, key = { it.id }) { song ->
+            Column(
+                Modifier
+                    .listItemMotion(this, animatePlacement = !reorder.isMoving(song.id))
+                    .reorderRow(reorder, song.id, surface),
+            ) {
+                SongRow(state, list, song, reorder, listState)
                 Hairline()
             }
         }
@@ -242,7 +218,7 @@ private fun SongRow(
     state: SongListState,
     list: SongList,
     song: PitchedSong,
-    drag: RowDrag,
+    reorder: ReorderState<String>,
     listState: LazyListState,
 ) {
     val colors = plateColors
@@ -269,19 +245,17 @@ private fun SongRow(
                     customActions =
                         listOfNotNull(
                             CustomAccessibilityAction(moveUp) {
-                                listState.holdScrollPosition()
                                 list.moveUp(song)
                                 true
                             }.takeIf { list.canMoveUp(song) },
                             CustomAccessibilityAction(moveDown) {
-                                listState.holdScrollPosition()
                                 list.moveDown(song)
                                 true
                             }.takeIf { list.canMoveDown(song) },
                         )
                 }
             },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         if (editing) {
             Box {
@@ -326,7 +300,7 @@ private fun SongRow(
                         )
                     }
                 },
-            verticalAlignment = ViewCenterVertically,
+            verticalAlignment = ViewAlign.CenterVertically,
         ) {
             PlateText(
                 song.name.orEmpty(),
@@ -350,7 +324,7 @@ private fun SongRow(
                     .fillMaxHeight()
                     .testTag(TestTags.DRAG_HANDLE)
                     .semantics { contentDescription = context.getString(R.string.ReorderSong) }
-                    .pointerInput(song.id) { drag.track(this, song.id) }
+                    .reorderHandle(reorder, song.id, { list.songs.map { it.id } }, enabled = true)
                     .padding(horizontal = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -377,21 +351,18 @@ private fun SongContextMenu(
             PopupMenuItem(stringResource(R.string.EditSong), onClick = openEditor),
             PopupMenuItem(stringResource(R.string.RemoveSong)) { list.removeSong(song) },
             PopupMenuItem(stringResource(R.string.SortAll)) {
-                listState.holdScrollPosition()
                 list.sortSongs()
             },
             if (list.canMoveUp(song)) {
                 PopupMenuItem(stringResource(R.string.MoveUp)) {
-                    listState.holdScrollPosition()
-                    list.moveUp(song)
+                        list.moveUp(song)
                 }
             } else {
                 null
             },
             if (list.canMoveDown(song)) {
                 PopupMenuItem(stringResource(R.string.MoveDown)) {
-                    listState.holdScrollPosition()
-                    list.moveDown(song)
+                        list.moveDown(song)
                 }
             } else {
                 null

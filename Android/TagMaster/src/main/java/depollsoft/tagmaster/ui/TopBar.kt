@@ -1,5 +1,8 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
+import depollsoft.compose.OpensOnMenuKey
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface

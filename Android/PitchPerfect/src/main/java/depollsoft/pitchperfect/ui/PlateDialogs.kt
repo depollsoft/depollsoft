@@ -15,7 +15,6 @@ import androidx.compose.ui.layout.onPlaced
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +38,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -53,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import depollsoft.compose.dialogTitleFits
+import depollsoft.compose.dialogWindowWidth
 
 /** A dialog button: engraved caps in ink, as MaterialAlertDialog's text buttons. */
 class DialogButton(
@@ -64,7 +64,7 @@ class DialogButton(
 
 /**
  * The plate's alert dialog, sized and spaced as MaterialAlertDialog (with the plate theme's
- * dialog overlay) laid itself out: a surface card with 2dp corners, [horizontalInset] from the
+ * dialog overlay) laid itself out: a surface card with 2dp corners, 24dp in from the
  * screen edges and at least 95% of a portrait screen wide, a Subtitle1 title, the body and a row
  * of text buttons, positive last.
  */
@@ -75,7 +75,6 @@ fun PlateAlertDialog(
     buttons: List<DialogButton>,
     neutral: DialogButton? = null,
     verticalInset: Dp = 80.dp,
-    horizontalInset: Dp = 24.dp,
     message: String? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
@@ -88,17 +87,7 @@ fun PlateAlertDialog(
         val band = remember { arrayOfNulls<LayoutCoordinates>(2) }
         Box(
             Modifier
-                .layout { measurable, constraints ->
-                    // The dialog window wraps its content but is at least 95% of a portrait
-                    // screen's width (`windowMinWidthMinor`), and never wider than the screen.
-                    val minimum = (screenWidth * MIN_WIDTH_FRACTION).toInt()
-                    // Wrap-content, as the window was: its content's own width within those bounds.
-                    val width =
-                        measurable.maxIntrinsicWidth(constraints.maxHeight)
-                            .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
-                    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
-                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                }
+                .dialogWindowWidth(screenWidth)
                 // MaterialAlertDialog's inset band around the card was part of its window, and a
                 // tap there cancelled the dialog as a tap outside the window does.
                 .onPlaced { band[0] = it }
@@ -108,7 +97,7 @@ fun PlateAlertDialog(
                         val card = band[1]
                         if (outer != null && card != null && !outer.localBoundingBoxOf(card).contains(position)) onDismissRequest()
                     }
-                }.padding(horizontal = horizontalInset, vertical = verticalInset)
+                }.padding(horizontal = CARD_INSET, vertical = verticalInset)
                 // The system resized the old dialog window above the keyboard; this one keeps the
                 // card centred in the space the keyboard leaves.
                 .windowInsetsPadding(WindowInsets.ime),
@@ -121,7 +110,7 @@ fun PlateAlertDialog(
                     .background(colors.surface, DialogShape),
             ) {
                 if (title != null) {
-                    DialogTitle(title, horizontalInset, Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp))
+                    DialogTitle(title, Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp))
                 }
                 if (message != null) {
                     if (title != null) Spacer(Modifier.heightIn(min = 8.dp))
@@ -168,15 +157,8 @@ fun AppCompatAlertDialog(
         val screenWidth = with(density) { configuration.screenWidthDp.dp.roundToPx() }
         Box(
             Modifier
-                .layout { measurable, constraints ->
-                    val minimum = (screenWidth * MIN_WIDTH_FRACTION).toInt()
-                    // Wrap-content, as the window was: its content's own width within those bounds.
-                    val width =
-                        measurable.maxIntrinsicWidth(constraints.maxHeight)
-                            .coerceIn(minimum.coerceAtMost(screenWidth), screenWidth)
-                    val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
-                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-                }.padding(16.dp)
+                .dialogWindowWidth(screenWidth)
+                .padding(16.dp)
                 .windowInsetsPadding(WindowInsets.ime),
         ) {
             Column(Modifier.dialogEntrance().clip(DialogShape).background(background, DialogShape)) {
@@ -232,8 +214,10 @@ private fun rememberLauncherIcon(@androidx.annotation.DrawableRes id: Int): andr
 
 /** Below a message the scroll panel leaves 38px at xxhdpi before the buttons. */
 private val MESSAGE_BOTTOM = (38f / 3f).dp
-private const val MIN_WIDTH_FRACTION = 0.95f
 private val DialogShape = RoundedCornerShape(2.dp)
+
+/** MaterialAlertDialog's inset from the screen's sides. */
+private val CARD_INSET = 24.dp
 
 @Composable
 private fun DialogButtonBar(
@@ -325,16 +309,13 @@ private const val PLATE_DIM = 0.32f
 private const val APPCOMPAT_DIM = 0.6f
 
 /**
- * AppCompat's DialogTitle under the plate dialog theme: one Subtitle1 line, unless the title would
- * ellipsize in the window's first measuring pass, at the platform's preferred dialog width (320dp,
- * less the card's [horizontalInset] and the title's 24dp padding on each side). Then DialogTitle
- * switches to `textAppearanceMedium`'s size, 18sp, over up to two lines, and keeps it however wide
- * the dialog then opens.
+ * AppCompat's DialogTitle under the plate dialog theme: one Subtitle1 line, or, when that would
+ * not fit the window's first measuring pass ([dialogTitleFits]), `textAppearanceMedium`'s 18sp
+ * over up to two lines.
  */
 @Composable
 private fun DialogTitle(
     title: String,
-    horizontalInset: Dp,
     modifier: Modifier,
 ) {
     val colors = plateColors
@@ -342,8 +323,7 @@ private fun DialogTitle(
     val single = plateText(16.sp, colors.ink, letterSpacing = 0.009375f)
     val wrapped = plateText(18.sp, colors.ink, letterSpacing = 0.009375f)
     val density = LocalDensity.current
-    val firstPass = with(density) { 320.dp.roundToPx() - 2 * horizontalInset.roundToPx() - 2 * 24.dp.roundToPx() }
-    val fits = remember(title, single, firstPass) { !measurer.measure(title, single, maxLines = 1, constraints = Constraints(maxWidth = firstPass)).hasVisualOverflow }
+    val fits = remember(title, single, density) { measurer.dialogTitleFits(title, single, density, CARD_INSET) }
     if (fits) {
         PlateText(title, style = single, maxLines = 1, modifier = modifier)
     } else {

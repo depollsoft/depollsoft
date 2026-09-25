@@ -1,4 +1,4 @@
-package depollsoft.tagmaster.ui
+package depollsoft.compose
 
 import android.graphics.drawable.Drawable
 import android.os.Handler
@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.abs
@@ -183,7 +184,10 @@ private fun Modifier.viewScrollbar(
         if (offset > track - length) offset = track - length
         // ScrollBarDrawable takes the fade as an integer alpha.
         val shown = (alpha.value * 255).toInt() / 255f
-        drawPlatform(thumb, size.width.toInt() - end.roundToPx() - thickness, trackTop + offset, thickness, length, shown)
+        // The thumb sits at the trailing edge: the right, or the left in a right-to-left layout.
+        val left =
+            if (layoutDirection == LayoutDirection.Rtl) end.roundToPx() else size.width.toInt() - end.roundToPx() - thickness
+        drawPlatform(thumb, left, trackTop + offset, thickness, length, shown)
     }
 }
 

@@ -1,8 +1,8 @@
 package depollsoft.pitchperfect
 
 import androidx.compose.runtime.CompositionLocalProvider
-import depollsoft.pitchperfect.ui.LocalMenuKey
-import depollsoft.pitchperfect.ui.MenuKeySignal
+import depollsoft.compose.LocalMenuKey
+import depollsoft.compose.MenuKey
 
 import android.content.Intent
 import android.content.res.Configuration
@@ -79,18 +79,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
         get() = !SettingsModel.areAdsRemoved && !SettingsModel.licensed
 
     /** The Menu key opens the Songs tab's overflow menu, as the window action bar did. */
-    private val menuKey = MenuKeySignal()
-
-    override fun onKeyUp(
-        keyCode: Int,
-        event: android.view.KeyEvent,
-    ): Boolean {
-        if (keyCode == android.view.KeyEvent.KEYCODE_MENU) {
-            menuKey.press()
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
-    }
+    private val menuKey = MenuKey()
 
     @OptIn(ExperimentalComposeUiApi::class)
     public override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,6 +125,7 @@ class PitchPerfectActivity : AppCompatActivity(), depollsoft.lib.privacy.Telemet
                 }
             }
         }
+        menuKey.install(window)
 
         PurchaseService.bind(this)
 
