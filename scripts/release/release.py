@@ -11,7 +11,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 APPS = json.loads((Path(__file__).with_name('apps.json')).read_text())
 SHARED = ['iOS/depolllib', 'iOS/pitchperfect/pitchperfectlib', 'Android/PitchPerfectLib',
-          'Android/DepollSoftCommon', 'Android/DepollSoftCommon.Compat',
+          'Android/DepollSoftCommon',
           'Android/depollsoft.lib.kotlin', 'Android/build.gradle', 'Android/gradle',
           'CloudCode', 'AppEngine']
 LIMITS = {'name': 30, 'subtitle': 30, 'description': 4000, 'keywords': 100,

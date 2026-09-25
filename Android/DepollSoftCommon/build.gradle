@@ -5,11 +5,9 @@ dependencies {
     // Models keep observable state in Compose snapshot state; see depollsoft.lib.state.
     api platform(compose_bom)
     api 'androidx.compose.runtime:runtime'
-    api 'androidx.legacy:legacy-support-v4:1.0.0'
     api 'com.parse.bolts:bolts-tasks:1.4.0'
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.core:core:1.19.0'
-    implementation 'com.google.android.material:material:1.14.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.16.1'
 }
