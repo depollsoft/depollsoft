@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect.ui
 
+import depollsoft.compose.inWholePixels
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
@@ -128,22 +129,3 @@ fun PlateTheme(content: @Composable () -> Unit) {
         MaterialTheme(colors = material, content = content)
     }
 }
-
-/** [this] size as the whole number of pixels `getDimensionPixelSize` makes of it, back in sp. */
-fun TextUnit.inWholePixels(density: androidx.compose.ui.unit.Density): TextUnit {
-    if (!isSp) return this
-    val px = with(density) { toPx() }
-    val whole = if (px == 0f) 0f else maxOf(1f, (px + 0.5f).toInt().toFloat())
-    // Back through the density's own conversion: with Android 14's non-linear font scaling a
-    // plain division by fontScale would undo a different curve than toPx applied.
-    return with(density) { whole.toSp() }
-}
-
-/**
- * [dp] as the View code sized things, `(dp * displayMetrics.density).toInt()`: truncated to whole
- * pixels where a Dp rounds. The two differ on devices whose density is not a whole number (14dp
- * is 36.75px at 420dpi: the View took 36).
- */
-@Composable
-@ReadOnlyComposable
-fun viewDp(dp: Float): Dp = with(LocalDensity.current) { (dp * density).toInt().toDp() }

@@ -1,5 +1,8 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.ListMotion
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import android.util.Log

@@ -1,10 +1,11 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ViewAlign
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import depollsoft.pitchperfect.ui.ListMotion
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -214,7 +215,7 @@ fun AddSongScreen(
                 )
                 Row(
                     Modifier.padding(vertical = 8.dp).fillMaxWidth(),
-                    verticalAlignment = ViewCenterVertically,
+                    verticalAlignment = ViewAlign.CenterVertically,
                 ) {
                     PlateSectionHeader(stringResource(R.string.SongKey), Modifier.weight(1f))
                     PlateModeToggle(
@@ -310,7 +311,7 @@ private fun KeyChoice(
                 contentDescription = SongKeys.spokenName(key)
                 selected = chosen
             },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         LegacyText(NoteText.keySignature(key), 24.sp, ink, android.graphics.Typeface.DEFAULT, Modifier.weight(1f).padding(start = 20.dp), wrapWidth = true)
         LegacyText(NoteText.keyName(key), 22.sp, ink, PlateFonts.condensedTypeface, Modifier.padding(end = 20.dp), wrapWidth = true)

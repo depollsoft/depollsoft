@@ -1,5 +1,7 @@
 package depollsoft.tagmaster
 
+import depollsoft.compose.scrollViewScrollbar
+import depollsoft.compose.ViewAlign
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
@@ -71,9 +73,7 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.TagMasterType.withoutLineHeight
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.navigateUpOrHome
-import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.setTagMasterContent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

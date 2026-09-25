@@ -4,6 +4,7 @@ import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import android.view.HapticFeedbackConstants
 import android.view.SoundEffectConstants
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
@@ -393,7 +394,11 @@ private fun Modifier.tabGestures(
                     interaction.emit(press)
                     interaction.emit(if (tryAwaitRelease()) PressInteraction.Release(press) else PressInteraction.Cancel(press))
                 },
-                onLongPress = { longClick() },
+                onLongPress = {
+                    // combinedClickable would give the long press its buzz; this gesture gives its own.
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    longClick()
+                },
                 onTap = {
                     view.playSoundEffect(SoundEffectConstants.CLICK)
                     click()

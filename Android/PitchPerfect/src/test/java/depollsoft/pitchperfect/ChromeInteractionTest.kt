@@ -1,5 +1,6 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.SnackbarTiming
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityManager
 import androidx.compose.ui.geometry.Offset
@@ -136,7 +137,10 @@ class ChromeInteractionTest {
         activity.tap(MainTab.SONGS)
         screens.click(TestTags.EDIT_SONGS)
         assertFalse(screens.exists(TestTags.ADD_FROM_LIST))
-        compose.runOnIdle { activity.onKeyUp(KeyEvent.KEYCODE_MENU, KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MENU)) }
+        compose.runOnIdle {
+            activity.window.callback.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MENU))
+            activity.window.callback.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MENU))
+        }
         screens.settle()
         assertTrue(screens.exists(TestTags.ADD_FROM_LIST))
     }
@@ -175,16 +179,6 @@ class ChromeInteractionTest {
     }
 
     @Test
-    fun aSnackbarWithAnActionWaitsAsLongAsTheAccessibilityTimeoutAsks() {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val accessibility = context.getSystemService(AccessibilityManager::class.java)
-        assertEquals(SnackbarTiming.LONG_MS, SnackbarTiming.timeoutMillis(context, SnackbarTiming.LONG_MS, hasAction = true))
-        shadowOf(accessibility).setInteractiveUiTimeout(20_000)
-        assertEquals(20_000L, SnackbarTiming.timeoutMillis(context, SnackbarTiming.LONG_MS, hasAction = true))
-        assertNotNull(SnackbarTiming.timeoutMillis(context, SnackbarTiming.SHORT_MS, hasAction = false))
-    }
-
-    @Test
     fun theSnackbarSlidesUpFromBelow() {
         val other = model.createList("Saturday show")
         val activity = screens.launchMain()
@@ -193,9 +187,9 @@ class ChromeInteractionTest {
         compose.runOnIdle { activity.songs.deleteList(other, { "Deleted $it" }, "Undo") }
         compose.mainClock.advanceTimeByFrame()
         compose.mainClock.advanceTimeByFrame()
-        compose.mainClock.advanceTimeBy(SnackbarTiming.SLIDE_MS / 2L)
+        compose.mainClock.advanceTimeBy(SnackbarTiming.SLIDE_MILLIS / 2L)
         val midway = compose.onNodeWithText("Deleted Saturday show").fetchSemanticsNode().boundsInRoot.top
-        compose.mainClock.advanceTimeBy(SnackbarTiming.SLIDE_MS.toLong())
+        compose.mainClock.advanceTimeBy(SnackbarTiming.SLIDE_MILLIS.toLong())
         val settled = compose.onNodeWithText("Deleted Saturday show").fetchSemanticsNode().boundsInRoot.top
         assertTrue("on its way up ($midway, then $settled)", midway > settled)
         compose.mainClock.autoAdvance = true

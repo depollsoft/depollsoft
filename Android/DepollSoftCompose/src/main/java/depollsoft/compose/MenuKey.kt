@@ -1,6 +1,8 @@
-package depollsoft.tagmaster.ui
+package depollsoft.compose
 
 import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.Menu
 import android.view.Window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -8,8 +10,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
- * The hardware or keyboard Menu key, which opened the support toolbar's overflow menu. The screen's
- * top bar registers its overflow here; the most recently shown bar with an overflow opens.
+ * The hardware or keyboard Menu key, which opened a window action bar's or support toolbar's
+ * overflow menu. A screen's top bar registers its overflow here; the most recently shown bar with
+ * an overflow opens.
  */
 class MenuKey {
     private val openers = mutableListOf<() -> Unit>()
@@ -26,7 +29,7 @@ class MenuKey {
         return { openers.remove(open) }
     }
 
-    /** Sends Menu key presses the screen does not use itself to [press]. */
+    /** Sends the Menu key presses the window's views do not use themselves to [press]. */
     fun install(window: Window) {
         val original = window.callback
         window.callback =
@@ -36,6 +39,15 @@ class MenuKey {
                     if (event.keyCode != KeyEvent.KEYCODE_MENU) return false
                     return event.action == KeyEvent.ACTION_DOWN || press()
                 }
+
+                // Java default methods, which delegation by `by` leaves out.
+                override fun onProvideKeyboardShortcuts(
+                    data: MutableList<KeyboardShortcutGroup>?,
+                    menu: Menu?,
+                    deviceId: Int,
+                ) = original.onProvideKeyboardShortcuts(data, menu, deviceId)
+
+                override fun onPointerCaptureChanged(hasCapture: Boolean) = original.onPointerCaptureChanged(hasCapture)
             }
     }
 }

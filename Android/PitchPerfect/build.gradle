@@ -42,6 +42,7 @@ dependencies {
     implementation fileTree(include: '*.jar', dir: 'libs')
     implementation project(':PitchPerfectLib')
     implementation project(':DepollSoftCommon')
+    implementation project(':DepollSoftCompose')
     implementation project(':DepollSoftCommon.Compat')
     implementation project(':depollsoft.lib.kotlin')
     implementation 'com.parse.bolts:bolts-tasks:1.4.0'

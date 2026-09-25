@@ -25,45 +25,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.ceil
 
 /**
- * View-system centering. LinearLayout and FrameLayout center with integer division, so an odd
- * leftover pixel goes below (or after) the child; Compose's own alignments round it the other way.
- * Every layout that stands in for a View one uses these, so centered content lands on the same
- * pixel.
- */
-object ViewAlign {
-    val CenterVertically = Alignment.Vertical { size, space -> (space - size) / 2 }
-    val CenterHorizontally = Alignment.Horizontal { size, space, _ -> (space - size) / 2 }
-    val Center =
-        Alignment { size, space, _ ->
-            IntOffset((space.width - size.width) / 2, (space.height - size.height) / 2)
-        }
-
-    /** Gravity center_vertical|start: vertically centered with integer division, at the start. */
-    val CenterStart = Alignment { size, space, _ -> IntOffset(0, (space.height - size.height) / 2) }
-
-    /** Gravity center_vertical|end. */
-    val CenterEnd = Alignment { size, space, _ -> IntOffset(space.width - size.width, (space.height - size.height) / 2) }
-
-    /** A row's children packed together and centered with integer division. */
-    val CenterArrangement =
-        object : Arrangement.Horizontal {
-            override fun Density.arrange(
-                totalSize: Int,
-                sizes: IntArray,
-                layoutDirection: LayoutDirection,
-                outPositions: IntArray,
-            ) {
-                var x = (totalSize - sizes.sum()) / 2
-                val order = if (layoutDirection == LayoutDirection.Ltr) sizes.indices else sizes.indices.reversed()
-                for (i in order) {
-                    outPositions[i] = x
-                    x += sizes[i]
-                }
-            }
-        }
-}
-
-/**
  * The width a single-line TextView gives [text]: the platform's desired width, rounded up. Compose
  * can come out a pixel wider, which moves whatever sits after the text.
  */
@@ -152,11 +113,3 @@ fun Modifier.widthPx(width: Int): Modifier =
         val placeable = measurable.measure(constraints.copy(minWidth = exact, maxWidth = exact))
         layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
     }
-
-/**
- * [dp] in pixels the way the View code computed it, `(dp * displayMetrics.density).toInt()`:
- * truncated, where [Density.roundToPx] rounds. They differ on devices whose density is not a
- * whole number (4dp is 10.5px at 420dpi: the View took 10), so layouts that stand in for View
- * code which truncated use this.
- */
-fun androidx.compose.ui.unit.Density.viewPx(dp: Int): Int = (dp * density).toInt()

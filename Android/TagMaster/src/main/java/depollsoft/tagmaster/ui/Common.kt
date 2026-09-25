@@ -1,5 +1,9 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.rememberDrawable
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.drawCenterInside
+import depollsoft.compose.ViewAlign
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.DrawableRes

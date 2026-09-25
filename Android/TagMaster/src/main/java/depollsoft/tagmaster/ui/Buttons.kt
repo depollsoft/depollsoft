@@ -1,5 +1,7 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

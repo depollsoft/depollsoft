@@ -1,7 +1,10 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.MenuKey
+import depollsoft.compose.LocalMenuKey
+import depollsoft.compose.ListMotion
+import depollsoft.compose.ViewAlign
 import androidx.compose.animation.core.animateFloatAsState
-import depollsoft.pitchperfect.ui.ListMotion
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -113,18 +116,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
         private set
 
     /** The Menu key opens the Select all menu, as the window action bar's overflow did. */
-    private val menuKey = depollsoft.pitchperfect.ui.MenuKeySignal()
-
-    override fun onKeyUp(
-        keyCode: Int,
-        event: android.view.KeyEvent,
-    ): Boolean {
-        if (keyCode == android.view.KeyEvent.KEYCODE_MENU) {
-            menuKey.press()
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
-    }
+    private val menuKey = depollsoft.compose.MenuKey()
 
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,7 +126,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
         addable = AddableSongs(model, intent.getStringExtra(LIST_EXTRA) ?: model.currentListId)
         setContent {
             PlateTheme {
-                androidx.compose.runtime.CompositionLocalProvider(depollsoft.pitchperfect.ui.LocalMenuKey provides menuKey) {
+                androidx.compose.runtime.CompositionLocalProvider(depollsoft.compose.LocalMenuKey provides menuKey) {
                     Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                         val count = addable.count
                         val label =
@@ -161,6 +153,7 @@ class AddSongsFromListActivity : AppCompatActivity() {
                 }
             }
         }
+        menuKey.install(window)
     }
 
     /** Copies the ticked songs into the target list and closes. */
@@ -203,13 +196,13 @@ fun AddSongsFromListScreen(
                     // Keyed by section, since a duplicated list can hold songs with the same ids.
                     addable.sections.forEachIndexed { section, (title, songs) ->
                         item(key = "section:$section:$title") {
-                            Column(Modifier.animateItem(ListMotion.fade(), ListMotion.placement(), ListMotion.fade())) {
+                            Column(Modifier.animateItem(ListMotion.fade, ListMotion.placement, ListMotion.fade)) {
                                 PlateSectionHeader(title, Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 6.dp))
                                 Hairline()
                             }
                         }
                         items(songs, key = { "$section:${it.id}" }) { song ->
-                            Column(Modifier.animateItem(ListMotion.fade(), ListMotion.placement(), ListMotion.fade())) {
+                            Column(Modifier.animateItem(ListMotion.fade, ListMotion.placement, ListMotion.fade)) {
                                 AddableRow(song, addable.isTicked(song)) { addable.toggle(song) }
                                 Hairline()
                             }
@@ -245,7 +238,7 @@ private fun AddableRow(
             // announces the change.
             .clickable(interaction, indication = null, role = Role.Checkbox, onClick = onToggle)
             .semantics(mergeDescendants = true) { toggleableState = ToggleableState(ticked) },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         PlateText(
             song.name.orEmpty(),

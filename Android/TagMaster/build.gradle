@@ -39,6 +39,7 @@ dependencies {
     testImplementation "io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi_version"
     implementation platform('com.google.firebase:firebase-bom:34.18.0')
     implementation project(':DepollSoftCommon')
+    implementation project(':DepollSoftCompose')
     implementation project(':PitchPerfectLib')
     implementation project(':DepollSoftCommon.Compat')
     implementation project(':depollsoft.lib.kotlin')

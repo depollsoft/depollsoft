@@ -1,5 +1,6 @@
 package depollsoft.tagmaster.ui
 
+import depollsoft.compose.inWholePixels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalDensity
@@ -68,25 +69,4 @@ object TagMasterType {
      * chips, toolbar titles, AppCompat text views): one line is exactly as tall as the font.
      */
     fun TextStyle.withoutLineHeight() = copy(lineHeight = TextUnit.Unspecified, lineHeightStyle = null)
-}
-
-/**
- * A TextView reads a text appearance's size and line height as whole pixels
- * (`getDimensionPixelSize` rounds 14sp at 2.625x, 36.75px, to 37px), where Compose would keep the
- * fraction. On a device whose density is not a whole number (420, 440 or 560dpi, most phones)
- * the fraction makes every line shorter than the View's; round them the same way.
- */
-@Composable
-@ReadOnlyComposable
-fun TextStyle.inWholePixels(): TextStyle {
-    val density = LocalDensity.current
-    fun TextUnit.rounded(): TextUnit {
-        if (!isSp) return this
-        val px = with(density) { toPx() }
-        val whole = if (px == 0f) 0f else maxOf(1f, (px + 0.5f).toInt().toFloat())
-        // Back through the density's own font scaling: from Android 14 that curve is non-linear,
-        // and dividing by fontScale would shrink large text below the TextView's size.
-        return with(density) { whole.toSp() }
-    }
-    return copy(fontSize = fontSize.rounded(), lineHeight = lineHeight.rounded())
 }

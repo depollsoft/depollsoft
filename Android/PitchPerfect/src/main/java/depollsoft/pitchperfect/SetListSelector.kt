@@ -1,6 +1,6 @@
 package depollsoft.pitchperfect
 
-import depollsoft.pitchperfect.ui.viewDp
+import depollsoft.compose.viewDp
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.combinedClickable

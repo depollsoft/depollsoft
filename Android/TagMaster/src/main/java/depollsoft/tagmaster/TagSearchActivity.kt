@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import depollsoft.compose.scrollViewScrollbar
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -49,7 +50,6 @@ import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
 import depollsoft.tagmaster.ui.TagMasterType
 import depollsoft.tagmaster.ui.navigateUpOrHome
-import depollsoft.tagmaster.ui.scrollViewScrollbar
 import depollsoft.tagmaster.ui.setTagMasterContent
 
 /** The search form: text, sort order and the catalog filters, which open [TagSearchResultsActivity]. */

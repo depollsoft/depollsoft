@@ -1,4 +1,4 @@
-package depollsoft.tagmaster.ui
+package depollsoft.compose
 
 import android.graphics.drawable.Drawable
 import androidx.annotation.DrawableRes

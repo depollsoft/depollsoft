@@ -1,5 +1,6 @@
 package depollsoft.tagmaster
 
+import depollsoft.compose.revealItem
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
@@ -37,7 +38,6 @@ import depollsoft.tagmaster.ui.Watermark
 import depollsoft.tagmaster.ui.navigateUpOrHome
 import depollsoft.tagmaster.ui.rememberListDialogs
 import depollsoft.tagmaster.ui.rememberPagerTabs
-import depollsoft.tagmaster.ui.revealItem
 import depollsoft.tagmaster.ui.setTagMasterContent
 import kotlinx.coroutines.launch
 

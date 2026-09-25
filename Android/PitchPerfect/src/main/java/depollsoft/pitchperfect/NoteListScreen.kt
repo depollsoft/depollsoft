@@ -1,7 +1,8 @@
 package depollsoft.pitchperfect
 
+import depollsoft.compose.listViewScrollbar
+import depollsoft.compose.ViewAlign
 import depollsoft.pitchperfect.ui.hairlineWidth
-import depollsoft.pitchperfect.ui.listViewScrollbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -75,7 +76,7 @@ private fun NoteRow(
                 selected = lit
                 onClick { BriefNotes.activate(note) }
             },
-        verticalAlignment = ViewCenterVertically,
+        verticalAlignment = ViewAlign.CenterVertically,
     ) {
         LegacyText(name, 24.sp, if (lit) colors.onAccent else colors.ink, PlateFonts.condensedTypeface, Modifier.weight(1f).padding(start = 20.dp, top = 10.dp, bottom = 10.dp), wrapWidth = true)
         PlateText(

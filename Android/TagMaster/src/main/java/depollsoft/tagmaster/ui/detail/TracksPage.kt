@@ -1,5 +1,8 @@
 package depollsoft.tagmaster.ui.detail
 
+import depollsoft.compose.drawPlatform
+import depollsoft.compose.PlatformIcon
+import depollsoft.compose.ViewAlign
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -56,12 +59,9 @@ import depollsoft.tagmaster.barbershop.RemoteLocation
 import depollsoft.tagmaster.barbershop.Tag
 import depollsoft.tagmaster.ui.CompactBarberPole
 import depollsoft.tagmaster.ui.LocalSnackbars
-import depollsoft.tagmaster.ui.PlatformIcon
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterType
-import depollsoft.tagmaster.ui.ViewAlign
 import depollsoft.tagmaster.ui.ViewSlider
-import depollsoft.tagmaster.ui.drawPlatform
 import depollsoft.tagmaster.ui.textViewWidth
 
 /** The parts a tag can have tracks for, in the order the picker lists them. */
