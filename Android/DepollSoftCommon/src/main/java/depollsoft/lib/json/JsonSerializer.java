@@ -176,6 +176,8 @@ public class JsonSerializer {
       }
       if (!(getter.getReturnType().equals(m.getParameterTypes()[0]) && (m.getModifiers() & Member.PUBLIC) == Member.PUBLIC))
         continue;
+      if (getter.isAnnotationPresent(NotStored.class))
+        continue;
       Pair<Method, Method> propPair = new Pair<Method, Method>(getter, m);
       props.add(propPair);
       JsonSerializer.revProperties.put(new Pair<Class<?>, String>(type, propName), propPair);

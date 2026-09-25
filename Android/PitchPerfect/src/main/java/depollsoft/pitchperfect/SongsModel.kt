@@ -24,7 +24,7 @@ class SongsModel private constructor() {
      * The map itself is a plain preference, not snapshot state, so the selector and the manage
      * screen would otherwise never hear about a list being created, deleted or switched to. Names
      * and orders are snapshot state on [SongList] and are read through [trackLists], so anything
-     * reading [trackLists] (a composable, a [depollsoft.lib.state.watchState]) sees every change
+     * reading [trackLists] (a composable, say) sees every change
      * the list-level UI cares about — local or remote.
      */
     private val listsChanged = ChangeSignal()

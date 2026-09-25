@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -72,6 +73,8 @@ class FieldIcon(
     val description: String? = null,
     /** Degrees the icon is turned: the dropdown arrow points up while its list is open. */
     val rotation: Float = 0f,
+    /** Reports the icon's own press and focus, for a caller that shows it while it has focus. */
+    val interactionSource: MutableInteractionSource? = null,
     val onClick: (() -> Unit)? = null,
 )
 
@@ -291,7 +294,7 @@ private fun FieldIconSlot(
             .then(
                 if (icon.onClick != null) {
                     Modifier
-                        .clickable(role = Role.Button, onClick = icon.onClick)
+                        .clickable(icon.interactionSource, LocalIndication.current, role = Role.Button, onClick = icon.onClick)
                         .semantics { icon.description?.let { contentDescription = it } }
                 } else {
                     Modifier

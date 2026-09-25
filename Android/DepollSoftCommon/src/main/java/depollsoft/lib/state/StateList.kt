@@ -14,10 +14,6 @@ class StateList<T> private constructor(
     private val items: SnapshotStateList<T>,
 ) : MutableList<T> by items,
     RandomAccess {
-    init {
-        SnapshotNotifications.ensureInstalled()
-    }
-
     constructor() : this(SnapshotStateList())
 
     constructor(initial: Collection<T>) : this(SnapshotStateList<T>().apply { addAll(initial) })
@@ -28,13 +24,11 @@ class StateList<T> private constructor(
             items.clear()
             items.addAll(newItems)
         }
-        SnapshotNotifications.ensureInstalled()
     }
 
     /** Applies [operation] as one change, the way a Bindroid collection transaction did. */
     fun transaction(operation: StateList<T>.() -> Unit) {
         batchStateChanges { operation() }
-        SnapshotNotifications.ensureInstalled()
     }
 
     /** A plain copy of the current contents, safe to keep after the list changes. */

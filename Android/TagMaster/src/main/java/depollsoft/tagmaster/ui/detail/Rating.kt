@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
@@ -30,11 +32,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import depollsoft.tagmaster.ui.TagMasterTheme
 import kotlin.math.ceil
@@ -163,8 +167,16 @@ fun RatingStars(
         modifier
             .width(with(density) { bar.width.toDp() })
             .height(with(density) { bar.height.toDp() })
-            .drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating, stepSize = 0.1f) } },
+            .drawBehind { mirroredForRtl { drawIntoCanvas { bar.draw(it.nativeCanvas, rating, stepSize = 0.1f) } } },
     )
+}
+
+/**
+ * A RatingBar mirrors right to left (the platform style's `mirrorForRtl`): the stars fill from the
+ * right.
+ */
+private fun DrawScope.mirroredForRtl(draw: DrawScope.() -> Unit) {
+    if (layoutDirection == LayoutDirection.Rtl) scale(-1f, 1f) { draw() } else draw()
 }
 
 /**
@@ -182,19 +194,24 @@ fun RatingPicker(
     val configuration = LocalConfiguration.current
     val bar = remember(context, configuration.uiMode) { StarBar(context, androidx.appcompat.R.attr.ratingBarStyle, null) }
     val density = LocalDensity.current
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
-    fun ratingAt(x: Float): Int = ceil(x / (bar.width / STARS.toFloat())).toInt().coerceIn(0, STARS)
+    // Stars count from the start edge, the right one right to left.
+    fun ratingAt(x: Float): Int = ceil((if (rtl) bar.width - x else x) / (bar.width / STARS.toFloat())).toInt().coerceIn(0, STARS)
     Box(
         modifier
             .width(with(density) { bar.width.toDp() })
             .height(with(density) { bar.height.toDp() })
-            .pointerInput(bar) { detectTapGestures { onRatingChange(ratingAt(it.x)) } }
-            .pointerInput(bar) { detectHorizontalDragGestures { change, _ -> onRatingChange(ratingAt(change.position.x)) } }
+            .pointerInput(bar, rtl) { detectTapGestures { onRatingChange(ratingAt(it.x)) } }
+            .pointerInput(bar, rtl) { detectHorizontalDragGestures { change, _ -> onRatingChange(ratingAt(change.position.x)) } }
             .onKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                // As AbsSeekBar: the arrow toward the end adds a star, so right to left it is Left.
+                val more = if (rtl) Key.DirectionLeft else Key.DirectionRight
+                val fewer = if (rtl) Key.DirectionRight else Key.DirectionLeft
                 when (event.key) {
-                    Key.DirectionRight -> onRatingChange((rating + 1).coerceAtMost(STARS)).let { true }
-                    Key.DirectionLeft -> onRatingChange((rating - 1).coerceAtLeast(0)).let { true }
+                    more -> onRatingChange((rating + 1).coerceAtMost(STARS)).let { true }
+                    fewer -> onRatingChange((rating - 1).coerceAtLeast(0)).let { true }
                     else -> false
                 }
             }.focusable()
@@ -205,6 +222,6 @@ fun RatingPicker(
                     onRatingChange(value.roundToInt().coerceIn(0, STARS))
                     true
                 }
-            }.drawBehind { drawIntoCanvas { bar.draw(it.nativeCanvas, rating.toFloat(), stepSize = 1f) } },
+            }.drawBehind { mirroredForRtl { drawIntoCanvas { bar.draw(it.nativeCanvas, rating.toFloat(), stepSize = 1f) } } },
     )
 }

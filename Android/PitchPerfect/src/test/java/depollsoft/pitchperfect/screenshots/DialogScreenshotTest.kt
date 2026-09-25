@@ -94,6 +94,16 @@ class DialogScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = ScreenshotSupport.PHONE_NIGHT)
+    fun setListMenuNight() {
+        val ids = ScreenshotSupport.seedSetLists()
+        val activity = launchMain()
+        activity.showTab(3)
+        activity.openSetListMenu(ids[0])
+        captureScreen("night_menu_set_list")
+    }
+
+    @Test
     fun loginPrompt() {
         launch(SettingsActivity::class.java).showLoginPrompt()
         captureScreen("dialog_login_prompt")

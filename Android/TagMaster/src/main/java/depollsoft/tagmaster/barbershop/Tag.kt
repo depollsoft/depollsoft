@@ -2,7 +2,6 @@ package depollsoft.tagmaster.barbershop
 
 import android.net.Uri
 import android.util.Log
-import depollsoft.lib.state.StateField
 import kotlin.jvm.JvmOverloads
 import depollsoft.lib.activity.RichApplication
 import org.json.JSONObject
@@ -27,46 +26,46 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Tag {
-    var appVersion: Int by StateField(CURRENT_APP_VERSION)
-    var id: Int by StateField(0)
-    var title: String? by StateField(null)
-    var lastRefreshed: Date by StateField(Date(0))
-    var alternativeTitle: String? by StateField(null)
-    var version: String? by StateField(null)
-    var writtenKey: String? by StateField(null)
-    var parts: Int by StateField(0)
-    var tagType: String? by StateField(null)
-    var recordingMethod: String? by StateField(null)
-    var teachingVideo: String? by StateField(null)
-    var notes: String? by StateField(null)
-    var arranger: String? by StateField(null)
-    var arrangerWebsite: String? by StateField(null)
-    var yearArranged: String? by StateField(null)
-    var sungBy: String? by StateField(null)
-    var sungByWebsite: String? by StateField(null)
-    var sungYear: String? by StateField(null)
-    var learningTrackQuartet: String? by StateField(null)
-    var learningTrackQuartetWebsite: String? by StateField(null)
-    var teacher: String? by StateField(null)
-    var teacherWebsite: String? by StateField(null)
-    var provider: String? by StateField(null)
-    var providerWebsite: String? by StateField(null)
-    var posted: Date? by StateField(null)
-    var classicTagNumber: Int? by StateField(null)
-    var rating: Double? by StateField(null)
-    var downloadCount: Int by StateField(0)
-    var sheetMusicUri: RemoteLocation? by StateField(null)
-    var notationUri: RemoteLocation? by StateField(null)
-    var allPartsTrackUri: RemoteLocation? by StateField(null)
-    var bassTrackUri: RemoteLocation? by StateField(null)
-    var baritoneTrackUri: RemoteLocation? by StateField(null)
-    var leadTrackUri: RemoteLocation? by StateField(null)
-    var tenorTrackUri: RemoteLocation? by StateField(null)
-    var other1TrackUri: RemoteLocation? by StateField(null)
-    var other2TrackUri: RemoteLocation? by StateField(null)
-    var other3TrackUri: RemoteLocation? by StateField(null)
-    var other4TrackUri: RemoteLocation? by StateField(null)
-    var videos: MutableList<Video>? by StateField(mutableListOf())
+    var appVersion: Int = CURRENT_APP_VERSION
+    var id: Int = 0
+    var title: String? = null
+    var lastRefreshed: Date = Date(0)
+    var alternativeTitle: String? = null
+    var version: String? = null
+    var writtenKey: String? = null
+    var parts: Int = 0
+    var tagType: String? = null
+    var recordingMethod: String? = null
+    var teachingVideo: String? = null
+    var notes: String? = null
+    var arranger: String? = null
+    var arrangerWebsite: String? = null
+    var yearArranged: String? = null
+    var sungBy: String? = null
+    var sungByWebsite: String? = null
+    var sungYear: String? = null
+    var learningTrackQuartet: String? = null
+    var learningTrackQuartetWebsite: String? = null
+    var teacher: String? = null
+    var teacherWebsite: String? = null
+    var provider: String? = null
+    var providerWebsite: String? = null
+    var posted: Date? = null
+    var classicTagNumber: Int? = null
+    var rating: Double? = null
+    var downloadCount: Int = 0
+    var sheetMusicUri: RemoteLocation? = null
+    var notationUri: RemoteLocation? = null
+    var allPartsTrackUri: RemoteLocation? = null
+    var bassTrackUri: RemoteLocation? = null
+    var baritoneTrackUri: RemoteLocation? = null
+    var leadTrackUri: RemoteLocation? = null
+    var tenorTrackUri: RemoteLocation? = null
+    var other1TrackUri: RemoteLocation? = null
+    var other2TrackUri: RemoteLocation? = null
+    var other3TrackUri: RemoteLocation? = null
+    var other4TrackUri: RemoteLocation? = null
+    var videos: MutableList<Video>? = mutableListOf()
     val tracks: List<Track>?
         get() {
             val tracks = ArrayList<Track>()
@@ -81,7 +80,7 @@ class Tag {
             if (other4TrackUri != null) tracks.add(Track("Other4", other4TrackUri))
             return tracks
         }
-    var lyrics: String? by StateField(null)
+    var lyrics: String? = null
 
     @JvmOverloads
     fun cache(overwrite: Boolean = true) {

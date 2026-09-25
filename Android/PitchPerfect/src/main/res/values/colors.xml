@@ -8,6 +8,8 @@
     <color name="plate_hairline">#B7B9BC</color>
     <color name="plate_accent">#141618</color>
     <color name="plate_on_accent">#F2F3F4</color>
+    <!-- A platform PopupMenu's panel: ?android:colorBackgroundFloating. -->
+    <color name="plate_menu">#FFFFFF</color>
 
     <!-- Legacy names kept for external references -->
     <color name="darker">#373737</color>

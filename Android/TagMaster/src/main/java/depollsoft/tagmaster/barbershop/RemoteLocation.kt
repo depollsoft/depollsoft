@@ -1,10 +1,9 @@
 package depollsoft.tagmaster.barbershop
 
-import depollsoft.lib.state.StateField
 
 class RemoteLocation {
-    var uri: String? by StateField(null)
-    var type: String? by StateField(null)
+    var uri: String? = null
+    var type: String? = null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

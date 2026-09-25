@@ -8,7 +8,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import depollsoft.lib.state.ChangeSignal
-import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 import java.util.Locale
 
@@ -49,12 +48,13 @@ object TagLists {
             return versionValue
         }
 
-    private val customKeyList: StateList<String> = StateList()
+    private var customKeyList: List<String> = emptyList()
 
     /** Ordered keys of the user-created lists. Read-only; mutate through this object. */
     val customKeys: List<String>
         get() {
             ensureLoaded()
+            versionSignal.read()
             return customKeyList
         }
 
@@ -78,7 +78,11 @@ object TagLists {
         }
         order.clear()
         Preferences.get<Collection<*>>(ORDER_KEY)?.filterIsInstance<String>()?.let(order::addAll)
-        rebuild()
+        // The first read may come inside a read-only snapshot (a snapshotFlow, say), where writing
+        // state throws. Nothing can have read the keys or the version yet, so the load signals
+        // nothing; later changes go through [rebuild].
+        customKeyList = orderedKeys()
+        versionValue++
     }
 
     fun isCustom(key: String): Boolean = key !in RESERVED
@@ -288,6 +292,12 @@ object TagLists {
      * cloud snapshot) that may not have been seen by this object yet.
      */
     private fun rebuild(extraKeys: Collection<String> = emptyList()) {
+        customKeyList = orderedKeys(extraKeys)
+        versionValue++
+        versionSignal.changed()
+    }
+
+    private fun orderedKeys(extraKeys: Collection<String> = emptyList()): List<String> {
         val known = LinkedHashSet<String>()
         order.forEach { if (isCustom(it)) known.add(it) }
         val unordered =
@@ -296,12 +306,7 @@ object TagLists {
                 .distinct()
                 .sortedBy { (names[it] ?: it).lowercase(Locale.ROOT) }
         known.addAll(unordered)
-        val next = known.toList()
-        if (next != customKeyList.toList()) {
-            customKeyList.replaceWith(next)
-        }
-        versionValue++
-        versionSignal.changed()
+        return known.toList()
     }
 
     private fun newKey(name: String): String {
@@ -326,6 +331,6 @@ object TagLists {
         names.clear()
         order.clear()
         loaded = false
-        customKeyList.replaceWith(emptyList())
+        customKeyList = emptyList()
     }
 }

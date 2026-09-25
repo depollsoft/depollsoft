@@ -11,12 +11,11 @@ import depollsoft.pitchperfect.lib.Note
  */
 class PitchPipeModel @JvmOverloads constructor(
     private val updateWidgets: () -> Unit = PitchPipeAppWidget::updateWidgets,
-) {
-    /** The cells, clockwise from the top. */
-    var notes: List<Note> by StateField(emptyList())
+) : PitchPipe {
+    override var notes: List<Note> by StateField(emptyList())
 
-    /** Whether the pipe spans F4 to F5 rather than C4 to C5. Setting it redraws the widget too. */
-    var isFromFToF: Boolean
+    /** Setting it redraws the home-screen widget too. */
+    override var isFromFToF: Boolean
         get() = Preferences.get(IS_FROM_F_TO_F_KEY)
         set(value) {
             Preferences.set(IS_FROM_F_TO_F_KEY, value)

@@ -22,6 +22,23 @@ import depollsoft.pitchperfect.ui.plateColors
 /** A prompt the main screen may open once it starts. */
 enum class StartupPrompt { LOGIN, CHANGELOG }
 
+/**
+ * The prompt the main screen opens as it starts. One already [open] stays: it was restored across
+ * recreation, and the login prompt may still be waiting for FirebaseUI's result. Otherwise the
+ * login prompt when [loginDue], else the changelog when [changelogDue]; each check runs only when
+ * reached, since both record that they ran.
+ */
+internal fun startupPromptFor(
+    open: StartupPrompt?,
+    loginDue: () -> Boolean,
+    changelogDue: () -> Boolean,
+): StartupPrompt? =
+    open ?: when {
+        loginDue() -> StartupPrompt.LOGIN
+        changelogDue() -> StartupPrompt.CHANGELOG
+        else -> null
+    }
+
 /** The changelog's once-per-version showing. */
 object Changelog {
     private var shownThisProcess = false

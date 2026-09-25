@@ -2,13 +2,11 @@ package depollsoft.tagmaster.barbershop;
 
 import java.util.Objects;
 
-import depollsoft.lib.state.StateField;
-
 public class Track {
 
-  private StateField<String> title = new StateField<>(null);
+  private String title;
 
-  private StateField<RemoteLocation> source = new StateField<>(null);
+  private RemoteLocation source;
 
   public Track() {
   }
@@ -27,19 +25,19 @@ public class Track {
   }
 
   public RemoteLocation getSource() {
-    return this.source.get();
+    return this.source;
   }
 
   public String getTitle() {
-    return this.title.get();
+    return this.title;
   }
 
   public void setSource(RemoteLocation value) {
-    this.source.set(value);
+    this.source = value;
   }
 
   public void setTitle(String value) {
-    this.title.set(value);
+    this.title = value;
   }
 
   @Override

@@ -3,6 +3,7 @@ package depollsoft.pitchperfect.lib;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
+import depollsoft.lib.json.NotStored;
 import depollsoft.lib.state.StateField;
 
 import java.util.ArrayList;
@@ -124,19 +125,19 @@ public class Note {
     return Note.prunedNotes;
   }
 
-  private StateField<String> friendlyName = new StateField<>(null);
+  private String friendlyName = null;
 
-  private StateField<Integer> octave = new StateField<>(0);
+  private Integer octave = 0;
 
-  private StateField<Accidental> accidental = new StateField<>(null);
+  private Accidental accidental = null;
 
-  private StateField<Double> frequency = new StateField<>(0d);
+  private Double frequency = 0d;
 
-  private StateField<Integer> keyNumber = new StateField<>(null);
+  private Integer keyNumber = null;
 
   private StateField<Boolean> isPlaying = new StateField<>(false);
 
-  private StateField<Note> alternate = new StateField<>(null);
+  private Note alternate = null;
   private boolean isAttemptingToPlay;
 
   private Object synchronizer = new Object();
@@ -168,31 +169,33 @@ public class Note {
   }
 
   public Accidental getAccidental() {
-    return this.accidental.get();
+    return this.accidental;
   }
 
   public Note getAlternate() {
-    return this.alternate.get();
+    return this.alternate;
   }
 
   public double getFrequency() {
-    return this.frequency.get();
+    return this.frequency;
   }
 
   public String getFriendlyName() {
-    return this.friendlyName.get();
+    return this.friendlyName;
   }
 
+  // Whether the note sounds right now: never stored, or loading a saved song would start it.
+  @NotStored
   public boolean getIsPlaying() {
     return this.isPlaying.get();
   }
 
   public Integer getKeyNumber() {
-    return this.keyNumber.get();
+    return this.keyNumber;
   }
 
   public int getOctave() {
-    return this.octave.get();
+    return this.octave;
   }
 
   public void play() {
@@ -207,19 +210,19 @@ public class Note {
   }
 
   public void setAccidental(Accidental value) {
-    this.accidental.set(value);
+    this.accidental = value;
   }
 
   public void setAlternate(Note value) {
-    this.alternate.set(value);
+    this.alternate = value;
   }
 
   public void setFrequency(double value) {
-    this.frequency.set(value);
+    this.frequency = value;
   }
 
   public void setFriendlyName(String value) {
-    this.friendlyName.set(value);
+    this.friendlyName = value;
   }
 
   public void setIsPlaying(boolean value) {
@@ -235,13 +238,13 @@ public class Note {
   }
 
   public void setKeyNumber(Integer value) {
-    this.keyNumber.set(value);
+    this.keyNumber = value;
     if (value != null)
       this.setFrequency(Note.getNoteFrequency(value));
   }
 
   public void setOctave(int value) {
-    this.octave.set(value);
+    this.octave = value;
   }
 
   public void stop() {

@@ -1,19 +1,18 @@
 package depollsoft.tagmaster.barbershop
 
-import depollsoft.lib.state.StateField
 import depollsoft.lib.xml.XmlElement
 import depollsoft.tagmaster.parseDate
 import java.util.*
 
 class Video {
-    var id: Int by StateField(0)
-    var description: String? by StateField(null)
-    var sungKey: String? by StateField(null)
-    var isMultitrack: Boolean by StateField(false)
-    var youTubeCode: String? by StateField(null)
-    var sungBy: String? by StateField(null)
-    var sungWebsite: String? by StateField(null)
-    var posted: Date? by StateField(null)
+    var id: Int = 0
+    var description: String? = null
+    var sungKey: String? = null
+    var isMultitrack: Boolean = false
+    var youTubeCode: String? = null
+    var sungBy: String? = null
+    var sungWebsite: String? = null
+    var posted: Date? = null
 
     fun parseFromXml(elem: XmlElement) {
         for (property in elem.elements) {

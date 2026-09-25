@@ -11,7 +11,7 @@ import depollsoft.tagmaster.MeActivity
 import depollsoft.tagmaster.TagBrowserActivity
 import depollsoft.tagmaster.TagDetailActivity
 import depollsoft.tagmaster.TagListActivity
-import depollsoft.tagmaster.TagPaneHost
+import depollsoft.tagmaster.TagPaneActivity
 import depollsoft.tagmaster.TeachableTagsActivity
 
 /**
@@ -76,7 +76,7 @@ internal class ScreenshotDriver(
         activity: Activity,
         id: Int,
     ) {
-        (activity as TagPaneHost).showTag(id)
+        (activity as TagPaneActivity).showTag(id)
         compose.waitForIdle()
     }
 

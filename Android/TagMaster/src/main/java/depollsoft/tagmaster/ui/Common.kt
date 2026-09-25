@@ -10,6 +10,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -217,5 +218,21 @@ fun EmptyState(
     }
 }
 
-/** Width cap of list and form content on wide windows: centered, at most [maxWidth]. */
-fun Modifier.readingMeasure(maxWidth: Dp = 640.dp) = this.widthIn(max = maxWidth)
+/**
+ * Lists and forms keep a readable measure on wide windows, as the View screens' content insets
+ * did: [content] is handed the horizontal inset that centres it at most [maxWidth] wide, to add as
+ * padding inside its scrolling container. The container keeps the full width, so its scrollbar
+ * stays at the edge and its margins still scroll. In the narrow list pane of the two-pane layout
+ * the inset is zero.
+ */
+@Composable
+fun ReadingWidth(
+    modifier: Modifier = Modifier,
+    maxWidth: Dp = 640.dp,
+    content: @Composable (inset: Dp) -> Unit,
+) {
+    BoxWithConstraints(modifier) {
+        val inset = with(LocalDensity.current) { ((constraints.maxWidth - maxWidth.roundToPx()).coerceAtLeast(0) / 2).toDp() }
+        content(inset)
+    }
+}

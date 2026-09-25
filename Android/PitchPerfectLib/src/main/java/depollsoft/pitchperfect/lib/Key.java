@@ -1,7 +1,6 @@
 package depollsoft.pitchperfect.lib;
 
 import depollsoft.lib.state.StateList;
-import depollsoft.lib.state.StateField;
 
 public class Key {
   private static StateList<Key> majorKeys;
@@ -48,11 +47,11 @@ public class Key {
     return Key.minorKeys;
   }
 
-  private StateField<Note> note = new StateField<>(null);
+  private Note note = null;
 
-  private StateField<KeyType> keyType = new StateField<>(null);
+  private KeyType keyType = null;
 
-  private StateField<Integer> numAccidentals = new StateField<>(0);
+  private Integer numAccidentals = 0;
 
   public Key() {
     this(Note.getC4(), KeyType.Major, 0);
@@ -87,26 +86,26 @@ public class Key {
   }
 
   public KeyType getKeyType() {
-    return this.keyType.get();
+    return this.keyType;
   }
 
   public Note getNote() {
-    return this.note.get();
+    return this.note;
   }
 
   public int getNumAccidentals() {
-    return this.numAccidentals.get();
+    return this.numAccidentals;
   }
 
   public void setKeyType(KeyType value) {
-    this.keyType.set(value);
+    this.keyType = value;
   }
 
   public void setNote(Note value) {
-    this.note.set(value);
+    this.note = value;
   }
 
   public void setNumAccidentals(int value) {
-    this.numAccidentals.set(value);
+    this.numAccidentals = value;
   }
 }

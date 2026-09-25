@@ -45,6 +45,7 @@ import depollsoft.tagmaster.ui.BarberPoleWatermark
 import depollsoft.tagmaster.ui.DropdownField
 import depollsoft.tagmaster.ui.FieldIcon
 import depollsoft.tagmaster.ui.OutlinedField
+import depollsoft.tagmaster.ui.ReadingWidth
 import depollsoft.tagmaster.ui.SearchFab
 import depollsoft.tagmaster.ui.TagMasterTheme
 import depollsoft.tagmaster.ui.TagMasterTopBar
@@ -113,77 +114,82 @@ private fun SearchScreen(
                     .imePadding(),
             ) {
                 val formScroll = rememberScrollState()
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .scrollViewScrollbar(formScroll, top = 16.dp, bottom = 16.dp, end = 16.dp)
-                        .verticalScroll(formScroll)
-                        .padding(16.dp),
-                ) {
-                    val searchInteractions = remember { MutableInteractionSource() }
-                    val searchFocused by searchInteractions.collectIsFocusedAsState()
-                    OutlinedField(
-                        label = stringResource(R.string.SearchBoxHint),
-                        value = text,
-                        onValueChange = {
-                            text = it
-                            model.query = it.text
-                        },
-                        startIcon = FieldIcon(R.drawable.ic_search),
-                        // The clear icon shows only while the field is focused and has text.
-                        endIcon =
-                            FieldIcon(
-                                com.google.android.material.R.drawable.mtrl_ic_cancel,
-                                stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
-                            ) {
-                                text = TextFieldValue("")
-                                model.query = ""
-                            },
-                        endIconVisible = searchFocused && text.text.isNotEmpty(),
-                        interactionSource = searchInteractions,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
-                        fieldModifier =
-                            Modifier
-                                .onPreviewKeyEvent {
-                                    if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
-                                        onSearch()
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }.testTag("searchTextBox"),
-                    )
-                    Text(
-                        stringResource(R.string.SearchOptions),
+                ReadingWidth(Modifier.weight(1f).fillMaxWidth()) { inset ->
+                    Column(
                         Modifier
-                            .padding(top = 24.dp)
-                            .semantics { heading() },
-                        style = TagMasterType.titleLarge,
-                        color = colors.text,
-                    )
-                    Choice(R.string.SortBy, R.array.SortByChoices, sortChoices.indexOf(model.sortBy), "sortBySpinner") {
-                        model.sortBy = sortChoices[it]
+                            .fillMaxSize()
+                            .scrollViewScrollbar(formScroll, top = 16.dp, bottom = 16.dp, end = 16.dp)
+                            .verticalScroll(formScroll)
+                            .padding(horizontal = 16.dp + inset, vertical = 16.dp),
+                    ) {
+                        val searchInteractions = remember { MutableInteractionSource() }
+                        val searchFocused by searchInteractions.collectIsFocusedAsState()
+                        val clearInteractions = remember { MutableInteractionSource() }
+                        val clearFocused by clearInteractions.collectIsFocusedAsState()
+                        OutlinedField(
+                            label = stringResource(R.string.SearchBoxHint),
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                model.query = it.text
+                            },
+                            startIcon = FieldIcon(R.drawable.ic_search),
+                            // The clear icon shows while the field has text and it, or the icon itself
+                            // (reached by keyboard), has focus.
+                            endIcon =
+                                FieldIcon(
+                                    com.google.android.material.R.drawable.mtrl_ic_cancel,
+                                    stringResource(com.google.android.material.R.string.clear_text_end_icon_content_description),
+                                    interactionSource = clearInteractions,
+                                ) {
+                                    text = TextFieldValue("")
+                                    model.query = ""
+                                },
+                            endIconVisible = (searchFocused || clearFocused) && text.text.isNotEmpty(),
+                            interactionSource = searchInteractions,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                            fieldModifier =
+                                Modifier
+                                    .onPreviewKeyEvent {
+                                        if (it.type == KeyEventType.KeyDown && it.key == Key.Enter) {
+                                            onSearch()
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }.testTag("searchTextBox"),
+                        )
+                        Text(
+                            stringResource(R.string.SearchOptions),
+                            Modifier
+                                .padding(top = 24.dp)
+                                .semantics { heading() },
+                            style = TagMasterType.titleLarge,
+                            color = colors.text,
+                        )
+                        Choice(R.string.SortBy, R.array.SortByChoices, sortChoices.indexOf(model.sortBy), "sortBySpinner") {
+                            model.sortBy = sortChoices[it]
+                        }
+                        Choice(R.string.SheetMusicSentence, R.array.SheetMusicChoices, booleanChoices.indexOf(model.hasSheetMusic), "sheetMusicSpinner") {
+                            model.hasSheetMusic = booleanChoices[it]
+                        }
+                        Choice(
+                            R.string.LearningTracks,
+                            R.array.LearningTracksChoices,
+                            booleanChoices.indexOf(model.hasLearningTracks),
+                            "learningTracksSpinner",
+                        ) { model.hasLearningTracks = booleanChoices[it] }
+                        Choice(R.string.Parts, R.array.PartsChoices, partChoices.indexOf(model.parts), "partsSpinner") {
+                            model.parts = partChoices[it]
+                        }
+                        Choice(
+                            R.string.TagCollectionSentence,
+                            R.array.TagCollectionChoices,
+                            collectionChoices.indexOf(model.collection),
+                            "tagCollectionSpinner",
+                        ) { model.collection = collectionChoices[it] }
                     }
-                    Choice(R.string.SheetMusicSentence, R.array.SheetMusicChoices, booleanChoices.indexOf(model.hasSheetMusic), "sheetMusicSpinner") {
-                        model.hasSheetMusic = booleanChoices[it]
-                    }
-                    Choice(
-                        R.string.LearningTracks,
-                        R.array.LearningTracksChoices,
-                        booleanChoices.indexOf(model.hasLearningTracks),
-                        "learningTracksSpinner",
-                    ) { model.hasLearningTracks = booleanChoices[it] }
-                    Choice(R.string.Parts, R.array.PartsChoices, partChoices.indexOf(model.parts), "partsSpinner") {
-                        model.parts = partChoices[it]
-                    }
-                    Choice(
-                        R.string.TagCollectionSentence,
-                        R.array.TagCollectionChoices,
-                        collectionChoices.indexOf(model.collection),
-                        "tagCollectionSpinner",
-                    ) { model.collection = collectionChoices[it] }
                 }
                 // The button sits under the form, 8dp below it; SearchFab keeps its own end and
                 // bottom margins.

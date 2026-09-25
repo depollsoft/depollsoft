@@ -29,6 +29,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    testImplementation testFixtures(project(':DepollSoftCommon'))
     testImplementation platform(compose_bom)
     testImplementation 'androidx.compose.ui:ui-test-junit4'
     testImplementation "io.github.takahirom.roborazzi:roborazzi:$roborazzi_version"

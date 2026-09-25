@@ -3,9 +3,7 @@ package depollsoft.tagmaster
 import depollsoft.compose.revealItem
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,8 +41,7 @@ import kotlinx.coroutines.launch
 
 /** Browse: the catalog four ways — latest, highest rated, most downloaded, and the classics. */
 class TagBrowserActivity :
-    AppCompatActivity(),
-    TagPaneHost {
+    TagPaneActivity() {
     private val retained: RetainedQueries by viewModels()
 
     /** One query per tab, in tab order; each fetches its first page when its tab is first shown. */
@@ -78,9 +75,6 @@ class TagBrowserActivity :
     val currentModel: QueryModel
         get() = models[currentPage]
 
-    internal lateinit var tagPane: TagPaneState
-        private set
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         currentPage = savedInstanceState?.getInt(STATE_PAGE, 0) ?: 0
@@ -105,34 +99,8 @@ class TagBrowserActivity :
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt(STATE_PAGE, currentPage)
-        tagPane.save(outState)
         super.onSaveInstanceState(outState)
     }
-
-    override fun onDestroy() {
-        tagPane.stop()
-        super.onDestroy()
-    }
-
-    override val hasDetailPane: Boolean
-        get() = tagPane.hasDetailPane
-
-    override var selectedTagId: Int?
-        get() = tagPane.selectedTagId
-        set(value) {
-            tagPane.selectedTagId = value
-        }
-
-    override fun showTag(id: Int) = tagPane.showTag(id)
-
-    override fun listedTagIds(): List<Int> = tagPane.listedTagIds()
-
-    override fun revealTag(id: Int) = tagPane.revealTag(id)
-
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean = tagPane.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
     private companion object {
         const val STATE_PAGE = "depollsoft.tagmaster.browse.page"

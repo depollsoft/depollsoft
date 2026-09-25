@@ -273,16 +273,16 @@ class WearInstrumentStateTest {
     @Test
     fun theGlowFollowsTheSystemAnimatorDurationScale() {
         // At 2x, as a ValueAnimator would, one breath takes eight seconds.
-        assertEquals(Math.PI.toFloat(), WearInstrumentState.breathePhaseAt(4_000, durationScale = 2f), 1e-4f)
-        assertEquals(Math.PI.toFloat(), WearInstrumentState.breathePhaseAt(1_000, durationScale = 0.5f), 1e-4f)
+        assertEquals(Math.PI.toFloat(), InstrumentState.breathePhaseAt(4_000, durationScale = 2f), 1e-4f)
+        assertEquals(Math.PI.toFloat(), InstrumentState.breathePhaseAt(1_000, durationScale = 0.5f), 1e-4f)
     }
 
     @Test
     fun theGlowBreathesOnceEveryFourSeconds() {
-        assertEquals(0f, WearInstrumentState.breathePhaseAt(0), 0f)
-        assertEquals(Math.PI.toFloat(), WearInstrumentState.breathePhaseAt(2000), 0.0001f)
-        assertEquals(0f, WearInstrumentState.breathePhaseAt(4000), 0f)
-        assertEquals(Math.PI.toFloat() / 2, WearInstrumentState.breathePhaseAt(5000), 0.0001f)
+        assertEquals(0f, InstrumentState.breathePhaseAt(0), 0f)
+        assertEquals(Math.PI.toFloat(), InstrumentState.breathePhaseAt(2000), 0.0001f)
+        assertEquals(0f, InstrumentState.breathePhaseAt(4000), 0f)
+        assertEquals(Math.PI.toFloat() / 2, InstrumentState.breathePhaseAt(5000), 0.0001f)
     }
 
     @Test

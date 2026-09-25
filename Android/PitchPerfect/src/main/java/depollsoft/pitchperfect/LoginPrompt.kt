@@ -160,7 +160,9 @@ fun LoginPromptDialog(
                     PlateText(
                         stringResource(message),
                         style = plateText(14.sp, colors.ink),
-                        modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },
+                        // "Opening sign-in" is announced outright when the button is pressed; the
+                        // live region speaks what comes back (cancelled, failed) without repeating it.
+                        modifier = Modifier.weight(1f).semantics { if (status != null) liveRegion = LiveRegionMode.Polite },
                     )
                 }
             }

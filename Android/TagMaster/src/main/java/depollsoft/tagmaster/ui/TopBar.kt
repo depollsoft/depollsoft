@@ -6,6 +6,7 @@ import depollsoft.compose.OpensOnMenuKey
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -67,18 +68,21 @@ data class BarAction(
 private const val TITLE_FONT = "fonts/wickhop-handwriting.ttf"
 
 /** The Wickhop display face the app name is set in, capped so its full bounds fit the bar. */
-private class BrandTitle(
+internal class BrandTitle(
     context: Context,
 ) {
     val family = FontFamily(Font(TITLE_FONT, context.assets))
     private val typeface = Typeface.createFromAsset(context.assets, TITLE_FONT)
 
-    /** The size, in pixels, the title is drawn at: 22sp, shrunk until the font is 40dp tall. */
+    /**
+     * The size, in pixels, the title is drawn at: 22sp through the platform's non-linear font
+     * scaling, as the toolbar's TextView scaled it, shrunk until the font is 40dp tall.
+     */
     fun sizePx(context: Context): Float {
         val metrics = context.resources.displayMetrics
         val paint = Paint().apply {
             typeface = this@BrandTitle.typeface
-            textSize = 22f * metrics.scaledDensity
+            textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22f, metrics)
         }
         val font = paint.fontMetrics
         val maxHeight = 40f * metrics.density
@@ -322,7 +326,10 @@ private fun ActionButton(
     }
 }
 
-/** The overflow popup, styled as the Popup overlay styled AppCompat's. */
+/**
+ * The overflow popup, styled as the Popup overlay styled AppCompat's. It follows the app's
+ * appearance, not the chrome's, so its press and focus highlights are the app surface's too.
+ */
 @Composable
 private fun OverflowMenu(
     expanded: Boolean,
@@ -330,27 +337,29 @@ private fun OverflowMenu(
     onDismiss: () -> Unit,
 ) {
     val colors = TagMasterTheme.colors
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        containerColor = colors.surfaceContainerHigh,
-    ) {
-        for (item in items) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        item.title,
-                        style = TagMasterType.bodyLarge.withoutLineHeight(),
-                        color = if (item.enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
-                    )
-                },
-                enabled = item.enabled,
-                modifier = Modifier.testTag(item.id),
-                onClick = {
-                    onDismiss()
-                    item.onClick()
-                },
-            )
+    OnAppSurface {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismiss,
+            containerColor = colors.surfaceContainerHigh,
+        ) {
+            for (item in items) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            item.title,
+                            style = TagMasterType.bodyLarge.withoutLineHeight(),
+                            color = if (item.enabled) colors.onSurface else colors.onSurface.copy(alpha = 0.38f),
+                        )
+                    },
+                    enabled = item.enabled,
+                    modifier = Modifier.testTag(item.id),
+                    onClick = {
+                        onDismiss()
+                        item.onClick()
+                    },
+                )
+            }
         }
     }
 }

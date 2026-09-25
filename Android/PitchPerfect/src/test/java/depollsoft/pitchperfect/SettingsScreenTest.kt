@@ -2,13 +2,17 @@ package depollsoft.pitchperfect
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -143,6 +147,10 @@ class SettingsScreenTest {
             started.intent.component!!.className.startsWith("com.firebase.ui.auth"),
         )
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).assertIsNotEnabled()
+        // "Opening sign-in" is announced outright on the press; a live region would repeat it.
+        val opening = compose.onAllNodesWithText(activity.getString(R.string.OpeningSignIn)).fetchSemanticsNodes()
+        assertTrue(opening.isNotEmpty())
+        assertTrue(opening.none { SemanticsProperties.LiveRegion in it.config })
 
         // A prompt opened again starts fresh, not stuck on the last attempt.
         compose.onNodeWithText("NOT NOW").performClick()
@@ -180,7 +188,10 @@ class SettingsScreenTest {
         controller.get().activityResultRegistry.dispatchResult(started.requestCode, android.app.Activity.RESULT_CANCELED, null)
         screens.settle()
 
-        compose.onNodeWithText(controller.get().getString(R.string.SignInCanceled)).assertIsDisplayed()
+        compose
+            .onNodeWithText(controller.get().getString(R.string.SignInCanceled))
+            .assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
         compose.onNodeWithTag(TestTags.LOGIN_BUTTON).assertIsEnabled()
     }
 

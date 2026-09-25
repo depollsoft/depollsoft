@@ -2,9 +2,7 @@ package depollsoft.tagmaster
 
 import depollsoft.compose.revealItem
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,15 +25,11 @@ import kotlinx.coroutines.launch
  * titled with the search text.
  */
 open class TagSearchResultsActivity :
-    AppCompatActivity(),
-    TagPaneHost {
+    TagPaneActivity() {
     lateinit var model: QueryModel
         private set
 
     private val retained: RetainedQueries by viewModels()
-
-    internal lateinit var tagPane: TagPaneState
-        private set
 
     /** The toolbar title; the search text. */
     protected open val screenTitle: String?
@@ -69,36 +63,6 @@ open class TagSearchResultsActivity :
         } catch (_: Exception) {
             null
         }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        tagPane.save(outState)
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onDestroy() {
-        tagPane.stop()
-        super.onDestroy()
-    }
-
-    override val hasDetailPane: Boolean
-        get() = tagPane.hasDetailPane
-
-    override var selectedTagId: Int?
-        get() = tagPane.selectedTagId
-        set(value) {
-            tagPane.selectedTagId = value
-        }
-
-    override fun showTag(id: Int) = tagPane.showTag(id)
-
-    override fun listedTagIds(): List<Int> = tagPane.listedTagIds()
-
-    override fun revealTag(id: Int) = tagPane.revealTag(id)
-
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent,
-    ): Boolean = tagPane.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
     companion object {
         const val QUERY_MODEL = "QueryModel"

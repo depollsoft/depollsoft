@@ -99,7 +99,7 @@ public class PitchPipeModelTest {
     public void setIsFromFToF_true_switchesToFToFScale() {
         PitchPipeModel model = new PitchPipeModel();
 
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
         StateList<Note> notes = model.getNotes();
         assertEquals("F-to-F scale should have 13 notes", 13, notes.size());
@@ -120,9 +120,9 @@ public class PitchPipeModelTest {
     @Test
     public void setIsFromFToF_false_switchesToCToCScale() {
         PitchPipeModel model = new PitchPipeModel();
-        model.setIsFromFToF(true); // First switch to F-to-F
+        model.setFromFToF(true); // First switch to F-to-F
 
-        model.setIsFromFToF(false); // Then switch back to C-to-C
+        model.setFromFToF(false); // Then switch back to C-to-C
 
         StateList<Note> notes = model.getNotes();
 
@@ -136,33 +136,33 @@ public class PitchPipeModelTest {
     public void getIsFromFToF_returnsFalse_byDefault() {
         PitchPipeModel model = new PitchPipeModel();
 
-        assertFalse("isFromFToF should be false by default", model.getIsFromFToF());
+        assertFalse("isFromFToF should be false by default", model.isFromFToF());
     }
 
     @Test
     public void getIsFromFToF_returnsTrue_afterSetToTrue() {
         PitchPipeModel model = new PitchPipeModel();
 
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
-        assertTrue("isFromFToF should be true after setting", model.getIsFromFToF());
+        assertTrue("isFromFToF should be true after setting", model.isFromFToF());
     }
 
     @Test
     public void isFromFToF_persistsAcrossInstances() {
         PitchPipeModel model1 = new PitchPipeModel();
-        model1.setIsFromFToF(true);
+        model1.setFromFToF(true);
 
         // Create a new instance - it should read the persisted preference
         PitchPipeModel model2 = new PitchPipeModel();
 
-        assertTrue("New instance should have persisted isFromFToF value", model2.getIsFromFToF());
+        assertTrue("New instance should have persisted isFromFToF value", model2.isFromFToF());
     }
 
     @Test
     public void fToFScale_containsCorrectNotes() {
         PitchPipeModel model = new PitchPipeModel();
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
 
         StateList<Note> notes = model.getNotes();
 
@@ -217,15 +217,15 @@ public class PitchPipeModelTest {
         assertEquals("C", model.getNotes().get(0).getFriendlyName());
 
         // Switch to F-to-F
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
         assertEquals("F", model.getNotes().get(0).getFriendlyName());
 
         // Switch back to C-to-C
-        model.setIsFromFToF(false);
+        model.setFromFToF(false);
         assertEquals("C", model.getNotes().get(0).getFriendlyName());
 
         // Switch to F-to-F again
-        model.setIsFromFToF(true);
+        model.setFromFToF(true);
         assertEquals("F", model.getNotes().get(0).getFriendlyName());
     }
 }

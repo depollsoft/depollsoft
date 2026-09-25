@@ -12,16 +12,16 @@ import kotlin.math.sin
  * the ring's hole.
  */
 class PitchInstrumentGeometry(
-    val width: Int,
-    val height: Int,
+    override val width: Int,
+    override val height: Int,
     cellCount: Int,
-) {
+) : InstrumentGeometry {
     val faceCx = width / 2f
     val faceCy = height * FACE_CENTER_Y
     val ringRadius = min(width.toFloat(), height * FACE_HEIGHT_FRACTION) * RING_FRACTION
     val cellRadius = ringRadius * if (cellCount > 12) 0.225f else 0.245f
 
-    val cellCenters: List<FloatArray> =
+    override val cellCenters: List<FloatArray> =
         List(cellCount.coerceAtLeast(1)) { i ->
             val step = 360.0 / cellCount.coerceAtLeast(1)
             val angle = Math.toRadians(-90.0 + step / 2.0 + i * step)
@@ -47,8 +47,7 @@ class PitchInstrumentGeometry(
     val rangeHighRect: Rect =
         Rect(rangeLowRect.left, rangeLowRect.bottom, rangeLowRect.right, rangeLowRect.bottom + rangeLowRect.height())
 
-    /** The range row under a point: 0 for C to C, 1 for F to F, -1 for neither. */
-    fun rangeRowAt(
+    override fun rangeRowAt(
         x: Float,
         y: Float,
     ): Int =
@@ -59,7 +58,7 @@ class PitchInstrumentGeometry(
         }
 
     /** The cell under a point, with a little slack around its rim, or -1. */
-    fun cellAt(
+    override fun cellAt(
         x: Float,
         y: Float,
     ): Int {
@@ -70,7 +69,8 @@ class PitchInstrumentGeometry(
         return -1
     }
 
-    fun cellBounds(index: Int): Rect {
+    /** A screen reader finds a cell in the square around its disc. */
+    override fun cellTarget(index: Int): Rect {
         val c = cellCenters[index]
         return Rect(
             (c[0] - cellRadius).toInt(),
@@ -79,6 +79,8 @@ class PitchInstrumentGeometry(
             (c[1] + cellRadius).toInt(),
         )
     }
+
+    override fun rangeTarget(row: Int): Rect = Rect(if (row == 0) rangeLowRect else rangeHighRect)
 
     companion object {
         const val FACE_CENTER_Y = 0.44f

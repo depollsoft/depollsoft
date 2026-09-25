@@ -1,11 +1,12 @@
 package depollsoft.tagmaster
 
 import android.app.Application
+import androidx.compose.runtime.snapshots.Snapshot
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
-import depollsoft.lib.util.Preferences
 import depollsoft.lib.state.SnapshotNotifications
 import depollsoft.lib.state.watchState
+import depollsoft.lib.util.Preferences
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -44,6 +45,23 @@ class TagListsTest {
         clearStoredLists()
         TagLists.resetForTest()
         Preferences.clearTestValues()
+    }
+
+    @Test
+    fun theFirstReadWorksInsideAReadOnlySnapshot() {
+        val key = TagLists.create("Afterglow set")
+        // A new process: the registry is read again on first use, here inside a snapshotFlow-style
+        // read-only snapshot, where writing state would throw.
+        TagLists.resetForTest()
+        val snapshot = Snapshot.takeSnapshot()
+        val keys =
+            try {
+                snapshot.enter { TagLists.customKeys.toList() }
+            } finally {
+                snapshot.dispose()
+            }
+        assertEquals(listOf(key), keys)
+        assertEquals("Afterglow set", TagLists.name(key))
     }
 
     // MARK: - Names
