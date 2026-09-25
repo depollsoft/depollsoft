@@ -160,6 +160,42 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         ScreenCatalog.settle(0.5)
     }
 
+    func testTheSplitReusesTheDetailKeepsItsPageAndFollowsTheListItCameFrom() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "The split is iPad only")
+        seedCachedTag(id: 1809)
+        seedCachedTag(id: 42, title: "Other")
+        let list = TMTestListController(ids: [1809, 42])
+        let split = UISplitViewController(style: .doubleColumn)
+        split.preferredDisplayMode = .oneBesideSecondary
+        split.setViewController(UINavigationController(rootViewController: list), for: .primary)
+        split.setViewController(UINavigationController(rootViewController: TMTagPlaceholderController()), for: .secondary)
+        let splitWindow = ScreenCatalog.makeWindow()
+        splitWindow.rootViewController = split
+        splitWindow.makeKeyAndVisible()
+        window = splitWindow
+        ScreenCatalog.settle(0.3)
+
+        DPAppDelegate.showTag(withId: 1809, from: list)
+        let secondary = try XCTUnwrap(split.viewController(for: .secondary) as? UINavigationController)
+        let detail = try XCTUnwrap(secondary.viewControllers.first as? TagDetailViewController)
+        spinUntil("the tag loads", timeout: 5) { detail.model.tag != nil && detail.model.expanded }
+        XCTAssertTrue(detail.source === list)
+        XCTAssertEqual(DPAppDelegate.currentSplitTagId(for: list), 1809)
+        detail.model.selectedPage = .tracks
+
+        detail.stepToNextTag()
+        XCTAssertTrue(secondary.viewControllers.first === detail, "Stepping reuses the detail")
+        XCTAssertEqual(detail.tagId, 42)
+        XCTAssertEqual(detail.model.selectedPage, .tracks, "The open page survives the tag change")
+        XCTAssertEqual(list.steppedTo, [1809, 42], "The list follows the open tag")
+        spinUntil("the next tag loads", timeout: 5) { detail.model.tag?.tagId == 42 }
+        XCTAssertFalse(detail.canPerformAction(#selector(TagDetailViewController.stepToNextTag), withSender: nil))
+
+        DPAppDelegate.showTag(withId: 42, from: split.viewController(for: .primary)!)
+        XCTAssertNil(detail.source, "Opened from nowhere in particular, there is nothing to step through")
+        XCTAssertEqual(detail.keyCommands?.count ?? 0, 0)
+    }
+
     // MARK: - Summary
 
     func testTheSummaryOffersSheetMusicRatingAndTheKeyAsFullSizeTargets() {
@@ -447,4 +483,14 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertTrue(driver.element(label: "Pick a tag")?.accessibilityTraits.contains(.header) ?? false)
         XCTAssertTrue(driver.exists(label: "Choose a tag from the list. Its summary, tracks, sheet music, and videos open here."))
     }
+}
+
+/// A plain list screen that opens tags, as Home or a query list does.
+final class TMTestListController: UIViewController, TMTagListSource {
+    let ids: [Int]
+    private(set) var steppedTo: [Int32] = []
+    init(ids: [Int]) { self.ids = ids; super.init(nibName: nil, bundle: nil) }
+    required init?(coder: NSCoder) { fatalError() }
+    func tm_listedTagIds() -> [NSNumber] { ids.map { NSNumber(value: $0) } }
+    func tm_didStep(toTagId tagId: Int32) { steppedTo.append(tagId) }
 }

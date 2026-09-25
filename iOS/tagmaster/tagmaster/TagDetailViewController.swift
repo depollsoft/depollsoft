@@ -130,16 +130,20 @@ final class TagDetailViewController: UIViewController {
 
     // MARK: Keyboard stepping
 
-    @objc func stepToPreviousTag() { model.stepToPreviousTag() }
-    @objc func stepToNextTag() { model.stepToNextTag() }
+    // The split can change before this screen next lays out (a tag opened and stepped
+    // from in one turn), so each keyboard question re-reads it.
+    @objc func stepToPreviousTag() { updateExpanded(); model.stepToPreviousTag() }
+    @objc func stepToNextTag() { updateExpanded(); model.stepToNextTag() }
 
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        updateExpanded()
         if action == #selector(stepToPreviousTag) { return model.canStep && model.hasPreviousTag }
         if action == #selector(stepToNextTag) { return model.canStep && model.hasNextTag }
         return super.canPerformAction(action, withSender: sender)
     }
 
     override var keyCommands: [UIKeyCommand]? {
+        updateExpanded()
         guard model.canStep else { return super.keyCommands }
         let previous = UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: .command,
                                     action: #selector(stepToPreviousTag))
