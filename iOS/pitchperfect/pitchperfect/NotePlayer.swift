@@ -51,9 +51,29 @@ final class NotePlayer {
         }
     }
 
-    /// The finger lifted or slid away: only momentary notes stop.
+    /// The finger lifted (or the press was cancelled by a scroll): only
+    /// momentary notes stop.
     func pressEnded(_ note: DPNote) {
         guard !toggleNotes() else { return }
         stop(note)
+    }
+
+    /// How long a VoiceOver activation sounds a momentary note, as on the pitch pipe.
+    static let activationDuration: TimeInterval = 1.5
+
+    /// A VoiceOver double-tap: toggles with Toggle Notes, otherwise sounds the
+    /// note for `activationDuration`. (A synthesized touch would start and stop
+    /// it in the same instant.)
+    func activate(_ note: DPNote, after delay: @escaping (TimeInterval, @escaping () -> Void) -> Void = NotePlayer.later) {
+        if toggleNotes() {
+            pressBegan(note)
+            return
+        }
+        play(note)
+        delay(Self.activationDuration) { [weak self] in self?.stop(note) }
+    }
+
+    static func later(_ seconds: TimeInterval, _ work: @escaping () -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
     }
 }
