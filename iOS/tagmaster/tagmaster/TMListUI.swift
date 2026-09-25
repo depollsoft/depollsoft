@@ -116,13 +116,67 @@ struct TMScreenBackground: View {
 
     var body: some View {
         if sharedWatermark {
-            if grouped { Color(uiColor: .systemGroupedBackground).ignoresSafeArea() }
+            // UIKit set a grouped screen's colour on its own view, beneath the
+            // sidebar's glass; painted in SwiftUI it would sit above the glass.
+            if grouped { TMPageColorHook(color: .systemGroupedBackground) }
         } else {
             ZStack {
                 Color(uiColor: grouped ? .systemGroupedBackground : .systemBackground).ignoresSafeArea()
                 TMWatermark()
             }
         }
+    }
+}
+
+/// Colours the view of the controller a screen is hosted in, the layer UIKit
+/// screens painted their page colour on.
+private struct TMPageColorHook: UIViewControllerRepresentable {
+    let color: UIColor
+
+    final class Hook: UIViewController {
+        var color: UIColor = .clear
+
+        /// The screen's own controller: the ancestor a navigation controller holds.
+        private var screen: UIViewController? {
+            var controller: UIViewController? = parent
+            while let current = controller, !(current.parent is UINavigationController) {
+                controller = current.parent
+            }
+            return controller
+        }
+
+        func apply() {
+            guard let view = screen?.view, view.backgroundColor != color else { return }
+            view.backgroundColor = color
+        }
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            apply()
+        }
+
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            apply()
+        }
+
+        override func viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            apply()
+        }
+    }
+
+    func makeUIViewController(context: Context) -> Hook {
+        let hook = Hook()
+        hook.view.isHidden = true
+        hook.view.isUserInteractionEnabled = false
+        hook.color = color
+        return hook
+    }
+
+    func updateUIViewController(_ hook: Hook, context: Context) {
+        hook.color = color
+        hook.apply()
     }
 }
 
