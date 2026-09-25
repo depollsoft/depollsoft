@@ -72,8 +72,19 @@ final class SearchBehaviorTests: TMBehaviorTestCase {
         ])
         XCTAssertTrue(driver.exists(label: "Search Options"))
         XCTAssertTrue(driver.exists(label: "Searches match titles and lyrics. Leave the field empty to list every tag that matches the options."))
+        // At 375pt (iPhone SE) Parts gets 303pt, short of the 308pt its seven 44pt
+        // segments need, so it is a menu there, as it was in UIKit; the others are segments.
         let controls = descendants(of: window) { $0 is UISegmentedControl }.compactMap(\.accessibilityLabel)
-        XCTAssertEqual(controls, TMSearchModel.filters.map(\.title), "Each option names itself")
+        XCTAssertEqual(controls, ["Sort By", "Sheet Music", "Learning Tracks", "Collection"], "Each option names itself")
+        XCTAssertEqual(driver.elements.first { $0.accessibilityLabel == "Parts" }?.accessibilityValue, "Any")
+
+        let wide = TMScreens.search(navigator: navigator)
+        mountScreen(wide, size: CGSize(width: 402, height: 1400))
+        XCTAssertEqual(descendants(of: window) { $0 is UISegmentedControl }.compactMap(\.accessibilityLabel),
+                       TMSearchModel.filters.map(\.title), "At 402pt every option is a full-size segmented control")
+        for control in descendants(of: window, where: { $0 is UISegmentedControl }) {
+            XCTAssertGreaterThanOrEqual(control.bounds.height, 44)
+        }
     }
 
     // MARK: - Mapping options onto the query
