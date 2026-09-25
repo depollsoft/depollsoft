@@ -312,11 +312,17 @@ enum TMScreens {
                                 Button("Rename list…", systemImage: "pencil", action: model.promptRename)
                                 Button("Delete list…", systemImage: "trash", role: .destructive, action: model.confirmDelete)
                             } label: {
-                                TMBarButton.symbol("ellipsis.circle")
+                                TMBarButton.symbol("ellipsis.circle", scale: .large)
                             }
                             .accessibilityLabel("List options")
                             .accessibilityIdentifier("list.menu")
                         }
+                    }
+                    // UIKit gave the list menu and Edit a glass each.
+                    if #available(iOS 26.0, *) {
+                        ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
                         TMEditButton(isEditing: Binding(get: { model.isEditing }, set: { model.isEditing = $0 }))
                             .disabled(!model.canEdit)
                     }
@@ -391,9 +397,14 @@ struct TMEditButton: View {
         Button {
             withAnimation { isEditing.toggle() }
         } label: {
-            Text(isEditing ? "Done" : "Edit")
-                .fontWeight(isEditing ? .semibold : .regular)
+            // iOS 26 draws UIKit's done-style item as a checkmark in its own glass.
+            if isEditing {
+                TMBarButton.symbol("checkmark", scale: .large)
+            } else {
+                Text("Edit")
+            }
         }
+        .accessibilityLabel(isEditing ? "Done" : "Edit")
     }
 }
 

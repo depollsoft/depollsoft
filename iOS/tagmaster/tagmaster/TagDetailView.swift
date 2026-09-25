@@ -145,8 +145,10 @@ struct TMBarButton: View {
     }
 
     /// The same image a UIBarButtonItem gets, so the bar lays it out identically.
-    static func symbol(_ name: String) -> some View {
-        let configuration = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular, scale: .medium)
+    /// `.large` is what UIKit gives a bar image created without a configuration
+    /// (and its own system items, such as Done's checkmark).
+    static func symbol(_ name: String, scale: UIImage.SymbolScale = .medium) -> some View {
+        let configuration = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular, scale: scale)
         let image = UIImage(systemName: name, withConfiguration: configuration) ?? UIImage()
         // UIKit centres a bar image by its alignment rect; SwiftUI centres its bounds.
         let insets = image.alignmentRectInsets

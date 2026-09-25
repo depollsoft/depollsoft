@@ -68,6 +68,12 @@ enum ScreenCatalog {
     static func capture(_ name: String, window: UIWindow, settle seconds: TimeInterval = 0.35,
                         file: StaticString = #filePath, line: UInt = #line) -> UIImage {
         settle(seconds)
+        // A system dialog left on the simulator (an "Open in …?" prompt, say) keeps
+        // the host inactive; UIKit then never finishes presenting alerts, and the
+        // capture silently shows the screen without them.
+        XCTAssertEqual(window.windowScene?.activationState, .foregroundActive,
+                       "The host app is not frontmost; clear the simulator's system dialogs (or reboot it)",
+                       file: file, line: line)
         let image = image(of: window)
         XCTAssertGreaterThan(image.size.width, 0, file: file, line: line)
         if let directory {
