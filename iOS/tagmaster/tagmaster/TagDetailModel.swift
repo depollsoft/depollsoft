@@ -58,9 +58,14 @@ struct TMRecoverableError: Identifiable {
 @Observable @MainActor
 final class TMBusyCount {
     private(set) var count = 0
+    /// How many pieces of work have finished, so a double settlement shows up.
+    private(set) var settled = 0
     var isBusy: Bool { count > 0 }
     func begin() { count += 1 }
-    func end() { count = max(0, count - 1) }
+    func end() {
+        count = max(0, count - 1)
+        settled += 1
+    }
 }
 
 /// What the detail asks of the screen around it. The UIKit shell and the SwiftUI

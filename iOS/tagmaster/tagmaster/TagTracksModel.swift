@@ -11,6 +11,7 @@ import AVFoundation
 import Foundation
 import Observation
 import os
+import UIKit
 
 /// Fetches a track (from the file cache or the network) and decodes it into a
 /// PCM buffer the balance player can render. Subclassed in tests.
@@ -304,6 +305,8 @@ final class TagTracksModel {
     // Seams for tests: how a track is fetched, and how long it may take.
     var makeLoader: (URL, String) -> TMTrackLoader = { TMTrackLoader(url: $0, cacheKey: $1) }
     var readyTimeout: TimeInterval = 30
+    /// Shows a decoded track in the inline player and starts it. Replaceable in tests.
+    var presentPlayer: ((DPTrack, AVAudioPCMBuffer) -> Void)?
 
     init(busy: TMBusyCount) {
         self.busy = busy
@@ -331,6 +334,13 @@ final class TagTracksModel {
         cancelLoading()
         player.unload()
         playerVisible = false
+    }
+
+    private func present(_ track: DPTrack, buffer: AVAudioPCMBuffer) {
+        player.load(track: track, buffer: buffer)
+        playerVisible = true
+        player.play()
+        UIAccessibility.post(notification: .layoutChanged, argument: nil)
     }
 
     func select(_ track: DPTrack) {
@@ -364,9 +374,11 @@ final class TagTracksModel {
             MainActor.assumeIsolated {
                 guard let self, let session, self.session === session, !self.hasLeft, self.tag === tag else { return }
                 self.session = nil
-                self.player.load(track: track, buffer: buffer)
-                self.playerVisible = true
-                self.player.play()
+                if let presentPlayer = self.presentPlayer {
+                    presentPlayer(track, buffer)
+                } else {
+                    self.present(track, buffer: buffer)
+                }
             }
         }, onFailure: { [weak self, weak session] in
             MainActor.assumeIsolated {
