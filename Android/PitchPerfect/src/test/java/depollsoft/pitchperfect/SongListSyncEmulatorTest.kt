@@ -74,10 +74,7 @@ class SongListSyncEmulatorTest {
             urlsReachTheNetwork(),
         )
 
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
         resetLists()

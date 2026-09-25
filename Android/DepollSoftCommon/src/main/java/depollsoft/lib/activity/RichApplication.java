@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,6 +18,12 @@ public class RichApplication extends Application {
 
   public static Context getAppContext() {
     return RichApplication.context;
+  }
+
+  /** Unit tests run with a plain Application; this gives the shared helpers its context. */
+  @VisibleForTesting
+  public static void setAppContextForTesting(Context context) {
+    RichApplication.context = context;
   }
 
   @Override

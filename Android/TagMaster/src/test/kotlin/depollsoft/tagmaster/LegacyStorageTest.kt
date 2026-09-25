@@ -39,10 +39,7 @@ class LegacyStorageTest {
     @Before
     fun setUp() {
         TagMasterApplication.registerStorageAliases()
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, app)
+        RichApplication.setAppContextForTesting(app)
         rebindPreferences()
     }
 

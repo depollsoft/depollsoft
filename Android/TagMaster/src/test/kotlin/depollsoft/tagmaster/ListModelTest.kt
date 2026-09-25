@@ -26,9 +26,7 @@ class ListModelTest {
         
         // Initialize RichApplication context for Preferences
         val app = RuntimeEnvironment.getApplication()
-        val contextField = RichApplication::class.java.getDeclaredField("context")
-        contextField.isAccessible = true
-        contextField.set(null, app)
+        RichApplication.setAppContextForTesting(app)
         
         // Reset the singleton instances before each test
         resetModelInstances()

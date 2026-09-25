@@ -37,7 +37,7 @@ abstract class ComposeScreenTest {
         ScreenTestSupport.startClean()
         ScreenTestSupport.clearTagCaches()
         AuthState.setTestSource { false }
-        forgetPrivacy()
+        answerPrivacyPrompt()
     }
 
     @After
@@ -48,7 +48,7 @@ abstract class ComposeScreenTest {
     }
 
     /** Keeps the first-run privacy prompt out of the way, as a returning user would see it. */
-    private fun forgetPrivacy() {
+    private fun answerPrivacyPrompt() {
         depollsoft.lib.privacy.PrivacyChoices(app).save(analytics = false, crashes = false)
     }
 

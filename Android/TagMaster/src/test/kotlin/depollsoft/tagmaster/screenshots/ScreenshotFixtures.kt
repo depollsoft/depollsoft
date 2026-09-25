@@ -1,6 +1,5 @@
 package depollsoft.tagmaster.screenshots
 
-import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -189,11 +188,8 @@ internal object ScreenshotFixtures {
         shadowOf(Looper.getMainLooper()).idle()
     }
 
-    fun choosePrivacy(activity: Activity) {
-        depollsoft.lib.privacy.PrivacyChoices(activity).save(analytics = false, crashes = false)
-    }
-
-    fun forgetPrivacy() {
+    /** Clears the saved telemetry choices, so the privacy prompt shows as on a first launch. */
+    fun clearPrivacyChoices() {
         RuntimeEnvironment
             .getApplication()
             .getSharedPreferences("telemetry_consent", android.content.Context.MODE_PRIVATE)

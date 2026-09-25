@@ -2,9 +2,7 @@ package depollsoft.tagmaster
 
 import android.app.Activity
 import android.app.Application
-import android.os.Bundle
 import android.os.Looper
-import bolts.Task
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.json.JsonSerializer
 import depollsoft.lib.util.Preferences
@@ -191,10 +189,7 @@ internal object ScreenTestSupport {
     fun startClean() {
         blockNetwork()
 
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         // Keep every list write in memory, but never empty the store: `preference(key, default)`
         // registers its default once, when the owning object is first touched, and Robolectric
         // shares statics between test classes with the same configuration. Clearing here would
@@ -276,11 +271,6 @@ internal object ScreenTestSupport {
         return controller
     }
 
-    fun <A : Activity> launch(
-        clazz: Class<A>,
-        intent: android.content.Intent? = null,
-    ): ActivityController<A> = build(clazz, intent).also { it.setup(); idle() }
-
     /**
      * Dismiss the first-run changelog, which `MeActivity` shows from `onCreate`.
      *
@@ -353,52 +343,4 @@ internal object ScreenTestSupport {
         File(RuntimeEnvironment.getApplication().filesDir, "TagCache").deleteRecursively()
     }
 
-    /**
-     * Hold every tag request off the network for the duration of [block].
-     *
-     * `TagDetailActivity` exposes a `tagLoader` seam, supplied before `onCreate` through the
-     * platform's own `ActivityLifecycleCallbacks` — the seam the instrumented
-     * `LayoutRegressionTest` used. Query screens stay off the network through [withTransport].
-     */
-    fun <T> withLocalData(
-        loader: (Int, Boolean) -> Task<Tag>,
-        block: () -> T,
-    ): T {
-        val app = RuntimeEnvironment.getApplication() as Application
-        val callbacks =
-            object : Application.ActivityLifecycleCallbacks {
-                override fun onActivityPreCreated(
-                    activity: Activity,
-                    state: Bundle?,
-                ) {
-                    if (activity is TagDetailActivity) activity.tagLoader = loader
-                }
-
-                override fun onActivityCreated(
-                    a: Activity,
-                    b: Bundle?,
-                ) = Unit
-
-                override fun onActivityStarted(a: Activity) = Unit
-
-                override fun onActivityResumed(a: Activity) = Unit
-
-                override fun onActivityPaused(a: Activity) = Unit
-
-                override fun onActivityStopped(a: Activity) = Unit
-
-                override fun onActivitySaveInstanceState(
-                    a: Activity,
-                    b: Bundle,
-                ) = Unit
-
-                override fun onActivityDestroyed(a: Activity) = Unit
-            }
-        app.registerActivityLifecycleCallbacks(callbacks)
-        return try {
-            block()
-        } finally {
-            app.unregisterActivityLifecycleCallbacks(callbacks)
-        }
-    }
 }

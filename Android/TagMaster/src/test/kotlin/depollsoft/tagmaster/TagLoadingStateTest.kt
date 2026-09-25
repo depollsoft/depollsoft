@@ -59,10 +59,7 @@ class TagLoadingStateTest {
 
     @Before
     fun context() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
     }
 
     private fun build(fast: Boolean = false): ActivityController<TagDetailActivity> {

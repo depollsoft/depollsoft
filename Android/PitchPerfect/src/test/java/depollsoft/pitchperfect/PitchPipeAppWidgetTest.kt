@@ -1,6 +1,8 @@
 package depollsoft.pitchperfect
 
 import android.content.Intent
+import android.os.Looper
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import depollsoft.lib.activity.RichApplication
 import depollsoft.lib.util.Preferences
@@ -13,9 +15,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.time.Duration
 
 /** The home-screen widget's taps, and the app redrawing it when the pitch pipe's range changes. */
 @RunWith(RobolectricTestRunner::class)
@@ -61,14 +64,19 @@ class PitchPipeAppWidgetTest {
             .apply { if (accidental != null) putExtra(PitchPipeAppWidget.EXTRA_ACCIDENTAL, accidental) },
     )
 
+    /** The model's default hook is the widget's coalesced redraw, 40ms after the last change. */
     @Test
     fun theAppRedrawsTheWidgetWhenTheRangeChanges() {
-        Mockito.mockStatic(PitchPipeAppWidget::class.java).use { widgets ->
-            val model = PitchPipeModel()
-            widgets.verifyNoInteractions()
-            model.isFromFToF = true
-            widgets.verify { PitchPipeAppWidget.updateWidgets() }
-        }
+        val looper = shadowOf(Looper.getMainLooper())
+        val model = PitchPipeModel()
+        looper.idle()
+        model.isFromFToF = true
+        looper.idle()
+        assertEquals(
+            Duration.ofMillis(40),
+            looper.nextScheduledTaskTime.minus(Duration.ofMillis(SystemClock.uptimeMillis())),
+        )
+        looper.idleFor(Duration.ofMillis(40))
     }
 
     @Test

@@ -62,7 +62,7 @@ class TagMasterScreenshotTest {
     fun setUp() {
         ScreenTestSupport.startClean()
         ScreenTestSupport.clearTagCaches()
-        ScreenshotFixtures.forgetPrivacy()
+        ScreenshotFixtures.clearPrivacyChoices()
         ScreenshotFixtures.cacheTags()
         ScreenshotFixtures.pinVersion()
         AuthState.setTestSource { false }

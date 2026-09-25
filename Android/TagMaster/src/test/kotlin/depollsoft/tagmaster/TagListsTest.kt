@@ -31,10 +31,7 @@ import org.robolectric.annotation.Config
 class TagListsTest {
     @Before
     fun setUp() {
-        RichApplication::class.java
-            .getDeclaredField("context")
-            .apply { isAccessible = true }
-            .set(null, RuntimeEnvironment.getApplication())
+        RichApplication.setAppContextForTesting(RuntimeEnvironment.getApplication())
         ListModel.setTestMode(true)
         Preferences.setTestMode(true)
         Preferences.clearTestValues()
