@@ -41,6 +41,14 @@ diffed against that capture, as the Android Compose port did.
   buttons), explicit paddings taken from the old constraints, hairlines drawn at
   the same widths. Animated regions (breathing cells, the barber pole, the
   quartet) are compared at rest.
+- Keep the simulator clean. A system dialog left on it (an "Open in …?" prompt
+  from `simctl openurl`) keeps the host app inactive, and UIKit then never
+  finishes presenting alerts; `ScreenCatalog.capture` now fails in that state.
+  Preferences written with `simctl spawn … defaults write <bundle id>` land in
+  a device-wide domain the app also reads, so a later in-app reset cannot clear
+  them; don't seed app defaults that way.
+- Run XCUITests with `xcodebuild test` after changing them: a
+  `test-without-building` run can use a previously installed UI test runner.
 
 ## Driving screens in tests
 
@@ -212,9 +220,23 @@ each over an `@Observable` model.
   (`TMHostedScreen`, a test-only `TagDetailViewController`) and mounts the real
   shell (`mountShell`). `TMRouterTests` covers routing and the deep-link
   grammar; the catalogs capture through the real shell.
-- **Differences from UIKit.** On iPad the list column is SwiftUI's sidebar and
-  is opaque over the watermark, where the UIKit list was translucent; the old
-  catalogs' iPad goldens used an empty stand-in list, so their list column
-  differs by design. Edit's Done is semibold text rather than UIKit's done-style
-  glass button.
+- **Sidebar backgrounds.** Search and Settings colour their hosting
+  controller's view (`TMPageColorHook`), beneath the sidebar's glass, as the
+  UIKit screens coloured their own view; painted in SwiftUI the grey sat above
+  the glass and whole columns differed.
+- **Bar items.** Edit's Done is UIKit's done-style checkmark in its own glass,
+  and the list menu gets a glass of its own. Symbols UIKit created without a
+  configuration use the large scale (`TMBarButton.symbol(_:scale:)`).
+- **Page bars.** `TMPageTabBarBridge` (detail and Browse) gives the bar its
+  identifiers, keeps it compact-width on iPad, and pins its vertical size class
+  to regular so a phone in landscape keeps the full-height bar and 44-point
+  targets the UIKit bar had. The landscape pill spans more of the width than
+  UIKit's did.
+- **Search.** The field keeps the bar and its Search action while in use
+  (`searchPresentationToolbarBehavior(.avoidHidingContent)`), as the UIKit
+  search controller did.
+- **Remaining differences from UIKit.** The detail catalog's iPad goldens were
+  recaptured with the real Home in the list column (the first ones used an
+  empty stand-in). In the iPad sidebar, tag rows' media marks sit about 1.7 pt
+  higher than UIKit's (about 4% of a Browse capture).
 
