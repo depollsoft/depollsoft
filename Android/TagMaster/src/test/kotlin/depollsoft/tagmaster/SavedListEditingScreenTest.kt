@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
  * open tags while editing, and editing ends when the list empties.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class SavedListEditingScreenTest : ComposeScreenTest() {
     private val ids = listOf(2147483017, 2147483018, 2147483019)
 

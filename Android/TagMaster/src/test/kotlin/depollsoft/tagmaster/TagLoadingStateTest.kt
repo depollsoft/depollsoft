@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
  * tag the screen has moved on from never landing.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class TagLoadingStateTest {
     @get:Rule
     val compose = createEmptyComposeRule()

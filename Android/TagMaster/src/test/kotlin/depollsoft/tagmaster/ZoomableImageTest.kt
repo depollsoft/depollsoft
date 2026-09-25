@@ -24,7 +24,7 @@ import org.robolectric.annotation.Config
 
 /** Sheet music zooms and pans as PhotoView did: stepped double-tap zoom in 200ms, a gliding pan, and double-tap-and-drag zoom. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class ZoomableImageTest {
     @get:Rule
     val compose = createComposeRule()

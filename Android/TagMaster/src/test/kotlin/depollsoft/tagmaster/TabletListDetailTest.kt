@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
  * chevrons walk the list the user is looking at.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w1280dp-h800dp-land-xhdpi")
+@Config(application = Application::class, qualifiers = "w1280dp-h800dp-land-xhdpi")
 class TabletListDetailTest : ComposeScreenTest() {
     private val ids = listOf(2147483017, 2147483018, 2147483019)
 

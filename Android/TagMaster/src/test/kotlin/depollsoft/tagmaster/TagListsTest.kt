@@ -27,7 +27,7 @@ import org.robolectric.annotation.Config
  * nothing here needs — or can reach — a FirebaseApp.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [28])
+@Config(application = Application::class)
 class TagListsTest {
     @Before
     fun setUp() {

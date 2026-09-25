@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
  * picker behind "Add to list", each following changes made anywhere while it is open.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class TagDetailActivityScreenTest : ComposeScreenTest() {
     private val fixture = ScreenTestSupport.fixtureTag()
 

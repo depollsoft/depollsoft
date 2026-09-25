@@ -12,7 +12,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class QuartetArtworkTest {
     @Test fun sampled_motion_is_linear_periodic_and_settled() {

@@ -22,7 +22,7 @@ import org.robolectric.annotation.Config
 
 /** The Pitch Pipe tab around its face: when it re-reads the toggle setting. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class PitchPipeScreenTest {
     @get:Rule
     val compose = createComposeRule()

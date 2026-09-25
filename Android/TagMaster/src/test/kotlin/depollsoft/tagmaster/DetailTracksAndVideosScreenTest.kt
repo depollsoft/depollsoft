@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 
 /** The Tracks and Videos pages: what a tag without tracks or videos shows, and what a full one lists. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class DetailTracksAndVideosScreenTest : ComposeScreenTest() {
     private fun open(
         tag: Tag,

@@ -36,7 +36,7 @@ import java.time.Duration
 
 /** The Notes and Keys tabs: rows that sound while held, the key lists and their switch. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class PitchRowsTest {
     @get:Rule
     val compose = createComposeRule()

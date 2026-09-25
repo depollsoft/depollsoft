@@ -39,7 +39,7 @@ import org.robolectric.annotation.Config
 
 /** How a dragged row and its neighbours move: lift, slide aside, settle, and the haptics on the way. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class RowDragTest {
     @get:Rule
     val compose = createComposeRule()

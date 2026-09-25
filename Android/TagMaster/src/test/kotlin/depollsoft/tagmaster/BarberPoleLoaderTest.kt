@@ -29,7 +29,7 @@ import org.robolectric.annotation.GraphicsMode
  * move while the frame stays still, and a seamless loop.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BarberPoleLoaderTest {
     @get:Rule

@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
  * and rounding a size to whole pixels must go back through that same curve.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "xxhdpi", fontScale = 2f)
+@Config(application = Application::class, qualifiers = "xxhdpi", fontScale = 2f)
 class LargeFontTest {
     @get:Rule
     val compose = createComposeRule()

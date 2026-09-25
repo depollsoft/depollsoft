@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
  * were written by that code, before its models moved to snapshot state.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], manifest = Config.NONE)
+@Config(manifest = Config.NONE)
 class StoredDataTest {
     @Before
     fun setUp() {

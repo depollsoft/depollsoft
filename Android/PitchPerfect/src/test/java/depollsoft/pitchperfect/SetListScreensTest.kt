@@ -36,7 +36,7 @@ import org.robolectric.annotation.Config
 
 /** The Set Lists screen and the Add Songs picker. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class SetListScreensTest {
     @get:Rule
     val compose = createEmptyComposeRule()

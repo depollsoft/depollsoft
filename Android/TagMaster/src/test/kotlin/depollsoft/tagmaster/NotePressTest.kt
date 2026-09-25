@@ -41,7 +41,7 @@ import org.robolectric.annotation.Config
  * is ever stopped. Ported from the pitch-pipe button cases that covered the View implementation.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class NotePressTest {
     @get:Rule
     val compose = createComposeRule()

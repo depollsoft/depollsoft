@@ -19,7 +19,7 @@ import org.robolectric.annotation.Config
 
 /** Snackbars stay up as long as MDC's did: 1500ms short, 2750ms long, until dismissed when indefinite. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class SnackbarTimingTest {
     @get:Rule
     val compose = createComposeRule()

@@ -25,7 +25,7 @@ import org.robolectric.annotation.GraphicsMode
 /** Dialogs, menus and snackbars, captured with every window on screen. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
+@Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class DialogScreenshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()

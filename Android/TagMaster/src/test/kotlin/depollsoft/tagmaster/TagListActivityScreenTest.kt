@@ -13,7 +13,7 @@ import org.robolectric.annotation.Config
 
 /** One custom list: its title and empty state, renaming and deleting it, and closing when it goes away. */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class TagListActivityScreenTest : ComposeScreenTest() {
     private val fixture = ScreenTestSupport.fixtureTag()
 

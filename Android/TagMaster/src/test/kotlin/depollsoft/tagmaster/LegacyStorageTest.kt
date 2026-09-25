@@ -26,7 +26,7 @@ import java.util.TimeZone
  * pre-lists favorites format, a cached tag, the rated-tag set and a saved search.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class LegacyStorageTest {
     private val app get() = RuntimeEnvironment.getApplication()
     private val defaultZone = TimeZone.getDefault()

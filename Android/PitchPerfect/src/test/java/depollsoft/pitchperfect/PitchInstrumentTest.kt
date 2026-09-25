@@ -43,7 +43,7 @@ import kotlin.math.PI
  * draws with.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class PitchInstrumentTest {
     @get:Rule
     val compose = createComposeRule()

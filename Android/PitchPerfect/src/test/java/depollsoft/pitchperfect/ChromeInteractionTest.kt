@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config
 
 /** The main screen's chrome as a person handles it: tooltips, tabs, the overflow and the snackbar. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = "w411dp-h891dp")
+@Config(application = RichApplication::class, qualifiers = "w411dp-h891dp")
 class ChromeInteractionTest {
     @get:Rule
     val compose = createEmptyComposeRule()

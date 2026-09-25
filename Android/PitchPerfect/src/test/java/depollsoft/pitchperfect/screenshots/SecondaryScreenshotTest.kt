@@ -27,7 +27,7 @@ import org.robolectric.annotation.GraphicsMode
 /** The screens the main screen opens: the song editor, add-from-list, set lists and settings. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
+@Config(application = RichApplication::class, qualifiers = ScreenshotSupport.PHONE)
 class SecondaryScreenshotTest {
     @get:Rule
     val compose = createEmptyComposeRule()

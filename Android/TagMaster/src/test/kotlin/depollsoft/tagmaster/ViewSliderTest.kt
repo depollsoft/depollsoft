@@ -39,7 +39,7 @@ import org.robolectric.annotation.Config
 /** The track sliders answer touch, a keyboard or a D-pad as MDC's slider did inside a scrolling page. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35])
+@Config(application = Application::class)
 class ViewSliderTest {
     @get:Rule
     val compose = createComposeRule()

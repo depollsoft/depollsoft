@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
  * no tab in between lit on the way, and presses ripple in a color that shows on the charcoal chrome.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class ChromeInteractionScreenTest : ComposeScreenTest() {
     private fun selected(tag: String) = node(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Selected) == true
 

@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
  * Favorites, the footer, list management from the rows, and edit mode.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(application = Application::class, sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(application = Application::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class MeActivityScreenTest : ComposeScreenTest() {
     private val fixture = ScreenTestSupport.fixtureTag()
 
