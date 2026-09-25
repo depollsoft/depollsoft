@@ -85,7 +85,9 @@ final class TMListPickerModel {
 }
 
 struct TMListPicker: View {
-    @Environment(\.tmAccent) private var accent
+    /// The rows set their accent explicitly, as the UIKit cells did.
+    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State var model: TMListPickerModel
     @Environment(\.dismiss) private var dismiss
 
@@ -103,8 +105,7 @@ struct TMListPicker: View {
                 .accessibilityIdentifier("picker.row.new")
             }
             .listStyle(.insetGrouped)
-            // UITableView's inset groups sat 4.67 pt further in than SwiftUI's.
-            .contentMargins(.horizontal, 25.33, for: .scrollContent)
+            .modifier(TMInsetGroupMargins())
             .focusEffectDisabled()
             .accessibilityIdentifier("picker.table")
             .navigationTitle("Add to list")
@@ -115,6 +116,8 @@ struct TMListPicker: View {
                         .accessibilityIdentifier("picker.done")
                 }
             }
+            // The grabber belongs to the iPhone sheet, not the iPad popover.
+            .presentationDragIndicator(sizeClass == .compact ? .visible : .hidden)
             .alert("New list", isPresented: $model.namingNewList) {
                 TextField("List name", text: $model.newListName)
                     .textInputAutocapitalization(.sentences)
@@ -128,7 +131,6 @@ struct TMListPicker: View {
                 Text(model.newListMessage)
             }
         }
-        .tmFollowsUIKitTint()
     }
 
     private func row(_ key: String) -> some View {
@@ -152,12 +154,12 @@ extension View {
     /// Presents the list picker for the detail's tag while `source` is the one that opened it.
     func tmListPicker(model: TagDetailModel, source: TMPickerSource) -> some View {
         popover(isPresented: Binding(get: { model.pickerPresented(from: source) },
-                                     set: { if !$0, model.pickerSource == source { model.pickerSource = nil } })) {
+                                     set: { if !$0, model.pickerSource == source { model.pickerSource = nil } }),
+                attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
             TMListPicker(model: TMListPickerModel(tagId: model.tagId))
                 .frame(idealWidth: 340, idealHeight: 420)
                 .presentationCompactAdaptation(.sheet)
                 .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
         }
     }
 }
@@ -166,7 +168,7 @@ extension View {
 /// centred in its column, the name 48 pt in, the count at the trailing edge
 /// (or beside the checkmark accessory).
 private struct TMPickerRowLayout: View {
-    @Environment(\.tmAccent) private var accent
+    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
     let symbol: String
     let iconColor: Color
     let name: String
@@ -202,7 +204,7 @@ private struct TMPickerRowLayout: View {
 
 /// A navigation bar Done button in UIKit's .done style: the prominent accent glass on iOS 26.
 struct TMDoneButton: View {
-    @Environment(\.tmAccent) private var accent
+    private let accent = Color(DPAppDelegate.accentColor() ?? .tintColor)
     let action: () -> Void
 
     var body: some View {
@@ -212,6 +214,19 @@ struct TMDoneButton: View {
                 .tint(accent)
         } else {
             Button("Done", action: action).fontWeight(.semibold)
+        }
+    }
+}
+
+/// On iPhone UITableView's inset groups sat 4.67 pt further in than SwiftUI's.
+private struct TMInsetGroupMargins: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    func body(content: Content) -> some View {
+        if sizeClass == .compact {
+            content.contentMargins(.horizontal, 25.33, for: .scrollContent)
+        } else {
+            content
         }
     }
 }

@@ -12,13 +12,20 @@ import SwiftUI
 struct TagDetailScreen: View {
     @Bindable var model: TagDetailModel
     @Environment(\.tmAccent) private var accent
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         ZStack {
             if model.isEmpty {
                 TagLoadingView(model: model)
             } else {
+                // Beside a list the detail runs under the floating list column; the
+                // pages and their bar belong to the horizontal safe area, not the bounds.
+                // TabView grows into any safe area its edges touch; a hair of padding
+                // keeps it off the column's unsafe strip, where the UIKit bar never went. (Drawing
+                // it back a pixel with an offset counts as touching again.)
                 pages
+                    .padding(.horizontal, 1 / displayScale)
             }
         }
         .navigationTitle(model.title)
