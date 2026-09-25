@@ -24,12 +24,15 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class LayoutRegressionTest {
-    @get:Rule
+    @get:Rule(order = 0)
+    val sandbox = SavedListsSandbox()
+
+    @get:Rule(order = 1)
     val compose = createEmptyComposeRule()
 
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
-    private val longTitle = "Sweet Adeline, the one I dream of when the harmonies ring all night long and the tags keep coming"
 
+    /** Clears this test's lists from memory; [sandbox] then restores the stored copy. */
     @After
     fun tearDown() {
         instrumentation.runOnMainSync {
@@ -37,6 +40,7 @@ class LayoutRegressionTest {
             TagLists.customKeys.toList().forEach(TagLists::delete)
         }
     }
+    private val longTitle = "Sweet Adeline, the one I dream of when the harmonies ring all night long and the tags keep coming"
 
     private fun onScreen(
         tag: String,

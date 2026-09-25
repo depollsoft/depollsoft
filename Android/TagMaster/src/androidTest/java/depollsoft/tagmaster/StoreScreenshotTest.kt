@@ -24,7 +24,10 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class StoreScreenshotTest {
-    @get:Rule
+    @get:Rule(order = 0)
+    val sandbox = SavedListsSandbox()
+
+    @get:Rule(order = 1)
     val compose = createEmptyComposeRule()
 
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()

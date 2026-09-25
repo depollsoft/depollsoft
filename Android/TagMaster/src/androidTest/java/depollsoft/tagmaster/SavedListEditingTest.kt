@@ -23,7 +23,10 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class SavedListEditingTest {
-    @get:Rule
+    @get:Rule(order = 0)
+    val sandbox = SavedListsSandbox()
+
+    @get:Rule(order = 1)
     val compose = createEmptyComposeRule()
 
     private val ids = listOf(2147483017, 2147483018, 2147483019, 2147483020)
