@@ -1,7 +1,6 @@
 
 #import <XCTest/XCTest.h>
 #import "DPAudioSynthesizer.h"
-#import "DPPitchPipeButton.h"
 #import "DPNote.h"
 #import "DPAccidental.h"
 
@@ -19,8 +18,5 @@
     [synth start];
     [synth stop];
 }
-
-// Note: DPPitchPipeButton tests are skipped as they require UIButton+Block category
-// which is not available in the test environment. Full button tests are in DPPitchPipeButtonTests.
 
 @end
