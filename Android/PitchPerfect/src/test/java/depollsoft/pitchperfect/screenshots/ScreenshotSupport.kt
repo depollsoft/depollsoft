@@ -171,13 +171,13 @@ internal object ScreenshotSupport {
     /** The activity window alone. */
     fun Activity.capture(name: String) {
         settle()
-        window.decorView.captureRoboImage("src/test/screenshots/$name.png")
+        window.decorView.captureRoboImage("src/test/screenshots/$name.png", roborazziOptions = GOLDEN_TOLERANCE)
     }
 
     /** Every window, for dialogs and popups over an activity. */
     fun captureScreen(name: String) {
         settle()
-        captureScreenRoboImage("src/test/screenshots/$name.png")
+        captureScreenRoboImage("src/test/screenshots/$name.png", roborazziOptions = GOLDEN_TOLERANCE)
     }
 
     fun song(

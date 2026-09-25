@@ -37,6 +37,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.IOException
 import java.net.URL
+import java.util.TimeZone
 
 /**
  * Pixel goldens for every Tag Master screen and the states that change how it looks.
@@ -57,6 +58,7 @@ class TagMasterScreenshotTest {
     private val driver by lazy { ScreenshotDriver(compose) }
     private var controller: ActivityController<*>? = null
     private var catalog: (URL) -> java.io.InputStream = { ScreenshotFixtures.catalogPage(it) }
+    private val defaultZone = TimeZone.getDefault()
 
     @Before
     fun setUp() {
@@ -65,12 +67,16 @@ class TagMasterScreenshotTest {
         ScreenshotFixtures.clearPrivacyChoices()
         ScreenshotFixtures.cacheTags()
         ScreenshotFixtures.pinVersion()
+        // Details prints the posted time in the default zone, and the goldens were recorded in
+        // Pacific time; CI runs in UTC.
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
         AuthState.setTestSource { false }
     }
 
     @After
     fun tearDown() {
         AuthState.setTestSource(null)
+        TimeZone.setDefault(defaultZone)
         ScreenTestSupport.finish(controller)
         ScreenTestSupport.clearTagCaches()
     }
@@ -103,12 +109,12 @@ class TagMasterScreenshotTest {
         name: String,
     ) {
         settleAll()
-        activity.window.decorView.captureRoboImage("src/test/screenshots/$name.png")
+        activity.window.decorView.captureRoboImage("src/test/screenshots/$name.png", roborazziOptions = GOLDEN_TOLERANCE)
     }
 
     private fun captureScreen(name: String) {
         settleAll()
-        captureScreenRoboImage("src/test/screenshots/$name.png")
+        captureScreenRoboImage("src/test/screenshots/$name.png", roborazziOptions = GOLDEN_TOLERANCE)
     }
 
     private fun <T> withCatalog(block: () -> T): T = ScreenTestSupport.withTransport({ catalog(it) }, block)

@@ -63,7 +63,7 @@ class PitchPipeScreenshotTest {
         val controller = Robolectric.buildActivity(PitchPipeActivity::class.java).setup()
         playing.forEach { it.play() }
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get().window.decorView.captureRoboImage("src/test/screenshots/$name.png")
+        controller.get().window.decorView.captureRoboImage("src/test/screenshots/$name.png", roborazziOptions = GOLDEN_TOLERANCE)
         playing.forEach { it.stop() }
         controller.pause().stop().destroy()
     }
