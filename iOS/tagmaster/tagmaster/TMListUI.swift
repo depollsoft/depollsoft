@@ -57,7 +57,10 @@ struct TMLabelBox: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let child = subviews.first else { return .zero }
-        let size = child.sizeThatFits(proposal)
+        // Measure as placement does, free of the proposed height: a height limit
+        // would clamp wrapped text to one line here, and the text would then
+        // overflow its box, over its neighbours, once placed.
+        let size = child.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
         let line = child.sizeThatFits(.unspecified).height
         let lines = line > 0 ? max(1, (size.height / line).rounded()) : 1
         let scale = UIScreen.main.scale

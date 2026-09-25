@@ -132,6 +132,37 @@ final class QueryBehaviorTests: TMBehaviorTestCase {
         XCTAssertFalse(network.attemptedURLs.isEmpty, "The real request path ran")
     }
 
+    /// Every screen's recovery alert: the message, then Retry and Cancel, or Cancel
+    /// alone when trying again would not help.
+    func testTheRecoveryAlertOffersRetryOnlyWhenItCanHelp() throws {
+        struct Host: View {
+            @State var recovery: TMRecovery?
+            let initial: TMRecovery
+            var body: some View {
+                Color.clear
+                    .tmRecoveryAlert($recovery)
+                    .onAppear { recovery = initial }
+            }
+        }
+        var retried = 0
+        for (initial, titles) in [
+            (TMRecovery(message: "Check your connection and try again.", retry: { retried += 1 }), ["Retry", "Cancel"]),
+            (TMRecovery(message: "No results.", retry: nil), ["Cancel"]),
+        ] {
+            let host = UIHostingController(rootView: Host(initial: initial))
+            mount(host)
+            spinUntil("the alert shows") { host.presentedViewController is UIAlertController }
+            let alert = try XCTUnwrap(host.presentedViewController as? UIAlertController)
+            XCTAssertEqual(alert.title, TMRecovery.title)
+            XCTAssertEqual(alert.message, initial.message)
+            XCTAssertEqual(Set(alert.actions.compactMap(\.title)), Set(titles))
+            XCTAssertEqual(alert.actions.first { $0.title == "Cancel" }?.style, .cancel)
+            alert.dismiss(animated: false)
+            ScreenCatalog.settle(0.1)
+        }
+        XCTAssertEqual(retried, 0, "Showing the alert retries nothing")
+    }
+
     func testTheMountedFailureOffersRetry() {
         fixtures.available = nil
         let screen = TMScreens.results(TMTagQuery(text: "coney"), navigator: navigator, catalog: fixtures.catalog)
@@ -309,6 +340,53 @@ final class QueryBehaviorTests: TMBehaviorTestCase {
         XCTAssertFalse(content.hasLearningTracks)
         XCTAssertTrue(content.accessibilityLabel.contains("Sheet music unavailable"))
         XCTAssertTrue(content.accessibilityLabel.contains("Learning tracks unavailable"))
+    }
+
+    /// The marks are green checks when the media exists and grey crosses when it
+    /// doesn't, as DPTagCell tinted them; the spoken label never depends on colour.
+    func testATagRowTintsAvailableMediaGreenAndMissingMediaGrey() throws {
+        func greenPixels(_ tag: DPTag) -> Int {
+            let host = UIHostingController(rootView: TMTagRow(content: TMTagRowContent(tagId: Int(tag.tagId), tag: tag))
+                .frame(width: 320))
+            host.overrideUserInterfaceStyle = .light
+            mount(host, size: CGSize(width: 320, height: 200))
+            ScreenCatalog.settle(0.2)
+            guard let cg = ScreenCatalog.image(of: window).cgImage else { return 0 }
+            // Redraw into plain 8-bit sRGB so every pixel reads the same way.
+            let width = cg.width, height = cg.height
+            var pixels = [UInt8](repeating: 0, count: width * height * 4)
+            guard let context = CGContext(data: &pixels, width: width, height: height, bitsPerComponent: 8,
+                                          bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return 0 }
+            context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+            // A clearly green pixel: green well above both red and blue.
+            return stride(from: 0, to: pixels.count, by: 4).filter { index in
+                let r = Int(pixels[index]), g = Int(pixels[index + 1]), b = Int(pixels[index + 2])
+                return g > 150 && g - r > 60 && g - b > 40
+            }.count
+        }
+        let full = seedCachedTag(id: 1809, title: "Lost")
+        let bare = seedCachedTag(id: 4242, title: "Bare Tag", withTracks: false, withSheetMusic: false)
+        XCTAssertGreaterThan(greenPixels(full), 50, "Available media draws green checks")
+        XCTAssertEqual(greenPixels(bare), 0, "Missing media draws no green at all")
+        XCTAssertTrue(TMTagRowContent(tagId: 1809, tag: full).accessibilityLabel.contains("Sheet music available"))
+    }
+
+    /// At a sidebar's width the facts line wraps; each line keeps its own space
+    /// instead of spilling over the a.k.a. line above it.
+    func testATagRowsWrappedFactsNeverOverlapTheLinesAroundThem() throws {
+        let tag = seedCachedTag(id: 1809, title: "Lost")
+        let content = TMTagRowContent(tagId: 1809, tag: tag)
+        mount(UIHostingController(rootView: TMTagRow(content: content).frame(width: 320)),
+              size: CGSize(width: 320, height: 240))
+        ScreenCatalog.settle(0.2)
+        let driver = UIDriver(window)
+        let aka = try XCTUnwrap(driver.element(label: try XCTUnwrap(content.aka))).accessibilityFrame
+        let facts = try XCTUnwrap(driver.element(label: content.details)).accessibilityFrame
+        let sheet = try XCTUnwrap(driver.element(label: "Sheet music")).accessibilityFrame
+        XCTAssertGreaterThan(facts.height, aka.height * 1.5, "The facts wrap onto a second line at 320 points")
+        XCTAssertGreaterThanOrEqual(facts.minY, aka.maxY - 0.5, "The facts start below the a.k.a. line")
+        XCTAssertGreaterThanOrEqual(sheet.minY, facts.maxY - 0.5, "The media marks start below the facts")
     }
 
     func testATagRowLeavesOutWhatItsTagLacks() {

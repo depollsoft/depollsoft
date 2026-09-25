@@ -120,6 +120,23 @@ final class TMRouterTests: TMBehaviorTestCase {
         XCTAssertTrue(router.path.isEmpty, "Favorites is Home's own section")
     }
 
+    /// Going back from a tag that is still loading stops it and lets it go: nothing
+    /// in the load (or the quartet) keeps the screen's model alive.
+    func testGoingBackFromALoadingTagReleasesIt() {
+        let router = TMRouter()
+        mountShell(router)
+        weak var released: TagDetailModel?
+        autoreleasepool {
+            router.showTag(424_242, source: nil)
+            settle()
+            released = router.path.last?.tagModel
+            XCTAssertNotNil(released)
+            router.path.removeAll()
+            settle()
+        }
+        spinUntil("the popped tag's model is released") { released == nil }
+    }
+
     func testAScreenRemovesOnlyItself() throws {
         let router = TMRouter()
         router.show(.list("a"))

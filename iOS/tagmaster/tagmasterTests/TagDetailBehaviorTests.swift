@@ -233,6 +233,24 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         }
     }
 
+    /// Sheet Music, Rate and the key share one height, as the UIKit summary's
+    /// branded buttons and pitch button did.
+    func testTheSummaryButtonsShareOneHeight() throws {
+        seedCachedTag(id: 1809, title: "Lost")
+        _ = mountDetail()
+        let driver = driver()
+        spinUntil("the summary buttons show") {
+            driver.exists(label: "Sheet Music") && driver.exists(id: "summary.rate") && driver.exists(id: "summary.key")
+        }
+        let heights = [driver.element(label: "Sheet Music"), driver.element(id: "summary.rate"), driver.element(id: "summary.key")]
+            .map { $0?.accessibilityFrame.height ?? 0 }
+        XCTAssertEqual(heights.count, 3)
+        for height in heights {
+            XCTAssertEqual(height, heights[0], accuracy: 1, "\(heights)")
+            XCTAssertGreaterThanOrEqual(height, 44)
+        }
+    }
+
     func testActivatingTheKeyPlaysItsNoteForAMoment() throws {
         TagSummaryModel.timedKeyNoteDuration = 0.1
         defer { TagSummaryModel.timedKeyNoteDuration = 1.5 }
@@ -262,6 +280,27 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         seedCachedTag(id: 4243, lyrics: nil)
         _ = mountDetail(4243)
         XCTAssertFalse(driver().exists(label: "Lyrics"))
+    }
+
+    /// Lyrics and notes each appear only when the tag has them, in every
+    /// combination, with or without sheet music.
+    func testLyricsAndNotesEachShowOnlyWhenTheTagHasThem() {
+        var id: Int32 = 5000
+        for sheet in [false, true] {
+            for (lyrics, notes) in [(nil, nil), ("Sing it", nil), (nil, "Hold it"), ("Sing it", "Hold it")] as [(String?, String?)] {
+                id += 1
+                let tag = seedCachedTag(id: id, lyrics: lyrics, withSheetMusic: sheet)
+                tag.notes = notes
+                tag.cache()
+                _ = mountDetail(id)
+                let driver = driver()
+                let context = "sheet \(sheet), lyrics \(lyrics ?? "none"), notes \(notes ?? "none")"
+                XCTAssertEqual(driver.exists(label: "Lyrics"), lyrics != nil, context)
+                XCTAssertEqual(driver.exists(label: "Notes"), notes != nil, context)
+                XCTAssertEqual(driver.exists(label: "Sheet Music"), sheet, context)
+                if let notes { XCTAssertTrue(driver.exists(label: notes), context) }
+            }
+        }
     }
 
     func testLyricsRemainAfterVisitingAnotherPage() {
