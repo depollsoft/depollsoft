@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import depollsoft.pitchperfect.ui.PlateFonts
@@ -233,18 +234,18 @@ private fun Position(
             .fillMaxHeight()
             .widthIn(max = MAX_POSITION_WIDTH)
             .drawBehind {
+                // The dot sits before the label and the hairline after the position, mirrored in a
+                // right-to-left layout along with the padding.
+                val rtl = layoutDirection == LayoutDirection.Rtl
                 if (selected) {
                     drawRect(colors.ink.copy(alpha = WASH_ALPHA / 255f))
                     val dot = DOT_SIZE.toPx()
-                    drawCircle(colors.accent, dot / 2f, Offset(DOT_INSET.toPx() + dot / 2f, size.height / 2f))
+                    val fromStart = DOT_INSET.toPx() + dot / 2f
+                    drawCircle(colors.accent, dot / 2f, Offset(if (rtl) size.width - fromStart else fromStart, size.height / 2f))
                 }
                 val edge = 1.dp.toPx()
-                drawLine(
-                    colors.hairline,
-                    Offset(size.width - edge / 2f, 0f),
-                    Offset(size.width - edge / 2f, size.height),
-                    edge,
-                )
+                val x = if (rtl) edge / 2f else size.width - edge / 2f
+                drawLine(colors.hairline, Offset(x, 0f), Offset(x, size.height), edge)
             }
     ) {
         // The position's long-press menu hangs from the position itself, outside its padding.
@@ -304,15 +305,19 @@ private fun AddPosition(onCreate: () -> Unit) {
 
 /**
  * HorizontalScrollView's fading edges: content fades toward the plate over [FADE_LENGTH] on a
- * side with more to scroll, scaled by how much more there is.
+ * side with more to scroll, scaled by how much more there is. The scroll counts from the start
+ * edge, which is the right one in a right-to-left layout.
  */
 private fun Modifier.fadingEdges(scroll: ScrollState): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         .drawWithContent {
             drawContent()
             val length = FADE_LENGTH.toPx()
-            val left = (scroll.value / length).coerceIn(0f, 1f) * length
-            val right = ((scroll.maxValue - scroll.value) / length).coerceIn(0f, 1f) * length
+            val start = (scroll.value / length).coerceIn(0f, 1f) * length
+            val end = ((scroll.maxValue - scroll.value) / length).coerceIn(0f, 1f) * length
+            val rtl = layoutDirection == LayoutDirection.Rtl
+            val left = if (rtl) end else start
+            val right = if (rtl) start else end
             if (left > 0f) {
                 drawRect(
                     Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), 0f, left),

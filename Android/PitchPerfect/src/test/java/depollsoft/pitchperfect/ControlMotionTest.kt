@@ -148,5 +148,38 @@ class ControlMotionTest {
         assertTrue("the first tab is at the right", left(TestTags.TAB_PITCH_PIPE) > left(TestTags.TAB_SONGS))
     }
 
+    @Test
+    fun theSetListSelectorMirrorsRightToLeft() {
+        depollsoft.lib.util.Preferences.setTestMode(true)
+        try {
+            val lists =
+                listOf("contest", "chapter", "tags").map { id ->
+                    SongList().apply {
+                        this.id = id
+                        name = id
+                    }
+                }
+            compose.setContent {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    PlateTheme {
+                        Box(Modifier.background(Color.White)) {
+                            SetListSelector(lists, "tags", { it.name }, {}, {}, {})
+                        }
+                    }
+                }
+            }
+            compose.waitForIdle()
+            // The hairline between positions follows each one, so right to left it is on the left.
+            // The middle position is clear of the selector's frame on both sides.
+            val position = compose.onNodeWithTag(TestTags.setListPosition("chapter")).captureToImage().toPixelMap()
+            val y = position.height / 2
+            val hairline = Color(0xFFB7B9BC)
+            assertEquals("the hairline is at the position's left", hairline, position[1, y])
+            assertEquals("and not at its right", Color.White, position[position.width - 2, y])
+        } finally {
+            depollsoft.lib.util.Preferences.setTestMode(false)
+        }
+    }
+
     private val Dp.px get() = value
 }
