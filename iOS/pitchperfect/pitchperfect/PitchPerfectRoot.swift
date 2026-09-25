@@ -21,11 +21,14 @@ enum PitchPerfectTab: Hashable {
 final class PitchPerfectModels {
     var tab = PitchPerfectTab.pitchPipe
     let pitchPipe: PitchPipeModel
+    let notes: NotesModel
     let keys: KeysModel
     let songs: SongListModel
 
-    init(pitchPipe: PitchPipeModel? = nil, keys: KeysModel? = nil, songs: SongListModel? = nil) {
+    init(pitchPipe: PitchPipeModel? = nil, notes: NotesModel? = nil, keys: KeysModel? = nil,
+         songs: SongListModel? = nil) {
         self.pitchPipe = pitchPipe ?? PitchPipeModel()
+        self.notes = notes ?? NotesModel()
         self.keys = keys ?? KeysModel()
         self.songs = songs ?? SongListModel()
     }
@@ -40,7 +43,7 @@ struct PitchPerfectRoot: View {
             NavigationStack { PitchPipeScreen(model: models.pitchPipe) }
                 .tabItem { TabLabel(title: "Pitch Pipe", image: "pitchpipe.png") }
                 .tag(PitchPerfectTab.pitchPipe)
-            NavigationStack { NotesScreen() }
+            NavigationStack { NotesScreen(model: models.notes) }
                 .tabItem { TabLabel(title: "Notes", image: "notes.png") }
                 .tag(PitchPerfectTab.notes)
             NavigationStack { KeysScreen(model: models.keys) }

@@ -50,6 +50,8 @@ final class SettingsModel {
     /// The Delete Account row's spinner.
     private(set) var deleting = false
     var confirmingDelete = false
+    /// The confirmation's title, named when the delete is asked for.
+    private(set) var deleteTitle = ""
     var deleteError: String?
     var showingPrivacy = false
 
@@ -91,7 +93,6 @@ final class SettingsModel {
     // MARK: Account
 
     var accountTitle: String { isSignedIn ? "Log out" : "Log in" }
-    var deleteTitle: String { "Delete Account \(account.userDescription())" }
 
     func logInOrOut() {
         if isSignedIn {
@@ -119,6 +120,8 @@ final class SettingsModel {
     }
 
     func requestDelete() {
+        // Read once, when asked, as the UIKit screen did: not on every redraw.
+        deleteTitle = "Delete Account \(account.userDescription())"
         deleting = true
         confirmingDelete = true
     }
@@ -132,14 +135,18 @@ final class SettingsModel {
         confirmingDelete = false
         songs.detachFromFirestore()
         settings.detachFromFirestore()
+        // The account is signed out once the server has deleted it even if
+        // Settings has been closed meanwhile (UIKit's Settings was a singleton
+        // that outlived its sheet, so its completion always ran).
+        let account = self.account
         account.deleteAccount { [weak self] error in
             MainActor.assumeIsolated {
+                if error == nil { account.signOut() }
                 guard let self else { return }
                 self.deleting = false
                 if let error {
                     self.deleteError = "Something went wrong and your account was not deleted. Please try again. (\(error.localizedDescription))"
                 } else {
-                    self.account.signOut()
                     self.reload()
                 }
             }
@@ -160,10 +167,11 @@ final class SettingsModel {
 }
 
 struct SettingsScreen: View {
-    @State private var model = SettingsModel()
+    @StateObject private var box = ModelBox(SettingsModel())
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        @Bindable var model = box.model
         InstrumentPage(showsBanner: UIDevice.current.userInterfaceIdiom == .phone) {
             List {
                 Section {
@@ -242,7 +250,7 @@ struct SettingsScreen: View {
             }
         }
         .onAppear { model.reload() }
-        .alert("Delete Account \(DPSettingsModel.sharedInstance.userString)", isPresented: $model.confirmingDelete) {
+        .alert(model.deleteTitle, isPresented: $model.confirmingDelete) {
             Button("Cancel", role: .cancel) { model.cancelDelete() }
             Button("Yes", role: .destructive) { model.confirmDelete() }
         } message: {
@@ -254,7 +262,9 @@ struct SettingsScreen: View {
         } message: {
             Text(model.deleteError ?? "")
         }
-        .sheet(isPresented: $model.showingPrivacy) { PrivacyChoicesSheet() }
+        .sheet(isPresented: $model.showingPrivacy, onDismiss: { TelemetryConsent.onDismiss?() }) {
+            PrivacyChoicesSheet()
+        }
         .signInSheet(isPresented: $model.showingSignIn,
                      onSignIn: model.signedIn(isNewUser:),
                      onDismiss: model.signInDismissed)

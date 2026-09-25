@@ -87,6 +87,14 @@ final class SetListsModel {
         return names
     }
 
+    enum SwipeAction: Hashable { case delete, duplicate, rename }
+
+    /// A custom row's swipe, outermost first: a full swipe asks to delete, as
+    /// UIKit's configuration did. My Songs has none.
+    func swipeActions(for list: DPSongList) -> [SwipeAction] {
+        isHome(list) ? [] : [.delete, .duplicate, .rename]
+    }
+
     func promptCreate() {
         prompts.create { [weak self] name in
             guard let self, let created = self.store.createList(named: name) else { return }
@@ -109,7 +117,8 @@ final class SetListsModel {
 }
 
 struct SetListsScreen: View {
-    @State private var model = SetListsModel()
+    @StateObject private var box = ModelBox(SetListsModel())
+    private var model: SetListsModel { box.model }
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -159,10 +168,14 @@ struct SetListsScreen: View {
         .moveDisabled(home)
         .deleteDisabled(true)
         .swipeActions(edge: .trailing) {
-            if !home {
-                Button("Rename") { model.promptRename(list) }
-                Button("Duplicate") { model.duplicate(list) }
-                Button("Delete", role: .destructive) { model.confirmDelete(list) }
+            ForEach(model.swipeActions(for: list), id: \.self) { action in
+                switch action {
+                // Red rather than the destructive role, which would take the row
+                // away before the confirmation is answered.
+                case .delete: Button("Delete") { model.confirmDelete(list) }.tint(.red)
+                case .duplicate: Button("Duplicate") { model.duplicate(list) }
+                case .rename: Button("Rename") { model.promptRename(list) }
+                }
             }
         }
     }

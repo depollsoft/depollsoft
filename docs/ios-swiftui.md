@@ -90,9 +90,25 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
   configuration. `plateList()` and `plateRow()` reproduce the UITableView rows:
   rules inset 20 pt, 1 pt rows added for separators, rules that stay put in edit
   mode.
-- **Sound.** `NotePlayer` sounds every note and makes playing observable;
-  rows press through a `ButtonStyle` watching `isPressed`, so a note sounds for
-  as long as a finger rests on it, as the UIKit cells' touches did.
+- **Sound.** `NotePlayer` sounds every note and makes playing observable.
+  Notes, Keys and Songs rows press through `TouchPressSurface`, a transparent
+  `UIView` with the UIKit cells' touch semantics: a press lasts until that
+  finger lifts, wherever it slides, and a scroll cancels it (SwiftUI's
+  `isPressed` ends when the finger leaves the row and begins again when it
+  returns, stopping a note early or toggling it twice). A VoiceOver
+  activation toggles with Toggle Notes and otherwise sounds the note for
+  1.5 s, as the pitch pipe's cells do.
+- **Songs.** Rows reach the `List` as values (`SongRowData`: title and key),
+  because a `List` reloads a row only when its element changes, and the song
+  is one object across edits. A List also drops a row update made while a
+  presented editor is going away, so the rows are redrawn once it has gone.
+  Each list keeps its exact scroll offset: the rows report the List's scroll
+  view and the model files and restores `contentOffset` on every switch of
+  list, wherever it came from (the selector, the Set Lists screen, another
+  device), clamped as UIKit did. SwiftUI's `ScrollPosition` does not drive a
+  `List`. The selector reveals the chosen position the same way whenever the
+  positions change size, since `ScrollViewReader` cannot reach views placed by
+  a custom `Layout`.
 - **Pitch pipe.** `InstrumentGeometry` and `PitchPipeModel` hold the layout and
   touch rules; `InstrumentRenderer` draws the face into a `Canvas` with the same
   Core Graphics calls the UIKit view made. `MultiTouchSurface`, a transparent
@@ -101,7 +117,19 @@ the XCUITest bundles and `scripts/release/capture.py` use them.
 - **Remaining UIKit.** The set-list naming and delete prompts are
   `UIAlertController`s presented by `SetListAlertPresenter`: SwiftUI's `.alert`
   fixes its message and buttons once shown, which would let an invalid name
-  through. The banner is the ad SDK's `BannerView` in `BannerAdSlot`.
+  through. The song editor's content is SwiftUI inside the UIKit shell the
+  editor always had (`SongEditorPresenter`: a `UINavigationController` asking
+  for 320 × 480 with Close and Done bar items), because a sheet can neither
+  flip over (editing an existing song) nor size itself as a form before
+  iOS 18, and a `NavigationStack` in a UIKit-presented controller hands its
+  title and toolbar to the presenting screen's bar. The banner is the ad SDK's
+  `BannerView` in `BannerAdSlot`, which presents its overlay from its own
+  screen's controller. Privacy choices, presented from UIKit, reports its
+  dismissal from `PrivacyChoicesHost.viewDidDisappear`, once it has really
+  gone, so the ad-consent flow that follows can present.
+- **Models built once.** Screens whose model observes notifications or starts
+  an auth listener keep it in `@StateObject ModelBox`: `@State`'s initial value
+  is evaluated again every time the view struct is recreated.
 
 Deliberate differences from the UIKit screens:
 
@@ -117,6 +145,23 @@ Deliberate differences from the UIKit screens:
   capture of the same moment showed the full list.
 - The pitch pipe breathes on the clock (one breath every four seconds) rather
   than per frame, so ProMotion displays no longer breathe twice as fast.
+- Toggle Notes and Wake Lock survive a relaunch. The Swift settings model
+  (2021) reset both to off whenever it was created; the Objective-C model
+  before it and Android always kept them.
+- A toggled Songs row stays lit while its note sounds, including after the
+  list redraws; UIKit's lit state was the cell's highlight and was lost on a
+  reload. Pressed Notes and Keys rows show no highlight, exactly as UIKit's
+  clear cells showed none.
+- VoiceOver activation of a Notes, Keys or Songs row sounds the note for 1.5 s
+  (or toggles it). UIKit's synthesized tap started and stopped it in the same
+  instant.
+- A deleted account is signed out even if Settings was closed while the
+  server was deleting it; the delete confirmation reads the account's name
+  when asked, not on every redraw, and never crashes on an account without an
+  email.
+- Keys and Settings declared portrait-only orientation masks that UIKit never
+  consulted (a plain navigation controller and a page sheet do not ask), so
+  they were not carried over; nothing changes for users.
 - The row, rule and bar metrics match to the pixel on iPhone; the system
   controls SwiftUI draws itself (List's delete and reorder controls, glass bar
   shadows) sit within a few pixels of UIKit's, and the login explanation's

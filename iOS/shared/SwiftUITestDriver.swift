@@ -154,10 +154,37 @@ struct UIDriver {
     var identifiers: [String] { elements.compactMap(UIDriver.identifier(of:)) }
 
     private func activate(_ element: NSObject, file: StaticString, line: UInt) -> Bool {
-        let handled = element.accessibilityActivate()
+        // SwiftUI's nodes act on activation. UIKit controls (a UIBarButtonItem's
+        // button, a UIButton) leave activation to VoiceOver's synthesized tap,
+        // so the control nearest the element is sent the tap's action instead.
+        var handled = element.accessibilityActivate()
+        if !handled, let control = UIDriver.control(for: element) {
+            // Whichever event the control answers: a bar button's primary action
+            // or a classic touch-up target.
+            var answered: UInt = 0
+            control.enumerateEventHandlers { _, _, event, _ in answered |= event.rawValue }
+            let primary = UIControl.Event.primaryActionTriggered
+            let event: UIControl.Event = answered & primary.rawValue != 0 ? primary : .touchUpInside
+            control.sendActions(for: event)
+            handled = true
+        }
         XCTAssertTrue(handled, "\(element.accessibilityLabel ?? "element") did not activate", file: file, line: line)
         ScreenCatalog.settle(0.05)
         return handled
+    }
+
+    private static func control(for element: NSObject) -> UIControl? {
+        var view = element as? UIView
+        while let current = view {
+            // The first control that acts: a bar button's inner button only draws.
+            if let control = current as? UIControl, control.isEnabled {
+                var answers = false
+                control.enumerateEventHandlers { _, _, _, stop in answers = true; stop = true }
+                if answers { return control }
+            }
+            view = current.superview
+        }
+        return nil
     }
 
     /// Waits (spinning the run loop) until `condition` holds or the deadline passes.

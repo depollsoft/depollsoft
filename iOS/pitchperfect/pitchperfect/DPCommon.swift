@@ -6,6 +6,7 @@
 //  Copyright © 2021 DepollSoft. All rights reserved.
 //
 
+import Combine
 import Foundation
 
 enum DPCommon {
@@ -26,4 +27,14 @@ enum DPCommon {
     static func accessibilityLabel(forSymbol systemName: String) -> String {
         barButtonLabels[systemName] ?? systemName
     }
+}
+
+/// Holds a view's model for as long as the view lives, building it once.
+/// `@State`'s initial value is evaluated every time the view struct is
+/// recreated (and then discarded), which for a model that observes
+/// notifications or starts an auth listener is real work; `@StateObject`
+/// evaluates its initial value only once.
+final class ModelBox<Model: AnyObject>: ObservableObject {
+    let model: Model
+    init(_ model: Model) { self.model = model }
 }

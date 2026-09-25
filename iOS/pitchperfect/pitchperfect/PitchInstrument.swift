@@ -96,6 +96,9 @@ final class PitchPipeModel {
         self.pipe = pipe
         self.player = player
         self.settings = settings
+        // Warmed up front, as the UIKit instrument did, so the first press is prompt.
+        noteFeedback.prepare()
+        rangeFeedback.prepare()
         refresh()
         settingsObserver = NotificationCenter.default.addObserver(
             forName: .settingsChanged, object: settings, queue: .main

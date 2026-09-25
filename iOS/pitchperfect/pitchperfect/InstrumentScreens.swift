@@ -42,19 +42,70 @@ struct PitchPipeScreen: View {
 
 // MARK: - Pressable rows
 
-/// A row that sounds while a finger is on it (or toggles, with Toggle Notes):
-/// the press itself, not a tap, drives the note, as the UIKit cells' touches did.
-struct NotePressStyle: ButtonStyle {
-    let note: DPNote?
-    var player: NotePlayer = .shared
+/// The touch handling the UIKit rows had: a touch that lands on the row begins
+/// a press and the press lasts until that finger lifts, wherever it has slid,
+/// or until the list's scrolling cancels it. SwiftUI's own press tracking ends
+/// when the finger leaves the row and begins again when it returns, which
+/// would stop a note early or toggle it twice.
+struct TouchPressSurface: UIViewRepresentable {
+    let began: () -> Void
+    let ended: () -> Void
 
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .contentShape(Rectangle())
-            .onChange(of: configuration.isPressed) { _, pressed in
-                guard let note else { return }
-                if pressed { player.pressBegan(note) } else { player.pressEnded(note) }
-            }
+    final class Surface: UIView {
+        var began: () -> Void = {}
+        var ended: () -> Void = {}
+        private var touching = Set<ObjectIdentifier>()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            backgroundColor = .clear
+            isMultipleTouchEnabled = false
+            isAccessibilityElement = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            let wasIdle = touching.isEmpty
+            touches.forEach { touching.insert(ObjectIdentifier($0)) }
+            if wasIdle { began() }
+        }
+
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { finish(touches) }
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { finish(touches) }
+
+        private func finish(_ touches: Set<UITouch>) {
+            guard !touching.isEmpty else { return }
+            touches.forEach { touching.remove(ObjectIdentifier($0)) }
+            if touching.isEmpty { ended() }
+        }
+    }
+
+    func makeUIView(context: Context) -> Surface { Surface() }
+
+    func updateUIView(_ surface: Surface, context: Context) {
+        surface.began = began
+        surface.ended = ended
+    }
+}
+
+extension View {
+    /// Presses the row with the UIKit rows' touch semantics (see TouchPressSurface)
+    /// and gives VoiceOver the same note as one activation.
+    func notePress(began: @escaping () -> Void, ended: @escaping () -> Void,
+                   activate: @escaping () -> Void) -> some View {
+        overlay(TouchPressSurface(began: began, ended: ended))
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { activate() }
+    }
+
+    /// A row that sounds `note` while pressed (or toggles it, with Toggle Notes).
+    func notePress(_ note: DPNote, player: NotePlayer = .shared) -> some View {
+        notePress(began: { player.pressBegan(note) },
+                  ended: { player.pressEnded(note) },
+                  activate: { player.activate(note) })
     }
 }
 
@@ -120,22 +171,43 @@ extension View {
 
 // MARK: - Notes
 
-struct NotesScreen: View {
+/// The Notes tab's notes, and whether it has opened on the middle one yet.
+@Observable
+@MainActor
+final class NotesModel {
     let notes: [DPNote] = DPNote.prunedNotes() as? [DPNote] ?? []
+    private let player: NotePlayer
+    /// The list opens once on its middle note, as the UIKit table did in
+    /// viewDidLoad; after that it keeps wherever it was left.
+    @ObservationIgnored var hasOpened = false
+
+    init(player: NotePlayer = .shared) {
+        self.player = player
+    }
+
+    func stopSounding() { player.stop(notes) }
+}
+
+struct NotesScreen: View {
+    let model: NotesModel
     @State private var showingSettings = false
-    private let player = NotePlayer.shared
 
     var body: some View {
+        let notes = model.notes
         InstrumentPage {
             ScrollViewReader { proxy in
                 List(notes.indices, id: \.self) { index in
-                    Button {} label: { NoteRow(note: notes[index]) }
-                        .buttonStyle(NotePressStyle(note: notes[index]))
+                    NoteRow(note: notes[index])
+                        .notePress(notes[index])
                         .plateRow()
                         .id(index)
                 }
                 .plateList()
-                .onAppear { proxy.scrollTo(notes.count / 2, anchor: .center) }
+                .onAppear {
+                    guard !model.hasOpened else { return }
+                    model.hasOpened = true
+                    proxy.scrollTo(notes.count / 2, anchor: .center)
+                }
             }
         }
         .navigationTitle("Notes")
@@ -143,7 +215,7 @@ struct NotesScreen: View {
         .instrumentChrome()
         .toolbar { SettingsToolbarItem(isPresented: $showingSettings) }
         .settingsSheet(isPresented: $showingSettings)
-        .onDisappear { player.stop(notes) }
+        .onDisappear { model.stopSounding() }
     }
 }
 
@@ -259,6 +331,9 @@ final class KeysModel {
         didSet { if mode != oldValue { player.stop(oldValue.keys.map(\.note)) } }
     }
 
+    /// The list opens once on its middle key; after that it keeps its place.
+    @ObservationIgnored var hasOpened = false
+
     init(player: NotePlayer = .shared) {
         self.player = player
     }
@@ -277,13 +352,17 @@ struct KeysScreen: View {
         InstrumentPage {
             ScrollViewReader { proxy in
                 List(keys.indices, id: \.self) { index in
-                    Button {} label: { KeyRow(key: keys[index]) }
-                        .buttonStyle(NotePressStyle(note: keys[index].note))
+                    KeyRow(key: keys[index])
+                        .notePress(keys[index].note)
                         .plateRow()
                         .id(index)
                 }
                 .plateList()
-                .onAppear { proxy.scrollTo(keys.count / 2, anchor: .center) }
+                .onAppear {
+                    guard !model.hasOpened else { return }
+                    model.hasOpened = true
+                    proxy.scrollTo(keys.count / 2, anchor: .center)
+                }
             }
         }
         .navigationTitle("Keys")
