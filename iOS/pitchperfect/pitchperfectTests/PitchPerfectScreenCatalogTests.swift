@@ -13,182 +13,9 @@ import UIKit
 import XCTest
 @testable import pitchperfect
 
-/// Drives the app into catalog states: through its controls where a finger
-/// would, through its models where a gesture cannot be synthesized.
 @MainActor
-final class CatalogApp {
-    let window: UIWindow
-    let models: PitchPerfectModels
-    let host: UIViewController
-
-    init(style: UIUserInterfaceStyle) throws {
-        window = ScreenCatalog.makeWindow(style: style)
-        models = PitchPerfectModels()
-        host = UIHostingController(rootView: PitchPerfectRoot(models: models))
-        window.rootViewController = host
-        window.makeKeyAndVisible()
-        ScreenCatalog.settle()
-    }
-
-    func tearDown() {
-        host.dismiss(animated: false)
-        window.isHidden = true
-        window.rootViewController = nil
-    }
-
-    var ui: UIDriver { UIDriver(window) }
-
-    var topPresented: UIViewController {
-        var top = host
-        while let next = top.presentedViewController { top = next }
-        return top
-    }
-
-    /// The frontmost sheet's own controls.
-    var sheet: UIDriver { UIDriver(topPresented.view) }
-
-    func show(tab index: Int) {
-        models.tab = [.pitchPipe, .notes, .keys, .songs][index]
-        ScreenCatalog.settle()
-    }
-
-    var songs: SongListModel { models.songs }
-
-    // MARK: Actions
-
-    /// Toggle mode: each activation starts a note that keeps sounding.
-    func pressInstrument(_ labels: [String], toggle: Bool) {
-        show(tab: 0)
-        for label in labels { ui.tap(label: label) }
-    }
-
-    func selectRange(high: Bool) {
-        show(tab: 0)
-        ui.tap(label: high ? "Octave range F to F" : "Octave range C to C")
-    }
-
-    func showMinorKeys() {
-        show(tab: 2)
-        let control = descendants(of: UISegmentedControl.self, in: window).first!
-        control.selectedSegmentIndex = 1
-        control.sendActions(for: .valueChanged)
-    }
-
-    func pressSong(row: Int) {
-        show(tab: 3)
-        songs.press(DPSongsModel.sharedInstance.currentList.songs[row])
-    }
-
-    func editSongs() {
-        show(tab: 3)
-        ui.tap(id: "pencil")
-    }
-
-    func openSettings() { ui.tap(id: "gearshape") }
-
-    func addSong() { ui.tap(id: "plus") }
-
-    func editSong(row: Int) {
-        songs.editSong(DPSongsModel.sharedInstance.currentList.songs[row])
-    }
-
-    func typeSongTitle(_ title: String) {
-        let field = descendants(of: UITextField.self, in: topPresented.view).first!
-        field.text = title
-        field.sendActions(for: .editingChanged)
-    }
-
-    func pressEditorDone() { sheet.tap(id: "checkmark") }
-
-    func manageSetLists() { songs.manageSetLists() }
-
-    func addSongsFromAnotherList(choose rows: [IndexPath]) {
-        songs.addSongsFromAnotherList()
-        ScreenCatalog.settle()
-        let groups = DPSongsModel.sharedInstance.addableSongs(for: DPSongsModel.sharedInstance.currentList)
-        for row in rows {
-            let song = groups[row.section].songs[row.row]
-            sheet.tap(label: "\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
-        }
-    }
-
-    func promptNewSetList(typing text: String?) {
-        show(tab: 3)
-        ui.tap(id: "setlist.new")
-        ScreenCatalog.settle()
-        if let text, let alert = topPresented as? UIAlertController {
-            alert.pp_type(text)
-        }
-    }
-
-    func confirmDelete(_ list: DPSongList) { songs.confirmDelete(list) }
-
-    func showLogin() {
-        host.present(UIHostingController(rootView: NavigationStack { LoginIntroScreen() }), animated: false)
-    }
-
-    func showPrivacyChoices() { TelemetryConsent.present(from: host) }
-
-    func descendants<T: UIView>(of type: T.Type, in root: UIView) -> [T] {
-        var result = (root as? T).map { [$0] } ?? []
-        for child in root.subviews { result += descendants(of: type, in: child) }
-        return result
-    }
-}
-
-@MainActor
-final class PitchPerfectScreenCatalogTests: XCTestCase {
-    private var savedDefaults: [String: Any] = [:]
-    private var savedLists: [String: DPSongList] = [:]
-    private var app: CatalogApp?
-
-    override func setUp() async throws {
-        await MainActor.run {
-            let defaults = UserDefaults.standard
-            savedDefaults = defaults.dictionaryRepresentation().filter { $0.key.hasPrefix("depollsoft.pitchperfect.") }
-            savedLists = DPSongsModel.sharedInstance.songLists
-            setenv("STORE_SCREENSHOTS", "1", 1)
-            if FirebaseApp.app() == nil { FirebaseApp.configure() }
-            UIView.setAnimationsEnabled(false)
-            DPSettingsModel.sharedInstance.detachFromFirestore()
-            DPSettingsModel.sharedInstance.toggleNotes = false
-            DPSettingsModel.sharedInstance.wakeLock = false
-            DPPitchPipeModel().isFromFToF = false
-            stopAll()
-            DPSongsModel.sharedInstance.songLists = ["default": DPSongList(id: "default")]
-            DPSongsModel.sharedInstance.currentListId = "default"
-        }
-    }
-
-    override func tearDown() async throws {
-        await MainActor.run {
-            app?.tearDown()
-            app = nil
-            stopAll()
-            let defaults = UserDefaults.standard
-            for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("depollsoft.pitchperfect.") {
-                defaults.removeObject(forKey: key)
-            }
-            for (key, value) in savedDefaults { defaults.set(value, forKey: key) }
-            DPSongsModel.sharedInstance.songLists = savedLists
-            UIView.setAnimationsEnabled(true)
-            unsetenv("STORE_SCREENSHOTS")
-        }
-    }
-
-    private func stopAll() {
-        NotePlayer.shared.stop(DPNote.commonNotes() as! [DPNote])
-    }
-
-    private func launch(_ style: UIUserInterfaceStyle = .light) throws -> CatalogApp {
-        // The app applies the stored theme to its windows; store the one wanted.
-        UserDefaults.standard.set(style == .dark ? 2 : 0, forKey: "depollsoft.pitchperfect.theme")
-        let app = try CatalogApp(style: style)
-        self.app = app
-        return app
-    }
-
-    private func capture(_ name: String, _ app: CatalogApp, settle: TimeInterval = 0.5) {
+final class PitchPerfectScreenCatalogTests: PitchPerfectTestCase {
+    private func capture(_ name: String, _ app: HostedApp, settle: TimeInterval = 0.5) {
         ScreenCatalog.capture(name, window: app.window, settle: settle)
     }
 
@@ -198,7 +25,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
 
     /// Eight songs in several keys, plus two custom set lists.
     @discardableResult
-    private func seedSongs(lists: Bool = true) -> [DPSongList] {
+    private func seedCatalog(lists: Bool = true) -> [DPSongList] {
         let majors = DPKey.majorKeys() as! [DPKey]
         let minors = DPKey.minorKeys() as! [DPKey]
         let keys = [majors[6], majors[1], majors[8], minors[4], majors[11], majors[3], minors[9], majors[6]]
@@ -269,7 +96,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     func testSongsPopulated() throws {
-        seedSongs()
+        seedCatalog()
         for style in [UIUserInterfaceStyle.light, .dark] {
             let app = try launch(style)
             app.show(tab: 3)
@@ -282,14 +109,14 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     func testSongsEditing() throws {
-        seedSongs()
+        seedCatalog()
         let app = try launch()
         app.editSongs()
         capture("songs-editing", app)
     }
 
     func testSongsCustomLists() throws {
-        let lists = seedSongs()
+        let lists = seedCatalog()
         DPSongsModel.sharedInstance.currentListId = lists[0].id
         let app = try launch()
         app.show(tab: 3)
@@ -299,7 +126,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     func testSetListsScreen() throws {
-        seedSongs()
+        seedCatalog()
         for style in [UIUserInterfaceStyle.light, .dark] {
             let app = try launch(style)
             app.editSongs()
@@ -310,7 +137,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     func testAddSongsPicker() throws {
-        let lists = seedSongs()
+        let lists = seedCatalog()
         DPSongsModel.sharedInstance.currentListId = lists[1].id
         let app = try launch()
         app.editSongs()
@@ -319,7 +146,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     }
 
     func testSetListAlerts() throws {
-        let lists = seedSongs()
+        let lists = seedCatalog()
         let app = try launch()
         app.show(tab: 3)
         app.promptNewSetList(typing: nil)
@@ -337,7 +164,7 @@ final class PitchPerfectScreenCatalogTests: XCTestCase {
     // MARK: - Song editor
 
     func testSongEditor() throws {
-        seedSongs(lists: false)
+        seedCatalog(lists: false)
         for style in [UIUserInterfaceStyle.light, .dark] {
             let app = try launch(style)
             app.editSongs()

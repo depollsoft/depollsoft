@@ -142,6 +142,18 @@ struct SetListsScreen: View {
         } select: {
             model.select(list)
             dismiss()
+        } rowAccessibility: { content in
+            AnyView(content
+                .accessibilityLabel(model.accessibilityLabel(list))
+                .accessibilityAddTraits(current ? [.isButton, .isSelected] : .isButton)
+                .accessibilityIdentifier(current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)")
+                .accessibilityActions {
+                    // The reorder control is a drag; VoiceOver and Switch Control reorder
+                    // through named actions instead, one row at a time.
+                    ForEach(model.moveActionNames(list), id: \.self) { name in
+                        Button(name) { model.move(list, by: name == "Move up" ? -1 : 1) }
+                    }
+                })
         }
         .plateRow(trailingOverhang: home ? 0 : 40)
         .moveDisabled(home)
@@ -151,17 +163,6 @@ struct SetListsScreen: View {
                 Button("Rename") { model.promptRename(list) }
                 Button("Duplicate") { model.duplicate(list) }
                 Button("Delete", role: .destructive) { model.confirmDelete(list) }
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(model.accessibilityLabel(list))
-        .accessibilityAddTraits(current ? [.isButton, .isSelected] : .isButton)
-        .accessibilityIdentifier(current ? "setlist.row.\(list.id).current" : "setlist.row.\(list.id)")
-        .accessibilityActions {
-            // The reorder control is a drag; VoiceOver and Switch Control reorder
-            // through named actions instead, one row at a time.
-            ForEach(model.moveActionNames(list), id: \.self) { name in
-                Button(name) { model.move(list, by: name == "Move up" ? -1 : 1) }
             }
         }
     }
@@ -181,6 +182,11 @@ struct SetListsScreen: View {
 
 /// One manage row: the list's display name, how many songs it holds, the
 /// selector's lit indicator when it is the current list, and a "…" menu.
+private struct RowAccessibility: ViewModifier {
+    let apply: (AnyView) -> AnyView
+    func body(content: Content) -> some View { apply(AnyView(content)) }
+}
+
 private enum SetListRowGlyph {
     /// The glyph at the size a system UIButton drew it in this row (18.5 pt).
     static let ellipsis = UIImage(systemName: "ellipsis.circle",
@@ -198,6 +204,8 @@ private struct SetListRow<MenuContent: View>: View {
     let menuIdentifier: String
     @ViewBuilder let menu: () -> MenuContent
     let select: () -> Void
+    /// What VoiceOver says about the row (the tappable part), apart from its menu.
+    let rowAccessibility: (AnyView) -> AnyView
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -229,6 +237,7 @@ private struct SetListRow<MenuContent: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .modifier(RowAccessibility(apply: rowAccessibility))
             Menu(content: menu) {
                 // Sized explicitly: a menu label would otherwise scale the glyph to its font.
                 Image(uiImage: Self.ellipsis)

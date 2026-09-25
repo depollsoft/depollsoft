@@ -249,13 +249,31 @@ enum KeyMode: Int, CaseIterable {
     }
 }
 
+/// Which signatures the Keys tab lists.
+@Observable
+@MainActor
+final class KeysModel {
+    private let player: NotePlayer
+    /// Switching stops whatever the other mode's rows were sounding.
+    var mode = KeyMode.major {
+        didSet { if mode != oldValue { player.stop(oldValue.keys.map(\.note)) } }
+    }
+
+    init(player: NotePlayer = .shared) {
+        self.player = player
+    }
+
+    var keys: [DPKey] { mode.keys }
+
+    func stopSounding() { player.stop(keys.map(\.note)) }
+}
+
 struct KeysScreen: View {
-    @State private var mode = KeyMode.major
+    @Bindable var model: KeysModel
     @State private var showingSettings = false
-    private let player = NotePlayer.shared
 
     var body: some View {
-        let keys = mode.keys
+        let keys = model.keys
         InstrumentPage {
             ScrollViewReader { proxy in
                 List(keys.indices, id: \.self) { index in
@@ -273,7 +291,7 @@ struct KeysScreen: View {
         .instrumentChrome()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Picker("Key mode", selection: $mode) {
+                Picker("Key mode", selection: $model.mode) {
                     Text("Major").tag(KeyMode.major)
                     Text("Minor").tag(KeyMode.minor)
                 }
@@ -283,9 +301,8 @@ struct KeysScreen: View {
             }
             SettingsToolbarItem(isPresented: $showingSettings)
         }
-        .onChange(of: mode) { old, _ in player.stop(old.keys.map(\.note)) }
         .settingsSheet(isPresented: $showingSettings)
-        .onDisappear { player.stop(keys.map(\.note)) }
+        .onDisappear { model.stopSounding() }
     }
 }
 
