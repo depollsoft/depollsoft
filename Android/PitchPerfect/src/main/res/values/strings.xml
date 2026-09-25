@@ -27,6 +27,7 @@
     <string name="NotesToggle">Notes play until pressed again</string>
     <string name="Purchase">Purchase to remove ads</string>
     <string name="Purchased">(Licensed)</string>
+    <string name="version_label">Version %1$s</string>
     <string name="DepollSoft">DepollSoft</string>
     <string name="RateReview">Rate &amp; Review</string>
     <string name="TermsOfUse">Terms of Use</string>

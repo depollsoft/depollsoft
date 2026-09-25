@@ -1,5 +1,8 @@
 package depollsoft.pitchperfect
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import depollsoft.lib.util.appVersionName
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -306,7 +309,8 @@ private fun AboutFooter(
         Row(verticalAlignment = Alignment.CenterVertically) {
             PlateText(stringResource(R.string.app_name), style = style)
             PlateText(" · ", style = style)
-            PlateText(stringResource(R.string.VersionString), style = style)
+            val context = LocalContext.current
+            PlateText(stringResource(R.string.version_label, remember(context) { appVersionName(context) }), style = style)
             if (licensed) PlateText(stringResource(R.string.Purchased), style = style, modifier = Modifier.padding(start = 4.dp))
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -9,6 +9,7 @@
     <string name="home_cancel">Cancel</string>
     <string name="home_teachable_hint">Open a tag and choose Mark as Teachable to add it here.</string>
     <string name="home_version_separator">" - "</string>
+    <string name="version_label">Version %1$s</string>
     <string name="home_space">" "</string>
     <string name="home_title">Tag Master</string>
     <string name="home_changelog_title">Tag Master Changelog</string>

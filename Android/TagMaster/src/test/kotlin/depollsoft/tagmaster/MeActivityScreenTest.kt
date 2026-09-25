@@ -215,9 +215,12 @@ class MeActivityScreenTest : ComposeScreenTest() {
     }
 
     @Test
-    fun theFooterNamesTheApplicationAndItsVersion() {
+    fun theFooterNamesTheApplicationAndItsInstalledVersion() {
+        // Release builds set the version name from the release plan, not from resources.
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        org.robolectric.Shadows.shadowOf(app.packageManager).getInternalMutablePackageInfo(app.packageName).versionName = "9.8.7"
         home()
-        val version = hasText(string(R.string.app_version))
+        val version = hasText("Version 9.8.7")
         node("homeList").performScrollToNode(version)
         idle()
         assertTrue(compose.onAllNodes(version, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty())
