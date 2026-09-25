@@ -346,7 +346,8 @@ private struct SongRows: View {
                     SongRow(song: song, isEditing: model.isEditing, lit: model.isLit(song),
                             press: { pressed in pressed ? model.press(song) : model.release(song) },
                             edit: { model.editSong(song) })
-                        .plateRow()
+                        .plateRow(contentIndent: model.isEditing ? SongRow.editingIndent : 0,
+                                  trailingOverhang: model.isEditing ? 40 : 0)
                         .id(ObjectIdentifier(song))
                         .onAppear { model.rowAppeared(song, at: index) }
                         .onDisappear { model.rowDisappeared(song) }
@@ -393,26 +394,40 @@ struct SongRow: View {
     var body: some View {
         HStack(spacing: 0) {
             Button {} label: { EmptyView() }
-                .buttonStyle(SongPressStyle(song: song, lit: lit, press: press))
+                .buttonStyle(SongPressStyle(song: song, lit: lit, isEditing: isEditing, press: press))
                 .accessibilityLabel("\(song.name ?? ""), \(song.key?.friendlyName() ?? "")")
             if isEditing {
                 Button(action: edit) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Color.accentColor)
+                    Image(uiImage: SongRow.detailDisclosure)
+                        .renderingMode(.template)
+                        .foregroundStyle(Color(uiColor: .systemBlue))
                 }
                 .buttonStyle(.borderless)
-                .padding(.horizontal, 8)
+                .padding(.leading, 8)
+                .offset(y: -1.0 / 3.0)
                 .accessibilityLabel("More Info")
                 .accessibilityIdentifier("song.edit")
+                // UIKit rules the accessory off from the reorder control.
+                Color(uiColor: .separator)
+                    .frame(width: 1)
+                    .padding(.leading, 22.0 / 3.0)
+                    .padding(.trailing, 15)
+                    .accessibilityHidden(true)
             }
         }
     }
+
+    /// How far edit mode moves a row's content in, past the delete control.
+    static let editingIndent: CGFloat = 124.0 / 3.0
+
+    /// The system detail-disclosure glyph, exactly as UIKit's button draws it.
+    static let detailDisclosure: UIImage = UIButton(type: .detailDisclosure).image(for: .normal) ?? UIImage()
 }
 
 private struct SongPressStyle: ButtonStyle {
     let song: DPPitchedSong
     let lit: Bool
+    let isEditing: Bool
     let press: (Bool) -> Void
 
     func makeBody(configuration: Configuration) -> some View {
@@ -425,9 +440,17 @@ private struct SongPressStyle: ButtonStyle {
             KeyReadout(key: song.key, color: lit ? Plate.onLit : Plate.inkSecondary)
                 .fixedSize()
                 .layoutPriority(1)
+                .offset(y: isEditing ? -1.0 / 3.0 : 0)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        // Editing indents the row past the delete control and hands the trailing
+        // edge to the accessory, as the UIKit cell's content view did.
+        .padding(.leading, isEditing ? 24 : 20)
+        .padding(.trailing, isEditing ? 11 : 20)
+        // 14 pt above and below the title (whose UILabel rounded its height up,
+        // setting the text 2 px lower), plus the 1 pt a self-sizing UIKit cell
+        // adds for its separator.
+        .padding(.top, 14 + 2.0 / 3.0)
+        .padding(.bottom, 15 - 2.0 / 3.0)
         .background(lit ? Plate.lit : Color.clear)
         .animation(.easeInOut(duration: 0.12), value: lit)
         .contentShape(Rectangle())

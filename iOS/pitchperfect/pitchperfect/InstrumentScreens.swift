@@ -87,11 +87,19 @@ private struct TopEdgeEffectHidden: ViewModifier {
 extension View {
     func plateList() -> some View { modifier(PlateListStyle()) }
 
-    func plateRow(_ insets: EdgeInsets = EdgeInsets()) -> some View {
+    /// A transparent row whose rule runs from 20 pt in from the list's edge to
+    /// 20 pt from the other. `contentIndent` is how far the list has moved the
+    /// row's content in (edit mode's delete control), so the rule stays put.
+    /// `trailingOverhang` carries the rule on under the reorder control, which
+    /// sits beyond the row's content.
+    func plateRow(_ insets: EdgeInsets = EdgeInsets(), contentIndent: CGFloat = 0,
+                  trailingOverhang: CGFloat = 0) -> some View {
         listRowInsets(insets)
             .listRowBackground(Color.clear)
-            .alignmentGuide(.listRowSeparatorLeading) { _ in 20 }
-            .alignmentGuide(.listRowSeparatorTrailing) { dimensions in dimensions.width - 20 }
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 20 - contentIndent }
+            .alignmentGuide(.listRowSeparatorTrailing) { dimensions in
+                dimensions.width - 20 + trailingOverhang
+            }
     }
 }
 

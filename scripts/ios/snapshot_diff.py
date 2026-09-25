@@ -34,13 +34,14 @@ def compare(reference: Path, candidate: Path, out: Path | None):
     peak = ImageChops.lighter(ImageChops.lighter(r, g), bl)
     histogram = peak.histogram()
     changed = sum(histogram[1:])
+    visible = sum(histogram[16:])
     largest = max(i for i, count in enumerate(histogram) if count)
     if out is not None:
         mask = peak.point(lambda v: 255 if v else 0)
         base = Image.blend(Image.new("RGB", a.size, "white"), a, 0.25)
         base.paste(Image.new("RGB", a.size, (255, 0, 0)), mask=mask)
         base.save(out / f"{reference.stem}.diff.png")
-    return {"changed": changed, "total": a.size[0] * a.size[1], "largest": largest, "bbox": bbox}
+    return {"changed": changed, "visible": visible, "total": a.size[0] * a.size[1], "largest": largest, "bbox": bbox}
 
 
 def main():
@@ -72,7 +73,9 @@ def main():
         else:
             failed = True
             share = 100.0 * result["changed"] / result["total"]
-            print(f"DIFF     {name} {result['changed']} px ({share:.3f}%), max {result['largest']}, bbox {result['bbox']}")
+            visible = 100.0 * result["visible"] / result["total"]
+            print(f"DIFF     {name} {result['changed']} px ({share:.3f}%), {visible:.3f}% by 16+ levels, "
+                  f"max {result['largest']}, bbox {result['bbox']}")
     sys.exit(1 if failed else 0)
 
 
