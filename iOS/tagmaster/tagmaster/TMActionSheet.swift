@@ -48,8 +48,14 @@ final class TMPresentingAnchor: UIView {
         sync()
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        sync()
+    }
+
     func sync() {
-        if wanted, presented == nil, let root = window?.rootViewController {
+        // A bar item is first placed at a provisional size; anchor once it has its own.
+        if wanted, presented == nil, bounds.height >= 30, let root = window?.rootViewController {
             let top = TMPresentingAnchor.top(root)
             guard !alreadyUp(top) else { return }
             let controller = make(self)
