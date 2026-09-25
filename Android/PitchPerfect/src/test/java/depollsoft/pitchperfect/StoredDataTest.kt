@@ -5,6 +5,7 @@ import depollsoft.lib.state.StateList
 import depollsoft.lib.util.Preferences
 import depollsoft.pitchperfect.lib.Accidental
 import depollsoft.pitchperfect.lib.KeyType
+import depollsoft.pitchperfect.lib.Note
 import depollsoft.pitchperfect.lib.PitchedSong
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -74,6 +75,41 @@ class StoredDataTest {
         assertEquals(listOf("Heart of My Heart", "The Old Songs"), songs.map { it.name })
         assertEquals(-6, songs[0].key.numAccidentals)
         assertEquals(KeyType.Minor, songs[1].key.keyType)
+    }
+
+    @Test
+    fun aStoredSongNeverStartsPlayingWhenItLoads() {
+        val played = mutableListOf<Note>()
+        Note.setPlayer(
+            object : Note.NotePlayer {
+                override fun play(n: Note) {
+                    played += n
+                }
+
+                override fun stop(n: Note) = Unit
+            },
+        )
+        try {
+            val sounding = ComposeScreens.song("Blue Skies")
+            sounding.key.note.isPlaying = true
+            val saved = JsonSerializer.serialize(sounding).toString()
+            sounding.key.note.isPlaying = false
+            played.clear()
+            assertTrue(saved, !saved.contains("IsPlaying"))
+
+            // Songs stored before this fix carry the flag; a playing one must load silent.
+            val flag = Regex("(\"IsPlaying\":\\s*\\{[^}]*\"Value\":\\s*)false")
+            val original = fixture("songs_legacy.json")
+            assertEquals("the fixture has flags to flip", 2, flag.findAll(original).count())
+            val stale = original.replace(flag, "$1true")
+            @Suppress("UNCHECKED_CAST")
+            val songs = JsonSerializer.deserialize(stale) as StateList<PitchedSong>
+            assertEquals(2, songs.size)
+            assertEquals("loading plays nothing", emptyList<Note>(), played)
+            assertTrue(songs.none { it.key.note.isPlaying })
+        } finally {
+            Note.setPlayer(Note.DEFAULT_PLAYER)
+        }
     }
 
     @Test

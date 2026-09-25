@@ -3,6 +3,7 @@ package depollsoft.pitchperfect.lib;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
+import depollsoft.lib.json.NotStored;
 import depollsoft.lib.state.StateField;
 
 import java.util.ArrayList;
@@ -183,6 +184,8 @@ public class Note {
     return this.friendlyName.get();
   }
 
+  // Whether the note sounds right now: never stored, or loading a saved song would start it.
+  @NotStored
   public boolean getIsPlaying() {
     return this.isPlaying.get();
   }
