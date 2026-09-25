@@ -100,7 +100,7 @@ struct UIDriver {
 
     @discardableResult
     func tap(id: String, file: StaticString = #filePath, line: UInt = #line) -> Bool {
-        guard let element = element(id: id) else {
+        guard let element = appearing({ element(id: id) }) else {
             XCTFail("No element with identifier \(id). Present: \(identifiers)", file: file, line: line)
             return false
         }
@@ -109,7 +109,10 @@ struct UIDriver {
 
     @discardableResult
     func tap(label: String, file: StaticString = #filePath, line: UInt = #line) -> Bool {
-        let matches = elements.filter { $0.isAccessibilityElement && $0.accessibilityLabel == label }
+        let matches = appearing({ () -> [NSObject]? in
+            let found = elements.filter { $0.isAccessibilityElement && $0.accessibilityLabel == label }
+            return found.isEmpty ? nil : found
+        }) ?? []
         guard !matches.isEmpty else {
             XCTFail("No element labelled \(label). Present: \(labels)", file: file, line: line)
             return false
@@ -127,7 +130,7 @@ struct UIDriver {
     /// Runs a named custom action (a swipe action, "Move up", a context menu item VoiceOver exposes).
     @discardableResult
     func perform(action name: String, id: String, file: StaticString = #filePath, line: UInt = #line) -> Bool {
-        guard let element = element(id: id) else {
+        guard let element = appearing({ element(id: id) }) else {
             XCTFail("No element with identifier \(id)", file: file, line: line)
             return false
         }
@@ -150,6 +153,18 @@ struct UIDriver {
 
     func increment(id: String) { element(id: id)?.accessibilityIncrement(); ScreenCatalog.settle(0.05) }
     func decrement(id: String) { element(id: id)?.accessibilityDecrement(); ScreenCatalog.settle(0.05) }
+
+    /// Polls briefly for something a control just set in motion (a bar item animating in,
+    /// a row mounting) instead of failing on the first look; slow CI runners need it.
+    private func appearing<T>(_ find: () -> T?, timeout: TimeInterval = 3) -> T? {
+        let deadline = Date().addingTimeInterval(timeout)
+        var found = find()
+        while found == nil, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
+            found = find()
+        }
+        return found
+    }
 
     var identifiers: [String] { elements.compactMap(UIDriver.identifier(of:)) }
 

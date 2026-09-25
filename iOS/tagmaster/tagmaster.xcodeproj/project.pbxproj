@@ -70,6 +70,7 @@
 		BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */; };
 		CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083712943734B5BCD1340641 /* TMArtworkTests.swift */; };
 		28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */; };
+		0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */; };
 		B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */; };
 		B4A1A0000000000000000031 /* FavoritesBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */; };
 		B4A1A0000000000000000032 /* SearchBehaviorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4A1A0000000000000000022 /* SearchBehaviorTests.swift */; };
@@ -240,6 +241,7 @@
 		37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMRouterTests.swift; sourceTree = "<group>"; };
 		083712943734B5BCD1340641 /* TMArtworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMArtworkTests.swift; sourceTree = "<group>"; };
 		63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterAuditTests.swift; sourceTree = "<group>"; };
+		22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMasterTestObserver.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBehaviorTestSupport.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000021 /* FavoritesBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesBehaviorTests.swift; sourceTree = "<group>"; };
 		B4A1A0000000000000000022 /* SearchBehaviorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBehaviorTests.swift; sourceTree = "<group>"; };
@@ -581,6 +583,7 @@
 				AF1059DD3F994302AA09C4FD /* DPHomeViewControllerExtensionTests.swift */,
 				B4A1A0000000000000000013 /* TMBalanceAudioPlayerTests.swift */,
 				B4A1A0000000000000000020 /* TMBehaviorTestSupport.swift */,
+				22AFC827264EA1C0323A6EC6 /* TagMasterTestObserver.swift */,
 				63D3134C1B0898F50EE69316 /* TagMasterAuditTests.swift */,
 				083712943734B5BCD1340641 /* TMArtworkTests.swift */,
 				37A4BC3BD26DC513A62F59B6 /* TMRouterTests.swift */,
@@ -934,6 +937,7 @@
 				4B737AE82EE04FD78D0EA597 /* DPHomeViewControllerExtensionTests.swift in Sources */,
 				B4A1A0000000000000000003 /* TMBalanceAudioPlayerTests.swift in Sources */,
 				B4A1A0000000000000000030 /* TMBehaviorTestSupport.swift in Sources */,
+				0B5E23ECC4A55E046E880953 /* TagMasterTestObserver.swift in Sources */,
 				28F695DF481EE0B06AFD6D03 /* TagMasterAuditTests.swift in Sources */,
 				CB34D931D876177CDE0CB921 /* TMArtworkTests.swift in Sources */,
 				BBCA090527B9C26B067B05EC /* TMRouterTests.swift in Sources */,

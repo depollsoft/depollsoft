@@ -307,8 +307,14 @@ private final class TMRenderState {
         state.currentFrame = Int((max(0, time) * sampleRate).rounded())
     }
 
+    /// Off in the unit-test bundle: CI simulators have no audio device, and starting a
+    /// hardware engine there deadlocks the audio server. Offline (manual rendering)
+    /// engines still start, so the render tests exercise the real graph.
+    nonisolated(unsafe) static var usesAudioHardware = true
+
     private func startEngine() -> Bool {
         guard !engine.isRunning else { return true }
+        if !Self.usesAudioHardware && !engine.isInManualRenderingMode { return true }
         do {
             if !engine.isInManualRenderingMode { try? AVAudioSession.sharedInstance().setActive(true) }
             try engine.start()
