@@ -126,7 +126,6 @@ struct TagVideosPage: View {
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 21))
         .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
-        .accessibilityElement(children: .ignore)
         .accessibilityLabel(video.spoken)
         .accessibilityHint("Opens the video")
         .accessibilityAddTraits(.isButton)

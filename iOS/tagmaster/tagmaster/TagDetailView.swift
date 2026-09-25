@@ -52,19 +52,19 @@ struct TagDetailScreen: View {
         TabView(selection: $model.selectedPage) {
             TagSummaryPage(model: model.summary)
                 .background(TMPageTabBarBridge())
-                .tabItem { Label(TagDetailModel.Page.summary.title, systemImage: TagDetailModel.Page.summary.symbol).environment(\.symbolVariants, .none) }
+                .tabItem { Label(TagDetailModel.Page.summary.title, systemImage: TagDetailModel.Page.summary.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.summary.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.summary)
             TagDetailsPage(model: model)
                 .background(TMPageTabBarBridge())
-                .tabItem { Label(TagDetailModel.Page.details.title, systemImage: TagDetailModel.Page.details.symbol).environment(\.symbolVariants, .none) }
+                .tabItem { Label(TagDetailModel.Page.details.title, systemImage: TagDetailModel.Page.details.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.details.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.details)
             TagTracksPage(model: model.tracks)
                 .background(TMPageTabBarBridge())
-                .tabItem { Label(TagDetailModel.Page.tracks.title, systemImage: TagDetailModel.Page.tracks.symbol).environment(\.symbolVariants, .none) }
+                .tabItem { Label(TagDetailModel.Page.tracks.title, systemImage: TagDetailModel.Page.tracks.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.tracks.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.tracks)
             TagVideosPage(model: model)
                 .background(TMPageTabBarBridge())
-                .tabItem { Label(TagDetailModel.Page.videos.title, systemImage: TagDetailModel.Page.videos.symbol).environment(\.symbolVariants, .none) }
+                .tabItem { Label(TagDetailModel.Page.videos.title, systemImage: TagDetailModel.Page.videos.symbol).accessibilityIdentifier("page-\(TagDetailModel.Page.videos.title)").environment(\.symbolVariants, .none) }
                 .tag(TagDetailModel.Page.videos)
         }
         .tint(accent)

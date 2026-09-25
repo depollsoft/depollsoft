@@ -222,9 +222,9 @@ final class TagDetailModelTests: XCTestCase {
         XCTAssertTrue(model.quartetMoving)
         model.applicationActive = false
         XCTAssertFalse(model.quartetMoving)
-        NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.post(Notification(name: UIApplication.didBecomeActiveNotification))
         XCTAssertTrue(model.quartetMoving)
-        NotificationCenter.default.post(name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.post(Notification(name: UIApplication.willResignActiveNotification))
         XCTAssertFalse(model.quartetMoving)
         model.applicationActive = true
         model.screenVisible = false
@@ -267,11 +267,11 @@ final class TagDetailModelTests: XCTestCase {
         XCTAssertEqual(shownTags, [122, 4243])
 
         source.ids = [1809, 122]
-        NotificationCenter.default.post(name: .TMTagListDidChange, object: source)
+        NotificationCenter.default.post(Notification(name: .TMTagListDidChange, object: source))
         XCTAssertFalse(model.hasPreviousTag, "A change in the list is picked up at once")
         XCTAssertTrue(model.hasNextTag)
         source.ids = [1809]
-        NotificationCenter.default.post(name: .TMTagListDidChange, object: source)
+        NotificationCenter.default.post(Notification(name: .TMTagListDidChange, object: source))
         XCTAssertFalse(model.hasNextTag)
         model.stepToNextTag()
         XCTAssertEqual(shownTags, [122, 4243], "Nothing past the end")

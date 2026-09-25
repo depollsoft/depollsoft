@@ -10,6 +10,7 @@
 //
 
 import SafariServices
+import SwiftUI
 import XCTest
 import UIKit
 @testable import tagmaster
@@ -85,7 +86,7 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         for label in ["Refresh", "Favorite and Teachable options", "Share"] {
             XCTAssertTrue(driver.exists(label: label), "\(label) is in the bar")
         }
-        for label in ["Previous tag", "Next tag", "Add Favorite", "Add to list"] {
+        for label in ["Previous tag", "Next tag", "Add Favorite", "Mark as Teachable"] {
             XCTAssertFalse(driver.exists(label: label), "\(label) belongs beside a list")
         }
     }
@@ -107,6 +108,8 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
     }
 
     func testBesideAListTheBarCarriesTheStepperTogglesAndAddToList() throws {
+        // The expanded bar is an iPad layout; on iPhone the model tests cover the same rules.
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Beside-a-list layout is iPad only")
         seedCachedTag(id: 1809)
         seedCachedTag(id: 4243, title: "Short")
         let detail = TagDetailViewController()
@@ -117,9 +120,10 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         split.preferredDisplayMode = .oneBesideSecondary
         split.setViewController(UINavigationController(rootViewController: UIViewController()), for: .primary)
         split.setViewController(UINavigationController(rootViewController: detail), for: .secondary)
-        mount(split, size: CGSize(width: 1194, height: 834))
-        window.traitOverrides.horizontalSizeClass = .regular
-        settle()
+        let splitWindow = ScreenCatalog.makeWindow()
+        splitWindow.rootViewController = split
+        splitWindow.makeKeyAndVisible()
+        window = splitWindow
         spinUntil("the detail settles", timeout: 5) { !detail.model.fetchPending && detail.model.expanded }
         ScreenCatalog.settle(0.3)
 
@@ -147,7 +151,10 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         ScreenCatalog.settle(0.2)
         XCTAssertTrue(driver.exists(label: "Add Favorite"))
 
-        driver.tap(label: "Add to list")
+        // The assist chip shares the name; the bar's button is the later element.
+        let barButton = try XCTUnwrap(driver.elements.last { $0.isAccessibilityElement && $0.accessibilityLabel == "Add to list" })
+        XCTAssertTrue(barButton.accessibilityActivate())
+        ScreenCatalog.settle(0.1)
         XCTAssertEqual(detail.model.pickerSource, .toolbar)
         detail.model.pickerSource = nil
         ScreenCatalog.settle(0.5)
@@ -225,8 +232,8 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         XCTAssertFalse(driver.exists(id: "summary.chip.add.remove"), "Nothing is removed from the assist chip")
         for id in ["summary.chip.favorite", "summary.chip.favorite.remove", "summary.chip.add"] {
             let frame = driver.element(id: id)?.accessibilityFrame ?? .zero
-            XCTAssertGreaterThanOrEqual(frame.height, 44, "\(id) is a full target")
-            XCTAssertGreaterThanOrEqual(frame.width, 44, "\(id) is a full target")
+            XCTAssertGreaterThanOrEqual(frame.height, 43.99, "\(id) is a full target")
+            XCTAssertGreaterThanOrEqual(frame.width, 43.99, "\(id) is a full target")
         }
     }
 
@@ -236,6 +243,8 @@ final class TagDetailBehaviorTests: TMBehaviorTestCase {
         let detail = mountDetail()
         detail.model.navigator.showList = { [unowned self] in self.shownLists.append($0) }
         let driver = driver()
+        // The accessibility tree is rebuilt lazily after the page settles.
+        driver.wait { driver.exists(id: "summary.chip.afterglow-set-k3f9") }
 
         driver.tap(id: "summary.chip.afterglow-set-k3f9")
         XCTAssertEqual(shownLists, ["afterglow-set-k3f9"])

@@ -321,7 +321,3 @@ final class TagDetailModel {
     var shareURL: URL? { tag?.tagUri() }
 }
 
-extension Notification.Name {
-    static let TMTagListDidChange = Notification.Name(rawValue: "TMTagListDidChangeNotification")
-    static let TMTagSelectionDidChange = Notification.Name(rawValue: "TMTagSelectionDidChangeNotification")
-}

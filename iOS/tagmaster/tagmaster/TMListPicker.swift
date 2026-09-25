@@ -142,7 +142,6 @@ struct TMListPicker: View {
         }
         .listRowInsets(EdgeInsets())
         .focusable(false)
-        .accessibilityElement(children: .ignore)
         .accessibilityLabel(TMTagLists.name(for: key))
         .accessibilityValue(count)
         .accessibilityAddTraits(member ? [.isButton, .isSelected] : .isButton)
