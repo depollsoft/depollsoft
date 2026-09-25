@@ -19,12 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import depollsoft.pitchperfect.R
 
 /** One row of a [PlatePopupMenu]. */
 class PopupMenuItem(
@@ -49,8 +50,9 @@ class PopupMenuItem(
 enum class MenuPlacement { BELOW_ANCHOR, OVER_ANCHOR_END }
 
 /**
- * A PopupMenu as the View screens showed it: a plain white list hanging from the anchor's bottom
- * start corner, 48dp rows of 16sp text inset 16dp, as wide as the widest row and at least 196dp.
+ * A PopupMenu as the View screens showed it: a plain list on the platform's floating-panel colour
+ * (white, or grey 800 at night) hanging from the anchor's bottom start corner, 48dp rows of 16sp
+ * text inset 16dp, as wide as the widest row and at least 196dp.
  * Place it inside the anchor's layout; it hangs from the anchor's bounds. It grows in from the
  * corner it opens from and fades away, as the platform's popup windows did.
  *
@@ -121,7 +123,7 @@ fun PlatePopupMenu(
                         this.alpha = alpha
                         transformOrigin = origin
                     }.shadow(8.dp)
-                    .background(Color.White),
+                    .background(colorResource(R.color.plate_menu)),
         ) { measurables, constraints ->
             val widest = measurables.maxOfOrNull { it.maxIntrinsicWidth(constraints.maxHeight) } ?: 0
             // AppCompat's popup menu rows are at least 196dp wide.

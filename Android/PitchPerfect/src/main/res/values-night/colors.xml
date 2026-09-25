@@ -8,6 +8,8 @@
     <color name="plate_hairline">#2C2F33</color>
     <color name="plate_accent">#F2EFE6</color>
     <color name="plate_on_accent">#101214</color>
+    <!-- Theme.Material's dark colorBackgroundFloating (material grey 800). -->
+    <color name="plate_menu">#424242</color>
 
     <color name="pano_color">#11DDDDDD</color>
 </resources>
